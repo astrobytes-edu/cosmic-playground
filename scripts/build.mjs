@@ -41,6 +41,8 @@ async function main() {
 
   const demosDist = path.join(demosDir, "dist");
   const sitePlayRoot = path.join(siteDir, "public", "play");
+  // Deterministic local builds: avoid stale /play/<slug>/ directories surviving between runs.
+  await fs.rm(sitePlayRoot, { recursive: true, force: true });
   await fs.mkdir(sitePlayRoot, { recursive: true });
 
   const entries = await fs.readdir(demosDist, { withFileTypes: true });
@@ -61,4 +63,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

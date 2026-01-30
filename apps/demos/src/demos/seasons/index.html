@@ -7,7 +7,61 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <main id="cp-demo" class="cp-layer-instrument cp-demo"></main>
+    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Seasons instrument">
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Seasons: Why Tilt Matters</div>
+        <div class="cp-panel-body">
+          <p class="cp-muted">Test how tilt changes sunlight angle and day length across the year.</p>
+          <div class="cp-callout" data-kind="misconception">
+            Common myth: seasons are caused by Earth being closer/farther from the Sun.
+          </div>
+
+          <button id="copyResults" class="cp-action" type="button">Copy results</button>
+          <p id="status" class="cp-status" role="status" aria-live="polite"></p>
+
+          <div class="cp-actions">
+            <a class="cp-button" href="../../exhibits/seasons/">Open exhibit</a>
+            <a class="cp-button cp-button--ghost" href="../../stations/seasons/">Station card</a>
+            <a class="cp-button cp-button--ghost" href="../../instructor/seasons/">Instructor notes</a>
+          </div>
+        </div>
+      </aside>
+
+      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
+        <div class="cp-stage__inner">
+          <p class="cp-stage__headline">Migration pending</p>
+          <p class="cp-muted">
+            This space will host the interactive visualization once the demo is migrated.
+          </p>
+        </div>
+      </section>
+
+      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
+        <div class="cp-panel-header">Readouts</div>
+        <div class="cp-panel-body">
+          <p class="cp-muted">Readouts and “what to notice” will live here once migrated.</p>
+          <div class="cp-readout">
+            <div class="cp-readout__label">(example) Day length</div>
+            <div class="cp-readout__value">—</div>
+          </div>
+          <div class="cp-notice">
+            <h3>What to notice</h3>
+            <ul>
+              <li>Day length and sun angle change with date and hemisphere.</li>
+              <li>Tilt drives seasons even if distance stayed constant.</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+
+      <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
+        <strong>Model notes</strong>
+        <ul>
+          <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
+          <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+        </ul>
+      </section>
+    </div>
     <script type="module" src="./main.ts"></script>
   </body>
 </html>
