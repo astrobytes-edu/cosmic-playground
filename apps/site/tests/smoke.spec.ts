@@ -143,4 +143,27 @@ test.describe("Cosmic Playground smoke", () => {
     expect(String(copied)).toContain("Timestamp:");
     expect(String(copied)).toContain("(v1)");
   });
+
+  test("Pilot demo respects prefers-reduced-motion (binary-orbits)", async ({
+    page
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+
+    await page.addInitScript(() => {
+      (window as any).__cpRafCount = 0;
+      const original = window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+        (window as any).__cpRafCount++;
+        return original(cb);
+      }) as any;
+    });
+
+    await page.goto("play/binary-orbits/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+
+    await page.waitForTimeout(300);
+
+    const count = await page.evaluate(() => (window as any).__cpRafCount);
+    expect(count, "requestAnimationFrame should not loop under reduced motion").toBeLessThanOrEqual(1);
+  });
 });

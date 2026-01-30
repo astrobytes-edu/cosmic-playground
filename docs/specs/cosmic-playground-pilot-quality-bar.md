@@ -85,6 +85,7 @@ These checks are intentionally pragmatic for v1 and should be expanded later.
   - a `Timestamp:` line
   - non-empty `Parameters:` and `Readouts:` sections (with at least 2 readouts)
 - A pilot-specific Playwright test validates keyboard-only activation for “Copy results” (tab to the button, press Enter, status updates, clipboard capture exists).
+- A pilot-specific Playwright test validates `prefers-reduced-motion` behavior for the exemplar demo (no continuous animation loop under reduced motion).
 
 ## Spec Deviations
 
