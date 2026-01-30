@@ -111,4 +111,36 @@ test.describe("Cosmic Playground smoke", () => {
     }
     expect(readoutRows).toBeGreaterThanOrEqual(2);
   });
+
+  test("Pilot demo copy results is keyboard-activatable (binary-orbits)", async ({
+    page
+  }) => {
+    await page.addInitScript(() => {
+      (window as any).__cpLastClipboardText = null;
+      const clipboard = (navigator as any).clipboard ?? {};
+      (navigator as any).clipboard = clipboard;
+      clipboard.writeText = async (text: string) => {
+        (window as any).__cpLastClipboardText = text;
+      };
+    });
+
+    await page.goto("play/binary-orbits/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+
+    const copyButton = page.locator("#copyResults");
+    await expect(copyButton).toBeVisible();
+
+    for (let i = 0; i < 60; i++) {
+      if (await copyButton.evaluate((el) => el === document.activeElement)) break;
+      await page.keyboard.press("Tab");
+    }
+    await expect(copyButton).toBeFocused();
+
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#status")).toContainText("Copied");
+
+    const copied = await page.evaluate(() => (window as any).__cpLastClipboardText);
+    expect(String(copied)).toContain("Timestamp:");
+    expect(String(copied)).toContain("(v1)");
+  });
 });
