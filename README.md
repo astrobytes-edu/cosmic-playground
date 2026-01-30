@@ -32,4 +32,4 @@ Workflow: `.github/workflows/deploy.yml`
 
 Astro GitHub Pages settings:
 - The museum site is configured as a **project site** with `base: "/cosmic-playground/"` in `apps/site/astro.config.mjs`.
-- Replace `https://<your-github-user>.github.io/` in `apps/site/astro.config.mjs` with your actual GitHub username when ready.
+- Local dev will serve the site under the same base path: open `http://localhost:4321/cosmic-playground/`.
