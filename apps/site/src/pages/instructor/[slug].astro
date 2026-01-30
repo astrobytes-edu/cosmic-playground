@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
+import KatexAutoRender from "../../components/KatexAutoRender.astro";
 
 export async function getStaticPaths() {
   const demos = await getCollection("demos");
@@ -37,6 +38,7 @@ const sections = await Promise.all(
 );
 
 const hasInstructorContent = instructorEntries.length > 0;
+const hasMath = instructorEntries.some((e) => e.data.has_math);
 
 const sectionLabels: Record<InstructorSection, string> = {
   index: "Overview",
@@ -62,26 +64,29 @@ const sectionLabels: Record<InstructorSection, string> = {
 
   {hasInstructorContent ? (
     <>
-      <nav class="nav" aria-label="Instructor bundle sections">
-        <ul>
-          {sectionOrder
-            .filter((s) => sections.find((x) => x.section === s && x.Content))
-            .map((s) => (
-              <li>
-                <a href={`#${s}`}>{sectionLabels[s]}</a>
-              </li>
-            ))}
-        </ul>
-      </nav>
+      {hasMath ? <KatexAutoRender /> : null}
+      <div id="instructor-content">
+        <nav class="nav" aria-label="Instructor bundle sections">
+          <ul>
+            {sectionOrder
+              .filter((s) => sections.find((x) => x.section === s && x.Content))
+              .map((s) => (
+                <li>
+                  <a href={`#${s}`}>{sectionLabels[s]}</a>
+                </li>
+              ))}
+          </ul>
+        </nav>
 
-      {sections
-        .filter((s) => s.Content)
-        .map(({ section, Content }) => (
-          <section class="block" id={section}>
-            <h2>{sectionLabels[section as InstructorSection]}</h2>
-            <Content />
-          </section>
-        ))}
+        {sections
+          .filter((s) => s.Content)
+          .map(({ section, Content }) => (
+            <section class="block" id={section}>
+              <h2>{sectionLabels[section as InstructorSection]}</h2>
+              <Content />
+            </section>
+          ))}
+      </div>
     </>
   ) : (
     <>

@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
+import KatexAutoRender from "../../components/KatexAutoRender.astro";
 
 export async function getStaticPaths() {
   const demos = await getCollection("demos");
@@ -17,10 +18,11 @@ const stationParams = entry.data.station_params ?? [];
 const hasStationParams = stationParams.length > 0;
 
 const stationOverrideEntry = (await getCollection("stations")).find(
-  (candidate) => candidate.slug === entry.slug
+  (candidate) => candidate.data.demo_slug === entry.slug
 );
 const StationOverride =
   stationOverrideEntry ? (await stationOverrideEntry.render()).Content : null;
+const hasMath = stationOverrideEntry?.data.has_math ?? false;
 ---
 
 <Layout title={`${entry.data.title} — Station Card`}>
@@ -37,9 +39,12 @@ const StationOverride =
     </header>
 
     {StationOverride ? (
-      <section class="box" aria-label="Station card content">
-        <StationOverride />
-      </section>
+      <>
+        {hasMath ? <KatexAutoRender /> : null}
+        <section class="box" id="station-content" aria-label="Station card content">
+          <StationOverride />
+        </section>
+      </>
     ) : (
       <>
         <section class="box">
