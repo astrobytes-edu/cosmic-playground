@@ -15,6 +15,12 @@ const { entry } = Astro.props;
 const exhibitHref = `${import.meta.env.BASE_URL}exhibits/${entry.slug}/`;
 const stationParams = entry.data.station_params ?? [];
 const hasStationParams = stationParams.length > 0;
+
+const stationOverrideEntry = (await getCollection("stations")).find(
+  (candidate) => candidate.slug === entry.slug
+);
+const StationOverride =
+  stationOverrideEntry ? (await stationOverrideEntry.render()).Content : null;
 ---
 
 <Layout title={`${entry.data.title} — Station Card`}>
@@ -30,81 +36,89 @@ const hasStationParams = stationParams.length > 0;
       </p>
     </header>
 
-    <section class="box">
-      <h2>Context</h2>
-      <p>
-        This station is designed to be completed quickly. Write a prediction,
-        follow the steps, then make a claim supported by evidence from the demo.
-      </p>
-    </section>
+    {StationOverride ? (
+      <section class="box" aria-label="Station card content">
+        <StationOverride />
+      </section>
+    ) : (
+      <>
+        <section class="box">
+          <h2>Context</h2>
+          <p>
+            This station is designed to be completed quickly. Write a prediction,
+            follow the steps, then make a claim supported by evidence from the demo.
+          </p>
+        </section>
 
-    <section class="box">
-      <h2>Predict</h2>
-      <p class="prompt">{entry.data.predict_prompt}</p>
-      <div class="blank">Prediction (1 sentence):</div>
-      <div class="blank blank--tall"></div>
-    </section>
+        <section class="box">
+          <h2>Predict</h2>
+          <p class="prompt">{entry.data.predict_prompt}</p>
+          <div class="blank">Prediction (1 sentence):</div>
+          <div class="blank blank--tall"></div>
+        </section>
 
-    <section class="box">
-      <h2>Play steps</h2>
-      <ol>
-        {entry.data.play_steps.map((s) => (
-          <li>{s}</li>
-        ))}
-      </ol>
-    </section>
+        <section class="box">
+          <h2>Play steps</h2>
+          <ol>
+            {entry.data.play_steps.map((s) => (
+              <li>{s}</li>
+            ))}
+          </ol>
+        </section>
 
-    <section class="box">
-      <h2>Parameter table</h2>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Parameter</th>
-            <th>Value</th>
-            <th>What to notice</th>
-          </tr>
-        </thead>
-        <tbody>
-          {hasStationParams ? (
-            stationParams.map((row) => (
+        <section class="box">
+          <h2>Parameter table</h2>
+          <table class="table">
+            <thead>
               <tr>
-                <td>{row.parameter}</td>
-                <td>{row.value}</td>
-                <td>{row.notice}</td>
+                <th>Parameter</th>
+                <th>Value</th>
+                <th>What to notice</th>
               </tr>
-            ))
-          ) : (
-            <>
-              <tr>
-                <td>(example) Phase angle (°)</td>
-                <td>________</td>
-                <td>How the illuminated fraction changes</td>
-              </tr>
-              <tr>
-                <td>(your choice)</td>
-                <td>________</td>
-                <td>________</td>
-              </tr>
-            </>
-          )}
-        </tbody>
-      </table>
-    </section>
+            </thead>
+            <tbody>
+              {hasStationParams ? (
+                stationParams.map((row) => (
+                  <tr>
+                    <td>{row.parameter}</td>
+                    <td>{row.value}</td>
+                    <td>{row.notice}</td>
+                  </tr>
+                ))
+              ) : (
+                <>
+                  <tr>
+                    <td>(example) Phase angle (°)</td>
+                    <td>________</td>
+                    <td>How the illuminated fraction changes</td>
+                  </tr>
+                  <tr>
+                    <td>(your choice)</td>
+                    <td>________</td>
+                    <td>________</td>
+                  </tr>
+                </>
+              )}
+            </tbody>
+          </table>
+        </section>
 
-    <section class="box">
-      <h2>Explain</h2>
-      <p class="prompt">{entry.data.explain_prompt}</p>
-      <div class="blank">Explanation (2–3 sentences):</div>
-      <div class="blank blank--tall"></div>
-    </section>
+        <section class="box">
+          <h2>Explain</h2>
+          <p class="prompt">{entry.data.explain_prompt}</p>
+          <div class="blank">Explanation (2–3 sentences):</div>
+          <div class="blank blank--tall"></div>
+        </section>
 
-    <section class="box">
-      <h2>Claim + evidence</h2>
-      <div class="blank">Claim:</div>
-      <div class="blank blank--tall"></div>
-      <div class="blank">Evidence (what you observed):</div>
-      <div class="blank blank--tall"></div>
-    </section>
+        <section class="box">
+          <h2>Claim + evidence</h2>
+          <div class="blank">Claim:</div>
+          <div class="blank blank--tall"></div>
+          <div class="blank">Evidence (what you observed):</div>
+          <div class="blank blank--tall"></div>
+        </section>
+      </>
+    )}
   </article>
 </Layout>
 

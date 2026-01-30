@@ -13,6 +13,38 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 
 const exhibitHref = `${import.meta.env.BASE_URL}exhibits/${entry.slug}/`;
+
+type InstructorSection = "index" | "activities" | "assessment" | "model" | "backlog";
+const sectionOrder: InstructorSection[] = [
+  "index",
+  "activities",
+  "assessment",
+  "model",
+  "backlog"
+];
+
+const instructorEntries = (await getCollection("instructor")).filter(
+  (candidate) => candidate.data.bundle === entry.slug
+);
+
+const sections = await Promise.all(
+  sectionOrder.map(async (section) => {
+    const match = instructorEntries.find((e) => e.data.section === section);
+    if (!match) return { section, title: null, Content: null as any };
+    const { Content } = await match.render();
+    return { section, title: match.data.title, Content };
+  })
+);
+
+const hasInstructorContent = instructorEntries.length > 0;
+
+const sectionLabels: Record<InstructorSection, string> = {
+  index: "Overview",
+  activities: "Activities",
+  assessment: "Assessment",
+  model: "Model notes (deeper)",
+  backlog: "Backlog"
+};
 ---
 
 <Layout title={`${entry.data.title} — Instructor Notes`}>
@@ -28,59 +60,103 @@ const exhibitHref = `${import.meta.env.BASE_URL}exhibits/${entry.slug}/`;
     <p class="meta">Exhibit: <a href={exhibitHref}>{exhibitHref}</a></p>
   </header>
 
-  <section class="block">
-    <h2>Overview</h2>
-    <p>
-      What this demo is for, how long it takes, and what misconception it targets.
-    </p>
-    <ul>
-      {entry.data.misconceptions.map((m) => (
-        <li>{m}</li>
-      ))}
-    </ul>
-  </section>
+  {hasInstructorContent ? (
+    <>
+      <nav class="nav" aria-label="Instructor bundle sections">
+        <ul>
+          {sectionOrder
+            .filter((s) => sections.find((x) => x.section === s && x.Content))
+            .map((s) => (
+              <li>
+                <a href={`#${s}`}>{sectionLabels[s]}</a>
+              </li>
+            ))}
+        </ul>
+      </nav>
 
-  <section class="block">
-    <h2>Activities</h2>
-    <p>Suggested flow (edit as needed):</p>
-    <ol>
-      <li>Students write a prediction before touching controls.</li>
-      <li>Students run the play steps in pairs and record evidence.</li>
-      <li>Whole-class debrief: claim + evidence, then model limitations.</li>
-    </ol>
-  </section>
+      {sections
+        .filter((s) => s.Content)
+        .map(({ section, Content }) => (
+          <section class="block" id={section}>
+            <h2>{sectionLabels[section as InstructorSection]}</h2>
+            <Content />
+          </section>
+        ))}
+    </>
+  ) : (
+    <>
+      <section class="block">
+        <h2>Overview</h2>
+        <p>
+          What this demo is for, how long it takes, and what misconception it targets.
+        </p>
+        <ul>
+          {entry.data.misconceptions.map((m) => (
+            <li>{m}</li>
+          ))}
+        </ul>
+      </section>
 
-  <section class="block">
-    <h2>Assessment</h2>
-    <ul>
-      <li>1–2 sentence explanation aligned to the “Explain” prompt.</li>
-      <li>One claim + one piece of evidence from the demo.</li>
-    </ul>
-  </section>
+      <section class="block">
+        <h2>Activities</h2>
+        <p>Suggested flow (edit as needed):</p>
+        <ol>
+          <li>Students write a prediction before touching controls.</li>
+          <li>Students run the play steps in pairs and record evidence.</li>
+          <li>Whole-class debrief: claim + evidence, then model limitations.</li>
+        </ol>
+      </section>
 
-  <section class="block">
-    <h2>Model notes (deeper)</h2>
-    <ul>
-      {entry.data.model_notes.map((n) => (
-        <li>{n}</li>
-      ))}
-    </ul>
-  </section>
+      <section class="block">
+        <h2>Assessment</h2>
+        <ul>
+          <li>1–2 sentence explanation aligned to the “Explain” prompt.</li>
+          <li>One claim + one piece of evidence from the demo.</li>
+        </ul>
+      </section>
 
-  <section class="block">
-    <h2>Backlog</h2>
-    <ul>
-      <li>Add a proper instructor content collection for richer notes.</li>
-      <li>Improve station card parameter table to be demo-driven.</li>
-      <li>Add export-results scaffolding once runtime lands.</li>
-    </ul>
-  </section>
+      <section class="block">
+        <h2>Model notes (deeper)</h2>
+        <ul>
+          {entry.data.model_notes.map((n) => (
+            <li>{n}</li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="block">
+        <h2>Backlog</h2>
+        <ul>
+          <li>Add a proper instructor content collection for richer notes.</li>
+          <li>Improve station card parameter table to be demo-driven.</li>
+          <li>Add export-results scaffolding once runtime lands.</li>
+        </ul>
+      </section>
+    </>
+  )}
 </Layout>
 
 <style>
   .header h1 {
     margin: 0;
     font-size: 1.7rem;
+  }
+
+  .nav {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: var(--cp-r-3);
+    border: 1px solid var(--cp-border);
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  .nav ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .nav a {
+    color: inherit;
   }
 
   .meta {
