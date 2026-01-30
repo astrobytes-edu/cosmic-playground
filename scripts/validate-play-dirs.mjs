@@ -128,6 +128,28 @@ async function main() {
     }
   }
 
+  const invalidInstrumentRootA11y = [];
+  for (const slug of slugs) {
+    const indexPath = path.join(playRoot, slug, "index.html");
+    if (!(await pathExists(indexPath))) continue;
+    const html = await readText(indexPath);
+
+    const rootTag = findStartTagById(html, "cp-demo");
+    if (!rootTag) continue;
+
+    const hasAriaLabel = /\baria-label=["'][^"']+["']/i.test(rootTag);
+    const hasAriaLabelledBy = /\baria-labelledby=["'][^"']+["']/i.test(rootTag);
+
+    if (!hasAriaLabel && !hasAriaLabelledBy) {
+      invalidInstrumentRootA11y.push({
+        slug,
+        indexPath,
+        missing: ['aria-label="…"', 'aria-labelledby="…"'],
+        rootTag
+      });
+    }
+  }
+
   const sourceSlugs = await getDemoSlugsFromSource();
   const missingMetadata = [];
   for (const slug of sourceSlugs) {
@@ -158,6 +180,7 @@ async function main() {
     missingContractMarkers.length > 0 ||
     invalidExportStatusRegion.length > 0 ||
     invalidCopyResultsButton.length > 0 ||
+    invalidInstrumentRootA11y.length > 0 ||
     missingMetadata.length > 0
   ) {
     if (missingPlayArtifacts.length > 0) {
@@ -191,6 +214,15 @@ async function main() {
       for (const item of invalidCopyResultsButton) {
         console.error(`- ${item.slug} (${item.indexPath})`);
         for (const marker of item.missing) console.error(`  - missing: ${marker}`);
+      }
+      console.error("");
+    }
+
+    if (invalidInstrumentRootA11y.length > 0) {
+      console.error("Built demo artifacts missing accessible name on instrument root:");
+      for (const item of invalidInstrumentRootA11y) {
+        console.error(`- ${item.slug} (${item.indexPath})`);
+        console.error("  - missing: aria-label or aria-labelledby on #cp-demo");
       }
       console.error("");
     }

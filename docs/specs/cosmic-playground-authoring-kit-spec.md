@@ -49,6 +49,7 @@ Creates:
 Every demo must include:
 
 - `#cp-demo` root element
+- `#cp-demo` has an accessible name (`aria-label` recommended; `aria-labelledby` allowed)
 - instrument layer classes: `.cp-layer-instrument.cp-demo`
 - regions from `@cosmic/theme/styles/demo-shell.css`:
   - `.cp-demo__controls`, `.cp-demo__stage`, `.cp-demo__readouts`, `.cp-demo__drawer`

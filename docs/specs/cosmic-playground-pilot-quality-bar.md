@@ -76,6 +76,7 @@ These checks are intentionally pragmatic for v1 and should be expanded later.
 - `scripts/validate-play-dirs.mjs` enforces core instrument markers exist in built `/play/<slug>/index.html` artifacts (instrument root, copy button, status region, model notes drawer marker).
 - `scripts/validate-play-dirs.mjs` enforces that the export status element `#status` is a live region (`role="status"` and `aria-live="polite"`).
 - `scripts/validate-play-dirs.mjs` enforces that `#copyResults` is a `<button type="button">`.
+- `scripts/validate-play-dirs.mjs` enforces that the instrument root `#cp-demo` has an accessible name (`aria-label` or `aria-labelledby`).
 
 ### Playwright (E2E)
 
