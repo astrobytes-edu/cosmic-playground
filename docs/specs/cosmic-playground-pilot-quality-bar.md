@@ -74,6 +74,7 @@ These checks are intentionally pragmatic for v1 and should be expanded later.
 ### Build-time gates
 
 - `scripts/validate-play-dirs.mjs` enforces core instrument markers exist in built `/play/<slug>/index.html` artifacts (instrument root, copy button, status region, model notes drawer marker).
+- `scripts/validate-play-dirs.mjs` enforces that the export status element `#status` is a live region (`role="status"` and `aria-live="polite"`).
 
 ### Playwright (E2E)
 
@@ -85,4 +86,3 @@ These checks are intentionally pragmatic for v1 and should be expanded later.
 ## Spec Deviations
 
 None.
-
