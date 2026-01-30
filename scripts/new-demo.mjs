@@ -165,6 +165,11 @@ async function main() {
   background: color-mix(in srgb, var(--cp-accent3) 30%, transparent);
 }
 
+.cp-action:focus-visible {
+  outline: 3px solid var(--cp-focus);
+  outline-offset: 3px;
+}
+
 .cp-status {
   margin: 0;
   color: var(--cp-muted);
@@ -255,10 +260,11 @@ const runtime = createInstrumentRuntime({
 
 function exportResults() {
   return {
-    parameters: {},
-    readouts: {},
-    notes: ["TODO: replace placeholder export results."],
-    timestamp: new Date().toISOString()
+    version: 1,
+    timestamp: new Date().toISOString(),
+    parameters: [],
+    readouts: [],
+    notes: ["TODO: replace placeholder export results."]
   };
 }
 
@@ -326,4 +332,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-
