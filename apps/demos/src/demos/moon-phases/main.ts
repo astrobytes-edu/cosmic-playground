@@ -35,6 +35,20 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+function cssVar(name: string, fallback: string) {
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  return value.length > 0 ? value : fallback;
+}
+
+const canvasTheme = {
+  glow: cssVar("--cp-glow-blue", "rgba(96, 165, 250, 0.12)"),
+  disk: cssVar("--cp-bg1", "#0B1020"),
+  lit: cssVar("--cp-text", "#EAF2FF"),
+  border: cssVar("--cp-border", "rgba(255, 255, 255, 0.10)")
+};
+
 // Illuminated fraction of a sphere as seen from Earth, approximated by:
 // f = (1 + cos(phaseAngle)) / 2 where phaseAngle is in radians.
 function illuminatedFraction(phaseAngleDeg: number) {
@@ -56,7 +70,7 @@ function drawMoon(phaseAngleDeg: number) {
 
   // Soft background glow
   const glow = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r * 1.6);
-  glow.addColorStop(0, "rgba(138,162,255,0.18)");
+  glow.addColorStop(0, canvasTheme.glow);
   glow.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, w, h);
@@ -65,7 +79,7 @@ function drawMoon(phaseAngleDeg: number) {
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.closePath();
-  ctx.fillStyle = "#0b0f1f";
+  ctx.fillStyle = canvasTheme.disk;
   ctx.fill();
 
   // Lit portion: draw as intersection of two circles to hint at a terminator.
@@ -77,7 +91,7 @@ function drawMoon(phaseAngleDeg: number) {
 
   ctx.beginPath();
   ctx.arc(cx + terminatorX, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = "#f1f3ff";
+  ctx.fillStyle = canvasTheme.lit;
   ctx.fill();
 
   ctx.restore();
@@ -85,7 +99,7 @@ function drawMoon(phaseAngleDeg: number) {
   // Rim
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.strokeStyle = "rgba(255,255,255,0.20)";
+  ctx.strokeStyle = canvasTheme.border;
   ctx.lineWidth = 3;
   ctx.stroke();
 }
