@@ -21,6 +21,10 @@ The **Authoring Kit v0.1** makes adding (or migrating) a demo feel like adding a
 3. **Make migration fast:** scaffolding should be a single command with minimal manual wiring.
 4. **Keep museum content first-class:** metadata and pedagogy live in content collections.
 
+**Definition of done (pilot / exemplar demos):**
+
+Pilot demos should also meet `docs/specs/cosmic-playground-pilot-quality-bar.md`.
+
 ---
 
 ## 2. CLI scaffold
