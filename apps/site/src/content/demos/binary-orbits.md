@@ -17,6 +17,13 @@ play_steps:
   - "Adjust mass ratio and observe how the orbit changes."
   - "Compare cases where masses are equal vs very unequal."
   - "Identify which quantities appear to remain consistent."
+station_params:
+  - parameter: "Mass ratio (m₂/m₁)"
+    value: "________"
+    notice: "Heavier body moves less; barycenter shifts toward the heavier mass."
+  - parameter: "Separation (a)"
+    value: "________"
+    notice: "Period changes quickly with distance (in this simplified circular model)."
 explain_prompt: "Explain how the center of mass helps you understand the motion of both bodies."
 model_notes:
   - "This is currently a stub while the legacy demo is migrated into the new runtime."
@@ -27,4 +34,3 @@ last_updated: "2026-01-30"
 ---
 
 This demo will be migrated into the Cosmic Playground runtime; for now it provides a placeholder `/play/` target.
-

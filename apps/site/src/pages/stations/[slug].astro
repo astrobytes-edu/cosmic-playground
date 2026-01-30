@@ -13,6 +13,8 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 
 const exhibitHref = `${import.meta.env.BASE_URL}exhibits/${entry.slug}/`;
+const stationParams = entry.data.station_params ?? [];
+const hasStationParams = stationParams.length > 0;
 ---
 
 <Layout title={`${entry.data.title} — Station Card`}>
@@ -63,16 +65,28 @@ const exhibitHref = `${import.meta.env.BASE_URL}exhibits/${entry.slug}/`;
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>(example) Phase angle (°)</td>
-            <td>________</td>
-            <td>How the illuminated fraction changes</td>
-          </tr>
-          <tr>
-            <td>(your choice)</td>
-            <td>________</td>
-            <td>________</td>
-          </tr>
+          {hasStationParams ? (
+            stationParams.map((row) => (
+              <tr>
+                <td>{row.parameter}</td>
+                <td>{row.value}</td>
+                <td>{row.notice}</td>
+              </tr>
+            ))
+          ) : (
+            <>
+              <tr>
+                <td>(example) Phase angle (°)</td>
+                <td>________</td>
+                <td>How the illuminated fraction changes</td>
+              </tr>
+              <tr>
+                <td>(your choice)</td>
+                <td>________</td>
+                <td>________</td>
+              </tr>
+            </>
+          )}
         </tbody>
       </table>
     </section>

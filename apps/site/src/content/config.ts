@@ -27,6 +27,15 @@ const demos = defineCollection({
     misconceptions: z.array(z.string().min(1)).min(1),
     predict_prompt: z.string().min(1),
     play_steps: z.array(z.string().min(1)).min(1),
+    station_params: z
+      .array(
+        z.object({
+          parameter: z.string().min(1),
+          value: z.string().min(1),
+          notice: z.string().min(1)
+        })
+      )
+      .optional(),
     explain_prompt: z.string().min(1),
     model_notes: z.array(z.string().min(1)).min(1),
     demo_path: z.string().min(1),
