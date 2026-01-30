@@ -59,4 +59,56 @@ test.describe("Cosmic Playground smoke", () => {
       expect(errors, `Console errors on ${basePath}play/${slug}/`).toEqual([]);
     }
   });
+
+  test("Pilot demo exports stable results text (binary-orbits)", async ({
+    page
+  }) => {
+    await page.addInitScript(() => {
+      (window as any).__cpLastClipboardText = null;
+      const clipboard = (navigator as any).clipboard ?? {};
+      (navigator as any).clipboard = clipboard;
+      clipboard.writeText = async (text: string) => {
+        (window as any).__cpLastClipboardText = text;
+      };
+    });
+
+    await page.goto("play/binary-orbits/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+
+    await page.locator("#copyResults").click();
+    await expect(page.locator("#status")).toContainText("Copied");
+
+    const copied = await page.evaluate(() => (window as any).__cpLastClipboardText);
+    expect(typeof copied).toBe("string");
+
+    const text = String(copied);
+    expect(text).toContain("Cosmic Playground");
+    expect(text).toContain("(v1)");
+    expect(text).toContain("Timestamp:");
+    expect(text).toContain("\nParameters:\n");
+    expect(text).toContain("\nReadouts:\n");
+
+    const lines = text.split("\n");
+
+    const parametersIndex = lines.findIndex((l) => l.trim() === "Parameters:");
+    expect(parametersIndex).toBeGreaterThan(-1);
+    const readoutsIndex = lines.findIndex((l) => l.trim() === "Readouts:");
+    expect(readoutsIndex).toBeGreaterThan(-1);
+
+    let parameterRows = 0;
+    for (let i = parametersIndex + 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.trim() === "") break;
+      if (line.startsWith("- ") && !line.includes("(none)")) parameterRows++;
+    }
+    expect(parameterRows).toBeGreaterThanOrEqual(1);
+
+    let readoutRows = 0;
+    for (let i = readoutsIndex + 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.trim() === "") break;
+      if (line.startsWith("- ") && !line.includes("(none)")) readoutRows++;
+    }
+    expect(readoutRows).toBeGreaterThanOrEqual(2);
+  });
 });
