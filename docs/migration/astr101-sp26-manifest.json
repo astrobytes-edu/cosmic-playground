@@ -1,0 +1,199 @@
+{
+  "source_root": "~/Teaching/astr101-sp26/demos",
+  "generated_at": "2026-01-30",
+  "demos": [
+    {
+      "slug": "angular-size",
+      "title": "Angular Size: The Sky’s Ruler",
+      "legacy": {
+        "demo_dir": "angular-size",
+        "model_file": "_assets/angular-size-model.js",
+        "station_card_include": "_assets/station-cards/angular-size.qmd",
+        "uses": {
+          "katex": false,
+          "demoModes": true,
+          "tourEngine": false,
+          "challengeEngine": false
+        },
+        "dataFiles": []
+      },
+      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+    },
+    {
+      "slug": "binary-orbits",
+      "title": "Binary Orbits: Two-Body Dance",
+      "legacy": {
+        "demo_dir": "binary-orbits",
+        "model_file": "_assets/binary-orbits-model.js",
+        "station_card_include": "_assets/station-cards/binary-orbits.qmd",
+        "uses": {
+          "katex": true,
+          "demoModes": false,
+          "tourEngine": false,
+          "challengeEngine": false
+        },
+        "dataFiles": []
+      },
+      "target": { "demo_status": "ported", "needsPhysicsPort": true }
+    },
+    {
+      "slug": "blackbody-radiation",
+      "title": "Blackbody Radiation: Color and Temperature",
+      "legacy": {
+        "demo_dir": "blackbody-radiation",
+        "model_file": "_assets/blackbody-model.js",
+        "station_card_include": "_assets/station-cards/blackbody-radiation.qmd",
+        "uses": {
+          "katex": true,
+          "demoModes": false,
+          "tourEngine": false,
+          "challengeEngine": false
+        },
+        "dataFiles": []
+      },
+      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+    },
+    {
+      "slug": "conservation-laws",
+      "title": "Conservation Laws: Energy & Momentum",
+      "legacy": {
+        "demo_dir": "conservation-laws",
+        "model_file": "_assets/conservation-laws-model.js",
+        "station_card_include": "_assets/station-cards/conservation-laws.qmd",
+        "uses": {
+          "katex": true,
+          "demoModes": false,
+          "tourEngine": false,
+          "challengeEngine": false
+        },
+        "dataFiles": []
+      },
+      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+    },
+    {
+      "slug": "eclipse-geometry",
+      "title": "Eclipse Geometry: Shadows in Space",
+      "legacy": {
+        "demo_dir": "eclipse-geometry",
+        "model_file": "_assets/eclipse-geometry-model.js",
+        "station_card_include": "_assets/station-cards/eclipse-geometry.qmd",
+        "uses": {
+          "katex": false,
+          "demoModes": true,
+          "tourEngine": false,
+          "challengeEngine": true
+        },
+        "dataFiles": []
+      },
+      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+    },
+    {
+      "slug": "em-spectrum",
+      "title": "Electromagnetic Spectrum: Light Beyond Visible",
+      "legacy": {
+        "demo_dir": "em-spectrum",
+        "model_file": "_assets/em-spectrum-model.js",
+        "station_card_include": "_assets/station-cards/em-spectrum.qmd",
+        "uses": {
+          "katex": true,
+          "demoModes": false,
+          "tourEngine": false,
+          "challengeEngine": false
+        },
+        "dataFiles": ["em-spectrum/object-data.js", "em-spectrum/telescope-data.js"]
+      },
+      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+    },
+    {
+      "slug": "keplers-laws",
+      "title": "Kepler’s Laws: Patterns of Planetary Motion",
+      "legacy": {
+        "demo_dir": "keplers-laws",
+        "model_file": "_assets/keplers-laws-model.js",
+        "station_card_include": "_assets/station-cards/keplers-laws.qmd",
+        "uses": {
+          "katex": true,
+          "demoModes": false,
+          "tourEngine": false,
+          "challengeEngine": false
+        },
+        "dataFiles": []
+      },
+      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+    },
+    {
+      "slug": "moon-phases",
+      "title": "Moon Phases: Light, Not Shadow",
+      "legacy": {
+        "demo_dir": "moon-phases",
+        "model_file": "_assets/moon-phases-model.js",
+        "station_card_include": "_assets/station-cards/moon-phases.qmd",
+        "uses": {
+          "katex": false,
+          "demoModes": true,
+          "tourEngine": false,
+          "challengeEngine": true
+        },
+        "dataFiles": []
+      },
+      "target": { "demo_status": "ported", "needsPhysicsPort": true }
+    },
+    {
+      "slug": "parallax-distance",
+      "title": "Parallax Distance: Measuring the Stars",
+      "legacy": {
+        "demo_dir": "parallax-distance",
+        "model_file": "_assets/parallax-distance-model.js",
+        "station_card_include": "_assets/station-cards/parallax-distance.qmd",
+        "uses": {
+          "katex": true,
+          "demoModes": false,
+          "tourEngine": false,
+          "challengeEngine": false
+        },
+        "dataFiles": ["parallax-distance/star-data.js"]
+      },
+      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+    },
+    {
+      "slug": "seasons",
+      "title": "Seasons: Why Tilt Matters",
+      "legacy": {
+        "demo_dir": "seasons",
+        "model_file": "_assets/seasons-model.js",
+        "station_card_include": "_assets/station-cards/seasons.qmd",
+        "uses": {
+          "katex": false,
+          "demoModes": true,
+          "tourEngine": false,
+          "challengeEngine": false
+        },
+        "dataFiles": []
+      },
+      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+    },
+    {
+      "slug": "telescope-resolution",
+      "title": "Telescope Resolution: Sharper Eyes",
+      "legacy": {
+        "demo_dir": "telescope-resolution",
+        "model_file": "_assets/telescope-resolution-model.js",
+        "station_card_include": "_assets/station-cards/telescope-resolution.qmd",
+        "uses": {
+          "katex": true,
+          "demoModes": false,
+          "tourEngine": false,
+          "challengeEngine": false
+        },
+        "dataFiles": ["telescope-resolution/telescope-data.js"]
+      },
+      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+    }
+  ],
+  "instructor_hubs": [
+    { "bundle": "cosmic-playground", "title": "Cosmic Playground (Instructor Hub)" },
+    { "bundle": "distance-and-measurement", "title": "Distance and Measurement (Instructor Hub)" },
+    { "bundle": "light-and-telescopes", "title": "Light and Telescopes (Instructor Hub)" }
+  ]
+}
+
