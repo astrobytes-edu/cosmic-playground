@@ -45,6 +45,38 @@ const demos = defineCollection({
   })
 });
 
+const stations = defineCollection({
+  type: "content",
+  schema: z.object({
+    title: z.string().min(1),
+    demo_slug: z.string().min(1),
+    last_updated: z.string().min(1),
+    has_math: z.boolean().optional()
+  })
+});
+
+const instructor = defineCollection({
+  type: "content",
+  schema: z.object({
+    title: z.string().min(1),
+    bundle: z.string().min(1),
+    section: z.enum(["index", "activities", "assessment", "model", "backlog"]),
+    demo_slug: z.string().min(1).optional(),
+    last_updated: z.string().min(1),
+    has_math: z.boolean().optional()
+  })
+});
+
+const hubs = defineCollection({
+  type: "content",
+  schema: z.object({
+    title: z.string().min(1),
+    bundle: z.string().min(1),
+    last_updated: z.string().min(1),
+    has_math: z.boolean().optional()
+  })
+});
+
 const playlists = defineCollection({
   type: "content",
   schema: z.object({
@@ -65,4 +97,4 @@ const playlists = defineCollection({
   })
 });
 
-export const collections = { demos, playlists };
+export const collections = { demos, stations, instructor, hubs, playlists };
