@@ -1,0 +1,108 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import DemoCard from "../components/DemoCard.astro";
+
+const demos = await getCollection("demos");
+
+function parseIsoDate(iso: string) {
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? 0 : t;
+}
+
+const featured = [...demos]
+  .sort((a, b) => parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated))
+  .slice(0, 6);
+
+const updated = [...demos]
+  .sort((a, b) => parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated))
+  .slice(0, 6);
+
+function excerptFromBody(body: string) {
+  const firstLine = body
+    .split("\n")
+    .map((l) => l.trim())
+    .find((l) => l.length > 0 && !l.startsWith("---"));
+  if (!firstLine) return "—";
+  return firstLine.replace(/^#+\s*/, "").slice(0, 140);
+}
+---
+
+<Layout title="Cosmic Playground">
+  <section class="hero">
+    <h1>Cosmic Playground</h1>
+    <p>
+      <strong>Predict. Play. Explain.</strong> Play with the universe. Learn the
+      physics.
+    </p>
+    <div class="hero__actions">
+      <a class="button" href={`${import.meta.env.BASE_URL}explore/`}>Explore demos</a>
+      <a class="button button--ghost" href={`${import.meta.env.BASE_URL}playlists/`}
+        >Browse playlists</a
+      >
+    </div>
+  </section>
+
+  <section class="home-section" aria-label="Featured exhibits">
+    <h2>Featured exhibits</h2>
+    <div class="grid">
+      {featured.map((d) => (
+        <DemoCard
+          title={d.data.title}
+          href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
+          description={excerptFromBody(d.body)}
+          status={d.data.status}
+          topics={d.data.topics}
+          levels={d.data.levels}
+          timeMinutes={d.data.time_minutes}
+          hasMathMode={d.data.has_math_mode}
+        />
+      ))}
+    </div>
+  </section>
+
+  <section class="home-section" aria-label="New and updated">
+    <h2>New / updated</h2>
+    <ul class="updated">
+      {updated.map((d) => (
+        <li>
+          <a href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}>{d.data.title}</a>
+          <span class="updated__date">{d.data.last_updated}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .home-section {
+    margin-top: 18px;
+  }
+
+  .grid {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  .updated {
+    margin: 10px 0 0;
+    padding-left: 18px;
+    color: var(--muted);
+  }
+
+  .updated li {
+    margin: 6px 0;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+
+  .updated__date {
+    opacity: 0.8;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+  }
+</style>

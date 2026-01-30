@@ -1,0 +1,52 @@
+---
+export type IframeStageProps = {
+  src: string;
+  title: string;
+  openHref: string;
+};
+
+const { src, title, openHref } = Astro.props;
+---
+
+<section class="iframe-stage" aria-label="Interactive demo">
+  <div class="iframe-stage__frame">
+    <iframe title={title} src={src} loading="lazy" allowfullscreen></iframe>
+  </div>
+  <p class="iframe-stage__fallback">
+    If the embed doesn’t load,{" "}
+    <a href={openHref} target="_blank" rel="noreferrer">open the demo fullscreen</a
+    >.
+  </p>
+</section>
+
+<style>
+  .iframe-stage {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .iframe-stage__frame {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    border-radius: 12px;
+    overflow: clip;
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+  }
+
+  .iframe-stage__fallback {
+    margin: 10px 0 0;
+    color: var(--muted);
+  }
+</style>
+

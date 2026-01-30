@@ -1,0 +1,133 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import DemoCard from "../../components/DemoCard.astro";
+import FilterBar from "../../components/FilterBar.astro";
+
+const demos = await getCollection("demos");
+
+const q = Astro.url.searchParams.get("q")?.trim() ?? "";
+const topic = Astro.url.searchParams.get("topic")?.trim() ?? "";
+const level = Astro.url.searchParams.get("level")?.trim() ?? "";
+const time = Astro.url.searchParams.get("time")?.trim() ?? "";
+const status = Astro.url.searchParams.get("status")?.trim() ?? "";
+const math = Astro.url.searchParams.get("math")?.trim() ?? "";
+const sort = Astro.url.searchParams.get("sort")?.trim() || "recommended";
+
+const topics = Array.from(
+  new Set(demos.flatMap((d) => d.data.topics))
+).sort();
+const levels = Array.from(
+  new Set(demos.flatMap((d) => d.data.levels))
+).sort();
+const statuses = Array.from(new Set(demos.map((d) => d.data.status))).sort();
+
+function excerptFromBody(body: string) {
+  const firstLine = body
+    .split("\n")
+    .map((l) => l.trim())
+    .find((l) => l.length > 0 && !l.startsWith("---"));
+  if (!firstLine) return "—";
+  return firstLine.replace(/^#+\s*/, "").slice(0, 140);
+}
+
+function timeBucket(minutes: number) {
+  if (minutes <= 10) return "lt10";
+  if (minutes <= 20) return "10to20";
+  return "gt20";
+}
+
+const filtered = demos
+  .filter((d) => {
+    const hay = `${d.data.title} ${d.data.tags.join(" ")}`
+      .toLowerCase()
+      .trim();
+    const needle = q.toLowerCase().trim();
+    return needle.length === 0 ? true : hay.includes(needle);
+  })
+  .filter((d) => (topic ? d.data.topics.includes(topic as any) : true))
+  .filter((d) => (level ? d.data.levels.includes(level as any) : true))
+  .filter((d) => (status ? d.data.status === status : true))
+  .filter((d) => (math ? d.data.has_math_mode === (math === "yes") : true))
+  .filter((d) => (time ? timeBucket(d.data.time_minutes) === time : true));
+
+function parseIsoDate(iso: string) {
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? 0 : t;
+}
+
+const statusRank: Record<string, number> = { stable: 0, beta: 1, draft: 2 };
+
+const sorted = [...filtered].sort((a, b) => {
+  if (sort === "shortest") return a.data.time_minutes - b.data.time_minutes;
+  if (sort === "newest")
+    return parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated);
+  // recommended: stable > beta > draft, then newest, then title
+  return (
+    (statusRank[a.data.status] ?? 99) - (statusRank[b.data.status] ?? 99) ||
+    parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated) ||
+    a.data.title.localeCompare(b.data.title)
+  );
+});
+---
+
+<Layout title="Explore — Cosmic Playground">
+  <h1>Explore</h1>
+  <p class="lede">Search and filter demos; click a card to open the exhibit page.</p>
+
+  <FilterBar
+    query={q}
+    topic={topic}
+    level={level}
+    time={time}
+    status={status}
+    math={math}
+    sort={sort}
+    topics={topics}
+    levels={levels}
+    statuses={statuses}
+  />
+
+  <section class="results" aria-label="Demo results">
+    <div class="results__summary">
+      <strong>{sorted.length}</strong> demo{sorted.length === 1 ? "" : "s"}
+    </div>
+    <div class="results__grid">
+      {sorted.map((d) => (
+        <DemoCard
+          title={d.data.title}
+          href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
+          description={excerptFromBody(d.body)}
+          status={d.data.status}
+          topics={d.data.topics}
+          levels={d.data.levels}
+          timeMinutes={d.data.time_minutes}
+          hasMathMode={d.data.has_math_mode}
+        />
+      ))}
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .lede {
+    margin: 6px 0 14px;
+    color: var(--muted);
+    max-width: 72ch;
+  }
+
+  .results {
+    margin-top: 14px;
+  }
+
+  .results__summary {
+    margin: 8px 0 10px;
+    color: var(--muted);
+  }
+
+  .results__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+  }
+</style>

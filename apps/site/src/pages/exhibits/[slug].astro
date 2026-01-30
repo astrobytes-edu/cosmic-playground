@@ -1,0 +1,146 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import IframeStage from "../../components/IframeStage.astro";
+import TagPill from "../../components/TagPill.astro";
+
+export async function getStaticPaths() {
+  const demos = await getCollection("demos");
+  return demos.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry }
+  }));
+}
+
+const { entry } = Astro.props;
+
+const demoHref = `${import.meta.env.BASE_URL}play/${entry.slug}/`;
+const stationHref = `${import.meta.env.BASE_URL}stations/${entry.slug}/`;
+const instructorHref = `${import.meta.env.BASE_URL}instructor/${entry.slug}/`;
+
+const { Content } = await entry.render();
+---
+
+<Layout title={`${entry.data.title} — Exhibit`}>
+  <header class="exhibit-header">
+    <h1>{entry.data.title}</h1>
+    <div class="badges" aria-label="Demo badges">
+      <TagPill label={entry.data.status} variant={entry.data.status === "stable" ? "info" : "default"} />
+      {entry.data.topics.map((t) => <TagPill label={t} />)}
+      {entry.data.levels.map((l) => <TagPill label={l} />)}
+      <TagPill label={`${entry.data.time_minutes} min`} />
+      {entry.data.has_math_mode ? <TagPill label="math mode" variant="info" /> : null}
+    </div>
+  </header>
+
+  <section class="launch" aria-label="Launch controls">
+    <a class="button" href={demoHref}>Launch demo</a>
+    <a class="button button--ghost" href={demoHref} target="_blank" rel="noreferrer"
+      >Open fullscreen</a
+    >
+    <a class="button button--ghost" href={stationHref}>Station card</a>
+    <a class="button button--ghost" href={instructorHref}>Instructor notes</a>
+  </section>
+
+  <section class="block">
+    <h2>Predict</h2>
+    <p class="prompt">{entry.data.predict_prompt}</p>
+  </section>
+
+  <section class="block">
+    <h2>Learning goals</h2>
+    <ul>
+      {entry.data.learning_goals.map((g) => (
+        <li>{g}</li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Misconceptions targeted</h2>
+    <ul>
+      {entry.data.misconceptions.map((m) => (
+        <li>{m}</li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Play</h2>
+    <ol>
+      {entry.data.play_steps.map((s) => (
+        <li>{s}</li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="block">
+    <h2>Explain</h2>
+    <p class="prompt">{entry.data.explain_prompt}</p>
+  </section>
+
+  <section class="block">
+    <h2>Model notes</h2>
+    <ul>
+      {entry.data.model_notes.map((n) => (
+        <li>{n}</li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>About this demo</h2>
+    <Content />
+  </section>
+
+  <IframeStage src={demoHref} title={entry.data.title} openHref={demoHref} />
+</Layout>
+
+<style>
+  .exhibit-header h1 {
+    margin: 0;
+    font-size: 1.9rem;
+  }
+
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .launch {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .block {
+    margin-top: 18px;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .block h2 {
+    margin: 0 0 8px;
+  }
+
+  .prompt {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  ul,
+  ol {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--muted);
+  }
+
+  li {
+    margin: 6px 0;
+  }
+</style>

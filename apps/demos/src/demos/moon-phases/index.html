@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moon Phases (Pilot) — Cosmic Playground</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main id="cp-demo" class="app">
+      <header class="header">
+        <h1>Moon Phases (Pilot)</h1>
+        <p class="subtitle">
+          Adjust the phase angle and watch the illuminated fraction change.
+        </p>
+      </header>
+
+      <section class="panel">
+        <label class="control">
+          <span>Phase angle (degrees)</span>
+          <input id="angle" type="range" min="0" max="360" value="90" step="1" />
+        </label>
+
+        <div class="readouts">
+          <div class="readout">
+            <div class="readout__label">Angle</div>
+            <div class="readout__value"><span id="angleValue"></span>°</div>
+          </div>
+          <div class="readout">
+            <div class="readout__label">Illuminated</div>
+            <div class="readout__value"><span id="illumValue"></span>%</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stage" aria-label="Moon phase visualization">
+        <canvas id="moonCanvas" width="420" height="420"></canvas>
+      </section>
+    </main>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
+

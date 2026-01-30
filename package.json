@@ -1,0 +1,14 @@
+{
+  "name": "cosmic-playground",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@9.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "corepack pnpm -C apps/site dev",
+    "build": "node scripts/build.mjs",
+    "lint": "echo \"lint: (placeholder)\"",
+    "typecheck": "corepack pnpm -r typecheck",
+    "test": "echo \"test: (placeholder)\""
+  }
+}

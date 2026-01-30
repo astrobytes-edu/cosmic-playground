@@ -1,0 +1,49 @@
+---
+import "../styles/global.css";
+
+export type LayoutProps = {
+  title?: string;
+};
+
+const { title = "Cosmic Playground" } = Astro.props;
+
+const withBase = (path: string) => {
+  const base = import.meta.env.BASE_URL;
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedBase}${normalizedPath}`;
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href={withBase("")}>Cosmic Playground</a>
+        <nav aria-label="Primary">
+          <a href={withBase("explore/")}>Explore</a>
+          <a href={withBase("playlists/")}>Playlists</a>
+        </nav>
+      </div>
+    </header>
+    <main id="content" class="site-main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <p>
+          Built as a static “interactive museum” for astronomy demos. Instructor
+          notes are public (v0.2 policy).
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
+

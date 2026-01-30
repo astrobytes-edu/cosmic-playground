@@ -1,0 +1,59 @@
+import { defineCollection, z } from "astro:content";
+
+const demos = defineCollection({
+  type: "content",
+  schema: z.object({
+    title: z.string().min(1),
+    status: z.enum(["stable", "beta", "draft"]),
+    levels: z.array(z.enum(["ASTR101", "ASTR201", "Both"])).min(1),
+    topics: z
+      .array(
+        z.enum([
+          "EarthSky",
+          "LightSpectra",
+          "Telescopes",
+          "Orbits",
+          "Stars",
+          "Galaxies",
+          "Cosmology",
+          "DataInference"
+        ])
+      )
+      .min(1),
+    time_minutes: z.number().int().positive(),
+    has_math_mode: z.boolean(),
+    tags: z.array(z.string()).default([]),
+    learning_goals: z.array(z.string().min(1)).min(1),
+    misconceptions: z.array(z.string().min(1)).min(1),
+    predict_prompt: z.string().min(1),
+    play_steps: z.array(z.string().min(1)).min(1),
+    explain_prompt: z.string().min(1),
+    model_notes: z.array(z.string().min(1)).min(1),
+    demo_path: z.string().min(1),
+    station_path: z.string().min(1),
+    instructor_path: z.string().min(1),
+    last_updated: z.string().min(1)
+  })
+});
+
+const playlists = defineCollection({
+  type: "content",
+  schema: z.object({
+    title: z.string().min(1),
+    audience: z.string().min(1),
+    estimated_minutes: z.number().int().positive(),
+    demos: z
+      .array(
+        z.object({
+          slug: z.string().min(1),
+          required: z.boolean(),
+          note: z.string().optional()
+        })
+      )
+      .min(1),
+    overview: z.string().min(1),
+    instructions: z.string().min(1)
+  })
+});
+
+export const collections = { demos, playlists };

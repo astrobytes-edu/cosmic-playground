@@ -1,0 +1,114 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const demos = await getCollection("demos");
+  return demos.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry }
+  }));
+}
+
+const { entry } = Astro.props;
+
+const exhibitHref = `${import.meta.env.BASE_URL}exhibits/${entry.slug}/`;
+---
+
+<Layout title={`${entry.data.title} — Instructor Notes`}>
+  <head>
+    <meta name="robots" content="noindex" />
+  </head>
+
+  <header class="header">
+    <h1>Instructor notes: {entry.data.title}</h1>
+    <p class="meta">
+      Public notes (v0.2 policy). Not linked from primary navigation.
+    </p>
+    <p class="meta">Exhibit: <a href={exhibitHref}>{exhibitHref}</a></p>
+  </header>
+
+  <section class="block">
+    <h2>Overview</h2>
+    <p>
+      What this demo is for, how long it takes, and what misconception it targets.
+    </p>
+    <ul>
+      {entry.data.misconceptions.map((m) => (
+        <li>{m}</li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Activities</h2>
+    <p>Suggested flow (edit as needed):</p>
+    <ol>
+      <li>Students write a prediction before touching controls.</li>
+      <li>Students run the play steps in pairs and record evidence.</li>
+      <li>Whole-class debrief: claim + evidence, then model limitations.</li>
+    </ol>
+  </section>
+
+  <section class="block">
+    <h2>Assessment</h2>
+    <ul>
+      <li>1–2 sentence explanation aligned to the “Explain” prompt.</li>
+      <li>One claim + one piece of evidence from the demo.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Model notes (deeper)</h2>
+    <ul>
+      {entry.data.model_notes.map((n) => (
+        <li>{n}</li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Backlog</h2>
+    <ul>
+      <li>Add a proper instructor content collection for richer notes.</li>
+      <li>Improve station card parameter table to be demo-driven.</li>
+      <li>Add export-results scaffolding once runtime lands.</li>
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .header h1 {
+    margin: 0;
+    font-size: 1.7rem;
+  }
+
+  .meta {
+    margin: 8px 0 0;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
+  .block {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .block h2 {
+    margin: 0 0 8px;
+  }
+
+  ul,
+  ol {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--muted);
+  }
+
+  li {
+    margin: 6px 0;
+  }
+</style>

@@ -1,0 +1,202 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const demos = await getCollection("demos");
+  return demos.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry }
+  }));
+}
+
+const { entry } = Astro.props;
+
+const exhibitHref = `${import.meta.env.BASE_URL}exhibits/${entry.slug}/`;
+---
+
+<Layout title={`${entry.data.title} — Station Card`}>
+  <article class="station">
+    <header class="station__header">
+      <h1>{entry.data.title}</h1>
+      <p class="meta">
+        {entry.data.topics.join(" • ")} • {entry.data.levels.join(" • ")} •{" "}
+        {entry.data.time_minutes} min
+      </p>
+      <p class="link">
+        Exhibit: <a href={exhibitHref}>{exhibitHref}</a>
+      </p>
+    </header>
+
+    <section class="box">
+      <h2>Context</h2>
+      <p>
+        This station is designed to be completed quickly. Write a prediction,
+        follow the steps, then make a claim supported by evidence from the demo.
+      </p>
+    </section>
+
+    <section class="box">
+      <h2>Predict</h2>
+      <p class="prompt">{entry.data.predict_prompt}</p>
+      <div class="blank">Prediction (1 sentence):</div>
+      <div class="blank blank--tall"></div>
+    </section>
+
+    <section class="box">
+      <h2>Play steps</h2>
+      <ol>
+        {entry.data.play_steps.map((s) => (
+          <li>{s}</li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="box">
+      <h2>Parameter table</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Value</th>
+            <th>What to notice</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>(example) Phase angle (°)</td>
+            <td>________</td>
+            <td>How the illuminated fraction changes</td>
+          </tr>
+          <tr>
+            <td>(your choice)</td>
+            <td>________</td>
+            <td>________</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="box">
+      <h2>Explain</h2>
+      <p class="prompt">{entry.data.explain_prompt}</p>
+      <div class="blank">Explanation (2–3 sentences):</div>
+      <div class="blank blank--tall"></div>
+    </section>
+
+    <section class="box">
+      <h2>Claim + evidence</h2>
+      <div class="blank">Claim:</div>
+      <div class="blank blank--tall"></div>
+      <div class="blank">Evidence (what you observed):</div>
+      <div class="blank blank--tall"></div>
+    </section>
+  </article>
+</Layout>
+
+<style>
+  .station {
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .station__header h1 {
+    margin: 0;
+    font-size: 1.7rem;
+  }
+
+  .meta {
+    margin: 8px 0 0;
+    color: var(--muted);
+  }
+
+  .link {
+    margin: 8px 0 0;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
+  .box {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .box h2 {
+    margin: 0 0 8px;
+  }
+
+  .prompt {
+    font-weight: 600;
+  }
+
+  .blank {
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.26);
+    background: rgba(0, 0, 0, 0.28);
+  }
+
+  .blank--tall {
+    min-height: 72px;
+  }
+
+  ol {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--muted);
+  }
+
+  li {
+    margin: 6px 0;
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+
+  th,
+  td {
+    border: 1px solid var(--border);
+    padding: 8px;
+    vertical-align: top;
+  }
+
+  th {
+    text-align: left;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  @media print {
+    :global(.site-header),
+    :global(.site-footer),
+    :global(.skip-link) {
+      display: none !important;
+    }
+
+    :global(body) {
+      background: white !important;
+      color: black !important;
+    }
+
+    .station {
+      border: 1px solid #000;
+      background: transparent;
+    }
+
+    .blank {
+      border-color: #000;
+      background: transparent;
+    }
+
+    th,
+    td {
+      border-color: #000;
+    }
+  }
+</style>

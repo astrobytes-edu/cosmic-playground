@@ -1,0 +1,11 @@
+node_modules/
+**/node_modules/
+
+.DS_Store
+
+apps/demos/dist/
+apps/site/dist/
+apps/site/.astro/
+
+apps/site/public/play/
+

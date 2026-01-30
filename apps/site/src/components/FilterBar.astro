@@ -1,0 +1,163 @@
+---
+export type FilterBarProps = {
+  query: string;
+  topic: string;
+  level: string;
+  time: string;
+  status: string;
+  math: string;
+  sort: string;
+  topics: string[];
+  levels: string[];
+  statuses: string[];
+};
+
+const {
+  query,
+  topic,
+  level,
+  time,
+  status,
+  math,
+  sort,
+  topics,
+  levels,
+  statuses
+} = Astro.props as FilterBarProps;
+---
+
+<form class="filter-bar" method="get">
+  <div class="filter-bar__row">
+    <label class="filter-bar__field">
+      <span class="filter-bar__label">Search</span>
+      <input
+        name="q"
+        type="search"
+        value={query}
+        placeholder="title or tag…"
+        autocomplete="off"
+      />
+    </label>
+
+    <label class="filter-bar__field">
+      <span class="filter-bar__label">Topic</span>
+      <select name="topic">
+        <option value="">All</option>
+        {topics.map((t) => (
+          <option value={t} selected={t === topic}>
+            {t}
+          </option>
+        ))}
+      </select>
+    </label>
+
+    <label class="filter-bar__field">
+      <span class="filter-bar__label">Level</span>
+      <select name="level">
+        <option value="">All</option>
+        {levels.map((l) => (
+          <option value={l} selected={l === level}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </label>
+  </div>
+
+  <div class="filter-bar__row">
+    <label class="filter-bar__field">
+      <span class="filter-bar__label">Time</span>
+      <select name="time">
+        <option value="">Any</option>
+        <option value="lt10" selected={time === "lt10"}>≤10</option>
+        <option value="10to20" selected={time === "10to20"}>10–20</option>
+        <option value="gt20" selected={time === "gt20"}>20+</option>
+      </select>
+    </label>
+
+    <label class="filter-bar__field">
+      <span class="filter-bar__label">Status</span>
+      <select name="status">
+        <option value="">Any</option>
+        {statuses.map((s) => (
+          <option value={s} selected={s === status}>
+            {s}
+          </option>
+        ))}
+      </select>
+    </label>
+
+    <label class="filter-bar__field">
+      <span class="filter-bar__label">Math mode</span>
+      <select name="math">
+        <option value="">Any</option>
+        <option value="yes" selected={math === "yes"}>Yes</option>
+        <option value="no" selected={math === "no"}>No</option>
+      </select>
+    </label>
+
+    <label class="filter-bar__field">
+      <span class="filter-bar__label">Sort</span>
+      <select name="sort">
+        <option value="recommended" selected={sort === "recommended"}>
+          Recommended
+        </option>
+        <option value="shortest" selected={sort === "shortest"}>Shortest</option>
+        <option value="newest" selected={sort === "newest"}>Newest</option>
+      </select>
+    </label>
+
+    <button class="filter-bar__submit" type="submit">Apply</button>
+  </div>
+</form>
+
+<style>
+  .filter-bar {
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--panel);
+    display: grid;
+    gap: 10px;
+  }
+
+  .filter-bar__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    align-items: end;
+  }
+
+  .filter-bar__field {
+    display: grid;
+    gap: 6px;
+  }
+
+  .filter-bar__label {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  input,
+  select {
+    padding: 10px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.35);
+    color: inherit;
+  }
+
+  .filter-bar__submit {
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(138, 162, 255, 0.44);
+    background: rgba(138, 162, 255, 0.2);
+    color: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .filter-bar__submit:hover {
+    background: rgba(138, 162, 255, 0.28);
+  }
+</style>

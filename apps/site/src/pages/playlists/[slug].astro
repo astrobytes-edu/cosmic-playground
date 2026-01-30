@@ -1,0 +1,127 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import DemoCard from "../../components/DemoCard.astro";
+
+export async function getStaticPaths() {
+  const playlists = await getCollection("playlists");
+  return playlists.map((playlist) => ({
+    params: { slug: playlist.slug },
+    props: { playlist }
+  }));
+}
+
+const { playlist } = Astro.props;
+
+const demos = await getCollection("demos");
+const demoBySlug = new Map<string, (typeof demos)[number]>(
+  demos.map((d) => [d.slug, d])
+);
+
+function excerptFromBody(body: string) {
+  const firstLine = body
+    .split("\n")
+    .map((l) => l.trim())
+    .find((l) => l.length > 0 && !l.startsWith("---"));
+  if (!firstLine) return "—";
+  return firstLine.replace(/^#+\s*/, "").slice(0, 140);
+}
+
+const resolved = playlist.data.demos
+  .map((d) => ({ ...d, entry: demoBySlug.get(d.slug) }))
+  .filter((d) => d.entry);
+
+const { Content } = await playlist.render();
+---
+
+<Layout title={`${playlist.data.title} — Playlist`}>
+  <header class="header">
+    <h1>{playlist.data.title}</h1>
+    <p class="meta">
+      {playlist.data.audience} • ~{playlist.data.estimated_minutes} min
+    </p>
+    <p class="overview">{playlist.data.overview}</p>
+  </header>
+
+  <section class="block">
+    <h2>Instructions</h2>
+    <pre class="instructions">{playlist.data.instructions}</pre>
+  </section>
+
+  <section class="block">
+    <h2>Demos</h2>
+    <div class="grid">
+      {resolved.map(({ entry, required, note }) => (
+        <div class="item">
+          <DemoCard
+            title={entry!.data.title}
+            href={`${import.meta.env.BASE_URL}exhibits/${entry!.slug}/`}
+            description={excerptFromBody(entry!.body)}
+            status={entry!.data.status}
+            topics={entry!.data.topics}
+            levels={entry!.data.levels}
+            timeMinutes={entry!.data.time_minutes}
+            hasMathMode={entry!.data.has_math_mode}
+          />
+          <p class="item-meta">
+            {required ? <strong>Required</strong> : <span>Optional</span>}
+            {note ? <span> — {note}</span> : null}
+          </p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Notes</h2>
+    <Content />
+  </section>
+</Layout>
+
+<style>
+  .header h1 {
+    margin: 0;
+    font-size: 1.9rem;
+  }
+
+  .meta {
+    margin: 8px 0 0;
+    color: var(--muted);
+  }
+
+  .overview {
+    margin: 10px 0 0;
+    max-width: 72ch;
+  }
+
+  .block {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .instructions {
+    margin: 0;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--border);
+    color: var(--text);
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  .item-meta {
+    margin: 8px 2px 0;
+    color: var(--muted);
+  }
+</style>
