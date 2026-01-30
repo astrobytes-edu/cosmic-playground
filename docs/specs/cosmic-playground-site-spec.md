@@ -299,8 +299,17 @@ Every demo must support:
 
 2. **Export results**
 
-   * `exportResults(): { parameters, readouts, notes, timestamp }`
-   * “Copy results” button copies a human-readable block to clipboard.
+   * Preferred (v1) export payload:
+
+     * `exportResults(): { version: 1, timestamp, parameters, readouts, notes }`
+     * `parameters` and `readouts` are ordered row arrays: `{ name, value, note? }[]`
+
+   * Backward-compatible legacy payload (allowed during migration):
+
+     * `exportResults(): { timestamp, parameters, readouts, notes }`
+     * `parameters` and `readouts` are string maps: `Record<string, string>`
+
+   * “Copy results” button copies a human-readable block to clipboard with a stable header that includes an explicit export version marker (e.g. “(v1)”).
 
 3. **Model note block**
 
