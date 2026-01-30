@@ -1,5 +1,6 @@
 ---
 import TagPill from "./TagPill.astro";
+import TopicIcon from "./TopicIcon.astro";
 
 export type DemoCardProps = {
   title: string;
@@ -41,7 +42,11 @@ const {
 
     <footer class="demo-card__footer">
       <div class="demo-card__badges" aria-label="Tags">
-        {topics.map((t) => <TagPill label={t} tone="blue" />)}
+        {topics.map((t) => (
+          <TagPill label={t} tone="blue">
+            <TopicIcon slot="icon" topic={t} />
+          </TagPill>
+        ))}
         {levels.map((l) => <TagPill label={l} tone="default" />)}
         <TagPill label={`${timeMinutes} min`} tone="default" />
       </div>

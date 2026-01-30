@@ -185,4 +185,12 @@ test.describe("Cosmic Playground smoke", () => {
     const searchIcon = page.locator(".filter-bar svg");
     await expect(searchIcon.first()).toBeVisible();
   });
+
+  test("Topic badges show icons", async ({ page }) => {
+    await page.goto("explore/");
+
+    // Topic badges should have SVG icons
+    const topicBadge = page.locator('.cp-badge[data-tone="blue"] svg');
+    await expect(topicBadge.first()).toBeVisible();
+  });
 });

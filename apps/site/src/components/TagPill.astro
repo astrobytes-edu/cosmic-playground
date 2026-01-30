@@ -1,12 +1,21 @@
 ---
-export type TagPillProps = {
+interface Props {
   label: string;
   tone?: "default" | "teal" | "violet" | "blue" | "magenta";
-};
+}
 
-const { label, tone = "default" } = Astro.props as TagPillProps;
+const { label, tone = "default" } = Astro.props;
 ---
 
 <span class="cp-badge" data-tone={tone === "default" ? undefined : tone}>
+  <slot name="icon" />
   {label}
 </span>
+
+<style>
+  .cp-badge {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+  }
+</style>

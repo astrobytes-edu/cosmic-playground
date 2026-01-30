@@ -1,0 +1,28 @@
+---
+import {
+  Globe, Sparkles, Telescope, Orbit,
+  Star, RotateCcw, Infinity, BarChart3
+} from "lucide-astro";
+
+interface Props {
+  topic: string;
+  size?: number;
+}
+
+const { topic, size = 14 } = Astro.props;
+
+const topicIcons: Record<string, any> = {
+  EarthSky: Globe,
+  LightSpectra: Sparkles,
+  Telescopes: Telescope,
+  Orbits: Orbit,
+  Stars: Star,
+  Galaxies: RotateCcw,
+  Cosmology: Infinity,
+  DataInference: BarChart3,
+};
+
+const IconComponent = topicIcons[topic];
+---
+
+{IconComponent && <IconComponent size={size} aria-hidden="true" />}
