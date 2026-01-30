@@ -240,4 +240,14 @@ test.describe("Cosmic Playground smoke", () => {
     // Links should have a color transition defined
     expect(transition).toContain("color");
   });
+
+  test("Badges have hover transition", async ({ page }) => {
+    await page.goto("explore/");
+
+    const badge = page.locator(".cp-badge").first();
+    const transition = await badge.evaluate((el) =>
+      window.getComputedStyle(el).transition
+    );
+    expect(transition).toContain("background");
+  });
 });

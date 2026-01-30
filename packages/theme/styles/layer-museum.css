@@ -50,14 +50,21 @@
 
 .cp-badge {
   display: inline-flex;
-  gap: 8px;
+  gap: 4px;
   align-items: center;
   padding: 4px 10px;
   border-radius: 999px;
   border: 1px solid var(--cp-border);
   background: rgba(255, 255, 255, 0.04);
   color: var(--cp-muted);
-  font-size: 0.875rem;
+  font-size: var(--cp-text-sm);
+  transition:
+    background var(--cp-transition-fast) var(--cp-ease-out),
+    border-color var(--cp-transition-fast) var(--cp-ease-out);
+}
+
+.cp-badge:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .cp-badge[data-tone="teal"] {
