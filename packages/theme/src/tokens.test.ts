@@ -42,4 +42,17 @@ describe("Design tokens", () => {
       expect(css).toContain("--cp-font-bold");
     });
   });
+
+  describe("Transition tokens", () => {
+    it("defines transition duration tokens", () => {
+      expect(css).toContain("--cp-transition-fast");
+      expect(css).toContain("--cp-transition-normal");
+      expect(css).toContain("--cp-transition-slow");
+    });
+
+    it("defines easing tokens", () => {
+      expect(css).toContain("--cp-ease-out");
+      expect(css).toContain("--cp-ease-in-out");
+    });
+  });
 });

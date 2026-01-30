@@ -58,6 +58,13 @@
   --cp-font-semibold: 600;
   --cp-font-bold: 700;
 
+  /* ---------- Transitions ---------- */
+  --cp-transition-fast: 150ms;
+  --cp-transition-normal: 200ms;
+  --cp-transition-slow: 300ms;
+  --cp-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --cp-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
   /* ---------- Spacing ---------- */
   --cp-space-1: 4px;
   --cp-space-2: 8px;
