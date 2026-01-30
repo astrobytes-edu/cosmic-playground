@@ -159,3 +159,195 @@ Expected: PASS.
 
 Run: `git push`
 
+---
+
+## Task 6: Define the “pilot demo quality bar” + add enforcement
+
+**Files:**
+- Create: `docs/specs/cosmic-playground-pilot-quality-bar.md`
+
+**Step 1: Write the pilot quality bar spec**
+
+Add a checklist for an exemplar demo (v1 pragmatic):
+- A11y + keyboard: labeled controls, visible focus, status region for copy, no keyboard traps
+- Theming: no hardcoded colors; stage + UI respects theme tokens/CSS variables
+- Export behavior: typed export payload with stable clipboard text format (see Task 7)
+- Model notes: brief assumptions + limitations; “what to notice” present
+- Performance: smooth on typical laptops; no layout thrash; lightweight stage
+- Mobile layout: controls/readouts usable at narrow widths; stage scales (no horizontal scroll)
+
+If any item deviates from `docs/specs/cosmic-playground-site-spec.md`, add a short **Spec Deviations** note in this new spec.
+
+**Step 2: Commit**
+
+Run:
+```bash
+git add docs/specs/cosmic-playground-pilot-quality-bar.md
+git commit -m "spec: define pilot demo quality bar checklist"
+```
+
+---
+
+## Task 7: Tighten the export-results standard in `@cosmic/runtime`
+
+**Files:**
+- Modify: `packages/runtime/src/index.ts`
+- Modify: `apps/demos/src/demos/moon-phases/main.ts`
+- Modify: `apps/demos/src/shared/stub-demo.ts`
+
+**Step 1: Define explicit export types + stable clipboard format**
+
+In `packages/runtime/src/index.ts`, introduce:
+- `ExportRow` (name/value, optional note)
+- `ExportPayloadV1` (version marker, timestamp, parameters/readouts/notes)
+- `formatExportText()` that produces stable headings + row lines
+
+Keep a small shim for the existing `ExportResults` shape (records) so existing demos can be migrated gradually.
+
+**Step 2: Update callsites**
+
+Update `moon-phases` and `stub-demo` to call `runtime.copyResults()` with the new payload shape (using arrays for ordering).
+
+**Step 3: Run**
+
+Run:
+```bash
+corepack pnpm build
+corepack pnpm -C apps/site test:e2e
+```
+
+Expected: PASS; Playwright export test should fail meaningfully if formatting changes.
+
+**Step 4: Commit**
+
+Run:
+```bash
+git add packages/runtime/src/index.ts apps/demos/src/demos/moon-phases/main.ts apps/demos/src/shared/stub-demo.ts
+git commit -m "feat(runtime): define typed export payload and stable clipboard format"
+```
+
+---
+
+## Task 8: Make station cards optionally demo-driven (keep v0.1 compatibility)
+
+**Files:**
+- Modify: `apps/site/src/content/config.ts`
+- Modify: `apps/site/src/pages/stations/[slug].astro`
+- Modify: `apps/site/src/content/demos/binary-orbits.md`
+
+**Step 1: Extend demos content schema**
+
+Add optional `station_params` to the `demos` collection:
+```ts
+station_params: z
+  .array(z.object({ parameter: z.string().min(1), value: z.string().min(1), notice: z.string().min(1) }))
+  .optional()
+```
+
+**Step 2: Render real rows when provided**
+
+In `apps/site/src/pages/stations/[slug].astro`, render:
+- `entry.data.station_params` rows if present and non-empty
+- Otherwise fall back to the existing placeholder rows
+
+**Step 3: Add starter rows for binary-orbits**
+
+Update `apps/site/src/content/demos/binary-orbits.md` to include 1–2 suggested parameter rows aligned to the migrated demo controls.
+
+**Step 4: Run**
+
+Run:
+```bash
+corepack pnpm build
+corepack pnpm -C apps/site test:e2e
+```
+
+Expected: PASS.
+
+**Step 5: Commit**
+
+Run:
+```bash
+git add apps/site/src/content/config.ts apps/site/src/pages/stations/[slug].astro apps/site/src/content/demos/binary-orbits.md
+git commit -m "feat(site): render station parameter rows from demo metadata"
+```
+
+---
+
+## Task 9: Migrate `binary-orbits` from stub → real (new export + pilot bar)
+
+**Files:**
+- Modify: `apps/demos/src/demos/binary-orbits/index.html`
+- Modify: `apps/demos/src/demos/binary-orbits/main.ts`
+- Modify: `apps/demos/src/demos/binary-orbits/style.css`
+- Modify: `apps/site/src/content/demos/binary-orbits.md`
+
+**Step 1: Replace stub UI with a minimal “real” instrument**
+
+Implement:
+- Stage: canvas animation of two bodies orbiting a barycenter
+- Controls: 1–2 inputs (e.g., mass ratio and separation)
+- Readouts: at least 2 values (e.g., barycenter offset, period; optionally speed)
+- Model notes: assumptions/limitations; “what to notice” in readouts panel
+- Export: `Copy results` uses `@cosmic/runtime` new export payload
+
+Constraints:
+- No hardcoded colors; use CSS variables/tokens in CSS + canvas theme lookup
+- Keep required instrument markers: `#cp-demo`, `#copyResults`, `#status`, `.cp-demo__drawer`
+
+**Step 2: Run**
+
+Run:
+```bash
+corepack pnpm build
+corepack pnpm -C apps/site test:e2e
+```
+
+Expected: PASS; pilot export test passes for `binary-orbits`.
+
+**Step 3: Commit**
+
+Run:
+```bash
+git add apps/demos/src/demos/binary-orbits/index.html apps/demos/src/demos/binary-orbits/main.ts apps/demos/src/demos/binary-orbits/style.css apps/site/src/content/demos/binary-orbits.md
+git commit -m "feat(demo): migrate binary-orbits to pilot-quality instrument"
+```
+
+---
+
+## Task 10: Final verification + push (after Tasks 6–9)
+
+**Step 0: Add an enforceable automated check**
+
+Add a Playwright test that asserts a pilot-quality export on `binary-orbits`:
+- Click “Copy results”
+- Assert the UI status becomes “Copied…”
+- Assert the exported text contains:
+  - A fixed header including an export version marker
+  - `Timestamp:` line
+  - `Parameters:` and `Readouts:` sections
+  - At least 2 readout lines
+
+Implementation approach: add an init script to stub `navigator.clipboard.writeText` and capture the last copied string to `window.__cpLastClipboardText`.
+
+Commit:
+```bash
+git add apps/site/tests/smoke.spec.ts
+git commit -m "test(e2e): enforce pilot-quality export for binary-orbits"
+```
+
+**Step 1: Full build**
+
+Run: `corepack pnpm build`
+
+Expected: PASS.
+
+**Step 2: E2E**
+
+Run: `corepack pnpm -C apps/site test:e2e`
+
+Expected: PASS.
+
+**Step 3: Push**
+
+Run: `git push origin main`
