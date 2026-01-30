@@ -115,10 +115,16 @@ h4 { font-size: var(--cp-text-xl); }
 
 a {
   color: var(--cp-accent3);
+  text-decoration: none;
+  transition: color var(--cp-transition-fast) var(--cp-ease-out);
 }
 
 a:hover {
-  filter: brightness(1.1);
+  color: color-mix(in srgb, var(--cp-accent3) 80%, white);
+}
+
+a:active {
+  color: var(--cp-accent3);
 }
 
 :focus-visible {

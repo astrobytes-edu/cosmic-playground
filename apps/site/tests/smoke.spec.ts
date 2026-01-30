@@ -229,4 +229,15 @@ test.describe("Cosmic Playground smoke", () => {
     await expect(activeLink).toBeVisible();
     await expect(activeLink).toContainText("Explore");
   });
+
+  test("Links have transitions", async ({ page }) => {
+    await page.goto("explore/");
+
+    const link = page.locator("a").first();
+    const transition = await link.evaluate((el) =>
+      window.getComputedStyle(el).transition
+    );
+    // Links should have a color transition defined
+    expect(transition).toContain("color");
+  });
 });
