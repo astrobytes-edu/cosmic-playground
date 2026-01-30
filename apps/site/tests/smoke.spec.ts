@@ -166,4 +166,15 @@ test.describe("Cosmic Playground smoke", () => {
     const count = await page.evaluate(() => (window as any).__cpRafCount);
     expect(count, "requestAnimationFrame should not loop under reduced motion").toBeLessThanOrEqual(1);
   });
+
+  test("Base typography uses design tokens", async ({ page }) => {
+    await page.goto("explore/");
+
+    const body = page.locator("body");
+    const fontSize = await body.evaluate((el) =>
+      window.getComputedStyle(el).fontSize
+    );
+    // 1.125rem = 18px at default browser settings
+    expect(parseInt(fontSize)).toBeGreaterThanOrEqual(18);
+  });
 });

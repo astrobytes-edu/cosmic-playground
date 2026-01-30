@@ -99,7 +99,19 @@ body {
   background: var(--cp-bg0);
   color: var(--cp-text);
   font-family: var(--cp-font-sans);
+  font-size: var(--cp-text-md);
+  line-height: var(--cp-leading-normal);
 }
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: var(--cp-leading-tight);
+  font-weight: var(--cp-font-semibold);
+}
+
+h1 { font-size: var(--cp-text-4xl); }
+h2 { font-size: var(--cp-text-3xl); }
+h3 { font-size: var(--cp-text-2xl); }
+h4 { font-size: var(--cp-text-xl); }
 
 a {
   color: var(--cp-accent3);
