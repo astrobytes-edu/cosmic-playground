@@ -177,4 +177,12 @@ test.describe("Cosmic Playground smoke", () => {
     // 1.125rem = 18px at default browser settings
     expect(parseInt(fontSize)).toBeGreaterThanOrEqual(18);
   });
+
+  test("Icon component renders SVG", async ({ page }) => {
+    await page.goto("explore/");
+
+    // After we add icons, search input should have search icon
+    const searchIcon = page.locator(".filter-bar svg");
+    await expect(searchIcon.first()).toBeVisible();
+  });
 });

@@ -1,4 +1,6 @@
 ---
+import Icon from "./Icon.astro";
+
 export type FilterBarProps = {
   query: string;
   topic: string;
@@ -30,13 +32,16 @@ const {
   <div class="filter-bar__row">
     <label class="filter-bar__field">
       <span class="filter-bar__label">Search</span>
-      <input
-        name="q"
-        type="search"
-        value={query}
-        placeholder="title or tag…"
-        autocomplete="off"
-      />
+      <div class="filter-bar__search">
+        <Icon name="Search" size={18} class="filter-bar__search-icon" />
+        <input
+          name="q"
+          type="search"
+          value={query}
+          placeholder="title or tag…"
+          autocomplete="off"
+        />
+      </div>
     </label>
 
     <label class="filter-bar__field">
@@ -133,6 +138,23 @@ const {
   .filter-bar__label {
     font-size: 0.9rem;
     color: var(--cp-muted);
+  }
+
+  .filter-bar__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .filter-bar__search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--cp-muted);
+    pointer-events: none;
+  }
+
+  .filter-bar__search input {
+    padding-left: 40px;
   }
 
   input,

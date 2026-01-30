@@ -1,0 +1,28 @@
+---
+import {
+  Search, Filter, X, Check,
+  ChevronRight, ChevronDown,
+  ExternalLink, Copy, Printer, Maximize,
+  Clock, GraduationCap, FlaskConical
+} from "lucide-astro";
+
+interface Props {
+  name: string;
+  size?: number;
+  class?: string;
+  "aria-hidden"?: boolean;
+}
+
+const { name, size = 20, class: className, "aria-hidden": ariaHidden = true } = Astro.props;
+
+const icons: Record<string, any> = {
+  Search, Filter, X, Check,
+  ChevronRight, ChevronDown,
+  ExternalLink, Copy, Printer, Maximize,
+  Clock, GraduationCap, FlaskConical
+};
+
+const IconComponent = icons[name];
+---
+
+{IconComponent && <IconComponent size={size} class={className} aria-hidden={ariaHidden} />}

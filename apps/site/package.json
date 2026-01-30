@@ -6,7 +6,8 @@
   "dependencies": {
     "@cosmic/theme": "workspace:*",
     "astro": "^4.16.0",
-    "katex": "^0.16.28"
+    "katex": "^0.16.28",
+    "lucide-astro": "^0.556.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.0",
