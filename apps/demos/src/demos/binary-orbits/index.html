@@ -11,10 +11,21 @@
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Binary Orbits: Two-Body Dance</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Explore how two masses orbit a shared center of mass.</p>
-          <div class="cp-callout" data-kind="model">
-            This demo is currently a stub while we migrate the legacy version into the new runtime.
-          </div>
+          <p class="cp-muted">
+            Adjust the mass ratio and separation to see how two bodies orbit a shared barycenter.
+          </p>
+
+          <label class="control">
+            <span>Mass ratio (m₂/m₁)</span>
+            <input id="massRatio" type="range" min="0.2" max="5" value="1" step="0.1" />
+            <span class="control__value"><span id="massRatioValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Separation (a, arbitrary units)</span>
+            <input id="separation" type="range" min="1" max="8" value="4" step="0.1" />
+            <span class="control__value"><span id="separationValue"></span></span>
+          </label>
 
           <button id="copyResults" class="cp-action" type="button">Copy results</button>
           <p id="status" class="cp-status" role="status" aria-live="polite"></p>
@@ -27,28 +38,26 @@
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
-        <div class="cp-stage__inner">
-          <p class="cp-stage__headline">Migration pending</p>
-          <p class="cp-muted">
-            This space will host the interactive visualization once the demo is migrated.
-          </p>
-        </div>
+      <section class="cp-demo__stage cp-stage stage" aria-label="Binary orbit visualization">
+        <canvas id="orbitCanvas" width="520" height="520"></canvas>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Readouts and “what to notice” will live here once migrated.</p>
           <div class="cp-readout">
-            <div class="cp-readout__label">(example) Separation</div>
-            <div class="cp-readout__value">—</div>
+            <div class="cp-readout__label">Barycenter offset from m₁</div>
+            <div class="cp-readout__value"><span id="baryOffsetValue"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Model period</div>
+            <div class="cp-readout__value"><span id="periodValue"></span></div>
           </div>
           <div class="cp-notice">
             <h3>What to notice</h3>
             <ul>
-              <li>Both bodies move; the heavier one moves less, not zero.</li>
-              <li>The center of mass can lie outside the larger body in some cases.</li>
+              <li>Both bodies move; the heavier one moves less, but it doesn’t stay perfectly fixed.</li>
+              <li>Changing separation affects the period strongly (in this simplified circular model).</li>
             </ul>
           </div>
         </div>
@@ -57,8 +66,9 @@
       <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
         <strong>Model notes</strong>
         <ul>
-          <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-          <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+          <li>We assume perfectly circular orbits and point masses (no size, no tides, no relativity).</li>
+          <li>Units are “model units”: we set G = 1, so the period is in arbitrary time units.</li>
+          <li>This is a visualization aid, not a full N-body integrator or a measured astrophysical binary.</li>
         </ul>
       </section>
     </div>

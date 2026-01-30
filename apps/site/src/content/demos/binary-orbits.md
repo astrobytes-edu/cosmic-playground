@@ -26,11 +26,12 @@ station_params:
     notice: "Period changes quickly with distance (in this simplified circular model)."
 explain_prompt: "Explain how the center of mass helps you understand the motion of both bodies."
 model_notes:
-  - "This is currently a stub while the legacy demo is migrated into the new runtime."
+  - "This pilot assumes perfectly circular orbits and point masses (no eccentricity, tides, or relativity)."
+  - "Units are model units with G = 1; period and distances are not calibrated to real systems."
 demo_path: "/play/binary-orbits/"
 station_path: "/stations/binary-orbits/"
 instructor_path: "/instructor/binary-orbits/"
 last_updated: "2026-01-30"
 ---
 
-This demo will be migrated into the Cosmic Playground runtime; for now it provides a placeholder `/play/` target.
+This pilot demo visualizes two masses orbiting a shared barycenter. It emphasizes *qualitative* relationships (how the barycenter shifts and how the period changes with separation) rather than modeling a specific astrophysical binary.

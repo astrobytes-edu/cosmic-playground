@@ -1,2 +1,32 @@
 @import "../../shared/stub-demo.css";
 
+.control {
+  display: grid;
+  gap: 8px;
+}
+
+.control__value {
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+input[type="range"]:focus-visible {
+  outline: 3px solid var(--cp-focus);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+.stage {
+  display: grid;
+  place-items: center;
+  padding: var(--cp-space-4);
+}
+
+canvas {
+  max-width: 100%;
+  height: auto;
+}
