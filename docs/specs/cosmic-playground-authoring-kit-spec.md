@@ -62,7 +62,22 @@ Minimum UI contract:
 
 Minimum code contract:
 
-- a function named `exportResults()` that returns `{ parameters, readouts, notes, timestamp }`
+- a function named `exportResults()` that returns a results payload (preferred v1)
+- new demos should return ordered rows (v1):
+
+```ts
+function exportResults() {
+  return {
+    version: 1,
+    timestamp: new Date().toISOString(),
+    parameters: [{ name: "Parameter name", value: "Value", note: "Optional note" }],
+    readouts: [{ name: "Readout name", value: "Value", note: "Optional note" }],
+    notes: ["Short model caveats or assumptions."]
+  };
+}
+```
+
+- legacy demos may return the migration shape `{ parameters, readouts, notes, timestamp }` where `parameters`/`readouts` are string maps; runtime normalizes this during clipboard export.
 - the demo registers a global hook (for smoke tests):
 
 ```ts
@@ -97,3 +112,18 @@ Playwright smoke tests must:
   - load `/play/<slug>/`
   - assert `#cp-demo` exists
   - fail on console errors
+
+---
+
+## 7. Station card parameter rows (optional)
+
+Station cards can render a real parameter table (instead of placeholders) when the demo metadata includes:
+
+```yml
+station_params:
+  - parameter: "Parameter label"
+    value: "________"
+    notice: "What to notice"
+```
+
+If `station_params` is omitted, station cards fall back to the placeholder rows.
