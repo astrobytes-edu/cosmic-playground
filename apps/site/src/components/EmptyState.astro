@@ -1,0 +1,48 @@
+---
+import { SearchX } from "lucide-astro";
+
+interface Props {
+  title?: string;
+  message?: string;
+}
+
+const {
+  title = "No demos found",
+  message = "Try adjusting your filters or search query."
+} = Astro.props;
+---
+
+<div class="empty-state">
+  <SearchX size={48} aria-hidden="true" />
+  <h3>{title}</h3>
+  <p>{message}</p>
+  <slot />
+</div>
+
+<style>
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--cp-space-4);
+    padding: var(--cp-space-7);
+    text-align: center;
+    color: var(--cp-muted);
+  }
+
+  .empty-state h3 {
+    margin: 0;
+    font-size: var(--cp-text-xl);
+    color: var(--cp-text);
+  }
+
+  .empty-state p {
+    margin: 0;
+    max-width: 40ch;
+  }
+
+  .empty-state :global(svg) {
+    opacity: 0.5;
+  }
+</style>

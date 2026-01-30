@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import DemoCard from "../../components/DemoCard.astro";
 import FilterBar from "../../components/FilterBar.astro";
+import EmptyState from "../../components/EmptyState.astro";
 
 const demos = await getCollection("demos");
 
@@ -92,20 +93,24 @@ const sorted = [...filtered].sort((a, b) => {
     <div class="results__summary">
       <strong>{sorted.length}</strong> demo{sorted.length === 1 ? "" : "s"}
     </div>
-    <div class="results__grid">
-      {sorted.map((d) => (
-        <DemoCard
-          title={d.data.title}
-          href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
-          description={excerptFromBody(d.body)}
-          status={d.data.status}
-          topics={d.data.topics}
-          levels={d.data.levels}
-          timeMinutes={d.data.time_minutes}
-          hasMathMode={d.data.has_math_mode}
-        />
-      ))}
-    </div>
+    {sorted.length > 0 ? (
+      <div class="results__grid">
+        {sorted.map((d) => (
+          <DemoCard
+            title={d.data.title}
+            href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
+            description={excerptFromBody(d.body)}
+            status={d.data.status}
+            topics={d.data.topics}
+            levels={d.data.levels}
+            timeMinutes={d.data.time_minutes}
+            hasMathMode={d.data.has_math_mode}
+          />
+        ))}
+      </div>
+    ) : (
+      <EmptyState />
+    )}
   </section>
 </Layout>
 
