@@ -130,14 +130,21 @@ async function handleCopyResults() {
     const frac = illuminatedFraction(angleDeg);
 
     await runtime.copyResults({
-      parameters: {
-        "Phase angle (deg)": `${Math.round(angleDeg)}°`
-      },
-      readouts: {
-        "Illuminated (%)": `${Math.round(frac * 100)}%`
-      },
-      notes: ["This pilot uses a simplified 2D terminator visualization."],
-      timestamp: new Date().toISOString()
+      version: 1,
+      timestamp: new Date().toISOString(),
+      parameters: [
+        {
+          name: "Phase angle (deg)",
+          value: `${Math.round(angleDeg)}°`
+        }
+      ],
+      readouts: [
+        {
+          name: "Illuminated (%)",
+          value: `${Math.round(frac * 100)}%`
+        }
+      ],
+      notes: ["This pilot uses a simplified 2D terminator visualization."]
     });
 
     status.textContent = "Copied results to clipboard.";

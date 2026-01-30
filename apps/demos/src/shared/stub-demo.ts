@@ -22,12 +22,13 @@ export function initStubDemo(options: StubDemoOptions) {
 
   function exportResults() {
     return {
-      parameters: {},
-      readouts: {},
+      version: 1,
       notes: [
         "This demo is currently a stub while we migrate the legacy version into the new runtime."
       ],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      parameters: [],
+      readouts: []
     };
   }
 

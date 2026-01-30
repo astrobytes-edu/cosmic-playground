@@ -2,6 +2,29 @@ export const PACKAGE_NAME = "@cosmic/runtime";
 
 export type Mode = "concept" | "math";
 
+export type ExportRow = {
+  name: string;
+  value: string;
+  note?: string;
+};
+
+export type ExportPayloadV1 = {
+  version: 1;
+  timestamp: string;
+  parameters: ExportRow[];
+  readouts: ExportRow[];
+  notes: string[];
+};
+
+function isExportPayloadV1(value: unknown): value is ExportPayloadV1 {
+  if (!value || typeof value !== "object") return false;
+  return (value as ExportPayloadV1).version === 1;
+}
+
+function sortEntries(obj: Record<string, string>): [string, string][] {
+  return Object.entries(obj).sort(([a], [b]) => a.localeCompare(b));
+}
+
 export type ExportResults = {
   parameters: Record<string, string>;
   readouts: Record<string, string>;
@@ -47,33 +70,69 @@ export function resolveInitialMode(args: {
   return candidate;
 }
 
-export function formatExport(results: ExportResults): string {
+export function normalizeExportPayload(
+  input: ExportPayloadV1 | ExportResults
+): ExportPayloadV1 {
+  if (isExportPayloadV1(input)) return input;
+
+  return {
+    version: 1,
+    timestamp: input.timestamp,
+    parameters: sortEntries(input.parameters).map(([name, value]) => ({
+      name,
+      value
+    })),
+    readouts: sortEntries(input.readouts).map(([name, value]) => ({
+      name,
+      value
+    })),
+    notes: input.notes
+  };
+}
+
+export function formatExportText(input: ExportPayloadV1 | ExportResults): string {
+  const results = normalizeExportPayload(input);
+
   const lines: string[] = [];
-  lines.push("Cosmic Playground — Export Results");
+  lines.push("Cosmic Playground — Results Export (v1)");
   lines.push(`Timestamp: ${results.timestamp}`);
   lines.push("");
 
-  const parameterEntries = Object.entries(results.parameters);
-  if (parameterEntries.length > 0) {
-    lines.push("Parameters:");
-    for (const [k, v] of parameterEntries) lines.push(`- ${k}: ${v}`);
-    lines.push("");
+  lines.push("Parameters:");
+  if (results.parameters.length === 0) {
+    lines.push("- (none)");
+  } else {
+    for (const row of results.parameters) {
+      const suffix = row.note ? ` — ${row.note}` : "";
+      lines.push(`- ${row.name}: ${row.value}${suffix}`);
+    }
   }
+  lines.push("");
 
-  const readoutEntries = Object.entries(results.readouts);
-  if (readoutEntries.length > 0) {
-    lines.push("Readouts:");
-    for (const [k, v] of readoutEntries) lines.push(`- ${k}: ${v}`);
-    lines.push("");
+  lines.push("Readouts:");
+  if (results.readouts.length === 0) {
+    lines.push("- (none)");
+  } else {
+    for (const row of results.readouts) {
+      const suffix = row.note ? ` — ${row.note}` : "";
+      lines.push(`- ${row.name}: ${row.value}${suffix}`);
+    }
   }
+  lines.push("");
 
-  if (results.notes.length > 0) {
-    lines.push("Notes:");
+  lines.push("Notes:");
+  if (results.notes.length === 0) {
+    lines.push("- (none)");
+  } else {
     for (const note of results.notes) lines.push(`- ${note}`);
-    lines.push("");
   }
+  lines.push("");
 
   return lines.join("\n").trimEnd() + "\n";
+}
+
+export function formatExport(results: ExportPayloadV1 | ExportResults): string {
+  return formatExportText(results);
 }
 
 export async function copyTextToClipboard(text: string): Promise<void> {
@@ -113,7 +172,7 @@ export function createInstrumentRuntime(args: {
     setModeInStorage(args.storageKey, resolved);
   }
 
-  async function copyResults(results: ExportResults) {
+  async function copyResults(results: ExportPayloadV1 | ExportResults) {
     await copyTextToClipboard(formatExport(results));
   }
 
