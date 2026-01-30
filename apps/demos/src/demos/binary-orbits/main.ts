@@ -1,4 +1,6 @@
 import { createInstrumentRuntime } from "@cosmic/runtime";
+import type { ExportPayloadV1 } from "@cosmic/runtime";
+import { TwoBodyAnalytic } from "@cosmic/physics";
 
 const massRatioInputEl = document.querySelector<HTMLInputElement>("#massRatio");
 const massRatioValueEl =
@@ -67,7 +69,7 @@ const prefersReducedMotion =
   typeof window.matchMedia !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const timeScale = 0.9; // mapping from real seconds -> model time units
+const yearsPerSecond = 0.06; // mapping from real seconds -> model years (teaching speed)
 
 function formatNumber(value: number, digits = 2) {
   if (!Number.isFinite(value)) return "—";
@@ -82,16 +84,29 @@ function getModel() {
   const m2 = massRatio;
   const total = m1 + m2;
 
-  // In model units with G = 1:
-  // omega^2 = (m1 + m2) / a^3  for circular orbits
-  const omega = Math.sqrt(total / (separation * separation * separation));
-  const period = (2 * Math.PI) / omega;
+  // Teaching units (AU / yr / M☉): with G = 4π², Kepler normalization gives:
+  // P² = a³ / (M1 + M2), with P in years, a in AU.
+  const periodYr = TwoBodyAnalytic.orbitalPeriodYrFromAuSolar({
+    aAu: separation,
+    massSolar: total
+  });
+  const omegaRadPerYr = Number.isFinite(periodYr) ? (2 * Math.PI) / periodYr : 0;
 
   // Distances from barycenter
   const r1 = separation * (m2 / total);
   const r2 = separation * (m1 / total);
 
-  return { massRatio, separation, m1, m2, total, omega, period, r1, r2 };
+  return {
+    massRatio,
+    separation,
+    m1,
+    m2,
+    total,
+    periodYr,
+    omegaRadPerYr,
+    r1,
+    r2
+  };
 }
 
 function draw(model: ReturnType<typeof getModel>, phaseRad: number) {
@@ -168,8 +183,8 @@ function renderAtPhase(phaseRad: number) {
   massRatioValue.textContent = `${formatNumber(model.massRatio, 1)}`;
   separationValue.textContent = `${formatNumber(model.separation, 1)}`;
 
-  baryOffsetValue.textContent = `${formatNumber(model.r1, 2)} units`;
-  periodValue.textContent = `${formatNumber(model.period, 2)} time units`;
+  baryOffsetValue.textContent = `${formatNumber(model.r1, 3)} AU`;
+  periodValue.textContent = `${formatNumber(model.periodYr, 3)} years`;
 
   draw(model, phaseRad);
 }
@@ -192,7 +207,8 @@ if (prefersReducedMotion) {
   function frame(now: number) {
     const model = getModel();
     const elapsed = (now - start) / 1000;
-    const phase = model.omega * elapsed * timeScale;
+    const elapsedYears = elapsed * yearsPerSecond;
+    const phase = model.omegaRadPerYr * elapsedYears;
     renderAtPhase(phase);
     requestAnimationFrame(frame);
   }
@@ -205,28 +221,25 @@ const runtime = createInstrumentRuntime({
   url: new URL(window.location.href)
 });
 
-function exportResults() {
+function exportResults(): ExportPayloadV1 {
   const model = getModel();
   return {
     version: 1,
     timestamp: new Date().toISOString(),
     parameters: [
-      { name: "Mass ratio (m₂/m₁)", value: formatNumber(model.massRatio, 1) },
-      {
-        name: "Separation (a)",
-        value: `${formatNumber(model.separation, 1)} units`
-      }
+      { name: "Mass ratio (m₂/m₁)", value: formatNumber(model.massRatio, 2) },
+      { name: "Separation (a)", value: `${formatNumber(model.separation, 2)} AU` }
     ],
     readouts: [
       {
         name: "Barycenter offset from m₁",
-        value: `${formatNumber(model.r1, 2)} units`
+        value: `${formatNumber(model.r1, 3)} AU`
       },
-      { name: "Model period", value: `${formatNumber(model.period, 2)} time units` }
+      { name: "Orbital period", value: `${formatNumber(model.periodYr, 3)} years` }
     ],
     notes: [
-      "Assumes perfectly circular orbits with point masses.",
-      "Uses model units with G = 1, so values are unitless/arbitrary."
+      "Assumes perfectly circular, coplanar two-body motion with point masses.",
+      "Uses AU/yr/M☉ teaching units where G = 4π², so P² = a³/(M₁+M₂)."
     ]
   };
 }

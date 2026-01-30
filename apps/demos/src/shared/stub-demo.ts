@@ -1,4 +1,5 @@
 import { createInstrumentRuntime } from "@cosmic/runtime";
+import type { ExportPayloadV1 } from "@cosmic/runtime";
 
 export type StubDemoOptions = {
   slug: string;
@@ -20,7 +21,7 @@ export function initStubDemo(options: StubDemoOptions) {
     url: new URL(window.location.href)
   });
 
-  function exportResults() {
+  function exportResults(): ExportPayloadV1 {
     return {
       version: 1,
       notes: [
