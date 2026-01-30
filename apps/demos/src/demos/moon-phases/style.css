@@ -50,6 +50,33 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.instrument {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(320px, 1.4fr) minmax(
+      240px,
+      1fr
+    );
+  gap: 12px;
+}
+
+.instrument__left,
+.instrument__center,
+.instrument__right {
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.panel-title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  color: var(--muted);
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
 .control {
   display: grid;
   gap: 8px;
@@ -66,7 +93,7 @@ input[type="range"]:focus-visible {
 }
 
 .readouts {
-  margin-top: 12px;
+  margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
@@ -90,8 +117,6 @@ input[type="range"]:focus-visible {
 }
 
 .stage {
-  margin-top: 16px;
-  padding: 14px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -104,3 +129,53 @@ canvas {
   height: auto;
 }
 
+.action {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(138, 162, 255, 0.44);
+  background: rgba(138, 162, 255, 0.2);
+  color: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.action:hover {
+  background: rgba(138, 162, 255, 0.28);
+}
+
+.status {
+  margin: 10px 0 0;
+  color: var(--muted);
+  min-height: 1.25em;
+}
+
+.notice {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.notice h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.notice ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.notice li {
+  margin: 6px 0;
+}
+
+@media (max-width: 920px) {
+  .instrument {
+    grid-template-columns: 1fr;
+  }
+}

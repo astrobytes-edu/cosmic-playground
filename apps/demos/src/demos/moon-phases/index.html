@@ -15,30 +15,48 @@
         </p>
       </header>
 
-      <section class="panel">
-        <label class="control">
-          <span>Phase angle (degrees)</span>
-          <input id="angle" type="range" min="0" max="360" value="90" step="1" />
-        </label>
+      <section class="instrument" aria-label="Demo instrument">
+        <div class="instrument__left">
+          <h2 class="panel-title">Controls</h2>
+          <label class="control">
+            <span>Phase angle (degrees)</span>
+            <input id="angle" type="range" min="0" max="360" value="90" step="1" />
+          </label>
+          <button id="copyResults" class="action" type="button">Copy results</button>
+          <p id="status" class="status" role="status" aria-live="polite"></p>
+        </div>
 
-        <div class="readouts">
-          <div class="readout">
-            <div class="readout__label">Angle</div>
-            <div class="readout__value"><span id="angleValue"></span>°</div>
+        <div class="instrument__center">
+          <h2 class="panel-title">View</h2>
+          <section class="stage" aria-label="Moon phase visualization">
+            <canvas id="moonCanvas" width="420" height="420"></canvas>
+          </section>
+        </div>
+
+        <div class="instrument__right">
+          <h2 class="panel-title">Readouts</h2>
+          <div class="readouts">
+            <div class="readout">
+              <div class="readout__label">Angle</div>
+              <div class="readout__value"><span id="angleValue"></span>°</div>
+            </div>
+            <div class="readout">
+              <div class="readout__label">Illuminated</div>
+              <div class="readout__value"><span id="illumValue"></span>%</div>
+            </div>
           </div>
-          <div class="readout">
-            <div class="readout__label">Illuminated</div>
-            <div class="readout__value"><span id="illumValue"></span>%</div>
+
+          <div class="notice">
+            <h3>What to notice</h3>
+            <ul>
+              <li>Half-lit happens at a phase angle near 90° or 270°.</li>
+              <li>“Dark” vs “lit” is about illumination, not Earth’s shadow.</li>
+            </ul>
           </div>
         </div>
-      </section>
-
-      <section class="stage" aria-label="Moon phase visualization">
-        <canvas id="moonCanvas" width="420" height="420"></canvas>
       </section>
     </main>
 
     <script type="module" src="./main.ts"></script>
   </body>
 </html>
-

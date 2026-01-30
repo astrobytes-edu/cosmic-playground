@@ -9,6 +9,10 @@ importers:
   .: {}
 
   apps/demos:
+    dependencies:
+      '@cosmic/runtime':
+        specifier: workspace:*
+        version: link:../../packages/runtime
     devDependencies:
       '@types/node':
         specifier: ^22.0.0

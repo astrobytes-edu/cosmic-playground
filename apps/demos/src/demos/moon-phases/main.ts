@@ -1,9 +1,20 @@
+import { createInstrumentRuntime } from "@cosmic/runtime";
+
 const angleInputEl = document.querySelector<HTMLInputElement>("#angle");
 const angleValueEl = document.querySelector<HTMLSpanElement>("#angleValue");
 const illumValueEl = document.querySelector<HTMLSpanElement>("#illumValue");
 const canvasEl = document.querySelector<HTMLCanvasElement>("#moonCanvas");
+const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
+const statusEl = document.querySelector<HTMLParagraphElement>("#status");
 
-if (!angleInputEl || !angleValueEl || !illumValueEl || !canvasEl) {
+if (
+  !angleInputEl ||
+  !angleValueEl ||
+  !illumValueEl ||
+  !canvasEl ||
+  !copyResultsEl ||
+  !statusEl
+) {
   throw new Error("Missing required DOM elements for moon-phases demo.");
 }
 
@@ -17,6 +28,8 @@ const angleValue = angleValueEl;
 const illumValue = illumValueEl;
 const canvas = canvasEl;
 const ctx = ctxEl;
+const copyResults = copyResultsEl;
+const status = statusEl;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -89,3 +102,37 @@ function render() {
 
 angleInput.addEventListener("input", render);
 render();
+
+const runtime = createInstrumentRuntime({
+  hasMathMode: false,
+  storageKey: "cp:moon-phases:mode",
+  url: new URL(window.location.href)
+});
+
+async function handleCopyResults() {
+  status.textContent = "Copying…";
+  try {
+    const angleDeg = clamp(Number(angleInput.value), 0, 360);
+    const frac = illuminatedFraction(angleDeg);
+
+    await runtime.copyResults({
+      parameters: {
+        "Phase angle (deg)": `${Math.round(angleDeg)}°`
+      },
+      readouts: {
+        "Illuminated (%)": `${Math.round(frac * 100)}%`
+      },
+      notes: ["This pilot uses a simplified 2D terminator visualization."],
+      timestamp: new Date().toISOString()
+    });
+
+    status.textContent = "Copied results to clipboard.";
+  } catch (err) {
+    status.textContent =
+      err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.";
+  }
+}
+
+copyResults.addEventListener("click", () => {
+  void handleCopyResults();
+});
