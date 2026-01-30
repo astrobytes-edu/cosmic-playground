@@ -75,6 +75,7 @@ These checks are intentionally pragmatic for v1 and should be expanded later.
 
 - `scripts/validate-play-dirs.mjs` enforces core instrument markers exist in built `/play/<slug>/index.html` artifacts (instrument root, copy button, status region, model notes drawer marker).
 - `scripts/validate-play-dirs.mjs` enforces that the export status element `#status` is a live region (`role="status"` and `aria-live="polite"`).
+- `scripts/validate-play-dirs.mjs` enforces that `#copyResults` is a `<button type="button">`.
 
 ### Playwright (E2E)
 
@@ -82,6 +83,7 @@ These checks are intentionally pragmatic for v1 and should be expanded later.
   - an explicit export version marker
   - a `Timestamp:` line
   - non-empty `Parameters:` and `Readouts:` sections (with at least 2 readouts)
+- A pilot-specific Playwright test validates keyboard-only activation for “Copy results” (tab to the button, press Enter, status updates, clipboard capture exists).
 
 ## Spec Deviations
 
