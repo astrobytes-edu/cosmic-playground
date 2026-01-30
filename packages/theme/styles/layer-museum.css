@@ -23,11 +23,29 @@
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-r-3);
   box-shadow: var(--cp-shadow-1);
+  transition:
+    transform var(--cp-transition-normal) var(--cp-ease-out),
+    box-shadow var(--cp-transition-normal) var(--cp-ease-out),
+    border-color var(--cp-transition-normal) var(--cp-ease-out);
 }
 
 .cp-card:hover {
-  box-shadow: var(--cp-shadow-2);
+  transform: translateY(-2px);
+  box-shadow: var(--cp-card-glow), var(--cp-shadow-2);
   border-color: color-mix(in srgb, var(--cp-border) 65%, var(--cp-accent3));
+}
+
+.cp-card:active {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-card {
+    transition: none;
+  }
+  .cp-card:hover {
+    transform: none;
+  }
 }
 
 .cp-badge {

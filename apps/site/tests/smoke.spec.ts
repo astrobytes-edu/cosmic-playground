@@ -193,4 +193,15 @@ test.describe("Cosmic Playground smoke", () => {
     const topicBadge = page.locator('.cp-badge[data-tone="blue"] svg');
     await expect(topicBadge.first()).toBeVisible();
   });
+
+  test("Cards have transition on hover", async ({ page }) => {
+    await page.goto("explore/");
+
+    const card = page.locator(".cp-card").first();
+    const transition = await card.evaluate((el) =>
+      window.getComputedStyle(el).transition
+    );
+    expect(transition).toContain("transform");
+    expect(transition).toContain("box-shadow");
+  });
 });
