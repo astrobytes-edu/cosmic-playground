@@ -1,9 +1,14 @@
 import { createInstrumentRuntime } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes } from "@cosmic/runtime";
 
 const angleInputEl = document.querySelector<HTMLInputElement>("#angle");
 const angleValueEl = document.querySelector<HTMLSpanElement>("#angleValue");
 const illumValueEl = document.querySelector<HTMLSpanElement>("#illumValue");
 const canvasEl = document.querySelector<HTMLCanvasElement>("#moonCanvas");
+const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
+const challengeModeEl =
+  document.querySelector<HTMLButtonElement>("#challengeMode");
+const helpEl = document.querySelector<HTMLButtonElement>("#help");
 const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
 const statusEl = document.querySelector<HTMLParagraphElement>("#status");
 
@@ -12,6 +17,9 @@ if (
   !angleValueEl ||
   !illumValueEl ||
   !canvasEl ||
+  !stationModeEl ||
+  !challengeModeEl ||
+  !helpEl ||
   !copyResultsEl ||
   !statusEl
 ) {
@@ -28,11 +36,19 @@ const angleValue = angleValueEl;
 const illumValue = illumValueEl;
 const canvas = canvasEl;
 const ctx = ctxEl;
+const stationModeButton = stationModeEl;
+const challengeModeButton = challengeModeEl;
+const helpButton = helpEl;
 const copyResults = copyResultsEl;
 const status = statusEl;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizeAngleDeg(angleDeg: number): number {
+  const a = angleDeg % 360;
+  return a < 0 ? a + 360 : a;
 }
 
 function cssVar(name: string, fallback: string) {
@@ -54,6 +70,42 @@ const canvasTheme = {
 function illuminatedFraction(phaseAngleDeg: number) {
   const radians = (phaseAngleDeg * Math.PI) / 180;
   return (1 + Math.cos(radians)) / 2;
+}
+
+function formatFraction(value: number): string {
+  if (!Number.isFinite(value)) return "—";
+  return value.toFixed(3);
+}
+
+function phaseName(angleDeg: number): string {
+  const a = normalizeAngleDeg(angleDeg);
+
+  // Teaching convention used here:
+  // - 0° = Full, 180° = New
+  // - 270° is First Quarter (waxing), 90° is Third Quarter (waning)
+  //
+  // We label the 8 principal phases by splitting the circle into 45° bins.
+  const bin = Math.round(a / 45) % 8;
+  switch (bin) {
+    case 0:
+      return "Full";
+    case 1:
+      return "Waning gibbous";
+    case 2:
+      return "Third quarter";
+    case 3:
+      return "Waning crescent";
+    case 4:
+      return "New";
+    case 5:
+      return "Waxing crescent";
+    case 6:
+      return "First quarter";
+    case 7:
+      return "Waxing gibbous";
+    default:
+      return "—";
+  }
 }
 
 function drawMoon(phaseAngleDeg: number) {
@@ -116,6 +168,180 @@ function render() {
 
 angleInput.addEventListener("input", render);
 render();
+
+// -------------------------
+// Station Mode + Help
+// -------------------------
+
+const demoModes = createDemoModes({
+  help: {
+    title: "Help / Shortcuts",
+    subtitle: "Keyboard shortcuts work when focus is not in an input field.",
+    sections: [
+      {
+        heading: "Shortcuts",
+        type: "shortcuts",
+        items: [
+          { key: "?", action: "Toggle help" },
+          { key: "g", action: "Toggle station mode" }
+        ]
+      },
+      {
+        heading: "Model",
+        type: "bullets",
+        items: [
+          "Angle α is the Sun–Moon–Earth phase angle in this model: 0° = Full, 180° = New.",
+          "Illuminated fraction is f = (1 + cos α) / 2."
+        ]
+      }
+    ]
+  },
+  station: {
+    title: "Station Mode: Moon Phases",
+    subtitle: "Add snapshot rows, then copy CSV or print.",
+    steps: [
+      "Move the slider to a phase.",
+      "Click “Add row (snapshot)” to record angle, phase name, and illuminated fraction.",
+      "Use the key-phase button for New → First Quarter → Full → Third Quarter, then sanity-check your results."
+    ],
+    columns: [
+      { key: "angleDeg", label: "Angle α (°)" },
+      { key: "phase", label: "Phase (name)" },
+      { key: "f", label: "Illuminated fraction f" },
+      { key: "percent", label: "Illuminated (%)" }
+    ],
+    getSnapshotRow() {
+      const angleDeg = clamp(Number(angleInput.value), 0, 360);
+      const frac = illuminatedFraction(angleDeg);
+      return {
+        angleDeg: String(Math.round(angleDeg)),
+        phase: phaseName(angleDeg),
+        f: formatFraction(frac),
+        percent: String(Math.round(frac * 100))
+      };
+    },
+    snapshotLabel: "Add row (snapshot)",
+    rowSets: [
+      {
+        label: "Add key phases",
+        getRows() {
+          const keyAngles = [
+            { label: "New", angleDeg: 180 },
+            { label: "First quarter", angleDeg: 270 },
+            { label: "Full", angleDeg: 0 },
+            { label: "Third quarter", angleDeg: 90 }
+          ];
+          return keyAngles.map((k) => {
+            const f = illuminatedFraction(k.angleDeg);
+            return {
+              angleDeg: String(k.angleDeg),
+              phase: k.label,
+              f: formatFraction(f),
+              percent: String(Math.round(f * 100))
+            };
+          });
+        }
+      }
+    ],
+    synthesisPrompt:
+      "<p><strong>Synthesis:</strong> In one sentence, explain why phases are about <em>geometry</em> (illumination) rather than Earth’s shadow.</p>"
+  }
+});
+
+demoModes.bindButtons({
+  helpButton,
+  stationButton: stationModeButton
+});
+
+// -------------------------
+// Challenge Mode
+// -------------------------
+
+const controlsBody =
+  document.querySelector<HTMLElement>(".cp-demo__controls .cp-panel-body");
+if (!controlsBody) {
+  throw new Error("Missing controls container for challenge mode.");
+}
+
+function getState() {
+  const angleDeg = clamp(Number(angleInput.value), 0, 360);
+  const frac = illuminatedFraction(angleDeg);
+  return { angleDeg, frac };
+}
+
+function setState(next: unknown) {
+  const angleDeg =
+    typeof next === "object" && next !== null && "angleDeg" in next
+      ? (next as any).angleDeg
+      : null;
+  if (typeof angleDeg === "number" && Number.isFinite(angleDeg)) {
+    angleInput.value = String(clamp(angleDeg, 0, 360));
+    render();
+  }
+}
+
+const challengeEngine = new ChallengeEngine(
+  [
+    {
+      prompt: "Set α so the Moon is about half illuminated.",
+      hints: [
+        "Half illumination happens at quarter phases.",
+        "Try α near 90° or 270°."
+      ],
+      initialState: { angleDeg: 100 },
+      check(state: any) {
+        const angleDeg = Number(state?.angleDeg);
+        const frac = Number(state?.frac);
+        if (![angleDeg, frac].every(Number.isFinite)) {
+          return { correct: false, close: false, message: "No valid state yet." };
+        }
+        const diff = Math.abs(frac - 0.5);
+        if (diff <= 0.03) return { correct: true, close: false, message: `f ≈ ${formatFraction(frac)}.` };
+        if (diff <= 0.08) return { correct: false, close: true, message: `Close: f ≈ ${formatFraction(frac)}.` };
+        return { correct: false, close: false, message: `Try moving toward 50% (f=0.5).` };
+      }
+    },
+    {
+      prompt: "Set α so the Moon is near New (almost dark).",
+      hints: ["New happens near α = 180°.", "Look for f near 0."],
+      initialState: { angleDeg: 150 },
+      check(state: any) {
+        const angleDeg = Number(state?.angleDeg);
+        const frac = Number(state?.frac);
+        if (![angleDeg, frac].every(Number.isFinite)) {
+          return { correct: false, close: false, message: "No valid state yet." };
+        }
+        if (frac <= 0.05) return { correct: true, close: false, message: `f ≈ ${formatFraction(frac)}.` };
+        if (frac <= 0.12) return { correct: false, close: true, message: `Close: f ≈ ${formatFraction(frac)}.` };
+        return { correct: false, close: false, message: `Too bright: f ≈ ${formatFraction(frac)}.` };
+      }
+    },
+    {
+      prompt: "Set α so the Moon is near Full (almost fully lit).",
+      hints: ["Full happens near α = 0° (or 360°).", "Look for f near 1."],
+      initialState: { angleDeg: 30 },
+      check(state: any) {
+        const angleDeg = Number(state?.angleDeg);
+        const frac = Number(state?.frac);
+        if (![angleDeg, frac].every(Number.isFinite)) {
+          return { correct: false, close: false, message: "No valid state yet." };
+        }
+        if (frac >= 0.95) return { correct: true, close: false, message: `f ≈ ${formatFraction(frac)}.` };
+        if (frac >= 0.88) return { correct: false, close: true, message: `Close: f ≈ ${formatFraction(frac)}.` };
+        return { correct: false, close: false, message: `Too dim: f ≈ ${formatFraction(frac)}.` };
+      }
+    }
+  ],
+  { container: controlsBody, getState, setState, showUI: true }
+);
+
+challengeModeButton.addEventListener("click", () => {
+  if (challengeEngine.isActive()) {
+    challengeEngine.stop();
+  } else {
+    challengeEngine.start();
+  }
+});
 
 const runtime = createInstrumentRuntime({
   hasMathMode: false,

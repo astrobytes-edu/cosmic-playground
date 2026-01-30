@@ -228,7 +228,7 @@ function exportResults(): ExportPayloadV1 {
     timestamp: new Date().toISOString(),
     parameters: [
       { name: "Mass ratio (m₂/m₁)", value: formatNumber(model.massRatio, 2) },
-      { name: "Separation (a)", value: `${formatNumber(model.separation, 2)} AU` }
+      { name: "Separation (a, AU)", value: `${formatNumber(model.separation, 2)} AU` }
     ],
     readouts: [
       {
