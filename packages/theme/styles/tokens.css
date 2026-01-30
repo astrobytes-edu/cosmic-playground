@@ -79,11 +79,19 @@
   --cp-r-2: 14px;
   --cp-r-3: 18px;
 
-  /* ---------- Shadows ---------- */
+  /* ---------- Shadows & Elevation ---------- */
   --cp-shadow-1: 0 1px 0 rgba(255, 255, 255, 0.04),
     0 10px 30px rgba(0, 0, 0, 0.35);
   --cp-shadow-2: 0 1px 0 rgba(255, 255, 255, 0.05),
     0 20px 60px rgba(0, 0, 0, 0.5);
+
+  /* Elevation system (use for layered UI) */
+  --cp-elevation-1: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --cp-elevation-2: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --cp-elevation-3: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+  /* Card hover glow (uses accent color) */
+  --cp-card-glow: 0 8px 32px rgba(45, 212, 191, 0.15);
 }
 
 html,

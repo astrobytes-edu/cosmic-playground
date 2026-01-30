@@ -55,4 +55,16 @@ describe("Design tokens", () => {
       expect(css).toContain("--cp-ease-in-out");
     });
   });
+
+  describe("Elevation tokens", () => {
+    it("defines elevation shadow levels", () => {
+      expect(css).toContain("--cp-elevation-1");
+      expect(css).toContain("--cp-elevation-2");
+      expect(css).toContain("--cp-elevation-3");
+    });
+
+    it("defines hover glow for cards", () => {
+      expect(css).toContain("--cp-card-glow");
+    });
+  });
 });
