@@ -1,3 +1,5 @@
+import { copyTextToClipboard } from "./clipboard";
+
 export const PACKAGE_NAME = "@cosmic/runtime";
 
 export type Mode = "concept" | "math";
@@ -15,6 +17,20 @@ export type ExportPayloadV1 = {
   readouts: ExportRow[];
   notes: string[];
 };
+
+export { copyTextToClipboard } from "./clipboard";
+export { createDemoModes, toCsv } from "./demoModes";
+export type {
+  DemoHelpConfig,
+  DemoHelpSection,
+  DemoModeKeys,
+  DemoShortcut,
+  DemoStationConfig,
+  StationColumn,
+  StationRow
+} from "./demoModes";
+export { ChallengeEngine } from "./challengeEngine";
+export type { Challenge, ChallengeOptions, ChallengeResult, ChallengeStats } from "./challengeEngine";
 
 function isExportPayloadV1(value: unknown): value is ExportPayloadV1 {
   if (!value || typeof value !== "object") return false;
@@ -133,30 +149,6 @@ export function formatExportText(input: ExportPayloadV1 | ExportResults): string
 
 export function formatExport(results: ExportPayloadV1 | ExportResults): string {
   return formatExportText(results);
-}
-
-export async function copyTextToClipboard(text: string): Promise<void> {
-  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-
-  if (typeof document === "undefined") {
-    throw new Error("Clipboard unavailable in this environment.");
-  }
-
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.setAttribute("readonly", "true");
-  textarea.style.position = "fixed";
-  textarea.style.left = "-9999px";
-  textarea.style.top = "0";
-  document.body.appendChild(textarea);
-  textarea.select();
-
-  const ok = document.execCommand("copy");
-  document.body.removeChild(textarea);
-  if (!ok) throw new Error("Failed to copy to clipboard.");
 }
 
 export function createInstrumentRuntime(args: {
