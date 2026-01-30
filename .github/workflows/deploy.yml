@@ -30,6 +30,10 @@ jobs:
           corepack pnpm install --frozen-lockfile
       - name: Build (demos → copy → site)
         run: corepack pnpm build
+      - name: Install Playwright browsers
+        run: corepack pnpm -C apps/site exec playwright install --with-deps chromium
+      - name: Playwright smoke tests
+        run: corepack pnpm -C apps/site test:e2e
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -44,4 +48,3 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
-

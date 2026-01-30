@@ -6,6 +6,7 @@ node_modules/
 apps/demos/dist/
 apps/site/dist/
 apps/site/.astro/
+apps/site/playwright-report/
+apps/site/test-results/
 
 apps/site/public/play/
-

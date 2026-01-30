@@ -9,12 +9,14 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.0",
+    "@playwright/test": "^1.50.0",
     "typescript": "^5.5.4"
   },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "test:e2e": "playwright test",
     "typecheck": "astro check"
   }
 }
