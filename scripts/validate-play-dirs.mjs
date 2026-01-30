@@ -51,6 +51,16 @@ function missingMarkers(html, markers) {
   return markers.filter((m) => !html.includes(m));
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function findStartTagById(html, id) {
+  const re = new RegExp(`<[^>]+\\bid=["']${escapeRegExp(id)}["'][^>]*>`, "i");
+  const match = html.match(re);
+  return match ? match[0] : null;
+}
+
 async function main() {
   const slugs = await getDemoSlugsFromContent();
   const playRoot = path.join(repoRoot, "apps", "site", "public", "play");
@@ -77,6 +87,25 @@ async function main() {
     const missing = missingMarkers(html, requiredMarkers);
     if (missing.length > 0) {
       missingContractMarkers.push({ slug, indexPath, missing });
+    }
+  }
+
+  const invalidExportStatusRegion = [];
+  for (const slug of slugs) {
+    const indexPath = path.join(playRoot, slug, "index.html");
+    if (!(await pathExists(indexPath))) continue;
+    const html = await readText(indexPath);
+
+    const statusTag = findStartTagById(html, "status");
+    if (!statusTag) continue;
+
+    const missing = [];
+    if (!/\brole=["']status["']/i.test(statusTag)) missing.push('role="status"');
+    if (!/\baria-live=["']polite["']/i.test(statusTag))
+      missing.push('aria-live="polite"');
+
+    if (missing.length > 0) {
+      invalidExportStatusRegion.push({ slug, indexPath, missing, statusTag });
     }
   }
 
@@ -108,6 +137,7 @@ async function main() {
   if (
     missingPlayArtifacts.length > 0 ||
     missingContractMarkers.length > 0 ||
+    invalidExportStatusRegion.length > 0 ||
     missingMetadata.length > 0
   ) {
     if (missingPlayArtifacts.length > 0) {
@@ -121,6 +151,15 @@ async function main() {
     if (missingContractMarkers.length > 0) {
       console.error("Built demo artifacts missing required instrument markers:");
       for (const item of missingContractMarkers) {
+        console.error(`- ${item.slug} (${item.indexPath})`);
+        for (const marker of item.missing) console.error(`  - missing: ${marker}`);
+      }
+      console.error("");
+    }
+
+    if (invalidExportStatusRegion.length > 0) {
+      console.error("Built demo artifacts missing export status live-region attributes:");
+      for (const item of invalidExportStatusRegion) {
         console.error(`- ${item.slug} (${item.indexPath})`);
         for (const marker of item.missing) console.error(`  - missing: ${marker}`);
       }
