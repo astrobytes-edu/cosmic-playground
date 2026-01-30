@@ -1,12 +1,80 @@
 {
   "source_root": "~/Teaching/astr101-sp26/demos",
   "generated_at": "2026-01-30",
+  "shared_assets": {
+    "physics": {
+      "dir": "_assets/physics",
+      "files": [
+        "_assets/physics/units.js",
+        "_assets/physics/astro-constants.js",
+        "_assets/physics/two-body-analytic.js"
+      ]
+    },
+    "engines": {
+      "demoModes": "_assets/demo-modes.js",
+      "challengeEngine": "_assets/challenge-engine.js",
+      "tourEngine": "_assets/tour-engine.js"
+    },
+    "katex": {
+      "dir": "_assets/katex",
+      "files": ["_assets/katex/katex.min.css", "_assets/katex/katex.min.js"],
+      "fonts_dir": "_assets/katex/fonts"
+    },
+    "shared_utils": [
+      "_assets/astro-utils.js",
+      "_assets/stellar-utils.js",
+      "_assets/demo-polish.js",
+      "_assets/starfield.js",
+      "_assets/astro-theme.css",
+      "_assets/demo-legacy.css",
+      "_assets/demo-shell.css",
+      "_assets/demo-modes.css"
+    ]
+  },
+  "inventory": {
+    "slugs": [
+      "angular-size",
+      "binary-orbits",
+      "blackbody-radiation",
+      "conservation-laws",
+      "eclipse-geometry",
+      "em-spectrum",
+      "keplers-laws",
+      "moon-phases",
+      "parallax-distance",
+      "seasons",
+      "telescope-resolution"
+    ],
+    "math_demos": [
+      "binary-orbits",
+      "blackbody-radiation",
+      "conservation-laws",
+      "em-spectrum",
+      "keplers-laws",
+      "parallax-distance",
+      "telescope-resolution"
+    ],
+    "demo_modes_demos": ["angular-size", "eclipse-geometry", "moon-phases", "seasons"],
+    "challenge_engine_demos": ["eclipse-geometry", "moon-phases"],
+    "external_data_files": {
+      "em-spectrum": ["object-data.js", "telescope-data.js"],
+      "parallax-distance": ["star-data.js"],
+      "telescope-resolution": ["telescope-data.js"]
+    },
+    "notes": [
+      "math_demos means the legacy demo loads KaTeX and/or renders KaTeX formulas; it does not necessarily imply the new demo must ship math UI.",
+      "tourEngine is present in legacy _assets but does not appear to be referenced by demo index.html files."
+    ]
+  },
   "demos": [
     {
       "slug": "angular-size",
       "title": "Angular Size: The Sky’s Ruler",
+      "migration_wave": 1,
       "legacy": {
         "demo_dir": "angular-size",
+        "entry_script": "angular-size/angular-size.js",
+        "entry_style": "angular-size/angular-size.css",
         "model_file": "_assets/angular-size-model.js",
         "station_card_include": "_assets/station-cards/angular-size.qmd",
         "uses": {
@@ -22,8 +90,11 @@
     {
       "slug": "binary-orbits",
       "title": "Binary Orbits: Two-Body Dance",
+      "migration_wave": 2,
       "legacy": {
         "demo_dir": "binary-orbits",
+        "entry_script": "binary-orbits/binary-orbits.js",
+        "entry_style": "binary-orbits/binary-orbits.css",
         "model_file": "_assets/binary-orbits-model.js",
         "station_card_include": "_assets/station-cards/binary-orbits.qmd",
         "uses": {
@@ -39,8 +110,11 @@
     {
       "slug": "blackbody-radiation",
       "title": "Blackbody Radiation: Color and Temperature",
+      "migration_wave": 2,
       "legacy": {
         "demo_dir": "blackbody-radiation",
+        "entry_script": "blackbody-radiation/blackbody.js",
+        "entry_style": "blackbody-radiation/blackbody.css",
         "model_file": "_assets/blackbody-model.js",
         "station_card_include": "_assets/station-cards/blackbody-radiation.qmd",
         "uses": {
@@ -56,8 +130,11 @@
     {
       "slug": "conservation-laws",
       "title": "Conservation Laws: Energy & Momentum",
+      "migration_wave": 2,
       "legacy": {
         "demo_dir": "conservation-laws",
+        "entry_script": "conservation-laws/conservation-laws.js",
+        "entry_style": "conservation-laws/conservation-laws.css",
         "model_file": "_assets/conservation-laws-model.js",
         "station_card_include": "_assets/station-cards/conservation-laws.qmd",
         "uses": {
@@ -73,8 +150,11 @@
     {
       "slug": "eclipse-geometry",
       "title": "Eclipse Geometry: Shadows in Space",
+      "migration_wave": 1,
       "legacy": {
         "demo_dir": "eclipse-geometry",
+        "entry_script": "eclipse-geometry/eclipse-geometry.js",
+        "entry_style": "eclipse-geometry/eclipse-geometry.css",
         "model_file": "_assets/eclipse-geometry-model.js",
         "station_card_include": "_assets/station-cards/eclipse-geometry.qmd",
         "uses": {
@@ -90,8 +170,11 @@
     {
       "slug": "em-spectrum",
       "title": "Electromagnetic Spectrum: Light Beyond Visible",
+      "migration_wave": 3,
       "legacy": {
         "demo_dir": "em-spectrum",
+        "entry_script": "em-spectrum/em-spectrum.js",
+        "entry_style": "em-spectrum/em-spectrum.css",
         "model_file": "_assets/em-spectrum-model.js",
         "station_card_include": "_assets/station-cards/em-spectrum.qmd",
         "uses": {
@@ -107,8 +190,11 @@
     {
       "slug": "keplers-laws",
       "title": "Kepler’s Laws: Patterns of Planetary Motion",
+      "migration_wave": 2,
       "legacy": {
         "demo_dir": "keplers-laws",
+        "entry_script": "keplers-laws/keplers-laws.js",
+        "entry_style": "keplers-laws/keplers-laws.css",
         "model_file": "_assets/keplers-laws-model.js",
         "station_card_include": "_assets/station-cards/keplers-laws.qmd",
         "uses": {
@@ -124,8 +210,11 @@
     {
       "slug": "moon-phases",
       "title": "Moon Phases: Light, Not Shadow",
+      "migration_wave": 1,
       "legacy": {
         "demo_dir": "moon-phases",
+        "entry_script": "moon-phases/moon-phases.js",
+        "entry_style": "moon-phases/moon-phases.css",
         "model_file": "_assets/moon-phases-model.js",
         "station_card_include": "_assets/station-cards/moon-phases.qmd",
         "uses": {
@@ -141,8 +230,11 @@
     {
       "slug": "parallax-distance",
       "title": "Parallax Distance: Measuring the Stars",
+      "migration_wave": 3,
       "legacy": {
         "demo_dir": "parallax-distance",
+        "entry_script": "parallax-distance/parallax.js",
+        "entry_style": "parallax-distance/parallax-distance.css",
         "model_file": "_assets/parallax-distance-model.js",
         "station_card_include": "_assets/station-cards/parallax-distance.qmd",
         "uses": {
@@ -158,8 +250,11 @@
     {
       "slug": "seasons",
       "title": "Seasons: Why Tilt Matters",
+      "migration_wave": 1,
       "legacy": {
         "demo_dir": "seasons",
+        "entry_script": "seasons/seasons.js",
+        "entry_style": "seasons/seasons.css",
         "model_file": "_assets/seasons-model.js",
         "station_card_include": "_assets/station-cards/seasons.qmd",
         "uses": {
@@ -175,8 +270,11 @@
     {
       "slug": "telescope-resolution",
       "title": "Telescope Resolution: Sharper Eyes",
+      "migration_wave": 3,
       "legacy": {
         "demo_dir": "telescope-resolution",
+        "entry_script": "telescope-resolution/resolution.js",
+        "entry_style": "telescope-resolution/telescope-resolution.css",
         "model_file": "_assets/telescope-resolution-model.js",
         "station_card_include": "_assets/station-cards/telescope-resolution.qmd",
         "uses": {
@@ -190,10 +288,9 @@
       "target": { "demo_status": "stub", "needsPhysicsPort": true }
     }
   ],
-  "instructor_hubs": [
+  "hubs": [
     { "bundle": "cosmic-playground", "title": "Cosmic Playground (Instructor Hub)" },
     { "bundle": "distance-and-measurement", "title": "Distance and Measurement (Instructor Hub)" },
     { "bundle": "light-and-telescopes", "title": "Light and Telescopes (Instructor Hub)" }
   ]
 }
-

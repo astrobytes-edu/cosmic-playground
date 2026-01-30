@@ -6,7 +6,21 @@
 
 **Architecture:** Keep the museum site static/fast (minimal client JS), and treat demos as Vite-built “instruments” that are copied into `apps/site/public/play/<slug>/`. Instructor/station materials become Astro content collections, imported from legacy Quarto `.qmd` with a small conversion script (includes inlined; callouts converted to semantic HTML).
 
-**Tech Stack:** pnpm workspace, Astro content collections (MD/MDX), Vite + TypeScript demos, `@cosmic/runtime` instrument runtime, vendored KaTeX assets (no npm dependency).
+**Tech Stack:** pnpm workspace, Astro content collections (mostly Markdown; MDX only when needed), Vite + TypeScript demos, `@cosmic/runtime` instrument runtime, KaTeX as a normal dependency (with an explicit vendoring fallback only if dependency install is blocked).
+
+---
+
+## Guardrails (prevent scope explosion)
+
+1. **Milestone hard stops:** Stop after each milestone and report status; do not continue into the next milestone in the same run.
+2. **End-of-milestone gates:** Every milestone ends with:
+   - `corepack pnpm build`
+   - `corepack pnpm -C apps/site test:e2e`
+3. **Ordering rule (do not reorder):**
+   1) inventory + baseline snapshots
+   2) site content model + build pipeline
+   3) one demo end-to-end to the quality bar
+   4) batch waves (2–3 demos per wave)
 
 ---
 
@@ -14,65 +28,77 @@
 
 1. **Content model**
    - Keep `apps/site/src/content/demos/*.md` as the library metadata + exhibit copy source of truth.
-   - Add `apps/site/src/content/instructor/<bundle>/<section>.mdx` for instructor bundles **and** suite-level hubs (“units”).
-   - Add `apps/site/src/content/stations/<slug>.mdx` for station cards; keep derived station cards as a fallback when a station entry is missing.
+   - Add multiple collections:
+     - `instructor/` for demo instructor bundles (directory per bundle, fixed filenames).
+     - `hubs/` for suite-level hubs (“Light & Telescopes”, “Distance & Measurement”, “Cosmic Playground”).
+     - `stations/` for station-card overrides (see below).
+   - **MDX rule:** only use MDX where we need components; default to `.md` for stability.
 2. **Station cards**
-   - Preserve the legacy Quarto station-card prose by importing `_assets/station-cards/<slug>.qmd` into the new `stations` collection.
-   - Continue to support `station_params` rows from demo metadata as a fallback (existing behavior stays).
+   - Default station cards are **derived** from demo metadata (fast + consistent).
+   - If a station needs nuance, it gets an **override** entry in `stations/` imported from legacy `_assets/station-cards/<slug>.qmd`.
+   - Legacy `.qmd` remains archival only; the override content is authoritative.
 3. **Shared engines**
-   - Port legacy engines into `packages/runtime` incrementally:
-     - v1: keep current `createInstrumentRuntime` as the default.
-     - v1.x: add optional `tour` / `challenge` exports (TS ports of legacy) when a demo needs them.
-     - Do **not** ship suite-level “station/help mode” inside the museum pages; if desired, treat it as *demo-internal* UI.
+   - Port legacy engines into `packages/runtime`, but **freeze the public API first** (types + exported entrypoints), then modernize internals.
+   - New demos may only import from `@cosmic/runtime` public exports (no reaching into internal files).
 4. **KaTeX strategy**
-   - Vendor KaTeX assets from legacy (`_assets/katex`) into `apps/site/public/vendor/katex/`.
-   - Render math **only on instructor + station pages** via a tiny inline autorender script; exhibits remain math-free by default to keep museum pages minimal.
+   - Museum pages: ship KaTeX as a dependency and only load it on pages that declare they contain math (instructor/stations).
+   - Demo apps: include KaTeX only for demos that render math (avoid pulling it into every demo).
+   - If dependency install is blocked, fall back to vendoring KaTeX assets under `apps/site/public/vendor/katex/` (explicit exception).
 5. **Physics strategy**
    - Port `_assets/physics/*.js` + `_assets/*-model.js` into `packages/physics` as TypeScript modules.
-   - Add a real unit-test runner (recommended: Vitest) and write tests for model code first, then refactor.
+   - Add a real unit-test runner (Vitest) and write tests for model code first, then refactor.
+   - Model contract: demos consume pure, deterministic functions (testable), not globals.
 6. **Demo UI strategy**
-   - Use `@cosmic/theme` CSS + the instrument HTML contract for consistency.
-   - Keep `@cosmic/ui` minimal for now; only extract UI components after they’re repeated across ≥3 demos (avoid premature abstractions).
+   - Use `@cosmic/theme` tokens and the instrument HTML contract everywhere.
+   - Prefer `@cosmic/ui` components for interaction patterns (controls/readouts/callouts) to prevent UI drift; CSS-only patterns are a last resort.
 7. **Performance/a11y gates**
    - Keep existing HTML-marker validator + Playwright smoke.
    - Add incremental gates as we migrate: `prefers-reduced-motion` compliance for any demo with animation, and “Copy results” keyboard activation for every demo.
+   - In E2E, treat console errors as failures (already enforced in smoke tests).
 
 ---
 
-## Task 0: Branch hygiene (no worktrees)
+## Milestone 0: Inventory + baseline snapshots (HARD STOP)
 
-**Files:** none
+### Task 0.1: Baseline gates (golden smoke)
 
-**Step 1: Ensure clean status**
+**Files:**
+- Create: `docs/migration/2026-01-30-baseline.md`
 
-Run: `git status --porcelain`
-Expected: empty output (or you consciously accept local changes before starting).
-
-**Step 2: Create a working branch**
+**Step 1: Run baseline**
 
 Run:
 ```bash
-git checkout -b chore/astr101-sp26-migration
+corepack pnpm build
+corepack pnpm -C apps/site test:e2e
 ```
-Expected: branch switches successfully.
 
-**Step 3: Commit cadence**
+Expected: both succeed (this is the “known good” baseline).
 
-Commit every task below as specified (small, logical commits).
+**Step 2: Record**
 
----
+Write a short baseline note with the exact commands run + pass/fail.
 
-## Task 1: Add migration manifest (slugs + legacy deps)
+**Step 3: Commit**
+
+```bash
+git add docs/migration/2026-01-30-baseline.md
+git commit -m "docs(migration): record baseline build + e2e"
+```
+
+### Task 0.2: Inventory (slugs, shared assets, math demos, data files)
 
 **Files:**
-- Create: `docs/migration/astr101-sp26-manifest.json`
+- Create/Modify: `docs/migration/astr101-sp26-manifest.json`
 
-**Step 1: Create manifest**
+**Step 1: Populate inventory fields**
 
-Each entry must include:
-- `slug`, `title`
-- `legacy`: `{ demo_dir, model_file, station_card_include, uses: { katex, demoModes, tourEngine, challengeEngine }, dataFiles: string[] }`
-- `target`: `{ demo_status: "stub" | "ported", needsPhysicsPort: boolean }`
+The manifest must include:
+- demo slugs + titles
+- shared assets list (engines, KaTeX, shared physics)
+- math demos vs non-math demos
+- demo-modes demos
+- external data-file demos
 
 **Step 2: Verify JSON parses**
 
@@ -83,20 +109,25 @@ Expected: prints `OK`.
 
 ```bash
 git add docs/migration/astr101-sp26-manifest.json
-git commit -m "docs(migration): add ASTR101 SP26 manifest"
+git commit -m "docs(migration): expand ASTR101 SP26 inventory manifest"
 ```
+
+**Hard stop:** Stop here and report what inventory says is “math”, “data”, and “engine-heavy”.
 
 ---
 
-## Task 2: Add `instructor` + `stations` content collections
+## Milestone 1: Site content model (collections + rendering) (HARD STOP)
+
+### Task 1.1: Add `instructor` + `hubs` + `stations` content collections
 
 **Files:**
 - Modify: `apps/site/src/content/config.ts`
 
 **Step 1: Add collections**
 
-- Add `stations` (MDX) with schema: `title`, `demo_slug`, `last_updated`, `has_math` (optional boolean).
-- Add `instructor` (MDX) with schema: `title`, `bundle`, `kind: "demo" | "hub"`, `section: "index" | "activities" | "assessment" | "model" | "backlog"`, `demo_slug?`, `last_updated`, `has_math?`.
+- Add `stations` for station overrides.
+- Add `instructor` for per-demo instructor bundle sections (index/activities/assessment/model/backlog).
+- Add `hubs` for suite-level hub pages (index + optional extras).
 
 **Step 2: Typecheck**
 
@@ -107,116 +138,100 @@ Expected: success.
 
 ```bash
 git add apps/site/src/content/config.ts
-git commit -m "feat(site): add instructor + stations content collections"
+git commit -m "feat(site): add instructor/hubs/stations content collections"
 ```
 
----
-
-## Task 3: Render station cards from content when available
+### Task 1.2: Station page supports overrides
 
 **Files:**
 - Modify: `apps/site/src/pages/stations/[slug].astro`
-- Create: `apps/site/src/content/stations/binary-orbits.mdx` (temporary fixture)
 
-**Step 1: Prefer station content**
+**Steps:**
+1. If a `stations/<slug>` entry exists, render it.
+2. Otherwise, fall back to the derived station layout (current behavior).
+3. Commit.
 
-In the station page:
-- Attempt `getEntry("stations", slug)` first.
-- If found: render `<Content />` inside the station layout and keep the header + exhibit link.
-- If not found: fall back to the existing derived station card template.
-
-**Step 2: Add one fixture entry**
-
-Add `binary-orbits.mdx` with a simple heading + a short excerpt (we’ll replace via importer later).
-
-**Step 3: Verify**
-
-Run: `corepack pnpm -C apps/site build`
-Expected: build succeeds; `/stations/binary-orbits/` uses the MDX content.
-
-**Step 4: Commit**
-
-```bash
-git add apps/site/src/pages/stations/[slug].astro apps/site/src/content/stations/binary-orbits.mdx
-git commit -m "feat(site): allow station cards to be authored as content"
-```
-
----
-
-## Task 4: Render instructor bundles from content (and keep fallback)
+### Task 1.3: Instructor page supports bundles
 
 **Files:**
 - Modify: `apps/site/src/pages/instructor/[slug].astro`
-- Create: `apps/site/src/content/instructor/binary-orbits/index.mdx` (temporary fixture)
 
-**Step 1: Instructor bundle resolver**
+**Steps:**
+1. If instructor bundle entries exist, render them (with a small internal nav).
+2. Otherwise, fall back to the current placeholder derived from demo metadata.
+3. Commit.
 
-Update `/instructor/[slug].astro` to:
-- Attempt to load instructor entries where `bundle === slug`.
-- If any exist: render a simple internal nav (index/activities/assessment/model/backlog) and render each section’s MDX.
-- If none exist: fall back to the current placeholder rendering from `demos` metadata (so pages keep working during migration).
+### Milestone 1 verification + stop
 
-**Step 2: Add one fixture entry**
-
-Create `binary-orbits/index.mdx` with a short “Why this demo exists” and keep the rest as TODO (importer will replace).
-
-**Step 3: Verify**
-
-Run: `corepack pnpm -C apps/site build`
-Expected: build succeeds; `/instructor/binary-orbits/` renders MDX content.
-
-**Step 4: Commit**
-
+Run:
 ```bash
-git add apps/site/src/pages/instructor/[slug].astro apps/site/src/content/instructor/binary-orbits/index.mdx
-git commit -m "feat(site): render instructor bundles from content when present"
+corepack pnpm build
+corepack pnpm -C apps/site test:e2e
 ```
+Expected: pass.
+
+**Hard stop:** Stop here and report which pages now render from content and which still use fallback.
 
 ---
 
-## Task 5: Vendor KaTeX assets + minimal autorender on instructor/stations
+## Milestone 2: KaTeX for instructor/stations (HARD STOP)
+
+### Task 2.1: Add KaTeX dependency (preferred path)
 
 **Files:**
-- Create: `apps/site/public/vendor/katex/` (copy assets)
+- Modify: `apps/site/package.json`
+- Modify: `pnpm-lock.yaml`
+
+**Step 1: Install**
+
+Run:
+```bash
+corepack pnpm -C apps/site add katex
+```
+Expected: dependency added and lock updated.
+
+**Step 2: Commit**
+
+```bash
+git add apps/site/package.json pnpm-lock.yaml
+git commit -m "chore(site): add katex dependency"
+```
+
+### Task 2.2: Add `KatexAutoRender` component (pages opt-in)
+
+**Files:**
 - Create: `apps/site/src/components/KatexAutoRender.astro`
 - Modify: `apps/site/src/pages/instructor/[slug].astro`
 - Modify: `apps/site/src/pages/stations/[slug].astro`
 
-**Step 1: Copy legacy assets**
+**Steps:**
+1. Add a component that loads KaTeX CSS/JS and renders `$…$` and `$$…$$` inside the content container.
+2. Only include the component when content frontmatter declares `has_math: true`.
+3. Commit.
+
+### Task 2.3 (fallback): Vendor KaTeX if install is blocked
+
+If Task 2.1 cannot run due to environment restrictions:
+- Copy from legacy `_assets/katex` into `apps/site/public/vendor/katex/`
+- Implement `KatexAutoRender` against the vendored paths
+- Record the exception in `docs/migration/2026-01-30-baseline.md`
+
+### Milestone 2 verification + stop
 
 Run:
 ```bash
-mkdir -p apps/site/public/vendor/katex
-cp -R ~/Teaching/astr101-sp26/demos/_assets/katex/* apps/site/public/vendor/katex/
+corepack pnpm build
+corepack pnpm -C apps/site test:e2e
 ```
-Expected: KaTeX CSS/JS/fonts present under `apps/site/public/vendor/katex/`.
+Expected: pass.
 
-**Step 2: Add `KatexAutoRender` component**
-
-Component responsibilities:
-- Link KaTeX CSS from `import.meta.env.BASE_URL`.
-- Load KaTeX JS from `import.meta.env.BASE_URL`.
-- Inline a tiny script that renders `$...$` and `$$...$$` into KaTeX output inside a container element (no external deps).
-
-**Step 3: Use on station/instructor pages**
-
-- Only include the component when the rendered content indicates `has_math: true` (frontmatter flag), otherwise don’t load it.
-
-**Step 4: Verify**
-
-Run: `corepack pnpm -C apps/site build`
-Expected: build succeeds.
-
-**Step 5: Commit**
-
-```bash
-git add apps/site/public/vendor/katex apps/site/src/components/KatexAutoRender.astro apps/site/src/pages/instructor/[slug].astro apps/site/src/pages/stations/[slug].astro
-git commit -m "feat(site): vendor KaTeX and autorender math on instructor/station pages"
-```
+**Hard stop:** Stop here and report whether KaTeX is dependency-driven or vendored (and why).
 
 ---
 
-## Task 6: Add Quarto `.qmd` → MDX importer (inlines includes + callouts)
+## Milestone 3: Import Quarto instructor + station content (HARD STOP)
+
+### Task 3.1: Add Quarto `.qmd` → Markdown/MDX importer
 
 **Files:**
 - Create: `scripts/import-astr101-sp26.mjs`
@@ -312,4 +327,3 @@ Expected: both succeed with no regressions.
 ## Spec Deviations
 
 - None intended. If we add any new route outside the canonical set in `docs/specs/cosmic-playground-site-spec.md`, record it here explicitly.
-
