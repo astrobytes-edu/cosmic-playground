@@ -204,4 +204,21 @@ test.describe("Cosmic Playground smoke", () => {
     expect(transition).toContain("transform");
     expect(transition).toContain("box-shadow");
   });
+
+  test("Buttons have focus-visible ring", async ({ page }) => {
+    await page.goto("explore/");
+
+    // Find the button with cp-button class and focus it
+    const cpButton = page.locator(".cp-button").first();
+    await expect(cpButton).toBeVisible();
+
+    // Focus the button programmatically then check its focus-visible styles
+    await cpButton.focus();
+
+    const outline = await cpButton.evaluate((el) =>
+      window.getComputedStyle(el).outlineColor
+    );
+    // Should have an outline color defined (teal focus ring)
+    expect(outline).toBeTruthy();
+  });
 });

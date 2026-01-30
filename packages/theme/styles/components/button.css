@@ -1,0 +1,68 @@
+.cp-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-3) var(--cp-space-5);
+  font-size: var(--cp-text-md);
+  font-weight: var(--cp-font-medium);
+  line-height: 1;
+  text-decoration: none;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-r-2);
+  background: var(--cp-bg1);
+  color: var(--cp-text);
+  cursor: pointer;
+  transition:
+    background var(--cp-transition-fast) var(--cp-ease-out),
+    border-color var(--cp-transition-fast) var(--cp-ease-out),
+    transform var(--cp-transition-fast) var(--cp-ease-out);
+}
+
+.cp-button:hover {
+  background: var(--cp-bg2);
+  border-color: color-mix(in srgb, var(--cp-border) 60%, var(--cp-accent));
+}
+
+.cp-button:active {
+  transform: scale(0.98);
+}
+
+.cp-button:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 2px;
+}
+
+.cp-button--primary {
+  background: var(--cp-accent);
+  border-color: var(--cp-accent);
+  color: var(--cp-bg0);
+}
+
+.cp-button--primary:hover {
+  background: color-mix(in srgb, var(--cp-accent) 85%, white);
+  border-color: color-mix(in srgb, var(--cp-accent) 85%, white);
+}
+
+.cp-button--ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+.cp-button--ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: transparent;
+}
+
+.cp-button:disabled,
+.cp-button[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-button {
+    transition: none;
+  }
+}

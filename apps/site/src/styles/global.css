@@ -1,6 +1,7 @@
 @import "@cosmic/theme/styles/tokens.css";
 @import "@cosmic/theme/styles/layer-museum.css";
 @import "@cosmic/theme/styles/print.css";
+@import "@cosmic/theme/styles/components/button.css";
 
 :root {
   --cp-site-max: 1080px;
