@@ -10,5 +10,8 @@
     "lint": "echo \"lint: (placeholder)\"",
     "typecheck": "corepack pnpm -r typecheck",
     "test": "echo \"test: (placeholder)\""
+  },
+  "devDependencies": {
+    "vitest": "^4.0.18"
   }
 }
