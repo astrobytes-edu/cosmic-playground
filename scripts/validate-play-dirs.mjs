@@ -109,6 +109,25 @@ async function main() {
     }
   }
 
+  const invalidCopyResultsButton = [];
+  for (const slug of slugs) {
+    const indexPath = path.join(playRoot, slug, "index.html");
+    if (!(await pathExists(indexPath))) continue;
+    const html = await readText(indexPath);
+
+    const copyResultsTag = findStartTagById(html, "copyResults");
+    if (!copyResultsTag) continue;
+
+    const missing = [];
+    if (!/^<button\b/i.test(copyResultsTag)) missing.push("<button …>");
+    if (!/\btype=["']button["']/i.test(copyResultsTag))
+      missing.push('type="button"');
+
+    if (missing.length > 0) {
+      invalidCopyResultsButton.push({ slug, indexPath, missing, copyResultsTag });
+    }
+  }
+
   const sourceSlugs = await getDemoSlugsFromSource();
   const missingMetadata = [];
   for (const slug of sourceSlugs) {
@@ -138,6 +157,7 @@ async function main() {
     missingPlayArtifacts.length > 0 ||
     missingContractMarkers.length > 0 ||
     invalidExportStatusRegion.length > 0 ||
+    invalidCopyResultsButton.length > 0 ||
     missingMetadata.length > 0
   ) {
     if (missingPlayArtifacts.length > 0) {
@@ -160,6 +180,15 @@ async function main() {
     if (invalidExportStatusRegion.length > 0) {
       console.error("Built demo artifacts missing export status live-region attributes:");
       for (const item of invalidExportStatusRegion) {
+        console.error(`- ${item.slug} (${item.indexPath})`);
+        for (const marker of item.missing) console.error(`  - missing: ${marker}`);
+      }
+      console.error("");
+    }
+
+    if (invalidCopyResultsButton.length > 0) {
+      console.error("Built demo artifacts missing copy results button semantics:");
+      for (const item of invalidCopyResultsButton) {
         console.error(`- ${item.slug} (${item.indexPath})`);
         for (const marker of item.missing) console.error(`  - missing: ${marker}`);
       }
