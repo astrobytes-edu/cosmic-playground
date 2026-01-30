@@ -23,11 +23,11 @@ station_params:
     notice: "Heavier body moves less; barycenter shifts toward the heavier mass."
   - parameter: "Separation (a)"
     value: "________"
-    notice: "Period changes quickly with distance (in this simplified circular model)."
+    notice: "In this circular Kepler model, P² = a³/(M₁+M₂) (P in years, a in AU, masses in M☉)."
 explain_prompt: "Explain how the center of mass helps you understand the motion of both bodies."
 model_notes:
   - "This pilot assumes perfectly circular orbits and point masses (no eccentricity, tides, or relativity)."
-  - "Units are model units with G = 1; period and distances are not calibrated to real systems."
+  - "Units: distance in AU, time in years, and masses in solar masses (M☉). This instrument takes M₁ = 1 M☉ and sets M₂ via the mass-ratio slider; it uses the teaching normalization G = 4π² AU³/(yr²·M☉)."
 demo_path: "/play/binary-orbits/"
 station_path: "/stations/binary-orbits/"
 instructor_path: "/instructor/binary-orbits/"

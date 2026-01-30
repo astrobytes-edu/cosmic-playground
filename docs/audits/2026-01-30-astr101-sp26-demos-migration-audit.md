@@ -15,6 +15,36 @@
 
 The legacy suite already has good separation between **testable model code** (`_assets/*-model.js`) and **UI code** (`<demo>/<demo>.js`). That’s the key leverage point: port models first, then port UI and shell.
 
+## Integration status (as of 2026-01-30)
+
+The migration has progressed beyond this audit’s original snapshot:
+
+- ✅ Astro content collections exist for `instructor/`, `stations/`, and `hubs/`, and the legacy Quarto content has been imported for **all 11** slugs.
+- ✅ KaTeX is dependency-driven in `apps/site` and loaded only on station/instructor pages that declare `has_math: true`.
+- ✅ `packages/physics` exists as TypeScript with Vitest, and the legacy shared physics modules are ported with tests (`astro-constants`, `units`, `two-body-analytic`).
+- ✅ Pedagogy engines are being preserved: `DemoModes` (help + station mode) and `ChallengeEngine` are now ported into `@cosmic/runtime` (wired up in `moon-phases` as the first integration).
+- ⚠️ Demo/UI/content alignment is the dominant remaining risk:
+  - Many demos are still stubs, but their imported station + instructor content describes the legacy feature set.
+  - Some demos will be migrated incrementally; treat “units + copy + export” alignment as part of each demo’s definition of done.
+
+### Per-demo integration map (legacy → current)
+
+| Slug | Legacy notable deps | Current instrument | Content imported | Key integration gaps |
+| --- | --- | --- | --- | --- |
+| `angular-size` | DemoModes | stub | station + instructor | needs model port; legacy “modes” UX not present |
+| `binary-orbits` | KaTeX, shared physics, `stellar-utils` | ported (partial) | station + instructor | station card expects eccentricity + vectors not present in the current instrument UI |
+| `blackbody-radiation` | KaTeX + Math Mode | stub | station + instructor | needs model port; decide keep/replace Math Mode |
+| `conservation-laws` | KaTeX, shared physics | stub | station + instructor | needs model port |
+| `eclipse-geometry` | DemoModes + ChallengeEngine | stub | station + instructor | needs model port; wire up Station/Challenge modes via runtime |
+| `em-spectrum` | KaTeX, data files | stub | station + instructor | needs data strategy + model port |
+| `keplers-laws` | KaTeX, shared physics | stub | station + instructor | needs model port |
+| `moon-phases` | DemoModes + ChallengeEngine, shared physics | ported (partial) | station + instructor | verify content wording + UI labels stay consistent |
+| `parallax-distance` | KaTeX, data files | stub | station + instructor | needs data strategy + model port |
+| `seasons` | DemoModes, shared physics | stub | station + instructor | needs model port |
+| `telescope-resolution` | KaTeX + Math Mode, data files | stub | station + instructor | needs data strategy + model port; decide keep/replace Math Mode |
+
+**Interpretation:** From here, success is mostly about (1) preventing UI/content drift and (2) migrating in deterministic waves (2–3 demos) with end-of-wave gates.
+
 ## Current state of `cosmic-playground` (target)
 
 ### Site + content
@@ -22,8 +52,8 @@ The legacy suite already has good separation between **testable model code** (`_
 - Astro “museum” site: `apps/site` (static build, GitHub Pages base path supported via `import.meta.env.BASE_URL`).
 - Demo metadata lives in `apps/site/src/content/demos/*.md` (title, topics, predict/play/explain prompts, model notes, etc.).
 - Exhibit pages: `apps/site/src/pages/exhibits/[slug].astro` embed the demo and render pedagogy from the demo content entry.
-- Station pages: `apps/site/src/pages/stations/[slug].astro` are print-first and now support optional `station_params` rows (fallback placeholder otherwise).
-- Instructor pages: `apps/site/src/pages/instructor/[slug].astro` are currently **placeholder** sections populated from demo metadata (misconceptions + model notes) and a hardcoded backlog; **no real instructor content collection yet**.
+- Station pages: `apps/site/src/pages/stations/[slug].astro` are print-first and prefer a `stations/<slug>` override entry (imported from legacy) when present; otherwise they fall back to derived content.
+- Instructor pages: `apps/site/src/pages/instructor/[slug].astro` prefer `instructor/<slug>/{index,activities,assessment,model,backlog}.md` bundle entries (imported from legacy) when present; otherwise they fall back to demo metadata.
 
 ### Demos build + gates
 
@@ -43,8 +73,8 @@ The legacy suite already has good separation between **testable model code** (`_
 ### Demo implementation status
 
 - “Real” demos in `apps/demos`:
-  - `moon-phases` (pilot)
-  - `binary-orbits` (pilot-quality instrument)
+  - `moon-phases` (pilot; does not yet match all legacy station-mode UX)
+  - `binary-orbits` (pilot; units now AU/yr/M☉ in code, but UI copy still says “arbitrary units”)
 - Still stubbed (use `apps/demos/src/shared/stub-demo.ts`):
   - `angular-size`, `blackbody-radiation`, `conservation-laws`, `eclipse-geometry`, `em-spectrum`, `keplers-laws`, `parallax-distance`, `seasons`, `telescope-resolution`
 
@@ -52,7 +82,8 @@ The legacy suite already has good separation between **testable model code** (`_
 
 - `packages/theme`: token + shell CSS.
 - `packages/runtime`: mode plumbing + export formatting + clipboard helper.
-- `packages/physics`, `packages/ui`: present but effectively placeholders (only export `PACKAGE_NAME` today).
+- `packages/physics`: TypeScript + Vitest with ports of legacy shared physics (`astro-constants`, `units`, `two-body-analytic`) and tests.
+- `packages/ui`: placeholder (not yet migrated from legacy patterns).
 
 ## Current state of `~/Teaching/astr101-sp26/demos/` (source)
 
@@ -124,7 +155,9 @@ Current instructor pages are generated from demo metadata and don’t support:
 - suite-level guides (unit hubs)
 - embedded demo/station includes from the Quarto system
 
-**Decision:** create a real instructor content collection (or embed instructor content into the demos collection, but that will bloat demo metadata).
+**Status:** resolved. Instructor/station/hubs content collections exist and are populated via an importer.
+
+**New primary risk:** content is imported for all demos, but most demos are stubs. Until content is verified, pages can describe controls/features that are not implemented. This needs an explicit “legacy/unverified” labeling strategy.
 
 ### 2) Shared engines + utilities gap
 
@@ -135,6 +168,8 @@ Legacy has working “tour/challenge” engines and station-mode tooling; `@cosm
 - (B) drop them and keep v1 simpler (but you’ll be throwing away working pedagogy UX).
 
 Given the source already uses them and backwards compat is not required, **porting is usually cheaper long-term** (especially for instructor materials).
+
+**Integration note:** there is a plausible v1 strategy that does *not* port DemoModes at all if “station mode” is replaced by the current “Copy results” export affordance + print-first station pages. If we choose that route, imported station content that references station mode must be edited (or clearly marked as legacy).
 
 ### 3) KaTeX strategy
 
@@ -192,3 +227,7 @@ You can brute-force port 11 demos by hand, but you’ll lose time to repeated ch
 
 See the implementation plan: `docs/plans/2026-01-30-astr101-sp26-demos-migration.md`.
 
+## Immediate action items (accuracy + drift prevention)
+
+1. Add a `content_verified` (or equivalent) signal to prevent imported legacy content being mistaken as current behavior.
+2. For each migrated demo, treat “content alignment” (units + UI + export + docs) as part of the definition of done (not a later sweep).

@@ -54,6 +54,7 @@
       "parallax-distance",
       "telescope-resolution"
     ],
+    "math_mode_demos": ["blackbody-radiation", "telescope-resolution"],
     "demo_modes_demos": ["angular-size", "eclipse-geometry", "moon-phases", "seasons"],
     "challenge_engine_demos": ["eclipse-geometry", "moon-phases"],
     "external_data_files": {
@@ -63,8 +64,26 @@
     },
     "notes": [
       "math_demos means the legacy demo loads KaTeX and/or renders KaTeX formulas; it does not necessarily imply the new demo must ship math UI.",
+      "math_mode_demos means the legacy demo toggles additional UI (e.g. formulas) behind a Math Mode control.",
       "tourEngine is present in legacy _assets but does not appear to be referenced by demo index.html files."
     ]
+  },
+  "integration": {
+    "status_legend": {
+      "demo_status": ["stub", "ported_partial", "ported"],
+      "content_imported": "Whether station + instructor content was imported from legacy Quarto",
+      "content_verified": "Whether content has been reviewed/edited to match the current instrument UI + units"
+    },
+    "known_cross_cutting_issues": [
+      "Station and instructor content is imported for all demos, but many demo instruments are still stubs; until verified, content may reference legacy controls/features that are not implemented yet.",
+      "Legacy engines are being ported into @cosmic/runtime: DemoModes (help/station mode) and ChallengeEngine now exist and are used by moon-phases, but most demos are not wired up yet; treat legacy references as 'legacy until verified' until each demo is migrated.",
+      "Scientific/units copy must stay consistent across: demo UI labels, export payload names/units, and site model_notes."
+    ]
+  },
+  "waves": {
+    "1": ["angular-size", "eclipse-geometry", "moon-phases", "seasons"],
+    "2": ["binary-orbits", "blackbody-radiation", "conservation-laws", "keplers-laws"],
+    "3": ["em-spectrum", "parallax-distance", "telescope-resolution"]
   },
   "demos": [
     {
@@ -79,13 +98,19 @@
         "station_card_include": "_assets/station-cards/angular-size.qmd",
         "uses": {
           "katex": false,
+          "mathMode": false,
           "demoModes": true,
           "tourEngine": false,
           "challengeEngine": false
         },
         "dataFiles": []
       },
-      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+      "target": {
+        "demo_status": "stub",
+        "needsPhysicsPort": true,
+        "content_imported": { "station": true, "instructor": true },
+        "content_verified": false
+      }
     },
     {
       "slug": "binary-orbits",
@@ -99,13 +124,23 @@
         "station_card_include": "_assets/station-cards/binary-orbits.qmd",
         "uses": {
           "katex": true,
+          "mathMode": false,
           "demoModes": false,
           "tourEngine": false,
           "challengeEngine": false
         },
         "dataFiles": []
       },
-      "target": { "demo_status": "ported", "needsPhysicsPort": true }
+      "target": {
+        "demo_status": "ported_partial",
+        "needsPhysicsPort": true,
+        "content_imported": { "station": true, "instructor": true },
+        "content_verified": false,
+        "known_issues": [
+          "Ensure unit consistency across instrument HTML labels, export payload names/units, and site model notes (binary-orbits has been migrated to AU/yr/M☉ teaching units with G=4π²; avoid regressions).",
+          "Imported station card references eccentricity and velocity vectors not present in the current instrument UI."
+        ]
+      }
     },
     {
       "slug": "blackbody-radiation",
@@ -119,13 +154,19 @@
         "station_card_include": "_assets/station-cards/blackbody-radiation.qmd",
         "uses": {
           "katex": true,
+          "mathMode": true,
           "demoModes": false,
           "tourEngine": false,
           "challengeEngine": false
         },
         "dataFiles": []
       },
-      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+      "target": {
+        "demo_status": "stub",
+        "needsPhysicsPort": true,
+        "content_imported": { "station": true, "instructor": true },
+        "content_verified": false
+      }
     },
     {
       "slug": "conservation-laws",
@@ -139,13 +180,19 @@
         "station_card_include": "_assets/station-cards/conservation-laws.qmd",
         "uses": {
           "katex": true,
+          "mathMode": false,
           "demoModes": false,
           "tourEngine": false,
           "challengeEngine": false
         },
         "dataFiles": []
       },
-      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+      "target": {
+        "demo_status": "stub",
+        "needsPhysicsPort": true,
+        "content_imported": { "station": true, "instructor": true },
+        "content_verified": false
+      }
     },
     {
       "slug": "eclipse-geometry",
@@ -159,13 +206,19 @@
         "station_card_include": "_assets/station-cards/eclipse-geometry.qmd",
         "uses": {
           "katex": false,
+          "mathMode": false,
           "demoModes": true,
           "tourEngine": false,
           "challengeEngine": true
         },
         "dataFiles": []
       },
-      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+      "target": {
+        "demo_status": "stub",
+        "needsPhysicsPort": true,
+        "content_imported": { "station": true, "instructor": true },
+        "content_verified": false
+      }
     },
     {
       "slug": "em-spectrum",
@@ -179,13 +232,19 @@
         "station_card_include": "_assets/station-cards/em-spectrum.qmd",
         "uses": {
           "katex": true,
+          "mathMode": false,
           "demoModes": false,
           "tourEngine": false,
           "challengeEngine": false
         },
         "dataFiles": ["em-spectrum/object-data.js", "em-spectrum/telescope-data.js"]
       },
-      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+      "target": {
+        "demo_status": "stub",
+        "needsPhysicsPort": true,
+        "content_imported": { "station": true, "instructor": true },
+        "content_verified": false
+      }
     },
     {
       "slug": "keplers-laws",
@@ -199,13 +258,19 @@
         "station_card_include": "_assets/station-cards/keplers-laws.qmd",
         "uses": {
           "katex": true,
+          "mathMode": false,
           "demoModes": false,
           "tourEngine": false,
           "challengeEngine": false
         },
         "dataFiles": []
       },
-      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+      "target": {
+        "demo_status": "stub",
+        "needsPhysicsPort": true,
+        "content_imported": { "station": true, "instructor": true },
+        "content_verified": false
+      }
     },
     {
       "slug": "moon-phases",
@@ -219,13 +284,19 @@
         "station_card_include": "_assets/station-cards/moon-phases.qmd",
         "uses": {
           "katex": false,
+          "mathMode": false,
           "demoModes": true,
           "tourEngine": false,
           "challengeEngine": true
         },
         "dataFiles": []
       },
-      "target": { "demo_status": "ported", "needsPhysicsPort": true }
+      "target": {
+        "demo_status": "ported_partial",
+        "needsPhysicsPort": true,
+        "content_imported": { "station": true, "instructor": true },
+        "content_verified": false
+      }
     },
     {
       "slug": "parallax-distance",
@@ -239,13 +310,19 @@
         "station_card_include": "_assets/station-cards/parallax-distance.qmd",
         "uses": {
           "katex": true,
+          "mathMode": false,
           "demoModes": false,
           "tourEngine": false,
           "challengeEngine": false
         },
         "dataFiles": ["parallax-distance/star-data.js"]
       },
-      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+      "target": {
+        "demo_status": "stub",
+        "needsPhysicsPort": true,
+        "content_imported": { "station": true, "instructor": true },
+        "content_verified": false
+      }
     },
     {
       "slug": "seasons",
@@ -259,13 +336,19 @@
         "station_card_include": "_assets/station-cards/seasons.qmd",
         "uses": {
           "katex": false,
+          "mathMode": false,
           "demoModes": true,
           "tourEngine": false,
           "challengeEngine": false
         },
         "dataFiles": []
       },
-      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+      "target": {
+        "demo_status": "stub",
+        "needsPhysicsPort": true,
+        "content_imported": { "station": true, "instructor": true },
+        "content_verified": false
+      }
     },
     {
       "slug": "telescope-resolution",
@@ -279,13 +362,19 @@
         "station_card_include": "_assets/station-cards/telescope-resolution.qmd",
         "uses": {
           "katex": true,
+          "mathMode": true,
           "demoModes": false,
           "tourEngine": false,
           "challengeEngine": false
         },
         "dataFiles": ["telescope-resolution/telescope-data.js"]
       },
-      "target": { "demo_status": "stub", "needsPhysicsPort": true }
+      "target": {
+        "demo_status": "stub",
+        "needsPhysicsPort": true,
+        "content_imported": { "station": true, "instructor": true },
+        "content_verified": false
+      }
     }
   ],
   "hubs": [

@@ -4,11 +4,20 @@
 
 **Goal:** Migrate *all* ASTR101 SP26 demos + instructor/station materials from `~/Teaching/astr101-sp26/demos/` into `astrobytes-edu/cosmic-playground` as first-class content and Vite-built instruments (no backward compatibility required).
 
-**Architecture:** Keep the museum site static/fast (minimal client JS), and treat demos as Vite-built “instruments” that are copied into `apps/site/public/play/<slug>/`. Instructor/station materials become Astro content collections, imported from legacy Quarto `.qmd` with a small conversion script (includes inlined; callouts converted to semantic HTML).
+**Architecture:** Keep the museum site static/fast (minimal client JS), and treat demos as Vite-built “instruments” that are copied into `apps/site/public/play/<slug>/`. Instructor/station materials become Astro content collections, imported from legacy Quarto `.qmd` with a small conversion script (includes inlined; callouts converted into Markdown-friendly blockquotes / admonitions).
 
 **Tech Stack:** pnpm workspace, Astro content collections (mostly Markdown; MDX only when needed), Vite + TypeScript demos, `@cosmic/runtime` instrument runtime, KaTeX as a normal dependency (with an explicit vendoring fallback only if dependency install is blocked).
 
 ---
+
+## Status snapshot (2026-01-30)
+
+- ✅ Milestones 0–3 (inventory, content collections, KaTeX, Quarto import) are complete.
+- ✅ `packages/physics` has Vitest + ports of legacy shared physics.
+- ✅ `@cosmic/runtime` now includes `DemoModes` (Help/Station) and `ChallengeEngine` (wired up in `moon-phases` as the first integration).
+- ⚠️ Remaining work is dominated by per-demo migration + drift prevention:
+  - Most demos are still stubs but already have imported station/instructor content.
+  - Some imported content still references legacy controls not yet implemented in the new instruments (until content is verified per demo).
 
 ## Guardrails (prevent scope explosion)
 
@@ -21,6 +30,7 @@
    2) site content model + build pipeline
    3) one demo end-to-end to the quality bar
    4) batch waves (2–3 demos per wave)
+4. **Workspace rule:** do work in this repo (no git worktrees).
 
 ---
 
@@ -235,7 +245,7 @@ Expected: pass.
 
 **Files:**
 - Create: `scripts/import-astr101-sp26.mjs`
-- Create: `scripts/lib/quarto-to-mdx.mjs`
+- Create: `scripts/lib/quarto-to-markdown.mjs`
 - Create: `scripts/lib/quarto-inline-includes.mjs`
 
 **Step 1: Script CLI**
@@ -243,13 +253,13 @@ Expected: pass.
 `node scripts/import-astr101-sp26.mjs --src ~/Teaching/astr101-sp26/demos`
 
 Outputs (overwrites allowed via `--force`):
-- `apps/site/src/content/instructor/<bundle>/*.mdx`
-- `apps/site/src/content/stations/<slug>.mdx`
+- `apps/site/src/content/instructor/<bundle>/*.md`
+- `apps/site/src/content/stations/<slug>.md`
 
 **Step 2: Conversion rules**
 
 - Inline `{{< include ... >}}` before conversion.
-- Convert Quarto callouts (`::: {.callout-... title="..."}`) into `<aside class="cp-callout" data-kind="...">`.
+- Convert Quarto callouts (`::: {.callout-... title="..."}`) into Markdown-friendly blockquote sections (preserving title and “kind” where possible).
 - Keep headings/lists/tables/code fences.
 - Preserve inline math (leave `$...$` as-is for KaTeX autorender).
 
@@ -271,11 +281,75 @@ Expected: build succeeds with imported content.
 **Step 6: Commit**
 
 ```bash
-git add scripts/import-astr101-sp26.mjs scripts/lib/quarto-to-mdx.mjs scripts/lib/quarto-inline-includes.mjs apps/site/src/content/instructor apps/site/src/content/stations
+git add scripts/import-astr101-sp26.mjs scripts/lib/quarto-to-markdown.mjs scripts/lib/quarto-inline-includes.mjs apps/site/src/content/instructor apps/site/src/content/stations
 git commit -m "chore(migration): import legacy instructor + station content from Quarto"
 ```
 
 ---
+
+## Milestone 4: Drift prevention (content vs demo) (HARD STOP)
+
+**Goal:** Prevent “imported legacy content” from being mistaken as “current behavior” while demos are still stubs / partially migrated.
+
+### Task 4.1: Add explicit content verification flags
+
+**Files:**
+- Modify: `apps/site/src/content/config.ts`
+- Modify: `apps/site/src/pages/instructor/[slug].astro`
+- Modify: `apps/site/src/pages/stations/[slug].astro`
+- Create: `apps/site/src/components/LegacyContentBanner.astro`
+
+**Step 1: Extend collection schemas**
+
+Add a field like:
+- `content_status: "legacy" | "verified" | "edited"`
+
+Default imported Quarto content to `legacy`.
+
+**Step 2: Render a banner on legacy pages**
+
+When `content_status !== "verified"`, show a print-friendly banner explaining:
+- content is imported from legacy
+- demo UI may not match yet
+- treat as draft until verified
+
+**Step 3: Typecheck + commit**
+
+Run: `corepack pnpm -C apps/site typecheck`  
+Expected: success.
+
+Commit: `feat(site): label imported instructor/station content as legacy`
+
+### Task 4.2: Fix `binary-orbits` unit/copy mismatch (surgical)
+
+**Files:**
+- Modify: `apps/demos/src/demos/binary-orbits/index.html`
+- Modify: `apps/site/src/content/demos/binary-orbits.md`
+
+**Steps:**
+1. Update UI labels/model notes to match teaching units (AU/yr/M☉, `G = 4π²`) used by the demo code.
+2. Update exhibit `model_notes` to match.
+3. Run the end-of-milestone gates + commit.
+
+### Milestone 4 verification + stop
+
+Run:
+```bash
+corepack pnpm build
+corepack pnpm -C apps/site test:e2e
+```
+Expected: pass.
+
+**Hard stop:** Stop here and report that (a) legacy content is labeled, and (b) `binary-orbits` copy is unit-consistent.
+
+---
+
+## Demo build pipeline notes (Vite multi-entry)
+
+- Vite multi-page build is configured in `apps/demos/vite.config.ts`:
+  - auto-discovers slugs under `apps/demos/src/demos/`
+  - uses `rollupOptions.input` map for per-slug HTML entrypoints
+  - sets `base: "./"` for portable hosting under `apps/site/public/play/<slug>/`
 
 ## Task 7+: Physics + demos (repeat per slug; TDD first)
 
