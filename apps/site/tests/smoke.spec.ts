@@ -221,4 +221,12 @@ test.describe("Cosmic Playground smoke", () => {
     // Should have an outline color defined (teal focus ring)
     expect(outline).toBeTruthy();
   });
+
+  test("Navigation shows active state", async ({ page }) => {
+    await page.goto("explore/");
+
+    const activeLink = page.locator('nav a[aria-current="page"]');
+    await expect(activeLink).toBeVisible();
+    await expect(activeLink).toContainText("Explore");
+  });
 });

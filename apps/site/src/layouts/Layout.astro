@@ -13,6 +13,14 @@ const withBase = (path: string) => {
   const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
   return `${normalizedBase}${normalizedPath}`;
 };
+
+const currentPath = Astro.url.pathname;
+
+function isActive(href: string) {
+  const base = import.meta.env.BASE_URL || "/";
+  const fullHref = href.startsWith("/") ? base + href.slice(1) : base + href;
+  return currentPath.startsWith(fullHref);
+}
 ---
 
 <!doctype html>
@@ -28,8 +36,18 @@ const withBase = (path: string) => {
       <div class="site-header__inner">
         <a class="brand" href={withBase("")}>Cosmic Playground</a>
         <nav aria-label="Primary">
-          <a href={withBase("explore/")}>Explore</a>
-          <a href={withBase("playlists/")}>Playlists</a>
+          <a
+            href={withBase("explore/")}
+            aria-current={isActive("/explore/") ? "page" : undefined}
+          >
+            Explore
+          </a>
+          <a
+            href={withBase("playlists/")}
+            aria-current={isActive("/playlists/") ? "page" : undefined}
+          >
+            Playlists
+          </a>
         </nav>
       </div>
     </header>
@@ -46,3 +64,10 @@ const withBase = (path: string) => {
     </footer>
   </body>
 </html>
+
+<style>
+  nav a[aria-current="page"] {
+    color: var(--cp-accent);
+    border-bottom: 2px solid currentColor;
+  }
+</style>
