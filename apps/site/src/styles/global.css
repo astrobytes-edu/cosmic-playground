@@ -1,14 +1,9 @@
+@import "@cosmic/theme/styles/tokens.css";
+@import "@cosmic/theme/styles/layer-museum.css";
+@import "@cosmic/theme/styles/print.css";
+
 :root {
-  color-scheme: light dark;
-  --bg: #070910;
-  --panel: rgba(255, 255, 255, 0.06);
-  --text: #f4f6ff;
-  --muted: rgba(244, 246, 255, 0.7);
-  --border: rgba(255, 255, 255, 0.14);
-  --ring: #8aa2ff;
-  --shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
-  --radius: 14px;
-  --max: 1080px;
+  --cp-site-max: 1080px;
 }
 
 * {
@@ -23,29 +18,7 @@ body {
 
 body {
   min-height: 100svh;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-    Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  background: radial-gradient(
-      1200px 800px at 20% 10%,
-      rgba(138, 162, 255, 0.18),
-      transparent 60%
-    ),
-    var(--bg);
-  color: var(--text);
   line-height: 1.55;
-}
-
-a {
-  color: inherit;
-}
-
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 3px solid var(--ring);
-  outline-offset: 3px;
 }
 
 .skip-link {
@@ -54,7 +27,7 @@ textarea:focus-visible {
   top: -999px;
   padding: 10px 12px;
   background: rgba(0, 0, 0, 0.75);
-  border: 1px solid var(--border);
+  border: 1px solid var(--cp-border);
   border-radius: 10px;
 }
 
@@ -67,14 +40,14 @@ textarea:focus-visible {
   top: 0;
   z-index: 10;
   backdrop-filter: blur(12px);
-  background: rgba(7, 9, 16, 0.72);
-  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--cp-bg0) 72%, transparent);
+  border-bottom: 1px solid var(--cp-border);
 }
 
 .site-header__inner,
 .site-footer__inner,
 .site-main {
-  max-width: var(--max);
+  max-width: var(--cp-site-max);
   margin: 0 auto;
   padding: 14px 18px;
 }
@@ -105,7 +78,7 @@ nav a {
 }
 
 nav a:hover {
-  border-color: var(--border);
+  border-color: var(--cp-border);
   background: rgba(255, 255, 255, 0.06);
 }
 
@@ -115,16 +88,14 @@ nav a:hover {
 }
 
 .site-footer {
-  border-top: 1px solid var(--border);
-  color: var(--muted);
+  border-top: 1px solid var(--cp-border);
+  color: var(--cp-muted);
 }
 
 .hero {
   padding: 22px 18px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--panel);
-  box-shadow: var(--shadow);
+  display: grid;
+  gap: 10px;
 }
 
 .hero h1 {
@@ -133,8 +104,8 @@ nav a:hover {
 }
 
 .hero p {
-  margin: 10px 0 0;
-  color: var(--muted);
+  margin: 0;
+  color: var(--cp-muted);
   max-width: 68ch;
 }
 
@@ -142,7 +113,7 @@ nav a:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 16px;
+  margin-top: 6px;
 }
 
 .button {
@@ -151,22 +122,21 @@ nav a:hover {
   justify-content: center;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(138, 162, 255, 0.20);
-  border: 1px solid rgba(138, 162, 255, 0.44);
+  background: color-mix(in srgb, var(--cp-accent3) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cp-accent3) 44%, transparent);
   text-decoration: none;
   font-weight: 600;
 }
 
 .button:hover {
-  background: rgba(138, 162, 255, 0.28);
+  background: color-mix(in srgb, var(--cp-accent3) 30%, transparent);
 }
 
 .button--ghost {
   background: transparent;
-  border-color: var(--border);
+  border-color: var(--cp-border);
 }
 
 .button--ghost:hover {
   background: rgba(255, 255, 255, 0.06);
 }
-

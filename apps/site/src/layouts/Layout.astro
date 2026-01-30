@@ -22,9 +22,9 @@ const withBase = (path: string) => {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{title}</title>
   </head>
-  <body>
+  <body class="cp-layer-museum">
     <a class="skip-link" href="#content">Skip to content</a>
-    <header class="site-header">
+    <header class="site-header cp-no-print">
       <div class="site-header__inner">
         <a class="brand" href={withBase("")}>Cosmic Playground</a>
         <nav aria-label="Primary">
@@ -36,7 +36,7 @@ const withBase = (path: string) => {
     <main id="content" class="site-main">
       <slot />
     </main>
-    <footer class="site-footer">
+    <footer class="site-footer cp-no-print">
       <div class="site-footer__inner">
         <p>
           Built as a static “interactive museum” for astronomy demos. Instructor
@@ -46,4 +46,3 @@ const withBase = (path: string) => {
     </footer>
   </body>
 </html>
-

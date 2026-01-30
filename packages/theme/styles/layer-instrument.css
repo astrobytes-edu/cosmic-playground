@@ -1,0 +1,49 @@
+/* Apply to demo root: <div class="cp-layer-instrument cp-demo"> */
+.cp-layer-instrument {
+  background: var(--cp-bg0);
+}
+
+/* Reduce ambient glow; instrument mode should be calmer */
+.cp-layer-instrument {
+  --cp-glow-accent: rgba(45, 212, 191, 0.1);
+  --cp-glow-violet: rgba(167, 139, 250, 0.08);
+  --cp-glow-blue: rgba(96, 165, 250, 0.08);
+  --cp-glow-magenta: rgba(236, 72, 153, 0.06);
+}
+
+.cp-panel {
+  background: var(--cp-bg1);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-r-2);
+  box-shadow: var(--cp-shadow-1);
+}
+
+.cp-panel-header {
+  padding: var(--cp-space-3) var(--cp-space-4);
+  border-bottom: 1px solid var(--cp-border);
+  color: var(--cp-muted);
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+
+.cp-panel-body {
+  padding: var(--cp-space-4);
+}
+
+.cp-callout {
+  border-left: 3px solid var(--cp-accent3);
+  background: rgba(96, 165, 250, 0.08);
+  padding: var(--cp-space-3) var(--cp-space-4);
+  border-radius: var(--cp-r-2);
+}
+
+.cp-callout[data-kind="model"] {
+  border-left-color: var(--cp-accent2);
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.cp-callout[data-kind="misconception"] {
+  border-left-color: var(--cp-accent4);
+  background: rgba(236, 72, 153, 0.08);
+}
+

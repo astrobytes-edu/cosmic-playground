@@ -1,34 +1,12 @@
 ---
 export type TagPillProps = {
   label: string;
-  variant?: "default" | "info" | "warn";
+  tone?: "default" | "teal" | "violet" | "blue" | "magenta";
 };
 
-const { label, variant = "default" } = Astro.props;
+const { label, tone = "default" } = Astro.props as TagPillProps;
 ---
 
-<span class={`tag-pill tag-pill--${variant}`}>{label}</span>
-
-<style>
-  .tag-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 8px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.06);
-    font-size: 0.85rem;
-    white-space: nowrap;
-  }
-
-  .tag-pill--info {
-    border-color: rgba(138, 162, 255, 0.55);
-    background: rgba(138, 162, 255, 0.14);
-  }
-
-  .tag-pill--warn {
-    border-color: rgba(255, 198, 120, 0.55);
-    background: rgba(255, 198, 120, 0.12);
-  }
-</style>
-
+<span class="cp-badge" data-tone={tone === "default" ? undefined : tone}>
+  {label}
+</span>

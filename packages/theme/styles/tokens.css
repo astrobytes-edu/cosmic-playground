@@ -1,0 +1,80 @@
+:root {
+  color-scheme: dark;
+
+  /* ---------- Neutrals ---------- */
+  --cp-bg0: #070a12; /* page background */
+  --cp-bg1: #0b1020; /* cards/panels */
+  --cp-bg2: #0f1a33; /* elevated */
+  --cp-border: rgba(255, 255, 255, 0.1);
+
+  --cp-text: #eaf2ff;
+  --cp-muted: #b7c4da;
+  --cp-faint: #7d8ba6;
+
+  /* ---------- Accents (cosmic, controlled) ---------- */
+  --cp-accent: #2dd4bf; /* aurora teal (primary) */
+  --cp-accent2: #a78bfa; /* nebula violet (secondary) */
+  --cp-accent3: #60a5fa; /* ion blue (links) */
+  --cp-accent4: #ec4899; /* nebula magenta (sparingly) */
+
+  /* ---------- Status ---------- */
+  --cp-success: #34d399;
+  --cp-warning: #fbbf24;
+  --cp-danger: #fb7185;
+
+  /* ---------- Glows (low alpha = not loud) ---------- */
+  --cp-glow-accent: rgba(45, 212, 191, 0.22);
+  --cp-glow-violet: rgba(167, 139, 250, 0.18);
+  --cp-glow-blue: rgba(96, 165, 250, 0.2);
+  --cp-glow-magenta: rgba(236, 72, 153, 0.16);
+
+  /* ---------- Focus ---------- */
+  --cp-focus: var(--cp-accent);
+
+  /* ---------- Typography ---------- */
+  --cp-font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Inter,
+    Roboto, Helvetica, Arial, sans-serif;
+  --cp-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
+  /* ---------- Spacing ---------- */
+  --cp-space-1: 4px;
+  --cp-space-2: 8px;
+  --cp-space-3: 12px;
+  --cp-space-4: 16px;
+  --cp-space-5: 24px;
+  --cp-space-6: 32px;
+  --cp-space-7: 48px;
+
+  /* ---------- Radius ---------- */
+  --cp-r-1: 10px;
+  --cp-r-2: 14px;
+  --cp-r-3: 18px;
+
+  /* ---------- Shadows ---------- */
+  --cp-shadow-1: 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 10px 30px rgba(0, 0, 0, 0.35);
+  --cp-shadow-2: 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+html,
+body {
+  background: var(--cp-bg0);
+  color: var(--cp-text);
+  font-family: var(--cp-font-sans);
+}
+
+a {
+  color: var(--cp-accent3);
+}
+
+a:hover {
+  filter: brightness(1.1);
+}
+
+:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 2px;
+}
+

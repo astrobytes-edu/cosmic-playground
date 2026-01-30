@@ -1,2 +1,3 @@
-export const PACKAGE_NAME = "@cosmic/theme";
+export * from "./layer";
+export * from "./vars";
 

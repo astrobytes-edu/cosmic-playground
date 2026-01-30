@@ -24,16 +24,16 @@ const {
 } = Astro.props as DemoCardProps;
 ---
 
-<article class="demo-card">
+<article class="demo-card cp-card">
   <a class="demo-card__link" href={href}>
     <header class="demo-card__header">
       <h3>{title}</h3>
       <div class="demo-card__meta">
         <TagPill
           label={status}
-          variant={status === "stable" ? "info" : status === "beta" ? "default" : "warn"}
+          tone={status === "stable" ? "teal" : status === "beta" ? "default" : "magenta"}
         />
-        {hasMathMode ? <TagPill label="math mode" variant="info" /> : null}
+        {hasMathMode ? <TagPill label="math mode" tone="violet" /> : null}
       </div>
     </header>
 
@@ -41,9 +41,9 @@ const {
 
     <footer class="demo-card__footer">
       <div class="demo-card__badges" aria-label="Tags">
-        {topics.map((t) => <TagPill label={t} />)}
-        {levels.map((l) => <TagPill label={l} />)}
-        <TagPill label={`${timeMinutes} min`} />
+        {topics.map((t) => <TagPill label={t} tone="blue" />)}
+        {levels.map((l) => <TagPill label={l} tone="default" />)}
+        <TagPill label={`${timeMinutes} min`} tone="default" />
       </div>
     </footer>
   </a>
@@ -51,9 +51,7 @@ const {
 
 <style>
   .demo-card {
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: rgba(0, 0, 0, 0.35);
+    border-radius: var(--cp-r-3);
     overflow: clip;
   }
 
@@ -88,7 +86,7 @@ const {
 
   .demo-card__desc {
     margin: 10px 0 0;
-    color: var(--muted);
+    color: var(--cp-muted);
     max-width: 72ch;
   }
 

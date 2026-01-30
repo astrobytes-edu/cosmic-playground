@@ -1,0 +1,60 @@
+/* Apply to <body class="cp-layer-museum"> on museum pages */
+.cp-layer-museum {
+  background: radial-gradient(
+      900px circle at 18% 12%,
+      var(--cp-glow-blue),
+      transparent 58%
+    ),
+    radial-gradient(
+      900px circle at 82% 18%,
+      var(--cp-glow-violet),
+      transparent 62%
+    ),
+    radial-gradient(
+      900px circle at 50% 95%,
+      var(--cp-glow-accent),
+      transparent 62%
+    ),
+    var(--cp-bg0);
+}
+
+.cp-card {
+  background: color-mix(in srgb, var(--cp-bg1) 92%, transparent);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-r-3);
+  box-shadow: var(--cp-shadow-1);
+}
+
+.cp-card:hover {
+  box-shadow: var(--cp-shadow-2);
+  border-color: color-mix(in srgb, var(--cp-border) 65%, var(--cp-accent3));
+}
+
+.cp-badge {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cp-muted);
+  font-size: 0.875rem;
+}
+
+.cp-badge[data-tone="teal"] {
+  border-color: color-mix(in srgb, var(--cp-accent) 35%, var(--cp-border));
+}
+
+.cp-badge[data-tone="violet"] {
+  border-color: color-mix(in srgb, var(--cp-accent2) 35%, var(--cp-border));
+}
+
+.cp-badge[data-tone="blue"] {
+  border-color: color-mix(in srgb, var(--cp-accent3) 35%, var(--cp-border));
+}
+
+.cp-badge[data-tone="magenta"] {
+  border-color: color-mix(in srgb, var(--cp-accent4) 35%, var(--cp-border));
+}
+

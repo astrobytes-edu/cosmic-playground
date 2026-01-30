@@ -23,8 +23,8 @@ const { src, title, openHref } = Astro.props;
   .iframe-stage {
     margin-top: 14px;
     padding: 14px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
+    border-radius: var(--cp-r-3);
+    border: 1px solid var(--cp-border);
     background: rgba(0, 0, 0, 0.35);
   }
 
@@ -33,7 +33,7 @@ const { src, title, openHref } = Astro.props;
     aspect-ratio: 16 / 10;
     border-radius: 12px;
     overflow: clip;
-    border: 1px solid var(--border);
+    border: 1px solid var(--cp-border);
     background: rgba(0, 0, 0, 0.35);
   }
 
@@ -46,7 +46,6 @@ const { src, title, openHref } = Astro.props;
 
   .iframe-stage__fallback {
     margin: 10px 0 0;
-    color: var(--muted);
+    color: var(--cp-muted);
   }
 </style>
-

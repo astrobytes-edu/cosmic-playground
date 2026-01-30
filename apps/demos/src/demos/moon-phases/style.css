@@ -1,81 +1,6 @@
-:root {
-  color-scheme: dark;
-  --bg: #070910;
-  --panel: rgba(255, 255, 255, 0.06);
-  --text: #f4f6ff;
-  --muted: rgba(244, 246, 255, 0.7);
-  --ring: #8aa2ff;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-height: 100svh;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-    Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  background: radial-gradient(
-      1200px 800px at 20% 10%,
-      rgba(138, 162, 255, 0.18),
-      transparent 60%
-    ),
-    var(--bg);
-  color: var(--text);
-}
-
-.app {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 24px 20px 40px;
-}
-
-.header h1 {
-  margin: 0;
-  font-size: 1.75rem;
-  letter-spacing: 0.2px;
-}
-
-.subtitle {
-  margin: 8px 0 0;
-  color: var(--muted);
-}
-
-.panel {
-  margin-top: 18px;
-  padding: 14px 14px 12px;
-  border-radius: 12px;
-  background: var(--panel);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.instrument {
-  margin-top: 18px;
-  display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(320px, 1.4fr) minmax(
-      240px,
-      1fr
-    );
-  gap: 12px;
-}
-
-.instrument__left,
-.instrument__center,
-.instrument__right {
-  padding: 14px;
-  border-radius: 12px;
-  background: var(--panel);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.panel-title {
-  margin: 0 0 10px;
-  font-size: 1rem;
-  color: var(--muted);
-  letter-spacing: 0.2px;
-  text-transform: uppercase;
-}
+@import "@cosmic/theme/styles/tokens.css";
+@import "@cosmic/theme/styles/layer-instrument.css";
+@import "@cosmic/theme/styles/demo-shell.css";
 
 .control {
   display: grid;
@@ -87,13 +12,12 @@ input[type="range"] {
 }
 
 input[type="range"]:focus-visible {
-  outline: 3px solid var(--ring);
+  outline: 3px solid var(--cp-focus);
   outline-offset: 3px;
   border-radius: 999px;
 }
 
 .readouts {
-  margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
@@ -102,13 +26,13 @@ input[type="range"]:focus-visible {
 .readout {
   padding: 10px;
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--cp-border);
 }
 
 .readout__label {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: var(--cp-muted);
 }
 
 .readout__value {
@@ -117,11 +41,9 @@ input[type="range"]:focus-visible {
 }
 
 .stage {
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.12);
   display: grid;
   place-items: center;
+  padding: var(--cp-space-4);
 }
 
 canvas {
@@ -130,24 +52,23 @@ canvas {
 }
 
 .action {
-  margin-top: 12px;
   width: 100%;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(138, 162, 255, 0.44);
-  background: rgba(138, 162, 255, 0.2);
+  border: 1px solid color-mix(in srgb, var(--cp-accent3) 44%, transparent);
+  background: color-mix(in srgb, var(--cp-accent3) 22%, transparent);
   color: inherit;
   font-weight: 700;
   cursor: pointer;
 }
 
 .action:hover {
-  background: rgba(138, 162, 255, 0.28);
+  background: color-mix(in srgb, var(--cp-accent3) 30%, transparent);
 }
 
 .status {
   margin: 10px 0 0;
-  color: var(--muted);
+  color: var(--cp-muted);
   min-height: 1.25em;
 }
 
@@ -155,8 +76,8 @@ canvas {
   margin-top: 12px;
   padding: 10px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--cp-border);
 }
 
 .notice h3 {
@@ -167,15 +88,19 @@ canvas {
 .notice ul {
   margin: 8px 0 0;
   padding-left: 18px;
-  color: var(--muted);
+  color: var(--cp-muted);
 }
 
 .notice li {
   margin: 6px 0;
 }
 
-@media (max-width: 920px) {
-  .instrument {
-    grid-template-columns: 1fr;
-  }
+.cp-muted {
+  color: var(--cp-muted);
+}
+
+.cp-drawer ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--cp-muted);
 }

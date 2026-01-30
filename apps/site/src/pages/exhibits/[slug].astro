@@ -25,11 +25,14 @@ const { Content } = await entry.render();
   <header class="exhibit-header">
     <h1>{entry.data.title}</h1>
     <div class="badges" aria-label="Demo badges">
-      <TagPill label={entry.data.status} variant={entry.data.status === "stable" ? "info" : "default"} />
-      {entry.data.topics.map((t) => <TagPill label={t} />)}
-      {entry.data.levels.map((l) => <TagPill label={l} />)}
-      <TagPill label={`${entry.data.time_minutes} min`} />
-      {entry.data.has_math_mode ? <TagPill label="math mode" variant="info" /> : null}
+      <TagPill
+        label={entry.data.status}
+        tone={entry.data.status === "stable" ? "teal" : entry.data.status === "draft" ? "magenta" : "default"}
+      />
+      {entry.data.topics.map((t) => <TagPill label={t} tone="blue" />)}
+      {entry.data.levels.map((l) => <TagPill label={l} tone="default" />)}
+      <TagPill label={`${entry.data.time_minutes} min`} tone="default" />
+      {entry.data.has_math_mode ? <TagPill label="math mode" tone="violet" /> : null}
     </div>
   </header>
 
@@ -119,8 +122,8 @@ const { Content } = await entry.render();
   .block {
     margin-top: 18px;
     padding: 14px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
+    border-radius: var(--cp-r-3);
+    border: 1px solid var(--cp-border);
     background: rgba(0, 0, 0, 0.35);
   }
 
@@ -129,7 +132,7 @@ const { Content } = await entry.render();
   }
 
   .prompt {
-    color: var(--text);
+    color: var(--cp-text);
     font-weight: 600;
   }
 
@@ -137,7 +140,7 @@ const { Content } = await entry.render();
   ol {
     margin: 0;
     padding-left: 18px;
-    color: var(--muted);
+    color: var(--cp-muted);
   }
 
   li {

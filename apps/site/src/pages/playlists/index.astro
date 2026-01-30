@@ -23,7 +23,7 @@ const playlists = await getCollection("playlists");
 <style>
   .lede {
     margin: 6px 0 14px;
-    color: var(--muted);
+    color: var(--cp-muted);
     max-width: 72ch;
   }
 
@@ -36,8 +36,8 @@ const playlists = await getCollection("playlists");
   .card {
     display: block;
     padding: 14px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
+    border-radius: var(--cp-r-3);
+    border: 1px solid var(--cp-border);
     background: rgba(0, 0, 0, 0.35);
     text-decoration: none;
   }
@@ -53,12 +53,11 @@ const playlists = await getCollection("playlists");
 
   .meta {
     margin: 8px 0 0;
-    color: var(--muted);
+    color: var(--cp-muted);
   }
 
   .desc {
     margin: 10px 0 0;
-    color: var(--text);
+    color: var(--cp-text);
   }
 </style>
-

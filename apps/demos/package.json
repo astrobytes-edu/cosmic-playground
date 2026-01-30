@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "@cosmic/runtime": "workspace:*"
+    "@cosmic/runtime": "workspace:*",
+    "@cosmic/theme": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -7,34 +7,31 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <main id="cp-demo" class="app">
-      <header class="header">
-        <h1>Moon Phases (Pilot)</h1>
-        <p class="subtitle">
-          Adjust the phase angle and watch the illuminated fraction change.
-        </p>
-      </header>
+    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Moon phases instrument">
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Moon Phases (Pilot)</div>
+        <div class="cp-panel-body">
+          <p class="cp-muted">
+            Adjust the phase angle and watch the illuminated fraction change.
+          </p>
 
-      <section class="instrument" aria-label="Demo instrument">
-        <div class="instrument__left">
-          <h2 class="panel-title">Controls</h2>
           <label class="control">
             <span>Phase angle (degrees)</span>
             <input id="angle" type="range" min="0" max="360" value="90" step="1" />
           </label>
+
           <button id="copyResults" class="action" type="button">Copy results</button>
           <p id="status" class="status" role="status" aria-live="polite"></p>
         </div>
+      </aside>
 
-        <div class="instrument__center">
-          <h2 class="panel-title">View</h2>
-          <section class="stage" aria-label="Moon phase visualization">
-            <canvas id="moonCanvas" width="420" height="420"></canvas>
-          </section>
-        </div>
+      <section class="cp-demo__stage cp-stage stage" aria-label="Moon phase visualization">
+        <canvas id="moonCanvas" width="420" height="420"></canvas>
+      </section>
 
-        <div class="instrument__right">
-          <h2 class="panel-title">Readouts</h2>
+      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
+        <div class="cp-panel-header">Readouts</div>
+        <div class="cp-panel-body">
           <div class="readouts">
             <div class="readout">
               <div class="readout__label">Angle</div>
@@ -54,8 +51,16 @@
             </ul>
           </div>
         </div>
+      </aside>
+
+      <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
+        <strong>Model notes</strong>
+        <ul>
+          <li>This pilot visualization is a simplified 2D aid, not a full 3D render.</li>
+          <li>Angle here is a proxy for Sun–Moon–Earth geometry; details will be refined.</li>
+        </ul>
       </section>
-    </main>
+    </div>
 
     <script type="module" src="./main.ts"></script>
   </body>

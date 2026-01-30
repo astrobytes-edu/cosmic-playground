@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
+    "@cosmic/theme": "workspace:*",
     "astro": "^4.16.0"
   },
   "devDependencies": {
