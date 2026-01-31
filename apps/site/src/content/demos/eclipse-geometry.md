@@ -19,12 +19,17 @@ play_steps:
   - "Compare solar vs lunar eclipse conditions."
 explain_prompt: "Use alignment and orbital tilt to explain why eclipses are rare."
 model_notes:
-  - "This is currently a stub while the legacy demo is migrated into the new runtime."
+  - "This is a simplified geometric model: eclipses require (1) syzygy (New/Full) and (2) the Moon near a node (small |β|)."
+  - "β (degrees) is computed from orbital tilt i and distance from the ascending node Ω: β = asin(sin i · sin(λM − Ω))."
+  - "Eclipse “how close is close enough?” thresholds come from a physically motivated shadow-cone model (similar triangles)."
+  - "Earth–Moon distance is selectable (km) and affects eclipse type (e.g., central solar eclipses can be total at perigee-like distances and annular at apogee-like distances)."
+  - "Interactive outcomes use a pedagogical tolerance (Δ within 5° of New/Full); the long-run simulation uses constant-rate angle evolution to show eclipse seasons."
 demo_path: "/play/eclipse-geometry/"
 station_path: "/stations/eclipse-geometry/"
 instructor_path: "/instructor/eclipse-geometry/"
 last_updated: "2026-01-30"
 ---
 
-This demo will be migrated into the Cosmic Playground runtime; for now it provides a placeholder `/play/` target.
+This demo helps explain why eclipses do not occur every month: the Moon must be at New/Full *and* near a node so its ecliptic latitude |β| is small.
 
+Use the distance presets to connect eclipse geometry to angular size: for central solar alignment, the same geometry can yield total or annular eclipses depending on Earth–Moon distance.
