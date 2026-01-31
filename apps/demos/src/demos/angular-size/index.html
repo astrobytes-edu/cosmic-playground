@@ -12,13 +12,53 @@
         <div class="cp-panel-header">Angular Size: The Sky’s Ruler</div>
         <div class="cp-panel-body">
           <p class="cp-muted">Compare apparent sizes and see why distance matters.</p>
-          <div class="cp-callout" data-kind="model">
-            This demo is currently a stub while we migrate the legacy version into the new runtime.
-          </div>
 
-          <button id="stationMode" class="cp-action" type="button">Station mode</button>
-          <button id="challengeMode" class="cp-action" type="button">Challenge mode</button>
-          <button id="help" class="cp-action" type="button">Help / shortcuts</button>
+          <label class="control">
+            <span>Preset</span>
+            <select id="preset"></select>
+          </label>
+
+          <label class="control">
+            <span>Distance (km)</span>
+            <input id="distanceSlider" type="range" min="0" max="1000" value="500" step="1" />
+            <span class="control__value"><span id="distanceValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Diameter (km)</span>
+            <input id="diameterSlider" type="range" min="0" max="1000" value="500" step="1" />
+            <span class="control__value"><span id="diameterValue"></span></span>
+          </label>
+
+          <section id="moonControls" class="cp-notice" aria-label="Moon controls" hidden>
+            <h3>Moon time mode</h3>
+            <div class="cp-muted">
+              The Moon’s apparent size changes across its orbit, and its distance changes slowly over geologic time.
+            </div>
+
+            <div class="radio-row" role="radiogroup" aria-label="Moon time mode">
+              <label class="radio">
+                <input id="moonModeOrbit" type="radio" name="moonMode" value="orbit" checked />
+                Orbit (perigee ↔ apogee)
+              </label>
+              <label class="radio">
+                <input id="moonModeRecession" type="radio" name="moonMode" value="recession" />
+                Recession (Myr from today)
+              </label>
+            </div>
+
+            <label id="moonOrbitRow" class="control">
+              <span>Orbit angle (deg)</span>
+              <input id="moonOrbitAngle" type="range" min="0" max="360" value="0" step="1" />
+              <span class="control__value"><span id="moonOrbitValue"></span></span>
+            </label>
+
+            <label id="moonRecessionRow" class="control" hidden>
+              <span>Recession time (Myr)</span>
+              <input id="moonRecessionTime" type="range" min="-1000" max="1000" value="0" step="10" />
+              <span class="control__value"><span id="moonRecessionValue"></span></span>
+            </label>
+          </section>
 
           <button id="copyResults" class="cp-action" type="button">Copy results</button>
           <p id="status" class="cp-status" role="status" aria-live="polite"></p>
@@ -31,22 +71,62 @@
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
-        <div class="cp-stage__inner">
-          <p class="cp-stage__headline">Migration pending</p>
-          <p class="cp-muted">
-            This space will host the interactive visualization once the demo is migrated.
-          </p>
-        </div>
+      <section class="cp-demo__stage cp-stage stage" aria-label="Visualization stage">
+        <svg
+          id="stageSvg"
+          class="stage__svg"
+          viewBox="0 0 640 360"
+          role="img"
+          aria-label="Angular size visualization"
+        >
+          <defs>
+            <radialGradient id="objectGlow" cx="40%" cy="30%">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.95)" />
+              <stop offset="100%" stop-color="rgba(96,165,250,0.30)" />
+            </radialGradient>
+          </defs>
+
+          <g id="observer" aria-hidden="true">
+            <circle class="stage__observer" cx="90" cy="180" r="18" />
+            <circle class="stage__observer-eye" cx="95" cy="176" r="6" />
+            <circle class="stage__observer-eyeHighlight" cx="97" cy="174" r="2" />
+            <text class="stage__label" x="90" y="215" text-anchor="middle">Observer</text>
+          </g>
+
+          <g id="rays" aria-hidden="true">
+            <line id="rayTop" class="stage__ray" x1="90" y1="180" x2="520" y2="140" />
+            <line id="rayBottom" class="stage__ray" x1="90" y1="180" x2="520" y2="220" />
+          </g>
+
+          <g id="object" aria-hidden="true">
+            <circle id="objectCircle" class="stage__object" cx="520" cy="180" r="42" />
+          </g>
+
+          <text id="angleLabel" class="stage__angle" x="120" y="48"></text>
+          <text id="noteLabel" class="stage__note" x="120" y="72">
+            Diagram is visually scaled; numeric readouts are authoritative.
+          </text>
+        </svg>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Readouts and “what to notice” will live here once migrated.</p>
           <div class="cp-readout">
-            <div class="cp-readout__label">(example) Apparent size</div>
-            <div class="cp-readout__value">—</div>
+            <div class="cp-readout__label">Angular diameter (display)</div>
+            <div class="cp-readout__value"><span id="thetaDisplay"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Angular diameter (deg)</div>
+            <div class="cp-readout__value"><span id="thetaDeg"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Diameter (km)</div>
+            <div class="cp-readout__value"><span id="diameterKm"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Distance (km)</div>
+            <div class="cp-readout__value"><span id="distanceKm"></span></div>
           </div>
           <div class="cp-notice">
             <h3>What to notice</h3>
@@ -61,8 +141,13 @@
       <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
         <strong>Model notes</strong>
         <ul>
-          <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-          <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+          <li>Angular diameter uses the exact formula: θ = 2 arctan(D / (2d)), with D and d in km.</li>
+          <li>
+            For small angles, a useful approximation is θ (radians) ≈ D / d; in degrees,
+            θ (deg) ≈ (180/π) · (D/d).
+          </li>
+          <li>Units: internal distance/diameter are always km; display may switch between ° / ′ / ″.</li>
+          <li>This is a geometry model (no lensing, no atmospheric effects, no finite detector resolution).</li>
         </ul>
       </section>
     </div>
