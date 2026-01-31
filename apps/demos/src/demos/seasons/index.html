@@ -16,6 +16,41 @@
             Common myth: seasons are caused by Earth being closer/farther from the Sun.
           </div>
 
+          <label class="control">
+            <span>Day of year</span>
+            <input id="dayOfYear" type="range" min="1" max="365" value="80" step="1" />
+            <span class="control__value">
+              <span id="dayOfYearValue"></span>
+              <span class="cp-muted" id="dateValue"></span>
+            </span>
+          </label>
+
+          <div class="anchor-row" role="group" aria-label="Anchor dates">
+            <button id="anchorMarEqx" class="cp-action cp-action--ghost" type="button">Mar equinox</button>
+            <button id="anchorJunSol" class="cp-action cp-action--ghost" type="button">Jun solstice</button>
+            <button id="anchorSepEqx" class="cp-action cp-action--ghost" type="button">Sep equinox</button>
+            <button id="anchorDecSol" class="cp-action cp-action--ghost" type="button">Dec solstice</button>
+          </div>
+
+          <label class="control">
+            <span>Axial tilt (°)</span>
+            <input id="tilt" type="range" min="0" max="45" value="23.5" step="0.1" />
+            <span class="control__value"><span id="tiltValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Latitude (°)</span>
+            <input id="latitude" type="range" min="-90" max="90" value="40" step="1" />
+            <span class="control__value"><span id="latitudeValue"></span></span>
+          </label>
+
+          <div class="animate-row">
+            <button id="animateYear" class="cp-action cp-action--ghost" type="button">
+              Animate year
+            </button>
+            <div id="motionNote" class="cp-muted" hidden></div>
+          </div>
+
           <button id="stationMode" class="cp-action" type="button">Station mode</button>
           <button id="challengeMode" class="cp-action" type="button">Challenge mode</button>
           <button id="help" class="cp-action" type="button">Help / shortcuts</button>
@@ -31,22 +66,100 @@
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
-        <div class="cp-stage__inner">
-          <p class="cp-stage__headline">Migration pending</p>
-          <p class="cp-muted">
-            This space will host the interactive visualization once the demo is migrated.
-          </p>
-        </div>
+      <section class="cp-demo__stage cp-stage stage" aria-label="Visualization stage">
+        <svg
+          id="seasonStage"
+          class="stage__svg"
+          viewBox="0 0 920 420"
+          role="img"
+          aria-label="Seasons visualization (orbit + sunlight geometry)"
+        >
+          <defs>
+            <radialGradient id="sunGlow" cx="40%" cy="35%">
+              <stop offset="0%" stop-color="rgba(255, 210, 90, 0.95)" />
+              <stop offset="100%" stop-color="rgba(255, 210, 90, 0.25)" />
+            </radialGradient>
+            <radialGradient id="earthGlow" cx="40%" cy="30%">
+              <stop offset="0%" stop-color="rgba(96, 165, 250, 0.95)" />
+              <stop offset="100%" stop-color="rgba(96, 165, 250, 0.30)" />
+            </radialGradient>
+          </defs>
+
+          <!-- Orbit panel -->
+          <g id="orbitPanel" transform="translate(40, 40)">
+            <text class="stage__title" x="0" y="0">Orbit (toy distance)</text>
+
+            <g transform="translate(180, 170)">
+              <circle class="stage__orbit" cx="0" cy="0" r="140" />
+              <circle class="stage__sun" cx="0" cy="0" r="26" />
+              <text class="stage__label" x="0" y="40" text-anchor="middle">Sun</text>
+
+              <circle id="earthOrbitDot" class="stage__earth" cx="140" cy="0" r="12" />
+              <text id="orbitLabel" class="stage__label" x="0" y="170" text-anchor="middle"></text>
+
+              <circle class="stage__marker" cx="140" cy="0" r="4" />
+              <text class="stage__markerLabel" x="140" y="-12" text-anchor="middle">peri</text>
+            </g>
+          </g>
+
+          <!-- Sunlight/tilt panel -->
+          <g id="tiltPanel" transform="translate(420, 40)">
+            <text class="stage__title" x="0" y="0">Sunlight geometry (toy)</text>
+
+            <g transform="translate(240, 190)">
+              <!-- Sun rays -->
+              <line class="stage__ray" x1="-220" y1="0" x2="-90" y2="0" />
+              <polygon class="stage__ray" points="-90,0 -108,-8 -108,8" />
+              <text class="stage__label" x="-170" y="-12" text-anchor="middle">Sunlight</text>
+
+              <!-- Earth disk -->
+              <circle id="earthDisk" class="stage__earthDisk" cx="0" cy="0" r="92" />
+
+              <!-- Axis + equator -->
+              <line id="axisLine" class="stage__axis" x1="0" y1="-120" x2="0" y2="120" />
+              <line id="equatorLine" class="stage__equator" x1="-120" y1="0" x2="120" y2="0" />
+
+              <!-- Subsolar and observer markers -->
+              <circle id="subsolarDot" class="stage__markerSun" cx="78" cy="0" r="6" />
+              <text id="subsolarLabel" class="stage__label" x="78" y="-14" text-anchor="middle"></text>
+
+              <circle id="observerDot" class="stage__markerObs" cx="78" cy="0" r="6" />
+              <text id="observerLabel" class="stage__label" x="78" y="22" text-anchor="middle"></text>
+            </g>
+          </g>
+
+          <text class="stage__note" x="40" y="392">
+            Note: This visualization is schematic; readouts use the toy model in the panel and are the authoritative values.
+          </text>
+        </svg>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Readouts and “what to notice” will live here once migrated.</p>
           <div class="cp-readout">
-            <div class="cp-readout__label">(example) Day length</div>
-            <div class="cp-readout__value">—</div>
+            <div class="cp-readout__label">Solar declination (δ)</div>
+            <div class="cp-readout__value"><span id="declinationValue"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Day length</div>
+            <div class="cp-readout__value"><span id="dayLengthValue"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Noon altitude</div>
+            <div class="cp-readout__value"><span id="noonAltitudeValue"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Earth–Sun distance</div>
+            <div class="cp-readout__value"><span id="distanceAuValue"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Season (North / South)</div>
+            <div class="cp-readout__value">
+              <span id="seasonNorthValue"></span>
+              <span class="cp-muted"> / </span>
+              <span id="seasonSouthValue"></span>
+            </div>
           </div>
           <div class="cp-notice">
             <h3>What to notice</h3>
@@ -61,8 +174,15 @@
       <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
         <strong>Model notes</strong>
         <ul>
-          <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-          <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+          <li>
+            Declination uses a simplified geometry: δ = asin(sin ε · sin L), where ε is axial tilt and L is treated as
+            uniform in time (toy model; ~1° accuracy vs ephemeris).
+          </li>
+          <li>
+            Earth–Sun distance uses a first-order eccentric model r ≈ 1 − e cos(θ) (not a Kepler solver). Perihelion is
+            anchored near day 3 (Jan 3) with an uncertainty of about ±2 days.
+          </li>
+          <li>Key idea: opposite hemispheres have opposite seasons; distance variations are small and not the main cause.</li>
         </ul>
       </section>
     </div>
