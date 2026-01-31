@@ -14,5 +14,14 @@ describe("AstroUnits", () => {
     expect(AstroUnits.degToRad(180)).toBeCloseTo(Math.PI, 12);
     expect(AstroUnits.radToDeg(Math.PI)).toBeCloseTo(180, 12);
   });
-});
 
+  it("converts degrees to arcminutes/arcseconds", () => {
+    expect(AstroUnits.degToArcmin(1)).toBe(60);
+    expect(AstroUnits.degToArcsec(1)).toBe(3600);
+  });
+
+  it("converts arcminutes/arcseconds to degrees", () => {
+    expect(AstroUnits.arcminToDeg(60)).toBe(1);
+    expect(AstroUnits.arcsecToDeg(3600)).toBe(1);
+  });
+});

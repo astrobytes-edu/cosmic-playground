@@ -109,6 +109,21 @@ export const AstroUnits = {
 
   radToDeg(rad: number): number {
     return (rad * 180) / Math.PI;
+  },
+
+  degToArcmin(deg: number): number {
+    return deg * 60;
+  },
+
+  degToArcsec(deg: number): number {
+    return deg * 3600;
+  },
+
+  arcminToDeg(arcmin: number): number {
+    return arcmin / 60;
+  },
+
+  arcsecToDeg(arcsec: number): number {
+    return arcsec / 3600;
   }
 } as const;
-
