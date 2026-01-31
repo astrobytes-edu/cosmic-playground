@@ -1,4 +1,5 @@
-import { createDemoModes } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes } from "@cosmic/runtime";
+import type { Challenge } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
 
 const dayOfYearEl = document.querySelector<HTMLInputElement>("#dayOfYear");
@@ -474,6 +475,172 @@ function render() {
     distanceAu
   });
 }
+
+type SeasonsDemoState = {
+  dayOfYear: number;
+  axialTiltDeg: number;
+  latitudeDeg: number;
+  declinationDeg: number;
+  dayLengthHours: number;
+  noonAltitudeDeg: number;
+};
+
+function getState(): SeasonsDemoState {
+  const day = clamp(Math.round(state.dayOfYear), 1, 365);
+  const axialTiltDeg = clamp(Number(state.axialTiltDeg), 0, 45);
+  const latitudeDeg = clamp(Number(state.latitudeDeg), -90, 90);
+
+  const declinationDegValue = SeasonsModel.sunDeclinationDeg({
+    dayOfYear: day,
+    axialTiltDeg
+  });
+  const dayLengthHoursValue = SeasonsModel.dayLengthHours({
+    latitudeDeg,
+    sunDeclinationDeg: declinationDegValue
+  });
+  const noonAltitudeDegValue = SeasonsModel.sunNoonAltitudeDeg({
+    latitudeDeg,
+    sunDeclinationDeg: declinationDegValue
+  });
+
+  return {
+    dayOfYear: day,
+    axialTiltDeg,
+    latitudeDeg,
+    declinationDeg: declinationDegValue,
+    dayLengthHours: dayLengthHoursValue,
+    noonAltitudeDeg: noonAltitudeDegValue
+  };
+}
+
+function setState(next: unknown): void {
+  if (!next || typeof next !== "object") return;
+  const obj = next as Partial<SeasonsDemoState>;
+
+  if (Number.isFinite(obj.dayOfYear)) state.dayOfYear = clamp(obj.dayOfYear as number, 1, 365);
+  if (Number.isFinite(obj.axialTiltDeg)) state.axialTiltDeg = clamp(obj.axialTiltDeg as number, 0, 45);
+  if (Number.isFinite(obj.latitudeDeg)) state.latitudeDeg = clamp(obj.latitudeDeg as number, -90, 90);
+
+  stopAnimation();
+  render();
+}
+
+function getControlsBody(): HTMLElement {
+  const el = document.querySelector<HTMLElement>(".cp-demo__controls .cp-panel-body");
+  if (!el) throw new Error("Missing controls container for challenge mode.");
+  return el;
+}
+
+const challenges: Challenge[] = [
+  {
+    type: "custom",
+    prompt: "Show “no seasons”: set tilt to 0° so δ stays near 0°.",
+    initialState: { dayOfYear: 172, axialTiltDeg: 23.5, latitudeDeg: 40 },
+    hints: ["Set axial tilt close to 0° and watch declination δ."],
+    check: (s: unknown) => {
+      const st = s as Partial<SeasonsDemoState>;
+      const tilt = Number(st.axialTiltDeg);
+      const decl = Number(st.declinationDeg);
+      if (![tilt, decl].every(Number.isFinite)) {
+        return { correct: false, close: false, message: "State is not finite." };
+      }
+      const tiltOk = tilt <= 1;
+      const declOk = Math.abs(decl) <= 1;
+      if (tiltOk && declOk) {
+        return { correct: true, close: true, message: `Nice: tilt ≈ ${tilt.toFixed(1)}°, δ ≈ ${decl.toFixed(1)}°` };
+      }
+      return {
+        correct: false,
+        close: tilt <= 2 || Math.abs(decl) <= 2,
+        message: `Not yet: tilt = ${tilt.toFixed(1)}°, δ = ${decl.toFixed(1)}° (targets ≤ 1°)`
+      };
+    }
+  },
+  {
+    type: "custom",
+    prompt: "At the March equinox, day length is ~12h at mid-latitudes.",
+    initialState: { dayOfYear: 172, axialTiltDeg: 23.5, latitudeDeg: 40 },
+    hints: ["Set day-of-year to 80 (March equinox). Keep |latitude| ≤ 50°."],
+    check: (s: unknown) => {
+      const st = s as Partial<SeasonsDemoState>;
+      const day = Number(st.dayOfYear);
+      const lat = Number(st.latitudeDeg);
+      const dayLen = Number(st.dayLengthHours);
+      if (![day, lat, dayLen].every(Number.isFinite)) {
+        return { correct: false, close: false, message: "State is not finite." };
+      }
+      const dayOk = Math.abs(day - 80) <= 1;
+      const latOk = Math.abs(lat) <= 50;
+      const lenOk = Math.abs(dayLen - 12) <= 1;
+
+      if (dayOk && latOk && lenOk) {
+        return { correct: true, close: true, message: `Nice: day length ≈ ${dayLen.toFixed(2)} h` };
+      }
+
+      const close = (dayOk && latOk) || (latOk && lenOk);
+      return {
+        correct: false,
+        close,
+        message: `Not yet: day=${Math.round(day)}, lat=${Math.round(lat)}°, day length=${dayLen.toFixed(2)} h`
+      };
+    }
+  },
+  {
+    type: "custom",
+    prompt: "Opposite hemispheres: at June solstice, the north has longer days than the south (for symmetric latitudes).",
+    initialState: { dayOfYear: 80, axialTiltDeg: 23.5, latitudeDeg: 40 },
+    hints: ["Set day-of-year to 172 (June solstice). Try |latitude| between 10° and 60°."],
+    check: (s: unknown) => {
+      const st = s as Partial<SeasonsDemoState>;
+      const day = Number(st.dayOfYear);
+      const tilt = Number(st.axialTiltDeg);
+      const lat = Number(st.latitudeDeg);
+      if (![day, tilt, lat].every(Number.isFinite)) {
+        return { correct: false, close: false, message: "State is not finite." };
+      }
+      const dayOk = Math.abs(day - 172) <= 1;
+      const absLat = Math.abs(lat);
+      const latOk = absLat >= 10 && absLat <= 60;
+
+      const decl = SeasonsModel.sunDeclinationDeg({ dayOfYear: day, axialTiltDeg: tilt });
+      const dayNorth = SeasonsModel.dayLengthHours({ latitudeDeg: absLat, sunDeclinationDeg: decl });
+      const daySouth = SeasonsModel.dayLengthHours({ latitudeDeg: -absLat, sunDeclinationDeg: decl });
+      const longerInNorth = dayNorth > daySouth;
+
+      if (dayOk && latOk && longerInNorth) {
+        return {
+          correct: true,
+          close: true,
+          message: `Nice: +${absLat.toFixed(0)}° → ${dayNorth.toFixed(2)} h, −${absLat.toFixed(0)}° → ${daySouth.toFixed(2)} h`
+        };
+      }
+
+      const close = dayOk && longerInNorth;
+      return {
+        correct: false,
+        close,
+        message: `Not yet: day=${Math.round(day)} (target 172), |lat|=${absLat.toFixed(0)}° (10–60 recommended)`
+      };
+    }
+  }
+];
+
+const challengeEngine = new ChallengeEngine(challenges, {
+  container: getControlsBody(),
+  showUI: true,
+  getState,
+  setState
+});
+
+challengeMode.disabled = false;
+challengeMode.addEventListener("click", () => {
+  if (challengeEngine.isActive()) {
+    challengeEngine.stop();
+  } else {
+    stopAnimation();
+    challengeEngine.start();
+  }
+});
 
 function setDay(day: number) {
   stopAnimation();
