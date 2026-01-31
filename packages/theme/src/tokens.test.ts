@@ -111,4 +111,25 @@ describe("Design tokens", () => {
       expect(css).toContain("--cp-input-focus");
     });
   });
+
+  describe("Data visualization tokens", () => {
+    it("defines chart color palette", () => {
+      const chartColors = [
+        "--cp-chart-1",
+        "--cp-chart-2",
+        "--cp-chart-3",
+        "--cp-chart-4",
+        "--cp-chart-5",
+      ];
+      for (const token of chartColors) {
+        expect(css).toContain(token);
+      }
+    });
+
+    it("defines semantic data colors", () => {
+      expect(css).toContain("--cp-data-positive");
+      expect(css).toContain("--cp-data-negative");
+      expect(css).toContain("--cp-data-neutral");
+    });
+  });
 });

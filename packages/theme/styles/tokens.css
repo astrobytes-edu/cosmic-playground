@@ -43,6 +43,19 @@
   --cp-glow-blue: var(--cp-glow-violet);  /* map old blue → violet */
   --cp-glow-magenta: var(--cp-glow-pink);
 
+  /* ---------- Data Visualization ---------- */
+  /* Categorical palette - perceptually distinct, colorblind-safe */
+  --cp-chart-1: var(--cp-accent);     /* teal */
+  --cp-chart-2: var(--cp-pink);       /* pink */
+  --cp-chart-3: var(--cp-violet);     /* violet */
+  --cp-chart-4: #facc15;              /* yellow */
+  --cp-chart-5: #fb923c;              /* orange */
+
+  /* Semantic data colors */
+  --cp-data-positive: var(--cp-success);
+  --cp-data-negative: var(--cp-danger);
+  --cp-data-neutral: var(--cp-muted);
+
   /* ---------- Selection & Focus ---------- */
   --cp-selection-bg: rgba(255, 45, 149, 0.28);
   --cp-focus: rgba(45, 212, 191, 0.70);
