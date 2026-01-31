@@ -34,7 +34,7 @@
 ### Task 0.1: Record baseline build + e2e results (before touching code)
 
 **Files:**
-- Create: `docs/migration/2026-01-30-wave1-baseline-snapshot.md`
+- Create: `docs/migration/YYYY-MM-DD-wave1-baseline-snapshot.md` (use the execution date)
 
 **Step 1: Run baseline gates**
 
@@ -43,6 +43,9 @@ Run:
 corepack pnpm build
 corepack pnpm -C apps/site test:e2e
 ```
+
+Notes:
+- Ensure `CP_BASE_PATH` is set to `/cosmic-playground/` (or unset). An empty `CP_BASE_PATH` can cause `/explore/` to 404 in Playwright if your environment is older than `main@cc1af66`.
 
 Expected:
 - `corepack pnpm build` exits 0
@@ -58,7 +61,7 @@ Write:
 
 **Step 3: Commit**
 ```bash
-git add docs/migration/2026-01-30-wave1-baseline-snapshot.md
+git add docs/migration/YYYY-MM-DD-wave1-baseline-snapshot.md
 git commit -m "docs(migration): record wave1 baseline build + e2e"
 ```
 
