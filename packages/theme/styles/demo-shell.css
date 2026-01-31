@@ -97,12 +97,12 @@
 }
 
 .cp-accordion__title {
-  font-weight: 800;
+  font-weight: var(--cp-font-bold);
 }
 
 .cp-accordion__meta {
   color: var(--cp-muted);
-  font-size: 0.9rem;
+  font-size: var(--cp-text-sm);
   white-space: nowrap;
 }
 
@@ -112,15 +112,17 @@
 }
 
 .cp-accordion__body :is(p, ul, ol) {
-  margin: 8px 0;
+  margin: var(--cp-space-2) 0;
 }
 
 .cp-accordion__body ul,
 .cp-accordion__body ol {
-  padding-left: 18px;
+  padding-left: var(--cp-space-5);
 }
 
-@media (max-width: 980px) {
+/* Note: CSS custom properties can't be used in @media queries directly.
+   Using the raw value but documenting the token. */
+@media (max-width: 1024px) { /* --cp-bp-lg */
   .cp-demo {
     grid-template-columns: 1fr;
     grid-template-areas:
