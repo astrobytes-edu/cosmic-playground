@@ -1,4 +1,5 @@
-import { createDemoModes, createInstrumentRuntime } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime } from "@cosmic/runtime";
+import type { Challenge } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AngularSizeModel, AstroUnits } from "@cosmic/physics";
 
@@ -108,8 +109,6 @@ const help = helpEl;
 
 const copyResults = copyResultsEl;
 const status = statusEl;
-
-challengeMode.disabled = true;
 
 const runtime = createInstrumentRuntime({
   hasMathMode: false,
@@ -554,6 +553,87 @@ demoModes.bindButtons({
   stationButton: stationMode
 });
 
+type AngularSizeDemoState = {
+  presetKey: keyof typeof AngularSizeModel.presets | "Custom";
+  diameterKm: number;
+  distanceKm: number;
+  moonTimeMode?: MoonTimeMode;
+  moonOrbitAngleDeg?: number;
+  moonRecessionTimeMyr?: number;
+  thetaDeg: number;
+};
+
+function getState(): AngularSizeDemoState {
+  const thetaDegValue = AngularSizeModel.angularDiameterDeg({
+    diameterKm: state.diameterKm,
+    distanceKm: state.distanceKm
+  });
+
+  const out: AngularSizeDemoState = {
+    presetKey: state.presetId,
+    diameterKm: state.diameterKm,
+    distanceKm: state.distanceKm,
+    thetaDeg: thetaDegValue
+  };
+
+  if (state.presetId === "moon") {
+    out.moonTimeMode = state.moonTimeMode;
+    out.moonOrbitAngleDeg = state.moonOrbitAngleDeg;
+    out.moonRecessionTimeMyr = state.moonRecessionTimeMyr;
+  }
+
+  return out;
+}
+
+function setState(next: unknown): void {
+  if (!next || typeof next !== "object") return;
+  const obj = next as Partial<AngularSizeDemoState>;
+
+  const presetKey = obj.presetKey;
+  if (
+    presetKey &&
+    presetKey !== "Custom" &&
+    Object.prototype.hasOwnProperty.call(AngularSizeModel.presets, presetKey)
+  ) {
+    setFromPreset(presetKey as keyof typeof AngularSizeModel.presets);
+  }
+
+  if (Number.isFinite(obj.diameterKm) && (obj.diameterKm as number) > 0) {
+    state.diameterKm = obj.diameterKm as number;
+  }
+
+  if (Number.isFinite(obj.distanceKm) && (obj.distanceKm as number) > 0) {
+    state.distanceKm = obj.distanceKm as number;
+  }
+
+  if (state.presetId === "moon") {
+    if (obj.moonTimeMode === "orbit" || obj.moonTimeMode === "recession") {
+      state.moonTimeMode = obj.moonTimeMode;
+      setMoonTimeMode(obj.moonTimeMode);
+    }
+
+    if (state.moonTimeMode === "orbit" && Number.isFinite(obj.moonOrbitAngleDeg)) {
+      state.moonOrbitAngleDeg = clamp(obj.moonOrbitAngleDeg as number, 0, 360);
+      moonOrbitAngle.value = String(Math.round(state.moonOrbitAngleDeg));
+      state.distanceKm = getMoonDistanceAtOrbitAngle(state.moonOrbitAngleDeg);
+    }
+
+    if (state.moonTimeMode === "recession" && Number.isFinite(obj.moonRecessionTimeMyr)) {
+      state.moonRecessionTimeMyr = clamp(obj.moonRecessionTimeMyr as number, -1000, 1000);
+      moonRecessionTime.value = String(Math.round(state.moonRecessionTimeMyr / 10) * 10);
+      state.moonRecessionTimeMyr = Number(moonRecessionTime.value);
+      state.distanceKm = AngularSizeModel.moonDistanceKmFromRecession({
+        distanceTodayKm: MOON_DISTANCE_TODAY_KM,
+        recessionCmPerYr: MOON_RECESSION_CM_PER_YEAR,
+        timeMyr: state.moonRecessionTimeMyr
+      });
+    }
+  }
+
+  updateMoonControlsVisibility();
+  render();
+}
+
 function render() {
   // Keep Moon distance consistent with Moon controls.
   applyMoonControlsToDistance();
@@ -594,6 +674,136 @@ function render() {
     exportResults: () => exportResults(thetaDegValue)
   };
 }
+
+function getControlsBody(): HTMLElement {
+  const el = document.querySelector<HTMLElement>(".cp-demo__controls .cp-panel-body");
+  if (!el) throw new Error("Missing controls container for challenge mode.");
+  return el;
+}
+
+const baselineBasketball = (() => {
+  const diameterKm0 = AngularSizeModel.presets.basketball.diameter;
+  const distanceKm0 = 0.02; // 20 m in km
+  const theta0 = AngularSizeModel.angularDiameterDeg({ diameterKm: diameterKm0, distanceKm: distanceKm0 });
+  return { diameterKm0, distanceKm0, theta0 };
+})();
+
+const challenges: Challenge[] = [
+  {
+    type: "custom" as const,
+    prompt: "Set the Sun to ~0.53°.",
+    initialState: {
+      presetKey: "sun",
+      diameterKm: AngularSizeModel.presets.sun.diameter,
+      distanceKm: 2 * AngularSizeModel.presets.sun.distance
+    },
+    hints: ["Try changing the distance back toward 1 AU (Sun preset)."],
+    check: (s: unknown) => {
+      const st = s as Partial<AngularSizeDemoState>;
+      if (st.presetKey !== "sun") {
+        return { correct: false, close: false, message: "Use the Sun preset for this challenge." };
+      }
+      const theta = Number(st.thetaDeg);
+      const target = 0.53313;
+      const tol = 0.02;
+      const err = Math.abs(theta - target);
+      if (!Number.isFinite(theta)) return { correct: false, close: false, message: "Angle is not finite." };
+      if (err <= tol) return { correct: true, close: true, message: `Nice: θ ≈ ${theta.toFixed(3)}°` };
+      return {
+        correct: false,
+        close: err <= 2 * tol,
+        message: `Not yet: θ = ${theta.toFixed(3)}° (target ${target.toFixed(3)}° ± ${tol.toFixed(2)}°)`
+      };
+    }
+  },
+  {
+    type: "custom" as const,
+    prompt: "Find a distance where the Moon looks ~0.50°.",
+    initialState: {
+      presetKey: "moon",
+      moonTimeMode: "orbit",
+      moonOrbitAngleDeg: 0
+    },
+    hints: ["Start at perigee (0°) then move toward apogee (180°) to make the Moon look smaller."],
+    check: (s: unknown) => {
+      const st = s as Partial<AngularSizeDemoState>;
+      if (st.presetKey !== "moon") {
+        return { correct: false, close: false, message: "Use the Moon preset for this challenge." };
+      }
+      const theta = Number(st.thetaDeg);
+      const target = 0.5;
+      const tol = 0.02;
+      const err = Math.abs(theta - target);
+      if (!Number.isFinite(theta)) return { correct: false, close: false, message: "Angle is not finite." };
+      if (err <= tol) return { correct: true, close: true, message: `Nice: θ ≈ ${theta.toFixed(3)}°` };
+      return {
+        correct: false,
+        close: err <= 2 * tol,
+        message: `Not yet: θ = ${theta.toFixed(3)}° (target ${target.toFixed(2)}° ± ${tol.toFixed(2)}°)`
+      };
+    }
+  },
+  {
+    type: "custom" as const,
+    prompt: "Double distance halves θ (small-angle sanity).",
+    initialState: {
+      presetKey: "basketball",
+      diameterKm: baselineBasketball.diameterKm0,
+      distanceKm: baselineBasketball.distanceKm0
+    },
+    hints: ["Keep the diameter fixed; increase the distance to about 0.04 km (40 m)."],
+    check: (s: unknown) => {
+      const st = s as Partial<AngularSizeDemoState>;
+      if (st.presetKey !== "basketball") {
+        return { correct: false, close: false, message: "Use the Basketball preset for this sanity check." };
+      }
+
+      const d = Number(st.distanceKm);
+      const D = Number(st.diameterKm);
+      const theta = Number(st.thetaDeg);
+      if (![d, D, theta].every(Number.isFinite)) {
+        return { correct: false, close: false, message: "State is not finite." };
+      }
+
+      const expectedDistance = 2 * baselineBasketball.distanceKm0;
+      const distanceOk = Math.abs(d - expectedDistance) / expectedDistance <= 0.05;
+      const diameterOk = Math.abs(D - baselineBasketball.diameterKm0) / baselineBasketball.diameterKm0 <= 0.01;
+      const ratio = theta / baselineBasketball.theta0;
+      const ratioOk = Math.abs(ratio - 0.5) <= 0.05;
+
+      if (distanceOk && diameterOk && ratioOk) {
+        return { correct: true, close: true, message: `Nice: θ ratio ≈ ${ratio.toFixed(2)} (expected 0.50)` };
+      }
+
+      const close = distanceOk || ratioOk;
+      const parts: string[] = [];
+      if (!distanceOk) parts.push("distance");
+      if (!diameterOk) parts.push("diameter");
+      if (!ratioOk) parts.push("θ ratio");
+      return {
+        correct: false,
+        close,
+        message: `Not yet: adjust ${parts.join(", ")} (θ ratio ≈ ${ratio.toFixed(2)})`
+      };
+    }
+  }
+];
+
+const challengeEngine = new ChallengeEngine(challenges, {
+  container: getControlsBody(),
+  showUI: true,
+  getState,
+  setState
+});
+
+challengeMode.disabled = false;
+challengeMode.addEventListener("click", () => {
+  if (challengeEngine.isActive()) {
+    challengeEngine.stop();
+  } else {
+    challengeEngine.start();
+  }
+});
 
 populatePresets();
 updateMoonControlsVisibility();
