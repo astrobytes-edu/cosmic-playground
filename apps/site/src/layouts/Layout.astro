@@ -32,6 +32,16 @@ const isLightTheme = themeParam === "paper" || Astro.url.pathname.includes("/ins
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{title}</title>
+    <link rel="preload" href={withBase("fonts/Inter.woff2")} as="font" type="font/woff2" crossorigin />
+    <style set:html={`
+      @font-face {
+        font-family: "Inter";
+        font-style: normal;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url("${withBase("fonts/Inter.woff2")}") format("woff2");
+      }
+    `} />
   </head>
   <body class={isLightTheme ? "cp-layer-paper" : "cp-layer-museum"}>
     <a class="skip-link" href="#content">Skip to content</a>
