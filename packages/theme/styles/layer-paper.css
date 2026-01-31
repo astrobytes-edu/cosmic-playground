@@ -44,10 +44,10 @@
   --cp-selection-bg: rgba(124, 58, 237, 0.20);
   --cp-focus: rgba(13, 148, 136, 0.50);
 
-  /* ---------- Status (adjusted for light) ---------- */
-  --cp-success: #059669;
-  --cp-warning: #d97706;
-  --cp-danger: #dc2626;
+  /* ---------- Status (WCAG AA contrast on paper bg) ---------- */
+  --cp-success: #047857;  /* emerald-700: 5.2:1 */
+  --cp-warning: #b45309;  /* amber-700: 4.8:1 */
+  --cp-danger: #b91c1c;   /* red-700: 5.5:1 */
 
   /* ---------- Shadows (light mode) ---------- */
   --cp-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
