@@ -381,15 +381,13 @@ function renderStage(args: {
   declinationDeg: number;
   distanceAu: number;
 }) {
-  // Orbit panel (center is hard-coded in SVG markup)
-  const orbitCx = 180;
-  const orbitCy = 170;
+  // Orbit panel (orbit is centered at (0,0) inside its translated SVG group)
   const orbitR = 140;
 
   const angle = SeasonsModel.orbitAngleRadFromDay({ dayOfYear: args.dayOfYear });
   const rScaled = orbitR * clamp(args.distanceAu, 0.95, 1.05);
-  const x = orbitCx + rScaled * Math.cos(angle);
-  const y = orbitCy + rScaled * Math.sin(angle);
+  const x = rScaled * Math.cos(angle);
+  const y = rScaled * Math.sin(angle);
   earthOrbitDot.setAttribute("cx", formatNumber(x, 2));
   earthOrbitDot.setAttribute("cy", formatNumber(y, 2));
   orbitLabel.textContent = `r ≈ ${formatNumber(args.distanceAu, 3)} AU`;
