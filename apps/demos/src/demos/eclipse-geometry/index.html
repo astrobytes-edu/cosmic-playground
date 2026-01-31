@@ -12,9 +12,40 @@
         <div class="cp-panel-header">Eclipse Geometry: Shadows in Space</div>
         <div class="cp-panel-body">
           <p class="cp-muted">Investigate alignment, shadow cones, and why eclipses aren’t monthly.</p>
+
           <div class="cp-callout" data-kind="model">
-            This demo is currently a stub while we migrate the legacy version into the new runtime.
+            Eclipses require two things at once: (1) the right phase (New/Full), and (2) the Moon near a node (small
+            |β|).
           </div>
+
+          <div class="button-row" role="group" aria-label="Phase buttons">
+            <button id="setNewMoon" class="cp-action cp-action--ghost" type="button">New Moon</button>
+            <button id="setFullMoon" class="cp-action cp-action--ghost" type="button">Full Moon</button>
+          </div>
+
+          <label class="control">
+            <span>Moon angle (deg)</span>
+            <input id="moonLon" type="range" min="0" max="360" value="180" step="1" />
+            <span class="control__value"><span id="moonLonValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Node longitude Ω (deg)</span>
+            <input id="nodeLon" type="range" min="0" max="360" value="210" step="1" />
+            <span class="control__value"><span id="nodeLonValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Orbital tilt i (deg)</span>
+            <input id="tilt" type="range" min="0" max="10" value="5.145" step="0.001" />
+            <span class="control__value"><span id="tiltValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Earth–Moon distance (km)</span>
+            <select id="distancePreset"></select>
+            <span class="control__value"><span id="distanceValue"></span></span>
+          </label>
 
           <button id="stationMode" class="cp-action" type="button">Station mode</button>
           <button id="challengeMode" class="cp-action" type="button">Challenge mode</button>
@@ -31,22 +62,91 @@
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
-        <div class="cp-stage__inner">
-          <p class="cp-stage__headline">Migration pending</p>
-          <p class="cp-muted">
-            This space will host the interactive visualization once the demo is migrated.
-          </p>
-        </div>
+      <section class="cp-demo__stage cp-stage stage" aria-label="Visualization stage">
+        <svg
+          id="eclipseStage"
+          class="stage__svg"
+          viewBox="0 0 920 420"
+          role="img"
+          aria-label="Eclipse geometry visualization (orbit + β indicator)"
+        >
+          <defs>
+            <radialGradient id="earthGlow" cx="40%" cy="30%">
+              <stop offset="0%" stop-color="rgba(96, 165, 250, 0.95)" />
+              <stop offset="100%" stop-color="rgba(96, 165, 250, 0.30)" />
+            </radialGradient>
+            <radialGradient id="moonGlow" cx="40%" cy="30%">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.95)" />
+              <stop offset="100%" stop-color="rgba(255,255,255,0.30)" />
+            </radialGradient>
+          </defs>
+
+          <g id="orbitPanel" transform="translate(40, 40)">
+            <text class="stage__title" x="0" y="0">Top view (ecliptic plane)</text>
+
+            <g transform="translate(220, 180)">
+              <line class="stage__sunDir" x1="-180" y1="0" x2="180" y2="0" />
+              <text class="stage__label" x="180" y="-10" text-anchor="end">Sun direction</text>
+
+              <circle class="stage__orbit" cx="0" cy="0" r="140" />
+              <circle class="stage__earth" cx="0" cy="0" r="16" />
+              <text class="stage__label" x="0" y="32" text-anchor="middle">Earth</text>
+
+              <circle id="ascNodeDot" class="stage__node" cx="140" cy="0" r="5" />
+              <circle id="descNodeDot" class="stage__node" cx="-140" cy="0" r="5" />
+              <text id="ascNodeLabel" class="stage__label" x="0" y="-156" text-anchor="middle"></text>
+              <text id="descNodeLabel" class="stage__label" x="0" y="170" text-anchor="middle"></text>
+
+              <circle id="moonDot" class="stage__moon" cx="0" cy="0" r="10" />
+              <line id="betaLine" class="stage__betaLine" x1="0" y1="0" x2="0" y2="0" />
+            </g>
+          </g>
+
+          <g id="betaPanel" transform="translate(520, 40)">
+            <text class="stage__title" x="0" y="0">Out-of-plane (β)</text>
+
+            <g transform="translate(160, 180)">
+              <line class="stage__betaAxis" x1="0" y1="-140" x2="0" y2="140" />
+              <line class="stage__betaZero" x1="-70" y1="0" x2="70" y2="0" />
+              <text class="stage__label" x="74" y="4">β = 0</text>
+
+              <circle id="betaMarker" class="stage__betaMarker" cx="0" cy="0" r="7" />
+              <text id="betaLabel" class="stage__label" x="0" y="-18" text-anchor="middle"></text>
+            </g>
+          </g>
+
+          <text class="stage__note" x="40" y="392">
+            Note: The stage is schematic; the readouts use the model and are the authoritative values.
+          </text>
+        </svg>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Readouts and “what to notice” will live here once migrated.</p>
           <div class="cp-readout">
-            <div class="cp-readout__label">(example) Alignment score</div>
-            <div class="cp-readout__value">—</div>
+            <div class="cp-readout__label">Phase</div>
+            <div class="cp-readout__value"><span id="phaseLabel"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Phase angle Δ</div>
+            <div class="cp-readout__value"><span id="phaseAngle"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">|β| (ecliptic latitude)</div>
+            <div class="cp-readout__value"><span id="absBeta"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Nearest node distance</div>
+            <div class="cp-readout__value"><span id="nearestNode"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Solar outcome</div>
+            <div class="cp-readout__value"><span id="solarOutcome"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Lunar outcome</div>
+            <div class="cp-readout__value"><span id="lunarOutcome"></span></div>
           </div>
           <div class="cp-notice">
             <h3>What to notice</h3>
@@ -61,8 +161,18 @@
       <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
         <strong>Model notes</strong>
         <ul>
-          <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-          <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+          <li>
+            We model eclipse *geometry* using similar triangles for the umbra/penumbra and compute physically motivated
+            thresholds (in degrees) for eclipse visibility.
+          </li>
+          <li>
+            β is the Moon’s ecliptic latitude; when |β| is small, the Moon is close to a node and an eclipse is possible
+            at New/Full.
+          </li>
+          <li>
+            Earth–Moon distance affects shadow size: at perigee a central solar eclipse can be total; at apogee it can
+            be annular.
+          </li>
         </ul>
       </section>
     </div>

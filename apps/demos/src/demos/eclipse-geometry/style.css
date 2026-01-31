@@ -1,2 +1,130 @@
 @import "../../shared/stub-demo.css";
 
+.control {
+  display: grid;
+  gap: 8px;
+}
+
+.control__value {
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cp-action--ghost {
+  background: transparent;
+  border-color: var(--cp-border);
+}
+
+.cp-action--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--cp-border);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+}
+
+select:focus-visible {
+  outline: 3px solid var(--cp-focus);
+  outline-offset: 3px;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+input[type="range"]:focus-visible,
+.cp-action:focus-visible {
+  outline: 3px solid var(--cp-focus);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+.stage {
+  display: grid;
+  place-items: center;
+  padding: var(--cp-space-4);
+}
+
+.stage__svg {
+  width: min(980px, 100%);
+  height: auto;
+  border-radius: 18px;
+  border: 1px solid var(--cp-border);
+  background: radial-gradient(circle at 20% 20%, rgba(96, 165, 250, 0.08), rgba(0, 0, 0, 0.42));
+}
+
+.stage__title {
+  fill: var(--cp-text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.stage__label {
+  fill: var(--cp-muted);
+  font-size: 12px;
+}
+
+.stage__note {
+  fill: var(--cp-muted);
+  font-size: 12px;
+}
+
+.stage__orbit {
+  fill: none;
+  stroke: color-mix(in srgb, var(--cp-accent3) 34%, transparent);
+  stroke-width: 2px;
+}
+
+.stage__sunDir {
+  stroke: color-mix(in srgb, white 20%, transparent);
+  stroke-width: 2px;
+  stroke-dasharray: 6 6;
+}
+
+.stage__earth {
+  fill: url(#earthGlow);
+  stroke: color-mix(in srgb, var(--cp-accent3) 58%, transparent);
+  stroke-width: 2px;
+}
+
+.stage__moon {
+  fill: url(#moonGlow);
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 2px;
+}
+
+.stage__node {
+  fill: rgba(255, 255, 255, 0.75);
+}
+
+.stage__betaLine {
+  stroke: rgba(255, 210, 90, 0.9);
+  stroke-width: 3px;
+  stroke-linecap: round;
+}
+
+.stage__betaAxis {
+  stroke: color-mix(in srgb, var(--cp-accent3) 34%, transparent);
+  stroke-width: 2px;
+}
+
+.stage__betaZero {
+  stroke: color-mix(in srgb, white 30%, transparent);
+  stroke-width: 2px;
+  stroke-dasharray: 6 6;
+}
+
+.stage__betaMarker {
+  fill: rgba(255, 210, 90, 0.95);
+}
