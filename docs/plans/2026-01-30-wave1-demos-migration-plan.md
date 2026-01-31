@@ -17,6 +17,11 @@
 - Units must be consistent everywhere; do not introduce any `G=1` usage or “natural units” language.
 - Internal site links should remain GitHub Pages-base-path safe (prefer relative links from `/play/<slug>/` to `/exhibits/...` etc, or compute via `import.meta.env.BASE_URL` when building URLs in JS).
 
+## Spec Deviations (implementation notes)
+
+- **2026-01-30:** Implemented “Copy results” + v1 export during Task A2 (core UI) to keep the existing demo shell functional; Task A5 will be treated as “verify/align/export polish” rather than first introduction of export.
+- **2026-01-30:** Task A2 removed the stub Station/Challenge/Help buttons; Task A3 re-introduces the required buttons + wiring (this requires minor `index.html` edits even though the plan’s A3 file list only mentioned `main.ts`).
+
 ## Wave 1 scope decisions (locked)
 
 **In-scope (parity targets):**
