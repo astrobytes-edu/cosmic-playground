@@ -1,9 +1,24 @@
-import { EclipseGeometryModel } from "@cosmic/physics";
+import { AstroConstants, EclipseGeometryModel } from "@cosmic/physics";
 import { ChallengeEngine, createDemoModes } from "@cosmic/runtime";
 import type { Challenge } from "@cosmic/runtime";
 
 const setNewMoonEl = document.querySelector<HTMLButtonElement>("#setNewMoon");
 const setFullMoonEl = document.querySelector<HTMLButtonElement>("#setFullMoon");
+
+const animateMonthEl =
+  document.querySelector<HTMLButtonElement>("#animateMonth");
+const animateYearEl = document.querySelector<HTMLButtonElement>("#animateYear");
+const motionNoteEl = document.querySelector<HTMLParagraphElement>("#motionNote");
+
+const simYearsEl = document.querySelector<HTMLInputElement>("#simYears");
+const simYearsValueEl =
+  document.querySelector<HTMLSpanElement>("#simYearsValue");
+const simSpeedEl = document.querySelector<HTMLSelectElement>("#simSpeed");
+const runSimulationEl =
+  document.querySelector<HTMLButtonElement>("#runSimulation");
+const stopSimulationEl =
+  document.querySelector<HTMLButtonElement>("#stopSimulation");
+const simOutputEl = document.querySelector<HTMLPreElement>("#simOutput");
 
 const moonLonEl = document.querySelector<HTMLInputElement>("#moonLon");
 const moonLonValueEl = document.querySelector<HTMLSpanElement>("#moonLonValue");
@@ -46,6 +61,15 @@ const betaLabelEl = document.querySelector<SVGTextElement>("#betaLabel");
 if (
   !setNewMoonEl ||
   !setFullMoonEl ||
+  !animateMonthEl ||
+  !animateYearEl ||
+  !motionNoteEl ||
+  !simYearsEl ||
+  !simYearsValueEl ||
+  !simSpeedEl ||
+  !runSimulationEl ||
+  !stopSimulationEl ||
+  !simOutputEl ||
   !moonLonEl ||
   !moonLonValueEl ||
   !nodeLonEl ||
@@ -80,6 +104,16 @@ if (
 
 const setNewMoon = setNewMoonEl;
 const setFullMoon = setFullMoonEl;
+const animateMonth = animateMonthEl;
+const animateYear = animateYearEl;
+const motionNote = motionNoteEl;
+const simYears = simYearsEl;
+const simYearsValue = simYearsValueEl;
+const simSpeed = simSpeedEl;
+const runSimulation = runSimulationEl;
+const stopSimulation = stopSimulationEl;
+const simOutput = simOutputEl;
+
 const moonLon = moonLonEl;
 const moonLonValue = moonLonValueEl;
 const nodeLon = nodeLonEl;
@@ -116,6 +150,8 @@ stationMode.disabled = true;
 challengeMode.disabled = true;
 help.disabled = true;
 copyResults.disabled = true;
+stopSimulation.disabled = true;
+simOutput.hidden = true;
 
 const SYZYGY_TOLERANCE_DEG = 5;
 
@@ -144,6 +180,22 @@ const state: State = {
   earthMoonDistanceKm: DISTANCE_PRESETS_KM.mean,
   distancePresetKey: "mean"
 };
+
+simYearsValue.textContent = `${simYears.value} yr`;
+
+const prefersReducedMotion =
+  typeof window !== "undefined" &&
+  typeof window.matchMedia !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+if (prefersReducedMotion) {
+  animateMonth.disabled = true;
+  animateYear.disabled = true;
+  runSimulation.disabled = true;
+  stopSimulation.disabled = true;
+  motionNote.hidden = false;
+  motionNote.textContent = "Animation and simulation disabled due to reduced-motion preference.";
+}
 
 type EclipseDemoState = {
   moonLonDeg: number;
@@ -286,6 +338,7 @@ function populateDistancePresets() {
 }
 
 function renderStage(args: {
+  sunLonDeg: number;
   moonLonDeg: number;
   nodeLonDeg: number;
   betaDeg: number;
@@ -295,27 +348,35 @@ function renderStage(args: {
   const cy = 0;
   const r = 140;
 
-  const moonAngle = (Math.PI / 180) * args.moonLonDeg;
+  // Display in a Sun-fixed way: subtract λ☉ for visualization only.
+  const moonDisplayLonDeg = EclipseGeometryModel.normalizeAngleDeg(
+    args.moonLonDeg - args.sunLonDeg
+  );
+  const nodeDisplayLonDeg = EclipseGeometryModel.normalizeAngleDeg(
+    args.nodeLonDeg - args.sunLonDeg
+  );
+
+  const moonAngle = (Math.PI / 180) * moonDisplayLonDeg;
   const mx = cx + r * Math.cos(moonAngle);
   const my = cy + r * Math.sin(moonAngle);
   moonDot.setAttribute("cx", formatNumber(mx, 2));
   moonDot.setAttribute("cy", formatNumber(my, 2));
 
   // Node markers
-  const ascAngle = (Math.PI / 180) * args.nodeLonDeg;
+  const ascAngle = (Math.PI / 180) * nodeDisplayLonDeg;
   const dx = cx + r * Math.cos(ascAngle);
   const dy = cy + r * Math.sin(ascAngle);
   ascNodeDot.setAttribute("cx", formatNumber(dx, 2));
   ascNodeDot.setAttribute("cy", formatNumber(dy, 2));
 
-  const descAngle = (Math.PI / 180) * (args.nodeLonDeg + 180);
+  const descAngle = (Math.PI / 180) * (nodeDisplayLonDeg + 180);
   const ex = cx + r * Math.cos(descAngle);
   const ey = cy + r * Math.sin(descAngle);
   descNodeDot.setAttribute("cx", formatNumber(ex, 2));
   descNodeDot.setAttribute("cy", formatNumber(ey, 2));
 
-  ascNodeLabel.textContent = `Ω ≈ ${Math.round(EclipseGeometryModel.normalizeAngleDeg(args.nodeLonDeg))}°`;
-  descNodeLabel.textContent = `Ω+180 ≈ ${Math.round(EclipseGeometryModel.normalizeAngleDeg(args.nodeLonDeg + 180))}°`;
+  ascNodeLabel.textContent = `Ω ≈ ${Math.round(nodeDisplayLonDeg)}°`;
+  descNodeLabel.textContent = `Ω+180 ≈ ${Math.round(EclipseGeometryModel.normalizeAngleDeg(nodeDisplayLonDeg + 180))}°`;
 
   // β indicator: draw a short line "out of plane" near the Moon point.
   const betaScalePxPerDeg = 10;
@@ -371,7 +432,7 @@ function render() {
   solarOutcome.textContent = outcomeLabel(derived.solarType);
   lunarOutcome.textContent = outcomeLabel(derived.lunarType);
 
-  renderStage({ moonLonDeg, nodeLonDeg, betaDeg: derived.betaDeg });
+  renderStage({ sunLonDeg: state.sunLonDeg, moonLonDeg, nodeLonDeg, betaDeg: derived.betaDeg });
 
   status.textContent = `Thresholds (mean-distance example): solar partial ≈ ${formatNumber(thresholds.solarPartialDeg, 2)}°, solar central ≈ ${formatNumber(thresholds.solarCentralDeg, 2)}°`;
 }
@@ -751,6 +812,7 @@ const challengeEngine = new ChallengeEngine(challenges, {
 
 challengeMode.disabled = false;
 challengeMode.addEventListener("click", () => {
+  stopTimeActions();
   if (challengeEngine.isActive()) {
     challengeEngine.stop();
   } else {
@@ -759,21 +821,400 @@ challengeMode.addEventListener("click", () => {
   }
 });
 
+type SimSpeedKey = "slow" | "medium" | "fast";
+type RunMode = "idle" | "animate-month" | "animate-year" | "simulate";
+
+const DAY_S = AstroConstants.TIME.DAY_S;
+const JULIAN_YEAR_DAYS = AstroConstants.TIME.JULIAN_YEAR_S / DAY_S;
+const TROPICAL_YEAR_DAYS = AstroConstants.TIME.MEAN_TROPICAL_YEAR_DAYS;
+const SIDEREAL_MONTH_DAYS = AstroConstants.TIME.MEAN_SIDEREAL_MONTH_DAYS;
+const SYNODIC_MONTH_DAYS = AstroConstants.TIME.MEAN_SYNODIC_MONTH_DAYS;
+const NODE_REGRESSION_YEARS = AstroConstants.TIME.MEAN_NODE_REGRESSION_JULIAN_YEARS;
+
+const SUN_RATE_DEG_PER_DAY = 360 / TROPICAL_YEAR_DAYS;
+const MOON_RATE_DEG_PER_DAY = 360 / SIDEREAL_MONTH_DAYS;
+const NODE_RATE_DEG_PER_DAY = -360 / (NODE_REGRESSION_YEARS * JULIAN_YEAR_DAYS);
+const PHASE_RATE_DEG_PER_DAY = 360 / SYNODIC_MONTH_DAYS;
+
+const ANIMATE_MONTH_DAYS_PER_SECOND = 25;
+const ANIMATE_YEAR_DAYS_PER_SECOND = 220;
+
+const SIM_SPEED_DAYS_PER_SECOND: Record<SimSpeedKey, number> = {
+  slow: 200,
+  medium: 2000,
+  fast: 10000
+};
+const SIM_STEP_DAYS = 0.1;
+
+let runMode: RunMode = "idle";
+let rafId: number | null = null;
+let lastT = 0;
+let animateYearRemainingDays = 0;
+
+type SimulationCounts = {
+  solar: { partial: number; annular: number; total: number };
+  lunar: { penumbral: number; partial: number; total: number };
+  newWindows: number;
+  fullWindows: number;
+};
+
+type SyzygyWindowBest = { tDays: number; betaDeg: number; absBetaDeg: number; sepDeg: number };
+
+type SimulationState = {
+  tDays: number;
+  totalDays: number;
+  sunLonDeg: number;
+  moonLonDeg: number;
+  nodeLonDeg: number;
+  orbitalTiltDeg: number;
+  earthMoonDistanceKm: number;
+  counts: SimulationCounts;
+  sampleEvents: string[];
+  inNewWindow: boolean;
+  bestNew: SyzygyWindowBest | null;
+  inFullWindow: boolean;
+  bestFull: SyzygyWindowBest | null;
+};
+
+let simulation: SimulationState | null = null;
+
+function stopLoop() {
+  if (rafId !== null) cancelAnimationFrame(rafId);
+  rafId = null;
+  lastT = 0;
+  runMode = "idle";
+  animateYearRemainingDays = 0;
+  simulation = null;
+  stopSimulation.disabled = true;
+  runSimulation.disabled = prefersReducedMotion;
+  animateMonth.disabled = prefersReducedMotion;
+  animateYear.disabled = prefersReducedMotion;
+  animateMonth.textContent = "Animate month";
+  animateYear.textContent = "Animate 1 year";
+  runSimulation.textContent = "Run simulation";
+}
+
+function updateTimeButtonLabels() {
+  animateMonth.textContent = runMode === "animate-month" ? "Stop (month)" : "Animate month";
+  animateYear.textContent = runMode === "animate-year" ? "Stop (year)" : "Animate 1 year";
+  runSimulation.textContent = runMode === "simulate" ? "Running…" : "Run simulation";
+}
+
+function formatSimSummary(sim: SimulationState): string {
+  const years = sim.totalDays / TROPICAL_YEAR_DAYS;
+  const lines: string[] = [];
+  lines.push(
+    `Simulated ${years.toFixed(0)} year(s) @ distance=${Math.round(sim.earthMoonDistanceKm).toLocaleString()} km, i=${sim.orbitalTiltDeg.toFixed(3)}°`
+  );
+  lines.push(`Syzygies checked: New=${sim.counts.newWindows}, Full=${sim.counts.fullWindows}`);
+  lines.push(
+    `Solar eclipses: partial=${sim.counts.solar.partial}, annular=${sim.counts.solar.annular}, total=${sim.counts.solar.total}`
+  );
+  lines.push(
+    `Lunar eclipses: penumbral=${sim.counts.lunar.penumbral}, partial=${sim.counts.lunar.partial}, total=${sim.counts.lunar.total}`
+  );
+  if (sim.sampleEvents.length) {
+    lines.push("");
+    lines.push("Examples:");
+    for (const e of sim.sampleEvents.slice(0, 10)) lines.push(`- ${e}`);
+  }
+  return lines.join("\n");
+}
+
+function recordSyzygyWindow(kind: "new" | "full") {
+  if (!simulation) return;
+  const best = kind === "new" ? simulation.bestNew : simulation.bestFull;
+  if (!best) return;
+
+  if (kind === "new") simulation.counts.newWindows += 1;
+  else simulation.counts.fullWindows += 1;
+
+  const distanceKm = simulation.earthMoonDistanceKm;
+  if (kind === "new") {
+    const solarType = EclipseGeometryModel.solarEclipseTypeFromBetaDeg({
+      betaDeg: best.betaDeg,
+      earthMoonDistanceKm: distanceKm
+    }).type;
+    if (solarType === "partial-solar") simulation.counts.solar.partial += 1;
+    if (solarType === "annular-solar") simulation.counts.solar.annular += 1;
+    if (solarType === "total-solar") simulation.counts.solar.total += 1;
+
+    if (solarType !== "none" && simulation.sampleEvents.length < 10) {
+      const y = best.tDays / TROPICAL_YEAR_DAYS;
+      simulation.sampleEvents.push(
+        `Year ${y.toFixed(2)}: Solar ${outcomeLabel(solarType)} (|β|=${best.absBetaDeg.toFixed(3)}°, Δ≈0°)`
+      );
+    }
+  } else {
+    const lunarType = EclipseGeometryModel.lunarEclipseTypeFromBetaDeg({
+      betaDeg: best.betaDeg,
+      earthMoonDistanceKm: distanceKm
+    }).type;
+    if (lunarType === "penumbral-lunar") simulation.counts.lunar.penumbral += 1;
+    if (lunarType === "partial-lunar") simulation.counts.lunar.partial += 1;
+    if (lunarType === "total-lunar") simulation.counts.lunar.total += 1;
+
+    if (lunarType !== "none" && simulation.sampleEvents.length < 10) {
+      const y = best.tDays / TROPICAL_YEAR_DAYS;
+      simulation.sampleEvents.push(
+        `Year ${y.toFixed(2)}: Lunar ${outcomeLabel(lunarType)} (|β|=${best.absBetaDeg.toFixed(3)}°, Δ≈180°)`
+      );
+    }
+  }
+}
+
+function stepSimulation(dtDays: number) {
+  if (!simulation) return;
+  const sim = simulation;
+
+  sim.tDays += dtDays;
+  sim.sunLonDeg = EclipseGeometryModel.normalizeAngleDeg(sim.sunLonDeg + SUN_RATE_DEG_PER_DAY * dtDays);
+  sim.moonLonDeg = EclipseGeometryModel.normalizeAngleDeg(sim.moonLonDeg + MOON_RATE_DEG_PER_DAY * dtDays);
+  sim.nodeLonDeg = EclipseGeometryModel.normalizeAngleDeg(sim.nodeLonDeg + NODE_RATE_DEG_PER_DAY * dtDays);
+
+  const phaseAngleDegValue = EclipseGeometryModel.phaseAngleDeg({
+    moonLonDeg: sim.moonLonDeg,
+    sunLonDeg: sim.sunLonDeg
+  });
+  const sepNew = EclipseGeometryModel.angularSeparationDeg(phaseAngleDegValue, 0);
+  const sepFull = EclipseGeometryModel.angularSeparationDeg(phaseAngleDegValue, 180);
+
+  const betaDeg = EclipseGeometryModel.eclipticLatitudeDeg({
+    tiltDeg: sim.orbitalTiltDeg,
+    moonLonDeg: sim.moonLonDeg,
+    nodeLonDeg: sim.nodeLonDeg
+  });
+  const absBetaDegValue = Math.abs(betaDeg);
+
+  const inNew = sepNew <= SYZYGY_TOLERANCE_DEG;
+  if (inNew) {
+    if (!sim.inNewWindow) {
+      sim.inNewWindow = true;
+      sim.bestNew = { tDays: sim.tDays, betaDeg, absBetaDeg: absBetaDegValue, sepDeg: sepNew };
+    } else if (sim.bestNew && sepNew < sim.bestNew.sepDeg) {
+      sim.bestNew = { tDays: sim.tDays, betaDeg, absBetaDeg: absBetaDegValue, sepDeg: sepNew };
+    }
+  } else if (sim.inNewWindow) {
+    recordSyzygyWindow("new");
+    sim.inNewWindow = false;
+    sim.bestNew = null;
+  }
+
+  const inFull = sepFull <= SYZYGY_TOLERANCE_DEG;
+  if (inFull) {
+    if (!sim.inFullWindow) {
+      sim.inFullWindow = true;
+      sim.bestFull = { tDays: sim.tDays, betaDeg, absBetaDeg: absBetaDegValue, sepDeg: sepFull };
+    } else if (sim.bestFull && sepFull < sim.bestFull.sepDeg) {
+      sim.bestFull = { tDays: sim.tDays, betaDeg, absBetaDeg: absBetaDegValue, sepDeg: sepFull };
+    }
+  } else if (sim.inFullWindow) {
+    recordSyzygyWindow("full");
+    sim.inFullWindow = false;
+    sim.bestFull = null;
+  }
+}
+
+function tick(t: number) {
+  if (runMode === "idle") return;
+
+  const dtSec = lastT ? Math.max(0, (t - lastT) / 1000) : 0;
+  lastT = t;
+
+  if (runMode === "animate-month") {
+    const dtDays = ANIMATE_MONTH_DAYS_PER_SECOND * dtSec;
+    moonLon.value = String(
+      EclipseGeometryModel.normalizeAngleDeg(Number(moonLon.value) + PHASE_RATE_DEG_PER_DAY * dtDays)
+    );
+    render();
+    rafId = requestAnimationFrame(tick);
+    return;
+  }
+
+  if (runMode === "animate-year") {
+    const dtDays = Math.min(animateYearRemainingDays, ANIMATE_YEAR_DAYS_PER_SECOND * dtSec);
+    animateYearRemainingDays = Math.max(0, animateYearRemainingDays - dtDays);
+
+    state.sunLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + SUN_RATE_DEG_PER_DAY * dtDays);
+    moonLon.value = String(EclipseGeometryModel.normalizeAngleDeg(Number(moonLon.value) + MOON_RATE_DEG_PER_DAY * dtDays));
+    nodeLon.value = String(EclipseGeometryModel.normalizeAngleDeg(Number(nodeLon.value) + NODE_RATE_DEG_PER_DAY * dtDays));
+    render();
+
+    if (animateYearRemainingDays <= 0) {
+      stopLoop();
+      updateTimeButtonLabels();
+      status.textContent = "Year animation complete.";
+      return;
+    }
+    rafId = requestAnimationFrame(tick);
+    return;
+  }
+
+  if (runMode === "simulate") {
+    const speedKey = (simSpeed.value as SimSpeedKey) || "medium";
+    const speed = SIM_SPEED_DAYS_PER_SECOND[speedKey] ?? SIM_SPEED_DAYS_PER_SECOND.medium;
+    let remaining = speed * dtSec;
+
+    while (remaining > 0) {
+      const step = Math.min(SIM_STEP_DAYS, remaining);
+      stepSimulation(step);
+      remaining -= step;
+      if (simulation && simulation.tDays >= simulation.totalDays) break;
+    }
+
+    if (!simulation) {
+      stopLoop();
+      updateTimeButtonLabels();
+      return;
+    }
+
+    state.sunLonDeg = simulation.sunLonDeg;
+    moonLon.value = String(simulation.moonLonDeg);
+    nodeLon.value = String(simulation.nodeLonDeg);
+    render();
+
+    const pct = Math.min(1, simulation.tDays / simulation.totalDays);
+    simOutput.hidden = false;
+    simOutput.textContent = `${formatSimSummary(simulation)}\n\nProgress: ${(pct * 100).toFixed(1)}%`;
+
+    if (simulation.tDays >= simulation.totalDays) {
+      if (simulation.inNewWindow) recordSyzygyWindow("new");
+      if (simulation.inFullWindow) recordSyzygyWindow("full");
+
+      simOutput.textContent = formatSimSummary(simulation);
+      stopLoop();
+      stopSimulation.disabled = true;
+      runSimulation.disabled = prefersReducedMotion;
+      updateTimeButtonLabels();
+      status.textContent = "Simulation complete.";
+      return;
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+}
+
+function stopTimeActions() {
+  const wasRunning = runMode !== "idle";
+  if (!wasRunning) return;
+  stopLoop();
+  updateTimeButtonLabels();
+  status.textContent = "Stopped.";
+}
+
 populateDistancePresets();
 
 setNewMoon.addEventListener("click", () => {
+  stopTimeActions();
+  if (challengeEngine.isActive()) challengeEngine.stop();
   moonLon.value = String(state.sunLonDeg);
   render();
 });
 
 setFullMoon.addEventListener("click", () => {
+  stopTimeActions();
+  if (challengeEngine.isActive()) challengeEngine.stop();
   moonLon.value = String(EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + 180));
   render();
 });
 
-moonLon.addEventListener("input", render);
-nodeLon.addEventListener("input", render);
-tilt.addEventListener("input", render);
-distancePreset.addEventListener("change", render);
+simYears.addEventListener("input", () => {
+  simYearsValue.textContent = `${simYears.value} yr`;
+});
+
+animateMonth.addEventListener("click", () => {
+  if (prefersReducedMotion) return;
+  if (challengeEngine.isActive()) challengeEngine.stop();
+
+  if (runMode === "animate-month") {
+    stopTimeActions();
+    return;
+  }
+
+  stopLoop();
+  runMode = "animate-month";
+  updateTimeButtonLabels();
+  rafId = requestAnimationFrame(tick);
+});
+
+animateYear.addEventListener("click", () => {
+  if (prefersReducedMotion) return;
+  if (challengeEngine.isActive()) challengeEngine.stop();
+
+  if (runMode === "animate-year") {
+    stopTimeActions();
+    return;
+  }
+
+  stopLoop();
+  runMode = "animate-year";
+  animateYearRemainingDays = TROPICAL_YEAR_DAYS;
+  updateTimeButtonLabels();
+  rafId = requestAnimationFrame(tick);
+});
+
+runSimulation.addEventListener("click", () => {
+  if (prefersReducedMotion) return;
+  if (challengeEngine.isActive()) challengeEngine.stop();
+
+  stopLoop();
+  render(); // ensure state is synced with controls
+
+  const years = clamp(Number(simYears.value), 1, 100);
+  const totalDays = years * TROPICAL_YEAR_DAYS;
+
+  simulation = {
+    tDays: 0,
+    totalDays,
+    sunLonDeg: state.sunLonDeg,
+    moonLonDeg: EclipseGeometryModel.normalizeAngleDeg(Number(moonLon.value)),
+    nodeLonDeg: EclipseGeometryModel.normalizeAngleDeg(Number(nodeLon.value)),
+    orbitalTiltDeg: clamp(Number(tilt.value), 0, 10),
+    earthMoonDistanceKm: state.earthMoonDistanceKm,
+    counts: {
+      solar: { partial: 0, annular: 0, total: 0 },
+      lunar: { penumbral: 0, partial: 0, total: 0 },
+      newWindows: 0,
+      fullWindows: 0
+    },
+    sampleEvents: [],
+    inNewWindow: false,
+    bestNew: null,
+    inFullWindow: false,
+    bestFull: null
+  };
+
+  runMode = "simulate";
+  runSimulation.disabled = true;
+  stopSimulation.disabled = false;
+  animateMonth.disabled = true;
+  animateYear.disabled = true;
+  simOutput.hidden = false;
+  simOutput.textContent = formatSimSummary(simulation);
+  updateTimeButtonLabels();
+  status.textContent = "Simulation running…";
+  rafId = requestAnimationFrame(tick);
+});
+
+stopSimulation.addEventListener("click", () => {
+  stopTimeActions();
+});
+
+moonLon.addEventListener("input", () => {
+  stopTimeActions();
+  render();
+});
+nodeLon.addEventListener("input", () => {
+  stopTimeActions();
+  render();
+});
+tilt.addEventListener("input", () => {
+  stopTimeActions();
+  render();
+});
+distancePreset.addEventListener("change", () => {
+  stopTimeActions();
+  render();
+});
 
 render();

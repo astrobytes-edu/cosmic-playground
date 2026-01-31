@@ -47,6 +47,40 @@
             <span class="control__value"><span id="distanceValue"></span></span>
           </label>
 
+          <div class="cp-callout" data-kind="activity">
+            <strong>Time controls</strong>
+            <div class="button-row" role="group" aria-label="Time controls">
+              <button id="animateMonth" class="cp-action cp-action--ghost" type="button">Animate month</button>
+              <button id="animateYear" class="cp-action cp-action--ghost" type="button">Animate 1 year</button>
+            </div>
+            <p id="motionNote" class="cp-muted" hidden></p>
+          </div>
+
+          <div class="cp-callout" data-kind="activity">
+            <strong>Long-run simulation</strong>
+            <label class="control">
+              <span>Years</span>
+              <input id="simYears" type="range" min="1" max="100" value="10" step="1" />
+              <span class="control__value"><span id="simYearsValue"></span></span>
+            </label>
+
+            <label class="control">
+              <span>Speed</span>
+              <select id="simSpeed">
+                <option value="slow">Slow</option>
+                <option value="medium" selected>Medium</option>
+                <option value="fast">Fast</option>
+              </select>
+            </label>
+
+            <div class="button-row" role="group" aria-label="Simulation controls">
+              <button id="runSimulation" class="cp-action cp-action--ghost" type="button">Run simulation</button>
+              <button id="stopSimulation" class="cp-action cp-action--ghost" type="button">Stop</button>
+            </div>
+
+            <pre id="simOutput" class="cp-muted" hidden></pre>
+          </div>
+
           <button id="stationMode" class="cp-action" type="button">Station mode</button>
           <button id="challengeMode" class="cp-action" type="button">Challenge mode</button>
           <button id="help" class="cp-action" type="button">Help / shortcuts</button>
