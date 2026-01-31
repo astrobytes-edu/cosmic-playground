@@ -1,0 +1,40 @@
+/* packages/theme/styles/high-contrast.css */
+/* Activated via data-contrast="high" or prefers-contrast media query */
+
+@media (prefers-contrast: more) {
+  :root {
+    --cp-border: rgba(255, 255, 255, 0.25);
+    --cp-border-subtle: rgba(255, 255, 255, 0.15);
+    --cp-text: #ffffff;
+    --cp-text2: #e0e0e0;
+    --cp-muted: #b0b0b0;
+  }
+}
+
+[data-contrast="high"] {
+  --cp-border: rgba(255, 255, 255, 0.25);
+  --cp-border-subtle: rgba(255, 255, 255, 0.15);
+  --cp-text: #ffffff;
+  --cp-text2: #e0e0e0;
+  --cp-muted: #b0b0b0;
+
+  /* Increase focus visibility */
+  --cp-focus: rgba(45, 212, 191, 0.90);
+}
+
+/* Paper theme high contrast */
+@media (prefers-contrast: more) {
+  .cp-layer-paper,
+  [data-theme="paper"] {
+    --cp-border: rgba(0, 0, 0, 0.25);
+    --cp-text: #000000;
+    --cp-muted: #404040;
+  }
+}
+
+[data-theme="paper"][data-contrast="high"],
+.cp-layer-paper[data-contrast="high"] {
+  --cp-border: rgba(0, 0, 0, 0.25);
+  --cp-text: #000000;
+  --cp-muted: #404040;
+}
