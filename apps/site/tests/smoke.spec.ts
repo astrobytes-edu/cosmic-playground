@@ -24,7 +24,9 @@ async function demoSlugsFromContent() {
 }
 
 const basePath = normalizeBasePath(
-  process.env.CP_BASE_PATH ?? "/cosmic-playground/"
+  process.env.CP_BASE_PATH && process.env.CP_BASE_PATH.trim().length > 0
+    ? process.env.CP_BASE_PATH
+    : "/cosmic-playground/"
 );
 
 test.describe("Cosmic Playground smoke", () => {

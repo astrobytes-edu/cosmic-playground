@@ -9,7 +9,9 @@ function normalizeBasePath(value: string) {
 }
 
 const basePath = normalizeBasePath(
-  process.env.CP_BASE_PATH ?? "/cosmic-playground/"
+  process.env.CP_BASE_PATH && process.env.CP_BASE_PATH.trim().length > 0
+    ? process.env.CP_BASE_PATH
+    : "/cosmic-playground/"
 );
 const port = Number(process.env.PLAYWRIGHT_PORT ?? "4321");
 
