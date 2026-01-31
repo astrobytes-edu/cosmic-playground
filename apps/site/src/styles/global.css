@@ -118,29 +118,3 @@ nav a:hover {
   gap: 10px;
   margin-top: 6px;
 }
-
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(45, 212, 191, 0.14);
-  border: 1px solid rgba(45, 212, 191, 0.35);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.button:hover {
-  background: rgba(45, 212, 191, 0.22);
-  border-color: rgba(45, 212, 191, 0.50);
-}
-
-.button--ghost {
-  background: transparent;
-  border-color: var(--cp-border);
-}
-
-.button--ghost:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
