@@ -1,6 +1,6 @@
 import { AstroConstants, EclipseGeometryModel } from "@cosmic/physics";
-import { ChallengeEngine, createDemoModes } from "@cosmic/runtime";
-import type { Challenge } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime } from "@cosmic/runtime";
+import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 
 const setNewMoonEl = document.querySelector<HTMLButtonElement>("#setNewMoon");
 const setFullMoonEl = document.querySelector<HTMLButtonElement>("#setFullMoon");
@@ -152,6 +152,14 @@ help.disabled = true;
 copyResults.disabled = true;
 stopSimulation.disabled = true;
 simOutput.hidden = true;
+
+const runtime = createInstrumentRuntime({
+  hasMathMode: false,
+  storageKey: "cp:eclipse-geometry:mode",
+  url: new URL(window.location.href)
+});
+
+copyResults.disabled = false;
 
 const SYZYGY_TOLERANCE_DEG = 5;
 
@@ -435,6 +443,12 @@ function render() {
   renderStage({ sunLonDeg: state.sunLonDeg, moonLonDeg, nodeLonDeg, betaDeg: derived.betaDeg });
 
   status.textContent = `Thresholds (mean-distance example): solar partial ≈ ${formatNumber(thresholds.solarPartialDeg, 2)}°, solar central ≈ ${formatNumber(thresholds.solarCentralDeg, 2)}°`;
+
+  (window as any).__cp = {
+    slug: "eclipse-geometry",
+    mode: runtime.mode,
+    exportResults: () => exportResults(getState())
+  };
 }
 
 function getState(): EclipseDemoState {
@@ -473,6 +487,47 @@ function setState(next: unknown): void {
   }
 
   render();
+}
+
+function exportResults(st: EclipseDemoState): ExportPayloadV1 {
+  const thresholds = EclipseGeometryModel.eclipseThresholdsDeg({
+    earthMoonDistanceKm: st.earthMoonDistanceKm
+  });
+  const phase = phaseInfo(st.phaseAngleDeg);
+
+  const notes: string[] = [];
+  notes.push("Units: angles in degrees (°); distances in kilometers (km).");
+  notes.push(
+    `Interactive mode uses a pedagogical syzygy tolerance: outcomes only appear when Δ is within ${SYZYGY_TOLERANCE_DEG}° of 0° (New) or 180° (Full).`
+  );
+  notes.push("This is a simplified geometric model; it is not an ephemeris-grade eclipse predictor.");
+  if (prefersReducedMotion) {
+    notes.push("Reduced motion: animation and simulation controls are disabled.");
+  }
+
+  return {
+    version: 1,
+    timestamp: new Date().toISOString(),
+    parameters: [
+      { name: "Moon longitude λM", value: `${Math.round(st.moonLonDeg)}°` },
+      { name: "Sun longitude λ☉", value: `${Math.round(st.sunLonDeg)}°` },
+      { name: "Node longitude Ω", value: `${Math.round(st.nodeLonDeg)}°` },
+      { name: "Orbital tilt i", value: `${formatNumber(st.orbitalTiltDeg, 3)}°` },
+      { name: "Earth–Moon distance", value: `${Math.round(st.earthMoonDistanceKm).toLocaleString()} km` }
+    ],
+    readouts: [
+      { name: "Phase", value: phase.label },
+      { name: "Phase angle Δ", value: `${formatNumber(st.phaseAngleDeg, 1)}°` },
+      { name: "|β| (ecliptic latitude)", value: `${formatNumber(st.absBetaDeg, 3)}°` },
+      { name: "Nearest node distance", value: `${formatNumber(st.nearestNodeDeg, 2)}°` },
+      { name: "Solar outcome", value: outcomeLabel(st.solarType) },
+      { name: "Lunar outcome", value: outcomeLabel(st.lunarType) },
+      { name: "Solar partial threshold", value: `|β| ≤ ${formatNumber(thresholds.solarPartialDeg, 2)}°` },
+      { name: "Solar central threshold", value: `|β| ≤ ${formatNumber(thresholds.solarCentralDeg, 2)}°` },
+      { name: "Lunar penumbral threshold", value: `|β| ≤ ${formatNumber(thresholds.lunarPenumbralDeg, 2)}°` }
+    ],
+    notes
+  };
 }
 
 function buildStationRow(args: {
@@ -1198,6 +1253,20 @@ runSimulation.addEventListener("click", () => {
 
 stopSimulation.addEventListener("click", () => {
   stopTimeActions();
+});
+
+copyResults.addEventListener("click", () => {
+  stopTimeActions();
+  if (challengeEngine.isActive()) challengeEngine.stop();
+  status.textContent = "Copying…";
+  void runtime
+    .copyResults(exportResults(getState()))
+    .then(() => {
+      status.textContent = "Copied results to clipboard.";
+    })
+    .catch((err: unknown) => {
+      status.textContent = err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.";
+    });
 });
 
 moonLon.addEventListener("input", () => {
