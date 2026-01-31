@@ -83,6 +83,7 @@
   --cp-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
   /* ---------- Spacing ---------- */
+  --cp-space-0: 2px;
   --cp-space-1: 4px;
   --cp-space-2: 8px;
   --cp-space-3: 12px;
@@ -90,6 +91,18 @@
   --cp-space-5: 24px;
   --cp-space-6: 32px;
   --cp-space-7: 48px;
+
+  /* ---------- Z-Index Scale ---------- */
+  --cp-z-dropdown: 100;
+  --cp-z-sticky: 200;
+  --cp-z-modal: 300;
+  --cp-z-tooltip: 400;
+
+  /* ---------- Breakpoints (for reference, use in @media) ---------- */
+  --cp-bp-sm: 640px;
+  --cp-bp-md: 768px;
+  --cp-bp-lg: 1024px;
+  --cp-bp-xl: 1280px;
 
   /* ---------- Radius ---------- */
   --cp-r-1: 10px;

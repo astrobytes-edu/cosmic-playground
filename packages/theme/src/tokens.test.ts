@@ -67,4 +67,34 @@ describe("Design tokens", () => {
       expect(css).toContain("--cp-card-glow");
     });
   });
+
+  describe("Z-index scale", () => {
+    it("defines z-index tokens", () => {
+      const requiredTokens = [
+        "--cp-z-dropdown",
+        "--cp-z-sticky",
+        "--cp-z-modal",
+        "--cp-z-tooltip",
+      ];
+      for (const token of requiredTokens) {
+        expect(css).toContain(token);
+      }
+    });
+  });
+
+  describe("Breakpoint tokens", () => {
+    it("defines breakpoint tokens", () => {
+      expect(css).toContain("--cp-bp-sm");
+      expect(css).toContain("--cp-bp-md");
+      expect(css).toContain("--cp-bp-lg");
+      expect(css).toContain("--cp-bp-xl");
+    });
+  });
+
+  describe("Spacing completeness", () => {
+    it("defines small spacing values", () => {
+      expect(css).toContain("--cp-space-0");  // 2px
+      expect(css).toMatch(/--cp-space-1:\s*4px/);
+    });
+  });
 });
