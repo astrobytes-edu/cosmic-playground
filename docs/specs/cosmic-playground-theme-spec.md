@@ -1,10 +1,10 @@
-# Cosmic Playground — Theme Spec v0.1
+# Cosmic Playground — Theme Spec v0.2
 
 **Status:** Draft (Codex-ready)
 
 **Owner:** Anna
 
-**Date:** 2026-01-30
+**Date:** 2026-01-31
 
 **Repo:** `cosmic-playground` (monorepo)
 
@@ -12,7 +12,16 @@
 
 ## 0. One-liner
 
-Cosmic Playground uses a **two-layer theme**: a “museum” layer for the Astro site chrome (allowed to be atmospheric) and an “instrument” layer for demos (must be calm, readable, and consistent).
+Cosmic Playground uses a **three-layer theme**: a "museum" layer for the Astro site chrome (allowed to be atmospheric), an "instrument" layer for demos (calm, readable, consistent), and a "paper" layer for instructor-facing pages (clean light mode).
+
+### Aurora Ink palette philosophy
+
+The Aurora Ink palette replaces the previous blue-heavy "cosmic cliche" with a modern aesthetic:
+
+- **Warm ink blacks** — neutral charcoal backgrounds (`#0a0a0c`) instead of blue-blacks
+- **Neutral text** — clean whites (`#e8e8ec`) without blue tint
+- **Teal + Pink + Violet accents** — teal for primary interactive, pink for special emphasis, violet for tertiary/categories
+- **Paper mode** — a clean light theme for instructor pages and print
 
 ---
 
@@ -34,6 +43,7 @@ Theme package: `packages/theme`
 - Tokens: `packages/theme/styles/tokens.css`
 - Museum layer: `packages/theme/styles/layer-museum.css`
 - Instrument layer: `packages/theme/styles/layer-instrument.css`
+- Paper layer: `packages/theme/styles/layer-paper.css`
 - Demo shell layout contract: `packages/theme/styles/demo-shell.css`
 - Print: `packages/theme/styles/print.css`
 
@@ -41,16 +51,19 @@ Theme package: `packages/theme`
 
 In `apps/site` and `apps/demos`, **do not hardcode new colors**. Use CSS variables defined in `tokens.css`:
 
-- `--cp-bg0`, `--cp-bg1`, `--cp-bg2`
-- `--cp-text`, `--cp-muted`, `--cp-faint`
-- `--cp-accent`, `--cp-accent2`, `--cp-accent3`, `--cp-accent4`
-- `--cp-border`, `--cp-focus`
+- `--cp-bg0`, `--cp-bg1`, `--cp-bg2`, `--cp-bg3`
+- `--cp-text`, `--cp-text2`, `--cp-muted`, `--cp-faint`
+- `--cp-accent`, `--cp-accent-hover` (teal - primary)
+- `--cp-pink`, `--cp-pink-hover` (pink - special emphasis)
+- `--cp-violet`, `--cp-violet-hover` (violet - tertiary)
+- Legacy: `--cp-accent2`, `--cp-accent3`, `--cp-accent4` (aliases)
+- `--cp-border`, `--cp-border-subtle`, `--cp-focus`
 
 Exceptions: tiny per-demo visualization-only colors inside `<canvas>` or SVG (document them in model notes).
 
 ---
 
-## 3. Two-layer model
+## 3. Three-layer model
 
 ### 3.1 Museum layer (Astro site chrome)
 
@@ -90,9 +103,23 @@ Primitives:
 - `.cp-drawer` (bottom drawer in stage column)
 - `.cp-callout` with `data-kind="model"` or `data-kind="misconception"`
 
+### 3.3 Paper layer (instructor-facing)
+
+Intent:
+
+- clean, readable light mode
+- print-friendly by default
+- professional appearance for handouts
+
+Mechanics:
+
+- Set `<html data-theme="paper">` or `<body class="cp-layer-paper">`
+- Auto-applied to `/instructor/*` pages
+- Manual via `?theme=paper` query param
+
 ---
 
-## 4. Demo shell (“instrument”) layout contract
+## 4. Demo shell ("instrument") layout contract
 
 Every demo must provide these regions inside `.cp-demo`:
 
@@ -115,17 +142,20 @@ Responsive:
 
 ---
 
-## 5. Accent usage (including magenta)
+## 5. Accent usage (Aurora Ink palette)
 
-Accents are for **small, meaningful emphasis**:
-- focus rings
-- selected tags/filters
-- “misconception” callouts (magenta: `--cp-accent4`)
-- a small number of badges (avoid rainbow UI)
+The Aurora Ink palette uses three accent colors for **small, meaningful emphasis**:
+
+| Color  | Token         | Use for                                           |
+| ------ | ------------- | ------------------------------------------------- |
+| Teal   | `--cp-accent` | Primary interactive (links, buttons, focus rings) |
+| Pink   | `--cp-pink`   | Special emphasis (goals, challenges, alerts)      |
+| Violet | `--cp-violet` | Tertiary (categories, model callouts, tags)       |
 
 Avoid:
-- large magenta backgrounds
-- magenta body text
+
+- large pink/teal backgrounds
+- accent body text
 - low-contrast text on tinted backgrounds
 
 ---
