@@ -1,35 +1,52 @@
 :root {
   color-scheme: dark;
 
-  /* ---------- Neutrals ---------- */
-  --cp-bg0: #070a12; /* page background */
-  --cp-bg1: #0b1020; /* cards/panels */
-  --cp-bg2: #0f1a33; /* elevated */
-  --cp-border: rgba(255, 255, 255, 0.1);
+  /* ---------- Neutrals (warm ink, not blue) ---------- */
+  --cp-bg0: #0a0a0c;    /* page background - neutral ink */
+  --cp-bg1: #101014;    /* cards/panels - charcoal */
+  --cp-bg2: #18181c;    /* elevated - warm charcoal */
+  --cp-bg3: #1f1f24;    /* highest elevation */
+  --cp-border: rgba(255, 255, 255, 0.10);
+  --cp-border-subtle: rgba(255, 255, 255, 0.06);
 
-  --cp-text: #eaf2ff;
-  --cp-muted: #b7c4da;
-  --cp-faint: #7d8ba6;
+  /* ---------- Text (neutral, not blue-tinted) ---------- */
+  --cp-text: #e8e8ec;      /* primary - neutral white */
+  --cp-text2: #c9c9d0;     /* secondary */
+  --cp-muted: #9a9aa6;     /* tertiary */
+  --cp-faint: #6a6a78;     /* quaternary */
 
-  /* ---------- Accents (cosmic, controlled) ---------- */
-  --cp-accent: #2dd4bf; /* aurora teal (primary) */
-  --cp-accent2: #a78bfa; /* nebula violet (secondary) */
-  --cp-accent3: #60a5fa; /* ion blue (links) */
-  --cp-accent4: #ec4899; /* nebula magenta (sparingly) */
+  /* ---------- Accents (aurora ink: teal + pink + violet) ---------- */
+  --cp-accent: #2dd4bf;       /* teal - primary interactive */
+  --cp-accent-hover: #5eead4;
+  --cp-pink: #ff2d95;         /* pink - special emphasis, goals */
+  --cp-pink-hover: #ff5cad;
+  --cp-violet: #a78bfa;       /* violet - tertiary, categories */
+  --cp-violet-hover: #c4b5fd;
+
+  /* Legacy aliases (for gradual migration) */
+  --cp-accent2: var(--cp-violet);
+  --cp-accent3: var(--cp-accent);  /* links now use teal */
+  --cp-accent4: var(--cp-pink);
 
   /* ---------- Status ---------- */
   --cp-success: #34d399;
   --cp-warning: #fbbf24;
   --cp-danger: #fb7185;
 
-  /* ---------- Glows (low alpha = not loud) ---------- */
-  --cp-glow-accent: rgba(45, 212, 191, 0.22);
-  --cp-glow-violet: rgba(167, 139, 250, 0.18);
-  --cp-glow-blue: rgba(96, 165, 250, 0.2);
-  --cp-glow-magenta: rgba(236, 72, 153, 0.16);
+  /* ---------- Glows (aurora palette, not blue-heavy) ---------- */
+  --cp-glow-teal: rgba(45, 212, 191, 0.18);
+  --cp-glow-pink: rgba(255, 45, 149, 0.12);
+  --cp-glow-violet: rgba(167, 139, 250, 0.14);
 
-  /* ---------- Focus ---------- */
-  --cp-focus: var(--cp-accent);
+  /* Legacy aliases */
+  --cp-glow-accent: var(--cp-glow-teal);
+  --cp-glow-blue: var(--cp-glow-violet);  /* map old blue → violet */
+  --cp-glow-magenta: var(--cp-glow-pink);
+
+  /* ---------- Selection & Focus ---------- */
+  --cp-selection-bg: rgba(255, 45, 149, 0.28);
+  --cp-focus: rgba(45, 212, 191, 0.70);
+  --cp-focus-ring: 2px solid var(--cp-focus);
 
   /* ---------- Typography ---------- */
   --cp-font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Inter,
@@ -114,17 +131,25 @@ h3 { font-size: var(--cp-text-2xl); }
 h4 { font-size: var(--cp-text-xl); }
 
 a {
-  color: var(--cp-accent3);
+  color: var(--cp-accent);
   text-decoration: none;
+  text-decoration-color: rgba(45, 212, 191, 0.35);
+  text-underline-offset: 0.18em;
   transition: color var(--cp-transition-fast) var(--cp-ease-out);
 }
 
 a:hover {
-  color: color-mix(in srgb, var(--cp-accent3) 80%, white);
+  color: var(--cp-accent-hover);
+  text-decoration-color: rgba(94, 234, 212, 0.55);
 }
 
 a:active {
-  color: var(--cp-accent3);
+  color: var(--cp-accent);
+}
+
+::selection {
+  background: var(--cp-selection-bg);
+  color: var(--cp-text);
 }
 
 :focus-visible {
