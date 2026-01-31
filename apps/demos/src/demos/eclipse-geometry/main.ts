@@ -1,4 +1,5 @@
 import { EclipseGeometryModel } from "@cosmic/physics";
+import { createDemoModes } from "@cosmic/runtime";
 
 const setNewMoonEl = document.querySelector<HTMLButtonElement>("#setNewMoon");
 const setFullMoonEl = document.querySelector<HTMLButtonElement>("#setFullMoon");
@@ -324,6 +325,179 @@ function render() {
 
   status.textContent = `Thresholds (mean-distance example): solar partial ≈ ${formatNumber(thresholds.solarPartialDeg, 2)}°, solar central ≈ ${formatNumber(thresholds.solarCentralDeg, 2)}°`;
 }
+
+function buildStationRow(args: {
+  label: string;
+  phaseLabel: string;
+  phaseAngleDeg: number;
+  absBetaDeg: number;
+  nearestNodeDeg: number;
+  orbitalTiltDeg: number;
+  earthMoonDistanceKm: number;
+  outcome: string;
+}) {
+  return {
+    case: args.label,
+    phase: args.phaseLabel,
+    phaseAngleDeg: formatNumber(args.phaseAngleDeg, 1),
+    absBetaDeg: formatNumber(args.absBetaDeg, 3),
+    nearestNodeDeg: formatNumber(args.nearestNodeDeg, 2),
+    tiltDeg: formatNumber(args.orbitalTiltDeg, 3),
+    earthMoonDistanceKm: String(Math.round(args.earthMoonDistanceKm)),
+    outcome: args.outcome
+  };
+}
+
+stationMode.disabled = false;
+help.disabled = false;
+
+const demoModes = createDemoModes({
+  help: {
+    title: "Help / Shortcuts",
+    subtitle: "Keyboard shortcuts work when focus is not in an input field.",
+    sections: [
+      {
+        heading: "Shortcuts",
+        type: "shortcuts",
+        items: [
+          { key: "?", action: "Toggle help" },
+          { key: "g", action: "Toggle station mode" }
+        ]
+      },
+      {
+        heading: "How to use",
+        type: "bullets",
+        items: [
+          "Use New/Full buttons to set phase, then adjust node longitude Ω and tilt i.",
+          "Eclipses require syzygy (New/Full) and |β| small enough for the chosen Earth–Moon distance."
+        ]
+      }
+    ]
+  },
+  station: {
+    title: "Station Mode: Eclipse Geometry",
+    subtitle: "Record phase, node proximity, and eclipse outcomes",
+    columns: [
+      { key: "case", label: "Case" },
+      { key: "phase", label: "Phase" },
+      { key: "phaseAngleDeg", label: "Δ (deg)" },
+      { key: "absBetaDeg", label: "|β| (deg)" },
+      { key: "nearestNodeDeg", label: "Nearest node (deg)" },
+      { key: "tiltDeg", label: "Tilt i (deg)" },
+      { key: "earthMoonDistanceKm", label: "Earth–Moon distance (km)" },
+      { key: "outcome", label: "Outcome" }
+    ],
+    getSnapshotRow: () => {
+      const phaseAngleDegValue = EclipseGeometryModel.phaseAngleDeg({
+        moonLonDeg: state.moonLonDeg,
+        sunLonDeg: state.sunLonDeg
+      });
+      const betaDeg = EclipseGeometryModel.eclipticLatitudeDeg({
+        tiltDeg: state.orbitalTiltDeg,
+        moonLonDeg: state.moonLonDeg,
+        nodeLonDeg: state.nodeLonDeg
+      });
+      const absBetaDegValue = Math.abs(betaDeg);
+      const nearestNodeDeg = EclipseGeometryModel.nearestNodeDistanceDeg({
+        moonLonDeg: state.moonLonDeg,
+        nodeLonDeg: state.nodeLonDeg
+      });
+
+      const phase = phaseInfo(phaseAngleDegValue);
+      const isNewSyzygy =
+        EclipseGeometryModel.angularSeparationDeg(phaseAngleDegValue, 0) <=
+        SYZYGY_TOLERANCE_DEG;
+      const isFullSyzygy =
+        EclipseGeometryModel.angularSeparationDeg(phaseAngleDegValue, 180) <=
+        SYZYGY_TOLERANCE_DEG;
+
+      const solarType = isNewSyzygy
+        ? EclipseGeometryModel.solarEclipseTypeFromBetaDeg({
+            betaDeg,
+            earthMoonDistanceKm: state.earthMoonDistanceKm
+          }).type
+        : "none";
+
+      const lunarType = isFullSyzygy
+        ? EclipseGeometryModel.lunarEclipseTypeFromBetaDeg({
+            betaDeg,
+            earthMoonDistanceKm: state.earthMoonDistanceKm
+          }).type
+        : "none";
+
+      const outcome =
+        solarType !== "none"
+          ? outcomeLabel(solarType)
+          : lunarType !== "none"
+            ? outcomeLabel(lunarType)
+            : "None";
+
+      return buildStationRow({
+        label: phase.label,
+        phaseLabel: phase.label,
+        phaseAngleDeg: phaseAngleDegValue,
+        absBetaDeg: absBetaDegValue,
+        nearestNodeDeg,
+        orbitalTiltDeg: state.orbitalTiltDeg,
+        earthMoonDistanceKm: state.earthMoonDistanceKm,
+        outcome
+      });
+    },
+    snapshotLabel: "Add row (snapshot)",
+    rowSets: [
+      {
+        label: "Add 4-case template (blank)",
+        getRows: () => [
+          {
+            case: "New (far)",
+            phase: "",
+            phaseAngleDeg: "",
+            absBetaDeg: "",
+            nearestNodeDeg: "",
+            tiltDeg: "",
+            earthMoonDistanceKm: "",
+            outcome: ""
+          },
+          {
+            case: "New (near)",
+            phase: "",
+            phaseAngleDeg: "",
+            absBetaDeg: "",
+            nearestNodeDeg: "",
+            tiltDeg: "",
+            earthMoonDistanceKm: "",
+            outcome: ""
+          },
+          {
+            case: "Full (far)",
+            phase: "",
+            phaseAngleDeg: "",
+            absBetaDeg: "",
+            nearestNodeDeg: "",
+            tiltDeg: "",
+            earthMoonDistanceKm: "",
+            outcome: ""
+          },
+          {
+            case: "Full (near)",
+            phase: "",
+            phaseAngleDeg: "",
+            absBetaDeg: "",
+            nearestNodeDeg: "",
+            tiltDeg: "",
+            earthMoonDistanceKm: "",
+            outcome: ""
+          }
+        ]
+      }
+    ]
+  }
+});
+
+demoModes.bindButtons({
+  helpButton: help,
+  stationButton: stationMode
+});
 
 populateDistancePresets();
 
