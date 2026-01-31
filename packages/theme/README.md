@@ -1,54 +1,71 @@
-# `@cosmic/theme`
+# @cosmic/theme
 
-Two-layer theme system:
+Design tokens and component styles for Cosmic Playground.
 
-- **Museum layer**: site chrome (aurora backgrounds allowed)
-- **Instrument layer**: demos (flat panels, high readability)
+## Quick Start
 
-## Rules
-
-1. Never hardcode colors in `apps/site` or demo apps. Use CSS variables from `styles/tokens.css`.
-2. Use accents sparingly: badges, focus rings, tiny borders, small highlights.
-3. Maintain WCAG contrast for text (≥ 4.5:1 for normal text).
-4. Station cards must support print styling (import `styles/print.css` somewhere global for the museum).
-
-## Museum usage (Astro)
-
-- Import:
-  - `@cosmic/theme/styles/tokens.css`
-  - `@cosmic/theme/styles/layer-museum.css`
-  - `@cosmic/theme/styles/print.css`
-
-- Apply to body:
-
-```html
-<body class="cp-layer-museum">
+```css
+@import "@cosmic/theme/styles/tokens.css";
+@import "@cosmic/theme/styles/layer-museum.css";
 ```
 
-## Instrument usage (Demos)
+## Token Categories
 
-- Import:
-  - `@cosmic/theme/styles/tokens.css`
-  - `@cosmic/theme/styles/layer-instrument.css`
-  - `@cosmic/theme/styles/demo-shell.css`
+### Colors
 
-- Root structure:
+**Aurora Ink Palette** (dark theme):
+
+- `--cp-bg0` through `--cp-bg3`: Warm ink blacks
+- `--cp-text`, `--cp-text2`, `--cp-muted`, `--cp-faint`: Neutral text
+- `--cp-accent` (teal), `--cp-pink`, `--cp-violet`: Aurora accents
+
+**Paper Palette** (light theme):
+
+- Apply via `data-theme="paper"` or `.cp-layer-paper`
+
+### Typography
+
+- Sizes: `--cp-text-sm` (14px) through `--cp-text-hero` (64px)
+- Weights: `--cp-font-normal` (400) through `--cp-font-bold` (700)
+- Line heights: `--cp-leading-tight` (1.25), `--cp-leading-normal` (1.5)
+
+### Spacing
+
+`--cp-space-0` (2px) through `--cp-space-7` (48px)
+
+### Motion
+
+- Durations: `--cp-transition-fast` (150ms), `--cp-transition-normal` (200ms)
+- Easing: `--cp-ease-out`, `--cp-ease-in-out`, `--cp-ease-spring`
+
+## Components
+
+### Button (`.cp-button`)
 
 ```html
-<div class="cp-layer-instrument cp-demo">
-  <aside class="cp-demo__controls cp-panel">...</aside>
-  <main class="cp-demo__stage cp-stage">...</main>
-  <aside class="cp-demo__readouts cp-panel">...</aside>
-  <section class="cp-demo__drawer cp-drawer">...</section>
+<button class="cp-button">Default</button>
+<button class="cp-button cp-button--primary">Primary</button>
+<button class="cp-button cp-button--ghost">Ghost</button>
+<button class="cp-button cp-button--accent">Accent (Pink)</button>
+```
+
+### Form Inputs (`.cp-input`, `.cp-select`, `.cp-textarea`)
+
+```html
+<div class="cp-field">
+  <label class="cp-label">Email</label>
+  <input type="email" class="cp-input" placeholder="you@example.com">
 </div>
 ```
 
-## Magenta guidance
+## Theme Layers
 
-Use `--cp-accent4` for:
-- selected/active states
-- misconception callouts
-- special “highlight” states
+1. **Museum** (`.cp-layer-museum`): Dark with aurora gradients
+2. **Instrument** (`.cp-layer-instrument`): Calmer dark for demos
+3. **Paper** (`.cp-layer-paper`): Light for instructor materials
 
-Avoid using magenta for large surfaces or body text backgrounds.
+## Accessibility
 
+- All colors meet WCAG AA contrast (4.5:1)
+- High contrast mode: `data-contrast="high"` or `prefers-contrast: more`
+- Reduced motion: respects `prefers-reduced-motion: reduce`
