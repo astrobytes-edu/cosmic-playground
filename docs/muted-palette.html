@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Muted Aurora Palette - Cosmic Playground</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #08080c;
+      color: #e8e8ed;
+      padding: 32px;
+      line-height: 1.5;
+    }
+
+    h1 { font-size: 24px; margin-bottom: 8px; color: #fff; }
+    .subtitle { color: #8b8b96; margin-bottom: 32px; }
+
+    h2 {
+      font-size: 18px;
+      margin: 48px 0 16px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 800px) {
+      .comparison { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: #101014;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .panel-desc {
+      font-size: 13px;
+      color: #8b8b96;
+      margin-bottom: 20px;
+    }
+
+    .palette-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .swatch {
+      flex: 1;
+      height: 56px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .swatch-label {
+      font-size: 10px;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+
+    .demo-section {
+      margin-bottom: 20px;
+    }
+
+    .demo-label {
+      font-size: 11px;
+      color: #8b8b96;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+
+    .link {
+      font-size: 14px;
+      text-decoration: none;
+      border-bottom: 1px solid;
+    }
+
+    .card-demo {
+      background: #18181c;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .card-demo h4 {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .card-demo p {
+      font-size: 13px;
+      color: #8b8b96;
+    }
+
+    .focus-ring {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 8px;
+      background: #18181c;
+      font-size: 14px;
+    }
+
+    .status-row {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Current (bright) palette */
+    .current .teal { background: #2dd4bf; color: #08080c; }
+    .current .pink { background: #f472b6; color: #08080c; }
+    .current .violet { background: #a78bfa; color: #08080c; }
+
+    .current .btn-primary { background: #2dd4bf; color: #08080c; }
+    .current .btn-secondary { background: #f472b6; color: #08080c; }
+    .current .btn-outline { border-color: #2dd4bf; color: #2dd4bf; background: transparent; }
+    .current .link { color: #2dd4bf; border-color: rgba(45,212,191,0.4); }
+    .current .focus-ring { box-shadow: 0 0 0 3px rgba(45,212,191,0.35); }
+    .current .card-demo { box-shadow: 0 0 32px rgba(45,212,191,0.15); }
+    .current .card-demo h4 { color: #2dd4bf; }
+    .current .success { background: #10b981; }
+    .current .warning { background: #f59e0b; }
+    .current .danger { background: #ef4444; }
+
+    /* Muted aurora palette */
+    .muted .teal { background: #1a9e8f; color: #fff; }
+    .muted .pink { background: #d66ba0; color: #fff; }
+    .muted .violet { background: #9678e0; color: #fff; }
+
+    .muted .btn-primary { background: #1a9e8f; color: #fff; }
+    .muted .btn-secondary { background: #d66ba0; color: #fff; }
+    .muted .btn-outline { border-color: #1a9e8f; color: #1a9e8f; background: transparent; }
+    .muted .link { color: #1a9e8f; border-color: rgba(26,158,143,0.4); }
+    .muted .focus-ring { box-shadow: 0 0 0 3px rgba(26,158,143,0.35); }
+    .muted .card-demo { box-shadow: 0 0 32px rgba(26,158,143,0.12); }
+    .muted .card-demo h4 { color: #1a9e8f; }
+    .muted .success { background: #059669; }
+    .muted .warning { background: #d97706; }
+    .muted .danger { background: #dc2626; }
+
+    /* Deep aurora palette - even more subdued */
+    .deep .teal { background: #168f82; color: #fff; }
+    .deep .pink { background: #c45d90; color: #fff; }
+    .deep .violet { background: #8568d0; color: #fff; }
+
+    .deep .btn-primary { background: #168f82; color: #fff; }
+    .deep .btn-secondary { background: #c45d90; color: #fff; }
+    .deep .btn-outline { border-color: #168f82; color: #168f82; background: transparent; }
+    .deep .link { color: #168f82; border-color: rgba(22,143,130,0.4); }
+    .deep .focus-ring { box-shadow: 0 0 0 3px rgba(22,143,130,0.35); }
+    .deep .card-demo { box-shadow: 0 0 32px rgba(22,143,130,0.10); }
+    .deep .card-demo h4 { color: #168f82; }
+    .deep .success { background: #047857; }
+    .deep .warning { background: #b45309; }
+    .deep .danger { background: #b91c1c; }
+
+    .hex-values {
+      display: flex;
+      gap: 24px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #8b8b96;
+      margin-top: 12px;
+    }
+
+    .recommendation {
+      background: #18181c;
+      border-left: 3px solid #1a9e8f;
+      padding: 16px;
+      margin-top: 32px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .recommendation h3 {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .recommendation p {
+      font-size: 13px;
+      color: #a0a0a8;
+      margin-bottom: 8px;
+    }
+
+    .recommendation code {
+      background: #08080c;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Muted Aurora Palette</h1>
+  <p class="subtitle">Comparing current bright/neon colors vs. deeper, more sophisticated alternatives</p>
+
+  <div class="comparison">
+    <!-- Current -->
+    <div class="panel current">
+      <div class="panel-title">Current (Bright)</div>
+      <p class="panel-desc">High saturation, "neon" feel</p>
+
+      <div class="palette-row">
+        <div class="swatch teal">Teal<span class="swatch-label">#2dd4bf</span></div>
+        <div class="swatch pink">Pink<span class="swatch-label">#f472b6</span></div>
+        <div class="swatch violet">Violet<span class="swatch-label">#a78bfa</span></div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-label">Buttons</div>
+        <div class="btn-row">
+          <button class="btn btn-primary">Primary</button>
+          <button class="btn btn-secondary">Accent</button>
+          <button class="btn btn-outline">Outline</button>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-label">Links & Focus</div>
+        <a href="#" class="link">Link text</a>
+        <div style="margin-top: 12px;">
+          <span class="focus-ring">Focus ring</span>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-label">Card with glow</div>
+        <div class="card-demo">
+          <h4>Demo Title</h4>
+          <p>Card content with subtle glow effect</p>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-label">Status colors</div>
+        <div class="status-row">
+          <span class="status-item"><span class="status-dot success"></span> Success</span>
+          <span class="status-item"><span class="status-dot warning"></span> Warning</span>
+          <span class="status-item"><span class="status-dot danger"></span> Danger</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Muted -->
+    <div class="panel muted">
+      <div class="panel-title">Muted Aurora</div>
+      <p class="panel-desc">Deeper, more sophisticated</p>
+
+      <div class="palette-row">
+        <div class="swatch teal">Teal<span class="swatch-label">#1a9e8f</span></div>
+        <div class="swatch pink">Pink<span class="swatch-label">#d66ba0</span></div>
+        <div class="swatch violet">Violet<span class="swatch-label">#9678e0</span></div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-label">Buttons</div>
+        <div class="btn-row">
+          <button class="btn btn-primary">Primary</button>
+          <button class="btn btn-secondary">Accent</button>
+          <button class="btn btn-outline">Outline</button>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-label">Links & Focus</div>
+        <a href="#" class="link">Link text</a>
+        <div style="margin-top: 12px;">
+          <span class="focus-ring">Focus ring</span>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-label">Card with glow</div>
+        <div class="card-demo">
+          <h4>Demo Title</h4>
+          <p>Card content with subtle glow effect</p>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-label">Status colors</div>
+        <div class="status-row">
+          <span class="status-item"><span class="status-dot success"></span> Success</span>
+          <span class="status-item"><span class="status-dot warning"></span> Warning</span>
+          <span class="status-item"><span class="status-dot danger"></span> Danger</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Even Deeper Option</h2>
+  <p style="color: #8b8b96; margin-bottom: 16px; font-size: 14px;">If muted aurora still feels too bright, here's a deeper variant:</p>
+
+  <div class="comparison">
+    <div class="panel muted">
+      <div class="panel-title">Muted Aurora</div>
+      <div class="palette-row">
+        <div class="swatch teal">Teal<span class="swatch-label">#1a9e8f</span></div>
+        <div class="swatch pink">Pink<span class="swatch-label">#d66ba0</span></div>
+        <div class="swatch violet">Violet<span class="swatch-label">#9678e0</span></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-outline">Outline</button>
+      </div>
+    </div>
+
+    <div class="panel deep">
+      <div class="panel-title">Deep Aurora</div>
+      <div class="palette-row">
+        <div class="swatch teal">Teal<span class="swatch-label">#168f82</span></div>
+        <div class="swatch pink">Pink<span class="swatch-label">#c45d90</span></div>
+        <div class="swatch violet">Violet<span class="swatch-label">#8568d0</span></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-outline">Outline</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="recommendation">
+    <h3>Token Changes for Muted Aurora</h3>
+    <p>To implement the muted palette, we'd update these tokens:</p>
+    <p><code>--cp-accent: #1a9e8f</code> (was #2dd4bf)</p>
+    <p><code>--cp-pink: #d66ba0</code> (was #f472b6)</p>
+    <p><code>--cp-violet: #9678e0</code> (was #a78bfa)</p>
+    <p style="margin-top: 12px;">The glow tokens would automatically use these new values since they reference the base colors.</p>
+  </div>
+</body>
+</html>

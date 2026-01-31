@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Color Aesthetic Analysis</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #08080c;
+      color: #e8e8ed;
+      padding: 32px;
+      line-height: 1.5;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin: 32px 0 16px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+    h3 { font-size: 14px; margin-bottom: 12px; color: #a0a0a8; }
+    .subtitle { color: #8b8b96; margin-bottom: 32px; }
+
+    .color-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .color-swatch {
+      width: 80px;
+      height: 60px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-family: monospace;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .group {
+      background: #101014;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .group-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .group-count {
+      background: rgba(255,255,255,0.1);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: normal;
+    }
+
+    .insight {
+      background: #18181c;
+      border-left: 3px solid #028391;
+      padding: 16px;
+      margin: 24px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .insight h4 {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .insight p {
+      font-size: 13px;
+      color: #a0a0a8;
+      margin-bottom: 8px;
+    }
+
+    .insight ul {
+      font-size: 13px;
+      color: #a0a0a8;
+      margin-left: 20px;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 700px) {
+      .comparison { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: #101014;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .palette-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .palette-swatch {
+      flex: 1;
+      height: 48px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-family: monospace;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+    }
+
+    .link {
+      font-size: 14px;
+      text-decoration: none;
+      border-bottom: 1px solid;
+    }
+
+    .card-demo {
+      background: #18181c;
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .card-demo h5 {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .card-demo p {
+      font-size: 12px;
+      color: #8b8b96;
+    }
+
+    /* Current neon */
+    .current .t { background: #2dd4bf; }
+    .current .p { background: #f472b6; }
+    .current .v { background: #a78bfa; }
+    .current .btn-primary { background: #2dd4bf; color: #08080c; }
+    .current .btn-accent { background: #f472b6; color: #08080c; }
+    .current .link { color: #2dd4bf; border-color: rgba(45,212,191,0.4); }
+    .current .card-demo { box-shadow: 0 0 24px rgba(45,212,191,0.15); }
+    .current .card-demo h5 { color: #2dd4bf; }
+
+    /* Jewel aurora - based on your colors */
+    .jewel .t { background: #028391; }
+    .jewel .p { background: #BE5A83; }
+    .jewel .v { background: #7077A1; }
+    .jewel .btn-primary { background: #028391; color: #fff; }
+    .jewel .btn-accent { background: #BE5A83; color: #fff; }
+    .jewel .link { color: #028391; border-color: rgba(2,131,145,0.4); }
+    .jewel .card-demo { box-shadow: 0 0 24px rgba(2,131,145,0.12); }
+    .jewel .card-demo h5 { color: #028391; }
+
+    /* Deep jewel - even richer */
+    .deep-jewel .t { background: #257180; }
+    .deep-jewel .p { background: #A35C7A; }
+    .deep-jewel .v { background: #655D8A; }
+    .deep-jewel .btn-primary { background: #257180; color: #fff; }
+    .deep-jewel .btn-accent { background: #A35C7A; color: #fff; }
+    .deep-jewel .link { color: #257180; border-color: rgba(37,113,128,0.4); }
+    .deep-jewel .card-demo { box-shadow: 0 0 24px rgba(37,113,128,0.10); }
+    .deep-jewel .card-demo h5 { color: #257180; }
+
+    .rec-box {
+      background: #18181c;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 24px;
+    }
+
+    .rec-box h4 {
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .token-list {
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 2;
+    }
+
+    .token-list span {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Your Color Aesthetic</h1>
+  <p class="subtitle">Analyzing the 28 colors you shared to find patterns and build a palette</p>
+
+  <h2>Colors Grouped by Family</h2>
+
+  <div class="group">
+    <div class="group-title">Deep Teals & Cyans <span class="group-count">12 colors - your dominant preference!</span></div>
+    <div class="color-grid">
+      <div class="color-swatch" style="background: #005D6C">#005D6C</div>
+      <div class="color-swatch" style="background: #007892">#007892</div>
+      <div class="color-swatch" style="background: #00809D">#00809D</div>
+      <div class="color-swatch" style="background: #257180">#257180</div>
+      <div class="color-swatch" style="background: #028391">#028391</div>
+      <div class="color-swatch" style="background: #025464">#025464</div>
+      <div class="color-swatch" style="background: #0E5E6F">#0E5E6F</div>
+      <div class="color-swatch" style="background: #006989">#006989</div>
+      <div class="color-swatch" style="background: #1D5B79">#1D5B79</div>
+      <div class="color-swatch" style="background: #468B97">#468B97</div>
+      <div class="color-swatch" style="background: #679B9B">#679B9B</div>
+      <div class="color-swatch" style="background: #3A718C">#3A718C</div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Deep Pinks & Magentas <span class="group-count">8 colors - your accent preference</span></div>
+    <div class="color-grid">
+      <div class="color-swatch" style="background: #F54291">#F54291</div>
+      <div class="color-swatch" style="background: #D63484">#D63484</div>
+      <div class="color-swatch" style="background: #C92C6D">#C92C6D</div>
+      <div class="color-swatch" style="background: #AF2655">#AF2655</div>
+      <div class="color-swatch" style="background: #9E1C60">#9E1C60</div>
+      <div class="color-swatch" style="background: #BE5A83">#BE5A83</div>
+      <div class="color-swatch" style="background: #A35C7A">#A35C7A</div>
+      <div class="color-swatch" style="background: #643843">#643843</div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Muted Purples & Mauves <span class="group-count">4 colors</span></div>
+    <div class="color-grid">
+      <div class="color-swatch" style="background: #625772">#625772</div>
+      <div class="color-swatch" style="background: #655D8A">#655D8A</div>
+      <div class="color-swatch" style="background: #605678">#605678</div>
+      <div class="color-swatch" style="background: #7077A1">#7077A1</div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Dark Slates & Navy <span class="group-count">4 colors - background tones</span></div>
+    <div class="color-grid">
+      <div class="color-swatch" style="background: #213C51">#213C51</div>
+      <div class="color-swatch" style="background: #2D4356">#2D4356</div>
+      <div class="color-swatch" style="background: #3C5B6F">#3C5B6F</div>
+      <div class="color-swatch" style="background: #435B66">#435B66</div>
+    </div>
+  </div>
+
+  <div class="insight">
+    <h4>What These Colors Tell Me About Your Aesthetic</h4>
+    <ul>
+      <li><strong>You love deep, saturated teals</strong> - 12 of 28 colors! Not turquoise, not cyan, but rich ocean/forest teals</li>
+      <li><strong>Berry > Neon for pinks</strong> - Your pinks are deep magentas and dusty roses, not bubblegum</li>
+      <li><strong>Muted, dusty purples</strong> - Not bright violet, but sophisticated lavender-gray tones</li>
+      <li><strong>Jewel tones, not candy</strong> - These are colors you'd see in a dark room with moody lighting, not a candy store</li>
+      <li><strong>The vibe</strong>: Moody, sophisticated, deep-sea/twilight aesthetic. Think tide pools at dusk, not tropical reef at noon.</li>
+    </ul>
+  </div>
+
+  <h2>Proposed Palettes Using Your Colors</h2>
+
+  <div class="comparison" style="grid-template-columns: 1fr 1fr 1fr;">
+    <!-- Current -->
+    <div class="panel current">
+      <div class="panel-title">Current (Too Bright)</div>
+      <div class="palette-row">
+        <div class="palette-swatch t">#2dd4bf</div>
+        <div class="palette-swatch p">#f472b6</div>
+        <div class="palette-swatch v">#a78bfa</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-accent">Accent</button>
+      </div>
+      <a href="#" class="link">Link text</a>
+      <div class="card-demo">
+        <h5>Card Title</h5>
+        <p>With glow effect</p>
+      </div>
+    </div>
+
+    <!-- Jewel Aurora -->
+    <div class="panel jewel">
+      <div class="panel-title">Jewel Aurora (From Your Colors)</div>
+      <div class="palette-row">
+        <div class="palette-swatch t">#028391</div>
+        <div class="palette-swatch p">#BE5A83</div>
+        <div class="palette-swatch v">#7077A1</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-accent">Accent</button>
+      </div>
+      <a href="#" class="link">Link text</a>
+      <div class="card-demo">
+        <h5>Card Title</h5>
+        <p>With glow effect</p>
+      </div>
+    </div>
+
+    <!-- Deep Jewel -->
+    <div class="panel deep-jewel">
+      <div class="panel-title">Deep Jewel (Even Richer)</div>
+      <div class="palette-row">
+        <div class="palette-swatch t">#257180</div>
+        <div class="palette-swatch p">#A35C7A</div>
+        <div class="palette-swatch v">#655D8A</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-accent">Accent</button>
+      </div>
+      <a href="#" class="link">Link text</a>
+      <div class="card-demo">
+        <h5>Card Title</h5>
+        <p>With glow effect</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rec-box">
+    <h4>My Recommendation: Jewel Aurora</h4>
+    <div class="token-list">
+      <span style="background: #028391"></span>--cp-accent: #028391 (from your collection)<br>
+      <span style="background: #BE5A83"></span>--cp-pink: #BE5A83 (from your collection)<br>
+      <span style="background: #7077A1"></span>--cp-violet: #7077A1 (from your collection)<br>
+    </div>
+    <p style="margin-top: 12px; font-size: 13px; color: #8b8b96;">
+      These are literally colors you picked! They're deep enough to not feel "neon" but still visible enough to work as accents on dark backgrounds. The teal is ocean-deep, the pink is dusty rose/berry, and the violet is a sophisticated lavender-gray.
+    </p>
+  </div>
+
+  <div class="rec-box" style="border-left: 3px solid #257180; border-radius: 0 12px 12px 0; border: none;">
+    <h4>Alternative: Deep Jewel (if Jewel Aurora still feels too bright)</h4>
+    <div class="token-list">
+      <span style="background: #257180"></span>--cp-accent: #257180<br>
+      <span style="background: #A35C7A"></span>--cp-pink: #A35C7A<br>
+      <span style="background: #655D8A"></span>--cp-violet: #655D8A<br>
+    </div>
+    <p style="margin-top: 12px; font-size: 13px; color: #8b8b96;">
+      Even more subdued. Maximum "moody twilight" energy. Works if you want the colors to feel like they're emerging from shadow.
+    </p>
+  </div>
+
+</body>
+</html>
