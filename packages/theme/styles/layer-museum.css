@@ -1,19 +1,20 @@
 /* Apply to <body class="cp-layer-museum"> on museum pages */
 .cp-layer-museum {
-  background: radial-gradient(
-      900px circle at 18% 12%,
-      var(--cp-glow-blue),
-      transparent 58%
-    ),
+  background:
     radial-gradient(
-      900px circle at 82% 18%,
+      900px circle at 15% 10%,
       var(--cp-glow-violet),
-      transparent 62%
+      transparent 55%
     ),
     radial-gradient(
-      900px circle at 50% 95%,
-      var(--cp-glow-accent),
-      transparent 62%
+      900px circle at 85% 18%,
+      var(--cp-glow-pink),
+      transparent 50%
+    ),
+    radial-gradient(
+      1100px circle at 50% 100%,
+      var(--cp-glow-teal),
+      transparent 55%
     ),
     var(--cp-bg0);
 }
@@ -31,8 +32,8 @@
 
 .cp-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--cp-card-glow), var(--cp-shadow-2);
-  border-color: color-mix(in srgb, var(--cp-border) 65%, var(--cp-accent3));
+  box-shadow: 0 8px 32px rgba(45, 212, 191, 0.12), var(--cp-shadow-2);
+  border-color: color-mix(in srgb, var(--cp-border) 50%, var(--cp-accent));
 }
 
 .cp-card:active {
