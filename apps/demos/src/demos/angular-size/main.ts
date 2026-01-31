@@ -28,6 +28,13 @@ const stageSvgEl = document.querySelector<SVGSVGElement>("#stageSvg");
 const rayTopEl = document.querySelector<SVGLineElement>("#rayTop");
 const rayBottomEl = document.querySelector<SVGLineElement>("#rayBottom");
 const objectCircleEl = document.querySelector<SVGCircleElement>("#objectCircle");
+const angleArcEl = document.querySelector<SVGPathElement>("#angleArc");
+const sizeLineEl = document.querySelector<SVGLineElement>("#sizeLine");
+const sizeStageLabelEl =
+  document.querySelector<SVGTextElement>("#sizeStageLabel");
+const distanceStageLabelEl =
+  document.querySelector<SVGTextElement>("#distanceStageLabel");
+const objectLabelEl = document.querySelector<SVGTextElement>("#objectLabel");
 const angleLabelEl = document.querySelector<SVGTextElement>("#angleLabel");
 
 const thetaDisplayEl = document.querySelector<HTMLSpanElement>("#thetaDisplay");
@@ -62,6 +69,11 @@ if (
   !rayTopEl ||
   !rayBottomEl ||
   !objectCircleEl ||
+  !angleArcEl ||
+  !sizeLineEl ||
+  !sizeStageLabelEl ||
+  !distanceStageLabelEl ||
+  !objectLabelEl ||
   !angleLabelEl ||
   !thetaDisplayEl ||
   !thetaDegEl ||
@@ -96,6 +108,11 @@ const stageSvg = stageSvgEl;
 const rayTop = rayTopEl;
 const rayBottom = rayBottomEl;
 const objectCircle = objectCircleEl;
+const angleArc = angleArcEl;
+const sizeLine = sizeLineEl;
+const sizeStageLabel = sizeStageLabelEl;
+const distanceStageLabel = distanceStageLabelEl;
+const objectLabel = objectLabelEl;
 const angleLabel = angleLabelEl;
 
 const thetaDisplay = thetaDisplayEl;
@@ -344,9 +361,40 @@ function renderStage(thetaDegValue: number) {
   rayBottom.setAttribute("x2", String(objectX));
   rayBottom.setAttribute("y2", String(yBottom));
 
+  // Angle arc near the observer (purely visual).
+  if (Number.isFinite(thetaDegValue) && thetaDegValue > 0 && radius > 0) {
+    const arcR = 56;
+    const topDx = objectX - observerX;
+    const topDy = yTop - centerY;
+    const botDx = objectX - observerX;
+    const botDy = yBottom - centerY;
+    const topLen = Math.hypot(topDx, topDy);
+    const botLen = Math.hypot(botDx, botDy);
+
+    if (topLen > 0 && botLen > 0) {
+      const ax1 = observerX + (arcR * topDx) / topLen;
+      const ay1 = centerY + (arcR * topDy) / topLen;
+      const ax2 = observerX + (arcR * botDx) / botLen;
+      const ay2 = centerY + (arcR * botDy) / botLen;
+      angleArc.setAttribute(
+        "d",
+        `M ${formatNumber(ax1, 3)} ${formatNumber(ay1, 3)} A ${arcR} ${arcR} 0 0 1 ${formatNumber(ax2, 3)} ${formatNumber(ay2, 3)}`
+      );
+    } else {
+      angleArc.setAttribute("d", "");
+    }
+  } else {
+    angleArc.setAttribute("d", "");
+  }
+
   objectCircle.setAttribute("cx", String(objectX));
   objectCircle.setAttribute("cy", String(centerY));
   objectCircle.setAttribute("r", String(Math.max(6, radius)));
+
+  sizeLine.setAttribute("x1", String(objectX));
+  sizeLine.setAttribute("x2", String(objectX));
+  sizeLine.setAttribute("y1", String(yTop));
+  sizeLine.setAttribute("y2", String(yBottom));
 
   // Keep label inside the SVG even if angle is extreme.
   if (Number.isFinite(thetaDegValue) && thetaDegValue > 90) {
@@ -676,6 +724,26 @@ function render() {
   distanceKm.textContent = formatNumber(state.distanceKm, 6);
 
   angleLabel.textContent = `Angular diameter: ${display.text}${display.unit}`;
+  sizeStageLabel.textContent = `D ≈ ${formatNumber(state.diameterKm, 3)} km`;
+  distanceStageLabel.textContent = `d ≈ ${formatNumber(state.distanceKm, 3)} km`;
+
+  const presetMeta = AngularSizeModel.presets[state.presetId];
+  objectLabel.textContent = presetMeta.name;
+
+  const gradientId =
+    presetMeta.color === "sun"
+      ? "sunGlow"
+      : presetMeta.color === "moon"
+        ? "moonGlow"
+        : presetMeta.color === "planet"
+          ? "planetGlow"
+          : presetMeta.color === "mars"
+            ? "marsGlow"
+            : presetMeta.color === "galaxy"
+              ? "galaxyGlow"
+              : "objectGlow";
+  objectCircle.setAttribute("fill", `url(#${gradientId})`);
+
   renderStage(thetaDegValue);
 
   (window as any).__cp = {

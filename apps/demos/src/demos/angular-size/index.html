@@ -13,6 +13,11 @@
         <div class="cp-panel-body">
           <p class="cp-muted">Compare apparent sizes and see why distance matters.</p>
 
+          <div class="cp-callout" data-kind="tip">
+            <strong>Quick sky rule</strong>
+            <div>Your thumb at arm’s length covers about <strong>2°</strong>. The Sun and Moon are about <strong>0.5°</strong>.</div>
+          </div>
+
           <label class="control">
             <span>Preset</span>
             <select id="preset"></select>
@@ -65,6 +70,9 @@
           <button id="help" class="cp-action" type="button">Help / shortcuts</button>
 
           <button id="copyResults" class="cp-action" type="button">Copy results</button>
+          <div class="cp-muted">
+            Station Mode builds a snapshot table. Challenge Mode gives goals to hit. Copy Results exports the current state.
+          </div>
           <p id="status" class="cp-status" role="status" aria-live="polite"></p>
 
           <div class="cp-actions">
@@ -84,6 +92,32 @@
           aria-label="Angular size visualization"
         >
           <defs>
+            <radialGradient id="sunGlow">
+              <stop offset="0%" stop-color="rgba(255, 245, 204, 0.98)" />
+              <stop offset="70%" stop-color="rgba(255, 204, 0, 0.88)" />
+              <stop offset="100%" stop-color="rgba(255, 140, 0, 0.35)" />
+            </radialGradient>
+
+            <radialGradient id="moonGlow" cx="30%" cy="30%">
+              <stop offset="0%" stop-color="rgba(240, 240, 248, 0.98)" />
+              <stop offset="100%" stop-color="rgba(180, 180, 200, 0.35)" />
+            </radialGradient>
+
+            <radialGradient id="planetGlow" cx="35%" cy="35%">
+              <stop offset="0%" stop-color="rgba(96, 165, 250, 0.95)" />
+              <stop offset="100%" stop-color="rgba(96, 165, 250, 0.25)" />
+            </radialGradient>
+
+            <radialGradient id="marsGlow" cx="35%" cy="35%">
+              <stop offset="0%" stop-color="rgba(251, 113, 133, 0.95)" />
+              <stop offset="100%" stop-color="rgba(251, 113, 133, 0.25)" />
+            </radialGradient>
+
+            <radialGradient id="galaxyGlow" cx="35%" cy="35%">
+              <stop offset="0%" stop-color="rgba(167, 139, 250, 0.92)" />
+              <stop offset="100%" stop-color="rgba(167, 139, 250, 0.22)" />
+            </radialGradient>
+
             <radialGradient id="objectGlow" cx="40%" cy="30%">
               <stop offset="0%" stop-color="rgba(255,255,255,0.95)" />
               <stop offset="100%" stop-color="rgba(96,165,250,0.30)" />
@@ -102,8 +136,22 @@
             <line id="rayBottom" class="stage__ray" x1="90" y1="180" x2="520" y2="220" />
           </g>
 
+          <path id="angleArc" class="stage__angleArc" d="" aria-hidden="true"></path>
+
           <g id="object" aria-hidden="true">
-            <circle id="objectCircle" class="stage__object" cx="520" cy="180" r="42" />
+            <circle id="objectCircle" class="stage__object" cx="520" cy="180" r="42" fill="url(#objectGlow)" />
+          </g>
+
+          <g id="indicators" aria-hidden="true">
+            <line id="sizeLine" class="stage__sizeLine" x1="520" y1="140" x2="520" y2="220" />
+            <text id="sizeStageLabel" class="stage__metricLabel" x="544" y="180" text-anchor="start"></text>
+
+            <line id="distanceLine" class="stage__distanceLine" x1="120" y1="300" x2="520" y2="300" />
+            <line class="stage__distanceTick" x1="120" y1="294" x2="120" y2="306" />
+            <line class="stage__distanceTick" x1="520" y1="294" x2="520" y2="306" />
+            <text id="distanceStageLabel" class="stage__metricLabel" x="320" y="326" text-anchor="middle"></text>
+
+            <text id="objectLabel" class="stage__label stage__label--object" x="520" y="116" text-anchor="middle"></text>
           </g>
 
           <text id="angleLabel" class="stage__angle" x="120" y="48"></text>
