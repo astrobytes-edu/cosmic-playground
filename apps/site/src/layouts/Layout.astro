@@ -21,16 +21,19 @@ function isActive(href: string) {
   const fullHref = href.startsWith("/") ? base + href.slice(1) : base + href;
   return currentPath.startsWith(fullHref);
 }
+
+const themeParam = Astro.url.searchParams.get("theme");
+const isLightTheme = themeParam === "paper" || Astro.url.pathname.includes("/instructor/");
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme={isLightTheme ? "paper" : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{title}</title>
   </head>
-  <body class="cp-layer-museum">
+  <body class={isLightTheme ? "cp-layer-paper" : "cp-layer-museum"}>
     <a class="skip-link" href="#content">Skip to content</a>
     <header class="site-header cp-no-print">
       <div class="site-header__inner">
