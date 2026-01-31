@@ -20,13 +20,22 @@ const classes = ["cp-button", variantClass, className].filter(Boolean).join(" ")
 ---
 
 {href ? (
-  <a
-    href={href}
-    class={classes}
-    aria-disabled={disabled}
-  >
-    <slot />
-  </a>
+  disabled ? (
+    <a
+      class={classes}
+      aria-disabled="true"
+      tabindex="-1"
+    >
+      <slot />
+    </a>
+  ) : (
+    <a
+      href={href}
+      class={classes}
+    >
+      <slot />
+    </a>
+  )
 ) : (
   <button
     type={type}
