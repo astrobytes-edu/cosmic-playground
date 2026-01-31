@@ -1,4 +1,4 @@
-import { createInstrumentRuntime } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AngularSizeModel, AstroUnits } from "@cosmic/physics";
 
@@ -34,6 +34,11 @@ const thetaDegEl = document.querySelector<HTMLSpanElement>("#thetaDeg");
 const diameterKmEl = document.querySelector<HTMLSpanElement>("#diameterKm");
 const distanceKmEl = document.querySelector<HTMLSpanElement>("#distanceKm");
 
+const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
+const challengeModeEl =
+  document.querySelector<HTMLButtonElement>("#challengeMode");
+const helpEl = document.querySelector<HTMLButtonElement>("#help");
+
 const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
 const statusEl = document.querySelector<HTMLParagraphElement>("#status");
 
@@ -61,6 +66,9 @@ if (
   !thetaDegEl ||
   !diameterKmEl ||
   !distanceKmEl ||
+  !stationModeEl ||
+  !challengeModeEl ||
+  !helpEl ||
   !copyResultsEl ||
   !statusEl
 ) {
@@ -94,8 +102,14 @@ const thetaDeg = thetaDegEl;
 const diameterKm = diameterKmEl;
 const distanceKm = distanceKmEl;
 
+const stationMode = stationModeEl;
+const challengeMode = challengeModeEl;
+const help = helpEl;
+
 const copyResults = copyResultsEl;
 const status = statusEl;
+
+challengeMode.disabled = true;
 
 const runtime = createInstrumentRuntime({
   hasMathMode: false,
@@ -182,6 +196,20 @@ function formatAngleDisplay(thetaDegValue: number): { text: string; unit: string
   if (abs >= 1) return { text: thetaDegValue.toFixed(2), unit: "°" };
   if (abs >= 1 / 60) return { text: AstroUnits.degToArcmin(thetaDegValue).toFixed(1), unit: "′" };
   return { text: AstroUnits.degToArcsec(thetaDegValue).toFixed(0), unit: "″" };
+}
+
+function describeMoonOrbitAngle(angleDeg: number): string {
+  const normalized = ((angleDeg % 360) + 360) % 360;
+  if (Math.abs(normalized - 0) <= 1 || Math.abs(normalized - 360) <= 1) return "Perigee";
+  if (Math.abs(normalized - 180) <= 1) return "Apogee";
+  return `${Math.round(normalized)}°`;
+}
+
+function describeMoonRecessionTime(timeMyr: number): string {
+  const t = Math.round(timeMyr);
+  if (t === 0) return "Today";
+  if (t < 0) return `${Math.abs(t)} Myr ago`;
+  return `+${t} Myr`;
 }
 
 function getMoonDistanceAtOrbitAngle(angleDeg: number): number {
@@ -362,6 +390,170 @@ function exportResults(thetaDegValue: number): ExportPayloadV1 {
   };
 }
 
+function buildStationRow(args: {
+  label: string;
+  diameterKm: number;
+  distanceKm: number;
+  moonMode?: string;
+  moonSetting?: string;
+}) {
+  const thetaDegValue = AngularSizeModel.angularDiameterDeg({
+    diameterKm: args.diameterKm,
+    distanceKm: args.distanceKm
+  });
+  const display = formatAngleDisplay(thetaDegValue);
+
+  return {
+    case: args.label,
+    diameterKm: formatNumber(args.diameterKm, 6),
+    distanceKm: formatNumber(args.distanceKm, 6),
+    thetaDisplay: `${display.text}${display.unit}`,
+    thetaDeg: formatNumber(thetaDegValue, 6),
+    moonMode: args.moonMode ?? "",
+    moonSetting: args.moonSetting ?? ""
+  };
+}
+
+const demoModes = createDemoModes({
+  help: {
+    title: "Help / Shortcuts",
+    subtitle: "Keyboard shortcuts work when focus is not in an input field.",
+    sections: [
+      {
+        heading: "Shortcuts",
+        type: "shortcuts",
+        items: [
+          { key: "?", action: "Toggle help" },
+          { key: "g", action: "Toggle station mode" }
+        ]
+      },
+      {
+        heading: "Tip",
+        type: "bullets",
+        items: [
+          "For eclipses: total vs annular depends on whether the Moon’s angular size is larger or smaller than the Sun’s."
+        ]
+      }
+    ]
+  },
+  station: {
+    title: "Station Mode: Angular Size",
+    subtitle: "Record size, distance, and angular size (in multiple units)",
+    steps: [
+      "Add rows for Sun and Moon (today). Compare their angular sizes.",
+      "Switch to Moon orbit mode and add perigee/apogee rows.",
+      "Optional: try recession time (+500 Myr, +1000 Myr) and see when total eclipses become impossible."
+    ],
+    columns: [
+      { key: "case", label: "Case" },
+      { key: "diameterKm", label: "Diameter (km)" },
+      { key: "distanceKm", label: "Distance (km)" },
+      { key: "thetaDisplay", label: "θ (display)" },
+      { key: "thetaDeg", label: "θ (deg)" },
+      { key: "moonMode", label: "Moon mode" },
+      { key: "moonSetting", label: "Moon setting" }
+    ],
+    snapshotLabel: "Add row (snapshot)",
+    getSnapshotRow: () => {
+      const p = AngularSizeModel.presets[state.presetId];
+      const label = p?.name ?? "Custom";
+
+      let moonModeValue = "";
+      let moonSettingValue = "";
+      if (state.presetId === "moon") {
+        moonModeValue = state.moonTimeMode === "recession" ? "Recession time" : "Orbit angle";
+        moonSettingValue =
+          state.moonTimeMode === "recession"
+            ? describeMoonRecessionTime(state.moonRecessionTimeMyr)
+            : describeMoonOrbitAngle(state.moonOrbitAngleDeg);
+      }
+
+      return buildStationRow({
+        label,
+        diameterKm: state.diameterKm,
+        distanceKm: state.distanceKm,
+        moonMode: moonModeValue,
+        moonSetting: moonSettingValue
+      });
+    },
+    rowSets: [
+      {
+        label: "Add Sun + Moon (today)",
+        getRows: () => [
+          buildStationRow({
+            label: "Sun (1 AU)",
+            diameterKm: AngularSizeModel.presets.sun.diameter,
+            distanceKm: AngularSizeModel.presets.sun.distance
+          }),
+          buildStationRow({
+            label: "Moon (today)",
+            diameterKm: AngularSizeModel.presets.moon.diameter,
+            distanceKm: AngularSizeModel.presets.moon.distance,
+            moonMode: "Orbit",
+            moonSetting: "Today"
+          })
+        ]
+      },
+      {
+        label: "Add Moon perigee/apogee",
+        getRows: () => [
+          buildStationRow({
+            label: "Moon (perigee)",
+            diameterKm: AngularSizeModel.presets.moon.diameter,
+            distanceKm: moonOrbit.perigeeKm,
+            moonMode: "Orbit",
+            moonSetting: "Perigee"
+          }),
+          buildStationRow({
+            label: "Moon (apogee)",
+            diameterKm: AngularSizeModel.presets.moon.diameter,
+            distanceKm: moonOrbit.apogeeKm,
+            moonMode: "Orbit",
+            moonSetting: "Apogee"
+          })
+        ]
+      },
+      {
+        label: "Add Moon future (+500/+1000 Myr)",
+        getRows: () => {
+          const distanceAtMyr = (t: number) =>
+            AngularSizeModel.moonDistanceKmFromRecession({
+              distanceTodayKm: MOON_DISTANCE_TODAY_KM,
+              recessionCmPerYr: MOON_RECESSION_CM_PER_YEAR,
+              timeMyr: t
+            });
+
+          return [
+            buildStationRow({
+              label: "Moon (+500 Myr)",
+              diameterKm: AngularSizeModel.presets.moon.diameter,
+              distanceKm: distanceAtMyr(500),
+              moonMode: "Recession time",
+              moonSetting: "+500 Myr"
+            }),
+            buildStationRow({
+              label: "Moon (+1000 Myr)",
+              diameterKm: AngularSizeModel.presets.moon.diameter,
+              distanceKm: distanceAtMyr(1000),
+              moonMode: "Recession time",
+              moonSetting: "+1000 Myr"
+            })
+          ];
+        }
+      }
+    ],
+    synthesisPrompt: `
+      <p><strong>Explain:</strong> Angular size depends on <em>both</em> size and distance.</p>
+      <p><strong>Use your table:</strong> Compare the Sun and Moon today, then explain why perigee vs apogee changes whether a solar eclipse can be total or annular.</p>
+    `
+  }
+});
+
+demoModes.bindButtons({
+  helpButton: help,
+  stationButton: stationMode
+});
+
 function render() {
   // Keep Moon distance consistent with Moon controls.
   applyMoonControlsToDistance();
@@ -382,10 +574,7 @@ function render() {
 
   if (state.presetId === "moon") {
     moonOrbitValue.textContent = `${Math.round(state.moonOrbitAngleDeg)}°`;
-    const t = Math.round(state.moonRecessionTimeMyr);
-    if (t < 0) moonRecessionValue.textContent = `${Math.abs(t)} Myr ago`;
-    else if (t > 0) moonRecessionValue.textContent = `+${t} Myr`;
-    else moonRecessionValue.textContent = "Today";
+    moonRecessionValue.textContent = describeMoonRecessionTime(state.moonRecessionTimeMyr);
   } else {
     moonOrbitValue.textContent = "—";
     moonRecessionValue.textContent = "—";
