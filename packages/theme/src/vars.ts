@@ -39,3 +39,37 @@ export const CSS_VARS = {
 } as const;
 
 export type CssVarKey = keyof typeof CSS_VARS;
+
+export const Z_INDEX = {
+  dropdown: "var(--cp-z-dropdown)",
+  sticky: "var(--cp-z-sticky)",
+  modal: "var(--cp-z-modal)",
+  tooltip: "var(--cp-z-tooltip)",
+} as const;
+
+export const BREAKPOINTS = {
+  sm: "640px",
+  md: "768px",
+  lg: "1024px",
+  xl: "1280px",
+} as const;
+
+export const CHART_COLORS = {
+  1: "var(--cp-chart-1)",
+  2: "var(--cp-chart-2)",
+  3: "var(--cp-chart-3)",
+  4: "var(--cp-chart-4)",
+  5: "var(--cp-chart-5)",
+} as const;
+
+export const MOTION = {
+  fast: "var(--cp-transition-fast)",
+  normal: "var(--cp-transition-normal)",
+  slow: "var(--cp-transition-slow)",
+  enter: "var(--cp-duration-enter)",
+  exit: "var(--cp-duration-exit)",
+  easeOut: "var(--cp-ease-out)",
+  easeInOut: "var(--cp-ease-in-out)",
+  easeSpring: "var(--cp-ease-spring)",
+  stagger: "var(--cp-stagger)",
+} as const;
