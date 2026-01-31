@@ -41,6 +41,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   background: color-mix(in srgb, var(--cp-bg0) 72%, transparent);
   border-bottom: 1px solid var(--cp-border);
