@@ -6,6 +6,10 @@ export const SAROS_CYCLE_DAYS = SYNODIC_MONTH_DAYS * 223;
 export const EXELIGMOS_CYCLE_DAYS = SAROS_CYCLE_DAYS * 3;
 const CYCLE_TOLERANCE_DAYS = 1;
 
+// Naming convention (important):
+// - D is reserved for diameter in teaching materials (see packages/physics/README.md).
+// - Use d*/r*/distance* for distances to avoid D/d confusion.
+
 function normalizeAngleDeg(angleDeg: number): number {
   return ((angleDeg % 360) + 360) % 360;
 }
@@ -60,11 +64,13 @@ function shadowRadiiKmAtDistance(args: {
   distanceToSunKm: number;
   distanceFromBodyKm: number;
 }): { umbraRadiusKm: number; penumbraRadiusKm: number } {
-  const D = args.distanceToSunKm;
-  const x = args.distanceFromBodyKm;
+  const dSunKm = args.distanceToSunKm;
+  const dFromBodyKm = args.distanceFromBodyKm;
 
-  const umbraRadiusKm = args.bodyRadiusKm - (x * (args.sunRadiusKm - args.bodyRadiusKm)) / D;
-  const penumbraRadiusKm = args.bodyRadiusKm + (x * (args.sunRadiusKm + args.bodyRadiusKm)) / D;
+  const umbraRadiusKm =
+    args.bodyRadiusKm - (dFromBodyKm * (args.sunRadiusKm - args.bodyRadiusKm)) / dSunKm;
+  const penumbraRadiusKm =
+    args.bodyRadiusKm + (dFromBodyKm * (args.sunRadiusKm + args.bodyRadiusKm)) / dSunKm;
   return { umbraRadiusKm, penumbraRadiusKm };
 }
 
@@ -91,7 +97,7 @@ function eclipseThresholdsDeg(args: {
     moonShadowAtEarth: { umbraRadiusKm: number; penumbraRadiusKm: number };
   };
 } {
-  const D_EM = args.earthMoonDistanceKm;
+  const dEarthMoonKm = args.earthMoonDistanceKm;
   const earthRadiusKm = args.earthRadiusKm ?? 6371;
   const moonRadiusKm = args.moonRadiusKm ?? 1737.4;
   const sunRadiusKm = args.sunRadiusKm ?? 696000;
@@ -101,32 +107,44 @@ function eclipseThresholdsDeg(args: {
     bodyRadiusKm: earthRadiusKm,
     sunRadiusKm,
     distanceToSunKm: auKm,
-    distanceFromBodyKm: D_EM
+    distanceFromBodyKm: dEarthMoonKm
   });
 
   const bTotalLunarKm = Math.max(0, earthShadowAtMoon.umbraRadiusKm - moonRadiusKm);
   const bUmbralLunarKm = earthShadowAtMoon.umbraRadiusKm + moonRadiusKm;
   const bPenumbralLunarKm = earthShadowAtMoon.penumbraRadiusKm + moonRadiusKm;
 
-  const lunarTotalDeg = betaMaxDegFromImpactKm({ maxImpactKm: bTotalLunarKm, distanceKm: D_EM });
-  const lunarUmbralDeg = betaMaxDegFromImpactKm({ maxImpactKm: bUmbralLunarKm, distanceKm: D_EM });
+  const lunarTotalDeg = betaMaxDegFromImpactKm({
+    maxImpactKm: bTotalLunarKm,
+    distanceKm: dEarthMoonKm
+  });
+  const lunarUmbralDeg = betaMaxDegFromImpactKm({
+    maxImpactKm: bUmbralLunarKm,
+    distanceKm: dEarthMoonKm
+  });
   const lunarPenumbralDeg = betaMaxDegFromImpactKm({
     maxImpactKm: bPenumbralLunarKm,
-    distanceKm: D_EM
+    distanceKm: dEarthMoonKm
   });
 
   const moonShadowAtEarth = shadowRadiiKmAtDistance({
     bodyRadiusKm: moonRadiusKm,
     sunRadiusKm,
     distanceToSunKm: auKm,
-    distanceFromBodyKm: D_EM
+    distanceFromBodyKm: dEarthMoonKm
   });
 
   const bSolarPartialKm = earthRadiusKm + moonShadowAtEarth.penumbraRadiusKm;
   const bSolarCentralKm = earthRadiusKm + Math.abs(moonShadowAtEarth.umbraRadiusKm);
 
-  const solarPartialDeg = betaMaxDegFromImpactKm({ maxImpactKm: bSolarPartialKm, distanceKm: D_EM });
-  const solarCentralDeg = betaMaxDegFromImpactKm({ maxImpactKm: bSolarCentralKm, distanceKm: D_EM });
+  const solarPartialDeg = betaMaxDegFromImpactKm({
+    maxImpactKm: bSolarPartialKm,
+    distanceKm: dEarthMoonKm
+  });
+  const solarCentralDeg = betaMaxDegFromImpactKm({
+    maxImpactKm: bSolarCentralKm,
+    distanceKm: dEarthMoonKm
+  });
 
   return {
     solarCentralDeg,
@@ -149,20 +167,20 @@ function lunarEclipseTypeFromBetaDeg(args: {
   sunRadiusKm?: number;
   auKm?: number;
 }): { type: "none" | "penumbral-lunar" | "partial-lunar" | "total-lunar" } {
-  const D_EM = args.earthMoonDistanceKm;
+  const dEarthMoonKm = args.earthMoonDistanceKm;
   const earthRadiusKm = args.earthRadiusKm ?? 6371;
   const moonRadiusKm = args.moonRadiusKm ?? 1737.4;
   const sunRadiusKm = args.sunRadiusKm ?? 696000;
   const auKm = args.auKm ?? AstroConstants.LENGTH.KM_PER_AU;
 
   const absBetaRad = Math.abs(AstroUnits.degToRad(args.betaDeg));
-  const impactKm = D_EM * Math.sin(absBetaRad);
+  const impactKm = dEarthMoonKm * Math.sin(absBetaRad);
 
   const { umbraRadiusKm, penumbraRadiusKm } = shadowRadiiKmAtDistance({
     bodyRadiusKm: earthRadiusKm,
     sunRadiusKm,
     distanceToSunKm: auKm,
-    distanceFromBodyKm: D_EM
+    distanceFromBodyKm: dEarthMoonKm
   });
 
   const totalLimitKm = umbraRadiusKm - moonRadiusKm;
@@ -183,20 +201,20 @@ function solarEclipseTypeFromBetaDeg(args: {
   sunRadiusKm?: number;
   auKm?: number;
 }): { type: "none" | "partial-solar" | "annular-solar" | "total-solar" } {
-  const D_EM = args.earthMoonDistanceKm;
+  const dEarthMoonKm = args.earthMoonDistanceKm;
   const earthRadiusKm = args.earthRadiusKm ?? 6371;
   const moonRadiusKm = args.moonRadiusKm ?? 1737.4;
   const sunRadiusKm = args.sunRadiusKm ?? 696000;
   const auKm = args.auKm ?? AstroConstants.LENGTH.KM_PER_AU;
 
   const absBetaRad = Math.abs(AstroUnits.degToRad(args.betaDeg));
-  const impactKm = D_EM * Math.sin(absBetaRad);
+  const impactKm = dEarthMoonKm * Math.sin(absBetaRad);
 
   const { umbraRadiusKm, penumbraRadiusKm } = shadowRadiiKmAtDistance({
     bodyRadiusKm: moonRadiusKm,
     sunRadiusKm,
     distanceToSunKm: auKm,
-    distanceFromBodyKm: D_EM
+    distanceFromBodyKm: dEarthMoonKm
   });
 
   const partialLimitKm = earthRadiusKm + penumbraRadiusKm;
@@ -238,4 +256,3 @@ export const EclipseGeometryModel = {
   isSarosRelated,
   isExeligmosRelated
 } as const;
-

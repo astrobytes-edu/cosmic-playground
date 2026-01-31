@@ -38,4 +38,10 @@ When a relevant skill exists for the task, you must load it via:
 ### Units policy (important)
 - Keep units explicit and consistent across UI labels, exported results, and docs.
 - Do **not** introduce `G=1` or “natural units” language. When orbital mechanics units matter pedagogically, prefer AU / yr / M☉ with `G = 4π² AU³/(yr²·M☉)`.
+
+### Symbol / notation policy (important)
+- When using single-letter symbols in **UI copy**, **model notes**, **exports**, or **docs**:
+  - **D** = physical **diameter**
+  - **d** = **distance**
+- Do **not** reuse **D**/**d** for other distances (e.g., use `dEarthMoonKm`, `distanceToSunKm`, etc.).
 </INSTRUCTIONS>

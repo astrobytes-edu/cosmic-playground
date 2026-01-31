@@ -3,6 +3,17 @@ import { AstroUnits } from "./units";
 
 export type AngularDiameterArgs = { diameterKm: number; distanceKm: number };
 
+/**
+ * Angular diameter of a circular object.
+ *
+ * Notation used across Cosmic Playground teaching materials:
+ * - D = physical diameter (km)
+ * - d = distance from observer to object (km)
+ * - θ = angular diameter (degrees in UI; computed via radians internally)
+ *
+ * Exact geometry:
+ *   θ = 2 arctan(D / (2d))
+ */
 function angularDiameterDeg({ diameterKm, distanceKm }: AngularDiameterArgs): number {
   if (!Number.isFinite(diameterKm) || diameterKm <= 0) return 0;
   if (!Number.isFinite(distanceKm) || distanceKm <= 0) return 180;
@@ -146,4 +157,3 @@ export const AngularSizeModel = {
   moonDistanceKmFromRecession,
   presets
 } as const;
-

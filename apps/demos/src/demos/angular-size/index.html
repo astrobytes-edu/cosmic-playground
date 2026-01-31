@@ -24,13 +24,13 @@
           </label>
 
           <label class="control">
-            <span>Distance (km)</span>
+            <span>Distance d (km)</span>
             <input id="distanceSlider" type="range" min="0" max="1000" value="500" step="1" />
             <span class="control__value"><span id="distanceValue"></span></span>
           </label>
 
           <label class="control">
-            <span>Diameter (km)</span>
+            <span>Diameter D (km)</span>
             <input id="diameterSlider" type="range" min="0" max="1000" value="500" step="1" />
             <span class="control__value"><span id="diameterValue"></span></span>
           </label>
@@ -173,11 +173,11 @@
             <div class="cp-readout__value"><span id="thetaDeg"></span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Diameter (km)</div>
+            <div class="cp-readout__label">Diameter D (km)</div>
             <div class="cp-readout__value"><span id="diameterKm"></span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Distance (km)</div>
+            <div class="cp-readout__label">Distance d (km)</div>
             <div class="cp-readout__value"><span id="distanceKm"></span></div>
           </div>
         </div>
@@ -205,7 +205,8 @@
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>Angular diameter uses the exact formula: θ = 2 arctan(D / (2d)), with D and d in km.</li>
+                <li>Angular diameter uses the exact formula: θ = 2 arctan(D / (2d)).</li>
+                <li>D is physical diameter (km). d is distance from the observer to the object (km).</li>
                 <li>
                   For small angles, a useful approximation is θ (radians) ≈ D / d; in degrees,
                   θ (deg) ≈ (180/π) · (D/d).

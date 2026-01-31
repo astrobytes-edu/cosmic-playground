@@ -409,12 +409,12 @@ function exportResults(thetaDegValue: number): ExportPayloadV1 {
   const presetMeta = AngularSizeModel.presets[state.presetId];
 
   const notes: string[] = [];
-  notes.push("Units: diameter and distance in km; angles in degrees (display may switch ° / ′ / ″).");
+  notes.push("Units: D (diameter) and d (distance) in km; θ in degrees (display may switch ° / ′ / ″).");
 
   const parameters: ExportPayloadV1["parameters"] = [
     { name: "Preset", value: presetMeta.name },
-    { name: "Diameter", value: `${formatNumber(state.diameterKm, 4)} km` },
-    { name: "Distance", value: `${formatNumber(state.distanceKm, 4)} km` }
+    { name: "Diameter D", value: `${formatNumber(state.diameterKm, 4)} km` },
+    { name: "Distance d", value: `${formatNumber(state.distanceKm, 4)} km` }
   ];
 
   if (state.presetId === "moon") {
@@ -503,8 +503,8 @@ const demoModes = createDemoModes({
     ],
     columns: [
       { key: "case", label: "Case" },
-      { key: "diameterKm", label: "Diameter (km)" },
-      { key: "distanceKm", label: "Distance (km)" },
+      { key: "diameterKm", label: "Diameter D (km)" },
+      { key: "distanceKm", label: "Distance d (km)" },
       { key: "thetaDisplay", label: "θ (display)" },
       { key: "thetaDeg", label: "θ (deg)" },
       { key: "moonMode", label: "Moon mode" },

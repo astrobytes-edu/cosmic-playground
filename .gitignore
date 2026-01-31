@@ -10,3 +10,5 @@ apps/site/playwright-report/
 apps/site/test-results/
 
 apps/site/public/play/
+
+.playwright-mcp/
