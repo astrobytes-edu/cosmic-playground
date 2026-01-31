@@ -362,10 +362,24 @@ function exportResults(thetaDegValue: number): ExportPayloadV1 {
 
   const notes: string[] = [];
   notes.push("Units: diameter and distance in km; angles in degrees (display may switch ° / ′ / ″).");
+
+  const parameters: ExportPayloadV1["parameters"] = [
+    { name: "Preset", value: presetMeta.name },
+    { name: "Diameter", value: `${formatNumber(state.diameterKm, 4)} km` },
+    { name: "Distance", value: `${formatNumber(state.distanceKm, 4)} km` }
+  ];
+
   if (state.presetId === "moon") {
-    notes.push(
-      `Moon time mode: ${state.moonTimeMode === "orbit" ? "Orbit (perigee ↔ apogee)" : "Recession (Myr from today)"}`
-    );
+    const moonModeLabel =
+      state.moonTimeMode === "orbit" ? "Orbit (perigee ↔ apogee)" : "Recession (Myr from today)";
+    const moonSettingLabel =
+      state.moonTimeMode === "orbit"
+        ? describeMoonOrbitAngle(state.moonOrbitAngleDeg)
+        : describeMoonRecessionTime(state.moonRecessionTimeMyr);
+
+    parameters.push({ name: "Moon time mode", value: moonModeLabel });
+    parameters.push({ name: "Moon setting", value: moonSettingLabel });
+
     if (state.moonTimeMode === "recession") {
       notes.push(
         `Toy model: linear distance change using a constant recession rate of ${MOON_RECESSION_CM_PER_YEAR} cm/yr.`
@@ -376,14 +390,10 @@ function exportResults(thetaDegValue: number): ExportPayloadV1 {
   return {
     version: 1,
     timestamp: new Date().toISOString(),
-    parameters: [
-      { name: "Preset", value: presetMeta.name },
-      { name: "Diameter (km)", value: formatNumber(state.diameterKm, 4) },
-      { name: "Distance (km)", value: formatNumber(state.distanceKm, 4) }
-    ],
+    parameters,
     readouts: [
       { name: "Angular diameter (display)", value: `${display.text}${display.unit}` },
-      { name: "Angular diameter (deg)", value: formatNumber(thetaDegValue, 6) }
+      { name: "Angular diameter (deg)", value: `${formatNumber(thetaDegValue, 6)}°` }
     ],
     notes
   };
