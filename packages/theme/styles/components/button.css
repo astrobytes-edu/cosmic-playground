@@ -61,6 +61,17 @@
   pointer-events: none;
 }
 
+.cp-button--accent {
+  background: rgba(255, 45, 149, 0.14);
+  border-color: rgba(255, 45, 149, 0.45);
+  color: var(--cp-text);
+}
+
+.cp-button--accent:hover {
+  background: rgba(255, 45, 149, 0.22);
+  border-color: rgba(255, 45, 149, 0.60);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cp-button {
     transition: none;
