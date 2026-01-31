@@ -57,7 +57,8 @@ input[type="range"]:focus-visible,
 }
 
 .stage__svg {
-  width: min(980px, 100%);
+  width: 100%;
+  max-width: none;
   height: auto;
   border-radius: 18px;
   border: 1px solid var(--cp-border);

@@ -180,27 +180,42 @@
             <div class="cp-readout__label">Distance (km)</div>
             <div class="cp-readout__value"><span id="distanceKm"></span></div>
           </div>
-          <div class="cp-notice">
-            <h3>What to notice</h3>
-            <ul>
-              <li>Nearer objects look larger even if they are smaller.</li>
-              <li>Different (size, distance) pairs can look the same.</li>
-            </ul>
-          </div>
         </div>
       </aside>
 
-      <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
-        <strong>Model notes</strong>
-        <ul>
-          <li>Angular diameter uses the exact formula: θ = 2 arctan(D / (2d)), with D and d in km.</li>
-          <li>
-            For small angles, a useful approximation is θ (radians) ≈ D / d; in degrees,
-            θ (deg) ≈ (180/π) · (D/d).
-          </li>
-          <li>Units: internal distance/diameter are always km; display may switch between ° / ′ / ″.</li>
-          <li>This is a geometry model (no lensing, no atmospheric effects, no finite detector resolution).</li>
-        </ul>
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">2 bullets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Nearer objects look larger even if they are smaller.</li>
+                <li>Different (size, distance) pairs can look the same.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">geometry</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Angular diameter uses the exact formula: θ = 2 arctan(D / (2d)), with D and d in km.</li>
+                <li>
+                  For small angles, a useful approximation is θ (radians) ≈ D / d; in degrees,
+                  θ (deg) ≈ (180/π) · (D/d).
+                </li>
+                <li>Units: internal distance/diameter are always km; display may switch between ° / ′ / ″.</li>
+                <li>This is a geometry model (no lensing, no atmospheric effects, no finite detector resolution).</li>
+              </ul>
+            </div>
+          </details>
+        </div>
       </section>
     </div>
     <script type="module" src="./main.ts"></script>

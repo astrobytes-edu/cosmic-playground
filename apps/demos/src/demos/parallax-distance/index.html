@@ -39,27 +39,42 @@
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Readouts and “what to notice” will live here once migrated.</p>
+          <p class="cp-muted">Migration pending (stub).</p>
           <div class="cp-readout">
             <div class="cp-readout__label">(example) Parallax angle</div>
             <div class="cp-readout__value">—</div>
           </div>
-          <div class="cp-notice">
-            <h3>What to notice</h3>
-            <ul>
-              <li>Farther targets have smaller parallax shifts.</li>
-              <li>Small angles are hard: measurement uncertainty matters.</li>
-            </ul>
-          </div>
         </div>
       </aside>
 
-      <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
-        <strong>Model notes</strong>
-        <ul>
-          <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-          <li>When migrated, this drawer will host math mode + deeper model notes.</li>
-        </ul>
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">2 bullets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Farther targets have smaller parallax shifts.</li>
+                <li>Small angles are hard: measurement uncertainty matters.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">stub</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
+                <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
       </section>
     </div>
     <script type="module" src="./main.ts"></script>

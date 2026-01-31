@@ -110,7 +110,8 @@ Semantics:
 - stage should have an `aria-label` describing the visualization
 
 Responsive:
-- `demo-shell.css` collapses to a single column under 980px (no JS required).
+- Desktop: 2 columns (controls left; stage column right with readouts + panels below the stage).
+- Under 980px: stacks to a single column with the stage first (no JS required).
 
 ---
 
@@ -144,4 +145,3 @@ Station cards must print cleanly:
 - `setCosmicLayer()` / `getCosmicLayer()` utilities
 
 Use these only when a runtime toggle is needed; default should remain static classes.
-

@@ -1,6 +1,4 @@
-@import "@cosmic/theme/styles/tokens.css";
-@import "@cosmic/theme/styles/layer-instrument.css";
-@import "@cosmic/theme/styles/demo-shell.css";
+@import "../../shared/stub-demo.css";
 
 .control {
   display: grid;
@@ -17,29 +15,6 @@ input[type="range"]:focus-visible {
   border-radius: 999px;
 }
 
-.readouts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 10px;
-}
-
-.readout {
-  padding: 10px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--cp-border);
-}
-
-.readout__label {
-  font-size: 0.9rem;
-  color: var(--cp-muted);
-}
-
-.readout__value {
-  margin-top: 4px;
-  font-size: 1.4rem;
-}
-
 .stage {
   display: grid;
   place-items: center;
@@ -47,60 +22,8 @@ input[type="range"]:focus-visible {
 }
 
 canvas {
-  max-width: 100%;
-  height: auto;
-}
-
-.action {
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--cp-accent3) 44%, transparent);
-  background: color-mix(in srgb, var(--cp-accent3) 22%, transparent);
-  color: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.action:hover {
-  background: color-mix(in srgb, var(--cp-accent3) 30%, transparent);
-}
-
-.status {
-  margin: 10px 0 0;
-  color: var(--cp-muted);
-  min-height: 1.25em;
-}
-
-.notice {
-  margin-top: 12px;
-  padding: 10px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--cp-border);
-}
-
-.notice h3 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.notice ul {
-  margin: 8px 0 0;
-  padding-left: 18px;
-  color: var(--cp-muted);
-}
-
-.notice li {
-  margin: 6px 0;
-}
-
-.cp-muted {
-  color: var(--cp-muted);
-}
-
-.cp-drawer ul {
-  margin: 8px 0 0;
-  padding-left: 18px;
-  color: var(--cp-muted);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  display: block;
 }

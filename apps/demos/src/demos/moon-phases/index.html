@@ -20,12 +20,12 @@
             <input id="angle" type="range" min="0" max="360" value="90" step="1" />
           </label>
 
-          <button id="stationMode" class="action" type="button">Station mode</button>
-          <button id="challengeMode" class="action" type="button">Challenge mode</button>
-          <button id="help" class="action" type="button">Help / shortcuts</button>
+          <button id="stationMode" class="cp-action" type="button">Station mode</button>
+          <button id="challengeMode" class="cp-action" type="button">Challenge mode</button>
+          <button id="help" class="cp-action" type="button">Help / shortcuts</button>
 
-          <button id="copyResults" class="action" type="button">Copy results</button>
-          <p id="status" class="status" role="status" aria-live="polite"></p>
+          <button id="copyResults" class="cp-action" type="button">Copy results</button>
+          <p id="status" class="cp-status" role="status" aria-live="polite"></p>
         </div>
       </aside>
 
@@ -36,33 +36,45 @@
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <div class="readouts">
-            <div class="readout">
-              <div class="readout__label">Angle</div>
-              <div class="readout__value"><span id="angleValue"></span>°</div>
-            </div>
-            <div class="readout">
-              <div class="readout__label">Illuminated</div>
-              <div class="readout__value"><span id="illumValue"></span>%</div>
-            </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Angle</div>
+            <div class="cp-readout__value"><span id="angleValue"></span>°</div>
           </div>
-
-          <div class="notice">
-            <h3>What to notice</h3>
-            <ul>
-              <li>Half-lit happens at a phase angle near 90° or 270°.</li>
-              <li>“Dark” vs “lit” is about illumination, not Earth’s shadow.</li>
-            </ul>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Illuminated</div>
+            <div class="cp-readout__value"><span id="illumValue"></span>%</div>
           </div>
         </div>
       </aside>
 
-      <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
-        <strong>Model notes</strong>
-        <ul>
-          <li>This pilot visualization is a simplified 2D aid, not a full 3D render.</li>
-          <li>Angle here is a proxy for Sun–Moon–Earth geometry; details will be refined.</li>
-        </ul>
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">2 bullets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Half-lit happens at a phase angle near 90° or 270°.</li>
+                <li>“Dark” vs “lit” is about illumination, not Earth’s shadow.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">pilot</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>This pilot visualization is a simplified 2D aid, not a full 3D render.</li>
+                <li>Angle here is a proxy for Sun–Moon–Earth geometry; details will be refined.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
       </section>
     </div>
 

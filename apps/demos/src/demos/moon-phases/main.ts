@@ -58,6 +58,27 @@ function cssVar(name: string, fallback: string) {
   return value.length > 0 ? value : fallback;
 }
 
+function resizeCanvasToCssPixels(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D
+): { width: number; height: number } {
+  const rect = canvas.getBoundingClientRect();
+  const width = Math.max(1, rect.width);
+  const height = Math.max(1, rect.height);
+  const dpr = window.devicePixelRatio || 1;
+
+  const nextWidth = Math.max(1, Math.round(width * dpr));
+  const nextHeight = Math.max(1, Math.round(height * dpr));
+
+  if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+    canvas.width = nextWidth;
+    canvas.height = nextHeight;
+  }
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { width, height };
+}
+
 const canvasTheme = {
   glow: cssVar("--cp-glow-blue", "rgba(96, 165, 250, 0.12)"),
   disk: cssVar("--cp-bg1", "#0B1020"),
@@ -109,8 +130,7 @@ function phaseName(angleDeg: number): string {
 }
 
 function drawMoon(phaseAngleDeg: number) {
-  const w = canvas.width;
-  const h = canvas.height;
+  const { width: w, height: h } = resizeCanvasToCssPixels(canvas, ctx);
   const r = Math.min(w, h) * 0.34;
   const cx = w / 2;
   const cy = h / 2;
@@ -168,6 +188,15 @@ function render() {
 
 angleInput.addEventListener("input", render);
 render();
+if (typeof ResizeObserver !== "undefined") {
+  new ResizeObserver(() => {
+    render();
+  }).observe(canvas);
+} else {
+  window.addEventListener("resize", () => {
+    render();
+  });
+}
 
 // -------------------------
 // Station Mode + Help

@@ -53,27 +53,42 @@
             <div class="cp-readout__label">Orbital period</div>
             <div class="cp-readout__value"><span id="periodValue"></span></div>
           </div>
-          <div class="cp-notice">
-            <h3>What to notice</h3>
-            <ul>
-              <li>Both bodies move; the heavier one moves less, but it doesn’t stay perfectly fixed.</li>
-              <li>Changing separation affects the period strongly (in this simplified circular model).</li>
-            </ul>
-          </div>
         </div>
       </aside>
 
-      <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
-        <strong>Model notes</strong>
-        <ul>
-          <li>We assume perfectly circular orbits and point masses (no size, no tides, no relativity).</li>
-          <li>
-            Units: distance in AU, time in years, and masses in solar masses (M☉). We use the teaching normalization
-            G = 4π² AU³/(yr²·M☉). In this instrument we take m₁ = 1 M☉ and set m₂ via the mass-ratio slider, so
-            P² = a³/(M₁+M₂) in this circular Keplerian model.
-          </li>
-          <li>This is a visualization aid, not a full N-body integrator or a measured astrophysical binary.</li>
-        </ul>
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">2 bullets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Both bodies move; the heavier one moves less, but it doesn’t stay perfectly fixed.</li>
+                <li>Changing separation affects the period strongly (in this simplified circular model).</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">AU / yr / M☉</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>We assume perfectly circular orbits and point masses (no size, no tides, no relativity).</li>
+                <li>
+                  Units: distance in AU, time in years, and masses in solar masses (M☉). We use the teaching
+                  normalization G = 4π² AU³/(yr²·M☉). In this instrument we take m₁ = 1 M☉ and set m₂ via the
+                  mass-ratio slider, so P² = a³/(M₁+M₂) in this circular Keplerian model.
+                </li>
+                <li>This is a visualization aid, not a full N-body integrator or a measured astrophysical binary.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
       </section>
     </div>
     <script type="module" src="./main.ts"></script>

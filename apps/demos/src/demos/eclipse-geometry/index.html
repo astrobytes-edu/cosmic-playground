@@ -182,32 +182,47 @@
             <div class="cp-readout__label">Lunar outcome</div>
             <div class="cp-readout__value"><span id="lunarOutcome"></span></div>
           </div>
-          <div class="cp-notice">
-            <h3>What to notice</h3>
-            <ul>
-              <li>Orbital tilt breaks “monthly eclipse” intuition.</li>
-              <li>Small geometric differences determine eclipse visibility.</li>
-            </ul>
-          </div>
         </div>
       </aside>
 
-      <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
-        <strong>Model notes</strong>
-        <ul>
-          <li>
-            We model eclipse *geometry* using similar triangles for the umbra/penumbra and compute physically motivated
-            thresholds (in degrees) for eclipse visibility.
-          </li>
-          <li>
-            β is the Moon’s ecliptic latitude; when |β| is small, the Moon is close to a node and an eclipse is possible
-            at New/Full.
-          </li>
-          <li>
-            Earth–Moon distance affects shadow size: at perigee a central solar eclipse can be total; at apogee it can
-            be annular.
-          </li>
-        </ul>
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">2 bullets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Orbital tilt breaks “monthly eclipse” intuition.</li>
+                <li>Small geometric differences determine eclipse visibility.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">geometry</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>
+                  We model eclipse *geometry* using similar triangles for the umbra/penumbra and compute physically
+                  motivated thresholds (in degrees) for eclipse visibility.
+                </li>
+                <li>
+                  β is the Moon’s ecliptic latitude; when |β| is small, the Moon is close to a node and an eclipse is
+                  possible at New/Full.
+                </li>
+                <li>
+                  Earth–Moon distance affects shadow size: at perigee a central solar eclipse can be total; at apogee it
+                  can be annular.
+                </li>
+              </ul>
+            </div>
+          </details>
+        </div>
       </section>
     </div>
     <script type="module" src="./main.ts"></script>

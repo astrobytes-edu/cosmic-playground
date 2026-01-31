@@ -161,29 +161,47 @@
               <span id="seasonSouthValue"></span>
             </div>
           </div>
-          <div class="cp-notice">
-            <h3>What to notice</h3>
-            <ul>
-              <li>Day length and sun angle change with date and hemisphere.</li>
-              <li>Tilt drives seasons even if distance stayed constant.</li>
-            </ul>
-          </div>
         </div>
       </aside>
 
-      <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
-        <strong>Model notes</strong>
-        <ul>
-          <li>
-            Declination uses a simplified geometry: δ = asin(sin ε · sin L), where ε is axial tilt and L is treated as
-            uniform in time (toy model; ~1° accuracy vs ephemeris).
-          </li>
-          <li>
-            Earth–Sun distance uses a first-order eccentric model r ≈ 1 − e cos(θ) (not a Kepler solver). Perihelion is
-            anchored near day 3 (Jan 3) with an uncertainty of about ±2 days.
-          </li>
-          <li>Key idea: opposite hemispheres have opposite seasons; distance variations are small and not the main cause.</li>
-        </ul>
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">2 bullets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Day length and sun angle change with date and hemisphere.</li>
+                <li>Tilt drives seasons even if distance stayed constant.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">toy geometry</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>
+                  Declination uses a simplified geometry: δ = asin(sin ε · sin L), where ε is axial tilt and L is
+                  treated as uniform in time (toy model; ~1° accuracy vs ephemeris).
+                </li>
+                <li>
+                  Earth–Sun distance uses a first-order eccentric model r ≈ 1 − e cos(θ) (not a Kepler solver).
+                  Perihelion is anchored near day 3 (Jan 3) with an uncertainty of about ±2 days.
+                </li>
+                <li>
+                  Key idea: opposite hemispheres have opposite seasons; distance variations are small and not the main
+                  cause.
+                </li>
+              </ul>
+            </div>
+          </details>
+        </div>
       </section>
     </div>
     <script type="module" src="./main.ts"></script>
