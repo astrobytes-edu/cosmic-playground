@@ -1,3 +1,4 @@
+import { createDemoModes } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
 
 const dayOfYearEl = document.querySelector<HTMLInputElement>("#dayOfYear");
@@ -122,10 +123,139 @@ const subsolarLabel = subsolarLabelEl;
 const observerDot = observerDotEl;
 const observerLabel = observerLabelEl;
 
-stationMode.disabled = true;
+stationMode.disabled = false;
 challengeMode.disabled = true;
 help.disabled = true;
 copyResults.disabled = true;
+
+const demoModes = createDemoModes({
+  help: {
+    title: "Help / Shortcuts",
+    subtitle: "Keyboard shortcuts work when focus is not in an input field.",
+    sections: [
+      {
+        heading: "Shortcuts",
+        type: "shortcuts",
+        items: [
+          { key: "?", action: "Toggle help" },
+          { key: "g", action: "Toggle station mode" }
+        ]
+      },
+      {
+        heading: "Tip",
+        type: "bullets",
+        items: [
+          "Try equinox vs solstice anchor dates and compare North/South seasons.",
+          "Set tilt to 0° to see that declination stays near 0° all year in this toy model."
+        ]
+      }
+    ]
+  },
+  station: {
+    title: "Station Mode: Seasons",
+    subtitle: "Record date, declination, day length, and seasons by hemisphere",
+    columns: [
+      { key: "date", label: "Date" },
+      { key: "day", label: "Day" },
+      { key: "latitude", label: "Latitude (°)" },
+      { key: "tilt", label: "Tilt (°)" },
+      { key: "declination", label: "δ (°)" },
+      { key: "dayLength", label: "Day length (h)" },
+      { key: "noonAltitude", label: "Noon altitude (°)" },
+      { key: "seasonN", label: "Season (N)" },
+      { key: "seasonS", label: "Season (S)" },
+      { key: "distanceAu", label: "Distance (AU)" }
+    ],
+    getSnapshotRow: () => {
+      const day = clamp(Math.round(state.dayOfYear), 1, 365);
+      const axialTiltDeg = clamp(Number(state.axialTiltDeg), 0, 45);
+      const latitudeDeg = clamp(Number(state.latitudeDeg), -90, 90);
+
+      const declinationDegValue = SeasonsModel.sunDeclinationDeg({
+        dayOfYear: day,
+        axialTiltDeg
+      });
+      const dayLengthHoursValue = SeasonsModel.dayLengthHours({
+        latitudeDeg,
+        sunDeclinationDeg: declinationDegValue
+      });
+      const noonAltitudeDegValue = SeasonsModel.sunNoonAltitudeDeg({
+        latitudeDeg,
+        sunDeclinationDeg: declinationDegValue
+      });
+      const distanceAu = SeasonsModel.earthSunDistanceAu({ dayOfYear: day });
+      const north = seasonFromPhaseNorth(day);
+      const south = oppositeSeason(north);
+
+      return {
+        date: formatDateFromDayOfYear(day),
+        day: String(day),
+        latitude: String(Math.round(latitudeDeg)),
+        tilt: formatNumber(axialTiltDeg, 1),
+        declination: formatNumber(declinationDegValue, 1),
+        dayLength: formatNumber(dayLengthHoursValue, 2),
+        noonAltitude: formatNumber(noonAltitudeDegValue, 1),
+        seasonN: north,
+        seasonS: south,
+        distanceAu: formatNumber(distanceAu, 3)
+      };
+    },
+    snapshotLabel: "Add row (snapshot)",
+    rowSets: [
+      {
+        label: "Add anchor dates",
+        getRows: () => {
+          const axialTiltDeg = clamp(Number(state.axialTiltDeg), 0, 45);
+          const latitudeDeg = clamp(Number(state.latitudeDeg), -90, 90);
+          const anchors = [
+            { label: "Mar equinox", day: 80 },
+            { label: "Jun solstice", day: 172 },
+            { label: "Sep equinox", day: 266 },
+            { label: "Dec solstice", day: 356 }
+          ];
+
+          return anchors.map((a) => {
+            const declinationDegValue = SeasonsModel.sunDeclinationDeg({
+              dayOfYear: a.day,
+              axialTiltDeg
+            });
+            const dayLengthHoursValue = SeasonsModel.dayLengthHours({
+              latitudeDeg,
+              sunDeclinationDeg: declinationDegValue
+            });
+            const noonAltitudeDegValue = SeasonsModel.sunNoonAltitudeDeg({
+              latitudeDeg,
+              sunDeclinationDeg: declinationDegValue
+            });
+            const distanceAu = SeasonsModel.earthSunDistanceAu({ dayOfYear: a.day });
+            const north = seasonFromPhaseNorth(a.day);
+            const south = oppositeSeason(north);
+
+            return {
+              date: `${formatDateFromDayOfYear(a.day)} (${a.label})`,
+              day: String(a.day),
+              latitude: String(Math.round(latitudeDeg)),
+              tilt: formatNumber(axialTiltDeg, 1),
+              declination: formatNumber(declinationDegValue, 1),
+              dayLength: formatNumber(dayLengthHoursValue, 2),
+              noonAltitude: formatNumber(noonAltitudeDegValue, 1),
+              seasonN: north,
+              seasonS: south,
+              distanceAu: formatNumber(distanceAu, 3)
+            };
+          });
+        }
+      }
+    ]
+  }
+});
+
+demoModes.bindButtons({
+  helpButton: help,
+  stationButton: stationMode
+});
+
+help.disabled = false;
 
 type State = {
   dayOfYear: number;
