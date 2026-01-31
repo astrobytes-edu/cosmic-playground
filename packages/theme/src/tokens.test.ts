@@ -132,4 +132,19 @@ describe("Design tokens", () => {
       expect(css).toContain("--cp-data-neutral");
     });
   });
+
+  describe("Motion system", () => {
+    it("defines spring easing", () => {
+      expect(css).toContain("--cp-ease-spring");
+    });
+
+    it("defines stagger delay", () => {
+      expect(css).toContain("--cp-stagger");
+    });
+
+    it("defines entrance/exit durations", () => {
+      expect(css).toContain("--cp-duration-enter");
+      expect(css).toContain("--cp-duration-exit");
+    });
+  });
 });

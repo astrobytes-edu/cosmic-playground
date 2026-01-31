@@ -94,12 +94,22 @@
   --cp-font-semibold: 600;
   --cp-font-bold: 700;
 
-  /* ---------- Transitions ---------- */
+  /* ---------- Transitions & Motion ---------- */
   --cp-transition-fast: 150ms;
   --cp-transition-normal: 200ms;
   --cp-transition-slow: 300ms;
+
+  /* Durations for enter/exit animations */
+  --cp-duration-enter: 250ms;
+  --cp-duration-exit: 200ms;
+
+  /* Easing curves */
   --cp-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --cp-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --cp-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Stagger delay for sequential animations */
+  --cp-stagger: 50ms;
 
   /* ---------- Spacing ---------- */
   --cp-space-0: 2px;
