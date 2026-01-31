@@ -32,7 +32,7 @@
 
 .cp-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(45, 212, 191, 0.12), var(--cp-shadow-2);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--cp-accent) 12%, transparent), var(--cp-shadow-2);
   border-color: color-mix(in srgb, var(--cp-border) 50%, var(--cp-accent));
 }
 
@@ -83,4 +83,3 @@
 .cp-badge[data-tone="magenta"] {
   border-color: color-mix(in srgb, var(--cp-accent4) 35%, var(--cp-border));
 }
-

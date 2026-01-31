@@ -19,7 +19,7 @@
   --cp-muted: #b0b0b0;
 
   /* Increase focus visibility */
-  --cp-focus: rgba(45, 212, 191, 0.90);
+  --cp-focus: color-mix(in srgb, var(--cp-accent) 90%, transparent);
 }
 
 /* Paper theme high contrast */

@@ -20,12 +20,12 @@
   --cp-faint: #7d8599;
 
   /* ---------- Accents (adjusted for light bg) ---------- */
-  --cp-accent: #0d9488;       /* darker teal for contrast */
-  --cp-accent-hover: #14b8a6;
-  --cp-pink: #db2777;         /* darker pink for contrast */
-  --cp-pink-hover: #ec4899;
-  --cp-violet: #7c3aed;       /* darker violet */
-  --cp-violet-hover: #8b5cf6;
+  --cp-accent: #257180;       /* teal (Deep Jewel) */
+  --cp-accent-hover: color-mix(in srgb, var(--cp-accent) 82%, white);
+  --cp-pink: #a35c7a;         /* pink (Deep Jewel) */
+  --cp-pink-hover: color-mix(in srgb, var(--cp-pink) 82%, white);
+  --cp-violet: #655d8a;       /* violet (Deep Jewel) */
+  --cp-violet-hover: color-mix(in srgb, var(--cp-violet) 82%, white);
 
   /* Legacy aliases */
   --cp-accent2: var(--cp-violet);
@@ -33,16 +33,16 @@
   --cp-accent4: var(--cp-pink);
 
   /* ---------- Glows (subtle on light) ---------- */
-  --cp-glow-teal: rgba(13, 148, 136, 0.08);
-  --cp-glow-pink: rgba(219, 39, 119, 0.06);
-  --cp-glow-violet: rgba(124, 58, 237, 0.08);
+  --cp-glow-teal: color-mix(in srgb, var(--cp-accent) 10%, transparent);
+  --cp-glow-pink: color-mix(in srgb, var(--cp-pink) 8%, transparent);
+  --cp-glow-violet: color-mix(in srgb, var(--cp-violet) 10%, transparent);
   --cp-glow-accent: var(--cp-glow-teal);
   --cp-glow-blue: var(--cp-glow-violet);
   --cp-glow-magenta: var(--cp-glow-pink);
 
   /* ---------- Selection & Focus ---------- */
-  --cp-selection-bg: rgba(124, 58, 237, 0.20);
-  --cp-focus: rgba(13, 148, 136, 0.50);
+  --cp-selection-bg: color-mix(in srgb, var(--cp-violet) 18%, transparent);
+  --cp-focus: color-mix(in srgb, var(--cp-accent) 55%, transparent);
 
   /* ---------- Status (WCAG AA contrast on paper bg) ---------- */
   --cp-success: #047857;  /* emerald-700: 5.2:1 */
@@ -52,7 +52,7 @@
   /* ---------- Shadows (light mode) ---------- */
   --cp-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
   --cp-shadow-2: 0 2px 6px rgba(0, 0, 0, 0.10), 0 8px 24px rgba(0, 0, 0, 0.08);
-  --cp-card-glow: 0 4px 16px rgba(13, 148, 136, 0.08);
+  --cp-card-glow: 0 4px 16px color-mix(in srgb, var(--cp-accent) 10%, transparent);
 }
 
 .cp-layer-paper,
@@ -70,17 +70,17 @@
 /* Callouts with light backgrounds */
 .cp-layer-paper .cp-callout,
 [data-theme="paper"] .cp-callout {
-  background: rgba(13, 148, 136, 0.06);
+  background: color-mix(in srgb, var(--cp-accent) 7%, transparent);
 }
 
 .cp-layer-paper .cp-callout[data-kind="model"],
 [data-theme="paper"] .cp-callout[data-kind="model"] {
-  background: rgba(124, 58, 237, 0.06);
+  background: color-mix(in srgb, var(--cp-violet) 7%, transparent);
 }
 
 .cp-layer-paper .cp-callout[data-kind="misconception"],
 [data-theme="paper"] .cp-callout[data-kind="misconception"] {
-  background: rgba(219, 39, 119, 0.06);
+  background: color-mix(in srgb, var(--cp-pink) 7%, transparent);
 }
 
 /* Cards in light mode */

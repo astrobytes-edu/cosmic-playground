@@ -5,9 +5,9 @@
 
 /* Reduce ambient glow; instrument mode should be calmer */
 .cp-layer-instrument {
-  --cp-glow-teal: rgba(45, 212, 191, 0.08);
-  --cp-glow-pink: rgba(255, 45, 149, 0.05);
-  --cp-glow-violet: rgba(167, 139, 250, 0.06);
+  --cp-glow-teal: color-mix(in srgb, var(--cp-accent) 8%, transparent);
+  --cp-glow-pink: color-mix(in srgb, var(--cp-pink) 5%, transparent);
+  --cp-glow-violet: color-mix(in srgb, var(--cp-violet) 6%, transparent);
 
   /* Legacy */
   --cp-glow-accent: var(--cp-glow-teal);
@@ -36,18 +36,17 @@
 
 .cp-callout {
   border-left: 3px solid var(--cp-accent);
-  background: rgba(45, 212, 191, 0.08);
+  background: color-mix(in srgb, var(--cp-accent) 8%, transparent);
   padding: var(--cp-space-3) var(--cp-space-4);
   border-radius: var(--cp-r-2);
 }
 
 .cp-callout[data-kind="model"] {
   border-left-color: var(--cp-violet);
-  background: rgba(167, 139, 250, 0.08);
+  background: color-mix(in srgb, var(--cp-violet) 8%, transparent);
 }
 
 .cp-callout[data-kind="misconception"] {
   border-left-color: var(--cp-pink);
-  background: rgba(255, 45, 149, 0.08);
+  background: color-mix(in srgb, var(--cp-pink) 8%, transparent);
 }
-

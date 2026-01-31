@@ -62,14 +62,14 @@
 }
 
 .cp-button--accent {
-  background: rgba(255, 45, 149, 0.14);
-  border-color: rgba(255, 45, 149, 0.45);
+  background: color-mix(in srgb, var(--cp-pink) 14%, transparent);
+  border-color: color-mix(in srgb, var(--cp-pink) 45%, transparent);
   color: var(--cp-text);
 }
 
 .cp-button--accent:hover {
-  background: rgba(255, 45, 149, 0.22);
-  border-color: rgba(255, 45, 149, 0.60);
+  background: color-mix(in srgb, var(--cp-pink) 22%, transparent);
+  border-color: color-mix(in srgb, var(--cp-pink) 60%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {

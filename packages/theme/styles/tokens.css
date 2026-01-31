@@ -16,12 +16,12 @@
   --cp-faint: #6a6a78;     /* quaternary */
 
   /* ---------- Accents (aurora ink: teal + pink + violet) ---------- */
-  --cp-accent: #2dd4bf;       /* teal - primary interactive */
-  --cp-accent-hover: #5eead4;
-  --cp-pink: #ff2d95;         /* pink - special emphasis, goals */
-  --cp-pink-hover: #ff5cad;
-  --cp-violet: #a78bfa;       /* violet - tertiary, categories */
-  --cp-violet-hover: #c4b5fd;
+  --cp-accent: #028593;       /* teal (Jewel Aurora, AA-adjusted) */
+  --cp-accent-hover: color-mix(in srgb, var(--cp-accent) 85%, white);
+  --cp-pink: #be5a83;         /* pink (Jewel Aurora) */
+  --cp-pink-hover: color-mix(in srgb, var(--cp-pink) 85%, white);
+  --cp-violet: #7077a1;       /* violet (Jewel Aurora) */
+  --cp-violet-hover: color-mix(in srgb, var(--cp-violet) 85%, white);
 
   /* Legacy aliases (for gradual migration) */
   --cp-accent2: var(--cp-violet);
@@ -34,9 +34,9 @@
   --cp-danger: #fb7185;
 
   /* ---------- Glows (aurora palette, not blue-heavy) ---------- */
-  --cp-glow-teal: rgba(45, 212, 191, 0.18);
-  --cp-glow-pink: rgba(255, 45, 149, 0.12);
-  --cp-glow-violet: rgba(167, 139, 250, 0.14);
+  --cp-glow-teal: color-mix(in srgb, var(--cp-accent) 18%, transparent);
+  --cp-glow-pink: color-mix(in srgb, var(--cp-pink) 12%, transparent);
+  --cp-glow-violet: color-mix(in srgb, var(--cp-violet) 14%, transparent);
 
   /* Legacy aliases */
   --cp-glow-accent: var(--cp-glow-teal);
@@ -57,8 +57,8 @@
   --cp-data-neutral: var(--cp-muted);
 
   /* ---------- Selection & Focus ---------- */
-  --cp-selection-bg: rgba(255, 45, 149, 0.28);
-  --cp-focus: rgba(45, 212, 191, 0.70);
+  --cp-selection-bg: color-mix(in srgb, var(--cp-pink) 28%, transparent);
+  --cp-focus: color-mix(in srgb, var(--cp-accent) 70%, transparent);
   --cp-focus-ring: 2px solid var(--cp-focus);
 
   /* ---------- Form Inputs ---------- */
@@ -150,7 +150,7 @@
   --cp-elevation-3: 0 8px 32px rgba(0, 0, 0, 0.5);
 
   /* Card hover glow (uses accent color) */
-  --cp-card-glow: 0 8px 32px rgba(45, 212, 191, 0.15);
+  --cp-card-glow: 0 8px 32px color-mix(in srgb, var(--cp-accent) 15%, transparent);
 }
 
 html,
@@ -193,14 +193,14 @@ h4 {
 a {
   color: var(--cp-accent);
   text-decoration: none;
-  text-decoration-color: rgba(45, 212, 191, 0.35);
+  text-decoration-color: color-mix(in srgb, var(--cp-accent) 35%, transparent);
   text-underline-offset: 0.18em;
   transition: color var(--cp-transition-fast) var(--cp-ease-out);
 }
 
 a:hover {
   color: var(--cp-accent-hover);
-  text-decoration-color: rgba(94, 234, 212, 0.55);
+  text-decoration-color: color-mix(in srgb, var(--cp-accent-hover) 55%, transparent);
 }
 
 a:active {
@@ -216,4 +216,3 @@ a:active {
   outline: 2px solid var(--cp-focus);
   outline-offset: 2px;
 }
-
