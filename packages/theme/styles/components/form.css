@@ -1,0 +1,76 @@
+/* packages/theme/styles/components/form.css */
+
+.cp-input,
+.cp-select,
+.cp-textarea {
+  display: block;
+  width: 100%;
+  padding: var(--cp-space-3) var(--cp-space-4);
+  font-size: var(--cp-text-md);
+  font-family: inherit;
+  line-height: var(--cp-leading-normal);
+  color: var(--cp-text);
+  background: var(--cp-input-bg);
+  border: 1px solid var(--cp-input-border);
+  border-radius: var(--cp-r-2);
+  transition: border-color var(--cp-transition-fast) var(--cp-ease-out),
+              box-shadow var(--cp-transition-fast) var(--cp-ease-out);
+}
+
+.cp-input:focus,
+.cp-select:focus,
+.cp-textarea:focus {
+  outline: none;
+  border-color: var(--cp-accent);
+  box-shadow: 0 0 0 3px var(--cp-glow-teal);
+}
+
+.cp-input::placeholder,
+.cp-textarea::placeholder {
+  color: var(--cp-input-placeholder);
+}
+
+.cp-input:disabled,
+.cp-select:disabled,
+.cp-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cp-label {
+  display: block;
+  margin-bottom: var(--cp-space-2);
+  font-size: var(--cp-text-sm);
+  font-weight: var(--cp-font-medium);
+  color: var(--cp-text2);
+}
+
+.cp-field {
+  margin-bottom: var(--cp-space-5);
+}
+
+.cp-field--error .cp-input,
+.cp-field--error .cp-select,
+.cp-field--error .cp-textarea {
+  border-color: var(--cp-danger);
+}
+
+.cp-field--error .cp-input:focus,
+.cp-field--error .cp-select:focus,
+.cp-field--error .cp-textarea:focus {
+  box-shadow: 0 0 0 3px var(--cp-glow-pink);
+}
+
+.cp-error-message {
+  margin-top: var(--cp-space-2);
+  font-size: var(--cp-text-sm);
+  color: var(--cp-danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-input,
+  .cp-select,
+  .cp-textarea {
+    transition: none;
+  }
+}

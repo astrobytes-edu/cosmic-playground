@@ -97,4 +97,18 @@ describe("Design tokens", () => {
       expect(css).toMatch(/--cp-space-1:\s*4px/);
     });
   });
+
+  describe("Form tokens", () => {
+    it("defines input background token", () => {
+      expect(css).toContain("--cp-input-bg");
+    });
+
+    it("defines input border token", () => {
+      expect(css).toContain("--cp-input-border");
+    });
+
+    it("defines input focus token", () => {
+      expect(css).toContain("--cp-input-focus");
+    });
+  });
 });
