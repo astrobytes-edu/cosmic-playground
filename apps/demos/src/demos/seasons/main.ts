@@ -1,5 +1,5 @@
-import { ChallengeEngine, createDemoModes } from "@cosmic/runtime";
-import type { Challenge } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime } from "@cosmic/runtime";
+import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
 
 const dayOfYearEl = document.querySelector<HTMLInputElement>("#dayOfYear");
@@ -127,7 +127,13 @@ const observerLabel = observerLabelEl;
 stationMode.disabled = false;
 challengeMode.disabled = true;
 help.disabled = true;
-copyResults.disabled = true;
+copyResults.disabled = false;
+
+const runtime = createInstrumentRuntime({
+  hasMathMode: false,
+  storageKey: "cp:seasons:mode",
+  url: new URL(window.location.href)
+});
 
 const demoModes = createDemoModes({
   help: {
@@ -474,6 +480,12 @@ function render() {
     declinationDeg: declinationDegValue,
     distanceAu
   });
+
+  (window as any).__cp = {
+    slug: "seasons",
+    mode: runtime.mode,
+    exportResults: () => exportResults(getState())
+  };
 }
 
 type SeasonsDemoState = {
@@ -523,6 +535,50 @@ function setState(next: unknown): void {
 
   stopAnimation();
   render();
+}
+
+function exportResults(st: SeasonsDemoState): ExportPayloadV1 {
+  const day = clamp(Math.round(st.dayOfYear), 1, 365);
+  const dateLabel = formatDateFromDayOfYear(day);
+  const axialTiltDeg = clamp(Number(st.axialTiltDeg), 0, 45);
+  const latitudeDeg = clamp(Number(st.latitudeDeg), -90, 90);
+
+  const distanceAu = SeasonsModel.earthSunDistanceAu({ dayOfYear: day });
+  const seasonN = seasonFromPhaseNorth(day);
+  const seasonS = oppositeSeason(seasonN);
+
+  const notes: string[] = [];
+  notes.push(
+    "Declination uses a simplified toy model: δ = asin(sin ε · sin L), with L treated as uniform in time (~1° accuracy vs ephemeris)."
+  );
+  notes.push(
+    "Earth–Sun distance uses a first-order eccentric model r ≈ 1 − e cos(θ) (not a Kepler solver); distance variations are small and not the main cause of seasons."
+  );
+  notes.push(
+    `Perihelion is anchored near day 3 (Jan 3) with an uncertainty of about ±${SeasonsModel.PERIHELION_DAY_UNCERTAINTY} days.`
+  );
+  if (prefersReducedMotion) {
+    notes.push("Reduced motion: year animation is disabled.");
+  }
+
+  return {
+    version: 1,
+    timestamp: new Date().toISOString(),
+    parameters: [
+      { name: "Day-of-year", value: `${day} (${dateLabel})` },
+      { name: "Latitude", value: `${Math.round(latitudeDeg)}°` },
+      { name: "Axial tilt", value: `${formatNumber(axialTiltDeg, 1)}°` }
+    ],
+    readouts: [
+      { name: "Solar declination δ", value: `${formatNumber(st.declinationDeg, 1)}°` },
+      { name: "Day length", value: `${formatNumber(st.dayLengthHours, 2)} h` },
+      { name: "Noon altitude", value: `${formatNumber(st.noonAltitudeDeg, 1)}°` },
+      { name: "Earth–Sun distance", value: `${formatNumber(distanceAu, 3)} AU` },
+      { name: "Season (North)", value: seasonN },
+      { name: "Season (South)", value: seasonS }
+    ],
+    notes
+  };
 }
 
 function getControlsBody(): HTMLElement {
@@ -678,7 +734,16 @@ animateYear.addEventListener("click", () => {
 });
 
 copyResults.addEventListener("click", () => {
-  status.textContent = "Export is not available yet for this demo.";
+  status.textContent = "Copying…";
+  void runtime
+    .copyResults(exportResults(getState()))
+    .then(() => {
+      status.textContent = "Copied results to clipboard.";
+    })
+    .catch((err) => {
+      status.textContent =
+        err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.";
+    });
 });
 
 render();
