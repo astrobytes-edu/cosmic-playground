@@ -8,6 +8,7 @@ This repo uses `AGENTS.md` as the authoritative agent instructions. Read and fol
 - Build everything (demos + site): `corepack pnpm build`
 - Site checks: `corepack pnpm -C apps/site typecheck`
 - E2E (Playwright): `CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e` (or leave `CP_BASE_PATH` unset)
+- Python (conda env with PyYAML): `conda run -n astro python <script.py> ...`
 
 ## Architecture at a glance
 

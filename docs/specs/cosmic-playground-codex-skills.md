@@ -45,6 +45,13 @@ Use when polishing UI/UX across Astro site + Vite demos + instructor/station mat
   - Vite demos served from `/play/<slug>/`: use `../../...` (or compute `new URL("../../", window.location.href)`).
 - Enforces scientific/math correctness guardrails in UI copy (explicit units; `D`/`d` policy; KaTeX runtime only).
 
+### `cosmic-astro-site-engineering`
+
+Use when changing Astro routing/layouts/components in `apps/site` (especially when base paths and “static-first” constraints are fragile):
+- Enforces base-path-safe internal links/assets via `import.meta.env.BASE_URL` (no root-absolute `/...` and no hardcoded `/cosmic-playground/...`).
+- Enforces “museum pages are mostly static HTML”: avoid `client:*` on site-wide layout/chrome; prefer GET forms + query params (e.g. `/explore/?q=...`) over global JS.
+- Keeps `/stations/` and `/instructor/` paper-theme + print behavior centralized via `apps/site/src/layouts/Layout.astro` (and avoids adding new KaTeX renderers).
+
 ### `cosmic-demo-authoring`
 
 Use when creating/migrating demos under `apps/demos/src/demos/<slug>/`:
@@ -83,20 +90,7 @@ Keep SKILL.md short and searchable. Put “when to use” keywords in the `descr
 
 Each item below includes: goal, freedom level, and initial pressure tests to use for RED.
 
-### 1) `cosmic-astro-site-engineering` (medium freedom)
-
-**Use when** changing Astro routing/layouts/components and base-path behavior.
-
-What it should enforce:
-- `import.meta.env.BASE_URL` for internal links/assets in Astro components/pages.
-- Don’t introduce client JS on museum/exhibit pages unless necessary; prefer static-first patterns.
-- Keep “paper theme” rules for `/stations/` and `/instructor/` consistent with `apps/site/src/layouts/Layout.astro`.
-
-Pressure tests:
-- “Quick fix this broken link” → tries to hardcode `/cosmic-playground/` or `/explore/`.
-- “Add a component with client-side state everywhere” → accidentally adds JS to museum pages.
-
-### 2) `cosmic-accessibility-audit` (high freedom, checklist-driven)
+### 1) `cosmic-accessibility-audit` (high freedom, checklist-driven)
 
 **Use when** doing polish passes to enforce keyboard/focus and core accessibility affordances.
 
@@ -108,7 +102,7 @@ Pressure tests:
 - “Ship the modal quickly” → forgets focus trap/escape/aria-labelledby.
 - “The demo works with mouse” → ignores keyboard-only flows.
 
-### 3) `cosmic-export-contracts` (medium freedom)
+### 2) `cosmic-export-contracts` (medium freedom)
 
 **Use when** adding/changing demo exports (`copyResults`, CSV, snapshots).
 
@@ -119,7 +113,7 @@ What it should enforce:
 Pressure tests:
 - “Just dump whatever JSON is easy” → inconsistent keys, missing units, no versioning.
 
-### 4) `cosmic-runtime-instrumentation` (medium/low freedom)
+### 3) `cosmic-runtime-instrumentation` (medium/low freedom)
 
 **Use when** adding shared runtime behaviors across demos (tooltips, slider progress, mode dialogs, shortcuts).
 
@@ -130,7 +124,7 @@ What it should enforce:
 Pressure tests:
 - “Only this demo needs it” → reimplements tooltips locally.
 
-### 5) `cosmic-theme-tokens-and-components` (medium freedom)
+### 4) `cosmic-theme-tokens-and-components` (medium freedom)
 
 **Use when** editing `packages/theme` (tokens, components, surfaces).
 
@@ -141,7 +135,7 @@ What it should enforce:
 Pressure tests:
 - “Just match legacy styling” → starts hardcoding colors/spacing instead of tokens.
 
-### 6) `cosmic-basepath-smoke-tests` (low freedom)
+### 5) `cosmic-basepath-smoke-tests` (low freedom)
 
 **Use when** debugging 404s/broken routes in local or GH Pages builds.
 
@@ -152,7 +146,7 @@ What it should enforce:
 Pressure tests:
 - “It works locally” → ignores base-path differences and ships broken GH Pages links.
 
-### 7) `cosmic-instructor-materials-style` (high freedom)
+### 6) `cosmic-instructor-materials-style` (high freedom)
 
 **Use when** authoring instructor/station content for clarity and print/readability.
 
@@ -163,7 +157,7 @@ What it should enforce:
 Pressure tests:
 - “Just paste notes from a doc” → inconsistent headings, missing units, broken links.
 
-### 8) `cosmic-ux-polish-pass` (high freedom, demo checklist)
+### 7) `cosmic-ux-polish-pass` (high freedom, demo checklist)
 
 **Use when** doing demo-by-demo polish without inventing new systems.
 
@@ -174,7 +168,7 @@ What it should enforce:
 Pressure tests:
 - “This demo is special” → forks styles/layouts.
 
-### 9) `cosmic-spec-to-implementation` (medium freedom)
+### 8) `cosmic-spec-to-implementation` (medium freedom)
 
 **Use when** turning spec docs into execution plans and PR-sized task lists.
 
@@ -184,4 +178,3 @@ What it should enforce:
 
 Pressure tests:
 - “Start coding” → skips reading specs, produces drift and rework.
-

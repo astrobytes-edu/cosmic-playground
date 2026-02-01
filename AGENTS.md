@@ -13,6 +13,12 @@ When a relevant skill exists for the task, you must load it via:
 `~/.codex/superpowers/.codex/superpowers-codex use-skill <skill-name>`
 </EXTREMELY_IMPORTANT>
 
+### Python environment (conda)
+
+- When running Python for this repo (including skill tooling like `quick_validate.py` / `package_skill.py`), use the Conda env `astro` (it includes `pyyaml`).
+- Prefer non-interactive invocation so commands are reproducible without `conda activate`:
+  - `conda run -n astro python <script.py> ...`
+
 ### Repo goals
 - Treat `docs/specs/cosmic-playground-site-spec.md` as the contract.
 - Prefer static + fast pages; minimal client JS on museum pages.
