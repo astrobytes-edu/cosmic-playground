@@ -10,6 +10,11 @@ This repo uses `AGENTS.md` as the authoritative agent instructions. Read and fol
 - E2E (Playwright): `CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e` (or leave `CP_BASE_PATH` unset)
 - Python (conda env with PyYAML): `conda run -n astro python <script.py> ...`
 
+## Dependency notes
+
+- If a Python tool fails with `ModuleNotFoundError`, install the missing package into the `astro` conda env (and we’ll call out the exact package + command when it happens).
+- If a `corepack pnpm ...` command fails due to missing deps, run `corepack pnpm install`.
+
 ## Architecture at a glance
 
 - `apps/site/`: Astro static site (GitHub Pages deploy target is `apps/site/dist/`)

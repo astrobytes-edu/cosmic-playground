@@ -18,6 +18,7 @@ When a relevant skill exists for the task, you must load it via:
 - When running Python for this repo (including skill tooling like `quick_validate.py` / `package_skill.py`), use the Conda env `astro` (it includes `pyyaml`).
 - Prefer non-interactive invocation so commands are reproducible without `conda activate`:
   - `conda run -n astro python <script.py> ...`
+- If a Python command fails due to a missing module, call out the exact missing package and the install command for the `astro` env (do not silently work around it).
 
 ### Repo goals
 - Treat `docs/specs/cosmic-playground-site-spec.md` as the contract.
