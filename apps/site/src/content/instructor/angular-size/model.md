@@ -35,26 +35,26 @@ The demo reports the angular diameter in a human-friendly unit:
 
 The demo uses the exact geometric relationship:
 
-$$\theta = 2\arctan\!\left(\frac{d}{2D}\right)$$
+$$\theta = 2\arctan\!\left(\frac{D}{2d}\right)$$
 
 Let’s unpack each piece:
 
 - $\theta$ is **angular diameter** (radians in the math; converted to degrees for display).
-- $d$ is **physical diameter** (km in the demo’s internal units).
-- $D$ is **distance to the object** (km in the demo’s internal units).
+- $D$ is **physical diameter** (km in the demo’s internal units).
+- $d$ is **distance to the object** (km in the demo’s internal units).
 
-What this equation is really saying: angular size depends on a *ratio* $d/D$. If you double the distance, the object looks about half as big.
+What this equation is really saying: angular size depends on a *ratio* $D/d$. If you double the distance, the object looks about half as big.
 
 > **Dimensional analysis**
-> Inside the arctangent, $\frac{d}{2D}$ is a ratio of km/km, so it’s unitless (as required for trig functions).
+> Inside the arctangent, $\frac{D}{2d}$ is a ratio of km/km, so it’s unitless (as required for trig functions).
 
 ## Inverting the equation (distance from a desired angular size)
 
-Sometimes the teaching question is the inverse one: “If an object has diameter $d$, how far away would it need to be to appear $\theta$ wide?”
+Sometimes the teaching question is the inverse one: “If an object has diameter $D$, how far away would it need to be to appear $\theta$ wide?”
 
-Solving the exact equation for $D$ gives:
+Solving the exact equation for $d$ gives:
 
-$$D = \frac{d}{2\tan(\theta/2)}$$
+$$d = \frac{D}{2\tan(\theta/2)}$$
 
 This inversion is implemented in the shared model as:
 
@@ -66,9 +66,9 @@ The demo uses this idea when it sets “perigee-like” and “apogee-like” en
 
 For small angles (most astronomy cases), $\tan x \approx x$ (when $x$ is in radians), so:
 
-$$\theta \approx \frac{d}{D}\quad(\text{radians})$$
+$$\theta \approx \frac{D}{d}\quad(\text{radians})$$
 
-This is the mental math version students should take away: angular size scales as $d/D$.
+This is the mental math version students should take away: angular size scales as $D/d$.
 
 ## Angle unit conversions (for classroom fluency)
 
@@ -91,10 +91,10 @@ The demo includes an orbit-mode control that varies the Moon’s distance betwee
 Those endpoints imply distances (computed by inverting the exact formula above):
 
 > **Numbers implied by the demo’s orbit range**
-> Using $d_{\text{Moon}} = 3474\ \text{km}$:
+> Using $D_{\text{Moon}} = 3474\ \text{km}$:
 >
-> - $0.56^\circ \Rightarrow D \approx 355{,}436\ \text{km}$ (perigee-like)
-> - $0.49^\circ \Rightarrow D \approx 406{,}213\ \text{km}$ (apogee-like)
+> - $0.56^\circ \Rightarrow d \approx 355{,}436\ \text{km}$ (perigee-like)
+> - $0.49^\circ \Rightarrow d \approx 406{,}213\ \text{km}$ (apogee-like)
 >
 > These are reasonable order-of-magnitude values for the real Moon.
 
@@ -102,12 +102,12 @@ Those endpoints imply distances (computed by inverting the exact formula above):
 
 The demo’s recession-time mode uses a deliberately simple linear model:
 
-$$D(t) = D_0 + vt$$
+$$d(t) = d_0 + vt$$
 
 Let’s unpack each piece:
 
-- $D(t)$ is Moon distance (km)
-- $D_0$ is today’s distance (km)
+- $d(t)$ is Moon distance (km)
+- $d_0$ is today’s distance (km)
 - $v$ is the recession rate (km/Myr in the demo)
 - $t$ is time from today (Myr)
 
@@ -140,7 +140,7 @@ Two especially useful reference points for classroom verification:
 
 The “ISS overhead” preset uses:
 
-- diameter $d \approx 0.109\ \text{km}$ (109 m)
-- distance $D \approx 420\ \text{km}$
+- diameter $D \approx 0.109\ \text{km}$ (109 m)
+- distance $d \approx 420\ \text{km}$
 
 which puts it around the arcminute scale.

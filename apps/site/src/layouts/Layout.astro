@@ -1,11 +1,13 @@
 ---
 import "../styles/global.css";
+import KatexAutoRender from "../components/KatexAutoRender.astro";
 
 export type LayoutProps = {
   title?: string;
+  hasMath?: boolean;
 };
 
-const { title = "Cosmic Playground" } = Astro.props;
+const { title = "Cosmic Playground", hasMath = true } = Astro.props;
 
 const withBase = (path: string) => {
   const base = import.meta.env.BASE_URL;
@@ -67,6 +69,7 @@ const isLightTheme = themeParam === "paper" || Astro.url.pathname.includes("/ins
     </header>
     <main id="content" class="site-main">
       <slot />
+      {hasMath ? <KatexAutoRender /> : null}
     </main>
     <footer class="site-footer cp-no-print">
       <div class="site-footer__inner">

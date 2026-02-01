@@ -1,4 +1,4 @@
-import { createInstrumentRuntime } from "@cosmic/runtime";
+import { createInstrumentRuntime, initMath } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { TwoBodyAnalytic } from "@cosmic/physics";
 
@@ -291,3 +291,5 @@ copyResults.addEventListener("click", () => {
         err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.";
     });
 });
+
+initMath(document);

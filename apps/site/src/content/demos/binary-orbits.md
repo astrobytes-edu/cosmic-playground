@@ -18,16 +18,16 @@ play_steps:
   - "Compare cases where masses are equal vs very unequal."
   - "Identify which quantities appear to remain consistent."
 station_params:
-  - parameter: "Mass ratio (m₂/m₁)"
+  - parameter: 'Mass ratio ($m_2/m_1$)'
     value: "________"
     notice: "Heavier body moves less; barycenter shifts toward the heavier mass."
-  - parameter: "Separation (a)"
+  - parameter: 'Separation ($a$)'
     value: "________"
-    notice: "In this circular Kepler model, P² = a³/(M₁+M₂) (P in years, a in AU, masses in M☉)."
+    notice: 'In this circular Kepler model, $P^2 = \frac{a^3}{M_1+M_2}$ (with $P$ in $\mathrm{yr}$, $a$ in $\mathrm{AU}$, masses in $M_{\odot}$).'
 explain_prompt: "Explain how the center of mass helps you understand the motion of both bodies."
 model_notes:
   - "This pilot assumes perfectly circular orbits and point masses (no eccentricity, tides, or relativity)."
-  - "Units: distance in AU, time in years, and masses in solar masses (M☉). This instrument takes M₁ = 1 M☉ and sets M₂ via the mass-ratio slider; it uses the teaching normalization G = 4π² AU³/(yr²·M☉)."
+  - 'Units: distance in $\mathrm{AU}$, time in $\mathrm{yr}$, and masses in $M_{\odot}$. This instrument takes $M_1 = 1\,M_{\odot}$ and sets $M_2$ via the mass-ratio slider; it uses the teaching normalization $G = 4\pi^2\,\mathrm{AU}^3/(\mathrm{yr}^2\,M_{\odot})$.'
 demo_path: "/play/binary-orbits/"
 station_path: "/stations/binary-orbits/"
 instructor_path: "/instructor/binary-orbits/"

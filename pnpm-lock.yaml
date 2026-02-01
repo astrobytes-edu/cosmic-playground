@@ -66,6 +66,10 @@ importers:
         version: 5.9.3
 
   packages/runtime:
+    dependencies:
+      katex:
+        specifier: ^0.16.28
+        version: 0.16.28
     devDependencies:
       typescript:
         specifier: ^5.5.4

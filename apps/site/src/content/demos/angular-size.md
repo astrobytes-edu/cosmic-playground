@@ -19,9 +19,9 @@ play_steps:
   - "Try to find two different (size, distance) pairs that look the same."
 explain_prompt: "Use your observations to explain how apparent size depends on both size and distance."
 model_notes:
-  - "Angular diameter uses the exact geometric relation θ = 2 arctan(d / (2D))."
-  - "Units: diameter d and distance D are always in km; angles are reported in degrees/arcminutes/arcseconds (°/′/″)."
-  - "Moon time modes: (1) Orbit (perigee ↔ apogee) and (2) Recession (Myr from today; a toy linear extrapolation using a constant recession rate)."
+  - 'Angular diameter uses the exact geometric relation $\theta = 2\arctan\!\left(\frac{D}{2d}\right)$.'
+  - 'Units: diameter $D$ and distance $d$ are always in km; angles are reported in $^\circ$ / $^\prime$ / $^{\prime\prime}$.'
+  - 'Moon time modes: (1) Orbit (perigee ↔ apogee) and (2) Recession (Myr from today; a toy linear extrapolation using a constant recession rate).'
 demo_path: "/play/angular-size/"
 station_path: "/stations/angular-size/"
 instructor_path: "/instructor/angular-size/"

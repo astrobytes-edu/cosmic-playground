@@ -27,7 +27,7 @@ has_math: true
 >
 > **Correct:** B.
 >
-> **Reasoning:** For small angles, $\theta \propto d/D$.
+> **Reasoning:** For small angles, $\theta \propto D/d$.
 >
 > **Demo setup:** Pick any preset, then double the distance slider and watch the angular size update.
 
@@ -58,12 +58,12 @@ has_math: true
 ## Short answer
 
 > **Short answer 1: Read the equation like a sentence**
-> **Prompt (2–3 sentences):** The demo uses $\theta = 2\arctan(d/2D)$. Explain what this equation is saying in words, including what happens when you increase $d$ or increase $D$.
+> **Prompt (2–3 sentences):** The demo uses $\theta = 2\arctan(D/2d)$. Explain what this equation is saying in words, including what happens when you increase $D$ or increase $d$.
 >
-> **Answer key (core idea):** Angular size depends on the ratio of physical diameter to distance. Increasing $d$ increases $\theta$; increasing $D$ decreases $\theta$. For small angles, it behaves like $\theta \approx d/D$ (in radians).
+> **Answer key (core idea):** Angular size depends on the ratio of physical diameter to distance. Increasing $D$ increases $\theta$; increasing $d$ decreases $\theta$. For small angles, it behaves like $\theta \approx D/d$ (in radians).
 
 > **Short answer 2: Quick mental math (small-angle)**
-> **Prompt:** A 2 m tall person stands 20 m away. Use $\theta \approx d/D$ to estimate the angular size in radians and degrees.
+> **Prompt:** A 2 m tall person stands 20 m away. Use $\theta \approx D/d$ to estimate the angular size in radians and degrees.
 >
 > **Answer key:** $\theta \approx 2/20 = 0.1$ rad. In degrees, $0.1\times(180/\pi)\approx 5.7^\circ$.
 >

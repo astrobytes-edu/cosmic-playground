@@ -1,4 +1,4 @@
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath } from "@cosmic/runtime";
 import type { Challenge } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AngularSizeModel, AstroUnits } from "@cosmic/physics";
@@ -503,10 +503,10 @@ const demoModes = createDemoModes({
     ],
     columns: [
       { key: "case", label: "Case" },
-      { key: "diameterKm", label: "Diameter D (km)" },
-      { key: "distanceKm", label: "Distance d (km)" },
-      { key: "thetaDisplay", label: "θ (display)" },
-      { key: "thetaDeg", label: "θ (deg)" },
+      { key: "diameterKm", label: "Diameter $D$ (km)" },
+      { key: "distanceKm", label: "Distance $d$ (km)" },
+      { key: "thetaDisplay", label: "$\\theta$ (display)" },
+      { key: "thetaDeg", label: "$\\theta$ (deg)" },
       { key: "moonMode", label: "Moon mode" },
       { key: "moonSetting", label: "Moon setting" }
     ],
@@ -769,7 +769,7 @@ const baselineBasketball = (() => {
 const challenges: Challenge[] = [
   {
     type: "custom" as const,
-    prompt: "Set the Sun to ~0.53°.",
+    prompt: "Set the Sun to about $0.53^\\circ$.",
     initialState: {
       presetKey: "sun",
       diameterKm: AngularSizeModel.presets.sun.diameter,
@@ -786,17 +786,23 @@ const challenges: Challenge[] = [
       const tol = 0.02;
       const err = Math.abs(theta - target);
       if (!Number.isFinite(theta)) return { correct: false, close: false, message: "Angle is not finite." };
-      if (err <= tol) return { correct: true, close: true, message: `Nice: θ ≈ ${theta.toFixed(3)}°` };
+      if (err <= tol) {
+        return {
+          correct: true,
+          close: true,
+          message: `Nice: $\\theta \\approx ${theta.toFixed(3)}^\\circ$`
+        };
+      }
       return {
         correct: false,
         close: err <= 2 * tol,
-        message: `Not yet: θ = ${theta.toFixed(3)}° (target ${target.toFixed(3)}° ± ${tol.toFixed(2)}°)`
+        message: `Not yet: $\\theta = ${theta.toFixed(3)}^\\circ$ (target $${target.toFixed(3)}^\\circ \\pm ${tol.toFixed(2)}^\\circ$)`
       };
     }
   },
   {
     type: "custom" as const,
-    prompt: "Find a distance where the Moon looks ~0.50°.",
+    prompt: "Find a distance where the Moon looks about $0.50^\\circ$.",
     initialState: {
       presetKey: "moon",
       moonTimeMode: "orbit",
@@ -813,17 +819,23 @@ const challenges: Challenge[] = [
       const tol = 0.02;
       const err = Math.abs(theta - target);
       if (!Number.isFinite(theta)) return { correct: false, close: false, message: "Angle is not finite." };
-      if (err <= tol) return { correct: true, close: true, message: `Nice: θ ≈ ${theta.toFixed(3)}°` };
+      if (err <= tol) {
+        return {
+          correct: true,
+          close: true,
+          message: `Nice: $\\theta \\approx ${theta.toFixed(3)}^\\circ$`
+        };
+      }
       return {
         correct: false,
         close: err <= 2 * tol,
-        message: `Not yet: θ = ${theta.toFixed(3)}° (target ${target.toFixed(2)}° ± ${tol.toFixed(2)}°)`
+        message: `Not yet: $\\theta = ${theta.toFixed(3)}^\\circ$ (target $${target.toFixed(2)}^\\circ \\pm ${tol.toFixed(2)}^\\circ$)`
       };
     }
   },
   {
     type: "custom" as const,
-    prompt: "Double distance halves θ (small-angle sanity).",
+    prompt: "Double distance halves $\\theta$ (small-angle sanity).",
     initialState: {
       presetKey: "basketball",
       diameterKm: baselineBasketball.diameterKm0,
@@ -850,18 +862,22 @@ const challenges: Challenge[] = [
       const ratioOk = Math.abs(ratio - 0.5) <= 0.05;
 
       if (distanceOk && diameterOk && ratioOk) {
-        return { correct: true, close: true, message: `Nice: θ ratio ≈ ${ratio.toFixed(2)} (expected 0.50)` };
+        return {
+          correct: true,
+          close: true,
+          message: `Nice: $\\theta$ ratio $\\approx ${ratio.toFixed(2)}$ (expected $0.50$)`
+        };
       }
 
       const close = distanceOk || ratioOk;
       const parts: string[] = [];
       if (!distanceOk) parts.push("distance");
       if (!diameterOk) parts.push("diameter");
-      if (!ratioOk) parts.push("θ ratio");
+      if (!ratioOk) parts.push("$\\\\theta$ ratio");
       return {
         correct: false,
         close,
-        message: `Not yet: adjust ${parts.join(", ")} (θ ratio ≈ ${ratio.toFixed(2)})`
+        message: `Not yet: adjust ${parts.join(", ")} ($\\\\theta$ ratio $\\\\approx ${ratio.toFixed(2)}$)`
       };
     }
   }
@@ -960,3 +976,5 @@ copyResults.addEventListener("click", () => {
         err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.";
     });
 });
+
+initMath(document);

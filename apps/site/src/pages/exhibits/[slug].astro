@@ -21,7 +21,7 @@ const instructorHref = `${import.meta.env.BASE_URL}instructor/${entry.slug}/`;
 const { Content } = await entry.render();
 ---
 
-<Layout title={`${entry.data.title} — Exhibit`}>
+<Layout title={`${entry.data.title} — Exhibit`} hasMath={true}>
   <header class="exhibit-header">
     <h1>{entry.data.title}</h1>
     <div class="badges" aria-label="Demo badges">

@@ -16,7 +16,9 @@
 
           <div class="cp-callout" data-kind="tip">
             <strong>Quick sky rule</strong>
-            <div>Your thumb at arm’s length covers about <strong>2°</strong>. The Sun and Moon are about <strong>0.5°</strong>.</div>
+            <div>
+              Your thumb at arm’s length covers about <strong>$2^\circ$</strong>. The Sun and Moon are about <strong>$0.5^\circ$</strong>.
+            </div>
           </div>
 
           <label class="control">
@@ -25,13 +27,13 @@
           </label>
 
           <label class="control">
-            <span>Distance d (km)</span>
+            <span>Distance $d$ (km)</span>
             <input id="distanceSlider" type="range" min="0" max="1000" value="500" step="1" />
             <span class="control__value"><span id="distanceValue"></span></span>
           </label>
 
           <label class="control">
-            <span>Diameter D (km)</span>
+            <span>Diameter $D$ (km)</span>
             <input id="diameterSlider" type="range" min="0" max="1000" value="500" step="1" />
             <span class="control__value"><span id="diameterValue"></span></span>
           </label>
@@ -166,19 +168,19 @@
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
           <div class="cp-readout">
-            <div class="cp-readout__label">Angular diameter (display)</div>
+            <div class="cp-readout__label">Angular diameter $\theta$ (display)</div>
             <div class="cp-readout__value"><span id="thetaDisplay"></span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Angular diameter (deg)</div>
+            <div class="cp-readout__label">Angular diameter $\theta$ (deg)</div>
             <div class="cp-readout__value"><span id="thetaDeg"></span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Diameter D (km)</div>
+            <div class="cp-readout__label">Diameter $D$ (km)</div>
             <div class="cp-readout__value"><span id="diameterKm"></span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Distance d (km)</div>
+            <div class="cp-readout__label">Distance $d$ (km)</div>
             <div class="cp-readout__value"><span id="distanceKm"></span></div>
           </div>
         </div>
@@ -206,13 +208,17 @@
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>Angular diameter uses the exact formula: θ = 2 arctan(D / (2d)).</li>
-                <li>D is physical diameter (km). d is distance from the observer to the object (km).</li>
                 <li>
-                  For small angles, a useful approximation is θ (radians) ≈ D / d; in degrees,
-                  θ (deg) ≈ (180/π) · (D/d).
+                  Exact geometry:
+                  $$\theta = 2\tan^{-1}\left(\frac{D}{2d}\right)$$
                 </li>
-                <li>Units: internal distance/diameter are always km; display may switch between ° / ′ / ″.</li>
+                <li>$D$ is physical diameter (km). $d$ is distance from the observer to the object (km).</li>
+                <li>
+                  Small-angle approximation (when $D \ll d$):
+                  $$\theta \approx \frac{D}{d}\ \text{(radians)}$$
+                  $$\theta_{\mathrm{deg}} \approx \frac{180}{\pi}\,\frac{D}{d}$$
+                </li>
+                <li>Units: internal distance/diameter are always km; $\theta$ may display in $^\circ$ / $^\prime$ / $^{\prime\prime}$.</li>
                 <li>This is a geometry model (no lensing, no atmospheric effects, no finite detector resolution).</li>
               </ul>
             </div>

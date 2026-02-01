@@ -6,6 +6,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "katex": "^0.16.28"
+  },
   "devDependencies": {
     "typescript": "^5.5.4"
   },

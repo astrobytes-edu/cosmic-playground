@@ -1,5 +1,5 @@
 import { AstroConstants, EclipseGeometryModel } from "@cosmic/physics";
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 
 const setNewMoonEl = document.querySelector<HTMLButtonElement>("#setNewMoon");
@@ -572,8 +572,8 @@ const demoModes = createDemoModes({
         heading: "How to use",
         type: "bullets",
         items: [
-          "Use New/Full buttons to set phase, then adjust node longitude Ω and tilt i.",
-          "Eclipses require syzygy (New/Full) and |β| small enough for the chosen Earth–Moon distance."
+          "Use New/Full buttons to set phase, then adjust node longitude $\\Omega$ and tilt $i$.",
+          "Eclipses require syzygy (New/Full) and $|\\beta|$ small enough for the chosen Earth–Moon distance."
         ]
       }
     ]
@@ -584,10 +584,10 @@ const demoModes = createDemoModes({
     columns: [
       { key: "case", label: "Case" },
       { key: "phase", label: "Phase" },
-      { key: "phaseAngleDeg", label: "Δ (deg)" },
-      { key: "absBetaDeg", label: "|β| (deg)" },
+      { key: "phaseAngleDeg", label: "$\\Delta$ ($^\\circ$)" },
+      { key: "absBetaDeg", label: "$|\\beta|$ ($^\\circ$)" },
       { key: "nearestNodeDeg", label: "Nearest node (deg)" },
-      { key: "tiltDeg", label: "Tilt i (deg)" },
+      { key: "tiltDeg", label: "Tilt $i$ ($^\\circ$)" },
       { key: "earthMoonDistanceKm", label: "Earth–Moon distance (km)" },
       { key: "outcome", label: "Outcome" }
     ],
@@ -706,7 +706,7 @@ demoModes.bindButtons({
 const challenges: Challenge[] = [
   {
     type: "custom",
-    prompt: "Achieve a solar eclipse (New Moon and |β| small enough).",
+    prompt: "Achieve a solar eclipse (New Moon and $|\\beta|$ small enough).",
     initialState: {
       moonLonDeg: 12,
       nodeLonDeg: 210,
@@ -714,8 +714,8 @@ const challenges: Challenge[] = [
       distancePresetKey: "mean"
     },
     hints: [
-      "Click “New Moon” (or get phase angle Δ close to 0°).",
-      "Then adjust node longitude Ω so the Moon is near a node (|β| decreases)."
+      "Click “New Moon” (or get phase angle $\\Delta$ close to $0^\\circ$).",
+      "Then adjust node longitude $\\Omega$ so the Moon is near a node ($|\\beta|$ decreases)."
     ],
     check: (s: unknown) => {
       const st = s as Partial<EclipseDemoState>;
@@ -738,7 +738,7 @@ const challenges: Challenge[] = [
         return {
           correct: false,
           close: EclipseGeometryModel.angularSeparationDeg(delta, 0) <= 2 * SYZYGY_TOLERANCE_DEG,
-          message: `Not yet: get New Moon (Δ within ${SYZYGY_TOLERANCE_DEG}° of 0°).`
+          message: `Not yet: get New Moon ($\\Delta$ within $${SYZYGY_TOLERANCE_DEG}^\\circ$ of $0^\\circ$).`
         };
       }
 
@@ -746,7 +746,7 @@ const challenges: Challenge[] = [
         return {
           correct: true,
           close: true,
-          message: `Nice: ${outcomeLabel(solarType)} (|β|=${absBetaDeg.toFixed(3)}°)`
+          message: `Nice: ${outcomeLabel(solarType)} ($|\\beta|=${absBetaDeg.toFixed(3)}^\\circ$)`
         };
       }
 
@@ -754,13 +754,13 @@ const challenges: Challenge[] = [
       return {
         correct: false,
         close: absBetaDeg <= target * 1.2,
-        message: `Close, but no eclipse: try reducing |β| below ~${target.toFixed(2)}° (for this distance).`
+        message: `Close, but no eclipse: try reducing $|\\beta|$ below about $${target.toFixed(2)}^\\circ$ (for this distance).`
       };
     }
   },
   {
     type: "custom",
-    prompt: "Achieve a lunar eclipse (Full Moon and lunar outcome ≠ none).",
+    prompt: "Achieve a lunar eclipse (Full Moon and lunar outcome $\\ne$ none).",
     initialState: {
       moonLonDeg: 192,
       nodeLonDeg: 210,
@@ -768,8 +768,8 @@ const challenges: Challenge[] = [
       distancePresetKey: "mean"
     },
     hints: [
-      "Click “Full Moon” (or get phase angle Δ close to 180°).",
-      "Then adjust Ω so the Moon is near a node (|β| decreases)."
+      "Click “Full Moon” (or get phase angle $\\Delta$ close to $180^\\circ$).",
+      "Then adjust $\\Omega$ so the Moon is near a node ($|\\beta|$ decreases)."
     ],
     check: (s: unknown) => {
       const st = s as Partial<EclipseDemoState>;
@@ -788,7 +788,7 @@ const challenges: Challenge[] = [
           correct: false,
           close:
             EclipseGeometryModel.angularSeparationDeg(delta, 180) <= 2 * SYZYGY_TOLERANCE_DEG,
-          message: `Not yet: get Full Moon (Δ within ${SYZYGY_TOLERANCE_DEG}° of 180°).`
+          message: `Not yet: get Full Moon ($\\Delta$ within $${SYZYGY_TOLERANCE_DEG}^\\circ$ of $180^\\circ$).`
         };
       }
 
@@ -796,20 +796,20 @@ const challenges: Challenge[] = [
         return {
           correct: true,
           close: true,
-          message: `Nice: ${outcomeLabel(lunarType)} (|β|=${absBetaDeg.toFixed(3)}°)`
+          message: `Nice: ${outcomeLabel(lunarType)} ($|\\beta|=${absBetaDeg.toFixed(3)}^\\circ$)`
         };
       }
 
       return {
         correct: false,
         close: absBetaDeg <= 1.5,
-        message: "Close, but no eclipse: try bringing the Moon closer to a node (smaller |β|)."
+        message: "Close, but no eclipse: try bringing the Moon closer to a node (smaller $|\\beta|$)."
       };
     }
   },
   {
     type: "custom",
-    prompt: "Show “monthly eclipses” if i = 0°: make tilt 0° so New and Full both produce eclipses.",
+    prompt: "Show “monthly eclipses” if $i = 0^\\circ$: make tilt $0^\\circ$ so New and Full both produce eclipses.",
     initialState: {
       moonLonDeg: 180,
       nodeLonDeg: 210,
@@ -817,8 +817,8 @@ const challenges: Challenge[] = [
       distancePresetKey: "mean"
     },
     hints: [
-      "Set orbital tilt i to 0°.",
-      "Then check New and Full: with i=0°, β stays at 0° so eclipses are always possible at syzygy."
+      "Set orbital tilt $i$ to $0^\\circ$.",
+      "Then check New and Full: with $i=0^\\circ$, $\\beta$ stays at $0^\\circ$ so eclipses are always possible at syzygy."
     ],
     check: (s: unknown) => {
       const st = s as Partial<EclipseDemoState>;
@@ -832,7 +832,7 @@ const challenges: Challenge[] = [
         return {
           correct: false,
           close: tiltDeg <= 0.5,
-          message: `Not yet: set i very close to 0° (currently ${tiltDeg.toFixed(3)}°).`
+          message: `Not yet: set $i$ very close to $0^\\circ$ (currently $${tiltDeg.toFixed(3)}^\\circ$).`
         };
       }
 
@@ -849,11 +849,11 @@ const challenges: Challenge[] = [
         return {
           correct: true,
           close: true,
-          message: `Nice: at i≈0°, New → ${outcomeLabel(solar)} and Full → ${outcomeLabel(lunar)}`
+          message: `Nice: at $i\\approx0^\\circ$, New $\\to$ ${outcomeLabel(solar)} and Full $\\to$ ${outcomeLabel(lunar)}`
         };
       }
 
-      return { correct: false, close: false, message: "Unexpected: eclipse types were none at β=0." };
+      return { correct: false, close: false, message: "Unexpected: eclipse types were none at $\\beta=0^\\circ$." };
     }
   }
 ];
@@ -1287,3 +1287,5 @@ distancePreset.addEventListener("change", () => {
 });
 
 render();
+
+initMath(document);

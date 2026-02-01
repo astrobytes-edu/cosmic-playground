@@ -1,4 +1,4 @@
-import { createInstrumentRuntime } from "@cosmic/runtime";
+import { createInstrumentRuntime, initMath } from "@cosmic/runtime";
 import { ChallengeEngine, createDemoModes } from "@cosmic/runtime";
 
 const angleInputEl = document.querySelector<HTMLInputElement>("#angle");
@@ -219,8 +219,8 @@ const demoModes = createDemoModes({
         heading: "Model",
         type: "bullets",
         items: [
-          "Angle α is the Sun–Moon–Earth phase angle in this model: 0° = Full, 180° = New.",
-          "Illuminated fraction is f = (1 + cos α) / 2."
+          "Angle $\\alpha$ is the Sun–Moon–Earth phase angle in this model: $0^\\circ$ = Full, $180^\\circ$ = New.",
+          "Illuminated fraction is $f = \\frac{1 + \\cos\\alpha}{2}$."
         ]
       }
     ]
@@ -234,9 +234,9 @@ const demoModes = createDemoModes({
       "Use the key-phase button for New → First Quarter → Full → Third Quarter, then sanity-check your results."
     ],
     columns: [
-      { key: "angleDeg", label: "Angle α (°)" },
+      { key: "angleDeg", label: "Angle $\\alpha$ ($^\\circ$)" },
       { key: "phase", label: "Phase (name)" },
-      { key: "f", label: "Illuminated fraction f" },
+      { key: "f", label: "Illuminated fraction $f$" },
       { key: "percent", label: "Illuminated (%)" }
     ],
     getSnapshotRow() {
@@ -312,10 +312,10 @@ function setState(next: unknown) {
 const challengeEngine = new ChallengeEngine(
   [
     {
-      prompt: "Set α so the Moon is about half illuminated.",
+      prompt: "Set $\\alpha$ so the Moon is about half illuminated.",
       hints: [
         "Half illumination happens at quarter phases.",
-        "Try α near 90° or 270°."
+        "Try $\\alpha$ near $90^\\circ$ or $270^\\circ$."
       ],
       initialState: { angleDeg: 100 },
       check(state: any) {
@@ -325,14 +325,18 @@ const challengeEngine = new ChallengeEngine(
           return { correct: false, close: false, message: "No valid state yet." };
         }
         const diff = Math.abs(frac - 0.5);
-        if (diff <= 0.03) return { correct: true, close: false, message: `f ≈ ${formatFraction(frac)}.` };
-        if (diff <= 0.08) return { correct: false, close: true, message: `Close: f ≈ ${formatFraction(frac)}.` };
-        return { correct: false, close: false, message: `Try moving toward 50% (f=0.5).` };
+        if (diff <= 0.03) {
+          return { correct: true, close: false, message: `$f \\approx ${formatFraction(frac)}$.` };
+        }
+        if (diff <= 0.08) {
+          return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(frac)}$.` };
+        }
+        return { correct: false, close: false, message: "Try moving toward 50% ($f=0.5$)." };
       }
     },
     {
-      prompt: "Set α so the Moon is near New (almost dark).",
-      hints: ["New happens near α = 180°.", "Look for f near 0."],
+      prompt: "Set $\\alpha$ so the Moon is near New (almost dark).",
+      hints: ["New happens near $\\alpha = 180^\\circ$.", "Look for $f$ near 0."],
       initialState: { angleDeg: 150 },
       check(state: any) {
         const angleDeg = Number(state?.angleDeg);
@@ -340,14 +344,14 @@ const challengeEngine = new ChallengeEngine(
         if (![angleDeg, frac].every(Number.isFinite)) {
           return { correct: false, close: false, message: "No valid state yet." };
         }
-        if (frac <= 0.05) return { correct: true, close: false, message: `f ≈ ${formatFraction(frac)}.` };
-        if (frac <= 0.12) return { correct: false, close: true, message: `Close: f ≈ ${formatFraction(frac)}.` };
-        return { correct: false, close: false, message: `Too bright: f ≈ ${formatFraction(frac)}.` };
+        if (frac <= 0.05) return { correct: true, close: false, message: `$f \\approx ${formatFraction(frac)}$.` };
+        if (frac <= 0.12) return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(frac)}$.` };
+        return { correct: false, close: false, message: `Too bright: $f \\approx ${formatFraction(frac)}$.` };
       }
     },
     {
-      prompt: "Set α so the Moon is near Full (almost fully lit).",
-      hints: ["Full happens near α = 0° (or 360°).", "Look for f near 1."],
+      prompt: "Set $\\alpha$ so the Moon is near Full (almost fully lit).",
+      hints: ["Full happens near $\\alpha = 0^\\circ$ (or $360^\\circ$).", "Look for $f$ near 1."],
       initialState: { angleDeg: 30 },
       check(state: any) {
         const angleDeg = Number(state?.angleDeg);
@@ -355,9 +359,9 @@ const challengeEngine = new ChallengeEngine(
         if (![angleDeg, frac].every(Number.isFinite)) {
           return { correct: false, close: false, message: "No valid state yet." };
         }
-        if (frac >= 0.95) return { correct: true, close: false, message: `f ≈ ${formatFraction(frac)}.` };
-        if (frac >= 0.88) return { correct: false, close: true, message: `Close: f ≈ ${formatFraction(frac)}.` };
-        return { correct: false, close: false, message: `Too dim: f ≈ ${formatFraction(frac)}.` };
+        if (frac >= 0.95) return { correct: true, close: false, message: `$f \\approx ${formatFraction(frac)}$.` };
+        if (frac >= 0.88) return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(frac)}$.` };
+        return { correct: false, close: false, message: `Too dim: $f \\approx ${formatFraction(frac)}$.` };
       }
     }
   ],
@@ -412,3 +416,5 @@ async function handleCopyResults() {
 copyResults.addEventListener("click", () => {
   void handleCopyResults();
 });
+
+initMath(document);

@@ -1,4 +1,5 @@
 import { injectStyleOnce } from "./domStyle";
+import { renderMath } from "./math";
 
 export type ChallengeResult = {
   correct: boolean;
@@ -773,7 +774,10 @@ export class ChallengeEngine {
     const hintBtn = this.ui.querySelector<HTMLButtonElement>(".hint-btn");
 
     if (numberEl) numberEl.textContent = `Challenge ${this.currentIndex + 1} of ${this.challenges.length}`;
-    if (questionEl) questionEl.textContent = (challenge as any).question ?? "";
+    if (questionEl) {
+      questionEl.textContent = (challenge as any).question ?? "";
+      renderMath(questionEl);
+    }
     if (progressEl) progressEl.textContent = `${this.currentIndex + 1} / ${this.challenges.length}`;
 
     if (prevBtn) prevBtn.disabled = this.currentIndex === 0;
@@ -799,7 +803,15 @@ export class ChallengeEngine {
     feedback.className = `cp-challenge-feedback ${type}`;
     const prefix =
       type === "correct" ? "Correct!" : type === "close" ? "Close!" : "Not quite.";
-    feedback.innerHTML = `<strong>${prefix}</strong> ${message}`;
+    feedback.innerHTML = "";
+    const strong = document.createElement("strong");
+    strong.textContent = prefix;
+    feedback.appendChild(strong);
+    feedback.appendChild(document.createTextNode(" "));
+    const msg = document.createElement("span");
+    msg.textContent = message;
+    feedback.appendChild(msg);
+    renderMath(feedback);
     feedback.style.display = "block";
   }
 
@@ -815,6 +827,7 @@ export class ChallengeEngine {
     const hint = this.ui.querySelector<HTMLElement>(".cp-challenge-hint");
     if (!hint) return;
     hint.textContent = text;
+    renderMath(hint);
     hint.style.display = "block";
 
     const challenge = this.getCurrentChallenge();

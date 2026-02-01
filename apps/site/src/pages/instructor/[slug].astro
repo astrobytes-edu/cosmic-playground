@@ -1,7 +1,6 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
-import KatexAutoRender from "../../components/KatexAutoRender.astro";
 
 export async function getStaticPaths() {
   const demos = await getCollection("demos");
@@ -38,7 +37,6 @@ const sections = await Promise.all(
 );
 
 const hasInstructorContent = instructorEntries.length > 0;
-const hasMath = instructorEntries.some((e) => e.data.has_math);
 
 const sectionLabels: Record<InstructorSection, string> = {
   index: "Overview",
@@ -49,7 +47,7 @@ const sectionLabels: Record<InstructorSection, string> = {
 };
 ---
 
-<Layout title={`${entry.data.title} — Instructor Notes`}>
+<Layout title={`${entry.data.title} — Instructor Notes`} hasMath={true}>
   <head>
     <meta name="robots" content="noindex" />
   </head>
@@ -64,7 +62,6 @@ const sectionLabels: Record<InstructorSection, string> = {
 
   {hasInstructorContent ? (
     <>
-      {hasMath ? <KatexAutoRender /> : null}
       <div id="instructor-content">
         <nav class="nav" aria-label="Instructor bundle sections">
           <ul>

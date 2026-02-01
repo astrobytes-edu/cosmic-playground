@@ -1,4 +1,4 @@
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
 
@@ -153,7 +153,7 @@ const demoModes = createDemoModes({
         type: "bullets",
         items: [
           "Try equinox vs solstice anchor dates and compare North/South seasons.",
-          "Set tilt to 0° to see that declination stays near 0° all year in this toy model."
+          "Set $\\varepsilon$ to $0^\\circ$ to see that $\\delta$ stays near $0^\\circ$ all year in this toy model."
         ]
       }
     ]
@@ -164,14 +164,14 @@ const demoModes = createDemoModes({
     columns: [
       { key: "date", label: "Date" },
       { key: "day", label: "Day" },
-      { key: "latitude", label: "Latitude (°)" },
-      { key: "tilt", label: "Tilt (°)" },
-      { key: "declination", label: "δ (°)" },
+      { key: "latitude", label: "Latitude $\\phi$ ($^\\circ$)" },
+      { key: "tilt", label: "Tilt $\\varepsilon$ ($^\\circ$)" },
+      { key: "declination", label: "$\\delta$ ($^\\circ$)" },
       { key: "dayLength", label: "Day length (h)" },
       { key: "noonAltitude", label: "Noon altitude (°)" },
       { key: "seasonN", label: "Season (N)" },
       { key: "seasonS", label: "Season (S)" },
-      { key: "distanceAu", label: "Distance (AU)" }
+      { key: "distanceAu", label: "Distance $r$ (AU)" }
     ],
     getSnapshotRow: () => {
       const day = clamp(Math.round(state.dayOfYear), 1, 365);
@@ -588,9 +588,9 @@ function getControlsBody(): HTMLElement {
 const challenges: Challenge[] = [
   {
     type: "custom",
-    prompt: "Show “no seasons”: set tilt to 0° so δ stays near 0°.",
+    prompt: "Show “no seasons”: set $\\varepsilon$ to $0^\\circ$ so $\\delta$ stays near $0^\\circ$.",
     initialState: { dayOfYear: 172, axialTiltDeg: 23.5, latitudeDeg: 40 },
-    hints: ["Set axial tilt close to 0° and watch declination δ."],
+    hints: ["Set axial tilt ($\\varepsilon$) close to $0^\\circ$ and watch declination ($\\delta$)."],
     check: (s: unknown) => {
       const st = s as Partial<SeasonsDemoState>;
       const tilt = Number(st.axialTiltDeg);
@@ -601,20 +601,24 @@ const challenges: Challenge[] = [
       const tiltOk = tilt <= 1;
       const declOk = Math.abs(decl) <= 1;
       if (tiltOk && declOk) {
-        return { correct: true, close: true, message: `Nice: tilt ≈ ${tilt.toFixed(1)}°, δ ≈ ${decl.toFixed(1)}°` };
+        return {
+          correct: true,
+          close: true,
+          message: `Nice: $\\varepsilon \\approx ${tilt.toFixed(1)}^\\circ$, $\\delta \\approx ${decl.toFixed(1)}^\\circ$`
+        };
       }
       return {
         correct: false,
         close: tilt <= 2 || Math.abs(decl) <= 2,
-        message: `Not yet: tilt = ${tilt.toFixed(1)}°, δ = ${decl.toFixed(1)}° (targets ≤ 1°)`
+        message: `Not yet: $\\varepsilon = ${tilt.toFixed(1)}^\\circ$, $\\delta = ${decl.toFixed(1)}^\\circ$ (targets $\\le 1^\\circ$)`
       };
     }
   },
   {
     type: "custom",
-    prompt: "At the March equinox, day length is ~12h at mid-latitudes.",
+    prompt: "At the March equinox, day length is about $12\\,\\mathrm{h}$ at mid-latitudes.",
     initialState: { dayOfYear: 172, axialTiltDeg: 23.5, latitudeDeg: 40 },
-    hints: ["Set day-of-year to 80 (March equinox). Keep |latitude| ≤ 50°."],
+    hints: ["Set day-of-year to 80 (March equinox). Keep $|\\phi| \\le 50^\\circ$."],
     check: (s: unknown) => {
       const st = s as Partial<SeasonsDemoState>;
       const day = Number(st.dayOfYear);
@@ -628,14 +632,18 @@ const challenges: Challenge[] = [
       const lenOk = Math.abs(dayLen - 12) <= 1;
 
       if (dayOk && latOk && lenOk) {
-        return { correct: true, close: true, message: `Nice: day length ≈ ${dayLen.toFixed(2)} h` };
+        return {
+          correct: true,
+          close: true,
+          message: `Nice: day length $\\approx ${dayLen.toFixed(2)}\\,\\mathrm{h}$`
+        };
       }
 
       const close = (dayOk && latOk) || (latOk && lenOk);
       return {
         correct: false,
         close,
-        message: `Not yet: day=${Math.round(day)}, lat=${Math.round(lat)}°, day length=${dayLen.toFixed(2)} h`
+        message: `Not yet: day=${Math.round(day)}, $\\phi=${Math.round(lat)}^\\circ$, day length $=${dayLen.toFixed(2)}\\,\\mathrm{h}$`
       };
     }
   },
@@ -643,7 +651,7 @@ const challenges: Challenge[] = [
     type: "custom",
     prompt: "Opposite hemispheres: at June solstice, the north has longer days than the south (for symmetric latitudes).",
     initialState: { dayOfYear: 80, axialTiltDeg: 23.5, latitudeDeg: 40 },
-    hints: ["Set day-of-year to 172 (June solstice). Try |latitude| between 10° and 60°."],
+    hints: ["Set day-of-year to 172 (June solstice). Try $|\\phi|$ between $10^\\circ$ and $60^\\circ$."],
     check: (s: unknown) => {
       const st = s as Partial<SeasonsDemoState>;
       const day = Number(st.dayOfYear);
@@ -665,7 +673,7 @@ const challenges: Challenge[] = [
         return {
           correct: true,
           close: true,
-          message: `Nice: +${absLat.toFixed(0)}° → ${dayNorth.toFixed(2)} h, −${absLat.toFixed(0)}° → ${daySouth.toFixed(2)} h`
+          message: `Nice: $+${absLat.toFixed(0)}^\\circ \\to ${dayNorth.toFixed(2)}\\,\\mathrm{h}$, $-${absLat.toFixed(0)}^\\circ \\to ${daySouth.toFixed(2)}\\,\\mathrm{h}$`
         };
       }
 
@@ -673,7 +681,7 @@ const challenges: Challenge[] = [
       return {
         correct: false,
         close,
-        message: `Not yet: day=${Math.round(day)} (target 172), |lat|=${absLat.toFixed(0)}° (10–60 recommended)`
+        message: `Not yet: day=${Math.round(day)} (target 172), $|\\phi|=${absLat.toFixed(0)}^\\circ$ ($10^\\circ$–$60^\\circ$ recommended)`
       };
     }
   }
@@ -745,3 +753,5 @@ copyResults.addEventListener("click", () => {
 });
 
 render();
+
+initMath(document);

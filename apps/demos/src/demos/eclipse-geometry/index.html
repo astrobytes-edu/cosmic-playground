@@ -14,10 +14,10 @@
         <div class="cp-panel-body">
           <p class="cp-muted">Investigate alignment, shadow cones, and why eclipses aren’t monthly.</p>
 
-          <div class="cp-callout" data-kind="model">
-            Eclipses require two things at once: (1) the right phase (New/Full), and (2) the Moon near a node (small
-            |β|).
-          </div>
+            <div class="cp-callout" data-kind="model">
+              Eclipses require two things at once: (1) the right phase (New/Full), and (2) the Moon near a node (small
+            $|\beta|$).
+            </div>
 
           <div class="button-row" role="group" aria-label="Phase buttons">
             <button id="setNewMoon" class="cp-action cp-action--ghost" type="button">New Moon</button>
@@ -31,13 +31,13 @@
           </label>
 
           <label class="control">
-            <span>Node longitude Ω (deg)</span>
+            <span>Node longitude $\Omega$ ($^\circ$)</span>
             <input id="nodeLon" type="range" min="0" max="360" value="210" step="1" />
             <span class="control__value"><span id="nodeLonValue"></span></span>
           </label>
 
           <label class="control">
-            <span>Orbital tilt i (deg)</span>
+            <span>Orbital tilt $i$ ($^\circ$)</span>
             <input id="tilt" type="range" min="0" max="10" value="5.145" step="0.001" />
             <span class="control__value"><span id="tiltValue"></span></span>
           </label>
@@ -164,11 +164,11 @@
             <div class="cp-readout__value"><span id="phaseLabel"></span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Phase angle Δ</div>
+            <div class="cp-readout__label">Phase angle $\Delta$</div>
             <div class="cp-readout__value"><span id="phaseAngle"></span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">|β| (ecliptic latitude)</div>
+            <div class="cp-readout__label">$|\beta|$ (ecliptic latitude)</div>
             <div class="cp-readout__value"><span id="absBeta"></span></div>
           </div>
           <div class="cp-readout">
@@ -213,7 +213,7 @@
                   motivated thresholds (in degrees) for eclipse visibility.
                 </li>
                 <li>
-                  β is the Moon’s ecliptic latitude; when |β| is small, the Moon is close to a node and an eclipse is
+                  $\beta$ is the Moon’s ecliptic latitude; when $|\beta|$ is small, the Moon is close to a node and an eclipse is
                   possible at New/Full.
                 </li>
                 <li>

@@ -19,10 +19,10 @@ play_steps:
   - "Relate sunlight angle to ‘how concentrated’ the energy is."
 explain_prompt: "Use day length and sun angle to explain how tilt produces seasonal temperature changes."
 model_notes:
-  - "Declination uses a simplified geometry: δ = asin(sin ε · sin L), where ε is axial tilt and L is treated as uniform in time (toy model; ~1° accuracy vs ephemeris)."
-  - "Day length uses a standard sunrise/sunset hour-angle relation; polar day/night appear naturally when geometry demands it."
-  - "Earth–Sun distance uses a first-order eccentric model r ≈ 1 − e cos(θ) (not a Kepler solver); perihelion is anchored near day 3 (Jan 3) with an uncertainty of about ±2 days."
-  - "Key idea: opposite hemispheres have opposite seasons; distance variations are small and not the main cause."
+  - 'Declination uses a simplified geometry (toy model): $\delta = \sin^{-1}(\sin\varepsilon\,\sin L)$, where $\varepsilon$ is axial tilt and $L$ is treated as uniform in time (about $1^\circ$ accuracy vs ephemeris).'
+  - 'Day length uses a standard sunrise/sunset hour-angle relation; polar day/night appear naturally when geometry demands it.'
+  - 'Earth–Sun distance uses a first-order eccentric model (not a Kepler solver): $r \approx 1 - e\cos\theta$; perihelion is anchored near day 3 (Jan 3) with an uncertainty of about $\pm 2$ days.'
+  - 'Key idea: opposite hemispheres have opposite seasons; distance variations are small and not the main cause.'
 demo_path: "/play/seasons/"
 station_path: "/stations/seasons/"
 instructor_path: "/instructor/seasons/"

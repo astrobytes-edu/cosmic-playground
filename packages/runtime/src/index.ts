@@ -20,6 +20,7 @@ export type ExportPayloadV1 = {
 
 export { copyTextToClipboard } from "./clipboard";
 export { createDemoModes, toCsv } from "./demoModes";
+export { initMath, renderMath } from "./math";
 export type {
   DemoHelpConfig,
   DemoHelpSection,

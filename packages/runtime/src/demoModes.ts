@@ -1,5 +1,6 @@
 import { injectStyleOnce } from "./domStyle";
 import { copyTextToClipboard } from "./clipboard";
+import { renderMath } from "./math";
 
 export type DemoModeKeys = {
   help?: string;
@@ -384,6 +385,7 @@ function createDialog(args: {
   function open() {
     previous.active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     backdrop.classList.add("open");
+    renderMath(modal);
     if (closeBtn) closeBtn.focus();
     else modal.focus();
   }
