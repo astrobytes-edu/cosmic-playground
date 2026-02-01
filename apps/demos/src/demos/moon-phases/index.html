@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
   </head>
   <body>
-    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Moon phases instrument">
+    <div id="cp-demo" class="cp-layer-instrument cp-demo" data-shell="viz-first" aria-label="Moon phases instrument">
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Moon Phases (Pilot)</div>
         <div class="cp-panel-body">
@@ -18,8 +18,23 @@
 
           <label class="control">
             <span>Phase angle $\Delta$ ($^\circ$)</span>
-            <input id="angle" type="range" min="0" max="360" value="90" step="1" />
+            <input
+              id="angle"
+              type="range"
+              min="0"
+              max="360"
+              value="90"
+              step="1"
+              data-tooltip-source="#angleValue"
+            />
           </label>
+
+          <div class="button-row" role="group" aria-label="Key phases">
+            <button id="setNew" class="cp-action cp-action--ghost" type="button">New</button>
+            <button id="setFirstQuarter" class="cp-action cp-action--ghost" type="button">First quarter</button>
+            <button id="setFull" class="cp-action cp-action--ghost" type="button">Full</button>
+            <button id="setThirdQuarter" class="cp-action cp-action--ghost" type="button">Third quarter</button>
+          </div>
 
           <button id="stationMode" class="cp-action" type="button">Station mode</button>
           <button id="challengeMode" class="cp-action" type="button">Challenge mode</button>
@@ -27,6 +42,12 @@
 
           <button id="copyResults" class="cp-action" type="button">Copy results</button>
           <p id="status" class="cp-status" role="status" aria-live="polite"></p>
+
+          <div class="cp-actions">
+            <a class="cp-button" href="../../exhibits/moon-phases/">Open exhibit</a>
+            <a class="cp-button cp-button--outline" href="../../stations/moon-phases/">Station card</a>
+            <a class="cp-button cp-button--outline" href="../../instructor/moon-phases/">Instructor notes</a>
+          </div>
         </div>
       </aside>
 
@@ -37,6 +58,10 @@
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
+          <div class="cp-readout">
+            <div class="cp-readout__label">Phase</div>
+            <div class="cp-readout__value"><span id="phaseName"></span></div>
+          </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Angle</div>
             <div class="cp-readout__value"><span id="angleValue"></span>°</div>

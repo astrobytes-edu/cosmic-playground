@@ -1,0 +1,86 @@
+/* Markdown / prose typography helpers (site paper + instructor materials) */
+
+.cp-prose :is(p, ul, ol, pre, table, blockquote) {
+  margin: var(--cp-space-3) 0;
+}
+
+.cp-prose :is(ul, ol) {
+  padding-left: var(--cp-space-5);
+}
+
+.cp-prose :is(li) {
+  margin: var(--cp-space-2) 0;
+}
+
+.cp-prose :is(h2, h3, h4) {
+  margin: var(--cp-space-5) 0 var(--cp-space-2);
+}
+
+.cp-prose :is(h2, h3, h4):first-child {
+  margin-top: 0;
+}
+
+.cp-prose blockquote {
+  padding: var(--cp-space-3) var(--cp-space-4);
+  border-radius: var(--cp-r-2);
+  border: 1px solid var(--cp-border);
+  border-left: 3px solid var(--cp-accent);
+  background: color-mix(in srgb, var(--cp-accent) 6%, var(--cp-bg1));
+}
+
+.cp-prose blockquote > :first-child {
+  margin-top: 0;
+}
+
+.cp-prose blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.cp-prose :is(code) {
+  font-family: var(--cp-font-mono);
+  font-size: 0.95em;
+}
+
+.cp-prose :not(pre) > code {
+  padding: 0.1rem 0.35rem;
+  border-radius: 8px;
+  border: 1px solid var(--cp-border-subtle);
+  background: color-mix(in srgb, var(--cp-bg2) 70%, transparent);
+}
+
+.cp-prose pre {
+  padding: var(--cp-space-3) var(--cp-space-4);
+  border-radius: var(--cp-r-2);
+  border: 1px solid var(--cp-border);
+  background: color-mix(in srgb, var(--cp-bg2) 80%, transparent);
+  overflow: auto;
+}
+
+.cp-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.cp-prose th,
+.cp-prose td {
+  border: 1px solid var(--cp-border);
+  padding: 0.6rem 0.75rem;
+  vertical-align: top;
+}
+
+.cp-prose th {
+  text-align: left;
+  background: color-mix(in srgb, var(--cp-bg2) 75%, transparent);
+  color: var(--cp-text2);
+  font-weight: var(--cp-font-semibold);
+}
+
+.cp-prose tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--cp-bg2) 45%, transparent);
+}
+
+.cp-prose .katex-display {
+  margin: var(--cp-space-3) 0;
+}
+

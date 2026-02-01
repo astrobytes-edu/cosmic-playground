@@ -13,17 +13,6 @@
   font-size: 0.95rem;
 }
 
-input[type="range"] {
-  width: 100%;
-}
-
-input[type="range"]:focus-visible,
-.cp-action:focus-visible {
-  outline: 3px solid var(--cp-focus);
-  outline-offset: 3px;
-  border-radius: 999px;
-}
-
 .anchor-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -33,15 +22,6 @@ input[type="range"]:focus-visible,
 .animate-row {
   display: grid;
   gap: 8px;
-}
-
-.cp-action--ghost {
-  background: transparent;
-  border-color: var(--cp-border);
-}
-
-.cp-action--ghost:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
 }
 
 .stage {

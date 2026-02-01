@@ -1,4 +1,4 @@
-import { createInstrumentRuntime, initMath } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { TwoBodyAnalytic } from "@cosmic/physics";
 
@@ -12,6 +12,8 @@ const baryOffsetValueEl =
   document.querySelector<HTMLSpanElement>("#baryOffsetValue");
 const periodValueEl = document.querySelector<HTMLSpanElement>("#periodValue");
 const canvasEl = document.querySelector<HTMLCanvasElement>("#orbitCanvas");
+const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
+const helpEl = document.querySelector<HTMLButtonElement>("#help");
 const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
 const statusEl = document.querySelector<HTMLParagraphElement>("#status");
 
@@ -23,6 +25,8 @@ if (
   !baryOffsetValueEl ||
   !periodValueEl ||
   !canvasEl ||
+  !stationModeEl ||
+  !helpEl ||
   !copyResultsEl ||
   !statusEl
 ) {
@@ -42,6 +46,8 @@ const baryOffsetValue = baryOffsetValueEl;
 const periodValue = periodValueEl;
 const canvas = canvasEl;
 const ctx = ctxEl;
+const stationModeButton = stationModeEl;
+const helpButton = helpEl;
 const copyResults = copyResultsEl;
 const status = statusEl;
 
@@ -97,9 +103,9 @@ function formatNumber(value: number, digits = 2) {
   return value.toFixed(digits);
 }
 
-function getModel() {
-  const massRatio = clamp(Number(massRatioInput.value), 0.2, 5);
-  const separation = clamp(Number(separationInput.value), 1, 8);
+function computeModel(args: { massRatio: number; separation: number }) {
+  const massRatio = clamp(args.massRatio, 0.2, 5);
+  const separation = clamp(args.separation, 1, 8);
 
   const m1 = 1;
   const m2 = massRatio;
@@ -128,6 +134,13 @@ function getModel() {
     r1,
     r2
   };
+}
+
+function getModel() {
+  return computeModel({
+    massRatio: Number(massRatioInput.value),
+    separation: Number(separationInput.value)
+  });
 }
 
 function draw(model: ReturnType<typeof getModel>, phaseRad: number) {
@@ -250,6 +263,87 @@ const runtime = createInstrumentRuntime({
   url: new URL(window.location.href)
 });
 
+const demoModes = createDemoModes({
+  help: {
+    title: "Help / Shortcuts",
+    subtitle: "Keyboard shortcuts work when focus is not in an input field.",
+    sections: [
+      {
+        heading: "Shortcuts",
+        type: "shortcuts",
+        items: [
+          { key: "?", action: "Toggle help" },
+          { key: "g", action: "Toggle station mode" }
+        ]
+      },
+      {
+        heading: "Model",
+        type: "bullets",
+        items: [
+          "This is a circular, two-body visualization in teaching units (AU / yr / $M_{\\odot}$).",
+          "We hold $m_1 = 1\\,M_{\\odot}$ fixed and set $m_2$ via the mass-ratio slider.",
+          "Period uses the Kepler teaching normalization: $P^2 = \\frac{a^3}{M_1 + M_2}$."
+        ]
+      }
+    ]
+  },
+  station: {
+    title: "Station Mode: Binary Orbits",
+    subtitle: "Add snapshot rows, then copy CSV or print.",
+    steps: [
+      "Set a mass ratio and separation.",
+      "Record the barycenter offset and orbital period.",
+      "Compare an equal-mass system to an unequal-mass system."
+    ],
+    columns: [
+      { key: "case", label: "Case" },
+      { key: "massRatio", label: "$m_2/m_1$" },
+      { key: "separationAu", label: "Separation $a$ (AU)" },
+      { key: "baryOffsetAu", label: "Barycenter offset from $m_1$ (AU)" },
+      { key: "periodYr", label: "Period $P$ (yr)" }
+    ],
+    getSnapshotRow() {
+      const model = getModel();
+      return {
+        case: "Snapshot",
+        massRatio: formatNumber(model.massRatio, 2),
+        separationAu: formatNumber(model.separation, 2),
+        baryOffsetAu: formatNumber(model.r1, 3),
+        periodYr: formatNumber(model.periodYr, 3)
+      };
+    },
+    snapshotLabel: "Add row (snapshot)",
+    rowSets: [
+      {
+        label: "Add comparison set",
+        getRows() {
+          const cases = [
+            { label: "Equal masses", massRatio: 1, separation: 4 },
+            { label: "Unequal masses", massRatio: 5, separation: 4 }
+          ];
+          return cases.map((c) => {
+            const model = computeModel(c);
+            return {
+              case: c.label,
+              massRatio: formatNumber(model.massRatio, 2),
+              separationAu: formatNumber(model.separation, 2),
+              baryOffsetAu: formatNumber(model.r1, 3),
+              periodYr: formatNumber(model.periodYr, 3)
+            };
+          });
+        }
+      }
+    ],
+    synthesisPrompt:
+      "<p><strong>Synthesis:</strong> In one sentence, explain why the heavier body’s orbit is smaller, even though both bodies move.</p>"
+  }
+});
+
+demoModes.bindButtons({
+  helpButton,
+  stationButton: stationModeButton
+});
+
 function exportResults(): ExportPayloadV1 {
   const model = getModel();
   return {
@@ -291,5 +385,7 @@ copyResults.addEventListener("click", () => {
         err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.";
     });
 });
+
+initMath(document);
 
 initMath(document);

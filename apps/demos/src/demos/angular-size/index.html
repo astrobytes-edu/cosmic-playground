@@ -28,13 +28,29 @@
 
           <label class="control">
             <span>Distance $d$ (km)</span>
-            <input id="distanceSlider" type="range" min="0" max="1000" value="500" step="1" />
+            <input
+              id="distanceSlider"
+              type="range"
+              min="0"
+              max="1000"
+              value="500"
+              step="1"
+              data-tooltip-source="#distanceValue"
+            />
             <span class="control__value"><span id="distanceValue"></span></span>
           </label>
 
           <label class="control">
             <span>Diameter $D$ (km)</span>
-            <input id="diameterSlider" type="range" min="0" max="1000" value="500" step="1" />
+            <input
+              id="diameterSlider"
+              type="range"
+              min="0"
+              max="1000"
+              value="500"
+              step="1"
+              data-tooltip-source="#diameterValue"
+            />
             <span class="control__value"><span id="diameterValue"></span></span>
           </label>
 
@@ -57,13 +73,29 @@
 
             <label id="moonOrbitRow" class="control">
               <span>Orbit angle (deg)</span>
-              <input id="moonOrbitAngle" type="range" min="0" max="360" value="0" step="1" />
+              <input
+                id="moonOrbitAngle"
+                type="range"
+                min="0"
+                max="360"
+                value="0"
+                step="1"
+                data-tooltip-source="#moonOrbitValue"
+              />
               <span class="control__value"><span id="moonOrbitValue"></span></span>
             </label>
 
             <label id="moonRecessionRow" class="control" hidden>
               <span>Recession time (Myr)</span>
-              <input id="moonRecessionTime" type="range" min="-1000" max="1000" value="0" step="10" />
+              <input
+                id="moonRecessionTime"
+                type="range"
+                min="-1000"
+                max="1000"
+                value="0"
+                step="10"
+                data-tooltip-source="#moonRecessionValue"
+              />
               <span class="control__value"><span id="moonRecessionValue"></span></span>
             </label>
           </section>
@@ -80,8 +112,8 @@
 
           <div class="cp-actions">
             <a class="cp-button" href="../../exhibits/angular-size/">Open exhibit</a>
-            <a class="cp-button cp-button--ghost" href="../../stations/angular-size/">Station card</a>
-            <a class="cp-button cp-button--ghost" href="../../instructor/angular-size/">Instructor notes</a>
+            <a class="cp-button cp-button--outline" href="../../stations/angular-size/">Station card</a>
+            <a class="cp-button cp-button--outline" href="../../instructor/angular-size/">Instructor notes</a>
           </div>
         </div>
       </aside>

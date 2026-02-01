@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
   </head>
   <body>
-    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Eclipse Geometry instrument">
+    <div id="cp-demo" class="cp-layer-instrument cp-demo" data-shell="triad" aria-label="Eclipse Geometry instrument">
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Eclipse Geometry: Shadows in Space</div>
         <div class="cp-panel-body">
@@ -26,19 +26,43 @@
 
           <label class="control">
             <span>Moon angle (deg)</span>
-            <input id="moonLon" type="range" min="0" max="360" value="180" step="1" />
+            <input
+              id="moonLon"
+              type="range"
+              min="0"
+              max="360"
+              value="180"
+              step="1"
+              data-tooltip-source="#moonLonValue"
+            />
             <span class="control__value"><span id="moonLonValue"></span></span>
           </label>
 
           <label class="control">
             <span>Node longitude $\Omega$ ($^\circ$)</span>
-            <input id="nodeLon" type="range" min="0" max="360" value="210" step="1" />
+            <input
+              id="nodeLon"
+              type="range"
+              min="0"
+              max="360"
+              value="210"
+              step="1"
+              data-tooltip-source="#nodeLonValue"
+            />
             <span class="control__value"><span id="nodeLonValue"></span></span>
           </label>
 
           <label class="control">
             <span>Orbital tilt $i$ ($^\circ$)</span>
-            <input id="tilt" type="range" min="0" max="10" value="5.145" step="0.001" />
+            <input
+              id="tilt"
+              type="range"
+              min="0"
+              max="10"
+              value="5.145"
+              step="0.001"
+              data-tooltip-source="#tiltValue"
+            />
             <span class="control__value"><span id="tiltValue"></span></span>
           </label>
 
@@ -61,7 +85,15 @@
             <strong>Long-run simulation</strong>
             <label class="control">
               <span>Years</span>
-              <input id="simYears" type="range" min="1" max="100" value="10" step="1" />
+              <input
+                id="simYears"
+                type="range"
+                min="1"
+                max="100"
+                value="10"
+                step="1"
+                data-tooltip-source="#simYearsValue"
+              />
               <span class="control__value"><span id="simYearsValue"></span></span>
             </label>
 
@@ -91,8 +123,8 @@
 
           <div class="cp-actions">
             <a class="cp-button" href="../../exhibits/eclipse-geometry/">Open exhibit</a>
-            <a class="cp-button cp-button--ghost" href="../../stations/eclipse-geometry/">Station card</a>
-            <a class="cp-button cp-button--ghost" href="../../instructor/eclipse-geometry/">Instructor notes</a>
+            <a class="cp-button cp-button--outline" href="../../stations/eclipse-geometry/">Station card</a>
+            <a class="cp-button cp-button--outline" href="../../instructor/eclipse-geometry/">Instructor notes</a>
           </div>
         </div>
       </aside>

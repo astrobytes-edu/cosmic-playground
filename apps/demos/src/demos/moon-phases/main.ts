@@ -3,8 +3,15 @@ import { ChallengeEngine, createDemoModes } from "@cosmic/runtime";
 
 const angleInputEl = document.querySelector<HTMLInputElement>("#angle");
 const angleValueEl = document.querySelector<HTMLSpanElement>("#angleValue");
+const phaseNameEl = document.querySelector<HTMLSpanElement>("#phaseName");
 const illumValueEl = document.querySelector<HTMLSpanElement>("#illumValue");
 const canvasEl = document.querySelector<HTMLCanvasElement>("#moonCanvas");
+const setNewEl = document.querySelector<HTMLButtonElement>("#setNew");
+const setFirstQuarterEl =
+  document.querySelector<HTMLButtonElement>("#setFirstQuarter");
+const setFullEl = document.querySelector<HTMLButtonElement>("#setFull");
+const setThirdQuarterEl =
+  document.querySelector<HTMLButtonElement>("#setThirdQuarter");
 const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
 const challengeModeEl =
   document.querySelector<HTMLButtonElement>("#challengeMode");
@@ -15,8 +22,13 @@ const statusEl = document.querySelector<HTMLParagraphElement>("#status");
 if (
   !angleInputEl ||
   !angleValueEl ||
+  !phaseNameEl ||
   !illumValueEl ||
   !canvasEl ||
+  !setNewEl ||
+  !setFirstQuarterEl ||
+  !setFullEl ||
+  !setThirdQuarterEl ||
   !stationModeEl ||
   !challengeModeEl ||
   !helpEl ||
@@ -33,9 +45,14 @@ if (!ctxEl) {
 
 const angleInput = angleInputEl;
 const angleValue = angleValueEl;
+const phaseNameValue = phaseNameEl;
 const illumValue = illumValueEl;
 const canvas = canvasEl;
 const ctx = ctxEl;
+const setNew = setNewEl;
+const setFirstQuarter = setFirstQuarterEl;
+const setFull = setFullEl;
+const setThirdQuarter = setThirdQuarterEl;
 const stationModeButton = stationModeEl;
 const challengeModeButton = challengeModeEl;
 const helpButton = helpEl;
@@ -181,13 +198,23 @@ function render() {
   const frac = illuminatedFraction(angleDeg);
 
   angleValue.textContent = String(Math.round(angleDeg));
+  phaseNameValue.textContent = phaseName(angleDeg);
   illumValue.textContent = String(Math.round(frac * 100));
 
   drawMoon(angleDeg);
 }
 
+function setAngle(angleDeg: number) {
+  angleInput.value = String(clamp(angleDeg, 0, 360));
+  angleInput.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
 angleInput.addEventListener("input", render);
 render();
+setNew.addEventListener("click", () => setAngle(180));
+setFirstQuarter.addEventListener("click", () => setAngle(270));
+setFull.addEventListener("click", () => setAngle(0));
+setThirdQuarter.addEventListener("click", () => setAngle(90));
 if (typeof ResizeObserver !== "undefined") {
   new ResizeObserver(() => {
     render();

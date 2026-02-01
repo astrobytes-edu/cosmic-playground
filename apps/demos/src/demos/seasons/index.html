@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
   </head>
   <body>
-    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Seasons instrument">
+    <div id="cp-demo" class="cp-layer-instrument cp-demo" data-shell="triad" aria-label="Seasons instrument">
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Seasons: Why Tilt Matters</div>
         <div class="cp-panel-body">
@@ -19,7 +19,15 @@
 
           <label class="control">
             <span>Day of year</span>
-            <input id="dayOfYear" type="range" min="1" max="365" value="80" step="1" />
+            <input
+              id="dayOfYear"
+              type="range"
+              min="1"
+              max="365"
+              value="80"
+              step="1"
+              data-tooltip-source="#dateValue"
+            />
             <span class="control__value">
               <span id="dayOfYearValue"></span>
               <span class="cp-muted" id="dateValue"></span>
@@ -35,13 +43,29 @@
 
           <label class="control">
             <span>Axial tilt $\varepsilon$ ($^\circ$)</span>
-            <input id="tilt" type="range" min="0" max="45" value="23.5" step="0.1" />
+            <input
+              id="tilt"
+              type="range"
+              min="0"
+              max="45"
+              value="23.5"
+              step="0.1"
+              data-tooltip-source="#tiltValue"
+            />
             <span class="control__value"><span id="tiltValue"></span></span>
           </label>
 
           <label class="control">
             <span>Latitude $\phi$ ($^\circ$)</span>
-            <input id="latitude" type="range" min="-90" max="90" value="40" step="1" />
+            <input
+              id="latitude"
+              type="range"
+              min="-90"
+              max="90"
+              value="40"
+              step="1"
+              data-tooltip-source="#latitudeValue"
+            />
             <span class="control__value"><span id="latitudeValue"></span></span>
           </label>
 
@@ -61,8 +85,8 @@
 
           <div class="cp-actions">
             <a class="cp-button" href="../../exhibits/seasons/">Open exhibit</a>
-            <a class="cp-button cp-button--ghost" href="../../stations/seasons/">Station card</a>
-            <a class="cp-button cp-button--ghost" href="../../instructor/seasons/">Instructor notes</a>
+            <a class="cp-button cp-button--outline" href="../../stations/seasons/">Station card</a>
+            <a class="cp-button cp-button--outline" href="../../instructor/seasons/">Instructor notes</a>
           </div>
         </div>
       </aside>

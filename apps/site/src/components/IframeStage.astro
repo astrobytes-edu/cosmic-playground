@@ -22,10 +22,10 @@ const { src, title, openHref } = Astro.props;
 <style>
   .iframe-stage {
     margin-top: 14px;
-    padding: 14px;
+    padding: var(--cp-space-4);
     border-radius: var(--cp-r-3);
     border: 1px solid var(--cp-border);
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--cp-bg1);
   }
 
   .iframe-stage__frame {
@@ -34,7 +34,7 @@ const { src, title, openHref } = Astro.props;
     border-radius: 12px;
     overflow: clip;
     border: 1px solid var(--cp-border);
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--cp-bg0);
   }
 
   iframe {

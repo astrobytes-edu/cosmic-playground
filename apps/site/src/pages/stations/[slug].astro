@@ -39,7 +39,9 @@ const StationOverride =
     {StationOverride ? (
       <>
         <section class="box" id="station-content" aria-label="Station card content">
-          <StationOverride />
+          <div class="cp-prose">
+            <StationOverride />
+          </div>
         </section>
       </>
     ) : (
@@ -126,10 +128,10 @@ const StationOverride =
 
 <style>
   .station {
-    padding: 14px;
+    padding: var(--cp-space-4);
     border-radius: var(--cp-r-3);
     border: 1px solid var(--cp-border);
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--cp-bg1);
   }
 
   .station__header h1 {
@@ -166,8 +168,8 @@ const StationOverride =
     margin-top: 8px;
     padding: 10px;
     border-radius: 12px;
-    border: 1px dashed rgba(255, 255, 255, 0.26);
-    background: rgba(0, 0, 0, 0.28);
+    border: 1px dashed var(--cp-border);
+    background: color-mix(in srgb, var(--cp-bg2) 70%, transparent);
   }
 
   .blank--tall {
@@ -199,7 +201,7 @@ const StationOverride =
 
   th {
     text-align: left;
-    background: rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--cp-bg2) 75%, transparent);
   }
 
   @media print {

@@ -54,6 +54,20 @@
   border-color: transparent;
 }
 
+.cp-button--outline {
+  background: transparent;
+  border-color: var(--cp-border);
+}
+
+.cp-button--outline:hover {
+  background: color-mix(in srgb, var(--cp-bg1) 60%, transparent);
+  border-color: color-mix(in srgb, var(--cp-border) 60%, var(--cp-accent));
+}
+
+.cp-button--block {
+  width: 100%;
+}
+
 .cp-button:disabled,
 .cp-button[aria-disabled="true"] {
   opacity: 0.5;

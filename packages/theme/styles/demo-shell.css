@@ -11,6 +11,41 @@
   align-items: start;
 }
 
+.cp-demo[data-shell="triad"] {
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr) minmax(260px, 320px);
+  grid-template-areas:
+    "controls stage readouts"
+    "controls drawer readouts";
+}
+
+.cp-demo[data-shell="triad"] .cp-demo__readouts {
+  position: sticky;
+  top: var(--cp-space-4);
+  align-self: start;
+  max-height: calc(100svh - (2 * var(--cp-space-4)));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-demo[data-shell="triad"] .cp-demo__readouts .cp-panel-body {
+  overflow: auto;
+}
+
+.cp-demo[data-shell="viz-first"] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "stage stage"
+    "controls readouts"
+    "drawer drawer";
+}
+
+.cp-demo[data-shell="viz-first"] .cp-demo__controls {
+  position: static;
+  max-height: none;
+  overflow: visible;
+}
+
 .cp-demo__controls {
   grid-area: controls;
   position: sticky;
@@ -148,5 +183,11 @@
 
   .cp-demo__drawer {
     /* layout set by grid areas */
+  }
+
+  .cp-demo[data-shell="triad"] .cp-demo__readouts {
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
 }

@@ -1,4 +1,5 @@
 import { copyTextToClipboard } from "./clipboard";
+import { initDemoPolish } from "./polish";
 
 export const PACKAGE_NAME = "@cosmic/runtime";
 
@@ -21,6 +22,7 @@ export type ExportPayloadV1 = {
 export { copyTextToClipboard } from "./clipboard";
 export { createDemoModes, toCsv } from "./demoModes";
 export { initMath, renderMath } from "./math";
+export { initDemoPolish } from "./polish";
 export type {
   DemoHelpConfig,
   DemoHelpSection,
@@ -158,6 +160,11 @@ export function createInstrumentRuntime(args: {
   url: URL;
 }) {
   let mode: Mode = resolveInitialMode(args);
+  try {
+    initDemoPolish(document);
+  } catch {
+    // demo polish should never break a demo
+  }
 
   function setMode(nextMode: Mode) {
     const resolved = args.hasMathMode ? nextMode : "concept";
