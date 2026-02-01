@@ -32,6 +32,7 @@ const isLightTheme = themeParam === "paper" || Astro.url.pathname.includes("/ins
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{title}</title>
+    <link rel="stylesheet" href={withBase("assets/katex/katex.min.css")} />
     <link rel="preload" href={withBase("fonts/Inter.woff2")} as="font" type="font/woff2" crossorigin />
     <style set:html={`
       @font-face {

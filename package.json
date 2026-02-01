@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "corepack pnpm -C apps/site dev",
     "build": "node scripts/build.mjs",
+    "assets:katex": "node scripts/copy-katex-assets.mjs",
     "lint": "echo \"lint: (placeholder)\"",
     "typecheck": "corepack pnpm -r typecheck",
     "test": "echo \"test: (placeholder)\""

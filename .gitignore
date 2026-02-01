@@ -12,3 +12,6 @@ apps/site/test-results/
 apps/site/public/play/
 
 .playwright-mcp/
+
+apps/site/public/assets/katex/
+apps/demos/public/assets/katex/

@@ -15,7 +15,7 @@
     "typescript": "^5.5.4"
   },
   "scripts": {
-    "dev": "astro dev",
+    "dev": "node ../../scripts/copy-katex-assets.mjs && astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "test:e2e": "playwright test",

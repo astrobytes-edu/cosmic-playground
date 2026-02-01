@@ -14,8 +14,8 @@
     "vite": "^5.4.0"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node ../../scripts/copy-katex-assets.mjs && vite",
+    "build": "node ../../scripts/copy-katex-assets.mjs && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   }
