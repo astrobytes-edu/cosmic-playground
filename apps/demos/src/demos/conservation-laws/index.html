@@ -8,14 +8,63 @@
     <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
   </head>
   <body>
-    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Conservation Laws instrument">
+    <div
+      id="cp-demo"
+      class="cp-layer-instrument cp-demo"
+      data-shell="triad"
+      aria-label="Conservation Laws instrument"
+    >
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Conservation Laws: Energy &amp; Momentum</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Build intuition for what stays constant—and what changes—across a system.</p>
-          <div class="cp-callout" data-kind="model">
-            This demo is currently a stub while we migrate the legacy version into the new runtime.
+          <p class="cp-muted">Energy + angular momentum determine orbit shape and escape.</p>
+
+          <label class="control">
+            <span>Central mass $M$ ($M_{\\odot}$)</span>
+            <input id="massSlider" type="range" min="-1" max="1" step="0.01" value="0" />
+            <span class="control__value"><span id="massValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Initial radius $r_0$ (AU)</span>
+            <input id="r0Slider" type="range" min="-1" max="1" step="0.01" value="0" />
+            <span class="control__value"><span id="r0Value"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Speed factor $v/v_{\\rm circ}$</span>
+            <input id="speedFactor" type="range" min="0" max="2.5" step="0.01" value="1" />
+            <span class="control__value"
+              ><span id="speedValue"></span> <span class="cp-muted">(escape at $\\sqrt{2}$)</span></span
+            >
+          </label>
+
+          <label class="control">
+            <span>Direction from tangential (deg)</span>
+            <input id="directionDeg" type="range" min="-85" max="85" step="1" value="0" />
+            <span class="control__value"><span id="directionValue"></span></span>
+          </label>
+
+          <div class="presets">
+            <div class="presets__label">Presets</div>
+            <div class="presets__row" role="group" aria-label="Orbit presets">
+              <button class="cp-action cp-action--ghost preset" data-preset="circular" type="button">Circular</button>
+              <button class="cp-action cp-action--ghost preset" data-preset="elliptical" type="button">
+                Elliptical
+              </button>
+              <button class="cp-action cp-action--ghost preset" data-preset="escape" type="button">Escape</button>
+              <button class="cp-action cp-action--ghost preset" data-preset="hyperbolic" type="button">
+                Hyperbolic
+              </button>
+            </div>
           </div>
+
+          <button id="play" class="cp-action cp-action--ghost" type="button">Play</button>
+          <button id="pause" class="cp-action cp-action--ghost" type="button" disabled>Pause</button>
+          <button id="reset" class="cp-action cp-action--ghost" type="button">Reset</button>
+
+          <button id="stationMode" class="cp-action" type="button">Station mode</button>
+          <button id="help" class="cp-action cp-action--ghost" type="button">Help / shortcuts</button>
 
           <button id="copyResults" class="cp-action" type="button">Copy results</button>
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -28,22 +77,55 @@
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
-        <div class="cp-stage__inner">
-          <p class="cp-stage__headline">Migration pending</p>
-          <p class="cp-muted">
-            This space will host the interactive visualization once the demo is migrated.
-          </p>
-        </div>
+      <section class="cp-demo__stage cp-stage stage" aria-label="Orbit visualization stage">
+        <svg id="orbitSvg" class="orbit" viewBox="0 0 600 600" role="img" aria-label="Orbit path and moving particle">
+          <defs>
+            <marker id="arrowVel" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon class="orbit__arrowhead" points="0 0, 10 3.5, 0 7"></polygon>
+            </marker>
+          </defs>
+
+          <circle id="centralMass" class="orbit__mass" cx="300" cy="300" r="10"></circle>
+          <path id="orbitPath" class="orbit__path" d=""></path>
+          <circle id="particle" class="orbit__particle" cx="400" cy="300" r="8"></circle>
+          <line
+            id="velocityLine"
+            class="orbit__velocity"
+            x1="400"
+            y1="300"
+            x2="460"
+            y2="300"
+            marker-end="url(#arrowVel)"
+          ></line>
+        </svg>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Migration pending (stub).</p>
           <div class="cp-readout">
-            <div class="cp-readout__label">(example) Conserved quantity</div>
-            <div class="cp-readout__value">—</div>
+            <div class="cp-readout__label">Orbit type</div>
+            <div class="cp-readout__value"><span id="orbitType"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Eccentricity $e$</div>
+            <div class="cp-readout__value"><span id="ecc"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Specific energy $\\varepsilon$ (AU$^2$/yr$^2$)</div>
+            <div class="cp-readout__value"><span id="eps"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Specific angular momentum $|h|$ (AU$^2$/yr)</div>
+            <div class="cp-readout__value"><span id="h"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Speed $v$ (km/s)</div>
+            <div class="cp-readout__value"><span id="vKmS"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Periapsis $r_p$ (AU)</div>
+            <div class="cp-readout__value"><span id="rpAu"></span></div>
           </div>
         </div>
       </aside>
@@ -53,12 +135,13 @@
           <details class="cp-accordion" open>
             <summary>
               <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">2 bullets</span>
+              <span class="cp-accordion__meta">3 bullets</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>Conservation statements depend on explicit assumptions.</li>
-                <li>Changing the “system boundary” changes what counts as external.</li>
+                <li>Escape is set by energy: $\\varepsilon&lt;0$ (bound), $\\varepsilon=0$ (escape), $\\varepsilon&gt;0$ (unbound).</li>
+                <li>Angular momentum controls how close you get: larger $|h|$ prevents deep plunges.</li>
+                <li>At the same $r_0$, $v_{\\rm esc}=\\sqrt{2}\\,v_{\\rm circ}$.</li>
               </ul>
             </div>
           </details>
@@ -66,12 +149,13 @@
           <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">stub</span>
+              <span class="cp-accordion__meta">AU / yr / $M_\\odot$</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-                <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+                <li>Teaching units: AU / yr / $M_{\\odot}$ with $G=4\\pi^2\\,\\mathrm{AU}^3/(\\mathrm{yr}^2\\,M_{\\odot})$.</li>
+                <li>We start at $r_0$ on the +x axis and set $v$ using $v/v_{\\rm circ}$ and a direction offset from tangential.</li>
+                <li>For open orbits, the plotted path is clipped to a finite radius window for visibility.</li>
               </ul>
             </div>
           </details>

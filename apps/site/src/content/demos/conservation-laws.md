@@ -19,12 +19,13 @@ play_steps:
   - "Write down the assumption(s) needed for the invariant to hold."
 explain_prompt: "State what appears conserved in the model, and what assumptions make that conservation reasonable."
 model_notes:
-  - "This is currently a stub while the legacy demo is migrated into the new runtime."
+  - "Teaching units: AU / yr / $M_{\\odot}$ with $G = 4\\pi^2\\,\\mathrm{AU}^3/(\\mathrm{yr}^2\\,M_{\\odot})$."
+  - "Orbit type is determined by conserved specific energy $\\varepsilon$ and angular momentum $h$."
+  - "Escape at $v/v_{\\rm circ}=\\sqrt{2}$."
 demo_path: "/play/conservation-laws/"
 station_path: "/stations/conservation-laws/"
 instructor_path: "/instructor/conservation-laws/"
 last_updated: "2026-01-30"
 ---
 
-This demo will be migrated into the Cosmic Playground runtime; for now it provides a placeholder `/play/` target.
-
+Start with a circular case ($v/v_{\\rm circ}=1$), then move toward escape ($\\sqrt{2}$) and beyond to see how $\\varepsilon$ changes sign.

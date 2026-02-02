@@ -13,9 +13,9 @@ has_math: true
 
 > **This guide is instructor-facing**
 > Student demo: `/play/conservation-laws/`  
-> Main code: `demos/conservation-laws/conservation-laws.js`  
-> Shared physics: `demos/_assets/physics/two-body-analytic.js`  
-> Plot helpers: `demos/_assets/conservation-laws-model.js`
+> Main code: `apps/demos/src/demos/conservation-laws/main.ts`  
+> Shared physics: `packages/physics/src/twoBodyAnalytic.ts`  
+> Plot helpers: `packages/physics/src/conservationLawsModel.ts`
 
 > **Where to go next**
 > - Model + math + assumptions: `model.qmd`

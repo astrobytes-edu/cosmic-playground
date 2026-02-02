@@ -1,2 +1,83 @@
 @import "../../shared/stub-demo.css";
 
+.control {
+  display: grid;
+  gap: 8px;
+}
+
+.control__value {
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.presets {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.presets__label {
+  color: var(--cp-muted);
+  font-size: 0.9rem;
+}
+
+.presets__row {
+  display: grid;
+  gap: var(--cp-space-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.preset.cp-action {
+  padding: var(--cp-space-2) var(--cp-space-3);
+  font-size: var(--cp-text-sm);
+}
+
+.stage {
+  display: grid;
+  place-items: center;
+  padding: var(--cp-space-4);
+}
+
+.orbit {
+  width: 100%;
+  height: auto;
+  max-width: 980px;
+  aspect-ratio: 1 / 1;
+  display: block;
+  border-radius: 18px;
+  border: 1px solid var(--cp-border);
+  background: radial-gradient(
+    circle at 20% 20%,
+    var(--cp-glow-teal),
+    color-mix(in srgb, var(--cp-bg0) 75%, transparent)
+  );
+}
+
+.orbit__path {
+  fill: none;
+  stroke: var(--cp-chart-1);
+  stroke-width: 2;
+  opacity: 0.9;
+}
+
+.orbit__mass {
+  fill: var(--cp-chart-4);
+}
+
+.orbit__particle {
+  fill: color-mix(in srgb, var(--cp-text) 70%, var(--cp-chart-1));
+}
+
+.orbit__velocity {
+  stroke: var(--cp-chart-2);
+  stroke-width: 2;
+}
+
+.orbit__arrowhead {
+  fill: var(--cp-chart-2);
+}
+
+@media (min-width: 900px) {
+  .presets__row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
