@@ -40,8 +40,12 @@ From `docs/specs/cosmic-playground-theme-spec.md`:
 
 These are the gates that should stay green throughout Wave 2/3 work:
 
+- `corepack pnpm test:invariants` (OK)
+- `corepack pnpm test:play-dirs` (OK)
 - `node scripts/validate-invariants.mjs` (no violations)
 - `node scripts/validate-play-dirs.mjs` (OK)
+- `corepack pnpm typecheck` (OK; zero errors)
+- `corepack pnpm -C packages/physics test` (OK)
 - `corepack pnpm build` (OK)
 - `CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e` (OK)
 
@@ -81,20 +85,15 @@ These are the gates that should stay green throughout Wave 2/3 work:
 
 ### P0 — Fix/decide before starting Wave 2/3 migrations
 
-#### P0.1 Theme-spec enforcement gap: `rgba(...)` is not currently caught
+#### P0.1 Theme-spec enforcement is now strict for app-layer colors (RESOLVED)
 
-**Why it matters:** `docs/specs/cosmic-playground-theme-spec.md` says “no hardcoded colors” in `apps/site` and `apps/demos`. The current invariant regex only catches `#...`, `rgb(...)`, and `hsl(...)`, not `rgba(...)` / `hsla(...)`.
+**Status:** resolved on 2026-02-02.
 
-**Evidence:**
-- Hardcoded `rgba(...)` exists in `apps/site`:
-  - `apps/site/src/styles/global.css`
-  - `apps/site/src/components/DemoCard.astro`
+**What changed:**
+- `scripts/validate-invariants.mjs` now flags `rgba(...)` and `hsla(...)` in app-layer files (in addition to `#...`, `rgb(...)`, `hsl(...)`).
+- Existing `rgba(...)` usage in `apps/site` was replaced with token-derived `color-mix(...)`.
 
-**Decision needed:**
-1) If the theme rule is intended to be strict (recommended): update `scripts/validate-invariants.mjs` to catch `rgba(` and `hsla(`, then replace the existing `rgba(...)` usage with token-derived `color-mix(...)` expressions.
-2) If the theme rule is intended to be “no *new* hardcoded colors”: document that exception explicitly in the spec and keep the validator as-is.
-
-**Recommendation:** choose (1) before Wave 2/3 to avoid “silent drift” during fast migrations.
+**Result:** new hardcoded colors in `apps/site` / `apps/demos` should reliably fail CI/build gates (per theme spec 2.2).
 
 #### P0.2 Data package conventions are not written down yet (Wave 3 scaling risk)
 
@@ -177,7 +176,18 @@ Before declaring a Wave 2/3 demo migration “done”, run:
 The repo is **structurally ready** to begin Wave 2 and Wave 3 migrations:
 - base-path and instrument-contract gates exist and are passing
 - “no fetch” data bundling is now proven via `parallax-distance`
+- app-layer theme enforcement is now stricter (validator catches `rgba(...)` / `hsla(...)` too)
 
-The only “readiness” decision that should be made before Wave 2/3 starts is:
-- whether to tighten and enforce the theme spec’s “no hardcoded colors” rule by extending the invariant validator to catch `rgba(...)`/`hsla(...)` (recommended).
+The main remaining “readiness” decision before Wave 3 starts is:
+- standardize and document dataset package conventions (types, units-in-field-names, provenance, versioning) so `em-spectrum` and `telescope-resolution` don’t become ad hoc.
 
+## Scientific accuracy (what is enforced vs what is reviewed)
+
+What we can be confident about today:
+- `@cosmic/physics` models are unit-tested and treat units explicitly (and we explicitly avoid `G=1` in orbital mechanics teaching units).
+- The build + e2e gates catch many classes of migration regressions (base path, missing instrument markers, broken /play artifacts, export copy UX).
+
+What is **not** fully “mechanically enforced” (so it must be part of migration PR review):
+- Whether a specific model implementation matches the intended physical assumptions for that demo (e.g., simplifications for blackbody emission or diffraction limits).
+- End-to-end unit/notation consistency across UI labels ↔ exports ↔ station cards ↔ instructor notes (we have patterns, but not a complete automated checker).
+- Dataset provenance/licensing/traceability (Wave 3 is where this matters most).
