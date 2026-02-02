@@ -8,6 +8,22 @@ export type NearbyStar = {
   parallaxMas: number;
 };
 
+export const nearbyStarsMeta = {
+  id: "nearbyStars",
+  title: "Nearby stars (parallax)",
+  version: 1,
+  unitsPolicy: "units-in-field-names",
+  fields: [
+    { name: "name", type: "string", unit: "unitless" },
+    { name: "parallaxMas", type: "number", unit: "mas" }
+  ],
+  provenance: {
+    kind: "project-authored",
+    notes: "Approximate values curated for teaching examples; not a single upstream catalog."
+  },
+  license: "UNSPECIFIED"
+} as const;
+
 // Values are representative (order-of-magnitude correct) and intentionally limited in size
 // so the demo bundles quickly. These can be swapped with a larger vetted list later.
 export const nearbyStars: NearbyStar[] = [
@@ -22,4 +38,3 @@ export const nearbyStars: NearbyStar[] = [
   { name: "Procyon", parallaxMas: 284.6 },
   { name: "Vega", parallaxMas: 130.2 }
 ];
-

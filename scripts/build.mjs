@@ -38,6 +38,8 @@ async function main() {
   const siteDir = path.join(repoRoot, "apps", "site");
 
   await run("node", [path.join(repoRoot, "scripts", "validate-invariants.mjs")]);
+  await run("node", [path.join(repoRoot, "scripts", "validate-datasets.mjs")]);
+  await run("node", [path.join(repoRoot, "scripts", "validate-physics-models.mjs")]);
   await run("node", [path.join(repoRoot, "scripts", "copy-katex-assets.mjs")]);
   await run("corepack", ["pnpm", "-C", demosDir, "build"]);
 

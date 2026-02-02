@@ -50,6 +50,8 @@ Cosmic Playground personal skills (what to enforce):
 
 ### Repo goals
 - Treat `docs/specs/cosmic-playground-site-spec.md` as the contract.
+- Treat `docs/specs/cosmic-playground-data-contract.md` as the contract for data-heavy demos (Wave 3+).
+- Treat `docs/specs/cosmic-playground-model-contract.md` as the contract for any physics/model code (scientific correctness + explicit units + required tests).
 - Prefer static + fast pages; minimal client JS on museum pages.
 - Use `pnpm` workspace.
 - Demos build into `apps/demos/dist/<slug>/` and are copied to `apps/site/public/play/<slug>/`.
@@ -63,6 +65,9 @@ Cosmic Playground personal skills (what to enforce):
 - Primary gates:
   - `corepack pnpm build`
   - `CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e` (or leave `CP_BASE_PATH` unset)
+  - Optional contract-focused tests:
+    - `corepack pnpm test:datasets`
+    - `corepack pnpm test:physics-contract`
 - If Playwright is failing due to base paths, check `CP_BASE_PATH` first; an empty/incorrect value can cause `/explore/` and `/play/<slug>/` routes to 404 in e2e.
 
 ### Demo pipeline (important)

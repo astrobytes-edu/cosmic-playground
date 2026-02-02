@@ -1,0 +1,24 @@
+{
+  "package": "@cosmic/data-astr101",
+  "manifestVersion": 1,
+  "datasets": [
+    {
+      "id": "nearbyStars",
+      "title": "Nearby stars (parallax)",
+      "description": "Small teaching dataset of nearby stars with annual parallax values (mas).",
+      "exports": ["nearbyStars", "nearbyStarsMeta"],
+      "unitsPolicy": "units-in-field-names",
+      "fields": [
+        { "name": "name", "type": "string", "unit": "unitless" },
+        { "name": "parallaxMas", "type": "number", "unit": "mas" }
+      ],
+      "provenance": {
+        "kind": "project-authored",
+        "notes": "Approximate values curated for teaching examples; not a single upstream catalog."
+      },
+      "license": "UNSPECIFIED",
+      "version": 1
+    }
+  ]
+}
+

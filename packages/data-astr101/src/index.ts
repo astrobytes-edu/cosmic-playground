@@ -1,3 +1,2 @@
 export type { NearbyStar } from "./starsNearby";
-export { nearbyStars } from "./starsNearby";
-
+export { nearbyStars, nearbyStarsMeta } from "./starsNearby";
