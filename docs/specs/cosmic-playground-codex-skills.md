@@ -62,6 +62,13 @@ Use when doing an accessibility-focused polish pass or shipping UI interactions 
 - Enforces dialog semantics + focus management, live-region status messaging (e.g. Copy results), reduced-motion support, and avoiding color-only meaning.
 - Demo-specific: control labels, focus order, and `aria-*` naming for the instrument root (`#cp-demo`).
 
+### `cosmic-export-contracts`
+
+Use when adding/changing demo exports (`copyResults`, CSV, snapshots/station tables):
+
+- Units and names consistent across UI labels, exported params/readouts, and instructor station tables.
+- Stable field keys/labels, ordering, and versioning; “human readable + machine readable” formatting via shared runtime helpers.
+
 ### `cosmic-demo-authoring`
 
 Use when creating/migrating demos under `apps/demos/src/demos/<slug>/`:
@@ -88,6 +95,52 @@ Use when editing site content in `apps/site/src/content/**`:
 - Uses KaTeX auto-render only (no extra renderers/scripts in markdown).
 - Keeps demo excerpt paragraph plain text (no links/math in first paragraph).
 
+### `cosmic-instructor-materials-style`
+
+Use when authoring or editing instructor notes and station cards (`apps/site/src/content/instructor/**`, `apps/site/src/content/stations/**`):
+
+- Enforces the instructor/station content schemas (`apps/site/src/content/config.ts`) and the instructor section file layout (`index|activities|assessment|model|backlog`).
+- Keeps materials print-first by fixing content (no page-local print CSS; global print fixes only in `packages/theme/styles/print.css`).
+- Enforces base-path-safe markdown links in content (no `import.meta.env.BASE_URL` and no root-absolute `](/...)` links).
+- Enforces explicit units and correct `D` (diameter) / `d` (distance) notation in teaching copy.
+
+### `cosmic-ux-polish-pass`
+
+Use when doing a demo-by-demo UX polish pass without inventing new systems or letting one demo drift from the shared instrument style:
+
+- Uses a stable checklist (layout, affordances, keyboard/focus, responsive behavior, reduced motion).
+- Fixes “shared problems” (reproducible in 2+ demos) once in `apps/demos/src/shared/stub-demo.css` or `packages/theme/styles/*` (not demo-local overrides).
+- Avoids new dependencies (no GSAP/anime.js “just for polish”) and keeps motion token-based + `prefers-reduced-motion` safe.
+
+### `cosmic-spec-to-implementation`
+
+Use when turning Cosmic Playground spec docs into an execution plan (file targets + acceptance criteria + verification commands), especially when time/authority pressure tempts “just start coding” or “just make CI green”:
+
+- Starts by citing the relevant spec sections (site spec + theme spec when applicable).
+- Produces a falsifiable plan: concrete file targets, PR-sized slices, and commands (no claiming “done/saved/ran” without actually doing it).
+- Refuses “fix CI by unsetting `CP_BASE_PATH`” and keeps base-path safety front-and-center.
+
+### `cosmic-runtime-instrumentation`
+
+Use when adding shared runtime behaviors across demos (tooltips, slider progress, help/station dialogs, keyboard shortcuts, mode persistence):
+
+- Prefers `packages/runtime` helpers (and extending them once) over per-demo JS.
+- Avoids duplicated tooltip/keydown/mode-persistence logic in `apps/demos/src/demos/<slug>/main.ts` under “just ship it” pressure.
+
+### `cosmic-theme-tokens-and-components`
+
+Use when changing Cosmic Playground styling (tokens, layers, components, print) in a way that could create UI drift:
+
+- Enforces token-first styling and avoids new color literals in `apps/site` and `apps/demos` (visualization-only exceptions allowed).
+- Prefers updating `packages/theme/styles/*` (tokens/layers/components/print) over per-demo CSS or page-local print hacks.
+
+### `cosmic-basepath-smoke-tests`
+
+Use when debugging 404s/broken routes in local or GitHub Pages builds (especially anything that changes under a base path):
+
+- Checks `CP_BASE_PATH` first, then audits root-absolute links in Astro + markdown content.
+- Enforces correct cross-site linking from demos under `/play/<slug>/` (no `import.meta.env.BASE_URL` in demos; use `../../...` or computed `siteRoot`).
+
 ## How to implement new skills (required workflow)
 
 Use **`superpowers:writing-skills`** as the workflow spec. The short version:
@@ -103,93 +156,4 @@ Keep SKILL.md short and searchable. Put “when to use” keywords in the `descr
 
 Each item below includes: goal, freedom level, and initial pressure tests to use for RED.
 
-### 1) `cosmic-export-contracts` (medium freedom)
-
-**Use when** adding/changing demo exports (`copyResults`, CSV, snapshots).
-
-What it should enforce:
-
-- Units and names consistent across UI labels, exported params/readouts, and instructor station tables.
-- Stable field keys, versioning, and “human readable + machine readable” formatting.
-
-Pressure tests:
-
-- “Just dump whatever JSON is easy” → inconsistent keys, missing units, no versioning.
-
-### 2) `cosmic-runtime-instrumentation` (medium/low freedom)
-
-**Use when** adding shared runtime behaviors across demos (tooltips, slider progress, mode dialogs, shortcuts).
-
-What it should enforce:
-
-- Prefer adding/reusing runtime helpers in `packages/runtime/` rather than per-demo JS.
-- Avoid duplicated tooltip/slider logic; hook into the shared runtime polish.
-
-Pressure tests:
-
-- “Only this demo needs it” → reimplements tooltips locally.
-
-### 3) `cosmic-theme-tokens-and-components` (medium freedom)
-
-**Use when** editing `packages/theme` (tokens, components, surfaces).
-
-What it should enforce:
-
-- Token-first styling, consistent component scoping, and avoiding ad-hoc raw colors.
-- Backwards pressure: “I’ll just add a new CSS file in the demo” → should redirect to theme component patterns.
-
-Pressure tests:
-
-- “Just match legacy styling” → starts hardcoding colors/spacing instead of tokens.
-
-### 4) `cosmic-basepath-smoke-tests` (low freedom)
-
-**Use when** debugging 404s/broken routes in local or GH Pages builds.
-
-What it should enforce:
-
-- A repeatable triage flow: check `import.meta.env.BASE_URL` usage, demo `../../...` link usage, and `CP_BASE_PATH` for e2e.
-- A quick “search for root-absolute links” checklist.
-
-Pressure tests:
-
-- “It works locally” → ignores base-path differences and ships broken GH Pages links.
-
-### 5) `cosmic-instructor-materials-style` (high freedom)
-
-**Use when** authoring instructor/station content for clarity and print/readability.
-
-What it should enforce:
-
-- Consistent section structure, callouts, tables, and explicit units/notation.
-- Avoid putting math/links in demo excerpt paragraphs.
-
-Pressure tests:
-
-- “Just paste notes from a doc” → inconsistent headings, missing units, broken links.
-
-### 6) `cosmic-ux-polish-pass` (high freedom, demo checklist)
-
-**Use when** doing demo-by-demo polish without inventing new systems.
-
-What it should enforce:
-
-- A stable checklist: spacing, affordances, keyboard/focus, responsive layout, motion rules.
-- “If you need a new pattern, add it once to theme/runtime, then reuse.”
-
-Pressure tests:
-
-- “This demo is special” → forks styles/layouts.
-
-### 7) `cosmic-spec-to-implementation` (medium freedom)
-
-**Use when** turning spec docs into execution plans and PR-sized task lists.
-
-What it should enforce:
-
-- Read `docs/specs/cosmic-playground-site-spec.md` first; cite concrete file targets.
-- Include verification commands in every plan; don’t claim “done” without running them.
-
-Pressure tests:
-
-- “Start coding” → skips reading specs, produces drift and rework.
+Backlog is empty (as of 2026-02-01).
