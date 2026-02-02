@@ -3,7 +3,7 @@ title: "Kepler’s Laws — Assessment Bank"
 bundle: "keplers-laws"
 section: "assessment"
 demo_slug: "keplers-laws"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -29,7 +29,7 @@ has_math: true
 >
 > **Reasoning:** Kepler’s 2nd law (equal areas in equal times) forces higher speed at smaller $r$.
 >
-> **Demo setup:** Use a high‑$e$ preset, press Play, pause near perihelion/aphelion, compare velocity readout.
+> **Demo setup:** Use a high‑$e$ orbit, then use the time slider (or Animate) to compare the speed readout near perihelion vs aphelion.
 
 > **Clicker 2: Kepler 3 scaling**
 > **Prompt:** If you increase the semi-major axis by a factor of 4 (same star mass), the period increases by a factor of…
@@ -45,17 +45,17 @@ has_math: true
 >
 > **Demo setup:** Set $M=1$, compare $P$ at $a=1$ and $a=4$.
 
-> **Clicker 3: Vector meaning (Newton mode)**
-> **Prompt:** In Newton mode, the force (acceleration) vector points…
+> **Clicker 3: Velocity vector direction**
+> **Prompt:** When the velocity vector overlay is enabled, the velocity vector points…
 >
-> A. Tangent to the orbit (direction of motion)  
-> B. Toward the star  
-> C. Away from the star  
+> A. Toward the star  
+> B. Away from the star  
+> C. Tangent to the orbit (direction of motion)  
 > D. In a fixed direction regardless of position
 >
-> **Correct:** B.
+> **Correct:** C.
 >
-> **Demo setup:** Switch to Newton mode, enable vectors, drag the planet; the force vector stays radial toward the star.
+> **Demo setup:** Enable “Show velocity vector”, then move time around the orbit and note the vector is tangent to the path.
 
 ## Short answer
 
@@ -64,10 +64,10 @@ has_math: true
 >
 > **Answer key (core idea):** Gravity provides a central force toward the star, which implies conservation of angular momentum and a constant areal sweep rate (Kepler 2). That forces the planet to move faster when it is closer (perihelion) and slower when it is farther (aphelion). The same gravitational law also yields the period–distance scaling (Kepler 3).
 
-> **Short answer 2: Units discipline (101 vs 201)**
-> **Prompt:** The demo can display velocity in km/s (101) or cm/s (201). Explain why changing display units does **not** change the physics.
+> **Short answer 2: Units discipline**
+> **Prompt:** The demo reports orbital distance in AU and speed in km/s. Explain (in 1–2 sentences) what it would mean to “change units” without changing the physics.
 >
-> **Expected:** Units are a labeling/measurement convention; the underlying relationship is the same, and values transform by fixed conversion factors.
+> **Expected:** Units are a measurement/labeling convention; the underlying relationship is unchanged and the numbers transform by fixed conversion factors.
 
 ## Exit ticket (1 minute)
 

@@ -97,6 +97,10 @@ test.describe("Cosmic Playground smoke", () => {
     {
       slug: "seasons",
       expects: ["Axial tilt ε (deg)", "Solar declination δ (deg)", "Earth–Sun distance r (AU)"]
+    },
+    {
+      slug: "keplers-laws",
+      expects: ["Semi-major axis a (AU)", "Orbital period P (yr)", "Speed v (km/s)"]
     }
   ] as const;
 

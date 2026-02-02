@@ -8,14 +8,103 @@
     <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
   </head>
   <body>
-    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Kepler’s Laws instrument">
+    <div id="cp-demo" class="cp-layer-instrument cp-demo" data-shell="triad" aria-label="Kepler’s Laws instrument">
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Kepler’s Laws: Patterns of Planetary Motion</div>
         <div class="cp-panel-body">
           <p class="cp-muted">Connect orbital shape to speed, period, and distance.</p>
-          <div class="cp-callout" data-kind="model">
-            This demo is currently a stub while we migrate the legacy version into the new runtime.
+
+          <div class="cp-callout" data-kind="tip">
+            <strong>Kepler 3 (teaching units)</strong>
+            <div>
+              In AU/yr/$M_{\odot}$ units, the period scales as $P^2=\frac{a^3}{M}$.
+            </div>
           </div>
+
+          <label class="control">
+            <span>Semi-major axis $a$ (AU)</span>
+            <input
+              id="aAu"
+              type="range"
+              min="0.3"
+              max="12"
+              value="1"
+              step="0.01"
+              data-tooltip-source="#aAuValue"
+            />
+            <span class="control__value"><span id="aAuValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Eccentricity $e$</span>
+            <input
+              id="ecc"
+              type="range"
+              min="0"
+              max="0.9"
+              value="0.25"
+              step="0.01"
+              data-tooltip-source="#eccValue"
+            />
+            <span class="control__value"><span id="eccValue"></span></span>
+          </label>
+
+          <div class="check-row" role="group" aria-label="Mass mode">
+            <label class="check">
+              <input id="newtonMode" type="checkbox" />
+              Newton mode (vary $M$)
+            </label>
+          </div>
+
+          <label class="control">
+            <span>Central mass $M$ ($M_{\odot}$)</span>
+            <input
+              id="centralMassSolar"
+              type="range"
+              min="0.2"
+              max="4"
+              value="1"
+              step="0.01"
+              data-tooltip-source="#centralMassValue"
+              disabled
+            />
+            <span class="control__value"><span id="centralMassValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Time (mean anomaly $M$) (deg)</span>
+            <input
+              id="meanAnomalyDeg"
+              type="range"
+              min="0"
+              max="360"
+              value="0"
+              step="1"
+              data-tooltip-source="#meanAnomalyValue"
+            />
+            <span class="control__value"><span id="meanAnomalyValue"></span></span>
+          </label>
+
+          <div class="check-row" role="group" aria-label="Overlays">
+            <label class="check">
+              <input id="showApsides" type="checkbox" checked />
+              Show foci + apsides
+            </label>
+            <label class="check">
+              <input id="showEqualAreas" type="checkbox" checked />
+              Show equal-area slices
+            </label>
+            <label class="check">
+              <input id="showVelocity" type="checkbox" checked />
+              Show velocity vector
+            </label>
+          </div>
+
+          <button id="animate" class="cp-action cp-action--ghost" type="button">Animate</button>
+          <p id="motionNote" class="cp-muted" hidden></p>
+
+          <button id="stationMode" class="cp-action" type="button">Station mode</button>
+          <button id="help" class="cp-action cp-action--ghost" type="button">Help / shortcuts</button>
 
           <button id="copyResults" class="cp-action" type="button">Copy results</button>
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -28,22 +117,38 @@
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
-        <div class="cp-stage__inner">
-          <p class="cp-stage__headline">Migration pending</p>
-          <p class="cp-muted">
-            This space will host the interactive visualization once the demo is migrated.
-          </p>
-        </div>
+      <section class="cp-demo__stage cp-stage stage" aria-label="Orbit visualization stage">
+        <canvas
+          id="orbitCanvas"
+          width="900"
+          height="520"
+          role="img"
+          aria-label="Ellipse with orbit position, equal-time slices, and velocity vector overlays"
+        ></canvas>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Migration pending (stub).</p>
           <div class="cp-readout">
-            <div class="cp-readout__label">(example) Orbital period</div>
-            <div class="cp-readout__value">—</div>
+            <div class="cp-readout__label">Orbital period $P$ (yr)</div>
+            <div class="cp-readout__value"><span id="periodYr"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Perihelion $r_p$ (AU)</div>
+            <div class="cp-readout__value"><span id="perihelionAu"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Aphelion $r_a$ (AU)</div>
+            <div class="cp-readout__value"><span id="aphelionAu"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Current distance $r$ (AU)</div>
+            <div class="cp-readout__value"><span id="rAu"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Speed $v$ (km/s)</div>
+            <div class="cp-readout__value"><span id="speedKmS"></span></div>
           </div>
         </div>
       </aside>
@@ -53,12 +158,13 @@
           <details class="cp-accordion" open>
             <summary>
               <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">2 bullets</span>
+              <span class="cp-accordion__meta">3 bullets</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>Objects move faster when closer to the central body.</li>
-                <li>Period increases with orbit size.</li>
+                <li>When $e&gt;0$, the planet moves fastest near perihelion (closest point).</li>
+                <li>The equal-time slices have roughly equal area (Kepler 2), even though the arc lengths differ.</li>
+                <li>Bigger $a$ means a much longer period (Kepler 3).</li>
               </ul>
             </div>
           </details>
@@ -66,12 +172,23 @@
           <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">stub</span>
+              <span class="cp-accordion__meta">AU / yr / $M_{\odot}$</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-                <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+                <li>This is a simplified planar Kepler orbit (no inclination, no perturbations, no ephemeris).</li>
+                <li>
+                  Units: distance in AU, time in yr, and mass in $M_{\odot}$. We use the teaching normalization
+                  $$G = 4\pi^2\,\frac{\mathrm{AU}^3}{\mathrm{yr}^2\,M_{\odot}}.$$
+                </li>
+                <li>
+                  Kepler 3 in these units: $$P^2=\frac{a^3}{M}.$$
+                  When Newton mode is off, this instrument uses $M=1$ (solar-mass central body).
+                </li>
+                <li>
+                  The “time” slider advances mean anomaly uniformly. The displayed position uses Kepler’s equation,
+                  which produces varying speed around an ellipse.
+                </li>
               </ul>
             </div>
           </details>

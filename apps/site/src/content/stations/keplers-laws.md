@@ -1,7 +1,7 @@
 ---
 title: "Station card: keplers-laws"
 demo_slug: "keplers-laws"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 **Name:** ________________________________  **Section:** __________  **Date:** __________
@@ -11,7 +11,7 @@ has_math: true
 *Goal:* Use the demo to make a claim supported by (1) at least one number/readout and (2) at least one sanity check.
 
 > **Station card: Kepler’s Laws (6–8 minutes)**
-> **Controls:** $a$, $e$ (and in Newton mode: $M$)  
+> **Controls:** $a$, $e$, time (mean anomaly $M$, deg) (and in Newton mode: central mass $M$, $M_{\odot}$)  
 > **Overlays:** foci, apsides, equal areas, vectors
 >
 > **Your station artifact (fill in):**

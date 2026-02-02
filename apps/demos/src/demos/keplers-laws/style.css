@@ -1,2 +1,49 @@
 @import "../../shared/stub-demo.css";
 
+.control {
+  display: grid;
+  gap: 8px;
+}
+
+.control__value {
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.check-row {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.check {
+  display: flex;
+  gap: var(--cp-space-2);
+  align-items: center;
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.check input[type="checkbox"] {
+  accent-color: var(--cp-accent);
+}
+
+.stage {
+  display: grid;
+  place-items: center;
+  padding: var(--cp-space-4);
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  max-width: 980px;
+  aspect-ratio: 16 / 9;
+  display: block;
+  border-radius: 18px;
+  border: 1px solid var(--cp-border);
+  background: radial-gradient(
+    circle at 20% 20%,
+    var(--cp-glow-teal),
+    color-mix(in srgb, var(--cp-bg0) 75%, transparent)
+  );
+}

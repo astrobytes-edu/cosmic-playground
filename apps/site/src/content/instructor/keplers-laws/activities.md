@@ -3,7 +3,7 @@ title: "Kepler’s Laws — In-Class Activities"
 bundle: "keplers-laws"
 section: "activities"
 demo_slug: "keplers-laws"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -14,8 +14,8 @@ has_math: true
 
 > **Links**
 > Student demo: `/play/keplers-laws/`  
-> Main guide: `index.qmd`  
-> Model deep dive: `model.qmd`
+> Main guide: `index.md`  
+> Model deep dive: `model.md`
 
 ## MW Quick Exploration (3–5 min, pairs)
 
@@ -27,7 +27,7 @@ has_math: true
 > **Share (1–2 min):** Use the demo:
 > 1) Turn on **Apsides**.  
 > 2) Increase eccentricity (try a high‑$e$ preset).  
-> 3) Press Play and pause near perihelion vs aphelion; compare the velocity readout.
+> 3) Use the time slider (or Animate) to compare speed near perihelion vs aphelion.
 >
 > **Debrief script:** “Kepler 2 is really a timing law: equal areas in equal times. That forces higher speed at smaller $r$.”
 
@@ -53,9 +53,8 @@ has_math: true
 >
 > **Prompt:** “How can the wedge area stay the same while the wedge shape changes?”
 >
-> **Part B (Newton):** Switch to **Newton Mode** and turn on **Vectors**.
+> **Part B (Newton):** Switch to **Newton Mode** and enable the **velocity vector** overlay.
 > Record at the same two points:
-> - direction of the force vector (always toward the star)
 > - direction of the velocity vector (tangent to the path)
 >
 > **Claim prompt:** “Newton’s inverse-square gravity produces Kepler’s laws because…”
@@ -65,7 +64,7 @@ has_math: true
 ## Station version (for a rotation lab)
 
 > **Station card: Kepler’s Laws (6–8 minutes)**
-> **Controls:** $a$, $e$ (and in Newton mode: $M$)  
+> **Controls:** $a$, $e$, time (mean anomaly $M$, deg) (and in Newton mode: central mass $M$, $M_{\odot}$)  
 > **Overlays:** foci, apsides, equal areas, vectors
 >
 > **Your station artifact (fill in):**

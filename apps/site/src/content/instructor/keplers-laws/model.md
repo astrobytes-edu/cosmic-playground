@@ -3,7 +3,7 @@ title: "Kepler’s Laws — Model & Math (Instructor Deep Dive)"
 bundle: "keplers-laws"
 section: "model"
 demo_slug: "keplers-laws"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -14,8 +14,8 @@ has_math: true
 
 > **Links**
 > Student demo: `/play/keplers-laws/`  
-> Model code (tests + shared): `demos/_assets/keplers-laws-model.js`  
-> UI/visualization code: `demos/keplers-laws/keplers-laws.js`
+> Model code (tested): `packages/physics/src/keplersLawsModel.ts` + `packages/physics/src/twoBodyAnalytic.ts`  
+> UI/visualization code: `apps/demos/src/demos/keplers-laws/main.ts`
 
 ## What the demo is modeling (big picture)
 
@@ -27,19 +27,13 @@ This demo is a **planar, two-body** Keplerian-orbit model (planet mass negligibl
 - Newton’s mechanism: inverse-square gravity explains the Kepler patterns
 
 > **Single source of truth (testable model)**
-> The demo loads a shared model module:
->
-> - `demos/_assets/keplers-laws-model.js` → `window.KeplersLawsModel`
->
-> This file is unit tested in Node:
->
-> - `tests/keplers-laws-model.test.js`
+> The Kepler orbit math lives in `@cosmic/physics` and is unit tested in `packages/physics/src/*.test.ts`.
 
 ## Coordinate convention (important!)
 
-The demo uses true anomaly $\theta$ measured in the orbital plane with $\theta=0$ at **perihelion**. For visualization, we choose a coordinate convention where perihelion is drawn to the **left** of the star:
+The demo uses true anomaly $\theta$ measured in the orbital plane with $\theta=0$ at **perihelion**. For visualization, we choose a coordinate convention where perihelion is drawn to the **right** of the star:
 
-$$x = -r\cos\theta,\qquad y = r\sin\theta$$
+$$x = r\cos\theta,\qquad y = r\sin\theta$$
 
 This is purely a drawing convention. The physics is in $r(\theta)$ and in how $\theta$ evolves with time.
 
@@ -63,7 +57,8 @@ Let’s unpack each piece:
 
 In the code:
 
-- `KeplersLawsModel.orbitalRadiusAu({ aAu, e, thetaRad })`
+- `TwoBodyAnalytic.orbitalRadius({ a, e, thetaRad })` (with $a$ and $r$ in AU)
+- `KeplersLawsModel.stateAtMeanAnomalyRad(...)` returns $r$ and $(x,y)$ in AU.
 
 ## Kepler 2: Timing (equal areas in equal times)
 
@@ -89,8 +84,8 @@ The demo solves this equation numerically (Newton’s method) to get $E$, then c
 
 In the code (shared model):
 
-- `KeplersLawsModel.trueToMeanAnomalyRad({ thetaRad, e })`
-- `KeplersLawsModel.meanToTrueAnomalyRad({ meanAnomalyRad, e })`
+- `TwoBodyAnalytic.trueToMeanAnomalyRad({ thetaRad, e })`
+- `TwoBodyAnalytic.meanToTrueAnomalyRad({ meanAnomalyRad, e })`
 
 > **Timing sanity checks**
 > - For $e=0$ (circle), $\theta$ increases uniformly with time (constant speed).
@@ -108,56 +103,24 @@ $$P^2 = \frac{a^3}{M}$$
 
 The demo uses this solar-units form for the period readout.
 
-## Newton mode: speed and acceleration readouts
+## Newton mode: varying the central mass $M$
 
-Newton mode adds the mechanism layer:
+Newton mode lets students vary $M$ (in $M_{\odot}$) and see how the same orbit size $a$ produces a different period.
 
 ### Vis-viva (speed along a Kepler orbit)
 
 $$v = \sqrt{GM\left(\frac{2}{r}-\frac{1}{a}\right)}$$
 
-In the code, $v$ is computed in **km/s** (using a solar GM constant) and then optionally converted for the 201 unit display.
-
-### Acceleration (inverse-square gravity)
-
-$$a = \frac{GM}{r^2}$$
-
-In the code, gravitational acceleration is computed in **m/s²** and then optionally converted for the 201 unit display.
-
-> **Units and the 101 vs 201 toggle**
-> Internally:
->
-> - Speed $v$ is computed in **km/s**.
-> - Acceleration $a$ is computed in **m/s²**.
->
-> Display conversion:
->
-> - 101 mode shows **km/s** and **m/s²**.
-> - 201 mode shows **cm/s** and **cm/s²** (simple unit conversion; same physics).
->
-> The demo uses a single helper for both the readout panel and the KaTeX equations:
->
-> - `KeplersLawsModel.formatNewtonReadouts({ vKms, aMs2, units })`
+In this instrument, the model state is computed in AU/yr and the speed is displayed (and exported) in **km/s** via a fixed unit conversion.
 
 ## Vectors (Newton mode)
 
-The demo draws:
-
-- A **force/acceleration** vector that points from the planet toward the star (radial).
-- A **velocity** vector that is tangent to the orbit.
-
-The velocity direction is computed from the curve tangent (in the same coordinate convention as the orbit drawing):
-
-- `KeplersLawsModel.orbitTangentAngleRad({ aAu, e, thetaRad })`
-
-This is unit tested in:
-
-- `tests/keplers-laws-model.test.js`
+The demo can draw a **velocity** vector that is tangent to the path. (It does not currently draw a force/acceleration vector.)
 
 ## What’s simplified / not modeled
 
 > **Intentional simplifications**
 > - Planar orbit (no inclination).
 > - Two-body Keplerian dynamics (no perturbations, no GR precession).
-> - “Time” is a teaching scale, not an ephemeris; the speed control is labeled as years/sec.
-> - Vectors are scaled for visibility (not drawn to physical scale).
+> - “Time” is a teaching scale: the slider advances mean anomaly uniformly (a time proxy), not a calendar ephemeris.
+> - Vectors (when shown) are scaled for visibility (not drawn to physical scale).
