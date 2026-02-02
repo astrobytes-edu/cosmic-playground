@@ -1,2 +1,220 @@
 @import "../../shared/stub-demo.css";
 
+.control {
+  display: grid;
+  gap: 8px;
+}
+
+.control__value {
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.band-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  margin: 12px 0 0;
+  border: 0;
+}
+
+.band {
+  appearance: none;
+  border: 1px solid var(--cp-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cp-bg0) 70%, transparent);
+  color: var(--cp-text);
+  padding: 8px 10px;
+  font: inherit;
+  line-height: 1.1;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+.band[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--cp-accent) 55%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-accent) 18%, var(--cp-bg0));
+}
+
+.band:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--cp-accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+.stage {
+  display: grid;
+  gap: var(--cp-space-4);
+  padding: var(--cp-space-4);
+}
+
+.stage__header {
+  display: grid;
+  gap: 6px;
+}
+
+.stage__title {
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.stage__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+#bandBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-border);
+  background: color-mix(in srgb, var(--cp-bg0) 85%, transparent);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.spectrum {
+  display: grid;
+  gap: 10px;
+}
+
+.spectrum__bar {
+  position: relative;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-border);
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--cp-accent2) 50%, var(--cp-bg1)),
+    color-mix(in srgb, var(--cp-accent) 55%, var(--cp-bg1)),
+    color-mix(in srgb, var(--cp-accent3) 55%, var(--cp-bg1))
+  );
+  overflow: hidden;
+}
+
+.spectrum__highlight {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: color-mix(in srgb, white 18%, transparent);
+  border: 1px solid color-mix(in srgb, white 35%, transparent);
+  pointer-events: none;
+}
+
+.spectrum__marker {
+  position: absolute;
+  top: -10px;
+  width: 2px;
+  height: 42px;
+  background: color-mix(in srgb, var(--cp-text) 75%, transparent);
+}
+
+.spectrum__markerLabel {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-border);
+  background: color-mix(in srgb, var(--cp-bg0) 88%, transparent);
+  color: var(--cp-text);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.spectrum__ticks {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  color: var(--cp-muted);
+  font-size: 0.86rem;
+}
+
+.spectrum__ticks span {
+  text-align: center;
+}
+
+.band-card {
+  border: 1px solid var(--cp-border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--cp-bg0) 80%, transparent);
+  padding: var(--cp-space-4);
+  display: grid;
+  gap: 12px;
+}
+
+.band-card__title {
+  font-weight: 800;
+}
+
+.band-card__grid {
+  display: grid;
+  gap: 14px;
+}
+
+.band-card__label {
+  color: var(--cp-muted);
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.band-card__value {
+  font-size: 0.98rem;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab {
+  border: 1px solid var(--cp-border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--cp-bg0) 85%, transparent);
+  color: var(--cp-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tab[aria-selected="true"] {
+  border-color: color-mix(in srgb, var(--cp-accent) 55%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-accent) 16%, var(--cp-bg0));
+}
+
+.tab:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--cp-accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+.convert-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  margin-bottom: 10px;
+}
+
+.tabpanel[hidden] {
+  display: none;
+}
+
+.list {
+  margin: 12px 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 10px;
+}
+
+.list li {
+  line-height: 1.3;
+}

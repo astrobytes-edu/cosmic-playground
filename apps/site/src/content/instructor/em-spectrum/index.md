@@ -3,7 +3,7 @@ title: "EM Spectrum"
 bundle: "em-spectrum"
 section: "index"
 demo_slug: "em-spectrum"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -13,15 +13,16 @@ has_math: true
 
 > **This guide is instructor-facing**
 > Student demo: `/play/em-spectrum/`  
-> Main code: `demos/em-spectrum/em-spectrum.js`  
-> Model code: `demos/_assets/em-spectrum-model.js`  
-> Data: `demos/em-spectrum/object-data.js`, `demos/em-spectrum/telescope-data.js`
+> Main code: `apps/demos/src/demos/em-spectrum/main.ts`  
+> Markup/styles: `apps/demos/src/demos/em-spectrum/index.html`, `apps/demos/src/demos/em-spectrum/style.css`  
+> Physics helpers: `packages/physics/src/photonModel.ts` (constants in `packages/physics/src/astroConstants.ts`)  
+> Data: `packages/data-spectra/src/*` (`emSpectrumTelescopes`, `emSpectrumObjects`, `atomicLines`, `molecularBands`)
 
 > **Where to go next**
-> - Model + math + assumptions: `model.qmd`
-> - In-class activities (MW + Friday lab + station version): `activities.qmd`
-> - Assessment bank (clickers + short answer + exit ticket): `assessment.qmd`
-> - Future enhancements (planning backlog): `backlog.qmd`
+> - Model + math + assumptions: `model.md`
+> - In-class activities (MW + Friday lab + station version): `activities.md`
+> - Assessment bank (clickers + short answer + exit ticket): `assessment.md`
+> - Future enhancements (planning backlog): `backlog.md`
 
 ## Why this demo exists
 

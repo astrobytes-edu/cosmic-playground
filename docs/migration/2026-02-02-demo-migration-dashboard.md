@@ -6,10 +6,11 @@ This document is the planning “control panel” for finishing the demo migrati
 
 **Cosmic Playground demo slugs (content + source): 12.**
 
-- **Interactive (migrated): 9**
+- **Interactive (migrated): 10**
   - `angular-size`, `binary-orbits`, `blackbody-radiation`, `conservation-laws`, `eclipse-geometry`, `moon-phases`, `seasons`, `keplers-laws`, `parallax-distance`
-- **Stub (instrument shell only): 3**
-  - `em-spectrum`, `telescope-resolution`, `planetary-conjunctions`
+  - `em-spectrum`
+- **Stub (instrument shell only): 2**
+  - `telescope-resolution`, `planetary-conjunctions`
 
 **Legacy demo directories found in `~/Teaching/astr101-sp26/demos/`: 14**
 
@@ -45,7 +46,7 @@ Legend:
 | `blackbody-radiation` | yes | 2 | **Interactive** | Uses `@cosmic/physics` `BlackbodyRadiationModel`; Station mode + exports v1 wired (Math Mode UI still deferred) |
 | `conservation-laws` | yes | 2 | **Interactive** | Uses `@cosmic/physics` `TwoBodyAnalytic` + `ConservationLawsModel`; Station mode + exports v1 wired |
 | `keplers-laws` | yes | 2 | **Interactive** | Uses `@cosmic/physics` `KeplersLawsModel`; Station mode wired; export v1 wired |
-| `em-spectrum` | yes | 3 | **Stub** | Legacy depends on datasets; needs data packaging + UI |
+| `em-spectrum` | yes | 3 | **Interactive** | Uses `@cosmic/physics` `PhotonModel` + `@cosmic/data-spectra`; Convert + Telescopes + Objects panels |
 | `parallax-distance` | yes | 3 | **Interactive** | Uses `@cosmic/physics` `ParallaxDistanceModel` + `@cosmic/data-astr101` `nearbyStars`; Station + export v1 wired |
 | `telescope-resolution` | yes | 3 | **Stub** | Legacy had Math Mode + telescope dataset; needs data packaging + UI |
 | `planetary-conjunctions` | no | — | **Stub (New)** | New demo concept; needs scope + model + UI |
@@ -119,7 +120,7 @@ Legend:
 
 ### Wave 3 stubs (data-heavy)
 
-- [ ] `em-spectrum` — migrate telescope/object datasets into repo-owned modules (no fetch); port UI; confirm accessibility for selectable items/legend.
+- [x] `em-spectrum` — migrate telescope/object datasets into repo-owned modules (no fetch); port UI; confirm accessibility for selectable items/legend.
 - [ ] `telescope-resolution` — migrate telescope dataset; port optics model; decide whether to reintroduce Math Mode.
 
 ### New stub (not in legacy repo)

@@ -1,6 +1,7 @@
 ---
 title: "Electromagnetic Spectrum: Light Beyond Visible"
 status: draft
+content_verified: true
 levels: [Both]
 topics: [LightSpectra]
 time_minutes: 10
@@ -19,12 +20,15 @@ play_steps:
   - "Match bands to a type of astronomical observation."
 explain_prompt: "Explain how wavelength choice changes what information you can extract from an object."
 model_notes:
-  - "This is currently a stub while the legacy demo is migrated into the new runtime."
+  - 'Core relationships: $c=\lambda\nu$ and $E=h\nu=hc/\lambda$.'
+  - 'Internal conversions use CGS constants: $c$ in $\mathrm{cm/s}$ and $h$ in $\mathrm{erg\,s}$.'
+  - 'Readouts are reported in teaching-friendly units (nm/$\mu\mathrm{m}$/mm/m for $\lambda$; Hz for $\nu$; eV/keV/MeV for $E$).'
 demo_path: "/play/em-spectrum/"
 station_path: "/stations/em-spectrum/"
 instructor_path: "/instructor/em-spectrum/"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 ---
 
-This demo will be migrated into the Cosmic Playground runtime; for now it provides a placeholder `/play/` target.
+This demo helps you connect wavelength, frequency, and photon energy across the electromagnetic spectrum.
 
+Use the slider (or band buttons) to explore orders of magnitude, then use the Convert panel to practice unit conversions.

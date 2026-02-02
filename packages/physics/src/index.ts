@@ -6,5 +6,6 @@ export { ConservationLawsModel } from "./conservationLawsModel";
 export { EclipseGeometryModel } from "./eclipseGeometryModel";
 export { KeplersLawsModel } from "./keplersLawsModel";
 export { ParallaxDistanceModel } from "./parallaxDistanceModel";
+export { PhotonModel } from "./photonModel";
 export { SeasonsModel } from "./seasonsModel";
 export { TwoBodyAnalytic } from "./twoBodyAnalytic";

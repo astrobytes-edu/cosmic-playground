@@ -193,6 +193,10 @@ test.describe("Cosmic Playground smoke", () => {
     {
       slug: "parallax-distance",
       expects: ["Parallax p (mas)", "Distance d (pc)", "Signal-to-noise p/sigma_p"]
+    },
+    {
+      slug: "em-spectrum",
+      expects: ["Wavelength lambda (nm)", "Frequency nu (Hz)", "Photon energy E (eV)"]
     }
   ] as const;
 

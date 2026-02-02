@@ -1,7 +1,7 @@
 ---
 title: "Station card: em-spectrum"
 demo_slug: "em-spectrum"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 **Name:** ________________________________  **Section:** __________  **Date:** __________
@@ -24,7 +24,7 @@ has_math: true
 
 > **Word bank + sanity checks**
 > **Word bank:**
-> - **Wavelength $\lambda$:** “size” of the wave; longer $\lambda$ → lower photon energy.
+> - **Wavelength $\lambda$:** “size” of the wave; longer $\lambda$ $\to$ lower photon energy.
 > - **Photon energy:** energy per photon (not the same thing as brightness).
 > - **Band names:** labels we give to wavelength ranges (radio → gamma).
 >
@@ -35,4 +35,4 @@ has_math: true
 > **Sanity checks:**
 > - Ordering: Radio (lowest energy) → … → Gamma (highest energy).
 > - Shorter wavelength should correspond to larger energy readouts.
-> - Use convenient units: nm/$\\mu\\mathrm{m}$/mm/m for $\lambda$; eV/keV/MeV for energy.
+> - Use convenient units: nm/$\mu\mathrm{m}$/mm/m for $\lambda$; eV/keV/MeV for energy.

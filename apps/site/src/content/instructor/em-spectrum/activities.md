@@ -3,7 +3,7 @@ title: "EM Spectrum — Activity Protocols"
 bundle: "em-spectrum"
 section: "activities"
 demo_slug: "em-spectrum"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -42,7 +42,7 @@ has_math: true
 **Instructions:**
 1. Use the band labels (Radio/IR/Visible/UV/X-ray/Gamma) to jump around.
 2. Use the unit dropdowns to express:
-   - wavelength in a convenient unit (nm, $\\mu\\mathrm{m}$, mm, m),
+   - wavelength in a convenient unit (nm, $\mu\mathrm{m}$, mm, m),
    - energy in eV/keV/MeV as appropriate.
 3. Use the **Telescopes** tab and **Objects** tab to collect one example per band.
 
@@ -92,7 +92,7 @@ Each group gives a 60-second pitch: band choice + one key piece of evidence + on
 
 > **Word bank + sanity checks**
 > **Word bank:**
-> - **Wavelength $\lambda$:** “size” of the wave; longer $\lambda$ → lower photon energy.
+> - **Wavelength $\lambda$:** “size” of the wave; longer $\lambda$ $\to$ lower photon energy.
 > - **Photon energy:** energy per photon (not the same thing as brightness).
 > - **Band names:** labels we give to wavelength ranges (radio → gamma).
 >
@@ -103,4 +103,4 @@ Each group gives a 60-second pitch: band choice + one key piece of evidence + on
 > **Sanity checks:**
 > - Ordering: Radio (lowest energy) → … → Gamma (highest energy).
 > - Shorter wavelength should correspond to larger energy readouts.
-> - Use convenient units: nm/$\\mu\\mathrm{m}$/mm/m for $\lambda$; eV/keV/MeV for energy.
+> - Use convenient units: nm/$\mu\mathrm{m}$/mm/m for $\lambda$; eV/keV/MeV for energy.

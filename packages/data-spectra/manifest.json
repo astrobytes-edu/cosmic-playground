@@ -1,0 +1,88 @@
+{
+  "package": "@cosmic/data-spectra",
+  "manifestVersion": 1,
+  "datasets": [
+    {
+      "id": "atomicLines",
+      "title": "Teaching atomic lines (visible)",
+      "description": "Small teaching set of common atomic lines in the visible, used for spectra pattern-matching examples.",
+      "exports": ["atomicLines", "atomicLinesMeta"],
+      "unitsPolicy": "units-in-field-names",
+      "fields": [
+        { "name": "id", "type": "string", "unit": "unitless" },
+        { "name": "label", "type": "string", "unit": "unitless" },
+        { "name": "species", "type": "string", "unit": "unitless" },
+        { "name": "lineName", "type": "string", "unit": "unitless" },
+        { "name": "wavelengthCm", "type": "number", "unit": "cm" },
+        { "name": "medium", "type": "string", "unit": "unitless" },
+        { "name": "relativeStrengthUnitless", "type": "number", "unit": "unitless" }
+      ],
+      "provenance": {
+        "kind": "project-authored",
+        "notes": "Values curated for ASTR 101 teaching; wavelengths are representative air wavelengths anchored to NIST strong line tables."
+      },
+      "license": "UNSPECIFIED",
+      "version": 1
+    },
+    {
+      "id": "molecularBands",
+      "title": "Teaching IR molecular band centers",
+      "description": "Small teaching set of IR molecular band centers used for qualitative examples in spectra discussions.",
+      "exports": ["molecularBands", "molecularBandsMeta"],
+      "unitsPolicy": "units-in-field-names",
+      "fields": [
+        { "name": "id", "type": "string", "unit": "unitless" },
+        { "name": "label", "type": "string", "unit": "unitless" },
+        { "name": "molecule", "type": "string", "unit": "unitless" },
+        { "name": "bandType", "type": "string", "unit": "unitless" },
+        { "name": "centerWavelengthCm", "type": "number", "unit": "cm" }
+      ],
+      "provenance": {
+        "kind": "project-authored",
+        "notes": "Band centers are representative anchors for teaching; shapes/details are intentionally not line-by-line spectroscopy."
+      },
+      "license": "UNSPECIFIED",
+      "version": 1
+    },
+    {
+      "id": "emSpectrumTelescopes",
+      "title": "Example observatories by wavelength band",
+      "description": "Small teaching list of observatories and the wavelength ranges they cover.",
+      "exports": ["emSpectrumTelescopes", "emSpectrumTelescopesMeta"],
+      "unitsPolicy": "units-in-field-names",
+      "fields": [
+        { "name": "name", "type": "string", "unit": "unitless" },
+        { "name": "band", "type": "string", "unit": "unitless" },
+        { "name": "wavelengthMinCm", "type": "number", "unit": "cm" },
+        { "name": "wavelengthMaxCm", "type": "number", "unit": "cm" },
+        { "name": "location", "type": "string", "unit": "unitless" },
+        { "name": "science", "type": "string", "unit": "unitless" }
+      ],
+      "provenance": {
+        "kind": "project-authored",
+        "notes": "Ranges and descriptions are approximate and teaching-oriented, based on commonly cited instrument coverage."
+      },
+      "license": "UNSPECIFIED",
+      "version": 1
+    },
+    {
+      "id": "emSpectrumObjects",
+      "title": "Example objects across the EM spectrum",
+      "description": "Qualitative teaching list of objects and which bands are commonly useful for observing them.",
+      "exports": ["emSpectrumObjects", "emSpectrumObjectsMeta"],
+      "unitsPolicy": "units-in-field-names",
+      "fields": [
+        { "name": "name", "type": "string", "unit": "unitless" },
+        { "name": "bands", "type": "string[]", "unit": "unitless" },
+        { "name": "why", "type": "string", "unit": "unitless" },
+        { "name": "telescopeExamples", "type": "string", "unit": "unitless" }
+      ],
+      "provenance": {
+        "kind": "project-authored",
+        "notes": "Descriptions are qualitative and designed for introductory discussion; not an exhaustive catalog."
+      },
+      "license": "UNSPECIFIED",
+      "version": 1
+    }
+  ]
+}

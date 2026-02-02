@@ -306,14 +306,14 @@
         ]
       },
       "target": {
-        "demo_status": "stub",
-        "needsPhysicsPort": true,
-        "content_imported": {
-          "station": true,
-          "instructor": true
-        },
-        "content_verified": false
-      }
+      "demo_status": "ported",
+      "needsPhysicsPort": false,
+      "content_imported": {
+        "station": true,
+        "instructor": true
+      },
+      "content_verified": true
+    }
     },
     {
       "slug": "keplers-laws",

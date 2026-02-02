@@ -3,7 +3,7 @@ title: "EM Spectrum — Model & Math (Instructor Deep Dive)"
 bundle: "em-spectrum"
 section: "model"
 demo_slug: "em-spectrum"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -38,7 +38,7 @@ The shared model utilities in `demos/_assets/em-spectrum-model.js` use:
 The demo uses CGS constants:
 
 - $c = 2.99792458\times10^{10}\ \text{cm/s}$
-- $h = 6.62607015\times10^{-27}\ \text{erg·s}$
+- $h = 6.62607015\times10^{-27}\ \text{erg s}$
 - $1\ \text{eV} = 1.602176634\times10^{-12}\ \text{erg}$
 
 Band boundaries are teaching conventions (approximate wavelength ranges) implemented as fixed cutoffs in cm.
@@ -59,7 +59,7 @@ What this equation is really saying: for light, **wavelength and frequency trade
 
 > **Sanity checks**
 > - Units: (cm)·(1/s) = cm/s ✓
-> - Scaling: if $\lambda$ doubles, $\nu$ halves ✓
+> - Scaling: if $\lambda$ doubles, $\nu$ halves.
 
 ### Photon relationship: $E = h\nu = hc/\lambda$
 
@@ -77,7 +77,7 @@ What this equation is really saying: shorter wavelengths correspond to **higher-
 
 > **Sanity checks**
 > - Units: (erg·s)·(1/s) = erg ✓
-> - Scaling: if $\lambda$ gets $10\\times$ smaller, $E$ gets $10\\times$ larger ✓
+> - Scaling: if $\lambda$ gets $10\times$ smaller, $E$ gets $10\times$ larger.
 
 ## Assumptions, limitations, and sanity checks
 

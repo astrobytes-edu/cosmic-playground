@@ -17,6 +17,9 @@ importers:
       '@cosmic/data-astr101':
         specifier: workspace:*
         version: link:../../packages/data-astr101
+      '@cosmic/data-spectra':
+        specifier: workspace:*
+        version: link:../../packages/data-spectra
       '@cosmic/physics':
         specifier: workspace:*
         version: link:../../packages/physics
@@ -63,6 +66,12 @@ importers:
         version: 5.9.3
 
   packages/data-astr101:
+    devDependencies:
+      typescript:
+        specifier: ^5.5.4
+        version: 5.9.3
+
+  packages/data-spectra:
     devDependencies:
       typescript:
         specifier: ^5.5.4
