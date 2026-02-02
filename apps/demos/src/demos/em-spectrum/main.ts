@@ -258,6 +258,14 @@ const readoutEnergy = readoutEnergyEl;
 const copyResults = copyResultsEl;
 const status = statusEl;
 
+const convertWavelengthNm = convertWavelengthNmEl;
+const convertFrequencyHz = convertFrequencyHzEl;
+const convertEnergyEv = convertEnergyEvEl;
+
+const telescopeList = telescopeListEl;
+const objectList = objectListEl;
+const lineList = lineListEl;
+
 const runtime = createInstrumentRuntime({
   hasMathMode: false,
   storageKey: "cp:em-spectrum:mode",
@@ -321,7 +329,7 @@ function renderReadouts(lambdaCm: number) {
 }
 
 function renderLists(lambdaCm: number) {
-  telescopeListEl.innerHTML = "";
+  telescopeList.innerHTML = "";
   for (const scope of emSpectrumTelescopes) {
     const active = lambdaCm >= scope.wavelengthMinCm && lambdaCm <= scope.wavelengthMaxCm;
     const rangeMin = formatWavelength(scope.wavelengthMinCm);
@@ -329,28 +337,28 @@ function renderLists(lambdaCm: number) {
     const li = document.createElement("li");
     const prefix = active ? "Now: " : "";
     li.textContent = `${prefix}${scope.name} — ${scope.band} (${rangeMax.value} ${rangeMax.unit} to ${rangeMin.value} ${rangeMin.unit}) — ${scope.location}`;
-    telescopeListEl.appendChild(li);
+    telescopeList.appendChild(li);
   }
 
-  objectListEl.innerHTML = "";
+  objectList.innerHTML = "";
   for (const obj of emSpectrumObjects) {
     const li = document.createElement("li");
     li.textContent = `${obj.name} — ${obj.why}`;
-    objectListEl.appendChild(li);
+    objectList.appendChild(li);
   }
 
-  lineListEl.innerHTML = "";
+  lineList.innerHTML = "";
   for (const line of atomicLines) {
     const nm = AstroUnits.cmToNm(line.wavelengthCm);
     const li = document.createElement("li");
     li.textContent = `${line.label} (${line.species}) — ${nm.toFixed(3)} nm`;
-    lineListEl.appendChild(li);
+    lineList.appendChild(li);
   }
   for (const band of molecularBands) {
     const um = band.centerWavelengthCm / 1e-4;
     const li = document.createElement("li");
     li.textContent = `${band.label} — ${um.toPrecision(3)} um`;
-    lineListEl.appendChild(li);
+    lineList.appendChild(li);
   }
 }
 
@@ -467,21 +475,21 @@ let convertLock: "wavelength" | "frequency" | "energy" | null = null;
 
 function setConvertInputs(args: { wavelengthNm?: number; frequencyHz?: number; energyEv?: number }) {
   if (typeof args.wavelengthNm === "number") {
-    convertWavelengthNmEl.value = Number.isFinite(args.wavelengthNm) ? String(args.wavelengthNm) : "";
+    convertWavelengthNm.value = Number.isFinite(args.wavelengthNm) ? String(args.wavelengthNm) : "";
   }
   if (typeof args.frequencyHz === "number") {
-    convertFrequencyHzEl.value = Number.isFinite(args.frequencyHz) ? String(args.frequencyHz) : "";
+    convertFrequencyHz.value = Number.isFinite(args.frequencyHz) ? String(args.frequencyHz) : "";
   }
   if (typeof args.energyEv === "number") {
-    convertEnergyEvEl.value = Number.isFinite(args.energyEv) ? String(args.energyEv) : "";
+    convertEnergyEv.value = Number.isFinite(args.energyEv) ? String(args.energyEv) : "";
   }
 }
 
 function initConvertPanel() {
-  convertWavelengthNmEl.addEventListener("input", () => {
+  convertWavelengthNm.addEventListener("input", () => {
     if (convertLock) return;
     convertLock = "wavelength";
-    const wavelengthNm = Number(convertWavelengthNmEl.value);
+    const wavelengthNm = Number(convertWavelengthNm.value);
     if (!Number.isFinite(wavelengthNm) || wavelengthNm <= 0) {
       setConvertInputs({ frequencyHz: NaN, energyEv: NaN });
       convertLock = null;
@@ -494,10 +502,10 @@ function initConvertPanel() {
     convertLock = null;
   });
 
-  convertFrequencyHzEl.addEventListener("input", () => {
+  convertFrequencyHz.addEventListener("input", () => {
     if (convertLock) return;
     convertLock = "frequency";
-    const frequencyHz = Number(convertFrequencyHzEl.value);
+    const frequencyHz = Number(convertFrequencyHz.value);
     if (!Number.isFinite(frequencyHz) || frequencyHz <= 0) {
       setConvertInputs({ wavelengthNm: NaN, energyEv: NaN });
       convertLock = null;
@@ -511,10 +519,10 @@ function initConvertPanel() {
     convertLock = null;
   });
 
-  convertEnergyEvEl.addEventListener("input", () => {
+  convertEnergyEv.addEventListener("input", () => {
     if (convertLock) return;
     convertLock = "energy";
-    const energyEv = Number(convertEnergyEvEl.value);
+    const energyEv = Number(convertEnergyEv.value);
     if (!Number.isFinite(energyEv) || energyEv <= 0) {
       setConvertInputs({ wavelengthNm: NaN, frequencyHz: NaN });
       convertLock = null;
