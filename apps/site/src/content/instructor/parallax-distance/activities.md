@@ -3,7 +3,7 @@ title: "Parallax Distance — Activity Protocols"
 bundle: "parallax-distance"
 section: "activities"
 demo_slug: "parallax-distance"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -18,10 +18,10 @@ has_math: true
 **Goal:** Make “closer → larger parallax” a prediction students test.
 
 1. Open: `/play/parallax-distance/`
-2. Jump between **Jan** and **July** (opposite sides of Earth’s orbit).
-3. Set the distance to something nearby (around a few pc). Ask: *“Do you expect the target star to shift a lot or a little?”*
-4. Increase the distance by a factor of ~10 on the slider. **Prediction prompt (10–20 s):** *“What happens to the parallax angle?”*
-5. Reveal by reading the parallax value (arcsec/mas/µas). Say explicitly: **farther → smaller parallax**.
+2. Point to the two observation points in the diagram (Jan vs July). Ask: *“What baseline are we using?”* (Opposite sides of Earth’s orbit: ~2 AU.)
+3. Set $p=1000\\,\\mathrm{mas}$ (1 arcsec). Ask: *“Is this star near or far?”*
+4. Decrease parallax by a factor of 10 to $p=100\\,\\mathrm{mas}$. **Prediction prompt (10–20 s):** *“What happens to distance?”*
+5. Reveal by reading the distance. Say explicitly: **smaller parallax → greater distance**.
 
 ## MW Short (8–12 min)
 
@@ -29,18 +29,18 @@ has_math: true
 **Goal:** Practice inverse scaling and connect to measurement precision.
 
 ### Student worksheet (pairs)
-Fill in the table by using the distance slider and the parallax readout:
+Fill in the table by using the parallax slider and the distance readout:
 
-| Distance (pc) | Parallax (") | Parallax (mas) | “Measurable with Hipparcos?” | “Measurable with Gaia?” |
-|--------------:|-------------:|---------------:|------------------------------|--------------------------|
-| 1 |  |  |  |  |
-| 10 |  |  |  |  |
-| 100 |  |  |  |  |
+| Parallax (mas) | Parallax (") | Distance (pc) | Distance (ly) | Signal-to-noise $p/\\sigma_p$ |
+|--------------:|-------------:|--------------:|--------------:|------------------------------:|
 | 1000 |  |  |  |  |
+| 100 |  |  |  |  |
+| 10 |  |  |  |  |
+| 1 |  |  |  |  |
 
 **Instructions:**
-1. Use the **Hipparcos** / **Gaia** toggle and note when the status indicates measurability changes.
-2. Use **Jan**/**July** to connect the readout to the visible shift (geometry → number).
+1. Keep $\\sigma_p=1\\,\\mathrm{mas}$ at first, then increase it and record how $p/\\sigma_p$ changes.
+2. Use the diagram to connect the two sightlines to the idea of a baseline and a small angle.
 
 **Synthesis prompt (2 minutes):** *“If we want distances across the whole Milky Way, why can’t parallax be the only method?”*
 
@@ -53,11 +53,11 @@ Fill in the table by using the distance slider and the parallax readout:
 “How far can we directly measure stellar distances with parallax, and what sets the limit?”
 
 ### Protocol
-1. Pick two instruments in the demo: **Hipparcos** and **Gaia**.
-2. For each, find an approximate “reach” distance where the parallax becomes difficult to measure (using the measurability indicator and the readout units).
+1. Pick two uncertainty settings (e.g., $\\sigma_p=1\\,\\mathrm{mas}$ and $\\sigma_p=10\\,\\mathrm{mas}$).
+2. For each, find an approximate “reach” distance where the parallax becomes difficult to measure (use $p/\\sigma_p\\lesssim 1$ as a discussion threshold).
 3. Create a short poster (or shared doc) with:
-   - Claim: “Hipparcos reaches to about ____ pc; Gaia reaches to about ____ pc.”
-   - Evidence: at least 3 distances you tested + their parallax values + the measurability state.
+   - Claim: “With $\\sigma_p=____$, we can measure out to about ____ pc before $p$ is comparable to the uncertainty.”
+   - Evidence: at least 3 parallax settings you tested + their distances + $p/\\sigma_p$.
    - Reasoning: connect “tiny angle” to “measurement challenge” (instrument precision).
 
 ### Extension (if time)

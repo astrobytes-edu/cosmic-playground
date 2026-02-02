@@ -1,7 +1,7 @@
 ---
 title: "Station card: parallax-distance"
 demo_slug: "parallax-distance"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 **Name:** ________________________________  **Section:** __________  **Date:** __________
@@ -14,9 +14,9 @@ has_math: true
 > **Artifact:** a “parallax card” with one numeric example + one sentence interpretation.
 >
 > At the station, produce:
-> - A chosen distance $d$ (pc) and the corresponding parallax $p$ (in arcsec or mas),
+> - A chosen parallax $p$ (in arcsec or mas) and the corresponding distance $d$ (pc),
 > - One sentence: “Because $p$ decreases as $d$ increases, this star is [near/far] compared to ____.”
-> - One note about measurement: “Hipparcos/Gaia can/can’t measure this because ____.”
+> - One note about measurement: “This is (hard/easy) to measure because $p$ is (small/large) compared to the uncertainty.”
 
 > **Word bank + sanity checks**
 > **Word bank:**

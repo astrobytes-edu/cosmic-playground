@@ -1,2 +1,93 @@
 @import "../../shared/stub-demo.css";
 
+.control {
+  display: grid;
+  gap: 8px;
+}
+
+.control__value {
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.stage {
+  display: grid;
+  place-items: center;
+  padding: var(--cp-space-4);
+}
+
+.stage__svg {
+  width: 100%;
+  max-width: none;
+  height: auto;
+  border-radius: 18px;
+  border: 1px solid var(--cp-border);
+  background:
+    radial-gradient(
+      circle at 18% 24%,
+      var(--cp-glow-teal),
+      color-mix(in srgb, var(--cp-bg0) 78%, transparent)
+    ),
+    radial-gradient(circle at 82% 20%, var(--cp-glow-violet), transparent 55%),
+    color-mix(in srgb, var(--cp-bg0) 72%, transparent);
+  box-shadow: 0 24px 50px color-mix(in srgb, var(--cp-bg0) 65%, transparent);
+}
+
+.stage__bg {
+  fill: transparent;
+}
+
+.stage__baseline {
+  stroke: color-mix(in srgb, var(--cp-text) 26%, transparent);
+  stroke-width: 2px;
+  stroke-linecap: round;
+}
+
+.stage__earth {
+  fill: color-mix(in srgb, var(--cp-bg0) 55%, transparent);
+  stroke: color-mix(in srgb, var(--cp-accent3) 65%, transparent);
+  stroke-width: 2px;
+}
+
+.stage__star {
+  fill: var(--cp-warning);
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--cp-warning) 28%, transparent));
+}
+
+.stage__ray {
+  stroke: color-mix(in srgb, var(--cp-accent3) 55%, transparent);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+.stage__arc {
+  fill: none;
+  stroke: var(--cp-warning);
+  stroke-opacity: 0.95;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cp-warning) 18%, transparent));
+}
+
+.stage__label {
+  fill: var(--cp-text);
+  font-family: var(--cp-font-sans);
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.stage__label--angle {
+  fill: color-mix(in srgb, var(--cp-warning) 85%, var(--cp-text));
+}
+
+.stage__label--star {
+  fill: color-mix(in srgb, var(--cp-text) 80%, transparent);
+  font-weight: 600;
+}
+
+.stage__note {
+  fill: var(--cp-muted);
+  font-family: var(--cp-font-sans);
+  font-size: 14px;
+}

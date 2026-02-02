@@ -3,7 +3,7 @@ title: "Parallax Distance — Model & Math (Instructor Deep Dive)"
 bundle: "parallax-distance"
 section: "model"
 demo_slug: "parallax-distance"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -14,8 +14,8 @@ has_math: true
 
 > **Links**
 > Student demo: `/play/parallax-distance/`  
-> Model code: `demos/_assets/parallax-distance-model.js`  
-> UI/visualization code: `demos/parallax-distance/parallax.js`
+> Model code (tested): `packages/physics/src/parallaxDistanceModel.ts`  
+> UI/visualization code: `apps/demos/src/demos/parallax-distance/main.ts`
 
 ## What the demo is modeling (big picture)
 
@@ -29,13 +29,11 @@ The demo links three representations of the same idea:
 
 ## Units + conventions used in the code
 
-The shared model utilities in `demos/_assets/parallax-distance-model.js` use:
+The demo uses:
 
-- **Distance** in **parsecs** (pc).
-- **Parallax angle** in **arcseconds** (").
-- **Time** as `yearFraction` (dimensionless): 0 is “January,” 0.5 is “July,” 1.0 wraps back to 0.
-
-The “Earth orbit” in the model is a unit circle (coordinates in “orbit units”), because the demo focuses on how the **angle scales** rather than on a to-scale Solar System diagram.
+- **Distance** in **parsecs** (pc) and **light-years** (ly).
+- **Parallax angle** in **milliarcseconds** (mas) and **arcseconds** (").
+- A schematic baseline labeled “Jan ↔ Jul: 2 AU” in the diagram (not to scale; angles are exaggerated for visibility).
 
 ## Key relationships to foreground (with meaning + units)
 
@@ -56,13 +54,7 @@ What this equation is really saying: parallax is an **inverse** relationship. Wh
 
 ### Demo visualization link: apparent shift over the year
 
-In the shared model, the demo computes an Earth position on a unit circle
-and uses that to generate a sign-changing shift in the sky view:
-
-- `earthPosition(yearFraction)` returns $(\cos 2\pi t,\ \sin 2\pi t)$.
-- `apparentShift(yearFraction, parallaxArcsec)` returns $-\cos(2\pi t)\,p$ (in arcseconds).
-
-This implements a simple “largest shift at opposite sides of the orbit” story without needing a full 3D astrometry model.
+This demo’s diagram is a **static schematic**: it shows two observation points (Jan and Jul) and the angle between the two sightlines to the star. It is designed to support the core inference step (angle → distance), not to be a full astrometry simulator.
 
 ## Assumptions, limitations, and sanity checks
 

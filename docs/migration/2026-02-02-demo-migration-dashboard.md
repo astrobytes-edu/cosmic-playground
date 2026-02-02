@@ -6,10 +6,10 @@ This document is the planning “control panel” for finishing the demo migrati
 
 **Cosmic Playground demo slugs (content + source): 12.**
 
-- **Interactive (migrated): 5**
-  - `angular-size`, `binary-orbits`, `eclipse-geometry`, `moon-phases`, `seasons`
-- **Stub (instrument shell only): 7**
-  - `blackbody-radiation`, `conservation-laws`, `em-spectrum`, `keplers-laws`, `parallax-distance`, `telescope-resolution`, `planetary-conjunctions`
+- **Interactive (migrated): 7**
+  - `angular-size`, `binary-orbits`, `eclipse-geometry`, `moon-phases`, `seasons`, `keplers-laws`, `parallax-distance`
+- **Stub (instrument shell only): 5**
+  - `blackbody-radiation`, `conservation-laws`, `em-spectrum`, `telescope-resolution`, `planetary-conjunctions`
 
 **Legacy demo directories found in `~/Teaching/astr101-sp26/demos/`: 14**
 
@@ -44,9 +44,9 @@ Legend:
 | `binary-orbits` | yes | 2 | **Interactive** | Uses `@cosmic/physics` `TwoBodyAnalytic`; Station mode wired (no Challenge) |
 | `blackbody-radiation` | yes | 2 | **Stub** | Legacy had Math Mode; needs model + viz + export/readouts alignment |
 | `conservation-laws` | yes | 2 | **Stub** | Needs model + viz + export/readouts alignment |
-| `keplers-laws` | yes | 2 | **Stub** | Needs model + viz + export/readouts alignment |
+| `keplers-laws` | yes | 2 | **Interactive** | Uses `@cosmic/physics` `KeplersLawsModel`; Station mode wired; export v1 wired |
 | `em-spectrum` | yes | 3 | **Stub** | Legacy depends on datasets; needs data packaging + UI |
-| `parallax-distance` | yes | 3 | **Stub** | Legacy depends on star dataset; needs data packaging + UI |
+| `parallax-distance` | yes | 3 | **Interactive** | Uses `@cosmic/physics` `ParallaxDistanceModel` + `@cosmic/data-astr101` `nearbyStars`; Station + export v1 wired |
 | `telescope-resolution` | yes | 3 | **Stub** | Legacy had Math Mode + telescope dataset; needs data packaging + UI |
 | `planetary-conjunctions` | no | — | **Stub (New)** | New demo concept; needs scope + model + UI |
 | `doppler-shift-spectrometer` | yes | — | **Missing** | Newer legacy demo; uses shared spectra dataset + Doppler model |
@@ -115,12 +115,10 @@ Legend:
 
 - [ ] `blackbody-radiation` — legacy Math Mode; build Planck/Stefan–Boltzmann model + viz; decide whether to reintroduce Math Mode.
 - [ ] `conservation-laws` — model + viz; ensure units and labels match teaching goal.
-- [ ] `keplers-laws` — orbital relations; ensure no `G=1`; prefer AU/yr/M☉ convention where relevant.
 
 ### Wave 3 stubs (data-heavy)
 
 - [ ] `em-spectrum` — migrate telescope/object datasets into repo-owned modules (no fetch); port UI; confirm accessibility for selectable items/legend.
-- [ ] `parallax-distance` — migrate star dataset into repo-owned module (no fetch); port UI; add limiting-case checks (angle → 0 ⇒ distance → ∞).
 - [ ] `telescope-resolution` — migrate telescope dataset; port optics model; decide whether to reintroduce Math Mode.
 
 ### New stub (not in legacy repo)

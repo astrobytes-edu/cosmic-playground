@@ -25,8 +25,8 @@ Use the dashboard as the live inventory:
 - `docs/migration/2026-02-02-demo-migration-dashboard.md`
 
 Summary snapshot:
-- Interactive (migrated): `angular-size`, `binary-orbits`, `eclipse-geometry`, `moon-phases`, `seasons`
-- Stub: `blackbody-radiation`, `conservation-laws`, `em-spectrum`, `keplers-laws`, `parallax-distance`, `telescope-resolution`, `planetary-conjunctions`
+- Interactive (migrated): `angular-size`, `binary-orbits`, `eclipse-geometry`, `moon-phases`, `seasons`, `keplers-laws`, `parallax-distance`
+- Stub: `blackbody-radiation`, `conservation-laws`, `em-spectrum`, `telescope-resolution`, `planetary-conjunctions`
 - Missing from Cosmic Playground but present in legacy repo: `doppler-shift-spectrometer`, `spectral-lines-lab`, `planetary-climate-sandbox`
 
 ## PR Slice 1: Tighten the instrument contract + apply across all demos
@@ -110,6 +110,8 @@ Summary snapshot:
 - `corepack pnpm build`
 - `CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e`
 
+**Status:** Completed and pushed (2026-02-02).
+
 ## PR Slice 4: Establish the “data-heavy demo” pattern, then migrate one Wave 3 demo (Parallax Distance)
 
 **Scope:** Define a repo-owned, “no fetch” data packaging pattern suitable for the Wave 3 demos, then migrate `parallax-distance` end-to-end as the exemplar.
@@ -135,6 +137,8 @@ Summary snapshot:
 - `corepack pnpm build`
 - `CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e`
 
+**Status:** Completed and pushed (2026-02-02).
+
 ## After these slices (repeatable workflow)
 
 At this point you should have:
@@ -147,4 +151,3 @@ Then proceed one demo per PR in this order:
 - Finish Wave 2: `conservation-laws`, `blackbody-radiation`
 - Finish Wave 3: `em-spectrum`, `telescope-resolution`
 - Decide scope + migrate: `planetary-conjunctions` (new), then the 3 missing legacy demos (`spectral-lines-lab`, `doppler-shift-spectrometer`, `planetary-climate-sandbox`) once the spectra/climate datasets are placed in the chosen data pattern.
-

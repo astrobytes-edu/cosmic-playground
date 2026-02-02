@@ -3,7 +3,7 @@ title: "Parallax Distance — Assessment Bank"
 bundle: "parallax-distance"
 section: "assessment"
 demo_slug: "parallax-distance"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -16,17 +16,17 @@ has_math: true
 
 ### Clicker 1 — Direction of the relationship
 
-**Demo setup:** open `/play/parallax-distance/` and increase distance on the slider.
+**Demo setup:** open `/play/parallax-distance/` and decrease parallax $p$.
 
-**Question:** As distance increases, the parallax angle…
+**Question:** As parallax decreases, the inferred distance…
 
 A. increases  
 B. decreases  
 C. stays the same  
 D. changes sign randomly
 
-**Correct:** B  
-**Why:** Parallax is inverse: $p \propto 1/d$.  
+**Correct:** A  
+**Why:** Parallax is inverse: $d \propto 1/p$.  
 **Misconception targeted:** “Closer stars have smaller parallax.”
 
 ### Clicker 2 — Parsecs from parallax
@@ -46,7 +46,7 @@ D. 100 pc
 
 ### Clicker 3 — What is the baseline?
 
-**Demo setup:** click **Jan** and **July** and look at the top-down orbit.
+**Demo setup:** look at the diagram baseline label (Jan ↔ Jul).
 
 **Question:** The demo’s six-month parallax measurement uses Earth at opposite sides of its orbit, which is a baseline of approximately:
 
@@ -61,18 +61,18 @@ D. 1 parsec
 
 ### Clicker 4 — Which mission measures smaller angles?
 
-**Demo setup:** toggle **Hipparcos** and **Gaia**.
+**Demo setup:** increase $\\sigma_p$.
 
-**Question:** Which instrument can measure **smaller** parallax angles (higher precision)?
+**Question:** If the uncertainty $\\sigma_p$ increases (while $p$ stays the same), the signal-to-noise $p/\\sigma_p$…
 
-A. Hipparcos  
-B. Gaia  
-C. They are the same  
-D. Neither can measure parallax
+A. increases  
+B. decreases  
+C. stays the same  
+D. becomes negative
 
 **Correct:** B  
-**Why:** Gaia is designed for much finer astrometry than Hipparcos (the demo’s precision toggle illustrates this).  
-**Misconception targeted:** “Modern instruments don’t fundamentally change what’s measurable.”
+**Why:** Dividing by a larger $\\sigma_p$ makes $p/\\sigma_p$ smaller.  
+**Misconception targeted:** “Measurement precision doesn’t matter.”
 
 ### Clicker 5 — Is parallax a property of the star?
 

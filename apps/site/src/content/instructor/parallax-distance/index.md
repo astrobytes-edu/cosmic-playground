@@ -3,7 +3,7 @@ title: "Parallax Distance"
 bundle: "parallax-distance"
 section: "index"
 demo_slug: "parallax-distance"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -13,15 +13,16 @@ has_math: true
 
 > **This guide is instructor-facing**
 > Student demo: `/play/parallax-distance/`  
-> Main code: `demos/parallax-distance/parallax.js`  
-> Model code: `demos/_assets/parallax-distance-model.js`  
-> Data: `demos/parallax-distance/star-data.js`
+> Main code: `apps/demos/src/demos/parallax-distance/main.ts`  
+> UI markup: `apps/demos/src/demos/parallax-distance/index.html`  
+> Model code (tested): `packages/physics/src/parallaxDistanceModel.ts`  
+> Data: `packages/data-astr101/src/starsNearby.ts`
 
 > **Where to go next**
-> - Model + math + assumptions: `model.qmd`
-> - In-class activities (MW + Friday lab + station version): `activities.qmd`
-> - Assessment bank (clickers + short answer + exit ticket): `assessment.qmd`
-> - Future enhancements (planning backlog): `backlog.qmd`
+> - Model + math + assumptions: `model.md`
+> - In-class activities (MW + Friday lab + station version): `activities.md`
+> - Assessment bank (clickers + short answer + exit ticket): `assessment.md`
+> - Future enhancements (planning backlog): `backlog.md`
 
 ## Why this demo exists
 
@@ -55,13 +56,13 @@ Students should be able to:
 
 1. **Warm start: human parallax.** Have students do the thumb demo (alternate eyes). Ask: *“If your thumb were farther away, would the shift look bigger or smaller?”* (Prediction before observation.)
 
-2. **Introduce the baseline.** In the demo, jump between **Jan** and **July** and ask: *“What is the baseline we’re using?”* (Earth’s orbit; opposite sides give a ~2 AU baseline.)
+2. **Introduce the baseline.** In the demo, point to the two observation points (Jan vs July) and ask: *“What is the baseline we’re using?”* (Opposite sides of Earth’s orbit: ~2 AU.)
 
-3. **Use the distance slider (log scale).** Start near **1 pc** and slowly increase. Ask students to predict: *“When distance goes up by a factor of 10, what happens to the parallax angle?”* Then check the parallax readout as you move to 10 pc, 100 pc, etc.
+3. **Use the parallax slider.** Start at $p=1000\\,\\mathrm{mas}$ (1 arcsec, 1 pc). Ask students to predict: *“If parallax drops by a factor of 10, what happens to distance?”* Then set $p=100\\,\\mathrm{mas}$ and read the distance.
 
 4. **Make the inverse relationship explicit.** Pause on a clean value (e.g., 10 pc) and read off the parallax magnitude. Then ask: *“If parallax is half as big, is the star closer or farther? By what factor?”*
 
-5. **Measurement limits = knowledge limits.** Toggle **Hipparcos** vs **Gaia** precision and ask: *“At what distances does parallax become effectively unmeasurable with each?”* Use this to connect instrumentation to what we can infer.
+5. **Measurement limits = knowledge limits.** Increase $\\sigma_p$ and ask: *“When does $p$ become comparable to the uncertainty?”* Use the signal-to-noise readout $p/\\sigma_p$ to connect “tiny angle” to “measurement challenge.”
 
 6. **Close the story.** Say explicitly: *“Parallax gives us distances that calibrate everything else. When the angle is too tiny, we need other methods — but those methods are anchored to this geometric rung.”*
 

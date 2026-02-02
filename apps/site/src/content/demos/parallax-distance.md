@@ -14,17 +14,18 @@ misconceptions:
   - "Parallax is about an object moving, not the observer changing viewpoint."
 predict_prompt: "If a star is twice as far away, what happens to its parallax angle (bigger or smaller)?"
 play_steps:
-  - "Change distance and observe the parallax shift."
-  - "Identify what counts as the ‘baseline’ in the model."
-  - "Test how small angles become hard to measure."
+  - "Choose a preset star and record its parallax $p$ (mas) and distance $d$ (pc)."
+  - "Decrease $p$ by a factor of 10 and check that $d$ increases by a factor of 10."
+  - "Increase the measurement uncertainty $\\sigma_p$ and discuss why tiny angles are hard to measure."
 explain_prompt: "Use the triangle idea to explain why parallax decreases with distance."
 model_notes:
-  - "This is currently a stub while the legacy demo is migrated into the new runtime."
+  - "Parsec definition: $d\\,(\\mathrm{pc})=1/p\\,(\\mathrm{arcsec})$."
+  - "Unit reminder: $1\\,\\mathrm{arcsec}=1000\\,\\mathrm{mas}$."
+  - "Because $d\\propto 1/p$, uncertainty in a tiny $p$ can produce large distance uncertainty."
 demo_path: "/play/parallax-distance/"
 station_path: "/stations/parallax-distance/"
 instructor_path: "/instructor/parallax-distance/"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 ---
 
-This demo will be migrated into the Cosmic Playground runtime; for now it provides a placeholder `/play/` target.
-
+This demo uses parallax (a geometry measurement) to infer stellar distances in parsecs, and highlights how measurement uncertainty limits what we can know directly.

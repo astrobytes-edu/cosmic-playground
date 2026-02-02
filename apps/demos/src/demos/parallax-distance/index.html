@@ -8,14 +8,57 @@
     <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
   </head>
   <body>
-    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Parallax Distance instrument">
+    <div
+      id="cp-demo"
+      class="cp-layer-instrument cp-demo"
+      data-shell="triad"
+      aria-label="Parallax Distance instrument"
+    >
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Parallax Distance: Measuring the Stars</div>
         <div class="cp-panel-body">
           <p class="cp-muted">Use triangles and tiny angles to infer distance from apparent shift.</p>
-          <div class="cp-callout" data-kind="model">
-            This demo is currently a stub while we migrate the legacy version into the new runtime.
+
+          <div class="cp-callout" data-kind="tip">
+            <strong>Parsec definition</strong>
+            <div>$$d\\,(\\mathrm{pc})=\\frac{1}{p\\,(\\mathrm{arcsec})}$$</div>
           </div>
+
+          <label class="control">
+            <span>Preset star</span>
+            <select id="starPreset"></select>
+          </label>
+
+          <label class="control">
+            <span>Parallax angle $p$ (mas)</span>
+            <input
+              id="parallaxMas"
+              type="range"
+              min="1"
+              max="1000"
+              value="100"
+              step="1"
+              data-tooltip-source="#parallaxMasValue"
+            />
+            <span class="control__value"><span id="parallaxMasValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Measurement uncertainty $\\sigma_p$ (mas)</span>
+            <input
+              id="sigmaMas"
+              type="range"
+              min="0.1"
+              max="20"
+              value="1"
+              step="0.1"
+              data-tooltip-source="#sigmaMasValue"
+            />
+            <span class="control__value"><span id="sigmaMasValue"></span></span>
+          </label>
+
+          <button id="stationMode" class="cp-action" type="button">Station mode</button>
+          <button id="help" class="cp-action cp-action--ghost" type="button">Help / shortcuts</button>
 
           <button id="copyResults" class="cp-action" type="button">Copy results</button>
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -28,22 +71,52 @@
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
-        <div class="cp-stage__inner">
-          <p class="cp-stage__headline">Migration pending</p>
-          <p class="cp-muted">
-            This space will host the interactive visualization once the demo is migrated.
-          </p>
-        </div>
+      <section class="cp-demo__stage cp-stage stage" aria-label="Parallax visualization stage">
+        <svg
+          id="diagram"
+          class="stage__svg"
+          viewBox="0 0 900 520"
+          role="img"
+          aria-label="Parallax triangle diagram with two observation points and a star"
+        >
+          <rect x="0" y="0" width="900" height="520" rx="18" class="stage__bg" />
+
+          <line id="baseline" class="stage__baseline" x1="0" y1="0" x2="0" y2="0" />
+          <circle id="earthA" class="stage__earth" r="10" cx="0" cy="0" />
+          <circle id="earthB" class="stage__earth" r="10" cx="0" cy="0" />
+          <text id="baselineLabel" class="stage__label" x="0" y="0">Baseline (Jan ↔ Jul): 2 AU (schematic)</text>
+
+          <line id="rayA" class="stage__ray" x1="0" y1="0" x2="0" y2="0" />
+          <line id="rayB" class="stage__ray" x1="0" y1="0" x2="0" y2="0" />
+
+          <path id="angleArc" class="stage__arc" d="" />
+          <text id="angleLabel" class="stage__label stage__label--angle" x="0" y="0">2p</text>
+
+          <circle id="star" class="stage__star" r="9" cx="0" cy="0" />
+          <text id="starLabel" class="stage__label stage__label--star" x="0" y="0">Star</text>
+
+          <text id="clampNote" class="stage__note" x="0" y="0"></text>
+        </svg>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Migration pending (stub).</p>
           <div class="cp-readout">
-            <div class="cp-readout__label">(example) Parallax angle</div>
-            <div class="cp-readout__value">—</div>
+            <div class="cp-readout__label">Parallax $p$ (arcsec)</div>
+            <div class="cp-readout__value"><span id="parallaxArcsec"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Distance $d$ (pc)</div>
+            <div class="cp-readout__value"><span id="distancePc"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Distance $d$ (ly)</div>
+            <div class="cp-readout__value"><span id="distanceLy"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Signal-to-noise $p/\\sigma_p$</div>
+            <div class="cp-readout__value"><span id="snr"></span></div>
           </div>
         </div>
       </aside>
@@ -57,8 +130,8 @@
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>Farther targets have smaller parallax shifts.</li>
-                <li>Small angles are hard: measurement uncertainty matters.</li>
+                <li>Farther stars have smaller parallax angles ($p$ shrinks as $d$ grows).</li>
+                <li>Because $d\\propto 1/p$, small errors in tiny angles can create large distance uncertainty.</li>
               </ul>
             </div>
           </details>
@@ -66,12 +139,19 @@
           <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">stub</span>
+              <span class="cp-accordion__meta">pc / arcsec / mas</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-                <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+                <li>This diagram is schematic (angles are exaggerated for visibility).</li>
+                <li>
+                  We use the standard parallax definition:
+                  $$d\\,(\\mathrm{pc})=\\frac{1}{p\\,(\\mathrm{arcsec})}.$$
+                </li>
+                <li>
+                  The demo reports parallax in milliarcseconds (mas), where
+                  $$1\\,\\mathrm{arcsec}=1000\\,\\mathrm{mas}.$$
+                </li>
               </ul>
             </div>
           </details>
