@@ -6,10 +6,10 @@ This document is the planning “control panel” for finishing the demo migrati
 
 **Cosmic Playground demo slugs (content + source): 12.**
 
-- **Interactive (migrated): 7**
-  - `angular-size`, `binary-orbits`, `eclipse-geometry`, `moon-phases`, `seasons`, `keplers-laws`, `parallax-distance`
-- **Stub (instrument shell only): 5**
-  - `blackbody-radiation`, `conservation-laws`, `em-spectrum`, `telescope-resolution`, `planetary-conjunctions`
+- **Interactive (migrated): 9**
+  - `angular-size`, `binary-orbits`, `blackbody-radiation`, `conservation-laws`, `eclipse-geometry`, `moon-phases`, `seasons`, `keplers-laws`, `parallax-distance`
+- **Stub (instrument shell only): 3**
+  - `em-spectrum`, `telescope-resolution`, `planetary-conjunctions`
 
 **Legacy demo directories found in `~/Teaching/astr101-sp26/demos/`: 14**
 
@@ -42,8 +42,8 @@ Legend:
 | `eclipse-geometry` | yes | 1 | **Interactive** | Uses `@cosmic/physics` `EclipseGeometryModel`; Station + Challenge mode wired |
 | `moon-phases` | yes | 1 | **Interactive** | Station + Challenge mode wired; does **not** currently use `@cosmic/physics` |
 | `binary-orbits` | yes | 2 | **Interactive** | Uses `@cosmic/physics` `TwoBodyAnalytic`; Station mode wired (no Challenge) |
-| `blackbody-radiation` | yes | 2 | **Stub** | Legacy had Math Mode; needs model + viz + export/readouts alignment |
-| `conservation-laws` | yes | 2 | **Stub** | Needs model + viz + export/readouts alignment |
+| `blackbody-radiation` | yes | 2 | **Interactive** | Uses `@cosmic/physics` `BlackbodyRadiationModel`; Station mode + exports v1 wired (Math Mode UI still deferred) |
+| `conservation-laws` | yes | 2 | **Interactive** | Uses `@cosmic/physics` `TwoBodyAnalytic` + `ConservationLawsModel`; Station mode + exports v1 wired |
 | `keplers-laws` | yes | 2 | **Interactive** | Uses `@cosmic/physics` `KeplersLawsModel`; Station mode wired; export v1 wired |
 | `em-spectrum` | yes | 3 | **Stub** | Legacy depends on datasets; needs data packaging + UI |
 | `parallax-distance` | yes | 3 | **Interactive** | Uses `@cosmic/physics` `ParallaxDistanceModel` + `@cosmic/data-astr101` `nearbyStars`; Station + export v1 wired |
@@ -113,8 +113,8 @@ Legend:
 
 ### Wave 2 stubs (from `docs/migration/astr101-sp26-manifest.json`)
 
-- [ ] `blackbody-radiation` — legacy Math Mode; build Planck/Stefan–Boltzmann model + viz; decide whether to reintroduce Math Mode.
-- [ ] `conservation-laws` — model + viz; ensure units and labels match teaching goal.
+- [x] `blackbody-radiation` — migrated to interactive instrument (model + viz + exports v1). Math Mode UI still a backlog decision.
+- [x] `conservation-laws` — migrated to interactive instrument (model + viz + exports v1).
 
 ### Wave 3 stubs (data-heavy)
 
