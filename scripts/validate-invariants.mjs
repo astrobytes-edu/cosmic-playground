@@ -109,7 +109,9 @@ export async function validateInvariants({ repoRoot = process.cwd() } = {}) {
   const rxForbiddenBaseUrlInDemos = /\bimport\.meta\.env\.BASE_URL\b/g;
   const rxPrintMedia = /@media\s+print\b/g;
   const rxStyleTag = /<style\b/i;
-  const rxColorLiteral = /#[0-9a-fA-F]{3,8}\b|\brgb\(|\bhsl\(/g;
+  // Theme rule enforcement for apps: no hardcoded colors. Catch common CSS color literal forms.
+  // Note: This intentionally targets only app-layer files (apps/site and apps/demos), not packages/theme.
+  const rxColorLiteral = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/gi;
 
   // Site source (excluding content)
   if (await pathExists(siteSrcRoot)) {
@@ -333,4 +335,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // eslint-disable-next-line no-process-exit
   main().then((code) => process.exit(code));
 }
-

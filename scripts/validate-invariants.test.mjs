@@ -44,10 +44,20 @@ describe("validateInvariants", () => {
     expect(violations.map((v) => v.code)).toContain("demos:forbidden-base-url");
   });
 
+  test("flags rgba/hsla color literals in app-layer styles", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "cp-inv-"));
+    await writeFile(
+      path.join(root, "apps/site/src/styles/global.css"),
+      `.x { background: rgba(0,0,0,0.5); }\n.y { color: hsla(0, 0%, 100%, 0.7); }\n`
+    );
+
+    const violations = await validateInvariants({ repoRoot: root });
+    expect(violations.map((v) => v.code)).toContain("apps:no-color-literals");
+  });
+
   test("passes with no tracked source files", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "cp-inv-"));
     const violations = await validateInvariants({ repoRoot: root });
     expect(violations).toEqual([]);
   });
 });
-
