@@ -83,8 +83,16 @@ test.describe("Cosmic Playground smoke", () => {
       expects: ["Diameter D (km)", "Distance d (km)", "Angular diameter θ (deg)"]
     },
     {
+      slug: "blackbody-radiation",
+      expects: ["Temperature T (K)", "Peak wavelength λ_peak (nm)", "Luminosity ratio L/L☉ (same radius)"]
+    },
+    {
       slug: "binary-orbits",
       expects: ["Mass ratio", "Separation a (AU)", "Orbital period P (yr)"]
+    },
+    {
+      slug: "conservation-laws",
+      expects: ["Central mass M (M☉)", "Specific energy ε (AU²/yr²)", "Specific angular momentum |h| (AU²/yr)"]
     },
     {
       slug: "eclipse-geometry",
