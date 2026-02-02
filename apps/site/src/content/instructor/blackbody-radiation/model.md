@@ -14,8 +14,8 @@ has_math: true
 
 > **Links**
 > Student demo: `/play/blackbody-radiation/`  
-> Model code: `demos/_assets/blackbody-model.js`  
-> UI/visualization code: `demos/blackbody-radiation/blackbody.js`
+> Model code: `packages/physics/src/blackbodyRadiationModel.ts`  
+> UI/visualization code: `apps/demos/src/demos/blackbody-radiation/main.ts`
 
 ## What the demo is modeling (big picture)
 
@@ -25,7 +25,7 @@ This demo models the spectrum of an idealized **blackbody**: an object that abso
 - **Peak shift:** hotter objects peak at shorter wavelengths (Wien’s law).
 - **Total power:** hotter objects emit dramatically more energy per unit area (Stefan–Boltzmann law).
 
-The model computations live in `demos/_assets/blackbody-model.js` and are used by the interactive view in `demos/blackbody-radiation/blackbody.js`.
+The model computations live in `packages/physics/src/blackbodyRadiationModel.ts` and are used by the interactive view in `apps/demos/src/demos/blackbody-radiation/main.ts`.
 
 ## Units + conventions used in the code
 
@@ -35,7 +35,7 @@ The shared model uses CGS internally:
 - Temperature $T$ in **K**
 - Spectral radiance $B_\lambda$ in **erg/s/cm²/sr/cm** (theoretical units; the UI may plot in relative scaling for readability)
 
-Key constants (as implemented in `demos/_assets/blackbody-model.js`):
+Key constants (as implemented in `packages/physics/src/blackbodyRadiationModel.ts`):
 
 - $c = 2.998\times 10^{10}\ \text{cm/s}$
 - $h = 6.626\times 10^{-27}\ \text{erg·s}$

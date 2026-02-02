@@ -14,14 +14,14 @@ has_math: true
 
 ## P0 (blocking / correctness / teachability)
 
-- **Docs correctness:** reconcile `demos/blackbody-radiation/README.md` (“Comparison Mode”) with the current UI implementation (no obvious compare control in `demos/blackbody-radiation/index.html`). Either implement comparison or update docs.
+- **Docs correctness:** reconcile any legacy “Comparison Mode” notes with the current instrument UI (no compare control in `apps/demos/src/demos/blackbody-radiation/index.html`). Either implement comparison or update docs.
 - **Instructor usability:** add a one-page “teach script + misconceptions + one key question” printable summary linked from the instructor guide.
 - **CMB storyline (optional):** decide whether CMB presets are in-scope for ASTR 101 and, if so, add a short instructor-note section on how/when to use them.
 
 ## P1 (important)
 
 - **Stefan–Boltzmann intuition:** add an “area under the curve” visualization toggle (matches README future ideas) to make $T^4$ scaling more visceral.
-- **Approximations clarity:** tighten the “temperature → color” language in the student-facing explanation to emphasize it is perceptual/approximate (see `demos/_assets/blackbody-model.js` notes).
+- **Approximations clarity:** keep “temperature → color” language explicitly perceptual/approximate (see `packages/physics/src/blackbodyRadiationModel.ts` notes).
 - **Answer keys:** add suggested “ideal student responses” to the activities protocols to reduce TA variability.
 
 ## P2 (nice to have)

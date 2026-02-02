@@ -8,14 +8,60 @@
     <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
   </head>
   <body>
-    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Blackbody Radiation instrument">
+    <div
+      id="cp-demo"
+      class="cp-layer-instrument cp-demo"
+      data-shell="triad"
+      aria-label="Blackbody Radiation instrument"
+    >
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Blackbody Radiation: Color and Temperature</div>
         <div class="cp-panel-body">
           <p class="cp-muted">See how temperature shifts a thermal spectrum and perceived color.</p>
-          <div class="cp-callout" data-kind="model">
-            This demo is currently a stub while we migrate the legacy version into the new runtime.
+
+          <label class="control">
+            <span>Temperature $T$ (K)</span>
+            <input
+              id="tempSlider"
+              type="range"
+              min="0"
+              max="1000"
+              step="1"
+              value="500"
+              data-tooltip-source="#tempValue"
+              aria-label="Temperature slider (log scale)"
+            />
+            <span class="control__value"><span id="tempValue"></span></span>
+          </label>
+
+          <div class="segmented" role="group" aria-label="Intensity scale">
+            <button id="scaleLog" class="segmented__button" type="button">Log</button>
+            <button id="scaleLinear" class="segmented__button" type="button">Linear</button>
           </div>
+
+          <div class="check-row" role="group" aria-label="Overlays">
+            <label class="check">
+              <input id="showVisibleBand" type="checkbox" checked />
+              Show visible band
+            </label>
+            <label class="check">
+              <input id="showPeakMarker" type="checkbox" checked />
+              Show peak marker
+            </label>
+          </div>
+
+          <div class="presets">
+            <div class="presets__label">Presets</div>
+            <div class="presets__row" role="group" aria-label="Temperature presets">
+              <button class="cp-action cp-action--ghost preset" data-temp-k="3000" type="button">M dwarf</button>
+              <button class="cp-action cp-action--ghost preset" data-temp-k="5772" type="button">Sun</button>
+              <button class="cp-action cp-action--ghost preset" data-temp-k="10000" type="button">A/B star</button>
+              <button class="cp-action cp-action--ghost preset" data-temp-k="2.725" type="button">CMB</button>
+            </div>
+          </div>
+
+          <button id="stationMode" class="cp-action" type="button">Station mode</button>
+          <button id="help" class="cp-action cp-action--ghost" type="button">Help / shortcuts</button>
 
           <button id="copyResults" class="cp-action" type="button">Copy results</button>
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -28,22 +74,30 @@
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
-        <div class="cp-stage__inner">
-          <p class="cp-stage__headline">Migration pending</p>
-          <p class="cp-muted">
-            This space will host the interactive visualization once the demo is migrated.
-          </p>
-        </div>
+      <section class="cp-demo__stage cp-stage stage" aria-label="Spectrum visualization stage">
+        <canvas
+          id="spectrumCanvas"
+          role="img"
+          aria-label="Blackbody spectrum curve showing relative intensity versus wavelength"
+        ></canvas>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Migration pending (stub).</p>
+          <div class="star-preview" aria-label="Star preview">
+            <div id="starCircle" class="star-preview__circle" role="img" aria-label="Approximate star color"></div>
+            <div class="star-preview__label">
+              <span id="spectralClass"></span> · <span id="colorName"></span>
+            </div>
+          </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">(example) Peak wavelength</div>
-            <div class="cp-readout__value">—</div>
+            <div class="cp-readout__label">Peak wavelength $\lambda_{\\rm peak}$ (nm)</div>
+            <div class="cp-readout__value"><span id="peakNm"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Luminosity ratio $L/L_{\\odot}$ (same radius)</div>
+            <div class="cp-readout__value"><span id="lumRatio"></span></div>
           </div>
         </div>
       </aside>
@@ -53,11 +107,12 @@
           <details class="cp-accordion" open>
             <summary>
               <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">2 bullets</span>
+              <span class="cp-accordion__meta">3 bullets</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
                 <li>As temperature increases, the peak shifts to shorter wavelengths.</li>
+                <li>Total emission grows very rapidly with temperature ($\\propto T^4$).</li>
                 <li>“Red hot” vs “blue hot” depends on spectrum, not paint colors.</li>
               </ul>
             </div>
@@ -66,12 +121,16 @@
           <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">stub</span>
+              <span class="cp-accordion__meta">CGS + relative plot</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-                <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+                <li>The curve is generated from Planck’s law and plotted in relative (normalized) intensity.</li>
+                <li>Units: $\\lambda$ in cm internally (displayed in nm), $T$ in K.</li>
+                <li>
+                  The “star color” preview is a perceptual approximation (not full colorimetry) and is used only as a
+                  qualitative guide.
+                </li>
               </ul>
             </div>
           </details>

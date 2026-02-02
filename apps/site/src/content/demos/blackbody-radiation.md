@@ -19,12 +19,13 @@ play_steps:
   - "Relate the curve to a qualitative color impression."
 explain_prompt: "Use peak shift and curve shape to explain how temperature changes observed color."
 model_notes:
-  - "This is currently a stub while the legacy demo is migrated into the new runtime."
+  - "The curve is generated from Planck’s law and plotted in relative (normalized) intensity."
+  - "As temperature increases, the peak shifts to shorter wavelengths (Wien’s law)."
+  - "Total emission rises steeply with temperature (Stefan–Boltzmann scaling)."
 demo_path: "/play/blackbody-radiation/"
 station_path: "/stations/blackbody-radiation/"
 instructor_path: "/instructor/blackbody-radiation/"
 last_updated: "2026-01-30"
 ---
 
-This demo will be migrated into the Cosmic Playground runtime; for now it provides a placeholder `/play/` target.
-
+Use the temperature slider (or presets) to compare where the spectrum peaks and how the overall power changes.

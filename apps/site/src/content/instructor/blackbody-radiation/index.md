@@ -13,8 +13,8 @@ has_math: true
 
 > **This guide is instructor-facing**
 > Student demo: `/play/blackbody-radiation/`  
-> Main code: `demos/blackbody-radiation/blackbody.js`  
-> Model code: `demos/_assets/blackbody-model.js`
+> Main code: `apps/demos/src/demos/blackbody-radiation/main.ts`  
+> Model code: `packages/physics/src/blackbodyRadiationModel.ts`
 
 > **Where to go next**
 > - Model + math + assumptions: `model.qmd`
