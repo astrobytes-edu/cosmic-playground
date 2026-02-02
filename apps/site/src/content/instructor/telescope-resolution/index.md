@@ -3,7 +3,7 @@ title: "Telescope Resolution"
 bundle: "telescope-resolution"
 section: "index"
 demo_slug: "telescope-resolution"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -13,15 +13,15 @@ has_math: true
 
 > **This guide is instructor-facing**
 > Student demo: `/play/telescope-resolution/`  
-> Main code: `demos/telescope-resolution/resolution.js`  
-> Model code: `demos/_assets/telescope-resolution-model.js`  
-> Data: `demos/telescope-resolution/telescope-data.js`
+> Main code: `apps/demos/src/demos/telescope-resolution/main.ts`  
+> Model code: `packages/physics/src/telescopeResolutionModel.ts`  
+> Data: `packages/data-telescopes/src/*`
 
 > **Where to go next**
-> - Model + math + assumptions: `model.qmd`
-> - In-class activities (MW + Friday lab + station version): `activities.qmd`
-> - Assessment bank (clickers + short answer + exit ticket): `assessment.qmd`
-> - Future enhancements (planning backlog): `backlog.qmd`
+> - Model + math + assumptions: `model.md`
+> - In-class activities (MW + Friday lab + station version): `activities.md`
+> - Assessment bank (clickers + short answer + exit ticket): `assessment.md`
+> - Future enhancements (planning backlog): `backlog.md`
 
 ## Why this demo exists
 
@@ -57,20 +57,22 @@ Students should be able to:
 
 2. **Binary-star test as the observable.** Turn on the **Binary Star** mode. Set a separation where it is clearly resolved, then decrease separation and ask: *“At what point do two become one?”*
 
-3. **Change aperture (holding wavelength fixed).** Move the **Aperture** slider upward and ask students to predict: *“Does increasing diameter make the blur bigger or smaller?”* Confirm by watching the Airy disk shrink and the status indicator move toward “resolved.”
+3. **Magnification vs resolution.** Change **Magnification (zoom)**. Emphasize: the view changes, but the resolution readouts do not.
 
-4. **Change wavelength (holding aperture fixed).** Move the **Wavelength** slider from visible to IR/radio and ask: *“What happens to resolution at longer wavelength?”* Use this to motivate why ALMA-style instruments need large baselines.
+4. **Change aperture (holding wavelength fixed).** Move the **Aperture** slider upward and ask students to predict: *“Does increasing diameter make the blur bigger or smaller?”* Confirm by watching the PSF shrink and the status indicator move toward “resolved.”
 
-5. **Use telescope presets as narrative anchors.** Click a few presets (Human Eye → Hubble → Keck/JWST). Ask: *“Which change matters most for resolution: being in space, or being big?”* Reinforce: space removes atmosphere, but the diffraction limit still depends on aperture and wavelength.
+5. **Change wavelength (holding aperture fixed).** Click the wavelength buttons (visible → IR → radio) and ask: *“What happens to resolution at longer wavelength?”* Use this to motivate why ALMA-style instruments need large baselines.
 
-6. **Close with inference language.** Say explicitly: *“Resolution is a constraint on what we can infer. If two things are unresolved, it doesn’t mean they aren’t there; it means your instrument can’t separate them.”*
+6. **Use telescope presets as narrative anchors.** Click a few presets (Human Eye → Hubble → Keck/JWST). Ask: *“Which change matters most for resolution: being in space, or being big?”* Reinforce: space removes atmosphere, but the diffraction limit still depends on aperture and wavelength.
+
+7. **Close with inference language.** Say explicitly: *“Resolution is a constraint on what we can infer. If two things are unresolved, it doesn’t mean they aren’t there; it means your instrument can’t separate them.”*
 
 ## Misconceptions + prediction prompts
 
 Use these “predict first” prompts to surface wrong models:
 
 - **Misconception:** “More magnification = more detail.”  
-  **Prompt:** *“If magnification were the key, what slider would matter most?”* Then show it’s aperture/wavelength that controls the Airy pattern.
+  **Prompt:** *“If magnification were the key, what slider would matter most?”* Show that zoom changes the view but aperture/wavelength control the PSF and the resolution readouts.
 
 - **Misconception:** “Small telescopes can resolve exoplanets next to stars.”  
   **Prompt:** *“What happens when separation is tiny even for large apertures?”* Use the status indicator to frame “hard measurement problem.”

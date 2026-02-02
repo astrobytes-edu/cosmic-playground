@@ -12,10 +12,92 @@
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Telescope Resolution: Sharper Eyes</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">See how aperture affects detail and separating close objects.</p>
-          <div class="cp-callout" data-kind="model">
-            This demo is currently a stub while we migrate the legacy version into the new runtime.
-          </div>
+          <p class="cp-muted">See how wavelength and aperture set a best-case resolution limit.</p>
+
+          <label class="control">
+            <span>Telescope preset</span>
+            <select id="preset"></select>
+          </label>
+
+          <label class="control">
+            <span>Effective aperture $D$ (m)</span>
+            <input
+              id="aperture"
+              type="range"
+              min="0"
+              max="1000"
+              step="1"
+              value="400"
+              data-tooltip-source="#apertureValue"
+            />
+            <span class="control__value"><span id="apertureValue"></span></span>
+          </label>
+
+          <fieldset class="band-picker" aria-label="Wavelength band">
+            <legend class="cp-muted">Wavelength</legend>
+            <div id="bands" class="band-picker__buttons" role="group" aria-label="Wavelength bands"></div>
+            <div class="cp-muted" id="bandNotes"></div>
+          </fieldset>
+
+          <label class="control">
+            <span>Binary separation (arcsec)</span>
+            <input
+              id="separation"
+              type="range"
+              min="0"
+              max="1000"
+              step="1"
+              value="700"
+              data-tooltip-source="#separationValue"
+            />
+            <span class="control__value"><span id="separationValue"></span></span>
+          </label>
+
+          <label class="toggle">
+            <input id="binaryEnabled" type="checkbox" checked />
+            <span>Binary star mode</span>
+          </label>
+
+          <label class="control">
+            <span>Magnification (zoom)</span>
+            <input id="zoom" type="range" min="1" max="20" step="1" value="6" data-tooltip-source="#zoomValue" />
+            <span class="control__value"><span id="zoomValue"></span></span>
+          </label>
+
+          <label class="toggle">
+            <input id="includeAtmosphere" type="checkbox" />
+            <span>Include atmosphere (seeing)</span>
+          </label>
+
+          <section id="atmosphereControls" class="cp-notice" aria-label="Atmosphere controls" hidden>
+            <label class="control">
+              <span>Seeing preset (arcsec)</span>
+              <select id="seeingPreset"></select>
+            </label>
+
+            <label class="control">
+              <span>Seeing (arcsec)</span>
+              <input
+                id="seeing"
+                type="range"
+                min="0.2"
+                max="3.5"
+                step="0.1"
+                value="1.0"
+                data-tooltip-source="#seeingValue"
+              />
+              <span class="control__value"><span id="seeingValue"></span></span>
+            </label>
+
+            <label class="toggle">
+              <input id="aoEnabled" type="checkbox" />
+              <span>Adaptive optics (AO)</span>
+            </label>
+          </section>
+
+          <button id="stationMode" class="cp-action" type="button">Station mode</button>
+          <button id="challengeMode" class="cp-action" type="button" disabled>Challenge mode</button>
+          <button id="help" class="cp-action" type="button">Help / shortcuts</button>
 
           <button id="copyResults" class="cp-action" type="button">Copy results</button>
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -28,22 +110,35 @@
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
-        <div class="cp-stage__inner">
-          <p class="cp-stage__headline">Migration pending</p>
-          <p class="cp-muted">
-            This space will host the interactive visualization once the demo is migrated.
-          </p>
+      <section class="cp-demo__stage cp-stage stage" aria-label="Visualization stage">
+        <div class="stage__header">
+          <div class="stage__title">Binary star image</div>
+          <div class="stage__meta">
+            <span class="cp-badge" id="statusBadge"></span>
+            <span class="cp-muted" id="fovLabel"></span>
+          </div>
         </div>
+        <canvas id="canvas" class="stage__canvas" width="420" height="420" aria-label="Point-spread function view"></canvas>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Migration pending (stub).</p>
           <div class="cp-readout">
-            <div class="cp-readout__label">(example) Resolution limit</div>
-            <div class="cp-readout__value">—</div>
+            <div class="cp-readout__label">Diffraction limit $\theta_\mathrm{diff}$ (arcsec)</div>
+            <div class="cp-readout__value"><span id="thetaDiff"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Effective resolution $\theta_\mathrm{eff}$ (arcsec)</div>
+            <div class="cp-readout__value"><span id="thetaEff"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Binary separation (arcsec)</div>
+            <div class="cp-readout__value"><span id="sepReadout"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Status</div>
+            <div class="cp-readout__value"><span id="statusReadout"></span></div>
           </div>
         </div>
       </aside>
@@ -53,12 +148,13 @@
           <details class="cp-accordion" open>
             <summary>
               <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">2 bullets</span>
+              <span class="cp-accordion__meta">3 bullets</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
                 <li>Magnification isn’t the same as resolution.</li>
-                <li>Larger aperture can separate closer pairs.</li>
+                <li>Shorter wavelength and larger aperture improve resolution.</li>
+                <li>With atmosphere on, “seeing” can dominate unless AO helps.</li>
               </ul>
             </div>
           </details>
@@ -66,12 +162,24 @@
           <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">stub</span>
+              <span class="cp-accordion__meta">Rayleigh + seeing</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-                <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+                <li>
+                  Diffraction-limited scaling:
+                  $$\theta_\mathrm{diff} \approx 1.22\,\frac{\lambda}{D}$$
+                  where $\lambda$ is wavelength and $D$ is effective aperture.
+                </li>
+                <li>
+                  Atmosphere (toy model): without AO we take $\max(\theta_\mathrm{diff},\,\theta_\mathrm{seeing})$; with AO we reduce seeing and combine in quadrature.
+                </li>
+                <li>
+                  Status cutoffs are didactic: resolved if separation $\ge \theta_\mathrm{eff}$, marginal if $\ge 0.8\,\theta_\mathrm{eff}$.
+                </li>
+                <li>
+                  Visualization: diffraction uses an Airy PSF $I(x)=[2J_1(x)/x]^2$; with atmosphere on we use a blurred PSF for clarity (not a full turbulence simulation).
+                </li>
               </ul>
             </div>
           </details>

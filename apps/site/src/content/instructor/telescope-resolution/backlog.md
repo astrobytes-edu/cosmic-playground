@@ -3,7 +3,7 @@ title: "Telescope Resolution — Backlog"
 bundle: "telescope-resolution"
 section: "backlog"
 demo_slug: "telescope-resolution"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 ---
 > **Navigation**
 > - Instructor hub: [/demos/_instructor/](../../instructor/)
@@ -13,7 +13,7 @@ last_updated: "2026-01-30"
 
 ## P0 (blocking / correctness / teachability)
 
-- **Teachability:** add a short instructor note that “resolved/marginal/unresolved” thresholds are didactic cutoffs (see `demos/_assets/telescope-resolution-model.js`) and are not a full instrument-performance model.
+- **Teachability:** add a short instructor note that “resolved/marginal/unresolved” thresholds are didactic cutoffs (see `packages/physics/src/telescopeResolutionModel.ts`) and are not a full instrument-performance model.
 - **Atmosphere story:** add one explicit “seeing-limited vs diffraction-limited” check step to the activities protocol (students must compare with/without atmosphere).
 - **Assessment usability:** create a one-slide-per-clicker mini-deck template (prompt + setup + resolution readout) for fast classroom deployment.
 

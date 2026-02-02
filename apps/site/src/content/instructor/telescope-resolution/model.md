@@ -3,7 +3,7 @@ title: "Telescope Resolution — Model & Math (Instructor Deep Dive)"
 bundle: "telescope-resolution"
 section: "model"
 demo_slug: "telescope-resolution"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -14,8 +14,9 @@ has_math: true
 
 > **Links**
 > Student demo: `/play/telescope-resolution/`  
-> Model code: `demos/_assets/telescope-resolution-model.js`  
-> UI/visualization code: `demos/telescope-resolution/resolution.js`
+> Model code: `packages/physics/src/telescopeResolutionModel.ts`  
+> UI/visualization code: `apps/demos/src/demos/telescope-resolution/main.ts`  
+> Dataset: `packages/data-telescopes/src/*`
 
 ## What the demo is modeling (big picture)
 
@@ -24,7 +25,7 @@ This demo models the **diffraction limit** of a circular telescope aperture and 
 - A point source does not image to a point; it images to an **Airy pattern**.
 - Two sources are “just resolved” when their Airy patterns are sufficiently separated (Rayleigh criterion).
 
-The core physics utilities live in `demos/_assets/telescope-resolution-model.js` and are used by `demos/telescope-resolution/resolution.js`.
+The core physics utilities live in `packages/physics/src/telescopeResolutionModel.ts` and are used by the Vite instrument at `apps/demos/src/demos/telescope-resolution/`.
 
 ## Units + conventions used in the code
 
@@ -34,9 +35,7 @@ The shared model uses CGS-style internal units for convenience:
 - Aperture diameter $D$ stored in **cm** (UI commonly uses meters, then converts).
 - Angular resolution reported in **arcseconds**.
 
-The model defines a convenience constant:
-
-- `DIFF_COEFF = 251643.1` so that $\theta_{\text{arcsec}} = \text{DIFF\_COEFF}\cdot\lambda(\text{cm})/D(\text{cm})$ matches $1.22\lambda/D$ (in radians) converted to arcseconds.
+The implementation computes $\theta$ in radians via $1.22\\lambda/D$, then converts to arcseconds using shared unit helpers.
 
 ## Key relationships to foreground (with meaning + units)
 

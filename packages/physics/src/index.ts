@@ -8,4 +8,5 @@ export { KeplersLawsModel } from "./keplersLawsModel";
 export { ParallaxDistanceModel } from "./parallaxDistanceModel";
 export { PhotonModel } from "./photonModel";
 export { SeasonsModel } from "./seasonsModel";
+export { TelescopeResolutionModel } from "./telescopeResolutionModel";
 export { TwoBodyAnalytic } from "./twoBodyAnalytic";

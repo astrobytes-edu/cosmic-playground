@@ -1,2 +1,88 @@
 @import "../../shared/stub-demo.css";
 
+.control {
+  display: grid;
+  gap: 8px;
+}
+
+.control__value {
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--cp-muted);
+  margin-top: 10px;
+}
+
+.band-picker {
+  border: 1px solid var(--cp-border);
+  border-radius: 12px;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.band-picker__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.band {
+  border: 1px solid var(--cp-border);
+  background: color-mix(in srgb, var(--cp-bg2) 78%, transparent);
+  color: var(--cp-text);
+  border-radius: 9999px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+.band:hover {
+  border-color: var(--cp-accent);
+}
+
+.band--active {
+  border-color: var(--cp-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cp-accent) 22%, transparent);
+}
+
+.stage {
+  display: grid;
+  gap: var(--cp-space-3);
+  align-content: start;
+  padding: var(--cp-space-4);
+}
+
+.stage__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--cp-space-3);
+}
+
+.stage__title {
+  font-weight: 700;
+  color: var(--cp-text);
+}
+
+.stage__meta {
+  display: flex;
+  gap: var(--cp-space-2);
+  align-items: center;
+}
+
+.stage__canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  border: 1px solid var(--cp-border);
+  background: radial-gradient(circle at 20% 30%, var(--cp-glow-teal), transparent 55%),
+    radial-gradient(circle at 80% 20%, var(--cp-glow-violet), transparent 55%),
+    color-mix(in srgb, var(--cp-bg0) 70%, transparent);
+  box-shadow: 0 24px 50px color-mix(in srgb, var(--cp-bg0) 65%, transparent);
+}
+

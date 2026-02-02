@@ -1,6 +1,7 @@
 ---
 title: "Telescope Resolution: Sharper Eyes"
 status: draft
+content_verified: true
 levels: [Both]
 topics: [Telescopes]
 time_minutes: 10
@@ -19,12 +20,13 @@ play_steps:
   - "Compare the effect of changing magnification vs changing aperture."
 explain_prompt: "Explain why resolution is limited and why aperture matters for detail."
 model_notes:
-  - "This is currently a stub while the legacy demo is migrated into the new runtime."
+  - 'Diffraction-limited scaling: $\\theta_\\mathrm{diff} \\approx 1.22\\,\\lambda/D$ (converted to arcseconds for readouts).'
+  - "Atmosphere (toy model): seeing can dominate over diffraction; AO reduces the seeing contribution in the demo."
+  - "The Copy Results export includes diffraction limit, effective resolution, and resolved/marginal/unresolved status (with explicit units)."
 demo_path: "/play/telescope-resolution/"
 station_path: "/stations/telescope-resolution/"
 instructor_path: "/instructor/telescope-resolution/"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 ---
 
-This demo will be migrated into the Cosmic Playground runtime; for now it provides a placeholder `/play/` target.
-
+This demo shows how telescope resolution depends on wavelength and aperture, and how atmospheric seeing can blur images from the ground.

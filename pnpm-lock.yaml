@@ -20,6 +20,9 @@ importers:
       '@cosmic/data-spectra':
         specifier: workspace:*
         version: link:../../packages/data-spectra
+      '@cosmic/data-telescopes':
+        specifier: workspace:*
+        version: link:../../packages/data-telescopes
       '@cosmic/physics':
         specifier: workspace:*
         version: link:../../packages/physics
@@ -72,6 +75,12 @@ importers:
         version: 5.9.3
 
   packages/data-spectra:
+    devDependencies:
+      typescript:
+        specifier: ^5.5.4
+        version: 5.9.3
+
+  packages/data-telescopes:
     devDependencies:
       typescript:
         specifier: ^5.5.4

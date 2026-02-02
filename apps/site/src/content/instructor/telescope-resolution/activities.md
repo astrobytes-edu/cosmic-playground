@@ -3,7 +3,7 @@ title: "Telescope Resolution — Activity Protocols"
 bundle: "telescope-resolution"
 section: "activities"
 demo_slug: "telescope-resolution"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -19,10 +19,11 @@ has_math: true
 
 1. Open: `/play/telescope-resolution/`
 2. Leave wavelength at **Visible (550 nm)**.
-3. Set a moderate binary separation (so students can see the transition).
-4. **Prediction prompt:** *“If we increase the telescope diameter, should the two stars become easier or harder to separate?”*
-5. Increase aperture (e.g., Hubble → Keck). Watch the **resolution readout** drop and the status move toward resolved.
-6. One-sentence debrief: “Magnification doesn’t change the diffraction limit; $D$ and $\lambda$ do.”
+3. Ensure **Binary star mode** is on.
+4. Set a moderate binary separation (so students can see the transition).
+5. **Prediction prompt:** *“If we increase the telescope diameter, should the two stars become easier or harder to separate?”*
+6. Increase aperture (e.g., Hubble → Keck). Watch the **resolution readout** drop and the status move toward resolved.
+7. One-sentence debrief: “Magnification doesn’t change the diffraction limit; $D$ and $\lambda$ do.”
 
 ## MW Short (8–12 min)
 

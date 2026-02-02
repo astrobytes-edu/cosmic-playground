@@ -25,6 +25,13 @@ describe("AstroUnits", () => {
     expect(AstroUnits.arcsecToDeg(3600)).toBe(1);
   });
 
+  it("converts arcseconds <-> radians (sanity)", () => {
+    const arcsec = 1;
+    const rad = AstroUnits.arcsecToRad(arcsec);
+    expect(rad).toBeGreaterThan(0);
+    expect(AstroUnits.radToArcsec(rad)).toBeCloseTo(arcsec, 12);
+  });
+
   it("converts nm <-> cm", () => {
     expect(AstroUnits.cmToNm(1)).toBeCloseTo(1e7, 12);
     expect(AstroUnits.nmToCm(1e7)).toBeCloseTo(1, 12);

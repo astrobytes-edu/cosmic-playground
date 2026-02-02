@@ -1,0 +1,70 @@
+{
+  "package": "@cosmic/data-telescopes",
+  "manifestVersion": 1,
+  "datasets": [
+    {
+      "id": "telescopePresets",
+      "title": "Telescope and interferometer presets",
+      "description": "Teaching list of telescope apertures/baselines and default wavelength choices for resolution examples.",
+      "exports": ["telescopePresets", "telescopePresetsMeta"],
+      "unitsPolicy": "units-in-field-names",
+      "fields": [
+        { "name": "id", "type": "string", "unit": "unitless" },
+        { "name": "name", "type": "string", "unit": "unitless" },
+        { "name": "apertureM", "type": "number", "unit": "m" },
+        { "name": "apertureKind", "type": "string", "unit": "unitless" },
+        { "name": "platform", "type": "string", "unit": "unitless" },
+        { "name": "type", "type": "string", "unit": "unitless" },
+        { "name": "location", "type": "string", "unit": "unitless" },
+        { "name": "notes", "type": "string", "unit": "unitless" },
+        { "name": "defaultWavelengthCm", "type": "number", "unit": "cm" }
+      ],
+      "provenance": {
+        "kind": "project-authored",
+        "notes": "Values curated for ASTR 101 teaching examples; apertures are representative. Some entries represent interferometer baselines as an effective aperture."
+      },
+      "license": "UNSPECIFIED",
+      "version": 1
+    },
+    {
+      "id": "wavelengthBands",
+      "title": "Wavelength band presets",
+      "description": "Teaching presets for common observing bands used in the telescope resolution demo.",
+      "exports": ["wavelengthBands", "wavelengthBandsMeta"],
+      "unitsPolicy": "units-in-field-names",
+      "fields": [
+        { "name": "id", "type": "string", "unit": "unitless" },
+        { "name": "shortLabel", "type": "string", "unit": "unitless" },
+        { "name": "name", "type": "string", "unit": "unitless" },
+        { "name": "wavelengthCm", "type": "number", "unit": "cm" },
+        { "name": "notes", "type": "string", "unit": "unitless" }
+      ],
+      "provenance": {
+        "kind": "project-authored",
+        "notes": "Preset values mirror legacy ASTR 101 demo defaults; wavelengths are representative anchors for band-scale reasoning."
+      },
+      "license": "UNSPECIFIED",
+      "version": 1
+    },
+    {
+      "id": "seeingConditions",
+      "title": "Atmospheric seeing presets",
+      "description": "Teaching presets for atmospheric seeing (arcsec) used in resolution examples.",
+      "exports": ["seeingConditions", "seeingConditionsMeta"],
+      "unitsPolicy": "units-in-field-names",
+      "fields": [
+        { "name": "id", "type": "string", "unit": "unitless" },
+        { "name": "label", "type": "string", "unit": "unitless" },
+        { "name": "seeingArcsec", "type": "number", "unit": "arcsec" },
+        { "name": "notes", "type": "string", "unit": "unitless" }
+      ],
+      "provenance": {
+        "kind": "project-authored",
+        "notes": "Typical seeing ranges used for classroom discussion; not a site-specific distribution."
+      },
+      "license": "UNSPECIFIED",
+      "version": 1
+    }
+  ]
+}
+

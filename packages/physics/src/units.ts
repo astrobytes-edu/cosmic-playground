@@ -127,6 +127,14 @@ export const AstroUnits = {
     return (rad * 180) / Math.PI;
   },
 
+  arcsecToRad(arcsec: number): number {
+    return this.degToRad(arcsec / 3600);
+  },
+
+  radToArcsec(rad: number): number {
+    return this.degToArcsec(this.radToDeg(rad));
+  },
+
   degToArcmin(deg: number): number {
     return deg * 60;
   },

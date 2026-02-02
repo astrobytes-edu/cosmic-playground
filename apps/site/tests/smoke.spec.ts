@@ -197,6 +197,14 @@ test.describe("Cosmic Playground smoke", () => {
     {
       slug: "em-spectrum",
       expects: ["Wavelength lambda (nm)", "Frequency nu (Hz)", "Photon energy E (eV)"]
+    },
+    {
+      slug: "telescope-resolution",
+      expects: [
+        "Diffraction limit theta_diff (arcsec)",
+        "Effective resolution theta_eff (arcsec)",
+        "Binary separation (arcsec)"
+      ]
     }
   ] as const;
 

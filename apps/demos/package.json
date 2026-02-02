@@ -6,6 +6,7 @@
   "dependencies": {
     "@cosmic/data-astr101": "workspace:*",
     "@cosmic/data-spectra": "workspace:*",
+    "@cosmic/data-telescopes": "workspace:*",
     "@cosmic/physics": "workspace:*",
     "@cosmic/runtime": "workspace:*",
     "@cosmic/theme": "workspace:*"
