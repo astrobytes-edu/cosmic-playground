@@ -37,7 +37,7 @@ has_math: true
 3. Change to a cooler preset (**Red Giant**) and a hotter preset (**B**).
 4. Answer (in words): *“When $T$ increases, what happens to $\lambda_{\text{peak}}$? What happens to the area under the curve?”*
 
-**Optional quantitative check (2 min):** pick two temperatures where one is about 2× the other and see whether $\lambda_{\text{peak}}$ is about half (Wien scaling).
+**Optional quantitative check (2 min):** pick two temperatures where one is about $2\\times$ the other and see whether $\lambda_{\\text{peak}}$ is about half (Wien scaling).
 
 ## Friday Lab (20–30+ min)
 
@@ -68,7 +68,7 @@ Use the **log vs linear** display toggle and discuss: “Which view makes the lo
 > **Station card: Blackbody Radiation (6–8 minutes)**
 > Pick one preset (**Sun**, **Red Giant**, **B**, or **White Dwarf**) and record:
 > - Temperature $T$ (K)
-> - Peak wavelength $\lambda_{\text{peak}}$ (nm or µm)
+> - Peak wavelength $\lambda_{\\text{peak}}$ (nm or $\\mu\\mathrm{m}$)
 > - Which band dominates (IR / visible / UV)
 >
 > Then write one sentence:

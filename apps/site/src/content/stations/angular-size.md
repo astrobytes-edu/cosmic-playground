@@ -16,7 +16,7 @@ has_math: true
 >
 > **Your station artifact (fill in):**
 > 1) **Control(s):** diameter $D$, distance $d$  
-> 2) **Observable(s):** angular diameter $\theta$ (°/′/″)  
+> 2) **Observable(s):** angular diameter $\theta$ (deg/arcmin/arcsec)  
 > 3) **Governing relationship:** write this equation in words:
 >
 >    $$\theta = 2\arctan\!\left(\frac{D}{2d}\right)$$
@@ -29,7 +29,7 @@ has_math: true
 > - **Physical diameter $D$ (km in this demo):** the object’s actual size.
 > - **Distance $d$ (km in this demo):** how far the object is from the observer.
 > - **Small-angle idea:** larger $D$ → larger $\theta$; larger $d$ → smaller $\theta$.
-> - **Unit ladder:** $1^\circ = 60′$ and $1′ = 60″$.
+> - **Unit ladder:** $1^\\circ = 60\\,\\mathrm{arcmin}$ and $1\\,\\mathrm{arcmin} = 60\\,\\mathrm{arcsec}$.
 >
 > **Sanity checks:**
 > - If $d$ doubles, $\theta$ should get about half as big (for small angles).

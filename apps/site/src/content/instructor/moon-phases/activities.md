@@ -34,7 +34,7 @@ has_math: true
 ## MW Short Investigation (8–12 min, pairs/triads)
 
 > **Investigation: Build the illumination curve**
-> **Task:** Pick 8 angles evenly spaced around the orbit (e.g., 0°, 45°, 90°, …, 315°). For each, record:
+> **Task:** Pick 8 angles evenly spaced around the orbit (e.g., $0^\\circ$, $45^\\circ$, $90^\\circ$, \\dots, $315^\\circ$). For each, record:
 > - Phase name
 > - Illumination (%)
 >

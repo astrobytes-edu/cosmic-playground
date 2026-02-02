@@ -49,7 +49,7 @@ Students should be able to:
 
 3. Repeat at **New Moon** for solar eclipses. Emphasize that “New Moon” happens monthly, but “near a node” does not.
 
-4. Set orbital tilt to **0°**. Ask: *“What would happen to eclipses?”* Use this counterfactual to cement the causal role of inclination.
+4. Set orbital tilt to **$0^\\circ$**. Ask: *“What would happen to eclipses?”* Use this counterfactual to cement the causal role of inclination.
 
 5. Run **Animate 1 Year** (or the long-run simulation at ~10 years) to show eclipse seasons as clustering in time.
 

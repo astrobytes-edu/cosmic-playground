@@ -77,7 +77,7 @@ What this equation is really saying: shorter wavelengths correspond to **higher-
 
 > **Sanity checks**
 > - Units: (erg·s)·(1/s) = erg ✓
-> - Scaling: if $\lambda$ gets 10× smaller, $E$ gets 10× larger ✓
+> - Scaling: if $\lambda$ gets $10\\times$ smaller, $E$ gets $10\\times$ larger ✓
 
 ## Assumptions, limitations, and sanity checks
 

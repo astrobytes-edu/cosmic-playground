@@ -13,7 +13,7 @@ has_math: true
 > **Station card: Blackbody Radiation (6–8 minutes)**
 > Pick one preset (**Sun**, **Red Giant**, **B**, or **White Dwarf**) and record:
 > - Temperature $T$ (K)
-> - Peak wavelength $\lambda_{\text{peak}}$ (nm or µm)
+> - Peak wavelength $\lambda_{\\text{peak}}$ (nm or $\\mu\\mathrm{m}$)
 > - Which band dominates (IR / visible / UV)
 >
 > Then write one sentence:

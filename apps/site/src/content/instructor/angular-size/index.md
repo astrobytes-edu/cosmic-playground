@@ -41,7 +41,7 @@ Students should be able to:
 
 ## 10–15 minute live-teach script (projector)
 
-1. Start with **Sun** preset. Ask: *“What does 0.5° look like?”* Connect to the “thumb at arm’s length” reference if you use it.
+1. Start with **Sun** preset. Ask: *“What does $0.5^\\circ$ look like?”* Connect to the “thumb at arm’s length” reference if you use it.
 
 2. Switch to **Moon (Today)**. Ask: *“Does the Moon’s angular size feel ‘about the same’ as the Sun?”* Point out the similarity.
 

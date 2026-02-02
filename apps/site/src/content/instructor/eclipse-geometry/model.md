@@ -46,7 +46,7 @@ Let’s unpack each piece:
 
 In the interactive “live” eclipse check, the demo requires being within a tolerance of exact syzygy (pedagogical):
 
-- `SYZYGY_TOLERANCE_DEG = 5°`
+- `SYZYGY_TOLERANCE_DEG = 5 deg`
 
 In the long-run simulation, New/Full events are treated as exact conjunction/opposition.
 
@@ -59,7 +59,7 @@ $$\beta = \arcsin\!\big(\sin i\ \sin(\lambda_M - \Omega)\big)$$
 Let’s unpack each piece:
 
 - $\beta$ is the Moon’s ecliptic latitude (degrees). $|\beta|$ measures “height” above/below the ecliptic plane in angular terms.
-- $i$ is the Moon’s orbital inclination (degrees; default ~5.145° in the demo).
+- $i$ is the Moon’s orbital inclination (degrees; default ~$5.145^\\circ$ in the demo).
 - $\lambda_M-\Omega$ is the angular distance from the ascending node.
 
 What this equation is really saying: the Moon is in the ecliptic plane at the nodes ($\lambda_M=\Omega$ or $\Omega+180^\circ$), and farthest from the plane about $90^\circ$ away from a node.
@@ -120,9 +120,9 @@ A lunar eclipse happens when the Moon passes through Earth’s shadow at Full Mo
 >
 > | Preset | $D_{EM}$ (km) | Total lunar | Umbral lunar | Penumbral lunar |
 > |---|---:|---:|---:|---:|
-> | Perigee-like | 363,300 | 0.467° | 1.015° | 1.548° |
-> | Mean | 384,400 | 0.427° | 0.944° | 1.478° |
-> | Apogee-like | 405,500 | 0.391° | 0.882° | 1.415° |
+> | Perigee-like | 363,300 | $0.467^\\circ$ | $1.015^\\circ$ | $1.548^\\circ$ |
+> | Mean | 384,400 | $0.427^\\circ$ | $0.944^\\circ$ | $1.478^\\circ$ |
+> | Apogee-like | 405,500 | $0.391^\\circ$ | $0.882^\\circ$ | $1.415^\\circ$ |
 
 ## Solar eclipse classification (partial vs total vs annular)
 
@@ -141,9 +141,9 @@ Geometrically, the model checks whether the miss distance $b$ is smaller than th
 >
 > | Preset | $D_{EM}$ (km) | “Central” window | “Any partial” window |
 > |---|---:|---:|---:|
-> | Perigee-like | 363,300 | 1.013° | 1.546° |
-> | Mean | 384,400 | 0.957° | 1.476° |
-> | Apogee-like | 405,500 | 0.921° | 1.413° |
+> | Perigee-like | 363,300 | $1.013^\\circ$ | $1.546^\\circ$ |
+> | Mean | 384,400 | $0.957^\\circ$ | $1.476^\\circ$ |
+> | Apogee-like | 405,500 | $0.921^\\circ$ | $1.413^\\circ$ |
 
 ## Time evolution (what moves in the simulation)
 

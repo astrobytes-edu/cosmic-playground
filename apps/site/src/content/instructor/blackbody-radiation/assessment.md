@@ -114,5 +114,5 @@ D. Only black-colored objects behave this way.
 ## Exit ticket (3 questions)
 
 1. Hotter objects peak at (shorter/longer) wavelengths.
-2. If temperature doubles, does total emitted power per unit area increase by about 2×, 4×, 8×, or 16×?
+2. If temperature doubles, does total emitted power per unit area increase by about $2\\times$, $4\\times$, $8\\times$, or $16\\times$?
 3. Name one common misconception about star color and temperature.

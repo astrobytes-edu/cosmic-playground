@@ -34,7 +34,7 @@ has_math: true
 ## MW Short Investigation (8–12 min, pairs/triads)
 
 > **Investigation: What actually changes between seasons?**
-> **Setup:** Keep **Axial Tilt = 23.5°**. Assign each group a latitude (e.g., 0°, 23.5°, 40°, 66.5°, 80°).
+> **Setup:** Keep **Axial Tilt = $23.5^\\circ$**. Assign each group a latitude (e.g., $0^\\circ$, $23.5^\\circ$, $40^\\circ$, $66.5^\\circ$, $80^\\circ$).
 >
 > **Task:** For your latitude, record these readouts at:
 > - March equinox
@@ -62,7 +62,7 @@ has_math: true
 >
 > **Evidence (from the demo):**
 > 1) A data table for one latitude showing day length and noon altitude at the four anchor dates (use **Station Mode** to export/print).
-> 2) A “tilt = 0°” control test showing the seasonal cycle collapses.
+> 2) A “tilt = $0^\\circ$” control test showing the seasonal cycle collapses.
 > 3) A short note showing perihelion is in early January and therefore distance cannot explain Northern Hemisphere summer.
 >
 > **Reasoning:** Use the model language: connect the observed changes to declination $\delta$, and connect $\delta$ to tilt $\varepsilon$.

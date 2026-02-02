@@ -48,9 +48,9 @@ By the end of this demo, students should be able to:
 
 Students should be able to:
 
-- Use $d(\text{pc}) = 1/p(\text{arcsec})$ to convert between parallax and distance (including mas and µas units).
+- Use $d(\\text{pc}) = 1/p(\\text{arcsec})$ to convert between parallax and distance (including mas and $\\mu\\mathrm{as}$ units).
 - Interpret the parsec as a geometry-defined unit tied to the measurement.
-- Compare measurement reach for Hipparcos-scale (~mas) vs Gaia-scale (tens of µas) astrometry.
+- Compare measurement reach for Hipparcos-scale (~mas) vs Gaia-scale (tens of $\\mu\\mathrm{as}$) astrometry.
 
 ## 10–15 minute live-teach script (projector)
 

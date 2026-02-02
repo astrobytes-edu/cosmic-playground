@@ -46,7 +46,7 @@ Let’s unpack each piece:
 - **$d$** is distance, measured in **parsecs (pc)**.
 - **$p$** is the parallax angle, measured in **arcseconds (")**.
 
-What this equation is really saying: parallax is an **inverse** relationship. When a star is 10× farther away, the parallax angle is 10× smaller.
+What this equation is really saying: parallax is an **inverse** relationship. When a star is $10\\times$ farther away, the parallax angle is $10\\times$ smaller.
 
 > **Sanity checks**
 > - If $p = 1"$, then $d = 1\ \text{pc}$ (this is the definition of a parsec).

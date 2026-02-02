@@ -48,15 +48,15 @@ Students should be able to:
 
 ## 10–15 minute live-teach script (projector)
 
-1. Start at the lecture defaults (March equinox, tilt 23.5°, latitude 40°N). Ask for a prediction: *“At the equinox, how many hours of daylight should we have?”* Then reveal the day-length readout.
+1. Start at the lecture defaults (March equinox, tilt $23.5^\\circ$, latitude $40^\\circ$N). Ask for a prediction: *“At the equinox, how many hours of daylight should we have?”* Then reveal the day-length readout.
 
-2. Click **June Solstice**. Ask: *“At 40°N, should the Sun be higher or lower at noon than at the equinox?”* Connect the change to the **Sun Altitude** readout and the tilted globe view.
+2. Click **June Solstice**. Ask: *“At $40^\\circ$N, should the Sun be higher or lower at noon than at the equinox?”* Connect the change to the **Sun Altitude** readout and the tilted globe view.
 
 3. Click **December Solstice**. Ask: *“What should happen to day length and noon altitude now?”* Highlight that the two hemispheres must be opposite.
 
 4. Point at the **Earth–Sun Distance** readout and ask: *“Are we closer in June or January?”* Then explicitly surface the misconception: distance varies, but it is not aligned with Northern Hemisphere seasons.
 
-5. Optional “counterfactual”: set **Axial Tilt = 0°**. Ask: *“What happens to seasons and day length over the year?”* Use this to cement “tilt is the driver.”
+5. Optional “counterfactual”: set **Axial Tilt = $0^\\circ$**. Ask: *“What happens to seasons and day length over the year?”* Use this to cement “tilt is the driver.”
 
 ## Suggested connections to the other demos
 

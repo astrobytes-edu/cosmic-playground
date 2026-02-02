@@ -39,7 +39,7 @@ has_math: true
 Students collect a small dataset by varying:
 
 - speed factor $v/v_{\rm circ}$
-- direction angle (0° tangential; near ±85° radial)
+- direction angle ($0^\\circ$ tangential; near $\\pm 85^\\circ$ radial)
 
 **Deliverable:** a table with columns:
 

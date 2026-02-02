@@ -14,7 +14,7 @@ misconceptions:
   - "Seasons are caused by Earth being closer/farther from the Sun."
 predict_prompt: "If Earth’s axis were not tilted, what would happen to seasons?"
 play_steps:
-  - "Compare tilt = 0° vs tilt = 23.5° and note what changes."
+  - "Compare tilt = $0^\\circ$ vs tilt = $23.5^\\circ$ and note what changes."
   - "Change date and observe day length changes between hemispheres."
   - "Relate sunlight angle to ‘how concentrated’ the energy is."
 explain_prompt: "Use day length and sun angle to explain how tilt produces seasonal temperature changes."

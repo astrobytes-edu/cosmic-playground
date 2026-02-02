@@ -41,10 +41,10 @@ It uses the same core equation shown below and formats results for Station Mode 
 
 The demo uses a classroom-friendly convention:
 
-- `moonAngle = 0°` → **Full Moon** (Moon opposite the Sun; right side of the diagram)
-- `moonAngle = 180°` → **New Moon** (Moon toward the Sun; left side of the diagram)
-- `moonAngle = 90°` → **Third Quarter**
-- `moonAngle = 270°` → **First Quarter**
+- `moonAngle = $0^\\circ$` → **Full Moon** (Moon opposite the Sun; right side of the diagram)
+- `moonAngle = $180^\\circ$` → **New Moon** (Moon toward the Sun; left side of the diagram)
+- `moonAngle = $90^\\circ$` → **Third Quarter**
+- `moonAngle = $270^\\circ$` → **First Quarter**
 
 This is a convention for the diagram, not a universal astronomy standard. The important invariant is: the phase depends on the **Sun–Earth–Moon geometry**, not shadows.
 

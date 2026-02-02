@@ -76,7 +76,7 @@ D. Gamma-ray
 
 ### Clicker 5 — Choosing a telescope for a wavelength
 
-**Demo setup:** pick a wavelength around **10 µm** (Mid-IR scale) and then open the **Telescopes** tab.
+**Demo setup:** pick a wavelength around **$10\\,\\mu\\mathrm{m}$** (Mid-IR scale) and then open the **Telescopes** tab.
 
 **Question:** Which telescope is designed for infrared observations?
 

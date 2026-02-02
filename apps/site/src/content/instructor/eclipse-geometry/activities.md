@@ -49,7 +49,7 @@ has_math: true
 > **Deliverable:** A short report (table + claim + reasoning).
 > **Tip:** Use **Station Mode** to record cases and export/print your table.
 >
-> **Setup:** Assign each group a tilt value (e.g., 0°, 2°, 5°, 8°).
+> **Setup:** Assign each group a tilt value (e.g., $0^\\circ$, $2^\\circ$, $5^\\circ$, $8^\\circ$).
 >
 > **Task:** For your tilt:
 > 1) Run a **100-year** simulation (or 10 years if time is tight).  

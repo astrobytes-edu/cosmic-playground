@@ -37,7 +37,7 @@ Fill in the table using presets and wavelength buttons. Record the diffraction l
 | Hubble (2.4m) | Visible (550 nm) |  |  |
 | Hubble (2.4m) | Radio (21 cm) |  |  |
 | Keck (10m) | Visible (550 nm) |  |  |
-| Keck (10m) | Near-IR (2.2 µm) |  |  |
+| Keck (10m) | Near-IR ($2.2\\,\\mu\\mathrm{m}$) |  |  |
 
 **Synthesis prompt (2 min):** *“Why do radio astronomers build arrays instead of a single ‘normal-sized’ dish?”*
 

@@ -83,5 +83,5 @@ Use the discussion prompt: *“What if we could observe from Jupiter’s orbit?�
 >
 > **Sanity checks:**
 > - If $d=1\,\mathrm{pc}$, then $p=1\,\mathrm{arcsec}$.
-> - If distance increases by 10×, parallax should decrease by 10×.
-> - Distant stars have tiny parallax angles (mas or µas).
+> - If distance increases by $10\\times$, parallax should decrease by $10\\times$.
+> - Distant stars have tiny parallax angles (mas or $\\mu\\mathrm{as}$).

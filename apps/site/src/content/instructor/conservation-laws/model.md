@@ -57,7 +57,7 @@ Dimensional check:
 
 - $\mathbf{r}$ has units of length
 - $\mathbf{v}$ has units of length/time
-- so $h$ has units of length²/time
+- so $h$ has units of length^2/time
 
 ✓ Units match.
 
@@ -108,10 +108,10 @@ Internally, it uses the teaching normalization:
 
 $$G = 4\pi^2\ \frac{\mathrm{AU}^3}{\mathrm{yr}^2\,M_\odot}$$
 
-So $\mu = GM$ is in AU³/yr², and:
+So $\mu = GM$ is in AU^3/yr^2, and:
 
-- $\varepsilon$ is in AU²/yr²
-- $h$ is in AU²/yr
+- $\varepsilon$ is in AU^2/yr^2
+- $h$ is in AU^2/yr
 
 ## What’s simplified / not modeled
 

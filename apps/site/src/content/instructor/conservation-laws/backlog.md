@@ -27,10 +27,10 @@ has_math: true
 
 | Priority | Impact | Effort | Category | Notes | Code entrypoint |
 |---|---|---|---|---|---|
-| P1 | High | Medium | Pedagogy | Add an “energy decomposition” toggle that explicitly shows $v^2/2$, $-\mu/r$, and $\varepsilon$ (and makes the “sign of ε” story unavoidable). | `apps/demos/src/demos/conservation-laws/main.ts` |
+| P1 | High | Medium | Pedagogy | Add an “energy decomposition” toggle that explicitly shows $v^2/2$, $-\\mu/r$, and $\\varepsilon$ (and makes the “sign of $\\varepsilon$” story unavoidable). | `apps/demos/src/demos/conservation-laws/main.ts` |
 | P1 | High | Medium | Pedagogy | Add an “equal areas” overlay (wedge + constant areal velocity readout) to connect directly to Kepler’s 2nd law. | `apps/demos/src/demos/conservation-laws/` |
 | P1 | Medium | Medium | UX | Add an option to choose the initial position angle (currently fixed at +x), so students can test invariance under rotation. | `packages/physics/src/conservationLawsModel.ts` + `apps/demos/src/demos/conservation-laws/main.ts` |
-| P2 | Medium | Low | UX | Add a unit toggle (AU/yr ↔ km/s ↔ CGS) for ε and h readouts (keeps units consistent across the “mechanics suite”). | `apps/demos/src/demos/conservation-laws/main.ts` |
+| P2 | Medium | Low | UX | Add a unit toggle (AU/yr <-> km/s <-> CGS) for $\\varepsilon$ and $h$ readouts (keeps units consistent across the “mechanics suite”). | `apps/demos/src/demos/conservation-laws/main.ts` |
 | P2 | Medium | Medium | Pedagogy | Add a “station mode” overlay: numbered prompts, prediction checkpoints, and a small data table students can copy/paste. | `apps/demos/src/demos/conservation-laws/` |
 | P3 | Medium | High | Physics | Add an optional “integrator preview” mode (Euler vs symplectic vs RK4) that shows conservation drift — defer until the numerical-integrators project. | `apps/demos/src/demos/conservation-laws/` + `packages/physics/src/*` |
 

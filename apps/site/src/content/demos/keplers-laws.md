@@ -19,7 +19,7 @@ play_steps:
   - "Compare two semi-major axes $a$ (same $M$) and observe how the period $P$ changes."
 explain_prompt: "Write a claim consistent with a Kepler law and back it with a specific observation from the demo."
 model_notes:
-  - "Units: AU / yr / M☉ with teaching normalization $G = 4\\pi^2\\,\\mathrm{AU}^3/(\\mathrm{yr}^2\\,M_{\\odot})$."
+  - "Units: AU / yr / $M_{\\odot}$ with teaching normalization $G = 4\\pi^2\\,\\mathrm{AU}^3/(\\mathrm{yr}^2\\,M_{\\odot})$."
   - "Kepler 3 in these units: $P^2=\\frac{a^3}{M}$, so $P\\propto a^{3/2}$ when $M$ is fixed."
   - "The time slider advances mean anomaly $M$ uniformly (a time proxy); position and speed come from solving Kepler’s equation for the ellipse."
 demo_path: "/play/keplers-laws/"

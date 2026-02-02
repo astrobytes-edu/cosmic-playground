@@ -53,7 +53,7 @@ has_math: true
 The radial velocity curve is the primary observable for spectroscopic binaries and exoplanet detection. Implementation notes:
 
 - Plot $v_r = v \sin i \cos(\theta + \omega)$ where $i$ is inclination and $\omega$ is argument of perihelion
-- For edge-on systems ($i = 90°$), this simplifies to $v_r = v \cos\theta$
+- For edge-on systems ($i = 90^\\circ$), this simplifies to $v_r = v \\cos\\theta$
 - Show both curves (for binaries) or just the star curve (for exoplanets)
 - Sync with orbital animation so students see the connection
 
@@ -70,6 +70,6 @@ For edge-on systems, show brightness dips during transits/eclipses. Implementati
 
 Critical for understanding why RV gives minimum mass ($M \sin i$). Implementation notes:
 
-- Add inclination slider ($0°$ = face-on, $90°$ = edge-on)
+- Add inclination slider ($0^\\circ$ = face-on, $90^\\circ$ = edge-on)
 - Show that face-on systems have no RV signal
 - Explain that we measure $v \sin i$, hence $M_p \sin i$

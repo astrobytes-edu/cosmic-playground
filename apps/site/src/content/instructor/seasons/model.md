@@ -35,7 +35,7 @@ The core “physics” in this demo is geometric. We treat Earth as a tilted sph
 > From `demos/_assets/seasons-model.js` (distance + orbit-angle toy model):
 >
 > - Eccentricity: `eccentricity = 0.017` (dimensionless)
-> - Perihelion anchor day: `perihelionDay = 3` (≈ Jan 3)
+> - Perihelion anchor day: `perihelionDay = 3` (~ Jan 3)
 > - Year length used in the periodic distance/angle functions: `yearDays = 365.2422` (days)
 >
 > From `demos/seasons/seasons.js` (calendar + visualization):

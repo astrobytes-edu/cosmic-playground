@@ -35,4 +35,4 @@ has_math: true
 > **Sanity checks:**
 > - Ordering: Radio (lowest energy) → … → Gamma (highest energy).
 > - Shorter wavelength should correspond to larger energy readouts.
-> - Use convenient units: nm/µm/mm/m for $\lambda$; eV/keV/MeV for energy.
+> - Use convenient units: nm/$\\mu\\mathrm{m}$/mm/m for $\lambda$; eV/keV/MeV for energy.

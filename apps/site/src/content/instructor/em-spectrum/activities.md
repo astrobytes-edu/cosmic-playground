@@ -42,7 +42,7 @@ has_math: true
 **Instructions:**
 1. Use the band labels (Radio/IR/Visible/UV/X-ray/Gamma) to jump around.
 2. Use the unit dropdowns to express:
-   - wavelength in a convenient unit (nm, µm, mm, m),
+   - wavelength in a convenient unit (nm, $\\mu\\mathrm{m}$, mm, m),
    - energy in eV/keV/MeV as appropriate.
 3. Use the **Telescopes** tab and **Objects** tab to collect one example per band.
 
@@ -103,4 +103,4 @@ Each group gives a 60-second pitch: band choice + one key piece of evidence + on
 > **Sanity checks:**
 > - Ordering: Radio (lowest energy) → … → Gamma (highest energy).
 > - Shorter wavelength should correspond to larger energy readouts.
-> - Use convenient units: nm/µm/mm/m for $\lambda$; eV/keV/MeV for energy.
+> - Use convenient units: nm/$\\mu\\mathrm{m}$/mm/m for $\lambda$; eV/keV/MeV for energy.

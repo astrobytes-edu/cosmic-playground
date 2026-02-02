@@ -29,7 +29,7 @@ It’s intentionally multi-scale:
 
 The demo reports the angular diameter in a human-friendly unit:
 
-- degrees ($^\circ$), arcminutes ($′$), or arcseconds ($″$)
+- degrees ($^\circ$), arcminutes ($\\mathrm{arcmin}$), or arcseconds ($\\mathrm{arcsec}$)
 
 ## Angular diameter (exact)
 
@@ -72,11 +72,11 @@ This is the mental math version students should take away: angular size scales a
 
 ## Angle unit conversions (for classroom fluency)
 
-$$1^\circ = 60′ \qquad\text{and}\qquad 1′ = 60″$$
+$$1^\circ = 60\\,\\mathrm{arcmin} \\qquad\\text{and}\\qquad 1\\,\\mathrm{arcmin} = 60\\,\\mathrm{arcsec}$$
 
 So:
 
-$$1^\circ = 3600″$$
+$$1^\circ = 3600\\,\\mathrm{arcsec}$$
 
 These conversions are what let students compare “planets (arcseconds) vs Moon (degrees).”
 

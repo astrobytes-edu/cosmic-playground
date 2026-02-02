@@ -33,7 +33,7 @@ The shared model uses CGS internally:
 
 - Wavelength $\lambda$ in **cm**
 - Temperature $T$ in **K**
-- Spectral radiance $B_\lambda$ in **erg/s/cm²/sr/cm** (theoretical units; the UI may plot in relative scaling for readability)
+- Spectral radiance $B_\lambda$ in **erg/s/cm^2/sr/cm** (theoretical units; the UI may plot in relative scaling for readability)
 
 Key constants (as implemented in `packages/physics/src/blackbodyRadiationModel.ts`):
 
@@ -67,7 +67,7 @@ $$F = \sigma T^4$$
 
 Let’s unpack each piece:
 
-- **$F$** is total emitted energy per unit area per unit time (erg/s/cm²).
+- **$F$** is total emitted energy per unit area per unit time (erg/s/cm^2).
 - **$\sigma$** is the Stefan–Boltzmann constant.
 - **$T$** is temperature (K).
 

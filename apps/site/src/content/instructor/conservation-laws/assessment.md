@@ -31,10 +31,10 @@ D. 2.00
 
 At the same radius and same speed factor, which direction produces the *smallest* angular momentum magnitude?
 
-A. 0° (purely tangential)  
-B. 30°  
-C. 60°  
-D. 85° (near radial)
+A. $0^\\circ$ (purely tangential)  
+B. $30^\\circ$  
+C. $60^\\circ$  
+D. $85^\\circ$ (near radial)
 
 **Answer:** D  
 **Why:** $h=|\mathbf{r}\times\mathbf{v}|=rv\sin\phi$ is smallest when motion is nearly radial (small sideways component).
