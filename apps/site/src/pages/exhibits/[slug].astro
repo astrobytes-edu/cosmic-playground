@@ -45,6 +45,16 @@ const { Content } = await entry.render();
     <a class="cp-button cp-button--ghost" href={instructorHref}>Instructor notes</a>
   </section>
 
+  {!entry.data.content_verified ? (
+    <section class="cp-callout" data-kind="warn" aria-label="Legacy content warning">
+      <strong>Legacy content (unverified)</strong>
+      <div>
+        This exhibit’s copy was imported from the legacy ASTR101 SP26 demos and has not yet been
+        fully reviewed against the current instrument UI, units, and exports.
+      </div>
+    </section>
+  ) : null}
+
   <section class="block">
     <h2>Predict</h2>
     <p class="prompt">{entry.data.predict_prompt}</p>

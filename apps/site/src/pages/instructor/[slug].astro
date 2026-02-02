@@ -60,6 +60,16 @@ const sectionLabels: Record<InstructorSection, string> = {
     <p class="meta">Exhibit: <a href={exhibitHref}>{exhibitHref}</a></p>
   </header>
 
+  {!entry.data.content_verified ? (
+    <section class="cp-callout" data-kind="warn" aria-label="Legacy content warning">
+      <strong>Legacy content (unverified)</strong>
+      <div>
+        This instructor bundle was imported from the legacy ASTR101 SP26 demos and has not yet been
+        fully reviewed against the current instrument UI, units, and exports.
+      </div>
+    </section>
+  ) : null}
+
   {hasInstructorContent ? (
     <>
       <div id="instructor-content">

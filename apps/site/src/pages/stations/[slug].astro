@@ -36,6 +36,16 @@ const StationOverride =
       </p>
     </header>
 
+    {!entry.data.content_verified ? (
+      <section class="cp-callout" data-kind="warn" aria-label="Legacy content warning">
+        <strong>Legacy content (unverified)</strong>
+        <div>
+          This station card content was imported from the legacy ASTR101 SP26 demos and has not yet
+          been fully reviewed against the current instrument UI, units, and station-mode table.
+        </div>
+      </section>
+    ) : null}
+
     {StationOverride ? (
       <>
         <section class="box" id="station-content" aria-label="Station card content">
