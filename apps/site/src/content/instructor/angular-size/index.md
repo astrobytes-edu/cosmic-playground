@@ -6,8 +6,8 @@ demo_slug: "angular-size"
 last_updated: "2026-01-30"
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
-> - Student demo: [/play/angular-size/](/play/angular-size/)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
+> - Student demo: [/play/angular-size/](../../play/angular-size/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
 > **This guide is instructor-facing**

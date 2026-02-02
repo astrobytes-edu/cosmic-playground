@@ -7,8 +7,8 @@ last_updated: "2026-01-30"
 has_math: true
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
-> - Student demo: [/play/keplers-laws/](/play/keplers-laws/)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
+> - Student demo: [/play/keplers-laws/](../../play/keplers-laws/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
 > **This guide is instructor-facing**

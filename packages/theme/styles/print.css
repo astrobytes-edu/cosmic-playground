@@ -15,9 +15,24 @@
     border: 1px solid #ddd !important;
   }
 
+  /* Station cards: keep borders legible on paper. */
+  .station {
+    border-color: #000 !important;
+    background: transparent !important;
+  }
+
+  .station .blank {
+    border-color: #000 !important;
+    background: transparent !important;
+  }
+
+  .station th,
+  .station td {
+    border-color: #000 !important;
+  }
+
   a {
     color: #000 !important;
     text-decoration: underline;
   }
 }
-

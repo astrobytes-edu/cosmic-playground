@@ -6,8 +6,8 @@ demo_slug: "seasons"
 last_updated: "2026-01-30"
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
-> - Student demo: [/play/seasons/](/play/seasons/)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
+> - Student demo: [/play/seasons/](../../play/seasons/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
 > **This guide is instructor-facing**

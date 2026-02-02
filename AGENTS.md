@@ -13,6 +13,34 @@ When a relevant skill exists for the task, you must load it via:
 `~/.codex/superpowers/.codex/superpowers-codex use-skill <skill-name>`
 </EXTREMELY_IMPORTANT>
 
+### Skill catalog (recommended for this repo)
+
+Skills are stored in `~/.codex/skills/` (personal) and `~/.codex/superpowers/skills/` (process).
+
+Load a skill:
+`~/.codex/superpowers/.codex/superpowers-codex use-skill <skill-name>`
+
+Process skills (how to work):
+- `superpowers:writing-plans` — write a falsifiable plan before coding.
+- `superpowers:executing-plans` — execute a written plan with checkpoints.
+- `superpowers:systematic-debugging` — root-cause investigation before fixes.
+- `superpowers:test-driven-development` — test-first for behavior changes.
+
+Cosmic Playground personal skills (what to enforce):
+- `cosmic-spec-to-implementation` — turn specs into PR-sized slices with acceptance + commands.
+- `cosmic-astro-site-engineering` — Astro base-path safety + static-first museum pages + KaTeX runtime.
+- `cosmic-basepath-smoke-tests` — triage/fix GH Pages base-path regressions across site/content/demos.
+- `cosmic-content-authoring` — content schema validity + base-path-safe markdown links + excerpt rules.
+- `cosmic-instructor-materials-style` — instructor/station schemas + print-first patterns (no page-local print hacks).
+- `cosmic-demo-authoring` — Vite demo + `/play/<slug>/` instrument contract + build/copy pipeline.
+- `cosmic-runtime-instrumentation` — shared demo behaviors belong in `packages/runtime` (no per-demo forks).
+- `cosmic-theme-tokens-and-components` — token-first styling + centralized print fixes in `packages/theme`.
+- `cosmic-ui-ux` — shell consistency + tokens + correctness guardrails (units, D=diameter, d=distance).
+- `cosmic-export-contracts` — stable, unit-explicit exports via `@cosmic/runtime` helpers.
+- `cosmic-physics-modeling` — explicit units in APIs + tests + no `G=1`.
+- `cosmic-accessibility-audit` — keyboard/focus/dialog/live-region/reduced-motion guardrails.
+- `cosmic-ux-polish-pass` — demo-by-demo polish without new systems/deps or shared drift.
+
 ### Python environment (conda)
 
 - When running Python for this repo (including skill tooling like `quick_validate.py` / `package_skill.py`), use the Conda env `astro` (it includes `pyyaml`).

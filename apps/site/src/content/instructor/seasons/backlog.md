@@ -7,9 +7,9 @@ last_updated: "2026-01-30"
 has_math: true
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
 > - Back to this demo guide: [Guide](#index)
-> - Student demo: [/play/seasons/](/play/seasons/)
+> - Student demo: [/play/seasons/](../../play/seasons/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
 > **How to use this backlog**

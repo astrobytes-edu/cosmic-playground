@@ -7,8 +7,8 @@ last_updated: "2026-01-30"
 has_math: true
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
-> - Student demo: [/play/telescope-resolution/](/play/telescope-resolution/)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
+> - Student demo: [/play/telescope-resolution/](../../play/telescope-resolution/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
 > **This guide is instructor-facing**

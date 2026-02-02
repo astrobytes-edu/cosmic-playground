@@ -6,9 +6,9 @@ demo_slug: "em-spectrum"
 last_updated: "2026-01-30"
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
 > - Back to this demo guide: [Guide](#index)
-> - Student demo: [/play/em-spectrum/](/play/em-spectrum/)
+> - Student demo: [/play/em-spectrum/](../../play/em-spectrum/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
 ## P0 (blocking / correctness / teachability)

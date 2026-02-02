@@ -6,8 +6,8 @@ demo_slug: "moon-phases"
 last_updated: "2026-01-30"
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
-> - Student demo: [/play/moon-phases/](/play/moon-phases/)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
+> - Student demo: [/play/moon-phases/](../../play/moon-phases/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
 > **This guide is instructor-facing**

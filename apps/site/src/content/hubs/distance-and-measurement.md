@@ -5,9 +5,9 @@ last_updated: "2026-01-30"
 has_math: true
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
-> - Demo: [Parallax distance](/demos/_instructor/parallax-distance/)
-> - Companion activity (student-facing): [/activities/cosmic-distance-builder.qmd](/activities/cosmic-distance-builder.qmd)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
+> - Demo: [Parallax distance](../../instructor/parallax-distance/)
+> - Companion activity (student-facing): Cosmic Distance Builder (coming soon)
 > - Capstone: [Rotation + synthesis](capstone.qmd)
 
 > **What this page is**

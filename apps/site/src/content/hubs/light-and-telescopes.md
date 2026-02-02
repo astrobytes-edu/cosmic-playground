@@ -5,8 +5,8 @@ last_updated: "2026-01-30"
 has_math: true
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
-> - Demos: [EM spectrum](/demos/_instructor/em-spectrum/) · [Blackbody radiation](/demos/_instructor/blackbody-radiation/) · [Telescope resolution](/demos/_instructor/telescope-resolution/)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
+> - Demos: [EM spectrum](../../instructor/em-spectrum/) · [Blackbody radiation](../../instructor/blackbody-radiation/) · [Telescope resolution](../../instructor/telescope-resolution/)
 > - Capstone: [Rotation + synthesis](capstone.qmd)
 
 > **What this page is**

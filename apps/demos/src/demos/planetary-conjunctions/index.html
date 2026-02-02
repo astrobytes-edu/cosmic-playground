@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Planetary Conjunctions — Cosmic Playground</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
+  </head>
+  <body>
+    <div
+      id="cp-demo"
+      class="cp-layer-instrument cp-demo"
+      aria-label="Planetary Conjunctions instrument"
+    >
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Planetary Conjunctions: Alignments in the Sky</div>
+        <div class="cp-panel-body">
+          <p class="cp-muted">
+            Conjunctions and oppositions are line-of-sight alignments caused by relative motion.
+          </p>
+          <div class="cp-callout" data-kind="model">
+            This demo is currently a stub while we migrate the legacy version into the new runtime.
+          </div>
+
+          <button id="copyResults" class="cp-action" type="button">Copy results</button>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+
+          <div class="cp-actions">
+            <a class="cp-button" href="../../exhibits/planetary-conjunctions/">Open exhibit</a>
+            <a class="cp-button cp-button--outline" href="../../stations/planetary-conjunctions/"
+              >Station card</a
+            >
+            <a class="cp-button cp-button--outline" href="../../instructor/planetary-conjunctions/"
+              >Instructor notes</a
+            >
+          </div>
+        </div>
+      </aside>
+
+      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
+        <div class="cp-stage__inner">
+          <p class="cp-stage__headline">Migration pending</p>
+          <p class="cp-muted">
+            This space will host the interactive visualization once the demo is migrated.
+          </p>
+        </div>
+      </section>
+
+      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
+        <div class="cp-panel-header">Readouts</div>
+        <div class="cp-panel-body">
+          <p class="cp-muted">Migration pending (stub).</p>
+          <div class="cp-readout">
+            <div class="cp-readout__label">(example) Time between conjunctions (days)</div>
+            <div class="cp-readout__value">—</div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">2 bullets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Conjunctions are sky alignments, not physical closeness.</li>
+                <li>Repeat timing depends on relative orbital motion (synodic period).</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">stub</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
+                <li>When migrated, this drawer will host deeper model notes and (optionally) math mode.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
+

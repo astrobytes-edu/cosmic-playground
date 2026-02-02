@@ -5,8 +5,8 @@ last_updated: "2026-01-30"
 has_math: true
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
-> - Core demos: [Seasons](/demos/_instructor/seasons/) · [Moon phases](/demos/_instructor/moon-phases/) · [Angular size](/demos/_instructor/angular-size/) · [Eclipse geometry](/demos/_instructor/eclipse-geometry/)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
+> - Core demos: [Seasons](../../instructor/seasons/) · [Moon phases](../../instructor/moon-phases/) · [Angular size](../../instructor/angular-size/) · [Eclipse geometry](../../instructor/eclipse-geometry/)
 > - Capstone: [Rotation + synthesis](capstone.qmd)
 
 > **What this page is**

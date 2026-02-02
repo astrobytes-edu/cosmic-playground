@@ -7,9 +7,9 @@ last_updated: "2026-01-30"
 has_math: true
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
 > - Back to this demo guide: [Guide](#index)
-> - Student demo: [/play/blackbody-radiation/](/play/blackbody-radiation/)
+> - Student demo: [/play/blackbody-radiation/](../../play/blackbody-radiation/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
 ## MW Quick (3–5 min)

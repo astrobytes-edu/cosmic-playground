@@ -6,8 +6,8 @@ demo_slug: "eclipse-geometry"
 last_updated: "2026-01-30"
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](/instructor/)
-> - Student demo: [/play/eclipse-geometry/](/play/eclipse-geometry/)
+> - Instructor hub: [/demos/_instructor/](../../instructor/)
+> - Student demo: [/play/eclipse-geometry/](../../play/eclipse-geometry/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
 > **This guide is instructor-facing**
