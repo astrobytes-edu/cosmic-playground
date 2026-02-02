@@ -28,5 +28,5 @@ has_math: true
 >
 > **Sanity checks:**
 > - If $d=1\,\mathrm{pc}$, then $p=1\,\mathrm{arcsec}$.
-> - If distance increases by $10\\times$, parallax should decrease by $10\\times$.
-> - Distant stars have tiny parallax angles (mas or $\\mu\\mathrm{as}$).
+> - If distance increases by $10\times$, parallax should decrease by $10\times$.
+> - Distant stars have tiny parallax angles (mas or $\mu\mathrm{as}$).

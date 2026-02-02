@@ -3,7 +3,7 @@ title: "Eclipse Geometry — In-Class Activities"
 bundle: "eclipse-geometry"
 section: "activities"
 demo_slug: "eclipse-geometry"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -49,7 +49,7 @@ has_math: true
 > **Deliverable:** A short report (table + claim + reasoning).
 > **Tip:** Use **Station Mode** to record cases and export/print your table.
 >
-> **Setup:** Assign each group a tilt value (e.g., $0^\\circ$, $2^\\circ$, $5^\\circ$, $8^\\circ$).
+> **Setup:** Assign each group a tilt value (e.g., $0^\circ$, $2^\circ$, $5^\circ$, $8^\circ$).
 >
 > **Task:** For your tilt:
 > 1) Run a **100-year** simulation (or 10 years if time is tight).  

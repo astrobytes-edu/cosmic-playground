@@ -1,6 +1,7 @@
 ---
 title: "Binary Orbits: Two-Body Dance"
 status: draft
+content_verified: true
 levels: [Both]
 topics: [Orbits]
 time_minutes: 12
@@ -14,9 +15,9 @@ misconceptions:
   - "The larger object stays fixed while the smaller one orbits it."
 predict_prompt: "If one star is much more massive than the other, where is the center of mass located?"
 play_steps:
-  - "Adjust mass ratio and observe how the orbit changes."
-  - "Compare cases where masses are equal vs very unequal."
-  - "Identify which quantities appear to remain consistent."
+  - "Adjust mass ratio and watch the barycenter shift (the heavier body moves less)."
+  - "Change separation $a$ and observe how the period $P$ changes."
+  - "Compare an equal-mass case to an unequal-mass case using Station Mode snapshot rows."
 station_params:
   - parameter: 'Mass ratio ($m_2/m_1$)'
     value: "________"
@@ -31,7 +32,7 @@ model_notes:
 demo_path: "/play/binary-orbits/"
 station_path: "/stations/binary-orbits/"
 instructor_path: "/instructor/binary-orbits/"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 ---
 
 This pilot demo visualizes two masses orbiting a shared barycenter. It emphasizes *qualitative* relationships (how the barycenter shifts and how the period changes with separation) rather than modeling a specific astrophysical binary.

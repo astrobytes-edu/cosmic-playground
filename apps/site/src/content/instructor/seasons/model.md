@@ -3,7 +3,7 @@ title: "Seasons — Model & Math (Instructor Deep Dive)"
 bundle: "seasons"
 section: "model"
 demo_slug: "seasons"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -14,8 +14,8 @@ has_math: true
 
 > **Links**
 > Student demo: `/play/seasons/`  
-> Model code: `demos/_assets/seasons-model.js`  
-> UI/visualization code: `demos/seasons/seasons.js`
+> Model code: `packages/physics/src/seasonsModel.ts`  
+> UI/visualization code: `apps/demos/src/demos/seasons/main.ts`
 
 ## What the demo is modeling (big picture)
 
@@ -27,18 +27,18 @@ The core “physics” in this demo is geometric. We treat Earth as a tilted sph
 - **Earth–Sun distance** $r$ (AU): a small, *secondary* seasonal effect shown mainly to confront the “distance causes seasons” misconception.
 
 > **Model parameters as implemented**
-> From `demos/_assets/seasons-model.js` (declination/day length/noon altitude):
+> From `packages/physics/src/seasonsModel.ts` (declination/day length/noon altitude):
 >
 > - March equinox anchor day: `dayOfMarchEquinox = 80` (day-of-year)
 > - Tropical year length used in the declination model: `tropicalYearDays = 365.2422` (days)
 >
-> From `demos/_assets/seasons-model.js` (distance + orbit-angle toy model):
+> From `packages/physics/src/seasonsModel.ts` (distance + orbit-angle toy model):
 >
 > - Eccentricity: `eccentricity = 0.017` (dimensionless)
 > - Perihelion anchor day: `perihelionDay = 3` (~ Jan 3)
 > - Year length used in the periodic distance/angle functions: `yearDays = 365.2422` (days)
 >
-> From `demos/seasons/seasons.js` (calendar + visualization):
+> From `apps/demos/src/demos/seasons/main.ts` (calendar + visualization):
 >
 > - Calendar year length used for date wrapping: `YEAR_DAYS = 365` (days; non-leap-year calendar)
 > - Physics year length used for distance/orbit display: `TROPICAL_YEAR_DAYS = 365.2422` (days)

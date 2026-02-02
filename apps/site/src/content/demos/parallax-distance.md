@@ -1,6 +1,7 @@
 ---
 title: "Parallax Distance: Measuring the Stars"
 status: draft
+content_verified: true
 levels: [Both]
 topics: [DataInference]
 time_minutes: 12

@@ -1,6 +1,6 @@
 {
   "source_root": "~/Teaching/astr101-sp26/demos",
-  "generated_at": "2026-01-30",
+  "generated_at": "2026-02-02",
   "shared_assets": {
     "physics": {
       "dir": "_assets/physics",
@@ -17,7 +17,10 @@
     },
     "katex": {
       "dir": "_assets/katex",
-      "files": ["_assets/katex/katex.min.css", "_assets/katex/katex.min.js"],
+      "files": [
+        "_assets/katex/katex.min.css",
+        "_assets/katex/katex.min.js"
+      ],
       "fonts_dir": "_assets/katex/fonts"
     },
     "shared_utils": [
@@ -43,7 +46,10 @@
       "moon-phases",
       "parallax-distance",
       "seasons",
-      "telescope-resolution"
+      "telescope-resolution",
+      "doppler-shift-spectrometer",
+      "spectral-lines-lab",
+      "planetary-climate-sandbox"
     ],
     "math_demos": [
       "binary-orbits",
@@ -54,13 +60,31 @@
       "parallax-distance",
       "telescope-resolution"
     ],
-    "math_mode_demos": ["blackbody-radiation", "telescope-resolution"],
-    "demo_modes_demos": ["angular-size", "eclipse-geometry", "moon-phases", "seasons"],
-    "challenge_engine_demos": ["eclipse-geometry", "moon-phases"],
+    "math_mode_demos": [
+      "blackbody-radiation",
+      "telescope-resolution"
+    ],
+    "demo_modes_demos": [
+      "angular-size",
+      "eclipse-geometry",
+      "moon-phases",
+      "seasons"
+    ],
+    "challenge_engine_demos": [
+      "eclipse-geometry",
+      "moon-phases"
+    ],
     "external_data_files": {
-      "em-spectrum": ["object-data.js", "telescope-data.js"],
-      "parallax-distance": ["star-data.js"],
-      "telescope-resolution": ["telescope-data.js"]
+      "em-spectrum": [
+        "object-data.js",
+        "telescope-data.js"
+      ],
+      "parallax-distance": [
+        "star-data.js"
+      ],
+      "telescope-resolution": [
+        "telescope-data.js"
+      ]
     },
     "notes": [
       "math_demos means the legacy demo loads KaTeX and/or renders KaTeX formulas; it does not necessarily imply the new demo must ship math UI.",
@@ -70,7 +94,12 @@
   },
   "integration": {
     "status_legend": {
-      "demo_status": ["stub", "ported_partial", "ported"],
+      "demo_status": [
+        "stub",
+        "ported_partial",
+        "ported",
+        "missing"
+      ],
       "content_imported": "Whether station + instructor content was imported from legacy Quarto",
       "content_verified": "Whether content has been reviewed/edited to match the current instrument UI + units"
     },
@@ -81,9 +110,28 @@
     ]
   },
   "waves": {
-    "1": ["angular-size", "eclipse-geometry", "moon-phases", "seasons"],
-    "2": ["binary-orbits", "blackbody-radiation", "conservation-laws", "keplers-laws"],
-    "3": ["em-spectrum", "parallax-distance", "telescope-resolution"]
+    "0": [
+      "doppler-shift-spectrometer",
+      "spectral-lines-lab",
+      "planetary-climate-sandbox"
+    ],
+    "1": [
+      "angular-size",
+      "eclipse-geometry",
+      "moon-phases",
+      "seasons"
+    ],
+    "2": [
+      "binary-orbits",
+      "blackbody-radiation",
+      "conservation-laws",
+      "keplers-laws"
+    ],
+    "3": [
+      "em-spectrum",
+      "parallax-distance",
+      "telescope-resolution"
+    ]
   },
   "demos": [
     {
@@ -106,10 +154,13 @@
         "dataFiles": []
       },
       "target": {
-        "demo_status": "stub",
-        "needsPhysicsPort": true,
-        "content_imported": { "station": true, "instructor": true },
-        "content_verified": false
+        "demo_status": "ported",
+        "needsPhysicsPort": false,
+        "content_imported": {
+          "station": true,
+          "instructor": true
+        },
+        "content_verified": true
       }
     },
     {
@@ -132,10 +183,13 @@
         "dataFiles": []
       },
       "target": {
-        "demo_status": "ported_partial",
-        "needsPhysicsPort": true,
-        "content_imported": { "station": true, "instructor": true },
-        "content_verified": false,
+        "demo_status": "ported",
+        "needsPhysicsPort": false,
+        "content_imported": {
+          "station": true,
+          "instructor": true
+        },
+        "content_verified": true,
         "known_issues": [
           "Ensure unit consistency across instrument HTML labels, export payload names/units, and site model notes (binary-orbits has been migrated to AU/yr/M☉ teaching units with G=4π²; avoid regressions).",
           "Imported station card references eccentricity and velocity vectors not present in the current instrument UI."
@@ -162,10 +216,13 @@
         "dataFiles": []
       },
       "target": {
-        "demo_status": "stub",
-        "needsPhysicsPort": true,
-        "content_imported": { "station": true, "instructor": true },
-        "content_verified": false
+        "demo_status": "ported",
+        "needsPhysicsPort": false,
+        "content_imported": {
+          "station": true,
+          "instructor": true
+        },
+        "content_verified": true
       }
     },
     {
@@ -188,10 +245,13 @@
         "dataFiles": []
       },
       "target": {
-        "demo_status": "stub",
-        "needsPhysicsPort": true,
-        "content_imported": { "station": true, "instructor": true },
-        "content_verified": false
+        "demo_status": "ported",
+        "needsPhysicsPort": false,
+        "content_imported": {
+          "station": true,
+          "instructor": true
+        },
+        "content_verified": true
       }
     },
     {
@@ -214,10 +274,13 @@
         "dataFiles": []
       },
       "target": {
-        "demo_status": "stub",
-        "needsPhysicsPort": true,
-        "content_imported": { "station": true, "instructor": true },
-        "content_verified": false
+        "demo_status": "ported",
+        "needsPhysicsPort": false,
+        "content_imported": {
+          "station": true,
+          "instructor": true
+        },
+        "content_verified": true
       }
     },
     {
@@ -237,12 +300,18 @@
           "tourEngine": false,
           "challengeEngine": false
         },
-        "dataFiles": ["em-spectrum/object-data.js", "em-spectrum/telescope-data.js"]
+        "dataFiles": [
+          "em-spectrum/object-data.js",
+          "em-spectrum/telescope-data.js"
+        ]
       },
       "target": {
         "demo_status": "stub",
         "needsPhysicsPort": true,
-        "content_imported": { "station": true, "instructor": true },
+        "content_imported": {
+          "station": true,
+          "instructor": true
+        },
         "content_verified": false
       }
     },
@@ -266,10 +335,13 @@
         "dataFiles": []
       },
       "target": {
-        "demo_status": "stub",
-        "needsPhysicsPort": true,
-        "content_imported": { "station": true, "instructor": true },
-        "content_verified": false
+        "demo_status": "ported",
+        "needsPhysicsPort": false,
+        "content_imported": {
+          "station": true,
+          "instructor": true
+        },
+        "content_verified": true
       }
     },
     {
@@ -292,10 +364,13 @@
         "dataFiles": []
       },
       "target": {
-        "demo_status": "ported_partial",
+        "demo_status": "ported",
         "needsPhysicsPort": true,
-        "content_imported": { "station": true, "instructor": true },
-        "content_verified": false
+        "content_imported": {
+          "station": true,
+          "instructor": true
+        },
+        "content_verified": true
       }
     },
     {
@@ -315,13 +390,18 @@
           "tourEngine": false,
           "challengeEngine": false
         },
-        "dataFiles": ["parallax-distance/star-data.js"]
+        "dataFiles": [
+          "parallax-distance/star-data.js"
+        ]
       },
       "target": {
-        "demo_status": "stub",
-        "needsPhysicsPort": true,
-        "content_imported": { "station": true, "instructor": true },
-        "content_verified": false
+        "demo_status": "ported",
+        "needsPhysicsPort": false,
+        "content_imported": {
+          "station": true,
+          "instructor": true
+        },
+        "content_verified": true
       }
     },
     {
@@ -344,10 +424,13 @@
         "dataFiles": []
       },
       "target": {
-        "demo_status": "stub",
-        "needsPhysicsPort": true,
-        "content_imported": { "station": true, "instructor": true },
-        "content_verified": false
+        "demo_status": "ported",
+        "needsPhysicsPort": false,
+        "content_imported": {
+          "station": true,
+          "instructor": true
+        },
+        "content_verified": true
       }
     },
     {
@@ -367,19 +450,120 @@
           "tourEngine": false,
           "challengeEngine": false
         },
-        "dataFiles": ["telescope-resolution/telescope-data.js"]
+        "dataFiles": [
+          "telescope-resolution/telescope-data.js"
+        ]
       },
       "target": {
         "demo_status": "stub",
         "needsPhysicsPort": true,
-        "content_imported": { "station": true, "instructor": true },
+        "content_imported": {
+          "station": true,
+          "instructor": true
+        },
+        "content_verified": false
+      }
+    },
+    {
+      "slug": "doppler-shift-spectrometer",
+      "title": "Doppler Shift Spectrometer",
+      "migration_wave": 0,
+      "legacy": {
+        "demo_dir": "doppler-shift-spectrometer",
+        "entry_script": null,
+        "entry_style": null,
+        "model_file": null,
+        "station_card_include": null,
+        "uses": {
+          "katex": null,
+          "mathMode": null,
+          "demoModes": null,
+          "tourEngine": null,
+          "challengeEngine": null
+        },
+        "dataFiles": []
+      },
+      "target": {
+        "demo_status": "missing",
+        "needsPhysicsPort": true,
+        "content_imported": {
+          "station": false,
+          "instructor": false
+        },
+        "content_verified": false
+      }
+    },
+    {
+      "slug": "spectral-lines-lab",
+      "title": "Spectral Lines Lab",
+      "migration_wave": 0,
+      "legacy": {
+        "demo_dir": "spectral-lines-lab",
+        "entry_script": null,
+        "entry_style": null,
+        "model_file": null,
+        "station_card_include": null,
+        "uses": {
+          "katex": null,
+          "mathMode": null,
+          "demoModes": null,
+          "tourEngine": null,
+          "challengeEngine": null
+        },
+        "dataFiles": []
+      },
+      "target": {
+        "demo_status": "missing",
+        "needsPhysicsPort": true,
+        "content_imported": {
+          "station": false,
+          "instructor": false
+        },
+        "content_verified": false
+      }
+    },
+    {
+      "slug": "planetary-climate-sandbox",
+      "title": "Planetary Climate Sandbox",
+      "migration_wave": 0,
+      "legacy": {
+        "demo_dir": "planetary-climate-sandbox",
+        "entry_script": null,
+        "entry_style": null,
+        "model_file": null,
+        "station_card_include": null,
+        "uses": {
+          "katex": null,
+          "mathMode": null,
+          "demoModes": null,
+          "tourEngine": null,
+          "challengeEngine": null
+        },
+        "dataFiles": []
+      },
+      "target": {
+        "demo_status": "missing",
+        "needsPhysicsPort": true,
+        "content_imported": {
+          "station": false,
+          "instructor": false
+        },
         "content_verified": false
       }
     }
   ],
   "hubs": [
-    { "bundle": "cosmic-playground", "title": "Cosmic Playground (Instructor Hub)" },
-    { "bundle": "distance-and-measurement", "title": "Distance and Measurement (Instructor Hub)" },
-    { "bundle": "light-and-telescopes", "title": "Light and Telescopes (Instructor Hub)" }
+    {
+      "bundle": "cosmic-playground",
+      "title": "Cosmic Playground (Instructor Hub)"
+    },
+    {
+      "bundle": "distance-and-measurement",
+      "title": "Distance and Measurement (Instructor Hub)"
+    },
+    {
+      "bundle": "light-and-telescopes",
+      "title": "Light and Telescopes (Instructor Hub)"
+    }
   ]
 }

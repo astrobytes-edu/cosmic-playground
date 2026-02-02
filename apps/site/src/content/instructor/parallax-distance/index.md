@@ -48,9 +48,9 @@ By the end of this demo, students should be able to:
 
 Students should be able to:
 
-- Use $d(\\text{pc}) = 1/p(\\text{arcsec})$ to convert between parallax and distance (including mas and $\\mu\\mathrm{as}$ units).
+- Use $d(\text{pc}) = 1/p(\text{arcsec})$ to convert between parallax and distance (including mas and $\mu\mathrm{as}$ units).
 - Interpret the parsec as a geometry-defined unit tied to the measurement.
-- Compare measurement reach for Hipparcos-scale (~mas) vs Gaia-scale (tens of $\\mu\\mathrm{as}$) astrometry.
+- Compare measurement reach for Hipparcos-scale (~mas) vs Gaia-scale (tens of $\mu\mathrm{as}$) astrometry.
 
 ## 10–15 minute live-teach script (projector)
 
@@ -58,11 +58,11 @@ Students should be able to:
 
 2. **Introduce the baseline.** In the demo, point to the two observation points (Jan vs July) and ask: *“What is the baseline we’re using?”* (Opposite sides of Earth’s orbit: ~2 AU.)
 
-3. **Use the parallax slider.** Start at $p=1000\\,\\mathrm{mas}$ (1 arcsec, 1 pc). Ask students to predict: *“If parallax drops by a factor of 10, what happens to distance?”* Then set $p=100\\,\\mathrm{mas}$ and read the distance.
+3. **Use the parallax slider.** Start at $p=1000\,\mathrm{mas}$ (1 arcsec, 1 pc). Ask students to predict: *“If parallax drops by a factor of 10, what happens to distance?”* Then set $p=100\,\mathrm{mas}$ and read the distance.
 
 4. **Make the inverse relationship explicit.** Pause on a clean value (e.g., 10 pc) and read off the parallax magnitude. Then ask: *“If parallax is half as big, is the star closer or farther? By what factor?”*
 
-5. **Measurement limits = knowledge limits.** Increase $\\sigma_p$ and ask: *“When does $p$ become comparable to the uncertainty?”* Use the signal-to-noise readout $p/\\sigma_p$ to connect “tiny angle” to “measurement challenge.”
+5. **Measurement limits = knowledge limits.** Increase $\sigma_p$ and ask: *“When does $p$ become comparable to the uncertainty?”* Use the signal-to-noise readout $p/\sigma_p$ to connect “tiny angle” to “measurement challenge.”
 
 6. **Close the story.** Say explicitly: *“Parallax gives us distances that calibrate everything else. When the angle is too tiny, we need other methods — but those methods are anchored to this geometric rung.”*
 

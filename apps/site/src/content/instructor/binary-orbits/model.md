@@ -3,7 +3,7 @@ title: "Binary Orbits — Model & Math (Instructor Deep Dive)"
 bundle: "binary-orbits"
 section: "model"
 demo_slug: "binary-orbits"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**

@@ -3,7 +3,7 @@ title: "Moon Phases — Assessment Bank"
 bundle: "moon-phases"
 section: "assessment"
 demo_slug: "moon-phases"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**

@@ -3,7 +3,7 @@ title: "Seasons — Assessment Bank"
 bundle: "seasons"
 section: "assessment"
 demo_slug: "seasons"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -35,7 +35,7 @@ has_math: true
 >
 > **Demo setup:** Use defaults → click **June Solstice** and **December Solstice**; point to the North/South season labels and the Earth–Sun distance readout.
 
-> **Clicker 2: What happens if tilt = $0^\\circ$?**
+> **Clicker 2: What happens if tilt = $0^\circ$?**
 > **Prompt:** In the seasons demo, set axial tilt to $0^\circ$. What happens?
 >
 > A. Seasons get stronger  
@@ -47,7 +47,7 @@ has_math: true
 >
 > **Reasoning:** With $\varepsilon=0^\circ$, the declination stays $\delta=0^\circ$ all year, so the seasonal geometry vanishes.
 >
-> **Demo setup:** Set **Axial Tilt = $0^\\circ$** → click through the four season presets and watch day length/noon altitude stop changing.
+> **Demo setup:** Set **Axial Tilt = $0^\circ$** → click through the four season presets and watch day length/noon altitude stop changing.
 
 > **Clicker 3: Noon Sun altitude (qualitative)**
 > **Prompt:** At latitude $40^\circ$N, when is the noon Sun highest in the sky?
@@ -61,7 +61,7 @@ has_math: true
 >
 > **Reasoning:** The Sun’s declination is most positive at the June solstice, so $|\phi-\delta|$ is smallest and the noon altitude is largest.
 >
-> **Demo setup:** Set latitude to **$40^\\circ$N** → click **March equinox** and **June solstice** and compare the Sun Altitude readout.
+> **Demo setup:** Set latitude to **$40^\circ$N** → click **March equinox** and **June solstice** and compare the Sun Altitude readout.
 
 ## Short answer
 

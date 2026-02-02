@@ -3,7 +3,7 @@ title: "Eclipse Geometry — Model & Math (Instructor Deep Dive)"
 bundle: "eclipse-geometry"
 section: "model"
 demo_slug: "eclipse-geometry"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -14,8 +14,8 @@ has_math: true
 
 > **Links**
 > Student demo: `/play/eclipse-geometry/`  
-> Model code: `demos/_assets/eclipse-geometry-model.js`  
-> UI/visualization code: `demos/eclipse-geometry/eclipse-geometry.js`
+> Model code: `packages/physics/src/eclipseGeometryModel.ts`  
+> UI/visualization code: `apps/demos/src/demos/eclipse-geometry/main.ts`
 
 ## What the demo is modeling (big picture)
 
@@ -59,7 +59,7 @@ $$\beta = \arcsin\!\big(\sin i\ \sin(\lambda_M - \Omega)\big)$$
 Let’s unpack each piece:
 
 - $\beta$ is the Moon’s ecliptic latitude (degrees). $|\beta|$ measures “height” above/below the ecliptic plane in angular terms.
-- $i$ is the Moon’s orbital inclination (degrees; default ~$5.145^\\circ$ in the demo).
+- $i$ is the Moon’s orbital inclination (degrees; default ~$5.145^\circ$ in the demo).
 - $\lambda_M-\Omega$ is the angular distance from the ascending node.
 
 What this equation is really saying: the Moon is in the ecliptic plane at the nodes ($\lambda_M=\Omega$ or $\Omega+180^\circ$), and farthest from the plane about $90^\circ$ away from a node.
@@ -120,9 +120,9 @@ A lunar eclipse happens when the Moon passes through Earth’s shadow at Full Mo
 >
 > | Preset | $D_{EM}$ (km) | Total lunar | Umbral lunar | Penumbral lunar |
 > |---|---:|---:|---:|---:|
-> | Perigee-like | 363,300 | $0.467^\\circ$ | $1.015^\\circ$ | $1.548^\\circ$ |
-> | Mean | 384,400 | $0.427^\\circ$ | $0.944^\\circ$ | $1.478^\\circ$ |
-> | Apogee-like | 405,500 | $0.391^\\circ$ | $0.882^\\circ$ | $1.415^\\circ$ |
+> | Perigee-like | 363,300 | $0.467^\circ$ | $1.015^\circ$ | $1.548^\circ$ |
+> | Mean | 384,400 | $0.427^\circ$ | $0.944^\circ$ | $1.478^\circ$ |
+> | Apogee-like | 405,500 | $0.391^\circ$ | $0.882^\circ$ | $1.415^\circ$ |
 
 ## Solar eclipse classification (partial vs total vs annular)
 
@@ -141,9 +141,9 @@ Geometrically, the model checks whether the miss distance $b$ is smaller than th
 >
 > | Preset | $D_{EM}$ (km) | “Central” window | “Any partial” window |
 > |---|---:|---:|---:|
-> | Perigee-like | 363,300 | $1.013^\\circ$ | $1.546^\\circ$ |
-> | Mean | 384,400 | $0.957^\\circ$ | $1.476^\\circ$ |
-> | Apogee-like | 405,500 | $0.921^\\circ$ | $1.413^\\circ$ |
+> | Perigee-like | 363,300 | $1.013^\circ$ | $1.546^\circ$ |
+> | Mean | 384,400 | $0.957^\circ$ | $1.476^\circ$ |
+> | Apogee-like | 405,500 | $0.921^\circ$ | $1.413^\circ$ |
 
 ## Time evolution (what moves in the simulation)
 

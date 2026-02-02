@@ -61,9 +61,9 @@ D. 1 parsec
 
 ### Clicker 4 — Which mission measures smaller angles?
 
-**Demo setup:** increase $\\sigma_p$.
+**Demo setup:** increase $\sigma_p$.
 
-**Question:** If the uncertainty $\\sigma_p$ increases (while $p$ stays the same), the signal-to-noise $p/\\sigma_p$…
+**Question:** If the uncertainty $\sigma_p$ increases (while $p$ stays the same), the signal-to-noise $p/\sigma_p$…
 
 A. increases  
 B. decreases  
@@ -71,7 +71,7 @@ C. stays the same
 D. becomes negative
 
 **Correct:** B  
-**Why:** Dividing by a larger $\\sigma_p$ makes $p/\\sigma_p$ smaller.  
+**Why:** Dividing by a larger $\sigma_p$ makes $p/\sigma_p$ smaller.  
 **Misconception targeted:** “Measurement precision doesn’t matter.”
 
 ### Clicker 5 — Is parallax a property of the star?

@@ -1,6 +1,7 @@
 ---
 title: "Eclipse Geometry: Shadows in Space"
 status: draft
+content_verified: true
 levels: [Both]
 topics: [EarthSky]
 time_minutes: 12
@@ -27,7 +28,7 @@ model_notes:
 demo_path: "/play/eclipse-geometry/"
 station_path: "/stations/eclipse-geometry/"
 instructor_path: "/instructor/eclipse-geometry/"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 ---
 
 This demo helps explain why eclipses do not occur every month: the Moon must be at New/Full *and* near a node so its ecliptic latitude $|\beta|$ is small.

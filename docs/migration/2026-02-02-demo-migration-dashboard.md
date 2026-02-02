@@ -59,7 +59,8 @@ Legend:
 
 - [ ] Add `aria-atomic="true"` to `#status` in **all** demo `index.html` files, and tighten `scripts/validate-play-dirs.mjs` to require it.
 - [ ] Add a “per-demo contract checklist” section to each demo’s `model_notes` (short bullets: assumptions, units, known limits).
-- [ ] Verify **site content** matches the instrument UI:
+- [x] Verify **site content** matches the instrument UI (content verified in `apps/site/src/content/demos/*.md` for all interactive demos):
+  - `angular-size`, `binary-orbits`, `blackbody-radiation`, `conservation-laws`, `eclipse-geometry`, `keplers-laws`, `moon-phases`, `parallax-distance`, `seasons`
   - `apps/site/src/content/demos/<slug>.md` (learning goals/misconceptions/play steps)
   - `apps/site/src/content/instructor/<slug>/*` (references to controls/readouts should match the migrated UI)
   - `apps/site/src/content/stations/<slug>.md` (if overrides exist, align with station-mode snapshot columns)
@@ -69,21 +70,21 @@ Legend:
 
 - Current: Station + Challenge; exports v1; uses `AngularSizeModel`.
 - TODOs:
-  - [ ] Check the “units story” end-to-end: UI labels ↔ export labels ↔ station/instructor wording (especially `D` vs `d`).
+  - [x] Check the “units story” end-to-end: UI labels ↔ export labels ↔ station/instructor wording (especially `D` vs `d`).
   - [ ] Add `aria-atomic` to `#status`.
 
 ### `seasons` (interactive)
 
 - Current: Station + Challenge; exports v1; uses `SeasonsModel`.
 - TODOs:
-  - [ ] Content verification: instructor/station text should match current control names (tilt/latitude/day-of-year).
+  - [x] Content verification: instructor/station text should match current control names (tilt/latitude/day-of-year).
   - [ ] Add `aria-atomic` to `#status`.
 
 ### `eclipse-geometry` (interactive)
 
 - Current: Station + Challenge; exports v1; uses `EclipseGeometryModel`.
 - TODOs:
-  - [ ] Verify the classification wording in UI/readouts matches station/instructor content (solar vs lunar eclipse naming).
+  - [x] Verify the classification wording in UI/readouts matches station/instructor content (solar vs lunar eclipse naming).
   - [ ] Add `aria-atomic` to `#status`.
 
 ### `moon-phases` (interactive)
@@ -143,7 +144,7 @@ These exist in `~/Teaching/astr101-sp26/demos/` but are not yet present as `apps
 
 ## Meta TODOs (project management)
 
-- [ ] Update `docs/migration/astr101-sp26-manifest.json` to include the three newer legacy demos and to reflect current statuses (interactive vs stub) so it’s a reliable planner.
+- [x] Update `docs/migration/astr101-sp26-manifest.json` to include the three newer legacy demos and to reflect current statuses (interactive vs stub) so it’s a reliable planner.
 - [ ] Add a small “dashboard generator” script (optional) that scans:
   - `apps/demos/src/demos/*` (stub vs interactive; key runtime hooks)
   - `apps/site/src/content/demos/*` (metadata presence)

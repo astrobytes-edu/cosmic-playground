@@ -14,7 +14,7 @@ last_updated: "2026-02-02"
 ## P0 (blocking / correctness / teachability)
 
 - **Measurement-limit clarity:** add one explicit instructor note (and/or student microcopy) that “measurable” depends on precision and that the visualization is exaggerated for teaching.
-- **Unit scaffolding:** add a tiny on-page “arcsec <-> mas <-> $\\mu\\mathrm{as}$” conversion reminder so students don’t treat unit changes as physics changes.
+- **Unit scaffolding:** add a tiny on-page “arcsec <-> mas <-> $\mu\mathrm{as}$” conversion reminder so students don’t treat unit changes as physics changes.
 - **Assessment alignment:** package the clickers into a quick sequence that pairs each with a demo action (parallax slider, uncertainty slider, preset stars).
 
 ## P1 (important)

@@ -3,7 +3,7 @@ title: "Angular Size — Model & Math (Instructor Deep Dive)"
 bundle: "angular-size"
 section: "model"
 demo_slug: "angular-size"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -14,8 +14,8 @@ has_math: true
 
 > **Links**
 > Student demo: `/play/angular-size/`  
-> Model code: `demos/_assets/angular-size-model.js`  
-> UI/visualization code: `demos/angular-size/angular-size.js`
+> Model code: `packages/physics/src/angularSizeModel.ts`  
+> UI/visualization code: `apps/demos/src/demos/angular-size/main.ts`
 
 ## What the demo is modeling (big picture)
 
@@ -29,7 +29,7 @@ It’s intentionally multi-scale:
 
 The demo reports the angular diameter in a human-friendly unit:
 
-- degrees ($^\circ$), arcminutes ($\\mathrm{arcmin}$), or arcseconds ($\\mathrm{arcsec}$)
+- degrees ($^\circ$), arcminutes ($\mathrm{arcmin}$), or arcseconds ($\mathrm{arcsec}$)
 
 ## Angular diameter (exact)
 
@@ -72,11 +72,11 @@ This is the mental math version students should take away: angular size scales a
 
 ## Angle unit conversions (for classroom fluency)
 
-$$1^\circ = 60\\,\\mathrm{arcmin} \\qquad\\text{and}\\qquad 1\\,\\mathrm{arcmin} = 60\\,\\mathrm{arcsec}$$
+$$1^\circ = 60\,\mathrm{arcmin} \qquad\text{and}\qquad 1\,\mathrm{arcmin} = 60\,\mathrm{arcsec}$$
 
 So:
 
-$$1^\circ = 3600\\,\\mathrm{arcsec}$$
+$$1^\circ = 3600\,\mathrm{arcsec}$$
 
 These conversions are what let students compare “planets (arcseconds) vs Moon (degrees).”
 

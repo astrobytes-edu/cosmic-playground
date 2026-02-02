@@ -1,6 +1,7 @@
 ---
 title: "Seasons: Why Tilt Matters"
 status: draft
+content_verified: true
 levels: [Both]
 topics: [EarthSky]
 time_minutes: 12
@@ -26,7 +27,7 @@ model_notes:
 demo_path: "/play/seasons/"
 station_path: "/stations/seasons/"
 instructor_path: "/instructor/seasons/"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 ---
 
 This demo lets you change day-of-year, axial tilt, and latitude to explore how sun angle and day length change through the year in each hemisphere.

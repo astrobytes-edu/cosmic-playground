@@ -1,7 +1,7 @@
 ---
 title: "Station card: binary-orbits"
 demo_slug: "binary-orbits"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 **Name:** ________________________________  **Section:** __________  **Date:** __________

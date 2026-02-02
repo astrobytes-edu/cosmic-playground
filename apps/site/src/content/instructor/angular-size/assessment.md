@@ -3,7 +3,7 @@ title: "Angular Size — Assessment Bank"
 bundle: "angular-size"
 section: "assessment"
 demo_slug: "angular-size"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**

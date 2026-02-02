@@ -1,6 +1,7 @@
 ---
 title: "Moon Phases: Light, Not Shadow"
 status: beta
+content_verified: true
 levels: [Both]
 topics: [EarthSky]
 time_minutes: 8
@@ -24,7 +25,7 @@ model_notes:
 demo_path: "/play/moon-phases/"
 station_path: "/stations/moon-phases/"
 instructor_path: "/instructor/moon-phases/"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 ---
 
 A short, interactive model for relating phase angle to what fraction of the Moon appears illuminated.

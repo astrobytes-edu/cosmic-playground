@@ -1,7 +1,7 @@
 ---
 title: "Station card: angular-size"
 demo_slug: "angular-size"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 **Name:** ________________________________  **Section:** __________  **Date:** __________
@@ -29,7 +29,7 @@ has_math: true
 > - **Physical diameter $D$ (km in this demo):** the object’s actual size.
 > - **Distance $d$ (km in this demo):** how far the object is from the observer.
 > - **Small-angle idea:** larger $D$ → larger $\theta$; larger $d$ → smaller $\theta$.
-> - **Unit ladder:** $1^\\circ = 60\\,\\mathrm{arcmin}$ and $1\\,\\mathrm{arcmin} = 60\\,\\mathrm{arcsec}$.
+> - **Unit ladder:** $1^\circ = 60\,\mathrm{arcmin}$ and $1\,\mathrm{arcmin} = 60\,\mathrm{arcsec}$.
 >
 > **Sanity checks:**
 > - If $d$ doubles, $\theta$ should get about half as big (for small angles).

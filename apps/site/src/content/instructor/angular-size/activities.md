@@ -3,7 +3,7 @@ title: "Angular Size — In-Class Activities"
 bundle: "angular-size"
 section: "activities"
 demo_slug: "angular-size"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -29,7 +29,7 @@ has_math: true
 > 2) Select **Moon (Today)** preset → read the angular size.  
 > 3) Ask: “What does this imply about total solar eclipses?”
 >
-> **Debrief script:** “It’s a coincidence: the Sun is about $400\\times$ larger but also about $400\\times$ farther, so the ratios nearly cancel.”
+> **Debrief script:** “It’s a coincidence: the Sun is about $400\times$ larger but also about $400\times$ farther, so the ratios nearly cancel.”
 
 ## MW Short Investigation (8–12 min, pairs/triads)
 
@@ -85,7 +85,7 @@ has_math: true
 > - **Physical diameter $D$ (km in this demo):** the object’s actual size.
 > - **Distance $d$ (km in this demo):** how far the object is from the observer.
 > - **Small-angle idea:** larger $D$ → larger $\theta$; larger $d$ → smaller $\theta$.
-> - **Unit ladder:** $1^\\circ = 60\\,\\mathrm{arcmin}$ and $1\\,\\mathrm{arcmin} = 60\\,\\mathrm{arcsec}$.
+> - **Unit ladder:** $1^\circ = 60\,\mathrm{arcmin}$ and $1\,\mathrm{arcmin} = 60\,\mathrm{arcsec}$.
 >
 > **Sanity checks:**
 > - If $d$ doubles, $\theta$ should get about half as big (for small angles).

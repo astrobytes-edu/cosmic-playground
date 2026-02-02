@@ -3,7 +3,7 @@ title: "Moon Phases — Future Enhancements (Backlog)"
 bundle: "moon-phases"
 section: "backlog"
 demo_slug: "moon-phases"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 ---
 > **Navigation**
 > - Instructor hub: [/demos/_instructor/](../../instructor/)

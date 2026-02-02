@@ -1,6 +1,7 @@
 ---
 title: "Angular Size: The Sky’s Ruler"
 status: draft
+content_verified: true
 levels: [Both]
 topics: [EarthSky]
 time_minutes: 10
@@ -25,7 +26,7 @@ model_notes:
 demo_path: "/play/angular-size/"
 station_path: "/stations/angular-size/"
 instructor_path: "/instructor/angular-size/"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 ---
 
 This demo explores why objects can look big or small in the sky depending on both their physical size and their distance.
