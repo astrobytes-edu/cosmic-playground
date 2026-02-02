@@ -112,8 +112,8 @@ function computeModel(args: { massRatio: number; separation: number }) {
   const m2 = massRatio;
   const total = m1 + m2;
 
-  // Teaching units (AU / yr / M☉): with G = 4π², Kepler normalization gives:
-  // P² = a³ / (M1 + M2), with P in years, a in AU.
+  // Teaching units (AU / yr / Msun): with G = 4*pi^2, Kepler normalization gives:
+  // P^2 = a^3 / (M1 + M2), with P in years, a in AU.
   const periodYr = TwoBodyAnalytic.orbitalPeriodYrFromAuSolar({
     aAu: separation,
     massSolar: total
@@ -351,19 +351,19 @@ function exportResults(): ExportPayloadV1 {
     version: 1,
     timestamp: new Date().toISOString(),
     parameters: [
-      { name: "Mass ratio (m₂/m₁)", value: formatNumber(model.massRatio, 2) },
+      { name: "Mass ratio (m2/m1)", value: formatNumber(model.massRatio, 2) },
       { name: "Separation a (AU)", value: formatNumber(model.separation, 2) }
     ],
     readouts: [
       {
-        name: "Barycenter offset from m₁ (AU)",
+        name: "Barycenter offset from m1 (AU)",
         value: formatNumber(model.r1, 3)
       },
       { name: "Orbital period P (yr)", value: formatNumber(model.periodYr, 3) }
     ],
     notes: [
       "Assumes perfectly circular, coplanar two-body motion with point masses.",
-      "Uses AU/yr/M☉ teaching units where G = 4π², so P² = a³/(M₁+M₂)."
+      "Uses AU/yr/Msun teaching units where G = 4*pi^2, so P^2 = a^3/(M1+M2)."
     ]
   };
 }

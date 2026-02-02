@@ -125,10 +125,10 @@ function phaseName(angleDeg: number): string {
   const a = normalizeAngleDeg(angleDeg);
 
   // Teaching convention used here:
-  // - 0° = Full, 180° = New
-  // - 270° is First Quarter (waxing), 90° is Third Quarter (waning)
+  // - 0 deg = Full, 180 deg = New
+  // - 270 deg is First Quarter (waxing), 90 deg is Third Quarter (waning)
   //
-  // We label the 8 principal phases by splitting the circle into 45° bins.
+  // We label the 8 principal phases by splitting the circle into 45 deg bins.
   const bin = Math.round(a / 45) % 8;
   switch (bin) {
     case 0:
@@ -426,7 +426,7 @@ async function handleCopyResults() {
       timestamp: new Date().toISOString(),
       parameters: [
         {
-          name: "Phase angle α (deg)",
+          name: "Phase angle alpha (deg)",
           value: String(Math.round(angleDeg))
         }
       ],

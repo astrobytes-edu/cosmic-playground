@@ -356,7 +356,7 @@ function renderStage(args: {
   const cy = 0;
   const r = 140;
 
-  // Display in a Sun-fixed way: subtract λ☉ for visualization only.
+  // Display in a Sun-fixed way: subtract lambda_sun for visualization only.
   const moonDisplayLonDeg = EclipseGeometryModel.normalizeAngleDeg(
     args.moonLonDeg - args.sunLonDeg
   );
@@ -383,10 +383,10 @@ function renderStage(args: {
   descNodeDot.setAttribute("cx", formatNumber(ex, 2));
   descNodeDot.setAttribute("cy", formatNumber(ey, 2));
 
-  ascNodeLabel.textContent = `Ω ≈ ${Math.round(nodeDisplayLonDeg)}°`;
-  descNodeLabel.textContent = `Ω+180 ≈ ${Math.round(EclipseGeometryModel.normalizeAngleDeg(nodeDisplayLonDeg + 180))}°`;
+  ascNodeLabel.textContent = `node ~ ${Math.round(nodeDisplayLonDeg)} deg`;
+  descNodeLabel.textContent = `node+180 ~ ${Math.round(EclipseGeometryModel.normalizeAngleDeg(nodeDisplayLonDeg + 180))} deg`;
 
-  // β indicator: draw a short line "out of plane" near the Moon point.
+  // beta indicator: draw a short line "out of plane" near the Moon point.
   const betaScalePxPerDeg = 10;
   const by = my - clamp(args.betaDeg, -10, 10) * betaScalePxPerDeg;
   betaLine.setAttribute("x1", formatNumber(mx, 2));
@@ -394,11 +394,11 @@ function renderStage(args: {
   betaLine.setAttribute("x2", formatNumber(mx, 2));
   betaLine.setAttribute("y2", formatNumber(by, 2));
 
-  // β panel marker: y = -beta
+  // beta panel marker: y = -beta
   const betaPanelScale = 12;
   const y = clamp(-args.betaDeg * betaPanelScale, -140, 140);
   betaMarker.setAttribute("cy", formatNumber(y, 2));
-  betaLabel.textContent = `β ≈ ${formatNumber(args.betaDeg, 2)}°`;
+  betaLabel.textContent = `beta ~ ${formatNumber(args.betaDeg, 2)} deg`;
 }
 
 function render() {
@@ -427,15 +427,15 @@ function render() {
 
   const phase = phaseInfo(derived.phaseAngleDeg);
 
-  moonLonValue.textContent = `${Math.round(moonLonDeg)}°`;
-  nodeLonValue.textContent = `${Math.round(nodeLonDeg)}°`;
-  tiltValue.textContent = `${formatNumber(orbitalTiltDeg, 3)}°`;
+  moonLonValue.textContent = `${Math.round(moonLonDeg)} deg`;
+  nodeLonValue.textContent = `${Math.round(nodeLonDeg)} deg`;
+  tiltValue.textContent = `${formatNumber(orbitalTiltDeg, 3)} deg`;
   distanceValue.textContent = `${state.earthMoonDistanceKm.toLocaleString()} km`;
 
   phaseLabel.textContent = phase.label;
-  phaseAngle.textContent = `${formatNumber(derived.phaseAngleDeg, 1)}°`;
-  absBeta.textContent = `${formatNumber(derived.absBetaDeg, 3)}°`;
-  nearestNode.textContent = `${formatNumber(derived.nearestNodeDeg, 2)}°`;
+  phaseAngle.textContent = `${formatNumber(derived.phaseAngleDeg, 1)} deg`;
+  absBeta.textContent = `${formatNumber(derived.absBetaDeg, 3)} deg`;
+  nearestNode.textContent = `${formatNumber(derived.nearestNodeDeg, 2)} deg`;
 
   solarOutcome.textContent = outcomeLabel(derived.solarType);
   lunarOutcome.textContent = outcomeLabel(derived.lunarType);
@@ -444,7 +444,7 @@ function render() {
 
   setLiveRegionText(
     status,
-    `Thresholds (mean-distance example): solar partial ≈ ${formatNumber(thresholds.solarPartialDeg, 2)}°, solar central ≈ ${formatNumber(thresholds.solarCentralDeg, 2)}°`
+    `Thresholds (mean-distance example): solar partial ~ ${formatNumber(thresholds.solarPartialDeg, 2)} deg, solar central ~ ${formatNumber(thresholds.solarCentralDeg, 2)} deg`
   );
 
   (window as any).__cp = {
@@ -499,9 +499,9 @@ function exportResults(st: EclipseDemoState): ExportPayloadV1 {
   const phase = phaseInfo(st.phaseAngleDeg);
 
   const notes: string[] = [];
-  notes.push("Units: angles in degrees (°); distances in kilometers (km).");
+  notes.push("Units: angles in degrees (deg); distances in kilometers (km).");
   notes.push(
-    `Interactive mode uses a pedagogical syzygy tolerance: outcomes only appear when Δ is within ${SYZYGY_TOLERANCE_DEG}° of 0° (New) or 180° (Full).`
+    `Interactive mode uses a pedagogical syzygy tolerance: outcomes only appear when Delta is within ${SYZYGY_TOLERANCE_DEG} deg of 0 deg (New) or 180 deg (Full).`
   );
   notes.push("This is a simplified geometric model; it is not an ephemeris-grade eclipse predictor.");
   if (prefersReducedMotion) {
@@ -512,22 +512,22 @@ function exportResults(st: EclipseDemoState): ExportPayloadV1 {
     version: 1,
     timestamp: new Date().toISOString(),
     parameters: [
-      { name: "Moon longitude λM (deg)", value: String(Math.round(st.moonLonDeg)) },
-      { name: "Sun longitude λ☉ (deg)", value: String(Math.round(st.sunLonDeg)) },
-      { name: "Node longitude Ω (deg)", value: String(Math.round(st.nodeLonDeg)) },
+      { name: "Moon longitude lambda_M (deg)", value: String(Math.round(st.moonLonDeg)) },
+      { name: "Sun longitude lambda_sun (deg)", value: String(Math.round(st.sunLonDeg)) },
+      { name: "Node longitude Omega (deg)", value: String(Math.round(st.nodeLonDeg)) },
       { name: "Orbital tilt i (deg)", value: formatNumber(st.orbitalTiltDeg, 3) },
       { name: "Earth–Moon distance (km)", value: Math.round(st.earthMoonDistanceKm).toLocaleString() }
     ],
     readouts: [
       { name: "Phase", value: phase.label },
-      { name: "Phase angle Δ (deg)", value: formatNumber(st.phaseAngleDeg, 1) },
-      { name: "|β| (deg)", value: formatNumber(st.absBetaDeg, 3), note: "ecliptic latitude" },
+      { name: "Phase angle Delta (deg)", value: formatNumber(st.phaseAngleDeg, 1) },
+      { name: "abs(beta) (deg)", value: formatNumber(st.absBetaDeg, 3), note: "ecliptic latitude" },
       { name: "Nearest node distance (deg)", value: formatNumber(st.nearestNodeDeg, 2) },
       { name: "Solar outcome", value: outcomeLabel(st.solarType) },
       { name: "Lunar outcome", value: outcomeLabel(st.lunarType) },
-      { name: "Solar partial threshold |β| (deg)", value: formatNumber(thresholds.solarPartialDeg, 2) },
-      { name: "Solar central threshold |β| (deg)", value: formatNumber(thresholds.solarCentralDeg, 2) },
-      { name: "Lunar penumbral threshold |β| (deg)", value: formatNumber(thresholds.lunarPenumbralDeg, 2) }
+      { name: "Solar partial threshold abs(beta) (deg)", value: formatNumber(thresholds.solarPartialDeg, 2) },
+      { name: "Solar central threshold abs(beta) (deg)", value: formatNumber(thresholds.solarCentralDeg, 2) },
+      { name: "Lunar penumbral threshold abs(beta) (deg)", value: formatNumber(thresholds.lunarPenumbralDeg, 2) }
     ],
     notes
   };
@@ -962,7 +962,7 @@ function formatSimSummary(sim: SimulationState): string {
   const years = sim.totalDays / TROPICAL_YEAR_DAYS;
   const lines: string[] = [];
   lines.push(
-    `Simulated ${years.toFixed(0)} year(s) @ distance=${Math.round(sim.earthMoonDistanceKm).toLocaleString()} km, i=${sim.orbitalTiltDeg.toFixed(3)}°`
+    `Simulated ${years.toFixed(0)} year(s) @ distance=${Math.round(sim.earthMoonDistanceKm).toLocaleString()} km, i=${sim.orbitalTiltDeg.toFixed(3)} deg`
   );
   lines.push(`Syzygies checked: New=${sim.counts.newWindows}, Full=${sim.counts.fullWindows}`);
   lines.push(
@@ -1000,7 +1000,7 @@ function recordSyzygyWindow(kind: "new" | "full") {
     if (solarType !== "none" && simulation.sampleEvents.length < 10) {
       const y = best.tDays / TROPICAL_YEAR_DAYS;
       simulation.sampleEvents.push(
-        `Year ${y.toFixed(2)}: Solar ${outcomeLabel(solarType)} (|β|=${best.absBetaDeg.toFixed(3)}°, Δ≈0°)`
+        `Year ${y.toFixed(2)}: Solar ${outcomeLabel(solarType)} (abs(beta)=${best.absBetaDeg.toFixed(3)} deg, Delta~0 deg)`
       );
     }
   } else {
@@ -1015,7 +1015,7 @@ function recordSyzygyWindow(kind: "new" | "full") {
     if (lunarType !== "none" && simulation.sampleEvents.length < 10) {
       const y = best.tDays / TROPICAL_YEAR_DAYS;
       simulation.sampleEvents.push(
-        `Year ${y.toFixed(2)}: Lunar ${outcomeLabel(lunarType)} (|β|=${best.absBetaDeg.toFixed(3)}°, Δ≈180°)`
+        `Year ${y.toFixed(2)}: Lunar ${outcomeLabel(lunarType)} (abs(beta)=${best.absBetaDeg.toFixed(3)} deg, Delta~180 deg)`
       );
     }
   }

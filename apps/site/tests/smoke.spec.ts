@@ -62,6 +62,74 @@ test.describe("Cosmic Playground smoke", () => {
     }
   });
 
+  test("Kepler’s Laws renders with resolved canvas colors and animates", async ({
+    page
+  }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+
+    await page.goto("play/keplers-laws/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+
+    // (1) Verify the planet marker is not rendered with a default/invalid color.
+    // When canvas colors come from CSS vars like `var(--cp-accent)` or `color-mix(...)`,
+    // the canvas API won't accept them unless resolved to computed rgb(...).
+    const planetPixel = await page.evaluate(() => {
+      const canvas = document.querySelector<HTMLCanvasElement>("#orbitCanvas");
+      const a = document.querySelector<HTMLInputElement>("#aAu");
+      const e = document.querySelector<HTMLInputElement>("#ecc");
+      if (!canvas || !a || !e) return null;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+
+      const rect = canvas.getBoundingClientRect();
+      const w = Math.max(1, rect.width);
+      const h = Math.max(1, rect.height);
+      const dpr = window.devicePixelRatio || 1;
+
+      const aAu = Number(a.value);
+      const ecc = Number(e.value);
+      const rp = aAu * (1 - ecc);
+      const ra = aAu * (1 + ecc);
+      const b = aAu * Math.sqrt(1 - ecc * ecc);
+      const pad = 0.2 * aAu;
+
+      const margin = 36;
+      const plotW = Math.max(1, w - 2 * margin);
+      const plotH = Math.max(1, h - 2 * margin);
+      const xMin = -ra - pad;
+      const xMax = rp + pad;
+      const yMax = b + pad;
+      const scale = Math.min(plotW / (xMax - xMin), plotH / (2 * yMax));
+      const cx = margin + (-xMin) * scale;
+      const cy = h / 2;
+
+      // Default mean anomaly is 0, which puts the planet at perihelion (x=rp, y=0).
+      const px = cx + rp * scale;
+      const py = cy;
+
+      const image = ctx.getImageData(Math.round(px * dpr), Math.round(py * dpr), 1, 1);
+      const [r, g, bch, alpha] = image.data;
+      return { r, g, b: bch, alpha };
+    });
+
+    expect(planetPixel).not.toBeNull();
+    expect(planetPixel?.alpha, "Planet marker should be visible (non-transparent)").toBeGreaterThan(0);
+    expect(
+      (planetPixel?.r ?? 0) + (planetPixel?.g ?? 0) + (planetPixel?.b ?? 0),
+      "Planet marker should not be rendered as near-black (invalid canvas color)."
+    ).toBeGreaterThan(60);
+
+    // (2) Verify animation advances the time slider.
+    const mean = page.locator("#meanAnomalyDeg");
+    const before = await mean.inputValue();
+    await page.locator("#animate").click();
+    await expect(page.locator("#animate")).toContainText("Stop");
+    await page.waitForTimeout(350);
+    const after = await mean.inputValue();
+    expect(after, "Mean anomaly should advance while animating.").not.toEqual(before);
+  });
+
   async function installClipboardCapture(page: any) {
     await page.addInitScript(() => {
       (window as any).__cpLastClipboardText = null;
@@ -80,11 +148,15 @@ test.describe("Cosmic Playground smoke", () => {
   const migratedInteractiveDemos = [
     {
       slug: "angular-size",
-      expects: ["Diameter D (km)", "Distance d (km)", "Angular diameter θ (deg)"]
+      expects: ["Diameter D (km)", "Distance d (km)", "Angular diameter theta (deg)"]
     },
     {
       slug: "blackbody-radiation",
-      expects: ["Temperature T (K)", "Peak wavelength λ_peak (nm)", "Luminosity ratio L/L☉ (same radius)"]
+      expects: [
+        "Temperature T (K)",
+        "Peak wavelength lambda_peak (nm)",
+        "Luminosity ratio L/Lsun (same radius)"
+      ]
     },
     {
       slug: "binary-orbits",
@@ -92,19 +164,27 @@ test.describe("Cosmic Playground smoke", () => {
     },
     {
       slug: "conservation-laws",
-      expects: ["Central mass M (M☉)", "Specific energy ε (AU²/yr²)", "Specific angular momentum |h| (AU²/yr)"]
+      expects: [
+        "Central mass M (Msun)",
+        "Specific energy eps (AU^2/yr^2)",
+        "Specific angular momentum |h| (AU^2/yr)"
+      ]
     },
     {
       slug: "eclipse-geometry",
-      expects: ["Earth–Moon distance (km)", "Phase angle", "|β|"]
+      expects: ["Earth–Moon distance (km)", "Phase angle Delta (deg)", "abs(beta) (deg)"]
     },
     {
       slug: "moon-phases",
-      expects: ["Phase angle α (deg)", "Illuminated (%)"]
+      expects: ["Phase angle alpha (deg)", "Illuminated (%)"]
     },
     {
       slug: "seasons",
-      expects: ["Axial tilt ε (deg)", "Solar declination δ (deg)", "Earth–Sun distance r (AU)"]
+      expects: [
+        "Axial tilt epsilon (deg)",
+        "Solar declination delta (deg)",
+        "Earth–Sun distance r (AU)"
+      ]
     },
     {
       slug: "keplers-laws",
@@ -112,7 +192,7 @@ test.describe("Cosmic Playground smoke", () => {
     },
     {
       slug: "parallax-distance",
-      expects: ["Parallax p (mas)", "Distance d (pc)", "Signal-to-noise p/σ_p"]
+      expects: ["Parallax p (mas)", "Distance d (pc)", "Signal-to-noise p/sigma_p"]
     }
   ] as const;
 

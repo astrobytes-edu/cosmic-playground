@@ -209,16 +209,16 @@ function formatAngleDisplay(thetaDegValue: number): { text: string; unit: string
   if (!Number.isFinite(thetaDegValue)) return { text: "—", unit: "" };
 
   const abs = Math.abs(thetaDegValue);
-  if (abs >= 1) return { text: thetaDegValue.toFixed(2), unit: "°" };
-  if (abs >= 1 / 60) return { text: AstroUnits.degToArcmin(thetaDegValue).toFixed(1), unit: "′" };
-  return { text: AstroUnits.degToArcsec(thetaDegValue).toFixed(0), unit: "″" };
+  if (abs >= 1) return { text: thetaDegValue.toFixed(2), unit: "deg" };
+  if (abs >= 1 / 60) return { text: AstroUnits.degToArcmin(thetaDegValue).toFixed(1), unit: "arcmin" };
+  return { text: AstroUnits.degToArcsec(thetaDegValue).toFixed(0), unit: "arcsec" };
 }
 
 function describeMoonOrbitAngle(angleDeg: number): string {
   const normalized = ((angleDeg % 360) + 360) % 360;
   if (Math.abs(normalized - 0) <= 1 || Math.abs(normalized - 360) <= 1) return "Perigee";
   if (Math.abs(normalized - 180) <= 1) return "Apogee";
-  return `${Math.round(normalized)}°`;
+  return `${Math.round(normalized)} deg`;
 }
 
 function describeMoonRecessionTime(timeMyr: number): string {
@@ -230,7 +230,7 @@ function describeMoonRecessionTime(timeMyr: number): string {
 
 function getMoonDistanceAtOrbitAngle(angleDeg: number): number {
   const phaseRad = AstroUnits.degToRad(angleDeg);
-  const w = (Math.cos(phaseRad) + 1) / 2; // 1 at 0° (perigee), 0 at 180° (apogee)
+  const w = (Math.cos(phaseRad) + 1) / 2; // 1 at 0 deg (perigee), 0 at 180 deg (apogee)
   return moonOrbit.apogeeKm + w * (moonOrbit.perigeeKm - moonOrbit.apogeeKm);
 }
 
@@ -409,7 +409,7 @@ function exportResults(thetaDegValue: number): ExportPayloadV1 {
   const presetMeta = AngularSizeModel.presets[state.presetId];
 
   const notes: string[] = [];
-  notes.push("Units: D (diameter) and d (distance) in km; θ in degrees (display may switch ° / ′ / ″).");
+  notes.push("Units: D (diameter) and d (distance) in km; theta in degrees (display may switch deg / arcmin / arcsec).");
 
   const parameters: ExportPayloadV1["parameters"] = [
     { name: "Preset", value: presetMeta.name },
@@ -440,8 +440,8 @@ function exportResults(thetaDegValue: number): ExportPayloadV1 {
     timestamp: new Date().toISOString(),
     parameters,
     readouts: [
-      { name: "Angular diameter θ (display)", value: `${display.text}${display.unit}` },
-      { name: "Angular diameter θ (deg)", value: formatNumber(thetaDegValue, 6) }
+      { name: "Angular diameter theta (display)", value: `${display.text} ${display.unit}`.trim() },
+      { name: "Angular diameter theta (deg)", value: formatNumber(thetaDegValue, 6) }
     ],
     notes
   };
@@ -464,7 +464,7 @@ function buildStationRow(args: {
     case: args.label,
     diameterKm: formatNumber(args.diameterKm, 6),
     distanceKm: formatNumber(args.distanceKm, 6),
-    thetaDisplay: `${display.text}${display.unit}`,
+    thetaDisplay: `${display.text} ${display.unit}`.trim(),
     thetaDeg: formatNumber(thetaDegValue, 6),
     moonMode: args.moonMode ?? "",
     moonSetting: args.moonSetting ?? ""
@@ -711,21 +711,21 @@ function render() {
   diameterValue.textContent = `${formatNumber(state.diameterKm, 4)} km`;
 
   if (state.presetId === "moon") {
-    moonOrbitValue.textContent = `${Math.round(state.moonOrbitAngleDeg)}°`;
+    moonOrbitValue.textContent = `${Math.round(state.moonOrbitAngleDeg)} deg`;
     moonRecessionValue.textContent = describeMoonRecessionTime(state.moonRecessionTimeMyr);
   } else {
     moonOrbitValue.textContent = "—";
     moonRecessionValue.textContent = "—";
   }
 
-  thetaDisplay.textContent = `${display.text}${display.unit}`;
-  thetaDeg.textContent = `${formatNumber(thetaDegValue, 6)}°`;
+  thetaDisplay.textContent = `${display.text} ${display.unit}`.trim();
+  thetaDeg.textContent = `${formatNumber(thetaDegValue, 6)} deg`;
   diameterKm.textContent = formatNumber(state.diameterKm, 6);
   distanceKm.textContent = formatNumber(state.distanceKm, 6);
 
-  angleLabel.textContent = `Angular diameter: ${display.text}${display.unit}`;
-  sizeStageLabel.textContent = `D ≈ ${formatNumber(state.diameterKm, 3)} km`;
-  distanceStageLabel.textContent = `d ≈ ${formatNumber(state.distanceKm, 3)} km`;
+  angleLabel.textContent = `Angular diameter: ${`${display.text} ${display.unit}`.trim()}`;
+  sizeStageLabel.textContent = `D ~ ${formatNumber(state.diameterKm, 3)} km`;
+  distanceStageLabel.textContent = `d ~ ${formatNumber(state.distanceKm, 3)} km`;
 
   const presetMeta = AngularSizeModel.presets[state.presetId];
   objectLabel.textContent = presetMeta.name;
@@ -808,7 +808,7 @@ const challenges: Challenge[] = [
       moonTimeMode: "orbit",
       moonOrbitAngleDeg: 0
     },
-    hints: ["Start at perigee (0°) then move toward apogee (180°) to make the Moon look smaller."],
+    hints: ["Start at perigee ($0^\\\\circ$) then move toward apogee ($180^\\\\circ$) to make the Moon look smaller."],
     check: (s: unknown) => {
       const st = s as Partial<AngularSizeDemoState>;
       if (st.presetKey !== "moon") {

@@ -348,14 +348,14 @@ function exportResults(): ExportPayloadV1 {
       { name: "Intensity scale", value: state.intensityScale }
     ],
     readouts: [
-      { name: "Peak wavelength λ_peak (nm)", value: Number.isFinite(peakNm) ? String(Math.round(peakNm)) : "—" },
-      { name: "Luminosity ratio L/L☉ (same radius)", value: formatNumber(lumRatio, 6) },
+      { name: "Peak wavelength lambda_peak (nm)", value: Number.isFinite(peakNm) ? String(Math.round(peakNm)) : "—" },
+      { name: "Luminosity ratio L/Lsun (same radius)", value: formatNumber(lumRatio, 6) },
       { name: "Color name (approx)", value: name },
       { name: "Spectral class (approx)", value: classLetter }
     ],
     notes: [
       "Curve generated from Planck’s law and plotted in relative (normalized) intensity.",
-      "Units: wavelength λ is cm internally (displayed in nm); temperature T is K.",
+      "Units: wavelength lambda is cm internally (displayed in nm); temperature T is K.",
       "Star color preview is a perceptual approximation (not full colorimetry)."
     ]
   };
@@ -416,7 +416,7 @@ const demoModes = createDemoModes({
         items: [
           "Move the temperature slider and watch the peak shift left/right.",
           "Turn on the visible-band highlight and notice when the peak is in/near the visible range.",
-          "Compare two temperatures: doubling T halves λ_peak and increases total emission strongly (∝ T^4)."
+          "Compare two temperatures: doubling T halves lambda_peak and increases total emission strongly (scales as T^4)."
         ]
       }
     ]
@@ -426,14 +426,14 @@ const demoModes = createDemoModes({
     subtitle: "Add snapshot rows, then copy CSV or print.",
     steps: [
       "Record a snapshot for the Sun (5772 K).",
-      "Record a cooler star and a hotter star; compare λ_peak and luminosity ratio.",
+      "Record a cooler star and a hotter star; compare lambda_peak and luminosity ratio.",
       "Describe what 'color' means in astronomy using the peak and the visible-band region."
     ],
     columns: [
       { key: "case", label: "Case" },
       { key: "tK", label: "T (K)" },
-      { key: "peakNm", label: "λ_peak (nm)" },
-      { key: "lumRatio", label: "L/L☉ (same R)" },
+      { key: "peakNm", label: "lambda_peak (nm)" },
+      { key: "lumRatio", label: "L/Lsun (same R)" },
       { key: "class", label: "Class" },
       { key: "color", label: "Color (approx)" }
     ],

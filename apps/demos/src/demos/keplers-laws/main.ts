@@ -113,15 +113,27 @@ function cssVar(name: string): string {
   return value;
 }
 
+const colorProbe = document.createElement("span");
+colorProbe.style.position = "absolute";
+colorProbe.style.left = "-9999px";
+colorProbe.style.top = "-9999px";
+colorProbe.style.visibility = "hidden";
+document.body.appendChild(colorProbe);
+
+function resolveCssColor(raw: string): string {
+  colorProbe.style.color = raw;
+  return getComputedStyle(colorProbe).color;
+}
+
 const canvasTheme = {
-  orbit: cssVar("--cp-border"),
-  axes: cssVar("--cp-border-subtle"),
-  text: cssVar("--cp-text"),
-  muted: cssVar("--cp-muted"),
-  sun: cssVar("--cp-warning"),
-  planet: cssVar("--cp-chart-1"),
-  area: cssVar("--cp-glow-violet"),
-  vector: cssVar("--cp-chart-2")
+  orbit: resolveCssColor(cssVar("--cp-border")),
+  axes: resolveCssColor(cssVar("--cp-border-subtle")),
+  text: resolveCssColor(cssVar("--cp-text")),
+  muted: resolveCssColor(cssVar("--cp-muted")),
+  sun: resolveCssColor(cssVar("--cp-warning")),
+  planet: resolveCssColor(cssVar("--cp-chart-1")),
+  area: resolveCssColor(cssVar("--cp-glow-violet")),
+  vector: resolveCssColor(cssVar("--cp-chart-2"))
 };
 
 function resizeCanvasToCssPixels(
@@ -213,8 +225,8 @@ function render() {
 
   aAuValue.textContent = `${formatNumber(inputs.aAu, 2)} AU`;
   eccValue.textContent = formatNumber(inputs.e, 2);
-  centralMassValue.textContent = `${formatNumber(inputs.centralMassSolar, 2)} M☉`;
-  meanAnomalyValue.textContent = `${Math.round(inputs.meanAnomalyDeg)}°`;
+  centralMassValue.textContent = `${formatNumber(inputs.centralMassSolar, 2)} Msun`;
+  meanAnomalyValue.textContent = `${Math.round(inputs.meanAnomalyDeg)} deg`;
 
   periodYrValue.textContent = formatNumber(periodYr, 3);
   perihelionAuValue.textContent = formatNumber(extrema.perihelionAu, 3);
@@ -252,7 +264,7 @@ function render() {
     const slices = 8;
     ctx.save();
     ctx.fillStyle = canvasTheme.area;
-    ctx.globalAlpha = 0.7;
+    ctx.globalAlpha = 0.18;
     for (let i = 0; i < slices; i++) {
       const m0 = (i * 2 * Math.PI) / slices;
       const m1 = ((i + 1) * 2 * Math.PI) / slices;
@@ -285,6 +297,7 @@ function render() {
   ctx.save();
   ctx.strokeStyle = canvasTheme.orbit;
   ctx.lineWidth = 2;
+  ctx.setLineDash([8, 6]);
   ctx.beginPath();
   const samples = 360;
   for (let i = 0; i <= samples; i++) {
@@ -300,6 +313,7 @@ function render() {
     else ctx.lineTo(pt.x, pt.y);
   }
   ctx.stroke();
+  ctx.setLineDash([]);
   ctx.restore();
 
   // Sun at focus (origin).
@@ -395,7 +409,7 @@ function syncNewtonModeUI() {
 }
 
 let isAnimating = false;
-let rafId = 0;
+let intervalId: number | null = null;
 let lastT = 0;
 const meanAnomalyDegPerSecond = 36;
 
@@ -403,8 +417,10 @@ function stopAnimation() {
   if (!isAnimating) return;
   isAnimating = false;
   animateButton.textContent = "Animate";
-  if (rafId) cancelAnimationFrame(rafId);
-  rafId = 0;
+  if (intervalId !== null) {
+    window.clearInterval(intervalId);
+    intervalId = null;
+  }
   lastT = 0;
 }
 
@@ -414,18 +430,19 @@ function startAnimation() {
   isAnimating = true;
   animateButton.textContent = "Stop";
 
-  const tick = (t: number) => {
+  // Use a time-based loop that does not depend on requestAnimationFrame scheduling.
+  // (Headless environments can throttle rAF and make animation appear stuck.)
+  lastT = performance.now();
+  intervalId = window.setInterval(() => {
     if (!isAnimating) return;
-    if (!lastT) lastT = t;
-    const dt = Math.min(0.05, (t - lastT) / 1000);
-    lastT = t;
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
 
     const next = (Number(meanAnomalyDeg.value) + meanAnomalyDegPerSecond * dt) % 360;
     meanAnomalyDeg.value = String(next);
     render();
-    rafId = requestAnimationFrame(tick);
-  };
-  rafId = requestAnimationFrame(tick);
+  }, 1000 / 60);
 }
 
 function exportResults(): ExportPayloadV1 {
@@ -451,7 +468,7 @@ function exportResults(): ExportPayloadV1 {
     parameters: [
       { name: "Semi-major axis a (AU)", value: formatNumber(inputs.aAu, 3) },
       { name: "Eccentricity e", value: formatNumber(inputs.e, 3) },
-      { name: "Central mass M (M☉)", value: formatNumber(inputs.centralMassSolar, 3) },
+      { name: "Central mass M (Msun)", value: formatNumber(inputs.centralMassSolar, 3) },
       { name: "Mean anomaly M (deg)", value: String(Math.round(inputs.meanAnomalyDeg)) }
     ],
     readouts: [
@@ -462,8 +479,8 @@ function exportResults(): ExportPayloadV1 {
       { name: "Speed v (km/s)", value: formatNumber(speedKmS, 6) }
     ],
     notes: [
-      "Teaching units: AU / yr / M☉ with G = 4π² AU³/(yr²·M☉).",
-      "Kepler 3: P² = a³/M in these units.",
+      "Teaching units: AU / yr / Msun with G = 4*pi^2 AU^3/(yr^2 Msun).",
+      "Kepler 3: P^2 = a^3/M in these units.",
       "The time slider advances mean anomaly uniformly (a time proxy), producing varying speed around an ellipse."
     ]
   };
@@ -490,12 +507,14 @@ const demoModes = createDemoModes({
       },
       {
         heading: "How to use this instrument",
-        type: "bullets",
-        items: [
-          "Increase eccentricity e and compare the speed near perihelion vs aphelion.",
-          "Turn on “equal-area slices” and notice the areas look similar even though the arc lengths differ.",
-          "Change a to see period scaling: P grows quickly with orbit size (P ∝ a^(3/2) when M is fixed)."
-        ]
+        type: "html",
+        html: `
+          <ul style="margin: 0; padding-left: 1.2rem;">
+            <li>Increase eccentricity $e$ and compare the speed near perihelion vs aphelion.</li>
+            <li>Turn on “equal-area slices” and notice the areas look similar even though the arc lengths differ.</li>
+            <li>Change $a$ to see period scaling: $P \\propto a^{3/2}$ when $M$ is fixed.</li>
+          </ul>
+        `
       }
     ]
   },
@@ -503,15 +522,15 @@ const demoModes = createDemoModes({
     title: "Station Mode: Kepler’s Laws",
     subtitle: "Add snapshot rows, then copy CSV or print.",
     steps: [
-      "Pick an orbit (a, e).",
-      "Record a snapshot at two different times (mean anomaly) and compare r and v.",
-      "Double a (same M) and record how P changes."
+      "Pick an orbit ($a$, $e$).",
+      "Record a snapshot at two different times (mean anomaly $M$) and compare $r$ and $v$.",
+      "Double $a$ (same $M$) and record how $P$ changes."
     ],
     columns: [
       { key: "case", label: "Case" },
       { key: "aAu", label: "a (AU)" },
       { key: "e", label: "e" },
-      { key: "mSolar", label: "M (M☉)" },
+      { key: "mSolar", label: "M (Msun)" },
       { key: "meanAnomalyDeg", label: "M (deg)" },
       { key: "periodYr", label: "P (yr)" },
       { key: "rAu", label: "r (AU)" },

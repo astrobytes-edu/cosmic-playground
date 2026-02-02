@@ -211,8 +211,8 @@ function render() {
   sigmaMasValue.textContent = `${formatNumber(inputs.sigmaMas, 1)} mas`;
 
   parallaxArcsecValue.textContent = formatNumber(pArcsec, 4);
-  distancePcValue.textContent = Number.isFinite(dPc) ? formatNumber(dPc, 2) : "∞";
-  distanceLyValue.textContent = Number.isFinite(dLy) ? formatNumber(dLy, 2) : "∞";
+  distancePcValue.textContent = Number.isFinite(dPc) ? formatNumber(dPc, 2) : "Infinity";
+  distanceLyValue.textContent = Number.isFinite(dLy) ? formatNumber(dLy, 2) : "Infinity";
   snrValue.textContent = Number.isFinite(snr) ? formatNumber(snr, 1) : "—";
 
   renderDiagram(inputs);
@@ -231,13 +231,13 @@ function exportResults(): ExportPayloadV1 {
     parameters: [
       { name: "Preset", value: currentPresetLabel() },
       { name: "Parallax p (mas)", value: String(Math.round(inputs.parallaxMas)) },
-      { name: "Uncertainty σ_p (mas)", value: formatNumber(inputs.sigmaMas, 2) }
+      { name: "Uncertainty sigma_p (mas)", value: formatNumber(inputs.sigmaMas, 2) }
     ],
     readouts: [
       { name: "Parallax p (arcsec)", value: formatNumber(pArcsec, 6) },
       { name: "Distance d (pc)", value: Number.isFinite(dPc) ? formatNumber(dPc, 6) : "Infinity" },
       { name: "Distance d (ly)", value: Number.isFinite(dLy) ? formatNumber(dLy, 6) : "Infinity" },
-      { name: "Signal-to-noise p/σ_p", value: Number.isFinite(snr) ? formatNumber(snr, 6) : "—" }
+      { name: "Signal-to-noise p/sigma_p", value: Number.isFinite(snr) ? formatNumber(snr, 6) : "—" }
     ],
     notes: [
       "Parsec definition: d(pc) = 1 / p(arcsec).",
@@ -270,8 +270,8 @@ const demoModes = createDemoModes({
         heading: "How to use this instrument",
         type: "bullets",
         items: [
-          "Decrease p and watch d increase (d ∝ 1/p).",
-          "Increase σ_p and notice the signal-to-noise p/σ_p falls for tiny parallax angles.",
+          "Decrease p and watch d increase (d is proportional to 1/p).",
+          "Increase sigma_p and notice the signal-to-noise p/sigma_p falls for tiny parallax angles.",
           "Try the preset stars to compare nearby vs more distant examples."
         ]
       }
@@ -283,16 +283,16 @@ const demoModes = createDemoModes({
     steps: [
       "Pick a parallax p and record the resulting distance d.",
       "Change p by a factor of 10 and check that d changes by a factor of 10 in the opposite direction.",
-      "Adjust σ_p to discuss why very small parallax angles are hard to measure."
+      "Adjust sigma_p to discuss why very small parallax angles are hard to measure."
     ],
     columns: [
       { key: "case", label: "Case" },
       { key: "preset", label: "Preset" },
       { key: "pMas", label: "p (mas)" },
-      { key: "sigmaMas", label: "σ_p (mas)" },
+      { key: "sigmaMas", label: "sigma_p (mas)" },
       { key: "dPc", label: "d (pc)" },
       { key: "dLy", label: "d (ly)" },
-      { key: "snr", label: "p/σ_p" }
+      { key: "snr", label: "p/sigma_p" }
     ],
     getSnapshotRow() {
       const inputs = currentInputs();
@@ -304,15 +304,15 @@ const demoModes = createDemoModes({
         preset: currentPresetLabel(),
         pMas: String(Math.round(inputs.parallaxMas)),
         sigmaMas: formatNumber(inputs.sigmaMas, 2),
-        dPc: Number.isFinite(dPc) ? formatNumber(dPc, 3) : "∞",
-        dLy: Number.isFinite(dLy) ? formatNumber(dLy, 3) : "∞",
+        dPc: Number.isFinite(dPc) ? formatNumber(dPc, 3) : "Infinity",
+        dLy: Number.isFinite(dLy) ? formatNumber(dLy, 3) : "Infinity",
         snr: Number.isFinite(snr) ? formatNumber(snr, 2) : "—"
       };
     },
     snapshotLabel: "Add row (snapshot)",
     rowSets: [
       {
-        label: "Add nearby star examples (σ_p=1 mas)",
+        label: "Add nearby star examples (sigma_p=1 mas)",
         getRows() {
           return nearbyStars.map((s) => {
             const dPc = ParallaxDistanceModel.distanceParsecFromParallaxMas(s.parallaxMas);

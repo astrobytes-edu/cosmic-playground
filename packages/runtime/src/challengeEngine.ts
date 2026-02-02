@@ -564,7 +564,7 @@ export class ChallengeEngine {
     return {
       correct: isCorrect,
       close: !isCorrect && isClose,
-      message: isCorrect ? `Correct! Angle: ${user.toFixed(0)}°` : isClose ? `Close! You're ${diff.toFixed(0)}° off.` : `Off by ${diff.toFixed(0)}°. Try again.`
+      message: isCorrect ? `Correct! Angle: ${user.toFixed(0)} deg` : isClose ? `Close! You're ${diff.toFixed(0)} deg off.` : `Off by ${diff.toFixed(0)} deg. Try again.`
     };
   }
 

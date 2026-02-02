@@ -95,7 +95,7 @@ const VIEW_RADIUS_PX = 250;
 const PATH_SAMPLES = 720;
 
 // Teaching time scale: simulation time in years per real second.
-// Calibrated so that a circular orbit at 1 AU around 1 M☉ completes in ~3 s.
+// Calibrated so that a circular orbit at 1 AU around 1 Msun completes in ~3 s.
 const SIM_YEARS_PER_SEC = 1 / 3;
 
 const prefersReducedMotion =
@@ -261,7 +261,7 @@ function instantaneousSpeedAuPerYr(args: { muAu3Yr2: number; hAbsAu2Yr: number; 
   if (!Number.isFinite(ecc) || ecc < 0) return NaN;
   if (!Number.isFinite(nuRad)) return NaN;
 
-  // v = (μ / h) * sqrt(1 + 2e cosν + e^2)
+  // v = (mu / h) * sqrt(1 + 2e cos(nu) + e^2)
   const q = 1 + 2 * ecc * Math.cos(nuRad) + ecc * ecc;
   if (!(q >= 0)) return NaN;
   return (muAu3Yr2 / hAbsAu2Yr) * Math.sqrt(Math.max(0, q));
@@ -317,7 +317,7 @@ function startAnimation() {
     anim.lastTimeMs = nowMs;
 
     // Advance using Kepler’s 2nd law (constant areal velocity):
-    // h = r^2 dν/dt  ⇒  dν/dt = h/r^2.
+    // h = r^2 d(nu)/dt  =>  d(nu)/dt = h/r^2.
     let dtRemain = Math.min(dt, 0.1);
     let stopped = false;
     while (dtRemain > 1e-9 && !stopped) {
@@ -390,10 +390,10 @@ function recomputeOrbit() {
   state.speedFactor = speedFactorValue;
   state.directionDeg = directionDegValue;
 
-  massValue.textContent = `${formatNumber(massSolar, 2)} M☉`;
+  massValue.textContent = `${formatNumber(massSolar, 2)} Msun`;
   r0Value.textContent = `${formatNumber(r0Au, 2)} AU`;
-  speedValue.textContent = `${formatNumber(speedFactorValue, 2)}×`;
-  directionValue.textContent = `${Math.round(directionDegValue)}°`;
+  speedValue.textContent = `${formatNumber(speedFactorValue, 2)}x`;
+  directionValue.textContent = `${Math.round(directionDegValue)} deg`;
 
   anim.muAu3Yr2 = TwoBodyAnalytic.muAu3Yr2FromMassSolar(massSolar);
   anim.vCirc0AuYr = TwoBodyAnalytic.circularSpeedAuPerYr({ muAu3Yr2: anim.muAu3Yr2, rAu: r0Au });
@@ -529,7 +529,7 @@ function exportResults(): ExportPayloadV1 {
     timestamp: new Date().toISOString(),
     parameters: [
       { name: "Mode", value: runtime.mode },
-      { name: "Central mass M (M☉)", value: formatNumber(state.massSolar, 4) },
+      { name: "Central mass M (Msun)", value: formatNumber(state.massSolar, 4) },
       { name: "Initial radius r_0 (AU)", value: formatNumber(state.r0Au, 4) },
       { name: "Speed factor v/v_circ", value: formatNumber(state.speedFactor, 4) },
       { name: "Direction from tangential (deg)", value: String(Math.round(state.directionDeg)) }
@@ -537,14 +537,14 @@ function exportResults(): ExportPayloadV1 {
     readouts: [
       { name: "Orbit type", value: formatOrbitType(anim.orbitType) },
       { name: "Eccentricity e", value: formatNumber(anim.ecc, 6) },
-      { name: "Specific energy ε (AU²/yr²)", value: formatNumber(anim.epsAu2Yr2, 8) },
-      { name: "Specific angular momentum |h| (AU²/yr)", value: formatNumber(anim.hAbsAu2Yr, 8) },
+      { name: "Specific energy eps (AU^2/yr^2)", value: formatNumber(anim.epsAu2Yr2, 8) },
+      { name: "Specific angular momentum |h| (AU^2/yr)", value: formatNumber(anim.hAbsAu2Yr, 8) },
       { name: "Periapsis r_p (AU)", value: formatNumber(anim.rpAu, 8) },
       { name: "Speed v (km/s)", value: formatNumber(vKmS, 6) }
     ],
     notes: [
-      "Teaching units: AU / yr / M☉ with G = 4π² AU³/(yr²·M☉).",
-      "Orbit type is determined by conserved specific energy ε and angular momentum |h|.",
+      "Teaching units: AU / yr / Msun with G = 4*pi^2 AU^3/(yr^2 Msun).",
+      "Orbit type is determined by conserved specific energy eps and angular momentum |h|.",
       "For open orbits, the plotted path is clipped to a finite radius window."
     ]
   };
@@ -567,8 +567,8 @@ const demoModes = createDemoModes({
         heading: "How to use this instrument",
         type: "bullets",
         items: [
-          "Start at M=1, r0=1 AU, v/v_circ=1, direction=0° and observe a circular orbit.",
-          "Increase v/v_circ to √2 (escape) and notice ε approaches 0.",
+          "Start at M=1, r0=1 AU, v/v_circ=1, direction=0 deg and observe a circular orbit.",
+          "Increase v/v_circ to sqrt(2) (escape) and notice eps approaches 0.",
           "Change direction to increase/decrease |h| and watch periapsis change."
         ]
       }
@@ -579,19 +579,19 @@ const demoModes = createDemoModes({
     subtitle: "Add snapshot rows, then copy CSV or print.",
     steps: [
       "Record a circular case (v/v_circ=1).",
-      "Record an escape case (v/v_circ=√2).",
-      "Record a hyperbolic case (v/v_circ>√2) and compare ε."
+      "Record an escape case (v/v_circ=sqrt(2)).",
+      "Record a hyperbolic case (v/v_circ>sqrt(2)) and compare eps."
     ],
     columns: [
       { key: "case", label: "Case" },
-      { key: "mSolar", label: "M (M☉)" },
+      { key: "mSolar", label: "M (Msun)" },
       { key: "r0Au", label: "r0 (AU)" },
       { key: "speedFactor", label: "v/v_circ" },
       { key: "directionDeg", label: "dir (deg)" },
       { key: "orbitType", label: "type" },
       { key: "e", label: "e" },
-      { key: "eps", label: "ε (AU²/yr²)" },
-      { key: "h", label: "|h| (AU²/yr)" },
+      { key: "eps", label: "eps (AU^2/yr^2)" },
+      { key: "h", label: "|h| (AU^2/yr)" },
       { key: "rp", label: "r_p (AU)" }
     ],
     getSnapshotRow() {

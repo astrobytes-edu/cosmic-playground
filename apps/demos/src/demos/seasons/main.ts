@@ -168,7 +168,7 @@ const demoModes = createDemoModes({
       { key: "tilt", label: "Tilt $\\varepsilon$ ($^\\circ$)" },
       { key: "declination", label: "$\\delta$ ($^\\circ$)" },
       { key: "dayLength", label: "Day length (h)" },
-      { key: "noonAltitude", label: "Noon altitude (°)" },
+      { key: "noonAltitude", label: "Noon altitude (deg)" },
       { key: "seasonN", label: "Season (N)" },
       { key: "seasonS", label: "Season (S)" },
       { key: "distanceAu", label: "Distance $r$ (AU)" }
@@ -390,7 +390,7 @@ function renderStage(args: {
   const y = rScaled * Math.sin(angle);
   earthOrbitDot.setAttribute("cx", formatNumber(x, 2));
   earthOrbitDot.setAttribute("cy", formatNumber(y, 2));
-  orbitLabel.textContent = `r ≈ ${formatNumber(args.distanceAu, 3)} AU`;
+  orbitLabel.textContent = `r ~ ${formatNumber(args.distanceAu, 3)} AU`;
 
   // Tilt panel
   const diskR = 92;
@@ -416,13 +416,13 @@ function renderStage(args: {
   const subY = -Math.sin(declRad) * 0.85 * diskR;
   subsolarDot.setAttribute("cx", formatNumber(sunFacingX, 2));
   subsolarDot.setAttribute("cy", formatNumber(subY, 2));
-  subsolarLabel.textContent = `δ = ${formatNumber(args.declinationDeg, 1)}°`;
+  subsolarLabel.textContent = `delta = ${formatNumber(args.declinationDeg, 1)} deg`;
 
   // Observer marker at chosen latitude.
   const obsY = -Math.sin(latRad) * 0.85 * diskR;
   observerDot.setAttribute("cx", formatNumber(sunFacingX, 2));
   observerDot.setAttribute("cy", formatNumber(obsY, 2));
-  observerLabel.textContent = `lat = ${Math.round(args.latitudeDeg)}°`;
+  observerLabel.textContent = `lat = ${Math.round(args.latitudeDeg)} deg`;
 }
 
 function render() {
@@ -461,12 +461,12 @@ function render() {
   dayOfYearValue.textContent = `Day ${day}`;
   dateValue.textContent = `(${formatDateFromDayOfYear(day)})`;
 
-  tiltValue.textContent = `${formatNumber(axialTiltDeg, 1)}°`;
-  latitudeValue.textContent = `${Math.round(latitudeDeg)}°`;
+  tiltValue.textContent = `${formatNumber(axialTiltDeg, 1)} deg`;
+  latitudeValue.textContent = `${Math.round(latitudeDeg)} deg`;
 
-  declinationValue.textContent = `${formatNumber(declinationDegValue, 1)}°`;
+  declinationValue.textContent = `${formatNumber(declinationDegValue, 1)} deg`;
   dayLengthValue.textContent = `${formatNumber(dayLengthHoursValue, 2)} h`;
-  noonAltitudeValue.textContent = `${formatNumber(noonAltitudeDegValue, 1)}°`;
+  noonAltitudeValue.textContent = `${formatNumber(noonAltitudeDegValue, 1)} deg`;
   distanceAuValue.textContent = `${formatNumber(distanceAu, 3)} AU`;
   seasonNorthValue.textContent = north;
   seasonSouthValue.textContent = south;
@@ -547,10 +547,10 @@ function exportResults(st: SeasonsDemoState): ExportPayloadV1 {
 
   const notes: string[] = [];
   notes.push(
-    "Declination uses a simplified toy model: δ = asin(sin ε · sin L), with L treated as uniform in time (~1° accuracy vs ephemeris)."
+    "Declination uses a simplified toy model: delta = asin(sin(epsilon) * sin(L)), with L treated as uniform in time (~1 deg accuracy vs ephemeris)."
   );
   notes.push(
-    "Earth–Sun distance uses a first-order eccentric model r ≈ 1 − e cos(θ) (not a Kepler solver); distance variations are small and not the main cause of seasons."
+    "Earth–Sun distance uses a first-order eccentric model r ~ 1 - e cos(theta) (not a Kepler solver); distance variations are small and not the main cause of seasons."
   );
   notes.push(
     `Perihelion is anchored near day 3 (Jan 3) with an uncertainty of about ±${SeasonsModel.PERIHELION_DAY_UNCERTAINTY} days.`
@@ -564,11 +564,11 @@ function exportResults(st: SeasonsDemoState): ExportPayloadV1 {
     timestamp: new Date().toISOString(),
     parameters: [
       { name: "Day-of-year", value: `${day} (${dateLabel})` },
-      { name: "Latitude φ (deg)", value: String(Math.round(latitudeDeg)) },
-      { name: "Axial tilt ε (deg)", value: formatNumber(axialTiltDeg, 1) }
+      { name: "Latitude phi (deg)", value: String(Math.round(latitudeDeg)) },
+      { name: "Axial tilt epsilon (deg)", value: formatNumber(axialTiltDeg, 1) }
     ],
     readouts: [
-      { name: "Solar declination δ (deg)", value: formatNumber(st.declinationDeg, 1) },
+      { name: "Solar declination delta (deg)", value: formatNumber(st.declinationDeg, 1) },
       { name: "Day length (h)", value: formatNumber(st.dayLengthHours, 2) },
       { name: "Noon altitude (deg)", value: formatNumber(st.noonAltitudeDeg, 1) },
       { name: "Earth–Sun distance r (AU)", value: formatNumber(distanceAu, 3) },
