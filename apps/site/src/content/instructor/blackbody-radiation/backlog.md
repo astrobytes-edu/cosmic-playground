@@ -3,7 +3,7 @@ title: "Blackbody Radiation — Backlog"
 bundle: "blackbody-radiation"
 section: "backlog"
 demo_slug: "blackbody-radiation"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -14,7 +14,7 @@ has_math: true
 
 ## P0 (blocking / correctness / teachability)
 
-- **Docs correctness:** reconcile any legacy “Comparison Mode” notes with the current instrument UI (no compare control in `apps/demos/src/demos/blackbody-radiation/index.html`). Either implement comparison or update docs.
+- **Optional compare UX:** decide whether to add an explicit compare overlay beyond the current workflow (Station mode rows / copy-results comparisons).
 - **Instructor usability:** add a one-page “teach script + misconceptions + one key question” printable summary linked from the instructor guide.
 - **CMB storyline (optional):** decide whether CMB presets are in-scope for ASTR 101 and, if so, add a short instructor-note section on how/when to use them.
 

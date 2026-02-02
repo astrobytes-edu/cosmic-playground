@@ -3,7 +3,7 @@ title: "Blackbody Radiation — Activity Protocols"
 bundle: "blackbody-radiation"
 section: "activities"
 demo_slug: "blackbody-radiation"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -18,8 +18,8 @@ has_math: true
 **Goal:** Flip the “red = hot” intuition using prediction-first evidence.
 
 1. Open: `/play/blackbody-radiation/`
-2. Click the **Red Giant** preset. Ask: *“Hotter or cooler than the Sun?”* (Prediction.)
-3. Click **Sun**. Ask again: *“Which is hotter: Sun or Red Giant?”*
+2. Click the **M dwarf** preset. Ask: *“Hotter or cooler than the Sun?”* (Prediction.)
+3. Click **Sun**. Ask again: *“Which is hotter: Sun or M dwarf?”*
 4. Reveal with the temperature readout and the spectrum peak position. Say explicitly: in astronomy, **redder stars are cooler**.
 5. 20-second debrief: “Color is an observable; the blackbody model connects it to temperature.”
 
@@ -33,11 +33,11 @@ has_math: true
 2. Record:
    - temperature $T$,
    - peak wavelength $\lambda_{\text{peak}}$ (use the peak marker),
-   - a short description of which band dominates (visible vs IR vs UV).
-3. Change to a cooler preset (**Red Giant**) and a hotter preset (**B**).
+   - a short description of which band dominates (visible vs IR vs UV/microwave).
+3. Change to a cooler preset (**M dwarf**) and a hotter preset (**A/B star**).
 4. Answer (in words): *“When $T$ increases, what happens to $\lambda_{\text{peak}}$? What happens to the area under the curve?”*
 
-**Optional quantitative check (2 min):** pick two temperatures where one is about $2\\times$ the other and see whether $\lambda_{\\text{peak}}$ is about half (Wien scaling).
+**Optional quantitative check (2 min):** pick two temperatures where one is about $2\times$ the other and see whether $\lambda_{\text{peak}}$ is about half (Wien scaling).
 
 ## Friday Lab (20–30+ min)
 
@@ -66,10 +66,10 @@ Use the **log vs linear** display toggle and discuss: “Which view makes the lo
 ## Station version (6–8 min)
 
 > **Station card: Blackbody Radiation (6–8 minutes)**
-> Pick one preset (**Sun**, **Red Giant**, **B**, or **White Dwarf**) and record:
+> Pick one preset (**M dwarf**, **Sun**, **A/B star**, or **CMB**) and record:
 > - Temperature $T$ (K)
-> - Peak wavelength $\lambda_{\\text{peak}}$ (nm or $\\mu\\mathrm{m}$)
-> - Which band dominates (IR / visible / UV)
+> - Peak wavelength $\lambda_{\text{peak}}$ (nm)
+> - Which band dominates (IR / visible / UV / microwave)
 >
 > Then write one sentence:
 > > “This star looks ____ because its blackbody peak is at ____.”

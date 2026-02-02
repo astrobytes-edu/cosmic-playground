@@ -3,7 +3,7 @@ title: "Conservation Laws: Orbit Shapes"
 bundle: "conservation-laws"
 section: "index"
 demo_slug: "conservation-laws"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -18,10 +18,10 @@ has_math: true
 > Plot helpers: `packages/physics/src/conservationLawsModel.ts`
 
 > **Where to go next**
-> - Model + math + assumptions: `model.qmd`
-> - In-class activities (MW quick + Friday lab + station version): `activities.qmd`
-> - Assessment bank (clickers + short answer + exit ticket): `assessment.qmd`
-> - Future enhancements (planning backlog): `backlog.qmd`
+> - Model + math + assumptions: `model.md`
+> - In-class activities (MW quick + Friday lab + station version): `activities.md`
+> - Assessment bank (clickers + short answer + exit ticket): `assessment.md`
+> - Future enhancements (planning backlog): `backlog.md`
 
 ## Why this demo exists
 

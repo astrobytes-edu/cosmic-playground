@@ -3,7 +3,7 @@ title: "Conservation Laws: Activities"
 bundle: "conservation-laws"
 section: "activities"
 demo_slug: "conservation-laws"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -39,7 +39,7 @@ has_math: true
 Students collect a small dataset by varying:
 
 - speed factor $v/v_{\rm circ}$
-- direction angle ($0^\\circ$ tangential; near $\\pm 85^\\circ$ radial)
+- direction angle ($0^\circ$ tangential; near $\pm 85^\circ$ radial)
 
 **Deliverable:** a table with columns:
 

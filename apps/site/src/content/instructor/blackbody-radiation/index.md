@@ -3,7 +3,7 @@ title: "Blackbody Radiation"
 bundle: "blackbody-radiation"
 section: "index"
 demo_slug: "blackbody-radiation"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -17,10 +17,10 @@ has_math: true
 > Model code: `packages/physics/src/blackbodyRadiationModel.ts`
 
 > **Where to go next**
-> - Model + math + assumptions: `model.qmd`
-> - In-class activities (MW + Friday lab + station version): `activities.qmd`
-> - Assessment bank (clickers + short answer + exit ticket): `assessment.qmd`
-> - Future enhancements (planning backlog): `backlog.qmd`
+> - Model + math + assumptions: `model.md`
+> - In-class activities (MW + Friday lab + station version): `activities.md`
+> - Assessment bank (clickers + short answer + exit ticket): `assessment.md`
+> - Future enhancements (planning backlog): `backlog.md`
 
 ## Why this demo exists
 
@@ -56,14 +56,14 @@ Students should be able to:
 
 2. **Anchor with a familiar reference.** Click the **Sun** preset and point out the visible-band highlight and the peak marker. Ask: *“If we could see from space, would the Sun look yellow or closer to white?”* Use this as a setup for “our atmosphere/eyes bias what ‘color’ feels like.”
 
-3. **Change temperature and watch two things at once.** Move to a cooler preset (e.g., Betelgeuse) and ask students to predict what happens to:
+3. **Change temperature and watch two things at once.** Move to a cooler preset (e.g., **M dwarf**) and ask students to predict what happens to:
    - the peak wavelength location, and
    - the overall height/area of the curve.
    Then reveal and narrate: cooler → peak shifts to longer wavelengths and total emission drops.
 
-4. **Then go hotter.** Click a hot-star preset (e.g., Rigel/Sirius). Ask: *“Should the peak move toward the UV or toward the IR?”* Confirm with the peak marker.
+4. **Then go hotter.** Click the **A/B star** preset. Ask: *“Should the peak move toward the UV or toward the IR?”* Confirm with the peak marker and the visible-band highlight.
 
-5. **Use comparison mode to make scaling obvious.** Toggle comparison and compare two temperatures. Ask: *“If temperature doubles, what happens to the peak wavelength?”* (Half) and *“What happens to total emitted power per area?”* (Grows dramatically; connect to $T^4$ qualitatively.)
+5. **Compare two temperatures using the instrument workflow.** Add two rows in **Station mode** (or copy results twice) and ask: *“If temperature doubles, what happens to the peak wavelength?”* (Half) and *“What happens to total emitted power per area?”* (Grows dramatically; connect to $T^4$ qualitatively.)
 
 6. **Close with inference.** Say explicitly: *“Color/spectrum is an observable. A model turns that into a temperature inference. Then temperature plus other measurements supports higher-level stories: stellar types, star formation, and what we can detect.”*
 

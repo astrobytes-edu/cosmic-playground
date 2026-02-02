@@ -1,7 +1,7 @@
 ---
 title: "Station card: blackbody-radiation"
 demo_slug: "blackbody-radiation"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 **Name:** ________________________________  **Section:** __________  **Date:** __________
@@ -11,10 +11,10 @@ has_math: true
 *Goal:* Use the demo to make a claim supported by (1) at least one number/readout and (2) at least one sanity check.
 
 > **Station card: Blackbody Radiation (6–8 minutes)**
-> Pick one preset (**Sun**, **Red Giant**, **B**, or **White Dwarf**) and record:
+> Pick one preset (**M dwarf**, **Sun**, **A/B star**, or **CMB**) and record:
 > - Temperature $T$ (K)
-> - Peak wavelength $\lambda_{\\text{peak}}$ (nm or $\\mu\\mathrm{m}$)
-> - Which band dominates (IR / visible / UV)
+> - Peak wavelength $\lambda_{\text{peak}}$ (nm)
+> - Which band dominates (IR / visible / UV / microwave)
 >
 > Then write one sentence:
 > > “This star looks ____ because its blackbody peak is at ____.”

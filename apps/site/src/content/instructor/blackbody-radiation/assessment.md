@@ -3,7 +3,7 @@ title: "Blackbody Radiation — Assessment Bank"
 bundle: "blackbody-radiation"
 section: "assessment"
 demo_slug: "blackbody-radiation"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -16,12 +16,12 @@ has_math: true
 
 ### Clicker 1 — Which is hotter?
 
-**Demo setup:** open `/play/blackbody-radiation/` and compare presets **Red Giant** and **B**.
+**Demo setup:** open `/play/blackbody-radiation/` and compare presets **M dwarf** and **A/B star**.
 
 **Question:** Which object is hotter?
 
-A. Red Giant  
-B. B star  
+A. M dwarf  
+B. A/B star  
 C. Same temperature  
 D. You can’t tell from the spectrum
 
@@ -61,7 +61,7 @@ D. stays the same
 
 ### Clicker 4 — Visible vs infrared detectability
 
-**Demo setup:** set temperature to a low value using the log scale (or use a cool preset like **Today** in the CMB section).
+**Demo setup:** set temperature to a low value (or use a cool preset like **CMB**).
 
 **Question:** A very cool object’s blackbody peak is most likely in:
 
@@ -114,5 +114,5 @@ D. Only black-colored objects behave this way.
 ## Exit ticket (3 questions)
 
 1. Hotter objects peak at (shorter/longer) wavelengths.
-2. If temperature doubles, does total emitted power per unit area increase by about $2\\times$, $4\\times$, $8\\times$, or $16\\times$?
+2. If temperature doubles, does total emitted power per unit area increase by about $2\times$, $4\times$, $8\times$, or $16\times$?
 3. Name one common misconception about star color and temperature.
