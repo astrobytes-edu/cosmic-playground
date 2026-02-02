@@ -1,5 +1,5 @@
 import { AstroConstants, EclipseGeometryModel } from "@cosmic/physics";
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 
 const setNewMoonEl = document.querySelector<HTMLButtonElement>("#setNewMoon");
@@ -442,7 +442,10 @@ function render() {
 
   renderStage({ sunLonDeg: state.sunLonDeg, moonLonDeg, nodeLonDeg, betaDeg: derived.betaDeg });
 
-  status.textContent = `Thresholds (mean-distance example): solar partial ≈ ${formatNumber(thresholds.solarPartialDeg, 2)}°, solar central ≈ ${formatNumber(thresholds.solarCentralDeg, 2)}°`;
+  setLiveRegionText(
+    status,
+    `Thresholds (mean-distance example): solar partial ≈ ${formatNumber(thresholds.solarPartialDeg, 2)}°, solar central ≈ ${formatNumber(thresholds.solarCentralDeg, 2)}°`
+  );
 
   (window as any).__cp = {
     slug: "eclipse-geometry",
@@ -509,22 +512,22 @@ function exportResults(st: EclipseDemoState): ExportPayloadV1 {
     version: 1,
     timestamp: new Date().toISOString(),
     parameters: [
-      { name: "Moon longitude λM", value: `${Math.round(st.moonLonDeg)}°` },
-      { name: "Sun longitude λ☉", value: `${Math.round(st.sunLonDeg)}°` },
-      { name: "Node longitude Ω", value: `${Math.round(st.nodeLonDeg)}°` },
-      { name: "Orbital tilt i", value: `${formatNumber(st.orbitalTiltDeg, 3)}°` },
-      { name: "Earth–Moon distance", value: `${Math.round(st.earthMoonDistanceKm).toLocaleString()} km` }
+      { name: "Moon longitude λM (deg)", value: String(Math.round(st.moonLonDeg)) },
+      { name: "Sun longitude λ☉ (deg)", value: String(Math.round(st.sunLonDeg)) },
+      { name: "Node longitude Ω (deg)", value: String(Math.round(st.nodeLonDeg)) },
+      { name: "Orbital tilt i (deg)", value: formatNumber(st.orbitalTiltDeg, 3) },
+      { name: "Earth–Moon distance (km)", value: Math.round(st.earthMoonDistanceKm).toLocaleString() }
     ],
     readouts: [
       { name: "Phase", value: phase.label },
-      { name: "Phase angle Δ", value: `${formatNumber(st.phaseAngleDeg, 1)}°` },
-      { name: "|β| (ecliptic latitude)", value: `${formatNumber(st.absBetaDeg, 3)}°` },
-      { name: "Nearest node distance", value: `${formatNumber(st.nearestNodeDeg, 2)}°` },
+      { name: "Phase angle Δ (deg)", value: formatNumber(st.phaseAngleDeg, 1) },
+      { name: "|β| (deg)", value: formatNumber(st.absBetaDeg, 3), note: "ecliptic latitude" },
+      { name: "Nearest node distance (deg)", value: formatNumber(st.nearestNodeDeg, 2) },
       { name: "Solar outcome", value: outcomeLabel(st.solarType) },
       { name: "Lunar outcome", value: outcomeLabel(st.lunarType) },
-      { name: "Solar partial threshold", value: `|β| ≤ ${formatNumber(thresholds.solarPartialDeg, 2)}°` },
-      { name: "Solar central threshold", value: `|β| ≤ ${formatNumber(thresholds.solarCentralDeg, 2)}°` },
-      { name: "Lunar penumbral threshold", value: `|β| ≤ ${formatNumber(thresholds.lunarPenumbralDeg, 2)}°` }
+      { name: "Solar partial threshold |β| (deg)", value: formatNumber(thresholds.solarPartialDeg, 2) },
+      { name: "Solar central threshold |β| (deg)", value: formatNumber(thresholds.solarCentralDeg, 2) },
+      { name: "Lunar penumbral threshold |β| (deg)", value: formatNumber(thresholds.lunarPenumbralDeg, 2) }
     ],
     notes
   };
@@ -1098,7 +1101,7 @@ function tick(t: number) {
     if (animateYearRemainingDays <= 0) {
       stopLoop();
       updateTimeButtonLabels();
-      status.textContent = "Year animation complete.";
+      setLiveRegionText(status, "Year animation complete.");
       return;
     }
     rafId = requestAnimationFrame(tick);
@@ -1141,7 +1144,7 @@ function tick(t: number) {
       stopSimulation.disabled = true;
       runSimulation.disabled = prefersReducedMotion;
       updateTimeButtonLabels();
-      status.textContent = "Simulation complete.";
+      setLiveRegionText(status, "Simulation complete.");
       return;
     }
 
@@ -1154,7 +1157,7 @@ function stopTimeActions() {
   if (!wasRunning) return;
   stopLoop();
   updateTimeButtonLabels();
-  status.textContent = "Stopped.";
+  setLiveRegionText(status, "Stopped.");
 }
 
 populateDistancePresets();
@@ -1247,7 +1250,7 @@ runSimulation.addEventListener("click", () => {
   simOutput.hidden = false;
   simOutput.textContent = formatSimSummary(simulation);
   updateTimeButtonLabels();
-  status.textContent = "Simulation running…";
+  setLiveRegionText(status, "Simulation running…");
   rafId = requestAnimationFrame(tick);
 });
 
@@ -1258,14 +1261,17 @@ stopSimulation.addEventListener("click", () => {
 copyResults.addEventListener("click", () => {
   stopTimeActions();
   if (challengeEngine.isActive()) challengeEngine.stop();
-  status.textContent = "Copying…";
+  setLiveRegionText(status, "Copying…");
   void runtime
     .copyResults(exportResults(getState()))
     .then(() => {
-      status.textContent = "Copied results to clipboard.";
+      setLiveRegionText(status, "Copied results to clipboard.");
     })
     .catch((err: unknown) => {
-      status.textContent = err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.";
+      setLiveRegionText(
+        status,
+        err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed."
+      );
     });
 });
 

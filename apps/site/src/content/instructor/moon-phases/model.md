@@ -14,8 +14,8 @@ has_math: true
 
 > **Links**
 > Student demo: `/play/moon-phases/`  
-> Model code: `demos/_assets/moon-phases-model.js` (loaded by the demo)  
-> UI/visualization code: `demos/moon-phases/moon-phases.js`
+> Demo source: `apps/demos/src/demos/moon-phases/`  
+> Demo logic: `apps/demos/src/demos/moon-phases/main.ts`
 
 ## What the demo is modeling (big picture)
 
@@ -28,15 +28,14 @@ The demo reports:
 
 - Phase name (New, Crescent, Quarter, Gibbous, Full)
 - Illumination fraction (0–100%)
-- Days since New Moon (using a synodic month)
 
-## Shared model code (single source of truth)
+## Implementation note (current instrument)
 
-The illumination fraction is computed by a small shared model function:
+In this repo, the current migrated instrument computes illumination directly in:
 
-- `MoonPhasesModel.illuminationFractionFromMoonAngleDeg(angleDeg)`
+- `apps/demos/src/demos/moon-phases/main.ts`
 
-The student-facing demo loads `demos/_assets/moon-phases-model.js` so the equation used in class discussion and the equation used by the code cannot silently drift apart.
+It uses the same core equation shown below and formats results for Station Mode + Copy Results via `@cosmic/runtime`.
 
 ## Angle convention in this demo
 
@@ -67,23 +66,6 @@ What this equation is really saying: at Full Moon ($\alpha=0^\circ$), $\cos\alph
 > - $\alpha=180^\circ$ → $f=0$ (New Moon)
 > - $\alpha=90^\circ$ or $270^\circ$ → $f=0.5$ (Quarter)
 
-## “Days since New” (mapping phase angle to the synodic month)
-
-The demo uses a synodic month of:
-
-$$P_{\text{syn}} \approx 29.53\ \text{days}$$
-
-and maps angle to time since New Moon by treating the phase cycle as uniform:
-
-$$t_{\text{since new}} \approx \left(\frac{(\alpha-180^\circ)\bmod 360^\circ}{360^\circ}\right)\,P_{\text{syn}}$$
-
-Let’s unpack each piece:
-
-- $t_{\text{since new}}$ is time in days since New Moon.
-- The modulo term just means “wrap around the circle.”
-
-What this is really saying: the demo treats the synodic month as evenly spaced in phase. This is good for building intuition, even though real lunar motion is not perfectly uniform.
-
 ## What’s simplified / not modeled
 
 > **Model limitations (intentional)**
@@ -93,4 +75,4 @@ What this is really saying: the demo treats the synodic month as evenly spaced i
 
 ## Reduced motion behavior (accessibility)
 
-If a browser reports `prefers-reduced-motion: reduce`, the demo defaults the animation speed to **1×**. Students can still step through phases and manually increase speed; the goal is to avoid surprising rapid motion by default.
+This instrument has no continuous animation loop; it re-renders on control changes and resize. Under `prefers-reduced-motion: reduce`, there is no additional motion to suppress.

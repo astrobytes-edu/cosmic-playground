@@ -1,4 +1,4 @@
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
 
@@ -564,14 +564,14 @@ function exportResults(st: SeasonsDemoState): ExportPayloadV1 {
     timestamp: new Date().toISOString(),
     parameters: [
       { name: "Day-of-year", value: `${day} (${dateLabel})` },
-      { name: "Latitude", value: `${Math.round(latitudeDeg)}°` },
-      { name: "Axial tilt", value: `${formatNumber(axialTiltDeg, 1)}°` }
+      { name: "Latitude φ (deg)", value: String(Math.round(latitudeDeg)) },
+      { name: "Axial tilt ε (deg)", value: formatNumber(axialTiltDeg, 1) }
     ],
     readouts: [
-      { name: "Solar declination δ", value: `${formatNumber(st.declinationDeg, 1)}°` },
-      { name: "Day length", value: `${formatNumber(st.dayLengthHours, 2)} h` },
-      { name: "Noon altitude", value: `${formatNumber(st.noonAltitudeDeg, 1)}°` },
-      { name: "Earth–Sun distance", value: `${formatNumber(distanceAu, 3)} AU` },
+      { name: "Solar declination δ (deg)", value: formatNumber(st.declinationDeg, 1) },
+      { name: "Day length (h)", value: formatNumber(st.dayLengthHours, 2) },
+      { name: "Noon altitude (deg)", value: formatNumber(st.noonAltitudeDeg, 1) },
+      { name: "Earth–Sun distance r (AU)", value: formatNumber(distanceAu, 3) },
       { name: "Season (North)", value: seasonN },
       { name: "Season (South)", value: seasonS }
     ],
@@ -740,15 +740,17 @@ animateYear.addEventListener("click", () => {
 });
 
 copyResults.addEventListener("click", () => {
-  status.textContent = "Copying…";
+  setLiveRegionText(status, "Copying…");
   void runtime
     .copyResults(exportResults(getState()))
     .then(() => {
-      status.textContent = "Copied results to clipboard.";
+      setLiveRegionText(status, "Copied results to clipboard.");
     })
     .catch((err) => {
-      status.textContent =
-        err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.";
+      setLiveRegionText(
+        status,
+        err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed."
+      );
     });
 });
 

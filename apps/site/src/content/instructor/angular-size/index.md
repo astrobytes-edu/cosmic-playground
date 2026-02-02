@@ -12,14 +12,15 @@ last_updated: "2026-01-30"
 
 > **This guide is instructor-facing**
 > Student demo: `/play/angular-size/`  
-> Main code: `demos/angular-size/angular-size.js`  
-> Model code (tests + shared): `demos/_assets/angular-size-model.js`
+> UI markup: `apps/demos/src/demos/angular-size/index.html`  
+> Demo logic: `apps/demos/src/demos/angular-size/main.ts`  
+> Physics model: `packages/physics/src/angularSizeModel.ts`
 
 > **Where to go next**
-> - Model + math + assumptions: `model.qmd`
-> - In-class activities (MW + Friday lab + station version): `activities.qmd`
-> - Assessment bank (clickers + short answer + exit ticket): `assessment.qmd`
-> - Future enhancements (planning backlog): `backlog.qmd`
+> - Model + math + assumptions: `apps/site/src/content/instructor/angular-size/model.md`
+> - In-class activities: `apps/site/src/content/instructor/angular-size/activities.md`
+> - Assessment bank: `apps/site/src/content/instructor/angular-size/assessment.md`
+> - Future enhancements: `apps/site/src/content/instructor/angular-size/backlog.md`
 
 > **New: Station Mode + Help**
 > - In the student demo, click **Station Mode** to build a data table you can **print** or **copy as CSV**.

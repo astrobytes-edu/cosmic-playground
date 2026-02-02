@@ -12,14 +12,14 @@ last_updated: "2026-01-30"
 
 > **This guide is instructor-facing**
 > Student demo: `/play/moon-phases/`  
-> Main code: `demos/moon-phases/moon-phases.js`  
-> Testable model snippet: `demos/_assets/moon-phases-model.js` (mirrors the core equation)
+> Demo source: `apps/demos/src/demos/moon-phases/`  
+> Demo logic: `apps/demos/src/demos/moon-phases/main.ts`
 
 > **Where to go next**
-> - Model + math + assumptions: `model.qmd`
-> - In-class activities (MW + Friday lab + station version): `activities.qmd`
-> - Assessment bank (clickers + short answer + exit ticket): `assessment.qmd`
-> - Future enhancements (planning backlog): `backlog.qmd`
+> - Model + math + assumptions: `apps/site/src/content/instructor/moon-phases/model.md`
+> - In-class activities: `apps/site/src/content/instructor/moon-phases/activities.md`
+> - Assessment bank: `apps/site/src/content/instructor/moon-phases/assessment.md`
+> - Future enhancements: `apps/site/src/content/instructor/moon-phases/backlog.md`
 
 > **New: Station Mode + Help**
 > - In the student demo, click **Station Mode** to build a data table you can **print** or **copy as CSV**.
@@ -36,7 +36,7 @@ Students should be able to:
 
 - Explain phases as a **viewing-geometry** effect (illuminated half vs visible half), not a shadow effect.
 - Identify the phase at four key configurations (New, First Quarter, Full, Third Quarter) and relate “quarter” to orbit position.
-- Use the demo’s readouts (illumination %, days since new) to connect phase to the synodic month.
+- Use the demo’s readouts (phase angle and illumination %) to connect phase to the Sun–Earth–Moon geometry.
 
 ## 10–15 minute live-teach script (projector)
 
@@ -46,7 +46,7 @@ Students should be able to:
 
 3. Go to **First Quarter** and **Third Quarter**. Ask: *“Why is ‘quarter’ not 25% illuminated?”* Tie it to being one quarter / three quarters of the way through the orbit from New Moon.
 
-4. Turn on the optional “Earth’s shadow” insight (if shown) and ask: *“Does the shadow touch the Moon most of the month?”* Use this to explicitly rule out the shadow misconception.
+4. Connect to eclipses: emphasize that Earth’s shadow matters for eclipses, which require New/Full *and* near-node geometry (see the Eclipse Geometry demo).
 
 ## Suggested connections to the other demos
 

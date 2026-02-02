@@ -11,14 +11,14 @@ has_math: true
 *Goal:* Use the demo to make a claim supported by (1) at least one number/readout and (2) at least one sanity check.
 
 > **Station card: Binary Orbits (6–8 minutes)**
-> **Controls:** $M_1$, $M_2$, separation $a$, eccentricity $e$  
-> **Overlays:** barycenter, velocity vectors
+> **Controls:** mass ratio $m_2/m_1$, separation $a$ (AU)  
+> **Readouts:** barycenter offset from $m_1$ (AU), orbital period $P$ (yr)
 >
 > **Your station artifact (fill in):**
-> 1) **Observation:** In the Sun + Jupiter system, which body’s orbit is larger? By roughly what factor?  
+> 1) **Observation:** Compare an equal-mass case ($m_2/m_1=1$) to an unequal-mass case (try $m_2/m_1=5$). What happens to the barycenter offset from $m_1$?  
 > 2) **Rule:** Write a relationship between orbit sizes and masses (in words or a ratio).  
-> 3) **Prediction:** If you doubled Jupiter’s mass, what would happen to the Sun’s wobble (bigger/smaller, and why)?  
-> 4) **Exoplanet connection:** How could an astronomer detect a Jupiter-sized planet using only the star’s light?  
+> 3) **Prediction:** If the total mass increases while separation stays the same, what happens to the period (bigger/smaller, and why)?  
+> 4) **Data artifact:** Record two snapshot rows (equal vs unequal) and compare the readouts.  
 > 5) **Connection sentence:** “This connects to another course idea because…”
 
 > **Word bank + sanity checks**
@@ -26,7 +26,7 @@ has_math: true
 > - **Barycenter:** the center of mass; both bodies orbit this point.
 > - **Mass ratio:** if one mass is larger, the barycenter sits closer to that body.
 > - **Orbit size about the barycenter:** the more massive body has the smaller orbit.
-> - **Radial velocity method:** detect a planet by measuring the star’s back-and-forth Doppler shift.
+> - **Kepler scaling:** at fixed separation, higher total mass means a shorter period.
 >
 > **Key relationship (mass vs orbit size):**
 >
@@ -34,5 +34,5 @@ has_math: true
 >
 > **Sanity checks:**
 > - If $M_1=M_2$, both orbits should be the same size (mirror symmetry).
-> - Making the planet more massive increases the star’s wobble (harder pull → larger response).
-> - The star’s wobble is usually much smaller than the planet’s orbit.
+> - Increasing $m_2/m_1$ moves the barycenter farther from $m_1$.
+> - Increasing total mass (at fixed $a$) decreases the period ($P \propto (M_1+M_2)^{-1/2}$).

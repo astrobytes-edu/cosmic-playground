@@ -36,29 +36,53 @@
   border-radius: 18px;
   border: 1px solid var(--cp-border);
   background:
-    radial-gradient(circle at 20% 30%, rgba(96, 165, 250, 0.12), rgba(0, 0, 0, 0.55)),
-    radial-gradient(circle at 84% 18%, rgba(167, 139, 250, 0.12), transparent 55%),
-    radial-gradient(circle at 12% 16%, rgba(255, 255, 255, 0.18) 0 1px, transparent 2px),
-    radial-gradient(circle at 22% 74%, rgba(255, 255, 255, 0.14) 0 1px, transparent 2px),
-    radial-gradient(circle at 66% 58%, rgba(255, 255, 255, 0.12) 0 1px, transparent 2px),
-    radial-gradient(circle at 76% 34%, rgba(255, 255, 255, 0.10) 0 1px, transparent 2px),
-    radial-gradient(circle at 46% 22%, rgba(255, 255, 255, 0.10) 0 1px, transparent 2px),
-    rgba(0, 0, 0, 0.42);
-  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.35);
+    radial-gradient(
+      circle at 20% 30%,
+      var(--cp-glow-teal),
+      color-mix(in srgb, var(--cp-bg0) 78%, transparent)
+    ),
+    radial-gradient(circle at 84% 18%, var(--cp-glow-violet), transparent 55%),
+    radial-gradient(
+      circle at 12% 16%,
+      color-mix(in srgb, var(--cp-text) 18%, transparent) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 22% 74%,
+      color-mix(in srgb, var(--cp-text) 14%, transparent) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 66% 58%,
+      color-mix(in srgb, var(--cp-text) 12%, transparent) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 76% 34%,
+      color-mix(in srgb, var(--cp-text) 10%, transparent) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 46% 22%,
+      color-mix(in srgb, var(--cp-text) 10%, transparent) 0 1px,
+      transparent 2px
+    ),
+    color-mix(in srgb, var(--cp-bg0) 70%, transparent);
+  box-shadow: 0 24px 50px color-mix(in srgb, var(--cp-bg0) 65%, transparent);
 }
 
 .stage__observer {
-  fill: rgba(0, 0, 0, 0.35);
+  fill: color-mix(in srgb, var(--cp-bg0) 55%, transparent);
   stroke: color-mix(in srgb, var(--cp-accent3) 60%, transparent);
   stroke-width: 2px;
 }
 
 .stage__observer-eye {
-  fill: color-mix(in srgb, var(--cp-accent3) 72%, white);
+  fill: color-mix(in srgb, var(--cp-accent3) 72%, var(--cp-text));
 }
 
 .stage__observer-eyeHighlight {
-  fill: white;
+  fill: var(--cp-text);
   opacity: 0.9;
 }
 
@@ -71,30 +95,32 @@
 
 .stage__angleArc {
   fill: none;
-  stroke: rgba(255, 210, 90, 0.95);
+  stroke: var(--cp-warning);
+  stroke-opacity: 0.95;
   stroke-width: 3px;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 10px rgba(255, 210, 90, 0.18));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cp-warning) 18%, transparent));
 }
 
 .stage__distanceLine {
-  stroke: color-mix(in srgb, white 24%, transparent);
+  stroke: color-mix(in srgb, var(--cp-text) 24%, transparent);
   stroke-width: 2px;
   stroke-dasharray: 6 6;
 }
 
 .stage__distanceTick {
-  stroke: color-mix(in srgb, white 38%, transparent);
+  stroke: color-mix(in srgb, var(--cp-text) 38%, transparent);
   stroke-width: 2px;
   stroke-linecap: round;
 }
 
 .stage__sizeLine {
-  stroke: rgba(255, 210, 90, 0.95);
+  stroke: var(--cp-warning);
+  stroke-opacity: 0.95;
   stroke-width: 2px;
   stroke-dasharray: 5 4;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 10px rgba(255, 210, 90, 0.12));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cp-warning) 12%, transparent));
 }
 
 .stage__metricLabel {
@@ -106,7 +132,7 @@
 .stage__object {
   stroke: color-mix(in srgb, var(--cp-accent3) 58%, transparent);
   stroke-width: 2px;
-  filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.14));
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--cp-text) 14%, transparent));
 }
 
 .stage__label {

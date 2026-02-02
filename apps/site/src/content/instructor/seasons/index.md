@@ -12,14 +12,15 @@ last_updated: "2026-01-30"
 
 > **This guide is instructor-facing**
 > Student demo: `/play/seasons/`  
-> Main code: `demos/seasons/seasons.js`  
-> Model code: `demos/_assets/seasons-model.js`
+> UI markup: `apps/demos/src/demos/seasons/index.html`  
+> Demo logic: `apps/demos/src/demos/seasons/main.ts`  
+> Physics model: `packages/physics/src/seasonsModel.ts`
 
 > **Where to go next**
-> - Model + math + assumptions: `model.qmd`
-> - In-class activities (MW + Friday lab + station version): `activities.qmd`
-> - Assessment bank (clickers + short answer + exit ticket): `assessment.qmd`
-> - Future enhancements (planning backlog): `backlog.qmd`
+> - Model + math + assumptions: `apps/site/src/content/instructor/seasons/model.md`
+> - In-class activities: `apps/site/src/content/instructor/seasons/activities.md`
+> - Assessment bank: `apps/site/src/content/instructor/seasons/assessment.md`
+> - Future enhancements: `apps/site/src/content/instructor/seasons/backlog.md`
 
 > **New: Station Mode + Help**
 > - In the student demo, click **Station Mode** to build a data table you can **print** or **copy as CSV**.

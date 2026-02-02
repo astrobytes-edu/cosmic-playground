@@ -14,10 +14,9 @@
         <div class="cp-panel-body">
           <p class="cp-muted">Investigate alignment, shadow cones, and why eclipses aren’t monthly.</p>
 
-            <div class="cp-callout" data-kind="model">
-              Eclipses require two things at once: (1) the right phase (New/Full), and (2) the Moon near a node (small
-            $|\beta|$).
-            </div>
+          <div class="cp-callout" data-kind="model">
+            Eclipses require two things at once: (1) the right phase (New/Full), and (2) the Moon near a node (small $|\beta|$).
+          </div>
 
           <div class="button-row" role="group" aria-label="Phase buttons">
             <button id="setNewMoon" class="cp-action cp-action--ghost" type="button">New Moon</button>
@@ -139,12 +138,12 @@
         >
           <defs>
             <radialGradient id="earthGlow" cx="40%" cy="30%">
-              <stop offset="0%" stop-color="rgba(96, 165, 250, 0.95)" />
-              <stop offset="100%" stop-color="rgba(96, 165, 250, 0.30)" />
+              <stop offset="0%" stop-color="var(--cp-chart-1)" stop-opacity="0.95" />
+              <stop offset="100%" stop-color="var(--cp-chart-1)" stop-opacity="0.3" />
             </radialGradient>
             <radialGradient id="moonGlow" cx="40%" cy="30%">
-              <stop offset="0%" stop-color="rgba(255,255,255,0.95)" />
-              <stop offset="100%" stop-color="rgba(255,255,255,0.30)" />
+              <stop offset="0%" stop-color="var(--cp-text)" stop-opacity="0.95" />
+              <stop offset="100%" stop-color="var(--cp-text)" stop-opacity="0.3" />
             </radialGradient>
           </defs>
 

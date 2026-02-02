@@ -21,7 +21,7 @@ station_params:
   - parameter: 'Mass ratio ($m_2/m_1$)'
     value: "________"
     notice: "Heavier body moves less; barycenter shifts toward the heavier mass."
-  - parameter: 'Separation ($a$)'
+  - parameter: 'Separation ($a$, AU)'
     value: "________"
     notice: 'In this circular Kepler model, $P^2 = \frac{a^3}{M_1+M_2}$ (with $P$ in $\mathrm{yr}$, $a$ in $\mathrm{AU}$, masses in $M_{\odot}$).'
 explain_prompt: "Explain how the center of mass helps you understand the motion of both bodies."

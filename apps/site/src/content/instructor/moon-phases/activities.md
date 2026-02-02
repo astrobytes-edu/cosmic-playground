@@ -14,8 +14,8 @@ has_math: true
 
 > **Links**
 > Student demo: `/play/moon-phases/`  
-> Main guide: `index.qmd`  
-> Model deep dive: `model.qmd`
+> Main guide: `apps/site/src/content/instructor/moon-phases/index.md`  
+> Model deep dive: `apps/site/src/content/instructor/moon-phases/model.md`
 
 ## MW Quick Exploration (3–5 min, pairs)
 
@@ -37,7 +37,6 @@ has_math: true
 > **Task:** Pick 8 angles evenly spaced around the orbit (e.g., 0°, 45°, 90°, …, 315°). For each, record:
 > - Phase name
 > - Illumination (%)
-> - Days since new
 >
 > **Prompt:** “How does illumination change with time? Is it linear?”
 >

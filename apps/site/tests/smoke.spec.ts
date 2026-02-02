@@ -62,9 +62,7 @@ test.describe("Cosmic Playground smoke", () => {
     }
   });
 
-  test("Pilot demo exports stable results text (binary-orbits)", async ({
-    page
-  }) => {
+  async function installClipboardCapture(page: any) {
     await page.addInitScript(() => {
       (window as any).__cpLastClipboardText = null;
       const clipboard = (navigator as any).clipboard ?? {};
@@ -73,78 +71,87 @@ test.describe("Cosmic Playground smoke", () => {
         (window as any).__cpLastClipboardText = text;
       };
     });
+  }
 
-    await page.goto("play/binary-orbits/", { waitUntil: "domcontentloaded" });
-    await expect(page.locator("#cp-demo")).toBeVisible();
+  async function getCapturedClipboardText(page: any) {
+    return await page.evaluate(() => (window as any).__cpLastClipboardText);
+  }
 
-    await page.locator("#copyResults").click();
-    await expect(page.locator("#status")).toContainText("Copied");
-
-    const copied = await page.evaluate(() => (window as any).__cpLastClipboardText);
-    expect(typeof copied).toBe("string");
-
-    const text = String(copied);
-    expect(text).toContain("Cosmic Playground");
-    expect(text).toContain("(v1)");
-    expect(text).toContain("Timestamp:");
-    expect(text).toContain("\nParameters:\n");
-    expect(text).toContain("\nReadouts:\n");
-
-    const lines = text.split("\n");
-
-    const parametersIndex = lines.findIndex((l) => l.trim() === "Parameters:");
-    expect(parametersIndex).toBeGreaterThan(-1);
-    const readoutsIndex = lines.findIndex((l) => l.trim() === "Readouts:");
-    expect(readoutsIndex).toBeGreaterThan(-1);
-
-    let parameterRows = 0;
-    for (let i = parametersIndex + 1; i < lines.length; i++) {
-      const line = lines[i];
-      if (line.trim() === "") break;
-      if (line.startsWith("- ") && !line.includes("(none)")) parameterRows++;
+  const migratedInteractiveDemos = [
+    {
+      slug: "angular-size",
+      expects: ["Diameter D (km)", "Distance d (km)", "Angular diameter θ (deg)"]
+    },
+    {
+      slug: "binary-orbits",
+      expects: ["Mass ratio", "Separation a (AU)", "Orbital period P (yr)"]
+    },
+    {
+      slug: "eclipse-geometry",
+      expects: ["Earth–Moon distance (km)", "Phase angle", "|β|"]
+    },
+    {
+      slug: "moon-phases",
+      expects: ["Phase angle α (deg)", "Illuminated (%)"]
+    },
+    {
+      slug: "seasons",
+      expects: ["Axial tilt ε (deg)", "Solar declination δ (deg)", "Earth–Sun distance r (AU)"]
     }
-    expect(parameterRows).toBeGreaterThanOrEqual(1);
+  ] as const;
 
-    let readoutRows = 0;
-    for (let i = readoutsIndex + 1; i < lines.length; i++) {
-      const line = lines[i];
-      if (line.trim() === "") break;
-      if (line.startsWith("- ") && !line.includes("(none)")) readoutRows++;
-    }
-    expect(readoutRows).toBeGreaterThanOrEqual(2);
-  });
+  for (const demo of migratedInteractiveDemos) {
+    test(`Migrated demo exports stable results text (${demo.slug})`, async ({
+      page
+    }) => {
+      await installClipboardCapture(page);
 
-  test("Pilot demo copy results is keyboard-activatable (binary-orbits)", async ({
-    page
-  }) => {
-    await page.addInitScript(() => {
-      (window as any).__cpLastClipboardText = null;
-      const clipboard = (navigator as any).clipboard ?? {};
-      (navigator as any).clipboard = clipboard;
-      clipboard.writeText = async (text: string) => {
-        (window as any).__cpLastClipboardText = text;
-      };
+      await page.goto(`play/${demo.slug}/`, { waitUntil: "domcontentloaded" });
+      await expect(page.locator("#cp-demo")).toBeVisible();
+
+      await page.locator("#copyResults").click();
+      await expect(page.locator("#status")).toContainText("Copied");
+
+      const copied = await getCapturedClipboardText(page);
+      expect(typeof copied).toBe("string");
+
+      const text = String(copied);
+      expect(text).toContain("Cosmic Playground");
+      expect(text).toContain("(v1)");
+      expect(text).toContain("Timestamp:");
+      expect(text).toContain("\nParameters:\n");
+      expect(text).toContain("\nReadouts:\n");
+
+      for (const needle of demo.expects) {
+        expect(text, `Expected export to include "${needle}"`).toContain(needle);
+      }
     });
 
-    await page.goto("play/binary-orbits/", { waitUntil: "domcontentloaded" });
-    await expect(page.locator("#cp-demo")).toBeVisible();
+    test(`Migrated demo copy results is keyboard-activatable (${demo.slug})`, async ({
+      page
+    }) => {
+      await installClipboardCapture(page);
 
-    const copyButton = page.locator("#copyResults");
-    await expect(copyButton).toBeVisible();
+      await page.goto(`play/${demo.slug}/`, { waitUntil: "domcontentloaded" });
+      await expect(page.locator("#cp-demo")).toBeVisible();
 
-    for (let i = 0; i < 60; i++) {
-      if (await copyButton.evaluate((el) => el === document.activeElement)) break;
-      await page.keyboard.press("Tab");
-    }
-    await expect(copyButton).toBeFocused();
+      const copyButton = page.locator("#copyResults");
+      await expect(copyButton).toBeVisible();
 
-    await page.keyboard.press("Enter");
-    await expect(page.locator("#status")).toContainText("Copied");
+      for (let i = 0; i < 80; i++) {
+        if (await copyButton.evaluate((el) => el === document.activeElement)) break;
+        await page.keyboard.press("Tab");
+      }
+      await expect(copyButton).toBeFocused();
 
-    const copied = await page.evaluate(() => (window as any).__cpLastClipboardText);
-    expect(String(copied)).toContain("Timestamp:");
-    expect(String(copied)).toContain("(v1)");
-  });
+      await page.keyboard.press("Enter");
+      await expect(page.locator("#status")).toContainText("Copied");
+
+      const copied = await getCapturedClipboardText(page);
+      expect(String(copied)).toContain("Timestamp:");
+      expect(String(copied)).toContain("(v1)");
+    });
+  }
 
   test("Pilot demo respects prefers-reduced-motion (binary-orbits)", async ({
     page

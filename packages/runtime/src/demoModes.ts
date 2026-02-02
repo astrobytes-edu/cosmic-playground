@@ -1,5 +1,6 @@
 import { injectStyleOnce } from "./domStyle";
 import { copyTextToClipboard } from "./clipboard";
+import { setLiveRegionText } from "./liveRegion";
 import { renderMath } from "./math";
 
 export type DemoModeKeys = {
@@ -583,6 +584,7 @@ function createStationDialog(stationConfig: DemoStationConfig) {
   status.className = "cp-modal-status";
   status.setAttribute("aria-live", "polite");
   status.setAttribute("role", "status");
+  status.setAttribute("aria-atomic", "true");
 
   tableSection.appendChild(actions);
   tableSection.appendChild(tableWrap);
@@ -609,7 +611,7 @@ function createStationDialog(stationConfig: DemoStationConfig) {
   });
 
   function setStatus(message: string) {
-    status.textContent = message;
+    setLiveRegionText(status, message);
   }
 
   function renderTable() {

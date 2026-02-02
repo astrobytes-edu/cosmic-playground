@@ -1,5 +1,10 @@
-import { createInstrumentRuntime, initMath } from "@cosmic/runtime";
-import { ChallengeEngine, createDemoModes } from "@cosmic/runtime";
+import {
+  ChallengeEngine,
+  createDemoModes,
+  createInstrumentRuntime,
+  initMath,
+  setLiveRegionText
+} from "@cosmic/runtime";
 
 const angleInputEl = document.querySelector<HTMLInputElement>("#angle");
 const angleValueEl = document.querySelector<HTMLSpanElement>("#angleValue");
@@ -68,11 +73,12 @@ function normalizeAngleDeg(angleDeg: number): number {
   return a < 0 ? a + 360 : a;
 }
 
-function cssVar(name: string, fallback: string) {
+function cssVar(name: string) {
   const value = getComputedStyle(document.documentElement)
     .getPropertyValue(name)
     .trim();
-  return value.length > 0 ? value : fallback;
+  if (value.length === 0) throw new Error(`Missing required CSS variable: ${name}`);
+  return value;
 }
 
 function resizeCanvasToCssPixels(
@@ -97,10 +103,10 @@ function resizeCanvasToCssPixels(
 }
 
 const canvasTheme = {
-  glow: cssVar("--cp-glow-blue", "rgba(96, 165, 250, 0.12)"),
-  disk: cssVar("--cp-bg1", "#0B1020"),
-  lit: cssVar("--cp-text", "#EAF2FF"),
-  border: cssVar("--cp-border", "rgba(255, 255, 255, 0.10)")
+  glow: cssVar("--cp-glow-blue"),
+  disk: cssVar("--cp-bg1"),
+  lit: cssVar("--cp-text"),
+  border: cssVar("--cp-border")
 };
 
 // Illuminated fraction of a sphere as seen from Earth, approximated by:
@@ -160,7 +166,7 @@ function drawMoon(phaseAngleDeg: number) {
   // Soft background glow
   const glow = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r * 1.6);
   glow.addColorStop(0, canvasTheme.glow);
-  glow.addColorStop(1, "rgba(0,0,0,0)");
+  glow.addColorStop(1, "transparent");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, w, h);
 
@@ -410,7 +416,7 @@ const runtime = createInstrumentRuntime({
 });
 
 async function handleCopyResults() {
-  status.textContent = "Copying…";
+  setLiveRegionText(status, "Copying…");
   try {
     const angleDeg = clamp(Number(angleInput.value), 0, 360);
     const frac = illuminatedFraction(angleDeg);
@@ -420,23 +426,25 @@ async function handleCopyResults() {
       timestamp: new Date().toISOString(),
       parameters: [
         {
-          name: "Phase angle (deg)",
-          value: `${Math.round(angleDeg)}°`
+          name: "Phase angle α (deg)",
+          value: String(Math.round(angleDeg))
         }
       ],
       readouts: [
         {
           name: "Illuminated (%)",
-          value: `${Math.round(frac * 100)}%`
+          value: String(Math.round(frac * 100))
         }
       ],
       notes: ["This pilot uses a simplified 2D terminator visualization."]
     });
 
-    status.textContent = "Copied results to clipboard.";
+    setLiveRegionText(status, "Copied results to clipboard.");
   } catch (err) {
-    status.textContent =
-      err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.";
+    setLiveRegionText(
+      status,
+      err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed."
+    );
   }
 }
 

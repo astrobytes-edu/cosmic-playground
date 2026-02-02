@@ -1,4 +1,4 @@
-import { createDemoModes, createInstrumentRuntime, initMath } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { TwoBodyAnalytic } from "@cosmic/physics";
 
@@ -55,11 +55,12 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function cssVar(name: string, fallback: string) {
+function cssVar(name: string) {
   const value = getComputedStyle(document.documentElement)
     .getPropertyValue(name)
     .trim();
-  return value.length > 0 ? value : fallback;
+  if (value.length === 0) throw new Error(`Missing required CSS variable: ${name}`);
+  return value;
 }
 
 function resizeCanvasToCssPixels(
@@ -84,11 +85,11 @@ function resizeCanvasToCssPixels(
 }
 
 const canvasTheme = {
-  glow: cssVar("--cp-glow-blue", "rgba(96, 165, 250, 0.12)"),
-  border: cssVar("--cp-border", "rgba(255, 255, 255, 0.10)"),
-  text: cssVar("--cp-text", "#EAF2FF"),
-  body1: cssVar("--cp-accent3", "#60A5FA"),
-  body2: cssVar("--cp-accent2", "#F97316")
+  glow: cssVar("--cp-glow-blue"),
+  border: cssVar("--cp-border"),
+  text: cssVar("--cp-text"),
+  body1: cssVar("--cp-chart-1"),
+  body2: cssVar("--cp-chart-2")
 };
 
 const prefersReducedMotion =
@@ -153,7 +154,7 @@ function draw(model: ReturnType<typeof getModel>, phaseRad: number) {
   // Soft background glow
   const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(w, h) * 0.6);
   glow.addColorStop(0, canvasTheme.glow);
-  glow.addColorStop(1, "rgba(0,0,0,0)");
+  glow.addColorStop(1, "transparent");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, w, h);
 
@@ -351,14 +352,14 @@ function exportResults(): ExportPayloadV1 {
     timestamp: new Date().toISOString(),
     parameters: [
       { name: "Mass ratio (m₂/m₁)", value: formatNumber(model.massRatio, 2) },
-      { name: "Separation (a, AU)", value: `${formatNumber(model.separation, 2)} AU` }
+      { name: "Separation a (AU)", value: formatNumber(model.separation, 2) }
     ],
     readouts: [
       {
-        name: "Barycenter offset from m₁",
-        value: `${formatNumber(model.r1, 3)} AU`
+        name: "Barycenter offset from m₁ (AU)",
+        value: formatNumber(model.r1, 3)
       },
-      { name: "Orbital period", value: `${formatNumber(model.periodYr, 3)} years` }
+      { name: "Orbital period P (yr)", value: formatNumber(model.periodYr, 3) }
     ],
     notes: [
       "Assumes perfectly circular, coplanar two-body motion with point masses.",
@@ -374,18 +375,18 @@ function exportResults(): ExportPayloadV1 {
 };
 
 copyResults.addEventListener("click", () => {
-  status.textContent = "Copying…";
+  setLiveRegionText(status, "Copying…");
   void runtime
     .copyResults(exportResults())
     .then(() => {
-      status.textContent = "Copied results to clipboard.";
+      setLiveRegionText(status, "Copied results to clipboard.");
     })
     .catch((err) => {
-      status.textContent =
-        err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.";
+      setLiveRegionText(
+        status,
+        err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed."
+      );
     });
 });
-
-initMath(document);
 
 initMath(document);

@@ -12,14 +12,15 @@ last_updated: "2026-01-30"
 
 > **This guide is instructor-facing**
 > Student demo: `/play/eclipse-geometry/`  
-> Main code: `demos/eclipse-geometry/eclipse-geometry.js`  
-> Model code (tests + shared): `demos/_assets/eclipse-geometry-model.js`
+> UI markup: `apps/demos/src/demos/eclipse-geometry/index.html`  
+> Demo logic: `apps/demos/src/demos/eclipse-geometry/main.ts`  
+> Physics model: `packages/physics/src/eclipseGeometryModel.ts`
 
 > **Where to go next**
-> - Model + math + assumptions: `model.qmd`
-> - In-class activities (MW + Friday lab + station version): `activities.qmd`
-> - Assessment bank (clickers + short answer + exit ticket): `assessment.qmd`
-> - Future enhancements (planning backlog): `backlog.qmd`
+> - Model + math + assumptions: `apps/site/src/content/instructor/eclipse-geometry/model.md`
+> - In-class activities: `apps/site/src/content/instructor/eclipse-geometry/activities.md`
+> - Assessment bank: `apps/site/src/content/instructor/eclipse-geometry/assessment.md`
+> - Future enhancements: `apps/site/src/content/instructor/eclipse-geometry/backlog.md`
 
 > **New: Station Mode + Help**
 > - In the student demo, click **Station Mode** to build a data table you can **print** or **copy as CSV**.

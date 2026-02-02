@@ -23,6 +23,7 @@ export { copyTextToClipboard } from "./clipboard";
 export { createDemoModes, toCsv } from "./demoModes";
 export { initMath, renderMath } from "./math";
 export { initDemoPolish } from "./polish";
+export { setLiveRegionText } from "./liveRegion";
 export type {
   DemoHelpConfig,
   DemoHelpSection,

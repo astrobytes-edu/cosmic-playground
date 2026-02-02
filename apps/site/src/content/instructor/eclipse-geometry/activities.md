@@ -14,8 +14,8 @@ has_math: true
 
 > **Links**
 > Student demo: `/play/eclipse-geometry/`  
-> Main guide: `index.qmd`  
-> Model deep dive: `model.qmd`
+> Main guide: `apps/site/src/content/instructor/eclipse-geometry/index.md`  
+> Model deep dive: `apps/site/src/content/instructor/eclipse-geometry/model.md`
 
 ## MW Quick Exploration (3–5 min, pairs)
 

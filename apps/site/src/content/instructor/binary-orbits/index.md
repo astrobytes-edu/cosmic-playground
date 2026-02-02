@@ -12,15 +12,16 @@ has_math: true
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
 > **This guide is instructor-facing**
-> Student demo: `/play/binary-orbits/`
-> Main code: `demos/binary-orbits/binary-orbits.js`
-> Model code (tests + shared): `demos/_assets/binary-orbits-model.js`
+> Student demo: `/play/binary-orbits/`  
+> UI markup: `apps/demos/src/demos/binary-orbits/index.html`  
+> Demo logic: `apps/demos/src/demos/binary-orbits/main.ts`  
+> Physics helper: `packages/physics/src/twoBodyAnalytic.ts`
 
 > **Where to go next**
-> - Model + math + assumptions: `model.qmd`
-> - In-class activities (MW quick + Friday lab + station version): `activities.qmd`
-> - Assessment bank (clickers + short answer + exit ticket): `assessment.qmd`
-> - Future enhancements (planning backlog): `backlog.qmd`
+> - Model + math + assumptions: `apps/site/src/content/instructor/binary-orbits/model.md`
+> - In-class activities: `apps/site/src/content/instructor/binary-orbits/activities.md`
+> - Assessment bank: `apps/site/src/content/instructor/binary-orbits/assessment.md`
+> - Future enhancements: `apps/site/src/content/instructor/binary-orbits/backlog.md`
 
 ## Why this demo exists
 
@@ -49,19 +50,17 @@ Students should also be able to:
 
 ## 10-15 minute live-teach script (projector)
 
-1. **Start with Sun+Jupiter preset.** Ask: *"Does the Sun move?"* Most students say no. Point out the tiny Sun orbit around the barycenter.
+1. **Start at equal masses.** Set $m_2/m_1 = 1$. Ask: *“Where is the barycenter?”* It should sit halfway between the bodies, and the two orbits should be the same size.
 
-2. **Show the barycenter position.** Use the barycenter overlay. Ask: *"Where is the center of mass for this system?"* It's just outside the Sun's surface for Jupiter.
+2. **Make the system unequal.** Set $m_2/m_1 = 5$. Ask: *“What changes, and what stays the same?”* Emphasize that **both bodies still move**, but the barycenter shifts toward the heavier body and the heavier body’s orbit shrinks.
 
-3. **Switch to Alpha Centauri AB.** Now both orbits are clearly visible. Ask: *"What's different about this system?"* The masses are comparable, so both orbits are substantial.
+3. **Connect to the inverse relationship.** Ask students to predict whether $a_1/a_2$ increases or decreases when $m_2/m_1$ increases. Connect to:
+   $$\frac{a_1}{a_2}=\frac{M_2}{M_1}.$$
 
-4. **Use the Equal Mass preset.** Ask: *"If the masses are equal, what do you predict about the orbits?"* They should be identical and opposite.
+4. **Period scaling.** Change separation $a$ (AU) and observe the period readout. Emphasize that in AU/yr/$M_\odot$ teaching units:
+   $$P^2=\frac{a^3}{M_1+M_2}.$$
 
-5. **Explain the inverse relationship.** Use the mass sliders to change $M_2$. Point out that as $M_2$ increases, the $M_1$ orbit gets larger. Connect to the formula $a_1/a_2 = M_2/M_1$.
-
-6. **Connect to exoplanet detection.** Ask: *"If we can't see a planet directly, how might we detect it?"* The star's wobble (measured via Doppler shift) reveals the planet's existence and mass.
-
-7. **(Optional) Increase eccentricity.** Show that both bodies still orbit the barycenter, reaching perihelion and aphelion simultaneously.
+5. **Exoplanet connection (conceptual).** Ask: *“If a star wobbles, how could we detect it?”* Tie barycentric motion to the radial-velocity idea, even though this simplified instrument does not model Doppler spectra directly.
 
 ## Suggested connections to other demos
 

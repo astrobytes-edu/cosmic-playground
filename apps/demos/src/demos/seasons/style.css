@@ -36,7 +36,11 @@
   height: auto;
   border-radius: 18px;
   border: 1px solid var(--cp-border);
-  background: radial-gradient(circle at 20% 20%, rgba(96, 165, 250, 0.08), rgba(0, 0, 0, 0.42));
+  background: radial-gradient(
+    circle at 20% 20%,
+    var(--cp-glow-teal),
+    color-mix(in srgb, var(--cp-bg0) 70%, transparent)
+  );
 }
 
 .stage__title {
@@ -63,7 +67,8 @@
 
 .stage__sun {
   fill: url(#sunGlow);
-  stroke: rgba(255, 210, 90, 0.5);
+  stroke: var(--cp-warning);
+  stroke-opacity: 0.5;
   stroke-width: 2px;
 }
 
@@ -76,7 +81,8 @@
 
 .stage__ray {
   fill: none;
-  stroke: rgba(255, 210, 90, 0.75);
+  stroke: var(--cp-warning);
+  stroke-opacity: 0.75;
   stroke-width: 3px;
   stroke-linecap: round;
 }
@@ -94,7 +100,7 @@
 }
 
 .stage__marker {
-  fill: rgba(255, 255, 255, 0.55);
+  fill: color-mix(in srgb, var(--cp-text) 55%, transparent);
 }
 
 .stage__markerLabel {
@@ -103,9 +109,10 @@
 }
 
 .stage__markerSun {
-  fill: rgba(255, 210, 90, 0.95);
+  fill: var(--cp-warning);
+  fill-opacity: 0.95;
 }
 
 .stage__markerObs {
-  fill: rgba(255, 255, 255, 0.85);
+  fill: color-mix(in srgb, var(--cp-text) 85%, transparent);
 }

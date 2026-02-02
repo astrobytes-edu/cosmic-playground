@@ -1,4 +1,4 @@
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AngularSizeModel, AstroUnits } from "@cosmic/physics";
@@ -413,8 +413,8 @@ function exportResults(thetaDegValue: number): ExportPayloadV1 {
 
   const parameters: ExportPayloadV1["parameters"] = [
     { name: "Preset", value: presetMeta.name },
-    { name: "Diameter D", value: `${formatNumber(state.diameterKm, 4)} km` },
-    { name: "Distance d", value: `${formatNumber(state.distanceKm, 4)} km` }
+    { name: "Diameter D (km)", value: formatNumber(state.diameterKm, 4) },
+    { name: "Distance d (km)", value: formatNumber(state.distanceKm, 4) }
   ];
 
   if (state.presetId === "moon") {
@@ -440,8 +440,8 @@ function exportResults(thetaDegValue: number): ExportPayloadV1 {
     timestamp: new Date().toISOString(),
     parameters,
     readouts: [
-      { name: "Angular diameter (display)", value: `${display.text}${display.unit}` },
-      { name: "Angular diameter (deg)", value: `${formatNumber(thetaDegValue, 6)}°` }
+      { name: "Angular diameter θ (display)", value: `${display.text}${display.unit}` },
+      { name: "Angular diameter θ (deg)", value: formatNumber(thetaDegValue, 6) }
     ],
     notes
   };
@@ -959,7 +959,7 @@ moonRecessionTime.addEventListener("input", () => {
 });
 
 copyResults.addEventListener("click", () => {
-  status.textContent = "Copying…";
+  setLiveRegionText(status, "Copying…");
 
   const thetaDegValue = AngularSizeModel.angularDiameterDeg({
     diameterKm: state.diameterKm,
@@ -969,11 +969,13 @@ copyResults.addEventListener("click", () => {
   void runtime
     .copyResults(exportResults(thetaDegValue))
     .then(() => {
-      status.textContent = "Copied results to clipboard.";
+      setLiveRegionText(status, "Copied results to clipboard.");
     })
     .catch((err) => {
-      status.textContent =
-        err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.";
+      setLiveRegionText(
+        status,
+        err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed."
+      );
     });
 });
 
