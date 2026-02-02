@@ -13,11 +13,35 @@
         <div class="cp-panel-header">Electromagnetic Spectrum: Light Beyond Visible</div>
         <div class="cp-panel-body">
           <p class="cp-muted">Compare wavelength, frequency, and what different bands reveal.</p>
-          <div class="cp-callout" data-kind="model">
-            This demo is currently a stub while we migrate the legacy version into the new runtime.
-          </div>
+
+          <label class="control">
+            <span>Wavelength $\lambda$</span>
+            <input
+              id="wavelengthSlider"
+              type="range"
+              min="0"
+              max="1000"
+              step="1"
+              value="520"
+              data-tooltip-source="#wavelengthValue"
+            />
+            <span class="control__value"><span id="wavelengthValue"></span></span>
+          </label>
+
+          <fieldset class="band-picker" aria-label="EM band">
+            <button class="band" type="button" data-band="radio">Radio</button>
+            <button class="band" type="button" data-band="microwave">Microwave</button>
+            <button class="band" type="button" data-band="infrared">Infrared</button>
+            <button class="band" type="button" data-band="visible">Visible</button>
+            <button class="band" type="button" data-band="ultraviolet">UV</button>
+            <button class="band" type="button" data-band="xray">X-ray</button>
+            <button class="band" type="button" data-band="gamma">Gamma</button>
+          </fieldset>
 
           <button id="copyResults" class="cp-action" type="button">Copy results</button>
+          <div class="cp-muted">
+            Copy Results exports wavelength, frequency, and photon energy (with units).
+          </div>
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
 
           <div class="cp-actions">
@@ -28,22 +52,69 @@
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
-        <div class="cp-stage__inner">
-          <p class="cp-stage__headline">Migration pending</p>
-          <p class="cp-muted">
-            This space will host the interactive visualization once the demo is migrated.
-          </p>
+      <section class="cp-demo__stage cp-stage" aria-label="Visualization stage">
+        <div class="stage">
+          <div class="stage__header">
+            <div class="stage__title">Spectrum scale</div>
+            <div class="stage__meta">
+              <span id="bandBadge"></span>
+              <span class="cp-muted" id="bandRange"></span>
+            </div>
+          </div>
+
+          <div class="spectrum" aria-label="Spectrum bar">
+            <div class="spectrum__bar" aria-hidden="true">
+              <div id="bandHighlight" class="spectrum__highlight"></div>
+              <div id="marker" class="spectrum__marker">
+                <div id="markerLabel" class="spectrum__markerLabel"></div>
+              </div>
+            </div>
+            <div class="spectrum__ticks" aria-hidden="true">
+              <span>10 km</span>
+              <span>1 m</span>
+              <span>1 mm</span>
+              <span>1 $\mu\mathrm{m}$</span>
+              <span>1 nm</span>
+              <span>1 pm</span>
+              <span>10 fm</span>
+            </div>
+          </div>
+
+          <div class="band-card" aria-label="Band description">
+            <div class="band-card__title" id="bandName"></div>
+            <div class="band-card__desc cp-muted" id="bandDescription"></div>
+            <div class="band-card__grid">
+              <div>
+                <div class="band-card__label">Examples</div>
+                <div class="band-card__value" id="bandExamples"></div>
+              </div>
+              <div>
+                <div class="band-card__label">Detectors</div>
+                <div class="band-card__value" id="bandDetection"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Migration pending (stub).</p>
           <div class="cp-readout">
-            <div class="cp-readout__label">(example) Wavelength band</div>
-            <div class="cp-readout__value">—</div>
+            <div class="cp-readout__label">Wavelength $\lambda$</div>
+            <div class="cp-readout__value"><span id="readoutWavelength"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Frequency $\nu$</div>
+            <div class="cp-readout__value"><span id="readoutFrequency"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Photon energy $E$</div>
+            <div class="cp-readout__value"><span id="readoutEnergy"></span></div>
+          </div>
+
+          <div class="cp-callout" data-kind="model">
+            Relationships: $c = \lambda \nu$ and $E = h\nu = \frac{hc}{\lambda}$.
           </div>
         </div>
       </aside>
@@ -52,26 +123,72 @@
         <div class="cp-panels">
           <details class="cp-accordion" open>
             <summary>
-              <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">2 bullets</span>
+              <span class="cp-accordion__title">Explore panels</span>
+              <span class="cp-accordion__meta">tabs</span>
             </summary>
             <div class="cp-accordion__body">
-              <ul>
-                <li>Different bands require different detectors and reveal different physics.</li>
-                <li>“Visible” is just one small slice of the spectrum.</li>
-              </ul>
+              <div class="tabs" role="tablist" aria-label="Explore panels">
+                <button id="tabConvert" class="tab" role="tab" aria-selected="false" aria-controls="panelConvert" type="button">
+                  Convert
+                </button>
+                <button id="tabTelescopes" class="tab" role="tab" aria-selected="false" aria-controls="panelTelescopes" type="button">
+                  Telescopes
+                </button>
+                <button id="tabObjects" class="tab" role="tab" aria-selected="false" aria-controls="panelObjects" type="button">
+                  Objects
+                </button>
+                <button id="tabLines" class="tab" role="tab" aria-selected="true" aria-controls="panelLines" type="button">
+                  Lines
+                </button>
+              </div>
+
+              <section id="panelConvert" class="tabpanel" role="tabpanel" aria-label="Convert" hidden>
+                <div class="cp-muted">Enter one quantity; the other two update automatically.</div>
+                <div class="convert-grid">
+                  <label class="control">
+                    <span>Wavelength (nm)</span>
+                    <input id="convertWavelengthNm" type="number" inputmode="decimal" min="0" step="any" />
+                  </label>
+                  <label class="control">
+                    <span>Frequency (Hz)</span>
+                    <input id="convertFrequencyHz" type="number" inputmode="decimal" min="0" step="any" />
+                  </label>
+                  <label class="control">
+                    <span>Photon energy (eV)</span>
+                    <input id="convertEnergyEv" type="number" inputmode="decimal" min="0" step="any" />
+                  </label>
+                </div>
+                <div class="cp-muted">
+                  Tip: try $656~\mathrm{nm}$ (H$\alpha$) or $21~\mathrm{cm}$ ($2.1\times 10^8~\mathrm{nm}$).
+                </div>
+              </section>
+
+              <section id="panelTelescopes" class="tabpanel" role="tabpanel" aria-label="Telescopes" hidden>
+                <ul id="telescopeList" class="list"></ul>
+              </section>
+
+              <section id="panelObjects" class="tabpanel" role="tabpanel" aria-label="Objects" hidden>
+                <ul id="objectList" class="list"></ul>
+              </section>
+
+              <section id="panelLines" class="tabpanel" role="tabpanel" aria-label="Lines">
+                <div class="cp-muted">
+                  A few common atomic lines (nm) and IR band centers ($\mu\mathrm{m}$) used in teaching examples.
+                </div>
+                <ul id="lineList" class="list"></ul>
+              </section>
             </div>
           </details>
 
           <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">stub</span>
+              <span class="cp-accordion__meta">units</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-                <li>When migrated, this drawer will host math mode + deeper model notes.</li>
+                <li>Internal math uses CGS constants: $c$ in $\mathrm{cm/s}$ and $h$ in $\mathrm{erg\,s}$.</li>
+                <li>Readouts are reported in teaching-friendly units (nm, Hz, eV/keV/MeV) with explicit unit labels.</li>
               </ul>
             </div>
           </details>

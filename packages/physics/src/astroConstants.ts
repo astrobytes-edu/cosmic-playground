@@ -58,6 +58,24 @@ export const AstroConstants = {
     CM_PER_AU: 0
   },
 
+  PHOTON: {
+    // Physical constants (CGS). Kept here so demos/models share a single source of truth.
+    // Exact definitions (SI) converted to CGS:
+    // - c = 299,792,458 m/s (exact) = 2.99792458×10^10 cm/s
+    // - h = 6.62607015×10^-34 J·s (exact) = 6.62607015×10^-27 erg·s
+    // - 1 eV = 1.602176634×10^-19 J (exact) = 1.602176634×10^-12 erg
+    C_CM_PER_S: 2.99792458e10,
+    H_ERG_S: 6.62607015e-27,
+
+    // Unit conversions used by Wave 3 light/spectra demos (teaching-facing outputs may use eV/keV/MeV).
+    ERG_PER_EV: 1.602176634e-12,
+    EV_PER_ERG: 0,
+
+    // Wavelength convenience conversions (CGS base is cm).
+    CM_PER_NM: 1e-7,
+    NM_PER_CM: 0
+  },
+
   GRAV: {
     // In AU/yr/M☉ teaching units, it is conventional to take:
     //   G = 4π² AU³ / yr² / M☉
@@ -118,3 +136,14 @@ const LENGTH = AstroConstants.LENGTH as {
 LENGTH.M_PER_AU = LENGTH.KM_PER_AU * LENGTH.M_PER_KM;
 LENGTH.CM_PER_AU = LENGTH.M_PER_AU * LENGTH.CM_PER_M;
 
+const PHOTON = AstroConstants.PHOTON as {
+  C_CM_PER_S: number;
+  H_ERG_S: number;
+  ERG_PER_EV: number;
+  EV_PER_ERG: number;
+  CM_PER_NM: number;
+  NM_PER_CM: number;
+};
+
+PHOTON.EV_PER_ERG = 1 / PHOTON.ERG_PER_EV;
+PHOTON.NM_PER_CM = 1 / PHOTON.CM_PER_NM;

@@ -3,7 +3,7 @@ title: "EM Spectrum — Assessment Bank"
 bundle: "em-spectrum"
 section: "assessment"
 demo_slug: "em-spectrum"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
@@ -76,7 +76,7 @@ D. Gamma-ray
 
 ### Clicker 5 — Choosing a telescope for a wavelength
 
-**Demo setup:** pick a wavelength around **$10\\,\\mu\\mathrm{m}$** (Mid-IR scale) and then open the **Telescopes** tab.
+**Demo setup:** pick a wavelength around **$10\,\mu\mathrm{m}$** (Mid-IR scale) and then open the **Telescopes** tab.
 
 **Question:** Which telescope is designed for infrared observations?
 

@@ -9,6 +9,22 @@
 import { AstroConstants } from "./astroConstants";
 
 export const AstroUnits = {
+  nmToCm(nm: number): number {
+    return nm * AstroConstants.PHOTON.CM_PER_NM;
+  },
+
+  cmToNm(cm: number): number {
+    return cm * AstroConstants.PHOTON.NM_PER_CM;
+  },
+
+  ergToEv(erg: number): number {
+    return erg * AstroConstants.PHOTON.EV_PER_ERG;
+  },
+
+  evToErg(ev: number): number {
+    return ev * AstroConstants.PHOTON.ERG_PER_EV;
+  },
+
   daysToSeconds(days: number): number {
     return days * AstroConstants.TIME.DAY_S;
   },

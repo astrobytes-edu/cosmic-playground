@@ -3,7 +3,7 @@ title: "EM Spectrum — Backlog"
 bundle: "em-spectrum"
 section: "backlog"
 demo_slug: "em-spectrum"
-last_updated: "2026-01-30"
+last_updated: "2026-02-02"
 ---
 > **Navigation**
 > - Instructor hub: [/demos/_instructor/](../../instructor/)

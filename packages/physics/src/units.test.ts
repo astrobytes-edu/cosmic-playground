@@ -24,4 +24,14 @@ describe("AstroUnits", () => {
     expect(AstroUnits.arcminToDeg(60)).toBe(1);
     expect(AstroUnits.arcsecToDeg(3600)).toBe(1);
   });
+
+  it("converts nm <-> cm", () => {
+    expect(AstroUnits.cmToNm(1)).toBeCloseTo(1e7, 12);
+    expect(AstroUnits.nmToCm(1e7)).toBeCloseTo(1, 12);
+  });
+
+  it("converts eV <-> erg", () => {
+    expect(AstroUnits.evToErg(1)).toBeCloseTo(AstroConstants.PHOTON.ERG_PER_EV, 20);
+    expect(AstroUnits.ergToEv(AstroConstants.PHOTON.ERG_PER_EV)).toBeCloseTo(1, 12);
+  });
 });
