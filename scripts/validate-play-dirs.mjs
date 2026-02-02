@@ -103,6 +103,8 @@ async function main() {
     if (!/\brole=["']status["']/i.test(statusTag)) missing.push('role="status"');
     if (!/\baria-live=["']polite["']/i.test(statusTag))
       missing.push('aria-live="polite"');
+    if (!/\baria-atomic=["']true["']/i.test(statusTag))
+      missing.push('aria-atomic="true"');
 
     if (missing.length > 0) {
       invalidExportStatusRegion.push({ slug, indexPath, missing, statusTag });

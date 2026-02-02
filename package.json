@@ -12,6 +12,7 @@
     "lint": "echo \"lint: (placeholder)\"",
     "typecheck": "corepack pnpm -r typecheck",
     "test:invariants": "vitest run scripts/validate-invariants.test.mjs",
+    "test:play-dirs": "vitest run scripts/validate-play-dirs.test.mjs",
     "test": "echo \"test: (placeholder)\""
   },
   "devDependencies": {

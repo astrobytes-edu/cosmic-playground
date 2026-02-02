@@ -4,7 +4,7 @@ This document is the planning “control panel” for finishing the demo migrati
 
 ## Snapshot (current repo state)
 
-**Cosmic Playground demo slugs (content + source): 12**
+**Cosmic Playground demo slugs (content + source): 12.**
 
 - **Interactive (migrated): 5**
   - `angular-size`, `binary-orbits`, `eclipse-geometry`, `moon-phases`, `seasons`
@@ -29,6 +29,7 @@ This document is the planning “control panel” for finishing the demo migrati
 ## Migration status table
 
 Legend:
+
 - **Interactive** = real instrument (not `initStubDemo`)
 - **Stub** = placeholder instrument that satisfies `/play/<slug>/` contract but has no physics/visualization yet
 - **Missing** = exists in legacy repo but no `apps/demos/src/demos/<slug>/` in this repo yet
@@ -150,4 +151,3 @@ These exist in `~/Teaching/astr101-sp26/demos/` but are not yet present as `apps
   - `apps/site/src/content/demos/*` (metadata presence)
   - legacy inventory (if available)
   and writes an updated status table into this doc.
-
