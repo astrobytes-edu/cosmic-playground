@@ -55,6 +55,7 @@ const { Content } = await playlist.render();
         <div class="item">
           <DemoCard
             title={entry!.data.title}
+            slug={entry!.slug}
             href={`${import.meta.env.BASE_URL}exhibits/${entry!.slug}/`}
             description={excerptFromBody(entry!.body)}
             status={entry!.data.status}

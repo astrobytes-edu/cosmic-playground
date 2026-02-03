@@ -27,7 +27,7 @@ const { Content } = await entry.render();
     <div class="badges" aria-label="Demo badges">
       <TagPill
         label={entry.data.status}
-        tone={entry.data.status === "stable" ? "teal" : entry.data.status === "draft" ? "magenta" : "default"}
+        tone={entry.data.status === "stable" ? "teal" : entry.data.status === "beta" ? "status-beta" : "status-draft"}
       />
       {entry.data.topics.map((t) => <TagPill label={t} tone="blue" />)}
       {entry.data.levels.map((l) => <TagPill label={l} tone="default" />)}

@@ -49,6 +49,7 @@ function excerptFromBody(body: string) {
       {featured.map((d) => (
         <DemoCard
           title={d.data.title}
+          slug={d.slug}
           href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
           description={excerptFromBody(d.body)}
           status={d.data.status}

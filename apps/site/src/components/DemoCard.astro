@@ -1,9 +1,12 @@
 ---
 import TagPill from "./TagPill.astro";
 import TopicIcon from "./TopicIcon.astro";
+import DemoGlyph from "./DemoGlyph.astro";
+import { pickDemoGlyph } from "../lib/demoGlyphs";
 
 export type DemoCardProps = {
   title: string;
+  slug: string;
   href: string;
   description: string;
   status: "stable" | "beta" | "draft";
@@ -15,6 +18,7 @@ export type DemoCardProps = {
 
 const {
   title,
+  slug,
   href,
   description,
   status,
@@ -23,18 +27,25 @@ const {
   timeMinutes,
   hasMathMode
 } = Astro.props as DemoCardProps;
+
+const glyph = pickDemoGlyph(topics, slug, title);
+const statusTone =
+  status === "stable" ? "teal" : status === "beta" ? "status-beta" : "status-draft";
 ---
 
 <article class="demo-card cp-card">
   <a class="demo-card__link" href={href}>
     <header class="demo-card__header">
-      <h3>{title}</h3>
-      <div class="demo-card__meta">
+      <DemoGlyph name={glyph} class="demo-card__glyph" />
+      <div class="demo-card__title-row">
+        <h3>{title}</h3>
+        <div class="demo-card__meta">
         <TagPill
           label={status}
-          tone={status === "stable" ? "teal" : status === "beta" ? "default" : "magenta"}
+          tone={statusTone}
         />
         {hasMathMode ? <TagPill label="math mode" tone="violet" /> : null}
+        </div>
       </div>
     </header>
 
@@ -71,6 +82,25 @@ const {
   }
 
   .demo-card__header {
+    display: grid;
+    gap: 10px;
+  }
+
+  .demo-card__glyph {
+    width: clamp(28px, 4vw, 36px);
+    height: clamp(28px, 4vw, 36px);
+    color: var(--cp-text-3);
+    transition: color var(--cp-transition-fast) var(--cp-ease-out),
+      transform var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .demo-card:hover .demo-card__glyph,
+  .demo-card:focus-within .demo-card__glyph {
+    color: var(--cp-accent);
+    transform: translateY(-1px);
+  }
+
+  .demo-card__title-row {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -93,6 +123,10 @@ const {
     margin: 10px 0 0;
     color: var(--cp-muted);
     max-width: 72ch;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .demo-card__footer {
