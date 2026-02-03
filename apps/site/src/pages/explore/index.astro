@@ -24,6 +24,26 @@ const levels = Array.from(
   new Set(demos.flatMap((d) => d.data.levels))
 ).sort();
 const statuses = Array.from(new Set(demos.map((d) => d.data.status))).sort();
+const topicOrder = [
+  "EarthSky",
+  "Orbits",
+  "LightSpectra",
+  "Telescopes",
+  "DataInference",
+  "Stars",
+  "Galaxies",
+  "Cosmology"
+];
+const topicLabel: Record<string, string> = {
+  EarthSky: "Earth & Sky",
+  Orbits: "Orbits",
+  LightSpectra: "Light & Spectra",
+  Telescopes: "Telescopes",
+  DataInference: "Data & Inference",
+  Stars: "Stars",
+  Galaxies: "Galaxies",
+  Cosmology: "Cosmology"
+};
 const featuredOrder = ["keplers-laws", "retrograde-motion", "binary-orbits"];
 const featured = demos
   .filter((d) => d.data.featured)
@@ -111,7 +131,21 @@ if (status) addChip("status", `Status: ${status}`);
 if (math) addChip("math", `Math mode: ${math === "yes" ? "Yes" : "No"}`);
 if (sort && sort !== "recommended") addChip("sort", `Sort: ${sortLabels[sort] ?? sort}`);
 
-const showFeatured = chips.length === 0;
+const noFilters = chips.length === 0;
+const showFeatured = noFilters && featured.length > 0;
+const featuredSlugs = new Set(featured.map((d) => d.slug));
+const topicSections = noFilters
+  ? topicOrder
+      .map((key) => ({
+        key,
+        label: topicLabel[key],
+        demos: sorted.filter(
+          (d) =>
+            d.data.topics.includes(key as any) && !featuredSlugs.has(d.slug)
+        )
+      }))
+      .filter((section) => section.demos.length > 0)
+  : [];
 ---
 
 <Layout title="Explore — Cosmic Playground" hasMath={false}>
