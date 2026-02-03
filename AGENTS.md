@@ -70,6 +70,29 @@ Cosmic Playground personal skills (what to enforce):
     - `corepack pnpm test:physics-contract`
 - If Playwright is failing due to base paths, check `CP_BASE_PATH` first; an empty/incorrect value can cause `/explore/` and `/play/<slug>/` routes to 404 in e2e.
 
+### Git workflow (solo maintainer friendly)
+
+Goal: keep `main` boring and always-green, even if you’re the only developer.
+
+- Prefer doing work on short-lived branches (e.g. `codex/<topic>`), then landing to `main` once gates pass.
+- Two merge directions:
+  - **Merge `main` → branch**: update your working branch with the latest `main` (good during development).
+  - **Merge branch → `main`**: land the feature on `main` (do this only after running gates).
+
+Suggested “land to main” checklist:
+
+```bash
+git checkout main
+git pull --ff-only
+git merge --ff-only <your-branch>
+corepack pnpm build
+corepack pnpm -r typecheck
+CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e
+git push origin main
+```
+
+If `--ff-only` merge fails, it usually means `main` moved. Update your branch from `main` first (and resolve conflicts), re-run gates, then try again.
+
 ### Demo pipeline (important)
 - Source: `apps/demos/src/demos/<slug>/` (Vite + TS)
 - Build output: `apps/demos/dist/<slug>/`

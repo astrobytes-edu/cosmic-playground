@@ -2,6 +2,53 @@
 
 This repo uses `AGENTS.md` as the authoritative agent instructions. Read and follow it first.
 
+## Git workflow (solo maintainer)
+
+If you’re the only developer, you *can* work directly on `main`, but you’ll learn faster (and keep `main` calmer) if you treat `main` as **always-green** and do work on short-lived branches.
+
+### The two “merge directions” (what they mean)
+
+- **Merge `main` → branch**: “bring latest `main` into my work-in-progress branch.” This reduces surprises later and is safe while you iterate.
+- **Merge branch → `main`**: “land the feature.” This changes `main`, so you want high confidence right before you do it.
+
+### Recommended habit (simple, no rebase required)
+
+**Start work**
+
+```bash
+git checkout main
+git pull --ff-only
+git checkout -b codex/<topic>
+```
+
+**While working (optional, but good when `main` moved)**
+
+```bash
+git fetch origin
+git checkout codex/<topic>
+git merge origin/main
+```
+
+**Land to `main` (safe fast-forward style)**
+
+```bash
+git checkout main
+git pull --ff-only
+git merge --ff-only codex/<topic>
+corepack pnpm build
+corepack pnpm -r typecheck
+CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e
+git push origin main
+```
+
+If `git merge --ff-only codex/<topic>` fails, it usually means `main` advanced since you started. Do the “merge `main` → branch” step above (resolve conflicts if needed), rerun gates, then try landing again.
+
+### PRs (still worth it even for solo)
+
+You can keep PR overhead low but still get value:
+- PRs give you a checklist (“did I run gates?”) and a permanent reviewable artifact.
+- You can open a PR and self-merge when ready; it’s still a disciplined workflow.
+
 ## Quick commands
 
 - Install (if needed): `corepack pnpm install`
