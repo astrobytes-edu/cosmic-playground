@@ -195,11 +195,11 @@ const showFeatured = chips.length === 0;
 
 <script>
   const form = document.querySelector("[data-filter-form]");
-  if (form) {
+  if (form instanceof HTMLFormElement) {
     form.classList.add("is-enhanced");
     const search = form.querySelector("input[name='q']");
     const selects = form.querySelectorAll("select");
-    let timer;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const submit = () => (form.requestSubmit ? form.requestSubmit() : form.submit());
 
     if (search) {
