@@ -10,9 +10,14 @@ function parseIsoDate(iso: string) {
   return Number.isNaN(t) ? 0 : t;
 }
 
-const featured = [...demos]
-  .sort((a, b) => parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated))
-  .slice(0, 6);
+const featuredOrder = ["keplers-laws", "retrograde-motion", "binary-orbits"];
+const featured = demos
+  .filter((d) => d.data.featured)
+  .sort(
+    (a, b) =>
+      featuredOrder.indexOf(a.slug) - featuredOrder.indexOf(b.slug) ||
+      a.data.title.localeCompare(b.data.title)
+  );
 
 const updated = [...demos]
   .sort((a, b) => parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated))
@@ -29,7 +34,7 @@ function excerptFromBody(body: string) {
 ---
 
 <Layout title="Cosmic Playground" hasMath={false}>
-  <section class="hero cp-card">
+  <section class="hero cp-hero">
     <h1>Cosmic Playground</h1>
     <p>
       <strong>Predict. Play. Explain.</strong> Play with the universe. Learn the
@@ -43,8 +48,8 @@ function excerptFromBody(body: string) {
     </div>
   </section>
 
-  <section class="home-section" aria-label="Featured exhibits">
-    <h2>Featured exhibits</h2>
+  <section class="home-section" aria-label="Start here: Gravity and Orbits">
+    <h2>Start here: Gravity &amp; Orbits</h2>
     <div class="grid">
       {featured.map((d) => (
         <DemoCard

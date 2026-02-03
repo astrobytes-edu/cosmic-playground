@@ -98,9 +98,26 @@ nav a:hover {
 }
 
 .hero {
-  padding: var(--cp-space-6) var(--cp-space-5);
   display: grid;
   gap: var(--cp-space-3);
+}
+
+.cp-hero {
+  padding: var(--cp-space-6) var(--cp-space-5);
+  border-radius: var(--cp-r-3);
+  border: 1px solid var(--cp-border-subtle);
+  background:
+    radial-gradient(
+      1200px 600px at 20% 0%,
+      var(--cp-glow-teal),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 480px at 85% -10%,
+      var(--cp-glow-pink),
+      transparent 65%
+    ),
+    color-mix(in srgb, var(--cp-bg0) 90%, var(--cp-bg2));
 }
 
 .hero h1 {
