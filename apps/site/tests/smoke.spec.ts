@@ -43,6 +43,24 @@ test.describe("Cosmic Playground smoke", () => {
     expect(errors, `Console errors on ${basePath}explore/`).toEqual([]);
   });
 
+  test("Hero glow is scoped to hero", async ({ page }) => {
+    await page.goto("explore/");
+    const bodyBg = await page.evaluate(() =>
+      window.getComputedStyle(document.body).backgroundImage
+    );
+    const heroBg = await page.locator(".cp-hero").evaluate((el) =>
+      window.getComputedStyle(el).backgroundImage
+    );
+    expect(bodyBg).not.toContain("radial-gradient");
+    expect(heroBg).toContain("radial-gradient");
+  });
+
+  test("Filter chips use theme chip class", async ({ page }) => {
+    await page.goto("explore/?topic=Orbits");
+    const chip = page.locator(".cp-chip").first();
+    await expect(chip).toBeVisible();
+  });
+
   test("All /play/<slug>/ pages load the instrument root", async ({ page }) => {
     const slugs = await demoSlugsFromContent();
     expect(slugs.length).toBeGreaterThan(0);
