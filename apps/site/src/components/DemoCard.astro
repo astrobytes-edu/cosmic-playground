@@ -31,35 +31,30 @@ const {
 const glyph = pickDemoGlyph(topics, slug, title);
 const statusTone =
   status === "stable" ? "teal" : status === "beta" ? "status-beta" : "status-draft";
+const timeLabel =
+  timeMinutes <= 10 ? "≤10 min" : timeMinutes <= 20 ? "10–20 min" : "20+ min";
 ---
 
 <article class="demo-card cp-card">
   <a class="demo-card__link" href={href}>
     <header class="demo-card__header">
       <DemoGlyph name={glyph} class="demo-card__glyph" />
-      <div class="demo-card__title-row">
-        <h3>{title}</h3>
-        <div class="demo-card__meta">
-        <TagPill
-          label={status}
-          tone={statusTone}
-        />
-        {hasMathMode ? <TagPill label="math mode" tone="violet" /> : null}
-        </div>
-      </div>
+      <h3>{title}</h3>
     </header>
 
     <p class="demo-card__desc">{description}</p>
 
     <footer class="demo-card__footer">
       <div class="demo-card__badges" aria-label="Tags">
+        <TagPill label={status} tone={statusTone} />
         {topics.map((t) => (
           <TagPill label={t} tone="blue">
             <TopicIcon slot="icon" topic={t} />
           </TagPill>
         ))}
+        <TagPill label={timeLabel} tone="default" />
         {levels.map((l) => <TagPill label={l} tone="default" />)}
-        <TagPill label={`${timeMinutes} min`} tone="default" />
+        {hasMathMode ? <TagPill label="math mode" tone="violet" /> : null}
       </div>
     </footer>
   </a>
@@ -100,28 +95,15 @@ const statusTone =
     transform: translateY(-1px);
   }
 
-  .demo-card__title-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
   h3 {
     margin: 0;
-    font-size: 1.1rem;
-  }
-
-  .demo-card__meta {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    font-size: var(--cp-text-xl);
+    color: var(--cp-text);
   }
 
   .demo-card__desc {
     margin: 10px 0 0;
-    color: var(--cp-muted);
+    color: var(--cp-text2);
     max-width: 72ch;
     display: -webkit-box;
     -webkit-line-clamp: 2;
