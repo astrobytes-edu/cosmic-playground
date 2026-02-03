@@ -6,6 +6,14 @@ This repo uses `AGENTS.md` as the authoritative agent instructions. Read and fol
 
 If you’re the only developer, you *can* work directly on `main`, but you’ll learn faster (and keep `main` calmer) if you treat `main` as **always-green** and do work on short-lived branches.
 
+### Teaching mode (for humans)
+
+If the user asks about Git (or seems unsure), prefer a “teach while doing” style:
+- Always state the **current branch** (`git branch --show-current`) and whether the tree is clean (`git status -sb`) before risky actions.
+- Use **safe defaults** (`git pull --ff-only`, `git merge --ff-only`) unless the user explicitly asks for rebases/force pushes.
+- Explain *why* a command is being run in one sentence before running it.
+- When something fails, explain the failure as a concept first (“the repo changed upstream” / “you have local edits”), then give the smallest next command.
+
 ### The two “merge directions” (what they mean)
 
 - **Merge `main` → branch**: “bring latest `main` into my work-in-progress branch.” This reduces surprises later and is safe while you iterate.
@@ -43,11 +51,27 @@ git push origin main
 
 If `git merge --ff-only codex/<topic>` fails, it usually means `main` advanced since you started. Do the “merge `main` → branch” step above (resolve conflicts if needed), rerun gates, then try landing again.
 
+### Why “branch first” is worth it (even solo)
+
+Working on a branch is not about bureaucracy; it’s about making “undo” and “review” easier:
+- You can abandon a branch without touching `main`.
+- You can compare your work to `main` at any time (`git log main..HEAD` and `git diff main..HEAD`).
+- You can land with confidence using `--ff-only` so history stays linear and simple.
+
 ### PRs (still worth it even for solo)
 
 You can keep PR overhead low but still get value:
 - PRs give you a checklist (“did I run gates?”) and a permanent reviewable artifact.
 - You can open a PR and self-merge when ready; it’s still a disciplined workflow.
+
+### Tiny “I’m learning Git” cheat sheet
+
+- “What branch am I on?” → `git branch --show-current`
+- “Is my tree clean?” → `git status -sb`
+- “What changed?” → `git diff` (unstaged), `git diff --staged` (staged)
+- “What commits did I make?” → `git log --oneline --decorate -10`
+- “I want the simplest pulls” → `git pull --ff-only`
+- “I messed up but committed” → `git reflog` (find the old SHA), then ask for help before force-resetting
 
 ## Quick commands
 

@@ -93,6 +93,14 @@ git push origin main
 
 If `--ff-only` merge fails, it usually means `main` moved. Update your branch from `main` first (and resolve conflicts), re-run gates, then try again.
 
+#### Teaching requirement (when the human is learning Git)
+
+If the user asks “what should I do?” / “is this normal?” / “what branch are we on?”:
+- Start by showing state: `git branch --show-current`, `git status -sb`, and a short `git log --oneline --decorate -5`.
+- Explain the “why” in plain language (1–2 sentences), then provide the smallest safe command sequence.
+- Prefer `--ff-only` for `pull` and `merge` unless the user explicitly wants a merge commit or rebase.
+- Never force-push or hard-reset without an explicit user request and a clear “this is destructive” warning.
+
 ### Demo pipeline (important)
 - Source: `apps/demos/src/demos/<slug>/` (Vite + TS)
 - Build output: `apps/demos/dist/<slug>/`
