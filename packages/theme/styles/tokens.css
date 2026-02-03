@@ -1,26 +1,27 @@
 :root {
   color-scheme: dark;
 
-  /* ---------- Neutrals (warm ink, not blue) ---------- */
-  --cp-bg0: #0a0a0c;    /* page background - neutral ink */
-  --cp-bg1: #101014;    /* cards/panels - charcoal */
-  --cp-bg2: #18181c;    /* elevated - warm charcoal */
-  --cp-bg3: #1f1f24;    /* highest elevation */
-  --cp-border: rgba(255, 255, 255, 0.10);
+  /* ---------- Neutrals (muted spectral minimalism) ---------- */
+  --cp-bg0: #0f1115;    /* ink */
+  --cp-bg1: #171b22;    /* slate */
+  --cp-bg2: #21222b;    /* lavender-gray */
+  --cp-bg3: color-mix(in srgb, var(--cp-bg2) 80%, var(--cp-bg0));
+  --cp-border: rgba(255, 255, 255, 0.08);
   --cp-border-subtle: rgba(255, 255, 255, 0.06);
 
-  /* ---------- Text (neutral, not blue-tinted) ---------- */
-  --cp-text: #e8e8ec;      /* primary - neutral white */
-  --cp-text2: #c9c9d0;     /* secondary */
-  --cp-muted: #9a9aa6;     /* tertiary */
-  --cp-faint: #6a6a78;     /* quaternary */
+  /* ---------- Text (derived from ink, no chroma) ---------- */
+  --cp-text: color-mix(in srgb, #ffffff 92%, var(--cp-bg0));
+  --cp-text2: color-mix(in srgb, #ffffff 72%, var(--cp-bg0));
+  --cp-muted: color-mix(in srgb, #ffffff 52%, var(--cp-bg0));
+  --cp-faint: color-mix(in srgb, #ffffff 38%, var(--cp-bg0));
+  --cp-text-3: var(--cp-muted);
 
-  /* ---------- Accents (aurora ink: teal + pink + violet) ---------- */
-  --cp-accent: #028593;       /* teal (Jewel Aurora, AA-adjusted) */
+  /* ---------- Accents (muted teal + dusty rose + slate violet) ---------- */
+  --cp-accent: #2f8c8d;       /* muted teal */
   --cp-accent-hover: color-mix(in srgb, var(--cp-accent) 85%, white);
-  --cp-pink: #be5a83;         /* pink (Jewel Aurora) */
+  --cp-pink: #b07a93;         /* dusty rose */
   --cp-pink-hover: color-mix(in srgb, var(--cp-pink) 85%, white);
-  --cp-violet: #7077a1;       /* violet (Jewel Aurora) */
+  --cp-violet: #6d7794;       /* slate violet */
   --cp-violet-hover: color-mix(in srgb, var(--cp-violet) 85%, white);
 
   /* Legacy aliases (for gradual migration) */
@@ -33,10 +34,10 @@
   --cp-warning: #fbbf24;
   --cp-danger: #fb7185;
 
-  /* ---------- Glows (aurora palette, not blue-heavy) ---------- */
-  --cp-glow-teal: color-mix(in srgb, var(--cp-accent) 18%, transparent);
-  --cp-glow-pink: color-mix(in srgb, var(--cp-pink) 12%, transparent);
-  --cp-glow-violet: color-mix(in srgb, var(--cp-violet) 14%, transparent);
+  /* ---------- Glows (subtle, muted) ---------- */
+  --cp-glow-teal: color-mix(in srgb, var(--cp-accent) 10%, transparent);
+  --cp-glow-pink: color-mix(in srgb, var(--cp-pink) 6%, transparent);
+  --cp-glow-violet: color-mix(in srgb, var(--cp-violet) 8%, transparent);
 
   /* Legacy aliases */
   --cp-glow-accent: var(--cp-glow-teal);
@@ -57,8 +58,8 @@
   --cp-data-neutral: var(--cp-muted);
 
   /* ---------- Selection & Focus ---------- */
-  --cp-selection-bg: color-mix(in srgb, var(--cp-pink) 28%, transparent);
-  --cp-focus: color-mix(in srgb, var(--cp-accent) 70%, transparent);
+  --cp-selection-bg: color-mix(in srgb, var(--cp-pink) 22%, transparent);
+  --cp-focus: color-mix(in srgb, var(--cp-accent) 55%, transparent);
   --cp-focus-ring: 2px solid var(--cp-focus);
 
   /* ---------- Form Inputs ---------- */
@@ -149,8 +150,26 @@
   --cp-elevation-2: 0 4px 16px rgba(0, 0, 0, 0.4);
   --cp-elevation-3: 0 8px 32px rgba(0, 0, 0, 0.5);
 
-  /* Card hover glow (uses accent color) */
-  --cp-card-glow: 0 8px 32px color-mix(in srgb, var(--cp-accent) 15%, transparent);
+  /* ---------- Surfaces & Chips ---------- */
+  --cp-chip-bg: color-mix(in srgb, var(--cp-bg2) 70%, transparent);
+  --cp-chip-bg-active: color-mix(in srgb, var(--cp-accent) 22%, transparent);
+  --cp-chip-border-active: color-mix(in srgb, var(--cp-accent) 45%, transparent);
+
+  --cp-card-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--cp-bg2) 92%, #ffffff 8%) 0%,
+    color-mix(in srgb, var(--cp-bg2) 92%, #000000 8%) 100%
+  );
+  --cp-card-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  --cp-card-shadow-hover: 0 14px 36px rgba(0, 0, 0, 0.42);
+  --cp-card-border-hover: color-mix(in srgb, var(--cp-accent) 35%, var(--cp-border));
+  --cp-card-glow: 0 8px 32px color-mix(in srgb, var(--cp-accent) 10%, transparent);
+
+  /* ---------- Status ---------- */
+  --cp-status-draft-bg: color-mix(in srgb, var(--cp-pink) 18%, transparent);
+  --cp-status-draft-text: color-mix(in srgb, var(--cp-pink) 85%, #ffffff 15%);
+  --cp-status-beta-bg: color-mix(in srgb, var(--cp-accent) 18%, transparent);
+  --cp-status-beta-text: color-mix(in srgb, var(--cp-accent) 85%, #ffffff 15%);
 }
 
 html,
