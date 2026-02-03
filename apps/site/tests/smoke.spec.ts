@@ -61,6 +61,25 @@ test.describe("Cosmic Playground smoke", () => {
     await expect(chip).toBeVisible();
   });
 
+  test("Explore cards show time ranges (not exact minutes)", async ({ page }) => {
+    await page.goto("explore/");
+    const timeBadge = page
+      .locator(".demo-card .cp-badge")
+      .filter({ hasText: "min" })
+      .first();
+    await expect(timeBadge).toBeVisible();
+    const text = (await timeBadge.textContent()) ?? "";
+    expect(text).toMatch(/(≤|–|\+)/);
+  });
+
+  test("Explore cards order badges with status first", async ({ page }) => {
+    await page.goto("explore/");
+    const badges = page.locator(".demo-card .demo-card__badges .cp-badge");
+    await expect(badges.first()).toBeVisible();
+    const firstText = (await badges.first().textContent())?.toLowerCase() ?? "";
+    expect(["stable", "beta", "draft"]).toContain(firstText.trim());
+  });
+
   test("All /play/<slug>/ pages load the instrument root", async ({ page }) => {
     const slugs = await demoSlugsFromContent();
     expect(slugs.length).toBeGreaterThan(0);
