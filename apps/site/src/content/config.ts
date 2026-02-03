@@ -24,6 +24,7 @@ const demos = defineCollection({
     time_minutes: z.number().int().positive(),
     has_math_mode: z.boolean(),
     tags: z.array(z.string()).default([]),
+    featured: z.boolean().default(false),
     learning_goals: z.array(z.string().min(1)).min(1),
     misconceptions: z.array(z.string().min(1)).min(1),
     predict_prompt: z.string().min(1),

@@ -7,6 +7,7 @@ topics: [Orbits]
 time_minutes: 12
 has_math_mode: false
 tags: ["orbits", "period", "ellipses"]
+featured: true
 learning_goals:
   - "Describe how orbital speed changes along an ellipse."
   - "Connect orbital period to distance from the central body."

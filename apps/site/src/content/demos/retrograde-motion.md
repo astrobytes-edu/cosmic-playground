@@ -7,6 +7,7 @@ topics: [EarthSky, Orbits]
 time_minutes: 12
 has_math_mode: false
 tags: ["retrograde", "stationary points", "relative motion", "apparent longitude", "inferior conjunction", "opposition"]
+featured: true
 learning_goals:
   - "Define retrograde motion as an apparent reversal caused by viewing geometry and relative motion."
   - "Interpret apparent (sky) longitude $\\lambda_{\\mathrm{app}}$ as the direction from an observer planet to a target planet in an inertial frame."
@@ -35,4 +36,3 @@ Use a simple Keplerian model to visualize how the direction to a planet can brie
 Links
 - [Student demo](../../play/retrograde-motion/)
 - [Instructor notes](../../instructor/retrograde-motion/)
-

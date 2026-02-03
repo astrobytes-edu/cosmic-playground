@@ -7,6 +7,7 @@ topics: [Orbits]
 time_minutes: 12
 has_math_mode: false
 tags: ["binaries", "center of mass", "gravity"]
+featured: true
 learning_goals:
   - "Describe how two masses orbit a shared center of mass."
   - "Predict how changing mass ratio affects orbital motion."
