@@ -28,8 +28,8 @@ const {
 } = Astro.props as FilterBarProps;
 ---
 
-<form class="filter-bar cp-card" method="get">
-  <div class="filter-bar__row">
+<form class="filter-bar cp-card" method="get" action={`${import.meta.env.BASE_URL}explore/`} data-filter-form>
+  <div class="filter-bar__row filter-bar__row--primary">
     <label class="filter-bar__field">
       <span class="filter-bar__label">Search</span>
       <div class="filter-bar__search">
@@ -58,47 +58,12 @@ const {
     </label>
 
     <label class="filter-bar__field">
-      <span class="filter-bar__label">Level</span>
-      <select class="cp-select" name="level">
-        <option value="">All</option>
-        {levels.map((l) => (
-          <option value={l} selected={l === level}>
-            {l}
-          </option>
-        ))}
-      </select>
-    </label>
-  </div>
-
-  <div class="filter-bar__row">
-    <label class="filter-bar__field">
       <span class="filter-bar__label">Time</span>
       <select class="cp-select" name="time">
         <option value="">Any</option>
         <option value="lt10" selected={time === "lt10"}>≤10</option>
         <option value="10to20" selected={time === "10to20"}>10–20</option>
         <option value="gt20" selected={time === "gt20"}>20+</option>
-      </select>
-    </label>
-
-    <label class="filter-bar__field">
-      <span class="filter-bar__label">Status</span>
-      <select class="cp-select" name="status">
-        <option value="">Any</option>
-        {statuses.map((s) => (
-          <option value={s} selected={s === status}>
-            {s}
-          </option>
-        ))}
-      </select>
-    </label>
-
-    <label class="filter-bar__field">
-      <span class="filter-bar__label">Math mode</span>
-      <select class="cp-select" name="math">
-        <option value="">Any</option>
-        <option value="yes" selected={math === "yes"}>Yes</option>
-        <option value="no" selected={math === "no"}>No</option>
       </select>
     </label>
 
@@ -112,8 +77,50 @@ const {
         <option value="newest" selected={sort === "newest"}>Newest</option>
       </select>
     </label>
+  </div>
 
-    <button class="cp-button cp-button--primary" type="submit">Apply</button>
+  <div class="filter-bar__row filter-bar__row--secondary">
+    <details class="filter-bar__details">
+      <summary>More filters</summary>
+      <div class="filter-bar__more">
+        <label class="filter-bar__field">
+          <span class="filter-bar__label">Level</span>
+          <select class="cp-select" name="level">
+            <option value="">All</option>
+            {levels.map((l) => (
+              <option value={l} selected={l === level}>
+                {l}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label class="filter-bar__field">
+          <span class="filter-bar__label">Status</span>
+          <select class="cp-select" name="status">
+            <option value="">Any</option>
+            {statuses.map((s) => (
+              <option value={s} selected={s === status}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label class="filter-bar__field">
+          <span class="filter-bar__label">Math mode</span>
+          <select class="cp-select" name="math">
+            <option value="">Any</option>
+            <option value="yes" selected={math === "yes"}>Yes</option>
+            <option value="no" selected={math === "no"}>No</option>
+          </select>
+        </label>
+      </div>
+    </details>
+
+    <button class="cp-button cp-button--ghost filter-bar__submit" type="submit">
+      Apply
+    </button>
   </div>
 </form>
 
@@ -129,6 +136,11 @@ const {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 10px;
     align-items: end;
+  }
+
+  .filter-bar__row--secondary {
+    grid-template-columns: 1fr auto;
+    align-items: center;
   }
 
   .filter-bar__field {
@@ -156,5 +168,32 @@ const {
 
   .filter-bar__search input {
     padding-left: 40px;
+  }
+
+  .filter-bar__details {
+    border: 0;
+    padding: 0;
+  }
+
+  .filter-bar__details summary {
+    cursor: pointer;
+    list-style: none;
+    color: var(--cp-muted);
+    font-size: var(--cp-text-sm);
+    margin-bottom: 8px;
+  }
+
+  .filter-bar__details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .filter-bar__more {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+
+  .filter-bar.is-enhanced .filter-bar__submit {
+    display: none;
   }
 </style>

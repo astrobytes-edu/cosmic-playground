@@ -6,6 +6,8 @@ import FilterBar from "../../components/FilterBar.astro";
 import EmptyState from "../../components/EmptyState.astro";
 
 const demos = await getCollection("demos");
+const base = import.meta.env.BASE_URL;
+const exploreHref = `${base}explore/`;
 
 const q = Astro.url.searchParams.get("q")?.trim() ?? "";
 const topic = Astro.url.searchParams.get("topic")?.trim() ?? "";
@@ -22,6 +24,14 @@ const levels = Array.from(
   new Set(demos.flatMap((d) => d.data.levels))
 ).sort();
 const statuses = Array.from(new Set(demos.map((d) => d.data.status))).sort();
+const featuredOrder = ["keplers-laws", "retrograde-motion", "binary-orbits"];
+const featured = demos
+  .filter((d) => d.data.featured)
+  .sort(
+    (a, b) =>
+      featuredOrder.indexOf(a.slug) - featuredOrder.indexOf(b.slug) ||
+      a.data.title.localeCompare(b.data.title)
+  );
 
 function excerptFromBody(body: string) {
   const firstLine = body
@@ -70,11 +80,45 @@ const sorted = [...filtered].sort((a, b) => {
     a.data.title.localeCompare(b.data.title)
   );
 });
+
+const params = Astro.url.searchParams;
+const buildHref = (next: URLSearchParams) => {
+  const qs = next.toString();
+  return qs ? `${exploreHref}?${qs}` : exploreHref;
+};
+const chips: { label: string; href: string }[] = [];
+const addChip = (key: string, label: string) => {
+  const next = new URLSearchParams(params);
+  next.delete(key);
+  chips.push({ label, href: buildHref(next) });
+};
+const timeLabels: Record<string, string> = {
+  lt10: "≤10 min",
+  "10to20": "10–20 min",
+  gt20: "20+ min"
+};
+const sortLabels: Record<string, string> = {
+  recommended: "Recommended",
+  shortest: "Shortest",
+  newest: "Newest"
+};
+
+if (q) addChip("q", `Search: ${q}`);
+if (topic) addChip("topic", `Topic: ${topic}`);
+if (level) addChip("level", `Level: ${level}`);
+if (time) addChip("time", `Time: ${timeLabels[time] ?? time}`);
+if (status) addChip("status", `Status: ${status}`);
+if (math) addChip("math", `Math mode: ${math === "yes" ? "Yes" : "No"}`);
+if (sort && sort !== "recommended") addChip("sort", `Sort: ${sortLabels[sort] ?? sort}`);
+
+const showFeatured = chips.length === 0;
 ---
 
 <Layout title="Explore — Cosmic Playground" hasMath={false}>
-  <h1>Explore</h1>
-  <p class="lede">Search and filter demos; click a card to open the exhibit page.</p>
+  <section class="explore-hero cp-hero">
+    <h1>Explore</h1>
+    <p class="lede">Interactive models for seeing how astronomy actually works.</p>
+  </section>
 
   <FilterBar
     query={q}
@@ -89,9 +133,43 @@ const sorted = [...filtered].sort((a, b) => {
     statuses={statuses}
   />
 
+  {chips.length > 0 ? (
+    <div class="filter-chips" aria-label="Active filters">
+      {chips.map((chip) => (
+        <a class="filter-chip" href={chip.href}>
+          {chip.label} <span aria-hidden="true">×</span>
+        </a>
+      ))}
+      <a class="filter-chip filter-chip--clear" href={exploreHref}>Clear all</a>
+    </div>
+  ) : null}
+
+  {showFeatured && featured.length > 0 ? (
+    <section class="featured" aria-label="Start here: Gravity and Orbits">
+      <div class="featured__header">
+        <h2>Start here: Gravity &amp; Orbits</h2>
+      </div>
+      <div class="results__grid">
+        {featured.map((d) => (
+          <DemoCard
+            title={d.data.title}
+            slug={d.slug}
+            href={`${base}exhibits/${d.slug}/`}
+            description={excerptFromBody(d.body)}
+            status={d.data.status}
+            topics={d.data.topics}
+            levels={d.data.levels}
+            timeMinutes={d.data.time_minutes}
+            hasMathMode={d.data.has_math_mode}
+          />
+        ))}
+      </div>
+    </section>
+  ) : null}
+
   <section class="results" aria-label="Demo results">
     <div class="results__summary">
-      <strong>{sorted.length}</strong> demo{sorted.length === 1 ? "" : "s"}
+      <strong>{sorted.length}</strong> interactive exhibit{sorted.length === 1 ? "" : "s"}
     </div>
     {sorted.length > 0 ? (
       <div class="results__grid">
@@ -115,25 +193,93 @@ const sorted = [...filtered].sort((a, b) => {
   </section>
 </Layout>
 
+<script>
+  const form = document.querySelector("[data-filter-form]");
+  if (form) {
+    form.classList.add("is-enhanced");
+    const search = form.querySelector("input[name='q']");
+    const selects = form.querySelectorAll("select");
+    let timer;
+    const submit = () => (form.requestSubmit ? form.requestSubmit() : form.submit());
+
+    if (search) {
+      search.addEventListener("input", () => {
+        clearTimeout(timer);
+        timer = setTimeout(submit, 300);
+      });
+    }
+
+    selects.forEach((select) => {
+      select.addEventListener("change", submit);
+    });
+  }
+</script>
+
 <style>
+  .explore-hero {
+    margin-bottom: var(--cp-space-5);
+  }
+
   .lede {
-    margin: 6px 0 14px;
+    margin: 6px 0 0;
     color: var(--cp-muted);
     max-width: 72ch;
   }
 
+  .filter-chips {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--cp-border-subtle);
+    background: var(--cp-chip-bg);
+    color: var(--cp-text2);
+    text-decoration: none;
+    font-size: var(--cp-text-sm);
+  }
+
+  .filter-chip:hover {
+    border-color: var(--cp-chip-border-active);
+    background: var(--cp-chip-bg-active);
+    color: var(--cp-text);
+  }
+
+  .filter-chip--clear {
+    background: transparent;
+  }
+
+  .featured {
+    margin-top: var(--cp-space-6);
+  }
+
+  .featured__header {
+    margin-bottom: 10px;
+  }
+
+  .featured h2 {
+    margin: 0;
+  }
+
   .results {
-    margin-top: 14px;
+    margin-top: var(--cp-space-6);
   }
 
   .results__summary {
-    margin: 8px 0 10px;
+    margin: 8px 0 14px;
     color: var(--cp-muted);
   }
 
   .results__grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 12px;
+    gap: var(--cp-space-5);
   }
 </style>
