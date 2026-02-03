@@ -22,7 +22,7 @@ has_math: true
 
 3) **Plot UX polish**
    - Add axis ticks/labels: $t$ (day) and $\\tilde{\\lambda}_{\\mathrm{app}}$ (deg).
-   - Add a “zoom to retrograde interval” button (sets window to [start-Δ, end+Δ]).
+   - Add a “zoom to retrograde interval” button (sets window to [start-$\\Delta$, end+$\\Delta$]).
    - Add “hover/focus tooltip” at cursor: $t$, $\\lambda_{\\mathrm{app}}$, $d\\tilde{\\lambda}/dt$ (must work on keyboard focus, not hover-only).
 
 4) **Make it playful**
@@ -38,9 +38,9 @@ has_math: true
 
 2) **Better presets**
    - Add presets for:
-     - Earth→Jupiter (slow retrograde)
-     - Earth→Saturn (slow retrograde)
-     - Mars observer → Jupiter target (advanced)
+     - Earth $\\to$ Jupiter (slow retrograde)
+     - Earth $\\to$ Saturn (slow retrograde)
+     - Mars observer $\\to$ Jupiter target (advanced)
    - Each preset should include a “what to notice” sentence.
 
 3) **Export richness (still stable)**
@@ -65,4 +65,3 @@ has_math: true
 4) **Model extensions (future scope, but physically meaningful)**
    - Optional inclination + projection to ecliptic longitude (3D-to-2D) with careful pedagogy; keep the default coplanar mode for clarity.
    - Optional light-time correction (advanced; likely overkill for ASTR101, but could be a “math mode” extension later).
-
