@@ -32,6 +32,12 @@ jobs:
         run: |
           corepack enable
           corepack pnpm install --frozen-lockfile
+      - name: Lint (contracts)
+        run: corepack pnpm lint
+      - name: Typecheck
+        run: corepack pnpm typecheck
+      - name: Unit tests
+        run: corepack pnpm test
       - name: Build (demos → copy → site)
         run: corepack pnpm build
       - name: Install Playwright browsers

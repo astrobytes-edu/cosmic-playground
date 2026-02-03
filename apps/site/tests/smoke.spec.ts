@@ -191,6 +191,10 @@ test.describe("Cosmic Playground smoke", () => {
       expects: ["Semi-major axis a (AU)", "Orbital period P (yr)", "Speed v (km/s)"]
     },
     {
+      slug: "retrograde-motion",
+      expects: ["Observer", "Target", "Apparent (sky) longitude lambda_app (deg)"]
+    },
+    {
       slug: "parallax-distance",
       expects: ["Parallax p (mas)", "Distance d (pc)", "Signal-to-noise p/sigma_p"]
     },

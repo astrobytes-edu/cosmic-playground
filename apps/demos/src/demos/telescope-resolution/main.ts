@@ -3,75 +3,44 @@ import { AstroConstants, AstroUnits, TelescopeResolutionModel } from "@cosmic/ph
 import { createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 
-const presetEl = document.querySelector<HTMLSelectElement>("#preset");
-const apertureEl = document.querySelector<HTMLInputElement>("#aperture");
-const apertureValueEl = document.querySelector<HTMLSpanElement>("#apertureValue");
+import { requiredSelector } from "../../shared/dom";
 
-const bandsEl = document.querySelector<HTMLDivElement>("#bands");
-const bandNotesEl = document.querySelector<HTMLDivElement>("#bandNotes");
+const presetEl = requiredSelector<HTMLSelectElement>("#preset");
+const apertureEl = requiredSelector<HTMLInputElement>("#aperture");
+const apertureValueEl = requiredSelector<HTMLSpanElement>("#apertureValue");
 
-const separationEl = document.querySelector<HTMLInputElement>("#separation");
-const separationValueEl = document.querySelector<HTMLSpanElement>("#separationValue");
+const bandsEl = requiredSelector<HTMLDivElement>("#bands");
+const bandNotesEl = requiredSelector<HTMLDivElement>("#bandNotes");
 
-const binaryEnabledEl = document.querySelector<HTMLInputElement>("#binaryEnabled");
-const zoomEl = document.querySelector<HTMLInputElement>("#zoom");
-const zoomValueEl = document.querySelector<HTMLSpanElement>("#zoomValue");
+const separationEl = requiredSelector<HTMLInputElement>("#separation");
+const separationValueEl = requiredSelector<HTMLSpanElement>("#separationValue");
 
-const includeAtmosphereEl = document.querySelector<HTMLInputElement>("#includeAtmosphere");
-const atmosphereControlsEl = document.querySelector<HTMLElement>("#atmosphereControls");
-const seeingPresetEl = document.querySelector<HTMLSelectElement>("#seeingPreset");
-const seeingEl = document.querySelector<HTMLInputElement>("#seeing");
-const seeingValueEl = document.querySelector<HTMLSpanElement>("#seeingValue");
-const aoEnabledEl = document.querySelector<HTMLInputElement>("#aoEnabled");
+const binaryEnabledEl = requiredSelector<HTMLInputElement>("#binaryEnabled");
+const zoomEl = requiredSelector<HTMLInputElement>("#zoom");
+const zoomValueEl = requiredSelector<HTMLSpanElement>("#zoomValue");
 
-const canvasEl = document.querySelector<HTMLCanvasElement>("#canvas");
-const fovLabelEl = document.querySelector<HTMLSpanElement>("#fovLabel");
-const statusBadgeEl = document.querySelector<HTMLSpanElement>("#statusBadge");
+const includeAtmosphereEl = requiredSelector<HTMLInputElement>("#includeAtmosphere");
+const atmosphereControlsEl = requiredSelector<HTMLElement>("#atmosphereControls");
+const seeingPresetEl = requiredSelector<HTMLSelectElement>("#seeingPreset");
+const seeingEl = requiredSelector<HTMLInputElement>("#seeing");
+const seeingValueEl = requiredSelector<HTMLSpanElement>("#seeingValue");
+const aoEnabledEl = requiredSelector<HTMLInputElement>("#aoEnabled");
 
-const thetaDiffEl = document.querySelector<HTMLSpanElement>("#thetaDiff");
-const thetaEffEl = document.querySelector<HTMLSpanElement>("#thetaEff");
-const sepReadoutEl = document.querySelector<HTMLSpanElement>("#sepReadout");
-const statusReadoutEl = document.querySelector<HTMLSpanElement>("#statusReadout");
+const canvasEl = requiredSelector<HTMLCanvasElement>("#canvas");
+const fovLabelEl = requiredSelector<HTMLSpanElement>("#fovLabel");
+const statusBadgeEl = requiredSelector<HTMLSpanElement>("#statusBadge");
 
-const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
-const challengeModeEl = document.querySelector<HTMLButtonElement>("#challengeMode");
-const helpEl = document.querySelector<HTMLButtonElement>("#help");
+const thetaDiffEl = requiredSelector<HTMLSpanElement>("#thetaDiff");
+const thetaEffEl = requiredSelector<HTMLSpanElement>("#thetaEff");
+const sepReadoutEl = requiredSelector<HTMLSpanElement>("#sepReadout");
+const statusReadoutEl = requiredSelector<HTMLSpanElement>("#statusReadout");
 
-const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
-const statusEl = document.querySelector<HTMLParagraphElement>("#status");
+const stationModeEl = requiredSelector<HTMLButtonElement>("#stationMode");
+const challengeModeEl = requiredSelector<HTMLButtonElement>("#challengeMode");
+const helpEl = requiredSelector<HTMLButtonElement>("#help");
 
-if (
-  !presetEl ||
-  !apertureEl ||
-  !apertureValueEl ||
-  !bandsEl ||
-  !bandNotesEl ||
-  !separationEl ||
-  !separationValueEl ||
-  !binaryEnabledEl ||
-  !zoomEl ||
-  !zoomValueEl ||
-  !includeAtmosphereEl ||
-  !atmosphereControlsEl ||
-  !seeingPresetEl ||
-  !seeingEl ||
-  !seeingValueEl ||
-  !aoEnabledEl ||
-  !canvasEl ||
-  !fovLabelEl ||
-  !statusBadgeEl ||
-  !thetaDiffEl ||
-  !thetaEffEl ||
-  !sepReadoutEl ||
-  !statusReadoutEl ||
-  !stationModeEl ||
-  !challengeModeEl ||
-  !helpEl ||
-  !copyResultsEl ||
-  !statusEl
-) {
-  throw new Error("Missing required DOM elements for telescope-resolution demo.");
-}
+const copyResultsEl = requiredSelector<HTMLButtonElement>("#copyResults");
+const statusEl = requiredSelector<HTMLParagraphElement>("#status");
 
 const runtime = createInstrumentRuntime({
   hasMathMode: false,

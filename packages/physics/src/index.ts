@@ -7,6 +7,7 @@ export { EclipseGeometryModel } from "./eclipseGeometryModel";
 export { KeplersLawsModel } from "./keplersLawsModel";
 export { ParallaxDistanceModel } from "./parallaxDistanceModel";
 export { PhotonModel } from "./photonModel";
+export { RetrogradeMotionModel } from "./retrogradeMotionModel";
 export { SeasonsModel } from "./seasonsModel";
 export { TelescopeResolutionModel } from "./telescopeResolutionModel";
 export { TwoBodyAnalytic } from "./twoBodyAnalytic";

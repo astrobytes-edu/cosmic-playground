@@ -20,6 +20,19 @@ describe("TwoBodyAnalytic geometry", () => {
     const M2 = TwoBodyAnalytic.trueToMeanAnomalyRad({ thetaRad: theta, e });
     expect(M2).toBeCloseTo(M, 10);
   });
+
+  it("meanToTrueAnomaly is periodic in mean anomaly (M -> M + 2πk)", () => {
+    const e = 0.7;
+    const M = 0.5;
+    const theta = TwoBodyAnalytic.meanToTrueAnomalyRad({ meanAnomalyRad: M, e });
+    const theta2 = TwoBodyAnalytic.meanToTrueAnomalyRad({
+      meanAnomalyRad: M + 20 * 2 * Math.PI,
+      e
+    });
+    // The returned true anomaly is an angle; we compare via sine/cosine to avoid branch issues.
+    expect(Math.cos(theta2)).toBeCloseTo(Math.cos(theta), 12);
+    expect(Math.sin(theta2)).toBeCloseTo(Math.sin(theta), 12);
+  });
 });
 
 describe("TwoBodyAnalytic teaching-unit relations (AU/yr/M☉)", () => {
@@ -54,4 +67,3 @@ describe("TwoBodyAnalytic teaching-unit relations (AU/yr/M☉)", () => {
     expect(state.aAu).toBeCloseTo(1, 10);
   });
 });
-

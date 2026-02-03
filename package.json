@@ -9,13 +9,13 @@
     "build": "node scripts/build.mjs",
     "assets:katex": "node scripts/copy-katex-assets.mjs",
     "lint:invariants": "node scripts/validate-invariants.mjs",
-    "lint": "echo \"lint: (placeholder)\"",
+    "lint": "node scripts/validate-invariants.mjs && node scripts/validate-math-formatting.mjs && node scripts/validate-datasets.mjs && node scripts/validate-physics-models.mjs",
     "typecheck": "corepack pnpm -r typecheck",
     "test:invariants": "vitest run scripts/validate-invariants.test.mjs",
     "test:play-dirs": "vitest run scripts/validate-play-dirs.test.mjs",
     "test:datasets": "vitest run scripts/validate-datasets.test.mjs",
     "test:physics-contract": "vitest run scripts/validate-physics-models.test.mjs",
-    "test": "echo \"test: (placeholder)\""
+    "test": "corepack pnpm -C packages/physics test && corepack pnpm -C packages/theme test && corepack pnpm test:invariants && corepack pnpm test:play-dirs && corepack pnpm test:datasets && corepack pnpm test:physics-contract"
   },
   "devDependencies": {
     "vitest": "^4.0.18"

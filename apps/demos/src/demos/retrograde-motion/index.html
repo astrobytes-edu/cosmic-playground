@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Retrograde Motion</title>
+  </head>
+  <body>
+    <div
+      id="cp-demo"
+      class="cp-layer-instrument cp-demo"
+      data-shell="triad"
+      aria-label="Retrograde motion instrument"
+    >
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-body">
+          <div class="cp-field">
+            <div class="cp-label">Preset</div>
+            <select id="preset" class="cp-select">
+              <option value="earth-mars">Earth (observer) -> Mars (target)</option>
+              <option value="earth-venus">Earth (observer) -> Venus (target)</option>
+            </select>
+          </div>
+
+          <div class="cp-field">
+            <div class="cp-label">Observer planet</div>
+            <select id="observer" class="cp-select">
+              <option value="Earth">Earth</option>
+              <option value="Venus">Venus</option>
+              <option value="Mars">Mars</option>
+              <option value="Jupiter">Jupiter</option>
+              <option value="Saturn">Saturn</option>
+            </select>
+          </div>
+
+          <div class="cp-field">
+            <div class="cp-label">Target planet</div>
+            <select id="target" class="cp-select">
+              <option value="Mars">Mars</option>
+              <option value="Venus">Venus</option>
+              <option value="Jupiter">Jupiter</option>
+              <option value="Saturn">Saturn</option>
+            </select>
+          </div>
+
+          <label class="cp-field">
+            <div class="cp-label">Window length (model months)</div>
+            <input
+              id="windowMonths"
+              class="cp-range"
+              type="range"
+              min="6"
+              max="36"
+              step="1"
+              value="24"
+            />
+            <div class="cp-muted"><span id="windowMonthsValue">24</span> months</div>
+          </label>
+
+          <div class="cp-field">
+            <div class="cp-label">Plot step (model day)</div>
+            <select id="plotStepDay" class="cp-select">
+              <option value="0.25">0.25</option>
+              <option value="0.5">0.5</option>
+              <option value="1" selected>1</option>
+              <option value="2">2</option>
+            </select>
+          </div>
+
+          <label class="cp-field">
+            <div class="cp-label">Model day $t$</div>
+            <input
+              id="cursorDay"
+              class="cp-range"
+              type="range"
+              min="0"
+              max="720"
+              step="0.25"
+              value="0"
+            />
+            <div class="cp-muted"><span id="cursorDayValue">0.00</span> day</div>
+          </label>
+
+          <div class="retrograde__nav">
+            <button id="prevStationary" class="cp-button cp-button--outline" type="button">
+              Previous stationary
+            </button>
+            <button id="nextStationary" class="cp-button cp-button--outline" type="button">
+              Next stationary
+            </button>
+            <button id="centerRetrograde" class="cp-button cp-button--outline" type="button">
+              Center on retrograde
+            </button>
+          </div>
+
+          <label class="cp-field retrograde__toggle">
+            <input id="showOtherPlanets" type="checkbox" />
+            <span>Show other planets (context)</span>
+          </label>
+
+          <button id="copyResults" class="cp-action" type="button">Copy results</button>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+
+          <div class="cp-actions">
+            <a class="cp-button" href="../../exhibits/retrograde-motion/">Open exhibit</a>
+            <a class="cp-button cp-button--outline" href="../../explore/">Explore</a>
+          </div>
+        </div>
+      </aside>
+
+      <section class="cp-demo__stage cp-stage" aria-label="Visualization stage">
+        <div class="retrograde__stageGrid">
+          <div class="retrograde__plotWrap">
+            <div class="retrograde__plotHeader">
+              <div class="retrograde__plotTitle">
+                Apparent (sky) longitude $\\lambda_{\\mathrm{app}}$
+              </div>
+              <div class="retrograde__plotHint cp-muted">
+                Click/drag to scrub; use arrow keys when focused.
+              </div>
+            </div>
+            <div id="plotFocus" class="retrograde__plotFocus" tabindex="0" aria-label="Longitude plot">
+              <svg id="plotSvg" class="retrograde__plotSvg" viewBox="0 0 1000 360"></svg>
+            </div>
+          </div>
+
+          <div class="retrograde__orbitWrap">
+            <div class="retrograde__plotHeader">
+              <div class="retrograde__plotTitle">Orbit view (top-down)</div>
+              <div class="retrograde__plotHint cp-muted">
+                Inertial axis: $0^\\circ$ is $+x$.
+              </div>
+            </div>
+            <svg id="orbitSvg" class="retrograde__orbitSvg" viewBox="0 0 420 420"></svg>
+          </div>
+        </div>
+      </section>
+
+      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
+        <div class="cp-panel-body">
+          <div class="cp-readout">
+            <div class="cp-readout__label">Model day $t$</div>
+            <div class="cp-readout__value"><span id="readoutDay">0.00</span></div>
+          </div>
+
+          <div class="cp-readout">
+            <div class="cp-readout__label">
+              Apparent (sky) longitude $\\lambda_{\\mathrm{app}}$ (deg)
+            </div>
+            <div class="cp-readout__value"><span id="readoutLambda">—</span></div>
+          </div>
+
+          <div class="cp-readout">
+            <div class="cp-readout__label">$d\\tilde{\\lambda}/dt$ (deg/day)</div>
+            <div class="cp-readout__value"><span id="readoutSlope">—</span></div>
+          </div>
+
+          <div class="cp-readout">
+            <div class="cp-readout__label">State</div>
+            <div class="cp-readout__value"><span id="readoutState">—</span></div>
+            <div class="cp-muted" id="geometryHint">—</div>
+          </div>
+
+          <div class="cp-readout">
+            <div class="cp-readout__label">Nearest stationary days</div>
+            <div class="cp-readout__value">
+              <span class="cp-muted">prev:</span> <span id="readoutPrevStationary">—</span>
+              <span class="cp-muted">next:</span> <span id="readoutNextStationary">—</span>
+            </div>
+          </div>
+
+          <div class="cp-readout">
+            <div class="cp-readout__label">Nearest retrograde interval</div>
+            <div class="cp-readout__value">
+              <span id="readoutRetroBounds">—</span>
+            </div>
+            <div class="cp-muted"><span id="readoutRetroDuration">—</span></div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="cp-demo__drawer cp-drawer" aria-label="Model notes">
+        <div class="cp-panel-body">
+          <div class="cp-notice">
+            <h3>Model notes</h3>
+            <ul>
+              <li>
+                Retrograde here is <strong>apparent</strong>: the planet never reverses its orbit; the
+                sign flip comes from relative motion and viewing geometry.
+              </li>
+              <li>
+                Time is <strong>model day</strong> $t$ (no calendar-date claims). For this instrument,
+                $1$ model month $= 30$ model days.
+              </li>
+              <li>
+                Planets move on coplanar Keplerian ellipses around the Sun with elements
+                $(a,e,\\varpi,L_0)$ defined at an epoch $t_0$.
+              </li>
+              <li>
+                Apparent (sky) longitude is computed from the observer-to-target direction:
+                $\\lambda_{\\mathrm{app}}(t)=\\operatorname{wrap}_{0..360}(\\arctan2(y_t-y_o, x_t-x_o))$.
+              </li>
+              <li>
+                We unwrap the sampled series with the 180-deg jump rule to get
+                $\\tilde{\\lambda}(t)$, then define retrograde by $d\\tilde{\\lambda}/dt &lt; 0$.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -11,6 +11,7 @@
 
 import { AstroConstants } from "./astroConstants";
 import { AstroUnits } from "./units";
+import { solveEccentricAnomalyRadDeterministic } from "./keplerSolver";
 
 export type Vec2Au = { xAu: number; yAu: number };
 export type Vec2AuYr = { vxAuYr: number; vyAuYr: number };
@@ -64,17 +65,11 @@ function meanToTrueAnomalyRad(args: {
 
   // Intentionally do NOT normalize mean anomaly: callers can build continuous
   // "time windows" without discontinuities at 0/2π.
-  const M = meanAnomalyRad;
-
-  // Solve Kepler’s equation: M = E - e sin E using Newton iterations.
-  let E = M;
-  for (let i = 0; i < 25; i++) {
-    const f = E - e * Math.sin(E) - M;
-    const fp = 1 - e * Math.cos(E);
-    const dE = -f / fp;
-    E += dE;
-    if (Math.abs(dE) < 1e-12) break;
-  }
+  // The shared solver preserves 2π turns while staying numerically stable.
+  const E = solveEccentricAnomalyRadDeterministic({
+    meanAnomalyRad,
+    eccentricity: e
+  });
 
   const denom = 1 - e * Math.cos(E);
   const cosT = (Math.cos(E) - e) / denom;
@@ -288,4 +283,3 @@ export const TwoBodyAnalytic = {
   speedKmPerSFromAuPerYr,
   accelMPerS2FromAuPerYr2
 } as const;
-
