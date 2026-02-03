@@ -120,9 +120,20 @@ nav a:hover {
     color-mix(in srgb, var(--cp-bg0) 90%, var(--cp-bg2));
 }
 
+.cp-section {
+  margin-top: var(--cp-space-6);
+}
+
 .hero h1 {
   margin: 0;
   font-size: var(--cp-text-3xl);
+}
+
+.hero__subtitle {
+  margin: 6px 0 0;
+  font-size: var(--cp-text-lg);
+  color: var(--cp-text2);
+  letter-spacing: 0.02em;
 }
 
 .hero p {
