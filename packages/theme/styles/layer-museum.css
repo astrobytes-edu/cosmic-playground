@@ -95,3 +95,31 @@
   color: var(--cp-status-beta-text);
   border-color: color-mix(in srgb, var(--cp-status-beta-text) 35%, var(--cp-border));
 }
+
+.cp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-border-subtle);
+  background: var(--cp-chip-bg);
+  color: var(--cp-text2);
+  text-decoration: none;
+  font-size: var(--cp-text-sm);
+  transition:
+    background var(--cp-transition-fast) var(--cp-ease-out),
+    border-color var(--cp-transition-fast) var(--cp-ease-out),
+    color var(--cp-transition-fast) var(--cp-ease-out);
+}
+
+.cp-chip:hover,
+.cp-chip:focus-visible {
+  border-color: var(--cp-chip-border-active);
+  background: var(--cp-chip-bg-active);
+  color: var(--cp-text);
+}
+
+.cp-chip--clear {
+  background: transparent;
+}

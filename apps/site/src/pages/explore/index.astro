@@ -170,11 +170,11 @@ const topicSections = noFilters
   {chips.length > 0 ? (
     <div class="filter-chips" aria-label="Active filters">
       {chips.map((chip) => (
-        <a class="filter-chip" href={chip.href}>
+        <a class="cp-chip" href={chip.href}>
           {chip.label} <span aria-hidden="true">×</span>
         </a>
       ))}
-      <a class="filter-chip filter-chip--clear" href={exploreHref}>Clear all</a>
+      <a class="cp-chip cp-chip--clear" href={exploreHref}>Clear all</a>
     </div>
   ) : null}
 
@@ -205,7 +205,7 @@ const topicSections = noFilters
     <nav class="topic-index" aria-label="Jump to topic">
       {topicSections.map((section) => (
         <a
-          class="topic-index__link"
+          class="cp-chip topic-index__link"
           href={`#topic-${section.key.toLowerCase()}`}
         >
           {section.label}
@@ -310,29 +310,6 @@ const topicSections = noFilters
     gap: 8px;
   }
 
-  .filter-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--cp-border-subtle);
-    background: var(--cp-chip-bg);
-    color: var(--cp-text2);
-    text-decoration: none;
-    font-size: var(--cp-text-sm);
-  }
-
-  .filter-chip:hover {
-    border-color: var(--cp-chip-border-active);
-    background: var(--cp-chip-bg-active);
-    color: var(--cp-text);
-  }
-
-  .filter-chip--clear {
-    background: transparent;
-  }
-
   .featured {
     margin-top: var(--cp-space-6);
   }
@@ -365,22 +342,6 @@ const topicSections = noFilters
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-  }
-
-  .topic-index__link {
-    padding: 4px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--cp-border-subtle);
-    background: var(--cp-chip-bg);
-    color: var(--cp-text2);
-    text-decoration: none;
-    font-size: var(--cp-text-sm);
-  }
-
-  .topic-index__link:hover {
-    border-color: var(--cp-chip-border-active);
-    background: var(--cp-chip-bg-active);
-    color: var(--cp-text);
   }
 
   .topic-section {
