@@ -80,6 +80,14 @@ test.describe("Cosmic Playground smoke", () => {
     expect(["stable", "beta", "draft"]).toContain(firstText.trim());
   });
 
+  test("Explore filter uses invitational microcopy", async ({ page }) => {
+    await page.goto("explore/");
+    const search = page.locator("input[name='q']");
+    await expect(search).toHaveAttribute("placeholder", "Title, topic, or idea…");
+    const summary = page.locator(".filter-bar__details summary");
+    await expect(summary).toHaveText("More ways to filter");
+  });
+
   test("All /play/<slug>/ pages load the instrument root", async ({ page }) => {
     const slugs = await demoSlugsFromContent();
     expect(slugs.length).toBeGreaterThan(0);
