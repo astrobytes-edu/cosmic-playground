@@ -202,19 +202,21 @@ const topicSections = noFilters
   ) : null}
 
   {noFilters ? (
-    <>
-      <nav class="topic-index" aria-label="Jump to topic">
-        {topicSections.map((section) => (
-          <a
-            class="topic-index__link"
-            href={`#topic-${section.key.toLowerCase()}`}
-          >
-            {section.label}
-          </a>
-        ))}
-      </nav>
+    <nav class="topic-index" aria-label="Jump to topic">
+      {topicSections.map((section) => (
+        <a
+          class="topic-index__link"
+          href={`#topic-${section.key.toLowerCase()}`}
+        >
+          {section.label}
+        </a>
+      ))}
+    </nav>
+  ) : null}
 
-      <section class="cp-section">
+  <section class="results" aria-label="Demo results">
+    {noFilters ? (
+      <div class="cp-section">
         {topicSections.map((section) => (
           <div
             class="topic-section"
@@ -238,34 +240,34 @@ const topicSections = noFilters
             </div>
           </div>
         ))}
-      </section>
-    </>
-  ) : (
-    <section class="results" aria-label="Demo results">
-      <div class="results__summary">
-        <strong>{sorted.length}</strong> interactive exhibit{sorted.length === 1 ? "" : "s"}
       </div>
-      {sorted.length > 0 ? (
-        <div class="results__grid">
-          {sorted.map((d) => (
-            <DemoCard
-              title={d.data.title}
-              slug={d.slug}
-              href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
-              description={excerptFromBody(d.body)}
-              status={d.data.status}
-              topics={d.data.topics}
-              levels={d.data.levels}
-              timeMinutes={d.data.time_minutes}
-              hasMathMode={d.data.has_math_mode}
-            />
-          ))}
+    ) : (
+      <>
+        <div class="results__summary">
+          <strong>{sorted.length}</strong> interactive exhibit{sorted.length === 1 ? "" : "s"}
         </div>
-      ) : (
-        <EmptyState />
-      )}
-    </section>
-  )}
+        {sorted.length > 0 ? (
+          <div class="results__grid">
+            {sorted.map((d) => (
+              <DemoCard
+                title={d.data.title}
+                slug={d.slug}
+                href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
+                description={excerptFromBody(d.body)}
+                status={d.data.status}
+                topics={d.data.topics}
+                levels={d.data.levels}
+                timeMinutes={d.data.time_minutes}
+                hasMathMode={d.data.has_math_mode}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState />
+        )}
+      </>
+    )}
+  </section>
 </Layout>
 
 <script>
