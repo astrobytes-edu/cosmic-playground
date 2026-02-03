@@ -1,17 +1,22 @@
 /* Apply to <body class="cp-layer-museum"> on museum pages */
 .cp-layer-museum {
+  background: var(--cp-bg0);
+}
+
+.cp-layer-museum .cp-hero {
+  border: 1px solid var(--cp-border-subtle);
   background:
     radial-gradient(
-      1200px circle at 20% -10%,
+      1200px 600px at 20% 0%,
       var(--cp-glow-teal),
       transparent 60%
     ),
     radial-gradient(
-      1200px circle at 80% 0%,
+      900px 480px at 85% -10%,
       var(--cp-glow-pink),
       transparent 65%
     ),
-    var(--cp-bg0);
+    color-mix(in srgb, var(--cp-bg0) 90%, var(--cp-bg2));
 }
 
 .cp-card {
