@@ -2,28 +2,23 @@
 .cp-layer-museum {
   background:
     radial-gradient(
-      900px circle at 15% 10%,
-      var(--cp-glow-violet),
-      transparent 55%
-    ),
-    radial-gradient(
-      900px circle at 85% 18%,
-      var(--cp-glow-pink),
-      transparent 50%
-    ),
-    radial-gradient(
-      1100px circle at 50% 100%,
+      1200px circle at 20% -10%,
       var(--cp-glow-teal),
-      transparent 55%
+      transparent 60%
+    ),
+    radial-gradient(
+      1200px circle at 80% 0%,
+      var(--cp-glow-pink),
+      transparent 65%
     ),
     var(--cp-bg0);
 }
 
 .cp-card {
-  background: color-mix(in srgb, var(--cp-bg1) 92%, transparent);
+  background: var(--cp-card-bg);
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-r-3);
-  box-shadow: var(--cp-shadow-1);
+  box-shadow: var(--cp-card-shadow);
   transition:
     transform var(--cp-transition-normal) var(--cp-ease-out),
     box-shadow var(--cp-transition-normal) var(--cp-ease-out),
@@ -32,8 +27,8 @@
 
 .cp-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px color-mix(in srgb, var(--cp-accent) 12%, transparent), var(--cp-shadow-2);
-  border-color: color-mix(in srgb, var(--cp-border) 50%, var(--cp-accent));
+  box-shadow: var(--cp-card-shadow-hover), var(--cp-shadow-2);
+  border-color: var(--cp-card-border-hover);
 }
 
 .cp-card:active {
@@ -55,8 +50,8 @@
   align-items: center;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid var(--cp-border);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--cp-border-subtle);
+  background: var(--cp-chip-bg);
   color: var(--cp-muted);
   font-size: var(--cp-text-sm);
   transition:
@@ -65,7 +60,7 @@
 }
 
 .cp-badge:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--cp-chip-bg) 70%, white 8%);
 }
 
 .cp-badge[data-tone="teal"] {
@@ -82,4 +77,16 @@
 
 .cp-badge[data-tone="magenta"] {
   border-color: color-mix(in srgb, var(--cp-accent4) 35%, var(--cp-border));
+}
+
+.cp-badge[data-tone="status-draft"] {
+  background: var(--cp-status-draft-bg);
+  color: var(--cp-status-draft-text);
+  border-color: color-mix(in srgb, var(--cp-status-draft-text) 35%, var(--cp-border));
+}
+
+.cp-badge[data-tone="status-beta"] {
+  background: var(--cp-status-beta-bg);
+  color: var(--cp-status-beta-text);
+  border-color: color-mix(in srgb, var(--cp-status-beta-text) 35%, var(--cp-border));
 }
