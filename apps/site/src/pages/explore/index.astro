@@ -125,10 +125,10 @@ const sortLabels: Record<string, string> = {
 
 if (q) addChip("q", `Search: ${q}`);
 if (topic) addChip("topic", `Topic: ${topic}`);
-if (level) addChip("level", `Level: ${level}`);
-if (time) addChip("time", `Time: ${timeLabels[time] ?? time}`);
+if (level) addChip("level", `Course level: ${level}`);
+if (time) addChip("time", `Time budget: ${timeLabels[time] ?? time}`);
 if (status) addChip("status", `Status: ${status}`);
-if (math) addChip("math", `Math mode: ${math === "yes" ? "Yes" : "No"}`);
+if (math) addChip("math", `Math required: ${math === "yes" ? "Yes" : "No"}`);
 if (sort && sort !== "recommended") addChip("sort", `Sort: ${sortLabels[sort] ?? sort}`);
 
 const noFilters = chips.length === 0;

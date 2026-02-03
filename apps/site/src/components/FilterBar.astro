@@ -31,7 +31,7 @@ const {
 <form class="filter-bar cp-card" method="get" action={`${import.meta.env.BASE_URL}explore/`} data-filter-form>
   <div class="filter-bar__row filter-bar__row--primary">
     <label class="filter-bar__field">
-      <span class="filter-bar__label">Search</span>
+      <span class="filter-bar__label">Search exhibits</span>
       <div class="filter-bar__search">
         <Icon name="Search" size={18} class="filter-bar__search-icon" />
         <input
@@ -39,14 +39,14 @@ const {
           name="q"
           type="search"
           value={query}
-          placeholder="title or tag…"
+          placeholder="Title, topic, or idea…"
           autocomplete="off"
         />
       </div>
     </label>
 
     <label class="filter-bar__field">
-      <span class="filter-bar__label">Topic</span>
+      <span class="filter-bar__label">Choose a topic</span>
       <select class="cp-select" name="topic">
         <option value="">All</option>
         {topics.map((t) => (
@@ -58,17 +58,17 @@ const {
     </label>
 
     <label class="filter-bar__field">
-      <span class="filter-bar__label">Time</span>
+      <span class="filter-bar__label">Time budget</span>
       <select class="cp-select" name="time">
         <option value="">Any</option>
-        <option value="lt10" selected={time === "lt10"}>≤10</option>
-        <option value="10to20" selected={time === "10to20"}>10–20</option>
-        <option value="gt20" selected={time === "gt20"}>20+</option>
+        <option value="lt10" selected={time === "lt10"}>≤10 min</option>
+        <option value="10to20" selected={time === "10to20"}>10–20 min</option>
+        <option value="gt20" selected={time === "gt20"}>20+ min</option>
       </select>
     </label>
 
     <label class="filter-bar__field">
-      <span class="filter-bar__label">Sort</span>
+      <span class="filter-bar__label">Sort by</span>
       <select class="cp-select" name="sort">
         <option value="recommended" selected={sort === "recommended"}>
           Recommended
@@ -81,10 +81,10 @@ const {
 
   <div class="filter-bar__row filter-bar__row--secondary">
     <details class="filter-bar__details">
-      <summary>More filters</summary>
+      <summary>More ways to filter</summary>
       <div class="filter-bar__more">
         <label class="filter-bar__field">
-          <span class="filter-bar__label">Level</span>
+          <span class="filter-bar__label">Course level</span>
           <select class="cp-select" name="level">
             <option value="">All</option>
             {levels.map((l) => (
@@ -108,7 +108,7 @@ const {
         </label>
 
         <label class="filter-bar__field">
-          <span class="filter-bar__label">Math mode</span>
+          <span class="filter-bar__label">Math required?</span>
           <select class="cp-select" name="math">
             <option value="">Any</option>
             <option value="yes" selected={math === "yes"}>Yes</option>
@@ -126,15 +126,15 @@ const {
 
 <style>
   .filter-bar {
-    padding: 14px;
+    padding: var(--cp-space-3);
     display: grid;
-    gap: 10px;
+    gap: var(--cp-space-2);
   }
 
   .filter-bar__row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px;
+    gap: var(--cp-space-2);
     align-items: end;
   }
 
@@ -145,11 +145,11 @@ const {
 
   .filter-bar__field {
     display: grid;
-    gap: 6px;
+    gap: var(--cp-space-1);
   }
 
   .filter-bar__label {
-    font-size: 0.9rem;
+    font-size: var(--cp-text-sm);
     color: var(--cp-muted);
   }
 
@@ -180,7 +180,7 @@ const {
     list-style: none;
     color: var(--cp-muted);
     font-size: var(--cp-text-sm);
-    margin-bottom: 8px;
+    margin-bottom: var(--cp-space-1);
   }
 
   .filter-bar__details summary::-webkit-details-marker {
@@ -190,7 +190,7 @@ const {
   .filter-bar__more {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px;
+    gap: var(--cp-space-2);
   }
 
   .filter-bar.is-enhanced .filter-bar__submit {
