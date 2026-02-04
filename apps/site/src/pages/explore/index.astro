@@ -151,7 +151,7 @@ const topicSections = noFilters
 <Layout title="Explore — Cosmic Playground" hasMath={false}>
   <section class="explore-hero cp-hero">
     <h1>Explore</h1>
-    <p class="lede">Interactive models for seeing how astronomy actually works.</p>
+    <p class="lede">Interactive exhibits for seeing how astronomy actually works.</p>
   </section>
 
   <FilterBar
@@ -203,6 +203,17 @@ const topicSections = noFilters
   ) : null}
 
   {noFilters ? (
+    <div class="explore-onboard">
+      <div class="explore-onboard__cadence">Predict → Play → Explain</div>
+      <p class="explore-onboard__lede">A simple loop for every exhibit.</p>
+    </div>
+  ) : null}
+
+  <div class="results__count">
+    <strong>{sorted.length}</strong> interactive exhibit{sorted.length === 1 ? "" : "s"}
+  </div>
+
+  {noFilters ? (
     <nav class="topic-index" aria-label="Jump to topic">
       {topicSections.map((section) => (
         <a
@@ -244,9 +255,6 @@ const topicSections = noFilters
       </div>
     ) : (
       <>
-        <div class="results__summary">
-          <strong>{sorted.length}</strong> interactive exhibit{sorted.length === 1 ? "" : "s"}
-        </div>
         {sorted.length > 0 ? (
           <div class="results__grid">
             {sorted.map((d) => (
@@ -331,12 +339,30 @@ const topicSections = noFilters
     max-width: 72ch;
   }
 
+  .explore-onboard {
+    margin-top: var(--cp-space-6);
+    display: grid;
+    gap: var(--cp-space-1);
+  }
+
+  .explore-onboard__cadence {
+    font-size: var(--cp-text-lg);
+    color: var(--cp-text);
+    letter-spacing: 0.02em;
+  }
+
+  .explore-onboard__lede {
+    margin: 0;
+    color: var(--cp-text2);
+    max-width: 72ch;
+  }
+
   .results {
     margin-top: var(--cp-space-6);
   }
 
-  .results__summary {
-    margin: 8px 0 14px;
+  .results__count {
+    margin-top: var(--cp-space-5);
     color: var(--cp-muted);
   }
 
