@@ -7,26 +7,84 @@ import {
 } from "@cosmic/runtime";
 import { MoonPhasesModel } from "@cosmic/physics";
 
-const angleInputEl = document.querySelector<HTMLInputElement>("#angle");
-const phaseNameEl = document.querySelector<HTMLElement>("#phase-name");
-const angleReadoutEl = document.querySelector<HTMLElement>("#angleReadout");
-const illumFractionEl = document.querySelector<HTMLElement>("#illumination-fraction");
-const illumPercentEl = document.querySelector<HTMLElement>("#illumination");
-const daysSinceNewEl = document.querySelector<HTMLElement>("#days-since-new");
-const waxingWaningEl = document.querySelector<HTMLElement>("#waxing-waning");
+function requireEl<T extends Element>(element: T | null, name: string): T {
+  if (!element) {
+    throw new Error(`Missing required element: ${name}`);
+  }
+  return element;
+}
 
-const orbitalSvgEl = document.querySelector<SVGSVGElement>("#orbital-svg");
-const moonGroupEl = document.querySelector<SVGGElement>("#moon-group");
-const moonDarkEl = document.querySelector<SVGCircleElement>("#moon-dark");
-const moonLitEl = document.querySelector<SVGCircleElement>("#moon-lit");
-const moonTerminatorEl = document.querySelector<SVGLineElement>("#moon-terminator");
-const moonLitHalfClipEl = document.querySelector<SVGRectElement>("#moon-lit-half-clip");
-const earthShadowGroupEl = document.querySelector<SVGGElement>("#earth-shadow-group");
+const angleInputEl = requireEl(
+  document.querySelector<HTMLInputElement>("#angle"),
+  "#angle"
+);
+const phaseNameEl = requireEl(
+  document.querySelector<HTMLElement>("#phase-name"),
+  "#phase-name"
+);
+const angleReadoutEl = requireEl(
+  document.querySelector<HTMLElement>("#angleReadout"),
+  "#angleReadout"
+);
+const illumFractionEl = requireEl(
+  document.querySelector<HTMLElement>("#illumination-fraction"),
+  "#illumination-fraction"
+);
+const illumPercentEl = requireEl(
+  document.querySelector<HTMLElement>("#illumination"),
+  "#illumination"
+);
+const daysSinceNewEl = requireEl(
+  document.querySelector<HTMLElement>("#days-since-new"),
+  "#days-since-new"
+);
+const waxingWaningEl = requireEl(
+  document.querySelector<HTMLElement>("#waxing-waning"),
+  "#waxing-waning"
+);
 
-const litPortionEl = document.querySelector<SVGPathElement>("#lit-portion");
+const orbitalSvgEl = requireEl(
+  document.querySelector<SVGSVGElement>("#orbital-svg"),
+  "#orbital-svg"
+);
+const moonGroupEl = requireEl(
+  document.querySelector<SVGGElement>("#moon-group"),
+  "#moon-group"
+);
+const moonDarkEl = requireEl(
+  document.querySelector<SVGCircleElement>("#moon-dark"),
+  "#moon-dark"
+);
+const moonLitEl = requireEl(
+  document.querySelector<SVGCircleElement>("#moon-lit"),
+  "#moon-lit"
+);
+const moonTerminatorEl = requireEl(
+  document.querySelector<SVGLineElement>("#moon-terminator"),
+  "#moon-terminator"
+);
+const moonLitHalfClipEl = requireEl(
+  document.querySelector<SVGRectElement>("#moon-lit-half-clip"),
+  "#moon-lit-half-clip"
+);
+const earthShadowGroupEl = requireEl(
+  document.querySelector<SVGGElement>("#earth-shadow-group"),
+  "#earth-shadow-group"
+);
 
-const timelineDirectionEl = document.querySelector<HTMLElement>("#timeline-direction");
-const timelineDayEl = document.querySelector<HTMLElement>("#timeline-day");
+const litPortionEl = requireEl(
+  document.querySelector<SVGPathElement>("#lit-portion"),
+  "#lit-portion"
+);
+
+const timelineDirectionEl = requireEl(
+  document.querySelector<HTMLElement>("#timeline-direction"),
+  "#timeline-direction"
+);
+const timelineDayEl = requireEl(
+  document.querySelector<HTMLElement>("#timeline-day"),
+  "#timeline-day"
+);
 const timelinePhaseEls = Array.from(
   document.querySelectorAll<HTMLButtonElement>(".timeline-phase")
 );
@@ -34,59 +92,60 @@ const phaseButtonEls = Array.from(
   document.querySelectorAll<HTMLButtonElement>(".phase-btn")
 );
 
-const playButtonEl = document.querySelector<HTMLButtonElement>("#btn-play");
-const pauseButtonEl = document.querySelector<HTMLButtonElement>("#btn-pause");
-const stepBackButtonEl = document.querySelector<HTMLButtonElement>("#btn-step-back");
-const stepForwardButtonEl =
-  document.querySelector<HTMLButtonElement>("#btn-step-forward");
-const resetButtonEl = document.querySelector<HTMLButtonElement>("#btn-reset");
-const speedSelectEl = document.querySelector<HTMLSelectElement>("#speed-select");
+const playButtonEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#btn-play"),
+  "#btn-play"
+);
+const pauseButtonEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#btn-pause"),
+  "#btn-pause"
+);
+const stepBackButtonEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#btn-step-back"),
+  "#btn-step-back"
+);
+const stepForwardButtonEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#btn-step-forward"),
+  "#btn-step-forward"
+);
+const resetButtonEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#btn-reset"),
+  "#btn-reset"
+);
+const speedSelectEl = requireEl(
+  document.querySelector<HTMLSelectElement>("#speed-select"),
+  "#speed-select"
+);
 
-const stationButtonEl = document.querySelector<HTMLButtonElement>("#btn-station-mode");
-const helpButtonEl = document.querySelector<HTMLButtonElement>("#btn-help");
-const challengeButtonEl =
-  document.querySelector<HTMLButtonElement>("#btn-challenges");
-const challengeContainerEl =
-  document.querySelector<HTMLDivElement>("#challenge-container");
+const stationButtonEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#btn-station-mode"),
+  "#btn-station-mode"
+);
+const helpButtonEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#btn-help"),
+  "#btn-help"
+);
+const challengeButtonEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#btn-challenges"),
+  "#btn-challenges"
+);
+const challengeContainerEl = requireEl(
+  document.querySelector<HTMLDivElement>("#challenge-container"),
+  "#challenge-container"
+);
 
-const shadowToggleEl = document.querySelector<HTMLInputElement>("#show-shadow-toggle");
-const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
-const statusEl = document.querySelector<HTMLParagraphElement>("#status");
-
-if (
-  !angleInputEl ||
-  !phaseNameEl ||
-  !angleReadoutEl ||
-  !illumFractionEl ||
-  !illumPercentEl ||
-  !daysSinceNewEl ||
-  !waxingWaningEl ||
-  !orbitalSvgEl ||
-  !moonGroupEl ||
-  !moonDarkEl ||
-  !moonLitEl ||
-  !moonTerminatorEl ||
-  !moonLitHalfClipEl ||
-  !earthShadowGroupEl ||
-  !litPortionEl ||
-  !timelineDirectionEl ||
-  !timelineDayEl ||
-  !playButtonEl ||
-  !pauseButtonEl ||
-  !stepBackButtonEl ||
-  !stepForwardButtonEl ||
-  !resetButtonEl ||
-  !speedSelectEl ||
-  !stationButtonEl ||
-  !helpButtonEl ||
-  !challengeButtonEl ||
-  !challengeContainerEl ||
-  !shadowToggleEl ||
-  !copyResultsEl ||
-  !statusEl
-) {
-  throw new Error("Missing required DOM elements for moon-phases demo.");
-}
+const shadowToggleEl = requireEl(
+  document.querySelector<HTMLInputElement>("#show-shadow-toggle"),
+  "#show-shadow-toggle"
+);
+const copyResultsEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#copyResults"),
+  "#copyResults"
+);
+const statusEl = requireEl(
+  document.querySelector<HTMLParagraphElement>("#status"),
+  "#status"
+);
 
 const PREFERS_REDUCED_MOTION =
   typeof window !== "undefined" && typeof window.matchMedia === "function"
@@ -255,7 +314,7 @@ function updateTimeline() {
   const daysSinceNew = MoonPhasesModel.daysSinceNewFromPhaseAngleDeg(moonAngleDeg);
   const waxingWaning = MoonPhasesModel.waxingWaningFromPhaseAngleDeg(moonAngleDeg);
 
-  timelineDirectionEl.textContent = waxingWaning === "Waxing" ? "WAXING →" : "← WANING";
+  timelineDirectionEl.textContent = waxingWaning === "Waxing" ? "WAXING ->" : "<- WANING";
   timelineDirectionEl.classList.toggle("waning", waxingWaning === "Waning");
   timelineDayEl.textContent = `Day ${formatDay(daysSinceNew)} of ${MoonPhasesModel.synodicMonthDays}`;
 
@@ -686,8 +745,8 @@ function setupModes() {
           heading: "Moon (when focused)",
           type: "shortcuts",
           items: [
-            { key: "← / → (or ↑ / ↓)", action: "Move Moon 5° around orbit" },
-            { key: "Shift + arrows", action: "Move Moon 1° (fine control)" },
+            { key: "Left/Right (or Up/Down)", action: "Move Moon 5 deg around orbit" },
+            { key: "Shift + arrow keys", action: "Move Moon 1 deg (fine control)" },
             { key: "Home", action: "Jump to Full Moon" },
             { key: "End", action: "Jump to New Moon" },
             { key: "1–8", action: "Jump to the 8 named phases" }
@@ -709,10 +768,10 @@ function setupModes() {
       steps: [
         "Add the 4 key phases (New, First Quarter, Full, Third Quarter).",
         "Drag to any other phase and add snapshot rows.",
-        "Use the table to connect angle around the orbit → illumination fraction."
+        "Use the table to connect angle around the orbit -> illumination fraction."
       ],
       columns: [
-        { key: "angleDeg", label: "Phase angle α (deg)" },
+        { key: "angleDeg", label: "Phase angle alpha (deg)" },
         { key: "phase", label: "Phase name" },
         { key: "f", label: "Illumination fraction f" },
         { key: "percent", label: "Illuminated (%)" },
@@ -780,7 +839,7 @@ async function handleCopyResults() {
       version: 1,
       timestamp: new Date().toISOString(),
       parameters: [
-        { name: "Phase angle α (deg)", value: String(Math.round(normalized)) }
+        { name: "Phase angle alpha (deg)", value: String(Math.round(normalized)) }
       ],
       readouts: [
         { name: "Phase name", value: MoonPhasesModel.phaseNameFromPhaseAngleDeg(normalized) },
@@ -790,7 +849,7 @@ async function handleCopyResults() {
         { name: "Waxing/Waning", value: MoonPhasesModel.waxingWaningFromPhaseAngleDeg(normalized) }
       ],
       notes: [
-        "Illumination uses f = (1 + cos α) / 2 with α in degrees.",
+        "Illumination uses f = (1 + cos alpha) / 2 with alpha in degrees.",
         "This is a geometric model (not to scale, no orbital tilt)."
       ]
     });

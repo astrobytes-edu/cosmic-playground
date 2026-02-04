@@ -27,7 +27,7 @@ This demo is a geometric model of **illumination** and **viewing angle**.
 The demo reports:
 
 - Phase name (New, Crescent, Quarter, Gibbous, Full)
-- Phase angle α (deg)
+- Phase angle $\alpha$ (deg)
 - Illumination fraction (0–1)
 - Illuminated (%) (0–100)
 - Days since new (d)
@@ -45,10 +45,10 @@ The demo layer (`apps/demos/src/demos/moon-phases/main.ts`) calls the model for 
 
 The demo uses a classroom-friendly convention:
 
-- `moonAngle = $0^\circ$` → **Full Moon** (Moon opposite the Sun; right side of the diagram)
-- `moonAngle = $180^\circ$` → **New Moon** (Moon toward the Sun; left side of the diagram)
-- `moonAngle = $90^\circ$` → **Third Quarter**
-- `moonAngle = $270^\circ$` → **First Quarter**
+- `moonAngle = $0^\circ$` -> **Full Moon** (Moon opposite the Sun; right side of the diagram)
+- `moonAngle = $180^\circ$` -> **New Moon** (Moon toward the Sun; left side of the diagram)
+- `moonAngle = $90^\circ$` -> **Third Quarter**
+- `moonAngle = $270^\circ$` -> **First Quarter**
 
 This is a convention for the diagram, not a universal astronomy standard. The important invariant is: the phase depends on the **Sun–Earth–Moon geometry**, not shadows.
 
@@ -66,9 +66,9 @@ Let’s unpack each piece:
 What this equation is really saying: at Full Moon ($\alpha=0^\circ$), $\cos\alpha=1$ so $f=1$. At New Moon ($\alpha=180^\circ$), $\cos\alpha=-1$ so $f=0$. At quarter phases ($\alpha=90^\circ$ or $270^\circ$), $\cos\alpha=0$ so $f=1/2$.
 
 > **Illumination sanity checks**
-> - $\alpha=0^\circ$ → $f=1$ (Full Moon)
-> - $\alpha=180^\circ$ → $f=0$ (New Moon)
-> - $\alpha=90^\circ$ or $270^\circ$ → $f=0.5$ (Quarter)
+> - $\alpha=0^\circ$ -> $f=1$ (Full Moon)
+> - $\alpha=180^\circ$ -> $f=0$ (New Moon)
+> - $\alpha=90^\circ$ or $270^\circ$ -> $f=0.5$ (Quarter)
 
 ## What’s simplified / not modeled
 
