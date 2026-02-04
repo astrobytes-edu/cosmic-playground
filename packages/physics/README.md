@@ -77,6 +77,18 @@ corepack pnpm build
 
 The sections below describe what each model computes, what it assumes, and the governing relationships used.
 
+### Rise/Set Model (`riseSetModel.ts`)
+
+This model provides **approximate rise/set times** in **local solar time** using a seasonal solar declination curve and a geometric hour-angle calculation.
+
+Key assumptions and limitations:
+- Declination uses a simple sinusoid with obliquity $23.44^\circ$ and day-of-year reference.
+- Rise/set is computed in **local solar time** (not clock time; no time zone or equation-of-time corrections).
+- No atmospheric refraction or parallax corrections.
+- Polar day/night is reported explicitly (no rise/set; day length 24h or 0h).
+
+These simplifications are intentional for classroom use; the goal is to connect **season + latitude** to daylight duration and phase-dependent rise/set offsets.
+
 ### AngularSizeModel (`angularSizeModel.ts`)
 
 Angular diameter depends on an object’s physical diameter and its distance from the observer:

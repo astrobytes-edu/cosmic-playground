@@ -128,6 +128,34 @@ test.describe("Cosmic Playground smoke", () => {
     }
   });
 
+  test("Moon phases advanced controls toggle and presets", async ({ page }) => {
+    await page.goto("play/moon-phases/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+
+    const advancedToggle = page.locator("#toggle-advanced");
+    const advancedControls = page.locator("#advanced-controls");
+    const dayOfYear = page.locator("#dayOfYear");
+    const presetSummer = page.locator("#preset-summer");
+
+    await expect(advancedToggle).toBeVisible();
+    await expect(advancedControls).toHaveClass(/is-hidden/);
+
+    await advancedToggle.check();
+    await expect(advancedControls).not.toHaveClass(/is-hidden/);
+
+    await presetSummer.click();
+    await expect(dayOfYear).toHaveValue("172");
+
+    const skyToggle = page.locator("#toggle-sky-view");
+    const skyView = page.locator("#sky-view");
+    const skyPanel = page.locator("#sky-view-panel");
+    await expect(skyView).toHaveClass(/is-hidden/);
+    await expect(skyPanel).toHaveClass(/is-hidden/);
+    await skyToggle.check();
+    await expect(skyView).not.toHaveClass(/is-hidden/);
+    await expect(skyPanel).not.toHaveClass(/is-hidden/);
+  });
+
   test("Kepler’s Laws renders with resolved canvas colors and animates", async ({
     page
   }) => {

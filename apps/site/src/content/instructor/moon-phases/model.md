@@ -3,7 +3,7 @@ title: "Moon Phases — Model & Math (Instructor Deep Dive)"
 bundle: "moon-phases"
 section: "model"
 demo_slug: "moon-phases"
-last_updated: "2026-02-02"
+last_updated: "2026-02-04"
 has_math: true
 ---
 > **Navigation**
@@ -32,6 +32,7 @@ The demo reports:
 - Illuminated (%) (0–100)
 - Days since new (d)
 - Waxing/Waning
+- Moon rise/set (local solar time; simplified when Advanced is enabled)
 
 ## Implementation note (current instrument)
 
@@ -74,7 +75,8 @@ What this equation is really saying: at Full Moon ($\alpha=0^\circ$), $\cos\alph
 
 > **Model limitations (intentional)**
 > - No 3D orbital inclination (that belongs in the Eclipse Geometry demo).
-> - No rise/set times or sky-map orientation (this demo is about phase geometry only).
+> - Rise/set estimates are simplified (latitude + day-of-year only; no orbital tilt or parallax).
+> - Polar day/night yields no rise/set (reported as N/A).
 > - The phase “shape” rendering is schematic (designed to look right qualitatively, not to be a photometric model).
 
 ## Reduced motion behavior (accessibility)

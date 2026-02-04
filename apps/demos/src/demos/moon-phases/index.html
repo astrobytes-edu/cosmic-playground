@@ -56,6 +56,48 @@
             </div>
           </div>
 
+          <label class="cp-field">
+            <input id="toggle-advanced" type="checkbox" />
+            <span>Advanced: latitude/season</span>
+          </label>
+
+          <div id="advanced-controls" class="advanced-controls is-hidden">
+            <label class="cp-field">
+              <span class="cp-label">Latitude (deg)</span>
+              <input id="latitude" class="cp-range" type="range" min="-90" max="90" value="0" step="1" />
+              <div class="cp-muted"><span id="latitudeReadout">0</span> deg</div>
+            </label>
+
+            <label class="cp-field">
+              <span class="cp-label">Day of year (1–365)</span>
+              <input id="dayOfYear" class="cp-range" type="range" min="1" max="365" value="80" step="1" />
+              <div class="cp-muted">Day <span id="dayOfYearReadout">80</span></div>
+            </label>
+
+            <div class="cp-field">
+              <span class="cp-label">Season presets</span>
+              <div class="preset-buttons" role="group" aria-label="Season presets">
+                <button class="cp-button cp-button--outline" id="preset-spring" type="button">
+                  Mar Equinox
+                </button>
+                <button class="cp-button cp-button--outline" id="preset-summer" type="button">
+                  Jun Solstice
+                </button>
+                <button class="cp-button cp-button--outline" id="preset-fall" type="button">
+                  Sept Equinox
+                </button>
+                <button class="cp-button cp-button--outline" id="preset-winter" type="button">
+                  Dec Solstice
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <label class="cp-field">
+            <input id="toggle-sky-view" type="checkbox" />
+            <span>Show sky view</span>
+          </label>
+
           <div class="cp-actions">
             <button class="cp-button" id="btn-station-mode" type="button">
               Station Mode
@@ -252,6 +294,44 @@
           </div>
         </div>
 
+        <div id="sky-view-panel" class="sky-view-panel">
+          <div class="panel-title">Sky view</div>
+          <div id="sky-view" class="sky-view is-hidden">
+            <svg id="sky-view-svg" viewBox="0 0 320 120" preserveAspectRatio="xMidYMid meet">
+              <line
+                id="sky-horizon"
+                x1="20"
+                y1="80"
+                x2="300"
+                y2="80"
+                stroke="var(--cp-border)"
+                stroke-width="2"
+              />
+              <line
+                x1="20"
+                y1="80"
+                x2="20"
+                y2="92"
+                stroke="var(--cp-muted)"
+                stroke-width="2"
+              />
+              <line
+                x1="300"
+                y1="80"
+                x2="300"
+                y2="92"
+                stroke="var(--cp-muted)"
+                stroke-width="2"
+              />
+              <text x="16" y="108" fill="var(--cp-muted)" font-size="10">E</text>
+              <text x="296" y="108" fill="var(--cp-muted)" font-size="10">W</text>
+              <circle id="sky-rise-marker" cx="60" cy="80" r="5" fill="var(--cp-accent2)" />
+              <circle id="sky-set-marker" cx="260" cy="80" r="5" fill="var(--cp-warning)" />
+            </svg>
+            <p id="sky-summary" class="cp-muted">Sky view shows rise/set along the horizon.</p>
+          </div>
+        </div>
+
         <div class="timeline-panel">
           <div class="timeline-header">
             <span class="timeline-direction" id="timeline-direction">WAXING -&gt;</span>
@@ -340,6 +420,18 @@
           <div class="cp-readout">
             <div class="cp-readout__label">Waxing/Waning</div>
             <div class="cp-readout__value" id="waxing-waning">Waxing</div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Moon rise time (local solar time)</div>
+            <div class="cp-readout__value" id="rise-time">--:--</div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Moon set time (local solar time)</div>
+            <div class="cp-readout__value" id="set-time">--:--</div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Rise/set status</div>
+            <div class="cp-readout__value" id="rise-set-status">Local solar time</div>
           </div>
         </div>
       </aside>

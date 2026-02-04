@@ -12,3 +12,5 @@ export { RetrogradeMotionModel } from "./retrogradeMotionModel";
 export { SeasonsModel } from "./seasonsModel";
 export { TelescopeResolutionModel } from "./telescopeResolutionModel";
 export { TwoBodyAnalytic } from "./twoBodyAnalytic";
+export { solarDeclinationDegFromDayOfYear } from "./riseSetModel";
+export { solarRiseSetLocalTimeHours, moonRiseSetLocalTimeHours } from "./riseSetModel";

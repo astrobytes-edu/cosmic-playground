@@ -5,8 +5,11 @@ import {
   initMath,
   setLiveRegionText
 } from "@cosmic/runtime";
-import { MoonPhasesModel } from "@cosmic/physics";
+import { MoonPhasesModel, moonRiseSetLocalTimeHours } from "@cosmic/physics";
 import { nextAngleDeg } from "./animation";
+import { buildMoonPhasesExport } from "./exportPayload";
+import { buildRiseSetViewModel } from "./riseSetViewModel";
+import { applyPresetDayOfYear, getAdvancedVisibility, getSkyViewVisibility } from "./riseSetUiState";
 
 function requireEl<T extends Element>(element: T | null, name: string): T {
   if (!element) {
@@ -42,6 +45,18 @@ const daysSinceNewEl = requireEl(
 const waxingWaningEl = requireEl(
   document.querySelector<HTMLElement>("#waxing-waning"),
   "#waxing-waning"
+);
+const riseTimeEl = requireEl(
+  document.querySelector<HTMLElement>("#rise-time"),
+  "#rise-time"
+);
+const setTimeEl = requireEl(
+  document.querySelector<HTMLElement>("#set-time"),
+  "#set-time"
+);
+const riseSetStatusEl = requireEl(
+  document.querySelector<HTMLElement>("#rise-set-status"),
+  "#rise-set-status"
 );
 
 const orbitalSvgEl = requireEl(
@@ -139,6 +154,70 @@ const shadowToggleEl = requireEl(
   document.querySelector<HTMLInputElement>("#show-shadow-toggle"),
   "#show-shadow-toggle"
 );
+const advancedToggleEl = requireEl(
+  document.querySelector<HTMLInputElement>("#toggle-advanced"),
+  "#toggle-advanced"
+);
+const advancedControlsEl = requireEl(
+  document.querySelector<HTMLDivElement>("#advanced-controls"),
+  "#advanced-controls"
+);
+const latitudeInputEl = requireEl(
+  document.querySelector<HTMLInputElement>("#latitude"),
+  "#latitude"
+);
+const latitudeReadoutEl = requireEl(
+  document.querySelector<HTMLElement>("#latitudeReadout"),
+  "#latitudeReadout"
+);
+const dayOfYearInputEl = requireEl(
+  document.querySelector<HTMLInputElement>("#dayOfYear"),
+  "#dayOfYear"
+);
+const dayOfYearReadoutEl = requireEl(
+  document.querySelector<HTMLElement>("#dayOfYearReadout"),
+  "#dayOfYearReadout"
+);
+const presetSpringEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#preset-spring"),
+  "#preset-spring"
+);
+const presetSummerEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#preset-summer"),
+  "#preset-summer"
+);
+const presetFallEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#preset-fall"),
+  "#preset-fall"
+);
+const presetWinterEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#preset-winter"),
+  "#preset-winter"
+);
+const skyToggleEl = requireEl(
+  document.querySelector<HTMLInputElement>("#toggle-sky-view"),
+  "#toggle-sky-view"
+);
+const skyViewEl = requireEl(
+  document.querySelector<HTMLDivElement>("#sky-view"),
+  "#sky-view"
+);
+const skyViewPanelEl = requireEl(
+  document.querySelector<HTMLDivElement>("#sky-view-panel"),
+  "#sky-view-panel"
+);
+const skySummaryEl = requireEl(
+  document.querySelector<HTMLElement>("#sky-summary"),
+  "#sky-summary"
+);
+const skyRiseMarkerEl = requireEl(
+  document.querySelector<SVGCircleElement>("#sky-rise-marker"),
+  "#sky-rise-marker"
+);
+const skySetMarkerEl = requireEl(
+  document.querySelector<SVGCircleElement>("#sky-set-marker"),
+  "#sky-set-marker"
+);
 const copyResultsEl = requireEl(
   document.querySelector<HTMLButtonElement>("#copyResults"),
   "#copyResults"
@@ -159,12 +238,19 @@ const MOON_RADIUS = 15;
 const PHASE_MOON_RADIUS = 60;
 const SNAP_DEGREES = 5;
 const PHASE_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
+const HOURS_PER_DAY = 24;
+const SKY_VIEW_X_MIN = 20;
+const SKY_VIEW_X_MAX = 300;
 
 let moonAngleDeg = 0;
 let isAnimating = false;
 let animationId: number | null = null;
 let tweenId: number | null = null;
 let animationSpeed = Number(speedSelectEl.value) || 5;
+let advancedEnabled = advancedToggleEl.checked;
+let latitudeDeg = Number(latitudeInputEl.value) || 0;
+let dayOfYear = Number(dayOfYearInputEl.value) || 80;
+let skyViewEnabled = skyToggleEl.checked;
 
 const runtime = createInstrumentRuntime({
   hasMathMode: false,
@@ -189,6 +275,68 @@ function formatFraction(value: number): string {
 function formatDay(value: number): string {
   if (!Number.isFinite(value)) return "—";
   return value.toFixed(1);
+}
+
+function mapHourToSkyX(hours: number): number {
+  const clamped = Math.max(0, Math.min(HOURS_PER_DAY, hours));
+  const range = SKY_VIEW_X_MAX - SKY_VIEW_X_MIN;
+  return SKY_VIEW_X_MIN + (clamped / HOURS_PER_DAY) * range;
+}
+
+function updateAdvancedReadouts() {
+  latitudeReadoutEl.textContent = String(Math.round(latitudeDeg));
+  dayOfYearReadoutEl.textContent = String(Math.round(dayOfYear));
+}
+
+function updateAdvancedVisibility() {
+  advancedControlsEl.classList.toggle(
+    "is-hidden",
+    getAdvancedVisibility(advancedEnabled)
+  );
+}
+
+function updateSkyViewVisibility() {
+  const isHidden = getSkyViewVisibility(skyViewEnabled);
+  skyViewEl.classList.toggle("is-hidden", isHidden);
+  skyViewPanelEl.classList.toggle("is-hidden", isHidden);
+}
+
+function updateSkyViewMarkers() {
+  const normalized = normalizeAngle(moonAngleDeg);
+  const result = moonRiseSetLocalTimeHours({
+    phaseAngleDeg: normalized,
+    latitudeDeg,
+    dayOfYear,
+    useAdvanced: advancedEnabled
+  });
+
+  const isHidden = result.status !== "ok" || result.riseHour == null || result.setHour == null;
+  skyRiseMarkerEl.setAttribute("visibility", isHidden ? "hidden" : "visible");
+  skySetMarkerEl.setAttribute("visibility", isHidden ? "hidden" : "visible");
+
+  if (isHidden) {
+    return;
+  }
+
+  skyRiseMarkerEl.setAttribute("cx", mapHourToSkyX(result.riseHour ?? 0).toFixed(1));
+  skySetMarkerEl.setAttribute("cx", mapHourToSkyX(result.setHour ?? 0).toFixed(1));
+}
+
+function updateRiseSetReadouts() {
+  const normalized = normalizeAngle(moonAngleDeg);
+  const viewModel = buildRiseSetViewModel({
+    phaseAngleDeg: normalized,
+    latitudeDeg,
+    dayOfYear,
+    useAdvanced: advancedEnabled
+  });
+
+  riseTimeEl.textContent = viewModel.riseText;
+  setTimeEl.textContent = viewModel.setText;
+  riseSetStatusEl.textContent = viewModel.statusText;
+  skySummaryEl.textContent = `Rise ${viewModel.riseText}, set ${viewModel.setText}. ${viewModel.statusText}`;
+
+  updateSkyViewMarkers();
 }
 
 function updateAngleInput() {
@@ -337,6 +485,7 @@ function update() {
   updateOrbitalView();
   updatePhaseView();
   updateReadouts();
+  updateRiseSetReadouts();
   updateTimeline();
 }
 
@@ -589,6 +738,63 @@ function setupShadowToggle() {
   });
 }
 
+function setupAdvancedControls() {
+  const syncLatitude = () => {
+    latitudeDeg = Number(latitudeInputEl.value) || 0;
+    updateAdvancedReadouts();
+    updateRiseSetReadouts();
+  };
+
+  const syncDayOfYear = () => {
+    dayOfYear = Number(dayOfYearInputEl.value) || 0;
+    updateAdvancedReadouts();
+    updateRiseSetReadouts();
+  };
+
+  advancedToggleEl.addEventListener("change", () => {
+    advancedEnabled = advancedToggleEl.checked;
+    updateAdvancedVisibility();
+    updateRiseSetReadouts();
+  });
+
+  skyToggleEl.addEventListener("change", () => {
+    skyViewEnabled = skyToggleEl.checked;
+    updateSkyViewVisibility();
+    updateSkyViewMarkers();
+  });
+
+  latitudeInputEl.addEventListener("input", syncLatitude);
+  dayOfYearInputEl.addEventListener("input", syncDayOfYear);
+
+  presetSpringEl.addEventListener("click", () => {
+    dayOfYear = applyPresetDayOfYear(dayOfYear, "spring");
+    dayOfYearInputEl.value = String(dayOfYear);
+    syncDayOfYear();
+  });
+
+  presetSummerEl.addEventListener("click", () => {
+    dayOfYear = applyPresetDayOfYear(dayOfYear, "summer");
+    dayOfYearInputEl.value = String(dayOfYear);
+    syncDayOfYear();
+  });
+
+  presetFallEl.addEventListener("click", () => {
+    dayOfYear = applyPresetDayOfYear(dayOfYear, "fall");
+    dayOfYearInputEl.value = String(dayOfYear);
+    syncDayOfYear();
+  });
+
+  presetWinterEl.addEventListener("click", () => {
+    dayOfYear = applyPresetDayOfYear(dayOfYear, "winter");
+    dayOfYearInputEl.value = String(dayOfYear);
+    syncDayOfYear();
+  });
+
+  updateAdvancedVisibility();
+  updateSkyViewVisibility();
+  updateAdvancedReadouts();
+}
+
 function setupChallenges() {
   const challenges = [
     {
@@ -835,28 +1041,14 @@ function setupModes() {
 async function handleCopyResults() {
   setLiveRegionText(statusEl, "Copying…");
   try {
-    const normalized = normalizeAngle(moonAngleDeg);
-    const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(normalized);
-    const days = MoonPhasesModel.daysSinceNewFromPhaseAngleDeg(normalized);
-
-    await runtime.copyResults({
-      version: 1,
-      timestamp: new Date().toISOString(),
-      parameters: [
-        { name: "Phase angle alpha (deg)", value: String(Math.round(normalized)) }
-      ],
-      readouts: [
-        { name: "Phase name", value: MoonPhasesModel.phaseNameFromPhaseAngleDeg(normalized) },
-        { name: "Illumination fraction f", value: formatFraction(illum) },
-        { name: "Illuminated (%)", value: String(Math.round(illum * 100)) },
-        { name: "Days since new (d)", value: formatDay(days) },
-        { name: "Waxing/Waning", value: MoonPhasesModel.waxingWaningFromPhaseAngleDeg(normalized) }
-      ],
-      notes: [
-        "Illumination uses f = (1 + cos alpha) / 2 with alpha in degrees.",
-        "This is a geometric model (not to scale, no orbital tilt)."
-      ]
-    });
+    await runtime.copyResults(
+      buildMoonPhasesExport({
+        phaseAngleDeg: moonAngleDeg,
+        latitudeDeg,
+        dayOfYear,
+        advancedEnabled
+      })
+    );
 
     setLiveRegionText(statusEl, "Copied results to clipboard.");
   } catch (err) {
@@ -882,6 +1074,7 @@ setupTimeline();
 setupKeyboard();
 setupAnimationControls();
 setupShadowToggle();
+setupAdvancedControls();
 setupChallenges();
 setupModes();
 

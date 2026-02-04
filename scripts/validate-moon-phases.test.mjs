@@ -23,5 +23,17 @@ describe("moon-phases demo structure", () => {
     expect(html).toContain('id="btn-step-back"');
     expect(html).toContain('id="speed-select"');
     expect(html).toContain('id="show-shadow-toggle"');
+    expect(html).toContain('id="toggle-advanced"');
+    expect(html).toContain('id="latitude"');
+    expect(html).toContain('id="dayOfYear"');
+    expect(html).toContain('id="preset-spring"');
+    expect(html).toContain('id="preset-summer"');
+    expect(html).toContain('id="preset-fall"');
+    expect(html).toContain('id="preset-winter"');
+    expect(html).toContain('id="toggle-sky-view"');
+    expect(html).toContain('id="sky-view"');
+    expect(html).toContain('id="rise-time"');
+    expect(html).toContain('id="set-time"');
+    expect(html).toContain('id="rise-set-status"');
   });
 });

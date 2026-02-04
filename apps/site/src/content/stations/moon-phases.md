@@ -1,7 +1,7 @@
 ---
 title: "Station card: moon-phases"
 demo_slug: "moon-phases"
-last_updated: "2026-02-02"
+last_updated: "2026-02-04"
 has_math: true
 ---
 **Name:** ________________________________  **Section:** __________  **Date:** __________
@@ -13,6 +13,7 @@ has_math: true
 > **Station card: Moon Phases (6–8 minutes)**
 > **Demo setup:** start at New → First Quarter → Full → Third Quarter.  
 > **Tip:** Click **Station Mode** to add key-phase rows and print/copy your table.
+> **Advanced (optional):** Enable **Advanced: latitude/season** to estimate rise/set using latitude (deg) and day of year (1–365). Polar day/night returns N/A.
 >
 > **Your station artifact (fill in):**
 > 1) **Control(s):** Moon angle $\alpha$  

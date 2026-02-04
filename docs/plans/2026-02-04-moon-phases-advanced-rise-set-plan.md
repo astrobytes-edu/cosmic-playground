@@ -418,7 +418,110 @@ Expected: PASS
 
 ---
 
-## Task 8: Wire Advanced + sky view in main.ts (TDD via view model)
+## Task 8: Add UI behavior unit tests (RED)
+
+**Files:**
+- Create: `apps/demos/src/demos/moon-phases/riseSetUiState.test.ts`
+
+**Step 1: Write failing tests**
+
+```ts
+import { describe, expect, test } from "vitest";
+import {
+  PRESET_DAY_OF_YEAR,
+  getAdvancedVisibility,
+  getSkyViewVisibility,
+  applyPresetDayOfYear
+} from "./riseSetUiState";
+
+describe("riseSetUiState", () => {
+  test("presets map to expected day-of-year values", () => {
+    expect(PRESET_DAY_OF_YEAR.spring).toBe(80);
+    expect(PRESET_DAY_OF_YEAR.summer).toBe(172);
+    expect(PRESET_DAY_OF_YEAR.fall).toBe(265);
+    expect(PRESET_DAY_OF_YEAR.winter).toBe(355);
+  });
+
+  test("advanced toggle controls visibility flags", () => {
+    expect(getAdvancedVisibility(true)).toBe(false);
+    expect(getAdvancedVisibility(false)).toBe(true);
+  });
+
+  test("sky view toggle controls visibility flags", () => {
+    expect(getSkyViewVisibility(true)).toBe(false);
+    expect(getSkyViewVisibility(false)).toBe(true);
+  });
+
+  test("preset application updates day-of-year", () => {
+    expect(applyPresetDayOfYear(10, "summer")).toBe(172);
+    expect(applyPresetDayOfYear(200, "winter")).toBe(355);
+  });
+});
+```
+
+**Step 2: Run test to verify it fails**
+
+Run: `corepack pnpm vitest run apps/demos/src/demos/moon-phases/riseSetUiState.test.ts`
+Expected: FAIL (module missing).
+
+---
+
+## Task 9: Implement UI behavior helpers (GREEN)
+
+**Files:**
+- Create: `apps/demos/src/demos/moon-phases/riseSetUiState.ts`
+
+**Step 1: Implement minimal helpers**
+
+```ts
+export const PRESET_DAY_OF_YEAR = {
+  spring: 80,
+  summer: 172,
+  fall: 265,
+  winter: 355
+} as const;
+
+export type RiseSetPreset = keyof typeof PRESET_DAY_OF_YEAR;
+
+export function getAdvancedVisibility(enabled: boolean): boolean {
+  return !enabled;
+}
+
+export function getSkyViewVisibility(enabled: boolean): boolean {
+  return !enabled;
+}
+
+export function applyPresetDayOfYear(current: number, preset: RiseSetPreset): number {
+  return PRESET_DAY_OF_YEAR[preset] ?? current;
+}
+```
+
+**Step 2: Run tests to verify pass**
+
+Run: `corepack pnpm vitest run apps/demos/src/demos/moon-phases/riseSetUiState.test.ts`
+Expected: PASS
+
+---
+
+## Task 10: Add moon-phases e2e checks (RED)
+
+**Files:**
+- Modify: `apps/site/tests/smoke.spec.ts`
+
+**Step 1: Add failing assertions**
+- Navigate to `play/moon-phases/`
+- Toggle `#toggle-advanced` and expect advanced controls to appear.
+- Click seasonal presets and expect `#dayOfYear` to update.
+- Toggle `#toggle-sky-view` and expect `#sky-view` to become visible.
+
+**Step 2: Run test to verify it fails**
+
+Run: `CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e -- --grep \"Moon phases advanced\"`
+Expected: FAIL (new behaviors not wired yet).
+
+---
+
+## Task 11: Wire Advanced + sky view in main.ts (TDD via view model)
 
 **Files:**
 - Modify: `apps/demos/src/demos/moon-phases/main.ts`
@@ -448,7 +551,7 @@ Expected: PASS
 
 ---
 
-## Task 9: Export contract updates (TDD)
+## Task 12: Export contract updates (TDD)
 
 **Files:**
 - Create: `apps/demos/src/demos/moon-phases/exportPayload.test.ts`
@@ -496,7 +599,7 @@ Expected: PASS
 
 ---
 
-## Task 10: Update instructor/model notes (docs)
+## Task 13: Update instructor/model notes (docs)
 
 **Files:**
 - Modify: `apps/site/src/content/instructor/moon-phases/model.md`
@@ -517,4 +620,3 @@ Expected: PASS
 - `corepack pnpm -r typecheck`
 - `corepack pnpm build`
 - `CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e`
-
