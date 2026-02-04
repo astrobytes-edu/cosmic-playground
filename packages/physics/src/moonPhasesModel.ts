@@ -29,6 +29,11 @@ export const MoonPhasesModel = {
     return match ? match.name : "Full Moon";
   },
 
+  phaseIndexFromPhaseAngleDeg(angleDeg: number): number {
+    const normalized = normalizeAngle(angleDeg);
+    return Math.round(normalized / 45) % 8;
+  },
+
   daysSinceNewFromPhaseAngleDeg(angleDeg: number): number {
     const normalized = normalizeAngle(angleDeg);
     const daysFraction = ((normalized - 180 + 360) % 360) / 360;

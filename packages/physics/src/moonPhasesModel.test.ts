@@ -28,4 +28,16 @@ describe("MoonPhasesModel", () => {
     expect(MoonPhasesModel.waxingWaningFromPhaseAngleDeg(180)).toBe("Waxing");
     expect(MoonPhasesModel.waxingWaningFromPhaseAngleDeg(0)).toBe("Waning");
   });
+
+  test("phase index follows 45° bins", () => {
+    expect(MoonPhasesModel.phaseIndexFromPhaseAngleDeg(0)).toBe(0);
+    expect(MoonPhasesModel.phaseIndexFromPhaseAngleDeg(45)).toBe(1);
+    expect(MoonPhasesModel.phaseIndexFromPhaseAngleDeg(90)).toBe(2);
+    expect(MoonPhasesModel.phaseIndexFromPhaseAngleDeg(135)).toBe(3);
+    expect(MoonPhasesModel.phaseIndexFromPhaseAngleDeg(180)).toBe(4);
+    expect(MoonPhasesModel.phaseIndexFromPhaseAngleDeg(225)).toBe(5);
+    expect(MoonPhasesModel.phaseIndexFromPhaseAngleDeg(270)).toBe(6);
+    expect(MoonPhasesModel.phaseIndexFromPhaseAngleDeg(315)).toBe(7);
+    expect(MoonPhasesModel.phaseIndexFromPhaseAngleDeg(360)).toBe(0);
+  });
 });
