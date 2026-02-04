@@ -96,7 +96,8 @@ test.describe("Cosmic Playground smoke", () => {
 
   test("Explore shows onboarding cadence strip", async ({ page }) => {
     await page.goto("explore/");
-    await expect(page.getByText("Predict → Play → Explain")).toBeVisible();
+    const cadence = page.locator(".explore-onboard__cadence");
+    await expect(cadence).toHaveText("Predict → Play → Explain");
   });
 
   test("Explore shows exhibit count line", async ({ page }) => {
@@ -411,6 +412,38 @@ test.describe("Cosmic Playground smoke", () => {
     const activeLink = page.locator('nav a[aria-current="page"]');
     await expect(activeLink).toBeVisible();
     await expect(activeLink).toContainText("Explore");
+  });
+
+  test("Header shows cadence tagline", async ({ page }) => {
+    await page.goto("explore/");
+
+    const header = page.locator(".site-header");
+    await expect(
+      header.getByText("Predict → Play → Explain")
+    ).toBeVisible();
+  });
+
+  test("Body text uses softened off-white", async ({ page }) => {
+    await page.goto("explore/");
+
+    const channels = await page.evaluate(() => {
+      const color = window.getComputedStyle(document.body).color;
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 1, 1);
+      const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+      return [r, g, b];
+    });
+
+    expect(channels).not.toBeNull();
+    (channels as number[]).forEach((value) => {
+      expect(value).toBeGreaterThan(205);
+      expect(value).toBeLessThan(255);
+    });
   });
 
   test("Footer shows attribution and contact link", async ({ page }) => {

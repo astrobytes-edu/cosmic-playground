@@ -19,6 +19,11 @@
   --cp-muted: #4b556b;
   --cp-faint: #7d8599;
 
+  /* ---------- Links (match current paper behavior) ---------- */
+  --cp-link: var(--cp-accent);
+  --cp-link-hover: var(--cp-accent-hover);
+  --cp-link-active: var(--cp-accent);
+
   /* ---------- Accents (adjusted for light bg) ---------- */
   --cp-accent: #257180;       /* teal (Deep Jewel) */
   --cp-accent-hover: color-mix(in srgb, var(--cp-accent) 82%, white);

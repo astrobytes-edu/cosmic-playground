@@ -53,7 +53,10 @@ const isLightTheme =
     <a class="skip-link" href="#content">Skip to content</a>
     <header class="site-header cp-no-print">
       <div class="site-header__inner">
-        <a class="brand" href={withBase("")}>Cosmic Playground</a>
+        <div class="brand">
+          <a class="brand__name" href={withBase("")}>Cosmic Playground</a>
+          <span class="brand__subtitle">Predict → Play → Explain</span>
+        </div>
         <nav aria-label="Primary">
           <a
             href={withBase("explore/")}

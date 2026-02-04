@@ -10,11 +10,16 @@
   --cp-border-subtle: rgba(255, 255, 255, 0.06);
 
   /* ---------- Text (derived from ink, no chroma) ---------- */
-  --cp-text: color-mix(in srgb, #ffffff 92%, var(--cp-bg0));
-  --cp-text2: color-mix(in srgb, #ffffff 72%, var(--cp-bg0));
-  --cp-muted: color-mix(in srgb, #ffffff 52%, var(--cp-bg0));
-  --cp-faint: color-mix(in srgb, #ffffff 38%, var(--cp-bg0));
+  --cp-text: color-mix(in srgb, #ffffff 88%, var(--cp-bg0));
+  --cp-text2: color-mix(in srgb, #ffffff 64%, var(--cp-bg0));
+  --cp-muted: color-mix(in srgb, #ffffff 46%, var(--cp-bg0));
+  --cp-faint: color-mix(in srgb, #ffffff 32%, var(--cp-bg0));
   --cp-text-3: var(--cp-muted);
+
+  /* ---------- Links (subtle chroma shifts) ---------- */
+  --cp-link: color-mix(in srgb, var(--cp-accent) 70%, var(--cp-text));
+  --cp-link-hover: color-mix(in srgb, var(--cp-accent) 85%, var(--cp-text));
+  --cp-link-active: var(--cp-accent);
 
   /* ---------- Accents (muted teal + dusty rose + slate violet) ---------- */
   --cp-accent: #2f8c8d;       /* muted teal */
@@ -210,20 +215,20 @@ h4 {
 }
 
 a {
-  color: var(--cp-accent);
+  color: var(--cp-link);
   text-decoration: none;
-  text-decoration-color: color-mix(in srgb, var(--cp-accent) 35%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--cp-link) 35%, transparent);
   text-underline-offset: 0.18em;
   transition: color var(--cp-transition-fast) var(--cp-ease-out);
 }
 
 a:hover {
-  color: var(--cp-accent-hover);
-  text-decoration-color: color-mix(in srgb, var(--cp-accent-hover) 55%, transparent);
+  color: var(--cp-link-hover);
+  text-decoration-color: color-mix(in srgb, var(--cp-link-hover) 55%, transparent);
 }
 
 a:active {
-  color: var(--cp-accent);
+  color: var(--cp-link-active);
 }
 
 ::selection {

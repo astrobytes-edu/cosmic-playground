@@ -65,10 +65,24 @@ body {
 }
 
 .brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.1;
+}
+
+.brand__name {
   text-decoration: none;
   font-weight: 700;
   letter-spacing: 0.2px;
   color: var(--cp-text);
+}
+
+.brand__subtitle {
+  font-size: var(--cp-text-sm);
+  font-weight: var(--cp-font-semibold);
+  letter-spacing: 0.08em;
+  color: var(--cp-link);
 }
 
 nav {
@@ -88,7 +102,7 @@ nav a {
 nav a:hover {
   border-color: var(--cp-border);
   background: color-mix(in srgb, var(--cp-text) 6%, transparent);
-  color: var(--cp-text);
+  color: var(--cp-link-hover);
 }
 
 .site-main {
