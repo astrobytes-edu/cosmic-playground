@@ -42,6 +42,11 @@
   gap: var(--cp-space-2);
 }
 
+.phase-btn.active {
+  border-color: var(--cp-accent);
+  background: color-mix(in srgb, var(--cp-accent) 18%, transparent);
+}
+
 .shadow-toggle {
   display: flex;
   align-items: center;

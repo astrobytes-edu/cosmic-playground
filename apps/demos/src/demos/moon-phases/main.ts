@@ -23,7 +23,6 @@ const moonTerminatorEl = document.querySelector<SVGLineElement>("#moon-terminato
 const moonLitHalfClipEl = document.querySelector<SVGRectElement>("#moon-lit-half-clip");
 const earthShadowGroupEl = document.querySelector<SVGGElement>("#earth-shadow-group");
 
-const phaseSvgEl = document.querySelector<SVGSVGElement>("#phase-svg");
 const litPortionEl = document.querySelector<SVGPathElement>("#lit-portion");
 
 const timelineDirectionEl = document.querySelector<HTMLElement>("#timeline-direction");
@@ -69,7 +68,6 @@ if (
   !moonTerminatorEl ||
   !moonLitHalfClipEl ||
   !earthShadowGroupEl ||
-  !phaseSvgEl ||
   !litPortionEl ||
   !timelineDirectionEl ||
   !timelineDayEl ||
