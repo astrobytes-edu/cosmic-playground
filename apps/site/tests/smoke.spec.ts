@@ -413,6 +413,18 @@ test.describe("Cosmic Playground smoke", () => {
     await expect(activeLink).toContainText("Explore");
   });
 
+  test("Footer shows attribution and contact link", async ({ page }) => {
+    await page.goto("explore/");
+
+    const footer = page.locator(".site-footer");
+    await expect(
+      footer.getByText("Developed and designed by Anna Rosen.")
+    ).toBeVisible();
+
+    const contact = footer.getByRole("link", { name: "Contact" });
+    await expect(contact).toHaveAttribute("href", "mailto:alrosen@sdsu.edu");
+  });
+
   test("Links have transitions", async ({ page }) => {
     await page.goto("explore/");
 
