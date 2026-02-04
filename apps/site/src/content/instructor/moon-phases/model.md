@@ -27,15 +27,19 @@ This demo is a geometric model of **illumination** and **viewing angle**.
 The demo reports:
 
 - Phase name (New, Crescent, Quarter, Gibbous, Full)
-- Illumination fraction (0–100%)
+- Phase angle α (deg)
+- Illumination fraction (0–1)
+- Illuminated (%) (0–100)
+- Days since new (d)
+- Waxing/Waning
 
 ## Implementation note (current instrument)
 
-In this repo, the current migrated instrument computes illumination directly in:
+In this repo, the instrument uses the shared physics model in:
 
-- `apps/demos/src/demos/moon-phases/main.ts`
+- `packages/physics/src/moonPhasesModel.ts`
 
-It uses the same core equation shown below and formats results for Station Mode + Copy Results via `@cosmic/runtime`.
+The demo layer (`apps/demos/src/demos/moon-phases/main.ts`) calls the model for illumination, phase names, days since new, and waxing/waning, then formats results for Station Mode + Copy Results via `@cosmic/runtime`.
 
 ## Angle convention in this demo
 
@@ -75,4 +79,4 @@ What this equation is really saying: at Full Moon ($\alpha=0^\circ$), $\cos\alph
 
 ## Reduced motion behavior (accessibility)
 
-This instrument has no continuous animation loop; it re-renders on control changes and resize. Under `prefers-reduced-motion: reduce`, there is no additional motion to suppress.
+This instrument includes optional animation controls. Under `prefers-reduced-motion: reduce`, continuous animation is disabled and the demo only updates on direct control changes (slider, drag, step buttons).

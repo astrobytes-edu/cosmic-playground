@@ -16,7 +16,7 @@ has_math: true
 >
 > **Your station artifact (fill in):**
 > 1) **Control(s):** Moon angle $\alpha$  
-> 2) **Observable(s):** phase name, illumination fraction $f$  
+> 2) **Observable(s):** phase name, illumination fraction $f$, illuminated (%), days since new ($d$), waxing/waning  
 > 3) **Governing relationship:** write this equation in words:
 >
 >    $$f=\frac{1+\cos\alpha}{2}$$
@@ -27,6 +27,8 @@ has_math: true
 > **Word bank:**
 > - **Phase:** the shape we see from Earth; it’s the overlap of the Moon’s lit half and the half facing Earth.
 > - **Illumination fraction $f$ (0–1):** fraction of the visible disk that is lit (0 = New, 1 = Full).
+> - **Illuminated (%)**: the same information as $f$, but scaled to 0–100.
+> - **Days since new ($d$):** where we are in the 29.53-day cycle (0 at New, ~14.8 at Full).
 > - **Moon angle $\alpha$ (degrees, this demo):** $0^\circ$ = Full, $180^\circ$ = New; quarter phases are at $90^\circ$ and $270^\circ$.
 > - **Waxing:** the illuminated fraction is increasing (after New → toward Full).
 > - **Waning:** the illuminated fraction is decreasing (after Full → toward New).
@@ -35,4 +37,5 @@ has_math: true
 > **Sanity checks:**
 > - First/Third Quarter should be about 50% illuminated.
 > - New Moon is not “unlit” — the Sun still lights half the Moon; we’re mostly seeing the dark half.
+> - Full Moon should be about halfway through the cycle ($d \\approx 14.8$ days since new).
 > - Earth’s shadow is not what causes phases (it matters only during eclipses, which are rare).
