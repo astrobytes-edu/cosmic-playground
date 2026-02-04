@@ -6,6 +6,7 @@ import {
   setLiveRegionText
 } from "@cosmic/runtime";
 import { MoonPhasesModel } from "@cosmic/physics";
+import { nextAngleDeg } from "./animation";
 
 function requireEl<T extends Element>(element: T | null, name: string): T {
   if (!element) {
@@ -521,13 +522,16 @@ function startAnimation() {
   updateAnimationButtons();
 
   let lastTime = performance.now();
-  const degreesPerSecond = (360 / MoonPhasesModel.synodicMonthDays) * animationSpeed;
-
   const step = (now: number) => {
     if (!isAnimating) return;
     const delta = (now - lastTime) / 1000;
     lastTime = now;
-    moonAngleDeg = normalizeAngle(moonAngleDeg + degreesPerSecond * delta);
+    moonAngleDeg = nextAngleDeg({
+      angleDeg: moonAngleDeg,
+      deltaSeconds: delta,
+      speed: animationSpeed,
+      synodicMonthDays: MoonPhasesModel.synodicMonthDays
+    });
     updateAngleInput();
     update();
     animationId = requestAnimationFrame(step);
