@@ -88,6 +88,12 @@ test.describe("Cosmic Playground smoke", () => {
     await expect(summary).toHaveText("More ways to filter");
   });
 
+  test("Explore featured row shows lead text", async ({ page }) => {
+    await page.goto("explore/");
+    const lead = page.locator(".featured__lede");
+    await expect(lead).toHaveText("Begin with the core orbit ideas before branching out.");
+  });
+
   test("All /play/<slug>/ pages load the instrument root", async ({ page }) => {
     const slugs = await demoSlugsFromContent();
     expect(slugs.length).toBeGreaterThan(0);
