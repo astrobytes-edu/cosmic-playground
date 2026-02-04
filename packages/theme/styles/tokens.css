@@ -21,6 +21,10 @@
   --cp-link-hover: color-mix(in srgb, var(--cp-accent) 85%, var(--cp-text));
   --cp-link-active: var(--cp-accent);
 
+  /* ---------- Titles ---------- */
+  --cp-title: color-mix(in srgb, var(--cp-accent) 55%, var(--cp-text));
+  --cp-title-strong: color-mix(in srgb, var(--cp-accent) 70%, var(--cp-text));
+
   /* ---------- Accents (muted teal + dusty rose + slate violet) ---------- */
   --cp-accent: #2f8c8d;       /* muted teal */
   --cp-accent-hover: color-mix(in srgb, var(--cp-accent) 85%, white);
@@ -194,24 +198,28 @@ h1 {
   font-size: var(--cp-text-4xl);
   font-weight: var(--cp-font-bold);
   letter-spacing: -0.025em;
+  color: var(--cp-title-strong);
 }
 
 h2 {
   font-size: var(--cp-text-3xl);
   font-weight: var(--cp-font-bold);
   letter-spacing: -0.02em;
+  color: var(--cp-title);
 }
 
 h3 {
   font-size: var(--cp-text-2xl);
   font-weight: var(--cp-font-semibold);
   letter-spacing: -0.015em;
+  color: var(--cp-title);
 }
 
 h4 {
   font-size: var(--cp-text-xl);
   font-weight: var(--cp-font-semibold);
   letter-spacing: -0.01em;
+  color: var(--cp-title);
 }
 
 a {

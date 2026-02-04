@@ -78,11 +78,24 @@ body {
   color: var(--cp-text);
 }
 
-.brand__subtitle {
+.brand__cadence {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   font-size: var(--cp-text-sm);
+}
+
+.brand__cadence li {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-border-subtle);
+  background: var(--cp-chip-bg);
+  color: var(--cp-title-strong);
   font-weight: var(--cp-font-semibold);
-  letter-spacing: 0.08em;
-  color: var(--cp-link);
+  letter-spacing: 0.04em;
 }
 
 nav {

@@ -24,6 +24,10 @@
   --cp-link-hover: var(--cp-accent-hover);
   --cp-link-active: var(--cp-accent);
 
+  /* ---------- Titles (paper stays neutral) ---------- */
+  --cp-title: var(--cp-text);
+  --cp-title-strong: var(--cp-text);
+
   /* ---------- Accents (adjusted for light bg) ---------- */
   --cp-accent: #257180;       /* teal (Deep Jewel) */
   --cp-accent-hover: color-mix(in srgb, var(--cp-accent) 82%, white);

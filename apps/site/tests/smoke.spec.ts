@@ -96,8 +96,11 @@ test.describe("Cosmic Playground smoke", () => {
 
   test("Explore shows onboarding cadence strip", async ({ page }) => {
     await page.goto("explore/");
-    const cadence = page.locator(".explore-onboard__cadence");
-    await expect(cadence).toHaveText("Predict → Play → Explain");
+    const cadence = page.locator(".explore-onboard__cadence li");
+    await expect(cadence).toHaveCount(3);
+    await expect(cadence.nth(0)).toHaveText("Predict");
+    await expect(cadence.nth(1)).toHaveText("Play");
+    await expect(cadence.nth(2)).toHaveText("Explain");
   });
 
   test("Explore shows exhibit count line", async ({ page }) => {
@@ -414,12 +417,57 @@ test.describe("Cosmic Playground smoke", () => {
     await expect(activeLink).toContainText("Explore");
   });
 
+  test("Card titles are tinted", async ({ page }) => {
+    await page.goto("explore/");
+
+    const bodyColor = await page.evaluate(() => {
+      const color = window.getComputedStyle(document.body).color;
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 1, 1);
+      const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+      return [r, g, b];
+    });
+    expect(bodyColor).not.toBeNull();
+
+    const titleColor = await page.evaluate(() => {
+      const title = document.querySelector(".demo-card__title");
+      if (!title) return null;
+      const color = window.getComputedStyle(title).color;
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 1, 1);
+      const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+      return [r, g, b];
+    });
+    expect(titleColor).not.toBeNull();
+    expect(titleColor).not.toEqual(bodyColor);
+  });
+
   test("Header shows cadence tagline", async ({ page }) => {
     await page.goto("explore/");
 
-    const header = page.locator(".site-header");
+    const cadenceItems = page.locator(".brand__cadence li");
+    await expect(cadenceItems).toHaveCount(3);
+    await expect(cadenceItems.nth(0)).toHaveText("Predict");
+    await expect(cadenceItems.nth(1)).toHaveText("Play");
+    await expect(cadenceItems.nth(2)).toHaveText("Explain");
+  });
+
+  test("Hero shows physics line", async ({ page }) => {
+    await page.goto("explore/");
+
+    const hero = page.locator(".explore-hero");
     await expect(
-      header.getByText("Predict → Play → Explain")
+      hero.getByText("Play with the universe. Learn the physics.")
     ).toBeVisible();
   });
 

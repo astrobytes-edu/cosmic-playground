@@ -39,7 +39,7 @@ const timeLabel =
   <a class="demo-card__link" href={href}>
     <header class="demo-card__header">
       <DemoGlyph name={glyph} class="demo-card__glyph" />
-      <h3>{title}</h3>
+      <h3 class="demo-card__title">{title}</h3>
     </header>
 
     <p class="demo-card__desc">{description}</p>
@@ -95,10 +95,16 @@ const timeLabel =
     transform: translateY(-1px);
   }
 
-  h3 {
+  .demo-card__title {
     margin: 0;
     font-size: var(--cp-text-xl);
-    color: var(--cp-text);
+    color: var(--cp-title);
+    transition: color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .demo-card__link:hover .demo-card__title,
+  .demo-card__link:focus-visible .demo-card__title {
+    color: var(--cp-title-strong);
   }
 
   .demo-card__desc {

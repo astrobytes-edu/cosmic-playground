@@ -151,6 +151,7 @@ const topicSections = noFilters
 <Layout title="Explore — Cosmic Playground" hasMath={false}>
   <section class="explore-hero cp-hero">
     <h1>Explore</h1>
+    <p class="explore-hero__tagline">Play with the universe. Learn the physics.</p>
     <p class="lede">Interactive exhibits for seeing how astronomy actually works.</p>
   </section>
 
@@ -204,7 +205,11 @@ const topicSections = noFilters
 
   {noFilters ? (
     <div class="explore-onboard">
-      <div class="explore-onboard__cadence">Predict → Play → Explain</div>
+      <ul class="explore-onboard__cadence" aria-label="Predict, Play, Explain">
+        <li>Predict</li>
+        <li>Play</li>
+        <li>Explain</li>
+      </ul>
       <p class="explore-onboard__lede">A simple loop for every exhibit.</p>
     </div>
   ) : null}
@@ -312,6 +317,14 @@ const topicSections = noFilters
     max-width: 72ch;
   }
 
+  .explore-hero__tagline {
+    margin: 10px 0 0;
+    font-size: var(--cp-text-xl);
+    font-weight: var(--cp-font-semibold);
+    color: var(--cp-title-strong);
+    max-width: 60ch;
+  }
+
   .filter-chips {
     margin-top: 10px;
     display: flex;
@@ -346,8 +359,22 @@ const topicSections = noFilters
   }
 
   .explore-onboard__cadence {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-2);
     font-size: var(--cp-text-lg);
-    color: var(--cp-text);
+  }
+
+  .explore-onboard__cadence li {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--cp-border-subtle);
+    background: var(--cp-chip-bg);
+    color: var(--cp-title-strong);
+    font-weight: var(--cp-font-semibold);
     letter-spacing: 0.02em;
   }
 
