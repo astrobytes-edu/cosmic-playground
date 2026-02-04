@@ -5,6 +5,7 @@ export { BlackbodyRadiationModel } from "./blackbodyRadiationModel";
 export { ConservationLawsModel } from "./conservationLawsModel";
 export { EclipseGeometryModel } from "./eclipseGeometryModel";
 export { KeplersLawsModel } from "./keplersLawsModel";
+export { MoonPhasesModel } from "./moonPhasesModel";
 export { ParallaxDistanceModel } from "./parallaxDistanceModel";
 export { PhotonModel } from "./photonModel";
 export { RetrogradeMotionModel } from "./retrogradeMotionModel";
