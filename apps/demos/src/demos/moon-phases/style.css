@@ -1,26 +1,212 @@
 @import "../../shared/stub-demo.css";
 
-.control {
+.viz-layout {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--cp-space-4);
+  margin-bottom: var(--cp-space-4);
 }
 
-.button-row {
+.viz-panel {
+  background: var(--cp-bg1);
+  border: 1px solid var(--cp-border);
+  border-radius: 12px;
+  padding: var(--cp-space-3);
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.panel-title {
+  font-size: 0.85rem;
+  font-weight: var(--cp-font-semibold);
+  color: var(--cp-text2);
+}
+
+#orbital-svg,
+#phase-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.drag-hint,
+.schematic-note {
+  text-align: center;
+  color: var(--cp-muted);
+  font-size: 0.75rem;
+}
+
+.phase-buttons {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--cp-space-2);
 }
 
-.stage {
-  display: grid;
-  place-items: center;
-  padding: var(--cp-space-4);
+.shadow-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  color: var(--cp-text2);
+  font-size: 0.9rem;
 }
 
-canvas {
-  width: 100%;
-  max-width: 520px;
-  height: auto;
-  aspect-ratio: 1 / 1;
-  display: block;
+.moon-draggable {
+  cursor: grab;
+}
+
+.moon-draggable:active {
+  cursor: grabbing;
+}
+
+.timeline-panel {
+  background: var(--cp-bg1);
+  border: 1px solid var(--cp-border);
+  border-radius: 12px;
+  padding: var(--cp-space-3);
+  margin-bottom: var(--cp-space-4);
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--cp-space-2);
+  font-size: 0.85rem;
+  color: var(--cp-text2);
+}
+
+.timeline-direction {
+  font-weight: var(--cp-font-semibold);
+  color: var(--cp-accent);
+}
+
+.timeline-direction.waning {
+  color: var(--cp-accent2);
+}
+
+.timeline-day {
+  font-family: var(--cp-font-mono);
+}
+
+.timeline-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--cp-space-1);
+}
+
+.timeline-phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cp-space-1);
+  padding: var(--cp-space-2);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline-phase:hover {
+  background: color-mix(in srgb, var(--cp-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--cp-accent) 40%, var(--cp-border));
+}
+
+.timeline-phase:focus-visible {
+  outline: var(--cp-focus-ring);
+  outline-offset: 2px;
+}
+
+.timeline-phase.active {
+  background: color-mix(in srgb, var(--cp-warning) 18%, transparent);
+  border-color: color-mix(in srgb, var(--cp-warning) 60%, var(--cp-border));
+}
+
+.timeline-phase span {
+  font-size: 0.65rem;
+  color: var(--cp-muted);
+  white-space: nowrap;
+}
+
+.timeline-phase.active span {
+  color: var(--cp-warning);
+}
+
+.phase-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  position: relative;
+  background: var(--cp-bg3);
+  overflow: hidden;
+}
+
+.phase-icon::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background: var(--cp-text2);
+}
+
+.phase-icon.new-moon::after { display: none; }
+.phase-icon.full-moon::after { width: 100%; left: 0; border-radius: 50%; }
+.phase-icon.first-quarter::after { left: 50%; }
+.phase-icon.third-quarter::after { left: 0; }
+.phase-icon.waxing-crescent::after { left: 50%; width: 25%; border-radius: 0 50% 50% 0; }
+.phase-icon.waning-crescent::after { left: 25%; width: 25%; border-radius: 50% 0 0 50%; }
+.phase-icon.waxing-gibbous::after { left: 25%; width: 75%; border-radius: 50%; }
+.phase-icon.waning-gibbous::after { left: 0; width: 75%; border-radius: 50%; }
+
+.animation-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-3);
+  background: var(--cp-bg1);
+  border: 1px solid var(--cp-border);
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--cp-text2);
+}
+
+@media (max-width: 900px) {
+  .viz-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .timeline-phase span {
+    display: none;
+  }
+
+  .phase-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .speed-control {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeline-phase,
+  .cp-button,
+  .cp-readout {
+    transition: none;
+  }
 }

@@ -110,19 +110,19 @@
             <svg id="orbital-svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stop-color="var(--cp-accent-warm)" />
-                  <stop offset="60%" stop-color="var(--cp-accent-warm)" stop-opacity="0.6" />
-                  <stop offset="100%" stop-color="var(--cp-accent-warm)" stop-opacity="0" />
+                  <stop offset="0%" stop-color="var(--cp-warning)" />
+                  <stop offset="60%" stop-color="var(--cp-warning)" stop-opacity="0.6" />
+                  <stop offset="100%" stop-color="var(--cp-warning)" stop-opacity="0" />
                 </radialGradient>
 
                 <radialGradient id="earthGradient" cx="30%" cy="30%">
-                  <stop offset="0%" stop-color="var(--cp-accent-cool)" />
+                  <stop offset="0%" stop-color="var(--cp-accent2)" />
                   <stop offset="100%" stop-color="var(--cp-border)" />
                 </radialGradient>
 
                 <radialGradient id="moonLit" cx="30%" cy="30%">
                   <stop offset="0%" stop-color="var(--cp-text)" />
-                  <stop offset="100%" stop-color="var(--cp-text-muted)" />
+                  <stop offset="100%" stop-color="var(--cp-muted)" />
                 </radialGradient>
 
                 <clipPath id="moonClip">
@@ -135,11 +135,11 @@
               </defs>
 
               <g id="sunlight-arrows" opacity="0.4">
-                <line x1="0" y1="100" x2="80" y2="100" stroke="var(--cp-accent-warm)" stroke-width="2" />
-                <line x1="0" y1="200" x2="80" y2="200" stroke="var(--cp-accent-warm)" stroke-width="2" />
-                <line x1="0" y1="300" x2="80" y2="300" stroke="var(--cp-accent-warm)" stroke-width="2" />
-                <text x="10" y="60" fill="var(--cp-accent-warm)" font-size="11">Sunlight →</text>
-                <text x="10" y="72" fill="var(--cp-accent-warm)" font-size="9" opacity="0.85">
+                <line x1="0" y1="100" x2="80" y2="100" stroke="var(--cp-warning)" stroke-width="2" />
+                <line x1="0" y1="200" x2="80" y2="200" stroke="var(--cp-warning)" stroke-width="2" />
+                <line x1="0" y1="300" x2="80" y2="300" stroke="var(--cp-warning)" stroke-width="2" />
+                <text x="10" y="60" fill="var(--cp-warning)" font-size="11">Sunlight →</text>
+                <text x="10" y="72" fill="var(--cp-warning)" font-size="9" opacity="0.85">
                   from the Sun
                 </text>
               </g>
@@ -159,7 +159,7 @@
 
               <g id="earth-group" transform="translate(200, 200)">
                 <circle r="25" fill="url(#earthGradient)" />
-                <text y="45" text-anchor="middle" fill="var(--cp-text-muted)" font-size="11">Earth</text>
+                <text y="45" text-anchor="middle" fill="var(--cp-muted)" font-size="11">Earth</text>
               </g>
 
               <g id="earth-shadow-group" style="display: none;">
@@ -183,10 +183,10 @@
                   stroke-width="1"
                   stroke-dasharray="4 2"
                 />
-                <text x="320" y="155" fill="var(--cp-accent-warn)" font-size="10" opacity="0.8">
+                <text x="320" y="155" fill="var(--cp-warning)" font-size="10" opacity="0.8">
                   Earth’s Shadow
                 </text>
-                <text x="300" y="168" fill="var(--cp-accent-warn)" font-size="9" opacity="0.6">
+                <text x="300" y="168" fill="var(--cp-warning)" font-size="9" opacity="0.6">
                   (only matters for eclipses)
                 </text>
               </g>
@@ -210,15 +210,15 @@
                   y1="185"
                   x2="320"
                   y2="215"
-                  stroke="var(--cp-text-muted)"
+                  stroke="var(--cp-muted)"
                   stroke-width="1"
                   opacity="0.85"
                 />
               </g>
 
               <g id="view-indicator" opacity="0.5">
-                <path d="M 200 175 L 200 140" stroke="var(--cp-accent-cool)" stroke-width="1" stroke-dasharray="3 3" />
-                <text x="200" y="130" text-anchor="middle" fill="var(--cp-accent-cool)" font-size="9">
+                <path d="M 200 175 L 200 140" stroke="var(--cp-accent2)" stroke-width="1" stroke-dasharray="3 3" />
+                <text x="200" y="130" text-anchor="middle" fill="var(--cp-accent2)" font-size="9">
                   Your view
                 </text>
               </g>
@@ -232,11 +232,11 @@
               <defs>
                 <radialGradient id="moonSurface" cx="30%" cy="30%">
                   <stop offset="0%" stop-color="var(--cp-text)" />
-                  <stop offset="100%" stop-color="var(--cp-text-muted)" />
+                  <stop offset="100%" stop-color="var(--cp-muted)" />
                 </radialGradient>
 
                 <radialGradient id="earthshine" cx="70%" cy="30%">
-                  <stop offset="0%" stop-color="var(--cp-surface)" />
+                  <stop offset="0%" stop-color="var(--cp-bg2)" />
                   <stop offset="100%" stop-color="var(--cp-bg3)" />
                 </radialGradient>
               </defs>
