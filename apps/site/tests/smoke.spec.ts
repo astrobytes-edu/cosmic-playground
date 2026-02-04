@@ -94,6 +94,17 @@ test.describe("Cosmic Playground smoke", () => {
     await expect(lead).toHaveText("Begin with the core orbit ideas before branching out.");
   });
 
+  test("Explore shows onboarding cadence strip", async ({ page }) => {
+    await page.goto("explore/");
+    await expect(page.getByText("Predict → Play → Explain")).toBeVisible();
+  });
+
+  test("Explore shows exhibit count line", async ({ page }) => {
+    await page.goto("explore/");
+    const count = page.locator(".results__count");
+    await expect(count).toContainText("interactive exhibit");
+  });
+
   test("All /play/<slug>/ pages load the instrument root", async ({ page }) => {
     const slugs = await demoSlugsFromContent();
     expect(slugs.length).toBeGreaterThan(0);
