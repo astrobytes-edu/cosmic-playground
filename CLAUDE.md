@@ -100,6 +100,11 @@ You can keep PR overhead low but still get value:
 - `corepack pnpm build` copies those outputs to `apps/site/public/play/<slug>/`
 - `/play/<slug>/` pages on the site are served from `apps/site/public/play/<slug>/`
 
+## Legacy demo reference (important)
+
+- Legacy demos live at: `~/Teaching/astr101-sp26/demos/`
+- Migration hardening directive: treat migrated demos as untrusted; refactor and harden them one-by-one starting with `moon-phases` by comparing behavior, UX, and physics against the legacy demo.
+
 ## Hard constraints / conventions
 
 - Prefer static + fast pages; minimal client JS on museum pages.

@@ -106,6 +106,10 @@ If the user asks “what should I do?” / “is this normal?” / “what branc
 - Build output: `apps/demos/dist/<slug>/`
 - Site-served copies: `apps/site/public/play/<slug>/` (copied during `corepack pnpm build`)
 
+### Legacy demo reference (important)
+- Legacy demos live at: `~/Teaching/astr101-sp26/demos/`
+- Migration hardening directive: treat migrated demos as untrusted; refactor and harden them one-by-one starting with `moon-phases` by comparing behavior, UX, and physics against the legacy demo.
+
 ### Units policy (important)
 - Keep units explicit and consistent across UI labels, exported results, and docs.
 - Do **not** introduce `G=1` or “natural units” language. When orbital mechanics units matter pedagogically, prefer AU / yr / M☉ with `G = 4π² AU³/(yr²·M☉)`.
