@@ -182,6 +182,7 @@ const topicSections = noFilters
     <section class="featured" aria-label="Start here: Gravity and Orbits">
       <div class="featured__header">
         <h2>Start here: Gravity &amp; Orbits</h2>
+        <p class="featured__lede">Begin with the core orbit ideas before branching out.</p>
       </div>
       <div class="results__grid">
         {featured.map((d) => (
@@ -316,10 +317,18 @@ const topicSections = noFilters
 
   .featured__header {
     margin-bottom: 10px;
+    display: grid;
+    gap: var(--cp-space-1);
   }
 
   .featured h2 {
     margin: 0;
+  }
+
+  .featured__lede {
+    margin: 0;
+    color: var(--cp-text2);
+    max-width: 72ch;
   }
 
   .results {
