@@ -58,6 +58,11 @@
   cursor: grabbing;
 }
 
+.moon-draggable:focus-visible {
+  outline: var(--cp-focus-ring);
+  outline-offset: 4px;
+}
+
 .timeline-panel {
   background: var(--cp-bg1);
   border: 1px solid var(--cp-border);

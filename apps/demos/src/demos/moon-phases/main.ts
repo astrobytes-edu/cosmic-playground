@@ -5,409 +5,108 @@ import {
   initMath,
   setLiveRegionText
 } from "@cosmic/runtime";
+import { MoonPhasesModel } from "@cosmic/physics";
 
 const angleInputEl = document.querySelector<HTMLInputElement>("#angle");
-const angleValueEl = document.querySelector<HTMLSpanElement>("#angleValue");
-const phaseNameEl = document.querySelector<HTMLSpanElement>("#phaseName");
-const illumValueEl = document.querySelector<HTMLSpanElement>("#illumValue");
-const canvasEl = document.querySelector<HTMLCanvasElement>("#moonCanvas");
-const setNewEl = document.querySelector<HTMLButtonElement>("#setNew");
-const setFirstQuarterEl =
-  document.querySelector<HTMLButtonElement>("#setFirstQuarter");
-const setFullEl = document.querySelector<HTMLButtonElement>("#setFull");
-const setThirdQuarterEl =
-  document.querySelector<HTMLButtonElement>("#setThirdQuarter");
-const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
-const challengeModeEl =
-  document.querySelector<HTMLButtonElement>("#challengeMode");
-const helpEl = document.querySelector<HTMLButtonElement>("#help");
+const phaseNameEl = document.querySelector<HTMLElement>("#phase-name");
+const angleReadoutEl = document.querySelector<HTMLElement>("#angleReadout");
+const illumFractionEl = document.querySelector<HTMLElement>("#illumination-fraction");
+const illumPercentEl = document.querySelector<HTMLElement>("#illumination");
+const daysSinceNewEl = document.querySelector<HTMLElement>("#days-since-new");
+const waxingWaningEl = document.querySelector<HTMLElement>("#waxing-waning");
+
+const orbitalSvgEl = document.querySelector<SVGSVGElement>("#orbital-svg");
+const moonGroupEl = document.querySelector<SVGGElement>("#moon-group");
+const moonDarkEl = document.querySelector<SVGCircleElement>("#moon-dark");
+const moonLitEl = document.querySelector<SVGCircleElement>("#moon-lit");
+const moonTerminatorEl = document.querySelector<SVGLineElement>("#moon-terminator");
+const moonLitHalfClipEl = document.querySelector<SVGRectElement>("#moon-lit-half-clip");
+const earthShadowGroupEl = document.querySelector<SVGGElement>("#earth-shadow-group");
+
+const phaseSvgEl = document.querySelector<SVGSVGElement>("#phase-svg");
+const litPortionEl = document.querySelector<SVGPathElement>("#lit-portion");
+
+const timelineDirectionEl = document.querySelector<HTMLElement>("#timeline-direction");
+const timelineDayEl = document.querySelector<HTMLElement>("#timeline-day");
+const timelinePhaseEls = Array.from(
+  document.querySelectorAll<HTMLButtonElement>(".timeline-phase")
+);
+const phaseButtonEls = Array.from(
+  document.querySelectorAll<HTMLButtonElement>(".phase-btn")
+);
+
+const playButtonEl = document.querySelector<HTMLButtonElement>("#btn-play");
+const pauseButtonEl = document.querySelector<HTMLButtonElement>("#btn-pause");
+const stepBackButtonEl = document.querySelector<HTMLButtonElement>("#btn-step-back");
+const stepForwardButtonEl =
+  document.querySelector<HTMLButtonElement>("#btn-step-forward");
+const resetButtonEl = document.querySelector<HTMLButtonElement>("#btn-reset");
+const speedSelectEl = document.querySelector<HTMLSelectElement>("#speed-select");
+
+const stationButtonEl = document.querySelector<HTMLButtonElement>("#btn-station-mode");
+const helpButtonEl = document.querySelector<HTMLButtonElement>("#btn-help");
+const challengeButtonEl =
+  document.querySelector<HTMLButtonElement>("#btn-challenges");
+const challengeContainerEl =
+  document.querySelector<HTMLDivElement>("#challenge-container");
+
+const shadowToggleEl = document.querySelector<HTMLInputElement>("#show-shadow-toggle");
 const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
 const statusEl = document.querySelector<HTMLParagraphElement>("#status");
 
 if (
   !angleInputEl ||
-  !angleValueEl ||
   !phaseNameEl ||
-  !illumValueEl ||
-  !canvasEl ||
-  !setNewEl ||
-  !setFirstQuarterEl ||
-  !setFullEl ||
-  !setThirdQuarterEl ||
-  !stationModeEl ||
-  !challengeModeEl ||
-  !helpEl ||
+  !angleReadoutEl ||
+  !illumFractionEl ||
+  !illumPercentEl ||
+  !daysSinceNewEl ||
+  !waxingWaningEl ||
+  !orbitalSvgEl ||
+  !moonGroupEl ||
+  !moonDarkEl ||
+  !moonLitEl ||
+  !moonTerminatorEl ||
+  !moonLitHalfClipEl ||
+  !earthShadowGroupEl ||
+  !phaseSvgEl ||
+  !litPortionEl ||
+  !timelineDirectionEl ||
+  !timelineDayEl ||
+  !playButtonEl ||
+  !pauseButtonEl ||
+  !stepBackButtonEl ||
+  !stepForwardButtonEl ||
+  !resetButtonEl ||
+  !speedSelectEl ||
+  !stationButtonEl ||
+  !helpButtonEl ||
+  !challengeButtonEl ||
+  !challengeContainerEl ||
+  !shadowToggleEl ||
   !copyResultsEl ||
   !statusEl
 ) {
   throw new Error("Missing required DOM elements for moon-phases demo.");
 }
 
-const ctxEl = canvasEl.getContext("2d");
-if (!ctxEl) {
-  throw new Error("Canvas 2D context unavailable.");
-}
+const PREFERS_REDUCED_MOTION =
+  typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    : false;
 
-const angleInput = angleInputEl;
-const angleValue = angleValueEl;
-const phaseNameValue = phaseNameEl;
-const illumValue = illumValueEl;
-const canvas = canvasEl;
-const ctx = ctxEl;
-const setNew = setNewEl;
-const setFirstQuarter = setFirstQuarterEl;
-const setFull = setFullEl;
-const setThirdQuarter = setThirdQuarterEl;
-const stationModeButton = stationModeEl;
-const challengeModeButton = challengeModeEl;
-const helpButton = helpEl;
-const copyResults = copyResultsEl;
-const status = statusEl;
+const ORBITAL_CENTER = { x: 200, y: 200 };
+const ORBITAL_RADIUS = 120;
+const MOON_RADIUS = 15;
+const PHASE_MOON_RADIUS = 60;
+const SNAP_DEGREES = 5;
+const PHASE_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function normalizeAngleDeg(angleDeg: number): number {
-  const a = angleDeg % 360;
-  return a < 0 ? a + 360 : a;
-}
-
-function cssVar(name: string) {
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
-  if (value.length === 0) throw new Error(`Missing required CSS variable: ${name}`);
-  return value;
-}
-
-function resizeCanvasToCssPixels(
-  canvas: HTMLCanvasElement,
-  ctx: CanvasRenderingContext2D
-): { width: number; height: number } {
-  const rect = canvas.getBoundingClientRect();
-  const width = Math.max(1, rect.width);
-  const height = Math.max(1, rect.height);
-  const dpr = window.devicePixelRatio || 1;
-
-  const nextWidth = Math.max(1, Math.round(width * dpr));
-  const nextHeight = Math.max(1, Math.round(height * dpr));
-
-  if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
-    canvas.width = nextWidth;
-    canvas.height = nextHeight;
-  }
-
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { width, height };
-}
-
-const canvasTheme = {
-  glow: cssVar("--cp-glow-blue"),
-  disk: cssVar("--cp-bg1"),
-  lit: cssVar("--cp-text"),
-  border: cssVar("--cp-border")
-};
-
-// Illuminated fraction of a sphere as seen from Earth, approximated by:
-// f = (1 + cos(phaseAngle)) / 2 where phaseAngle is in radians.
-function illuminatedFraction(phaseAngleDeg: number) {
-  const radians = (phaseAngleDeg * Math.PI) / 180;
-  return (1 + Math.cos(radians)) / 2;
-}
-
-function formatFraction(value: number): string {
-  if (!Number.isFinite(value)) return "—";
-  return value.toFixed(3);
-}
-
-function phaseName(angleDeg: number): string {
-  const a = normalizeAngleDeg(angleDeg);
-
-  // Teaching convention used here:
-  // - 0 deg = Full, 180 deg = New
-  // - 270 deg is First Quarter (waxing), 90 deg is Third Quarter (waning)
-  //
-  // We label the 8 principal phases by splitting the circle into 45 deg bins.
-  const bin = Math.round(a / 45) % 8;
-  switch (bin) {
-    case 0:
-      return "Full";
-    case 1:
-      return "Waning gibbous";
-    case 2:
-      return "Third quarter";
-    case 3:
-      return "Waning crescent";
-    case 4:
-      return "New";
-    case 5:
-      return "Waxing crescent";
-    case 6:
-      return "First quarter";
-    case 7:
-      return "Waxing gibbous";
-    default:
-      return "—";
-  }
-}
-
-function drawMoon(phaseAngleDeg: number) {
-  const { width: w, height: h } = resizeCanvasToCssPixels(canvas, ctx);
-  const r = Math.min(w, h) * 0.34;
-  const cx = w / 2;
-  const cy = h / 2;
-
-  const frac = illuminatedFraction(phaseAngleDeg);
-  const terminatorX = (1 - 2 * frac) * r;
-
-  ctx.clearRect(0, 0, w, h);
-
-  // Soft background glow
-  const glow = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r * 1.6);
-  glow.addColorStop(0, canvasTheme.glow);
-  glow.addColorStop(1, "transparent");
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, w, h);
-
-  // Moon disk base (dark)
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.closePath();
-  ctx.fillStyle = canvasTheme.disk;
-  ctx.fill();
-
-  // Lit portion: draw as intersection of two circles to hint at a terminator.
-  // This is a visualization aid, not a full 3D ray-trace.
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.clip();
-
-  ctx.beginPath();
-  ctx.arc(cx + terminatorX, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = canvasTheme.lit;
-  ctx.fill();
-
-  ctx.restore();
-
-  // Rim
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.strokeStyle = canvasTheme.border;
-  ctx.lineWidth = 3;
-  ctx.stroke();
-}
-
-function render() {
-  const angleDeg = clamp(Number(angleInput.value), 0, 360);
-  const frac = illuminatedFraction(angleDeg);
-
-  angleValue.textContent = String(Math.round(angleDeg));
-  phaseNameValue.textContent = phaseName(angleDeg);
-  illumValue.textContent = String(Math.round(frac * 100));
-
-  drawMoon(angleDeg);
-}
-
-function setAngle(angleDeg: number) {
-  angleInput.value = String(clamp(angleDeg, 0, 360));
-  angleInput.dispatchEvent(new Event("input", { bubbles: true }));
-}
-
-angleInput.addEventListener("input", render);
-render();
-setNew.addEventListener("click", () => setAngle(180));
-setFirstQuarter.addEventListener("click", () => setAngle(270));
-setFull.addEventListener("click", () => setAngle(0));
-setThirdQuarter.addEventListener("click", () => setAngle(90));
-if (typeof ResizeObserver !== "undefined") {
-  new ResizeObserver(() => {
-    render();
-  }).observe(canvas);
-} else {
-  window.addEventListener("resize", () => {
-    render();
-  });
-}
-
-// -------------------------
-// Station Mode + Help
-// -------------------------
-
-const demoModes = createDemoModes({
-  help: {
-    title: "Help / Shortcuts",
-    subtitle: "Keyboard shortcuts work when focus is not in an input field.",
-    sections: [
-      {
-        heading: "Shortcuts",
-        type: "shortcuts",
-        items: [
-          { key: "?", action: "Toggle help" },
-          { key: "g", action: "Toggle station mode" }
-        ]
-      },
-      {
-        heading: "Model",
-        type: "bullets",
-        items: [
-          "Angle $\\alpha$ is the Sun–Moon–Earth phase angle in this model: $0^\\circ$ = Full, $180^\\circ$ = New.",
-          "Illuminated fraction is $f = \\frac{1 + \\cos\\alpha}{2}$."
-        ]
-      }
-    ]
-  },
-  station: {
-    title: "Station Mode: Moon Phases",
-    subtitle: "Add snapshot rows, then copy CSV or print.",
-    steps: [
-      "Move the slider to a phase.",
-      "Click “Add row (snapshot)” to record angle, phase name, and illuminated fraction.",
-      "Use the key-phase button for New → First Quarter → Full → Third Quarter, then sanity-check your results."
-    ],
-    columns: [
-      { key: "angleDeg", label: "Angle $\\alpha$ ($^\\circ$)" },
-      { key: "phase", label: "Phase (name)" },
-      { key: "f", label: "Illuminated fraction $f$" },
-      { key: "percent", label: "Illuminated (%)" }
-    ],
-    getSnapshotRow() {
-      const angleDeg = clamp(Number(angleInput.value), 0, 360);
-      const frac = illuminatedFraction(angleDeg);
-      return {
-        angleDeg: String(Math.round(angleDeg)),
-        phase: phaseName(angleDeg),
-        f: formatFraction(frac),
-        percent: String(Math.round(frac * 100))
-      };
-    },
-    snapshotLabel: "Add row (snapshot)",
-    rowSets: [
-      {
-        label: "Add key phases",
-        getRows() {
-          const keyAngles = [
-            { label: "New", angleDeg: 180 },
-            { label: "First quarter", angleDeg: 270 },
-            { label: "Full", angleDeg: 0 },
-            { label: "Third quarter", angleDeg: 90 }
-          ];
-          return keyAngles.map((k) => {
-            const f = illuminatedFraction(k.angleDeg);
-            return {
-              angleDeg: String(k.angleDeg),
-              phase: k.label,
-              f: formatFraction(f),
-              percent: String(Math.round(f * 100))
-            };
-          });
-        }
-      }
-    ],
-    synthesisPrompt:
-      "<p><strong>Synthesis:</strong> In one sentence, explain why phases are about <em>geometry</em> (illumination) rather than Earth’s shadow.</p>"
-  }
-});
-
-demoModes.bindButtons({
-  helpButton,
-  stationButton: stationModeButton
-});
-
-// -------------------------
-// Challenge Mode
-// -------------------------
-
-const controlsBody =
-  document.querySelector<HTMLElement>(".cp-demo__controls .cp-panel-body");
-if (!controlsBody) {
-  throw new Error("Missing controls container for challenge mode.");
-}
-
-function getState() {
-  const angleDeg = clamp(Number(angleInput.value), 0, 360);
-  const frac = illuminatedFraction(angleDeg);
-  return { angleDeg, frac };
-}
-
-function setState(next: unknown) {
-  const angleDeg =
-    typeof next === "object" && next !== null && "angleDeg" in next
-      ? (next as any).angleDeg
-      : null;
-  if (typeof angleDeg === "number" && Number.isFinite(angleDeg)) {
-    angleInput.value = String(clamp(angleDeg, 0, 360));
-    render();
-  }
-}
-
-const challengeEngine = new ChallengeEngine(
-  [
-    {
-      prompt: "Set $\\alpha$ so the Moon is about half illuminated.",
-      hints: [
-        "Half illumination happens at quarter phases.",
-        "Try $\\alpha$ near $90^\\circ$ or $270^\\circ$."
-      ],
-      initialState: { angleDeg: 100 },
-      check(state: any) {
-        const angleDeg = Number(state?.angleDeg);
-        const frac = Number(state?.frac);
-        if (![angleDeg, frac].every(Number.isFinite)) {
-          return { correct: false, close: false, message: "No valid state yet." };
-        }
-        const diff = Math.abs(frac - 0.5);
-        if (diff <= 0.03) {
-          return { correct: true, close: false, message: `$f \\approx ${formatFraction(frac)}$.` };
-        }
-        if (diff <= 0.08) {
-          return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(frac)}$.` };
-        }
-        return { correct: false, close: false, message: "Try moving toward 50% ($f=0.5$)." };
-      }
-    },
-    {
-      prompt: "Set $\\alpha$ so the Moon is near New (almost dark).",
-      hints: ["New happens near $\\alpha = 180^\\circ$.", "Look for $f$ near 0."],
-      initialState: { angleDeg: 150 },
-      check(state: any) {
-        const angleDeg = Number(state?.angleDeg);
-        const frac = Number(state?.frac);
-        if (![angleDeg, frac].every(Number.isFinite)) {
-          return { correct: false, close: false, message: "No valid state yet." };
-        }
-        if (frac <= 0.05) return { correct: true, close: false, message: `$f \\approx ${formatFraction(frac)}$.` };
-        if (frac <= 0.12) return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(frac)}$.` };
-        return { correct: false, close: false, message: `Too bright: $f \\approx ${formatFraction(frac)}$.` };
-      }
-    },
-    {
-      prompt: "Set $\\alpha$ so the Moon is near Full (almost fully lit).",
-      hints: ["Full happens near $\\alpha = 0^\\circ$ (or $360^\\circ$).", "Look for $f$ near 1."],
-      initialState: { angleDeg: 30 },
-      check(state: any) {
-        const angleDeg = Number(state?.angleDeg);
-        const frac = Number(state?.frac);
-        if (![angleDeg, frac].every(Number.isFinite)) {
-          return { correct: false, close: false, message: "No valid state yet." };
-        }
-        if (frac >= 0.95) return { correct: true, close: false, message: `$f \\approx ${formatFraction(frac)}$.` };
-        if (frac >= 0.88) return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(frac)}$.` };
-        return { correct: false, close: false, message: `Too dim: $f \\approx ${formatFraction(frac)}$.` };
-      }
-    }
-  ],
-  { container: controlsBody, getState, setState, showUI: true }
-);
-
-challengeModeButton.addEventListener("click", () => {
-  if (challengeEngine.isActive()) {
-    challengeEngine.stop();
-  } else {
-    challengeEngine.start();
-  }
-});
+let moonAngleDeg = 0;
+let isAnimating = false;
+let animationId: number | null = null;
+let tweenId: number | null = null;
+let animationSpeed = Number(speedSelectEl.value) || 5;
 
 const runtime = createInstrumentRuntime({
   hasMathMode: false,
@@ -415,41 +114,716 @@ const runtime = createInstrumentRuntime({
   url: new URL(window.location.href)
 });
 
+function normalizeAngle(angleDeg: number): number {
+  const a = angleDeg % 360;
+  return a < 0 ? a + 360 : a;
+}
+
+function shortestAngleDelta(fromDeg: number, toDeg: number): number {
+  return ((toDeg - fromDeg + 540) % 360) - 180;
+}
+
+function formatFraction(value: number): string {
+  if (!Number.isFinite(value)) return "—";
+  return value.toFixed(3);
+}
+
+function formatDay(value: number): string {
+  if (!Number.isFinite(value)) return "—";
+  return value.toFixed(1);
+}
+
+function updateAngleInput() {
+  angleInputEl.value = String(Math.round(moonAngleDeg));
+}
+
+function setAngle(angleDeg: number) {
+  moonAngleDeg = normalizeAngle(angleDeg);
+  updateAngleInput();
+  update();
+}
+
+function animateAngle(targetDeg: number, durationMs: number) {
+  if (PREFERS_REDUCED_MOTION || durationMs <= 0) {
+    setAngle(targetDeg);
+    return;
+  }
+
+  if (tweenId) {
+    cancelAnimationFrame(tweenId);
+    tweenId = null;
+  }
+
+  const start = moonAngleDeg;
+  const delta = shortestAngleDelta(start, targetDeg);
+  const startTime = performance.now();
+
+  const step = (now: number) => {
+    const t = Math.min(1, (now - startTime) / durationMs);
+    moonAngleDeg = normalizeAngle(start + delta * t);
+    updateAngleInput();
+    update();
+    if (t < 1) {
+      tweenId = requestAnimationFrame(step);
+    } else {
+      tweenId = null;
+    }
+  };
+
+  tweenId = requestAnimationFrame(step);
+}
+
+function updateOrbitalView() {
+  const angleRad = (moonAngleDeg * Math.PI) / 180;
+  const moonX = ORBITAL_CENTER.x + ORBITAL_RADIUS * Math.cos(angleRad);
+  const moonY = ORBITAL_CENTER.y - ORBITAL_RADIUS * Math.sin(angleRad);
+
+  moonDarkEl.setAttribute("cx", moonX.toFixed(2));
+  moonDarkEl.setAttribute("cy", moonY.toFixed(2));
+  moonLitEl.setAttribute("cx", moonX.toFixed(2));
+  moonLitEl.setAttribute("cy", moonY.toFixed(2));
+  moonTerminatorEl.setAttribute("x1", moonX.toFixed(2));
+  moonTerminatorEl.setAttribute("x2", moonX.toFixed(2));
+  moonTerminatorEl.setAttribute("y1", (moonY - MOON_RADIUS).toFixed(2));
+  moonTerminatorEl.setAttribute("y2", (moonY + MOON_RADIUS).toFixed(2));
+
+  moonLitHalfClipEl.setAttribute("x", (moonX - MOON_RADIUS).toFixed(2));
+  moonLitHalfClipEl.setAttribute("y", (moonY - MOON_RADIUS).toFixed(2));
+  moonLitHalfClipEl.setAttribute("width", MOON_RADIUS.toFixed(2));
+  moonLitHalfClipEl.setAttribute("height", (MOON_RADIUS * 2).toFixed(2));
+}
+
+function updatePhaseView() {
+  const normalized = normalizeAngle(moonAngleDeg);
+  const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(normalized);
+  const r = PHASE_MOON_RADIUS;
+  const phaseAngleRad = (normalized * Math.PI) / 180;
+  const squeeze = r * Math.cos(phaseAngleRad);
+  const isWaxing = normalized > 180;
+
+  let path = "";
+
+  if (illum < 0.01) {
+    path = "";
+  } else if (illum > 0.99) {
+    path = `M 0 ${-r} A ${r} ${r} 0 1 1 0 ${r} A ${r} ${r} 0 1 1 0 ${-r}`;
+  } else if (isWaxing) {
+    if (squeeze >= 0) {
+      path = `M 0 ${-r} A ${r} ${r} 0 0 1 0 ${r} A ${Math.abs(
+        squeeze
+      )} ${r} 0 0 1 0 ${-r}`;
+    } else {
+      path = `M 0 ${-r} A ${r} ${r} 0 0 1 0 ${r} A ${Math.abs(
+        squeeze
+      )} ${r} 0 0 0 0 ${-r}`;
+    }
+  } else if (squeeze >= 0) {
+    path = `M 0 ${-r} A ${r} ${r} 0 0 0 0 ${r} A ${Math.abs(
+      squeeze
+    )} ${r} 0 0 0 0 ${-r}`;
+  } else {
+    path = `M 0 ${-r} A ${r} ${r} 0 0 0 0 ${r} A ${Math.abs(
+      squeeze
+    )} ${r} 0 0 1 0 ${-r}`;
+  }
+
+  litPortionEl.setAttribute("d", path);
+}
+
+function updateReadouts() {
+  const normalized = normalizeAngle(moonAngleDeg);
+  const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(normalized);
+  const phaseName = MoonPhasesModel.phaseNameFromPhaseAngleDeg(normalized);
+  const daysSinceNew = MoonPhasesModel.daysSinceNewFromPhaseAngleDeg(normalized);
+  const waxingWaning = MoonPhasesModel.waxingWaningFromPhaseAngleDeg(normalized);
+
+  phaseNameEl.textContent = phaseName;
+  angleReadoutEl.textContent = String(Math.round(normalized));
+  illumFractionEl.textContent = formatFraction(illum);
+  illumPercentEl.textContent = String(Math.round(illum * 100));
+  daysSinceNewEl.textContent = formatDay(daysSinceNew);
+  waxingWaningEl.textContent = waxingWaning;
+
+  moonGroupEl.setAttribute("aria-valuenow", String(Math.round(normalized)));
+  moonGroupEl.setAttribute(
+    "aria-valuetext",
+    `${phaseName}, ${Math.round(illum * 100)}% illuminated, Day ${daysSinceNew.toFixed(
+      0
+    )} of lunar cycle (${waxingWaning})`
+  );
+}
+
+function updateTimeline() {
+  const daysSinceNew = MoonPhasesModel.daysSinceNewFromPhaseAngleDeg(moonAngleDeg);
+  const waxingWaning = MoonPhasesModel.waxingWaningFromPhaseAngleDeg(moonAngleDeg);
+
+  timelineDirectionEl.textContent = waxingWaning === "Waxing" ? "WAXING →" : "← WANING";
+  timelineDirectionEl.classList.toggle("waning", waxingWaning === "Waning");
+  timelineDayEl.textContent = `Day ${formatDay(daysSinceNew)} of ${MoonPhasesModel.synodicMonthDays}`;
+
+  const normalized = normalizeAngle(moonAngleDeg);
+  timelinePhaseEls.forEach((button) => {
+    const target = Number(button.dataset.angle);
+    const diff = Math.abs(shortestAngleDelta(normalized, target));
+    button.classList.toggle("active", diff < 22.5);
+  });
+
+  phaseButtonEls.forEach((button) => {
+    const target = Number(button.dataset.angle);
+    const diff = Math.abs(shortestAngleDelta(normalized, target));
+    button.classList.toggle("active", diff < 22.5);
+  });
+}
+
+function update() {
+  updateOrbitalView();
+  updatePhaseView();
+  updateReadouts();
+  updateTimeline();
+}
+
+function applyShadowVisibility(showShadow: boolean, announce = false) {
+  earthShadowGroupEl.style.display = showShadow ? "block" : "none";
+  shadowToggleEl.checked = showShadow;
+  if (announce) {
+    setLiveRegionText(
+      statusEl,
+      showShadow
+        ? "Earth’s shadow cone is now visible. Notice it points away from the Sun."
+        : "Earth’s shadow cone hidden."
+    );
+  }
+}
+
+function snapToCardinalPhase(angleDeg: number): number {
+  const normalized = normalizeAngle(angleDeg);
+  const targets = [0, 90, 180, 270];
+
+  let bestTarget = normalized;
+  let bestAbsDelta = Infinity;
+
+  for (const target of targets) {
+    const delta = Math.abs(shortestAngleDelta(normalized, target));
+    if (delta < bestAbsDelta) {
+      bestAbsDelta = delta;
+      bestTarget = target;
+    }
+  }
+
+  return bestAbsDelta <= SNAP_DEGREES ? bestTarget : normalized;
+}
+
+function setupDrag() {
+  let isDragging = false;
+
+  const startDrag = (event: Event) => {
+    stopAnimation();
+    isDragging = true;
+    event.preventDefault();
+  };
+
+  const moveDrag = (event: MouseEvent | TouchEvent) => {
+    if (!isDragging) return;
+
+    let clientX: number;
+    let clientY: number;
+
+    if ("touches" in event && event.touches.length > 0) {
+      clientX = event.touches[0].clientX;
+      clientY = event.touches[0].clientY;
+    } else if ("clientX" in event) {
+      clientX = event.clientX;
+      clientY = event.clientY;
+    } else {
+      return;
+    }
+
+    const rect = orbitalSvgEl.getBoundingClientRect();
+    const svgX = ((clientX - rect.left) / rect.width) * 400;
+    const svgY = ((clientY - rect.top) / rect.height) * 400;
+
+    const dx = svgX - ORBITAL_CENTER.x;
+    const dy = ORBITAL_CENTER.y - svgY;
+
+    const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+    moonAngleDeg = normalizeAngle(angle);
+    updateAngleInput();
+    update();
+  };
+
+  const endDrag = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    setAngle(snapToCardinalPhase(moonAngleDeg));
+  };
+
+  moonGroupEl.addEventListener("mousedown", startDrag);
+  document.addEventListener("mousemove", moveDrag);
+  document.addEventListener("mouseup", endDrag);
+
+  moonGroupEl.addEventListener("touchstart", startDrag, { passive: false });
+  document.addEventListener("touchmove", moveDrag, { passive: false });
+  document.addEventListener("touchend", endDrag);
+}
+
+function setupPresets() {
+  phaseButtonEls.forEach((button) => {
+    button.addEventListener("click", () => {
+      stopAnimation();
+      const target = Number(button.dataset.angle);
+      animateAngle(target, 400);
+    });
+  });
+}
+
+function setupTimeline() {
+  timelinePhaseEls.forEach((button) => {
+    button.addEventListener("click", () => {
+      stopAnimation();
+      const target = Number(button.dataset.angle);
+      animateAngle(target, 400);
+    });
+  });
+}
+
+function setupKeyboard() {
+  moonGroupEl.addEventListener("keydown", (event) => {
+    let delta = 0;
+    let jump: number | null = null;
+
+    switch (event.key) {
+      case "ArrowLeft":
+      case "ArrowDown":
+        delta = event.shiftKey ? -1 : -5;
+        break;
+      case "ArrowRight":
+      case "ArrowUp":
+        delta = event.shiftKey ? 1 : 5;
+        break;
+      case "Home":
+        jump = 0;
+        break;
+      case "End":
+        jump = 180;
+        break;
+      case "1":
+        jump = 180;
+        break;
+      case "2":
+        jump = 225;
+        break;
+      case "3":
+        jump = 270;
+        break;
+      case "4":
+        jump = 315;
+        break;
+      case "5":
+        jump = 0;
+        break;
+      case "6":
+        jump = 45;
+        break;
+      case "7":
+        jump = 90;
+        break;
+      case "8":
+        jump = 135;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    stopAnimation();
+
+    if (jump !== null) {
+      animateAngle(jump, 300);
+      return;
+    }
+
+    if (delta !== 0) {
+      setAngle(moonAngleDeg + delta);
+    }
+  });
+}
+
+function updateAnimationButtons() {
+  playButtonEl.disabled = isAnimating || PREFERS_REDUCED_MOTION;
+  pauseButtonEl.disabled = !isAnimating;
+}
+
+function startAnimation() {
+  if (PREFERS_REDUCED_MOTION) {
+    setLiveRegionText(statusEl, "Animation is disabled in reduced-motion mode.");
+    return;
+  }
+  if (isAnimating) return;
+
+  isAnimating = true;
+  updateAnimationButtons();
+
+  let lastTime = performance.now();
+  const degreesPerSecond = (360 / MoonPhasesModel.synodicMonthDays) * animationSpeed;
+
+  const step = (now: number) => {
+    if (!isAnimating) return;
+    const delta = (now - lastTime) / 1000;
+    lastTime = now;
+    moonAngleDeg = normalizeAngle(moonAngleDeg + degreesPerSecond * delta);
+    updateAngleInput();
+    update();
+    animationId = requestAnimationFrame(step);
+  };
+
+  animationId = requestAnimationFrame(step);
+}
+
+function stopAnimation() {
+  isAnimating = false;
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+  updateAnimationButtons();
+}
+
+function stepForward() {
+  stopAnimation();
+  const index = MoonPhasesModel.phaseIndexFromPhaseAngleDeg(moonAngleDeg);
+  const target = PHASE_ANGLES[(index + 1) % PHASE_ANGLES.length];
+  animateAngle(target, 300);
+}
+
+function stepBackward() {
+  stopAnimation();
+  const index = MoonPhasesModel.phaseIndexFromPhaseAngleDeg(moonAngleDeg);
+  const target = PHASE_ANGLES[(index + PHASE_ANGLES.length - 1) % PHASE_ANGLES.length];
+  animateAngle(target, 300);
+}
+
+function resetToFull() {
+  stopAnimation();
+  animateAngle(0, 300);
+  applyShadowVisibility(false, true);
+}
+
+function setupAnimationControls() {
+  playButtonEl.addEventListener("click", startAnimation);
+  pauseButtonEl.addEventListener("click", stopAnimation);
+  stepForwardButtonEl.addEventListener("click", stepForward);
+  stepBackButtonEl.addEventListener("click", stepBackward);
+  resetButtonEl.addEventListener("click", resetToFull);
+
+  speedSelectEl.addEventListener("change", () => {
+    animationSpeed = Number(speedSelectEl.value) || 1;
+  });
+
+  updateAnimationButtons();
+}
+
+function setupShadowToggle() {
+  shadowToggleEl.addEventListener("change", () => {
+    applyShadowVisibility(shadowToggleEl.checked, true);
+  });
+}
+
+function setupChallenges() {
+  const challenges = [
+    {
+      prompt: "Set the Moon to show a Full Moon phase.",
+      hints: [
+        "Full Moon is opposite the Sun in this diagram.",
+        "Try $\alpha$ near $0^\circ$ or $360^\circ$."
+      ],
+      initialState: { angleDeg: 20 },
+      check(state: any) {
+        const angleDeg = Number(state?.angleDeg);
+        const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(angleDeg);
+        if (![angleDeg, illum].every(Number.isFinite)) {
+          return { correct: false, close: false, message: "No valid state yet." };
+        }
+        if (illum >= 0.95) {
+          return { correct: true, close: false, message: `$f \approx ${formatFraction(illum)}$.` };
+        }
+        if (illum >= 0.88) {
+          return { correct: false, close: true, message: `Close: $f \approx ${formatFraction(illum)}$.` };
+        }
+        return { correct: false, close: false, message: "Too dim—move closer to Full." };
+      }
+    },
+    {
+      prompt: "Set the Moon to show a New Moon phase.",
+      hints: ["New Moon is between Earth and Sun.", "Try $\alpha$ near $180^\circ$."],
+      initialState: { angleDeg: 150 },
+      check(state: any) {
+        const angleDeg = Number(state?.angleDeg);
+        const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(angleDeg);
+        if (![angleDeg, illum].every(Number.isFinite)) {
+          return { correct: false, close: false, message: "No valid state yet." };
+        }
+        if (illum <= 0.05) {
+          return { correct: true, close: false, message: `$f \approx ${formatFraction(illum)}$.` };
+        }
+        if (illum <= 0.12) {
+          return { correct: false, close: true, message: `Close: $f \approx ${formatFraction(illum)}$.` };
+        }
+        return { correct: false, close: false, message: "Too bright—move closer to New." };
+      }
+    },
+    {
+      prompt: "Find the First Quarter Moon position.",
+      hints: ["Quarter phases are about 50% illuminated.", "Try $\alpha$ near $270^\circ$."],
+      initialState: { angleDeg: 250 },
+      check(state: any) {
+        const angleDeg = Number(state?.angleDeg);
+        const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(angleDeg);
+        if (![angleDeg, illum].every(Number.isFinite)) {
+          return { correct: false, close: false, message: "No valid state yet." };
+        }
+        const diff = Math.abs(illum - 0.5);
+        if (diff <= 0.03) {
+          return { correct: true, close: false, message: `$f \approx ${formatFraction(illum)}$.` };
+        }
+        if (diff <= 0.08) {
+          return { correct: false, close: true, message: `Close: $f \approx ${formatFraction(illum)}$.` };
+        }
+        return { correct: false, close: false, message: "Move toward quarter phase (50% lit)." };
+      }
+    },
+    {
+      prompt: "Find the Third Quarter Moon position.",
+      hints: ["Quarter phases are about 50% illuminated.", "Try $\alpha$ near $90^\circ$."],
+      initialState: { angleDeg: 110 },
+      check(state: any) {
+        const angleDeg = Number(state?.angleDeg);
+        const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(angleDeg);
+        if (![angleDeg, illum].every(Number.isFinite)) {
+          return { correct: false, close: false, message: "No valid state yet." };
+        }
+        const diff = Math.abs(illum - 0.5);
+        if (diff <= 0.03) {
+          return { correct: true, close: false, message: `$f \approx ${formatFraction(illum)}$.` };
+        }
+        if (diff <= 0.08) {
+          return { correct: false, close: true, message: `Close: $f \approx ${formatFraction(illum)}$.` };
+        }
+        return { correct: false, close: false, message: "Move toward quarter phase (50% lit)." };
+      }
+    },
+    {
+      prompt: "Shadow challenge: Can Earth’s shadow touch the Moon?",
+      hints: [
+        "Turn on the shadow toggle to see where it points.",
+        "The shadow points away from the Sun (toward Full Moon)."
+      ],
+      initialState: { showShadow: true, angleDeg: 10 },
+      check(state: any) {
+        if (!state?.showShadow) {
+          return {
+            correct: false,
+            close: false,
+            message: "Turn on the shadow toggle first to see the cone."
+          };
+        }
+        const angleDeg = Number(state?.angleDeg);
+        const normalized = normalizeAngle(angleDeg);
+        const inShadowZone = normalized < 30 || normalized > 330;
+        return {
+          correct: inShadowZone,
+          close: false,
+          message: inShadowZone
+            ? "Yes — that’s a lunar eclipse alignment."
+            : "Move the Moon into the shadow cone (near Full Moon)."
+        };
+      }
+    }
+  ];
+
+  const engine = new ChallengeEngine(challenges, {
+    container: challengeContainerEl,
+    showUI: true,
+    getState: () => ({
+      angleDeg: moonAngleDeg,
+      showShadow: shadowToggleEl.checked
+    }),
+    setState: (next) => {
+      if (typeof next === "object" && next !== null) {
+        if ("showShadow" in next) {
+          applyShadowVisibility(Boolean((next as any).showShadow));
+        }
+        if ("angleDeg" in next && Number.isFinite((next as any).angleDeg)) {
+          setAngle(Number((next as any).angleDeg));
+        }
+      }
+    }
+  });
+
+  challengeButtonEl.addEventListener("click", () => {
+    if (engine.isActive()) {
+      engine.stop();
+      challengeButtonEl.classList.remove("active");
+    } else {
+      engine.start();
+      challengeButtonEl.classList.add("active");
+    }
+  });
+}
+
+function setupModes() {
+  const demoModes = createDemoModes({
+    help: {
+      title: "Help / Keys",
+      subtitle: "Shortcuts work when focus is not in an input field.",
+      sections: [
+        {
+          heading: "Global",
+          type: "shortcuts",
+          items: [
+            { key: "?", action: "Toggle help" },
+            { key: "g", action: "Toggle station mode" }
+          ]
+        },
+        {
+          heading: "Moon (when focused)",
+          type: "shortcuts",
+          items: [
+            { key: "← / → (or ↑ / ↓)", action: "Move Moon 5° around orbit" },
+            { key: "Shift + arrows", action: "Move Moon 1° (fine control)" },
+            { key: "Home", action: "Jump to Full Moon" },
+            { key: "End", action: "Jump to New Moon" },
+            { key: "1–8", action: "Jump to the 8 named phases" }
+          ]
+        },
+        {
+          heading: "Model",
+          type: "bullets",
+          items: [
+            "Angle $\\alpha$ is the Sun–Moon–Earth phase angle in this model: $0^\\circ$ = Full, $180^\\circ$ = New.",
+            "Illumination fraction is $f = \\frac{1 + \\cos\\alpha}{2}$."
+          ]
+        }
+      ]
+    },
+    station: {
+      title: "Station Mode: Moon Phases",
+      subtitle: "Collect evidence that phases are viewing geometry (not shadow).",
+      steps: [
+        "Add the 4 key phases (New, First Quarter, Full, Third Quarter).",
+        "Drag to any other phase and add snapshot rows.",
+        "Use the table to connect angle around the orbit → illumination fraction."
+      ],
+      columns: [
+        { key: "angleDeg", label: "Phase angle α (deg)" },
+        { key: "phase", label: "Phase name" },
+        { key: "f", label: "Illumination fraction f" },
+        { key: "percent", label: "Illuminated (%)" },
+        { key: "days", label: "Days since new (d)" },
+        { key: "trend", label: "Waxing/Waning" }
+      ],
+      snapshotLabel: "Add row (current Moon position)",
+      getSnapshotRow() {
+        const normalized = normalizeAngle(moonAngleDeg);
+        const f = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(normalized);
+        const days = MoonPhasesModel.daysSinceNewFromPhaseAngleDeg(normalized);
+        return {
+          angleDeg: String(Math.round(normalized)),
+          phase: MoonPhasesModel.phaseNameFromPhaseAngleDeg(normalized),
+          f: formatFraction(f),
+          percent: String(Math.round(f * 100)),
+          days: formatDay(days),
+          trend: MoonPhasesModel.waxingWaningFromPhaseAngleDeg(normalized)
+        };
+      },
+      rowSets: [
+        {
+          label: "Add key phases",
+          getRows() {
+            const keyAngles = [
+              { label: "New Moon", angleDeg: 180 },
+              { label: "First Quarter", angleDeg: 270 },
+              { label: "Full Moon", angleDeg: 0 },
+              { label: "Third Quarter", angleDeg: 90 }
+            ];
+            return keyAngles.map((item) => {
+              const f = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(item.angleDeg);
+              const days = MoonPhasesModel.daysSinceNewFromPhaseAngleDeg(item.angleDeg);
+              return {
+                angleDeg: String(item.angleDeg),
+                phase: item.label,
+                f: formatFraction(f),
+                percent: String(Math.round(f * 100)),
+                days: formatDay(days),
+                trend: MoonPhasesModel.waxingWaningFromPhaseAngleDeg(item.angleDeg)
+              };
+            });
+          }
+        }
+      ],
+      synthesisPrompt: `
+        <p><strong>Explain:</strong> The Sun always lights half the Moon. The phase is the fraction of that lit half we can see from Earth.</p>
+        <p><strong>Use your table:</strong> Quarter phases should be about 50% illuminated, and the illumination changes smoothly as the Moon moves.</p>
+      `
+    },
+    keys: { help: "?", station: "g" }
+  });
+
+  demoModes.bindButtons({ helpButton: helpButtonEl, stationButton: stationButtonEl });
+}
+
 async function handleCopyResults() {
-  setLiveRegionText(status, "Copying…");
+  setLiveRegionText(statusEl, "Copying…");
   try {
-    const angleDeg = clamp(Number(angleInput.value), 0, 360);
-    const frac = illuminatedFraction(angleDeg);
+    const normalized = normalizeAngle(moonAngleDeg);
+    const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(normalized);
+    const days = MoonPhasesModel.daysSinceNewFromPhaseAngleDeg(normalized);
 
     await runtime.copyResults({
       version: 1,
       timestamp: new Date().toISOString(),
       parameters: [
-        {
-          name: "Phase angle alpha (deg)",
-          value: String(Math.round(angleDeg))
-        }
+        { name: "Phase angle α (deg)", value: String(Math.round(normalized)) }
       ],
       readouts: [
-        {
-          name: "Illuminated (%)",
-          value: String(Math.round(frac * 100))
-        }
+        { name: "Phase name", value: MoonPhasesModel.phaseNameFromPhaseAngleDeg(normalized) },
+        { name: "Illumination fraction f", value: formatFraction(illum) },
+        { name: "Illuminated (%)", value: String(Math.round(illum * 100)) },
+        { name: "Days since new (d)", value: formatDay(days) },
+        { name: "Waxing/Waning", value: MoonPhasesModel.waxingWaningFromPhaseAngleDeg(normalized) }
       ],
-      notes: ["This pilot uses a simplified 2D terminator visualization."]
+      notes: [
+        "Illumination uses f = (1 + cos α) / 2 with α in degrees.",
+        "This is a geometric model (not to scale, no orbital tilt)."
+      ]
     });
 
-    setLiveRegionText(status, "Copied results to clipboard.");
+    setLiveRegionText(statusEl, "Copied results to clipboard.");
   } catch (err) {
     setLiveRegionText(
-      status,
+      statusEl,
       err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed."
     );
   }
 }
 
-copyResults.addEventListener("click", () => {
+angleInputEl.addEventListener("input", () => {
+  stopAnimation();
+  setAngle(Number(angleInputEl.value));
+});
+
+copyResultsEl.addEventListener("click", () => {
   void handleCopyResults();
 });
 
+setupDrag();
+setupPresets();
+setupTimeline();
+setupKeyboard();
+setupAnimationControls();
+setupShadowToggle();
+setupChallenges();
+setupModes();
+
+setAngle(0);
+applyShadowVisibility(false);
 initMath(document);
