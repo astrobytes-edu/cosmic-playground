@@ -76,16 +76,16 @@ describe("Angular Size — Design System Contracts", () => {
 
   describe("Readout unit separation", () => {
     it("readout values with units use .cp-readout__unit spans", () => {
-      // θ display has dynamic unit (deg/arcmin/arcsec) → needs cp-readout__unit
-      // θ (deg) has unit (deg) → needs cp-readout__unit
-      // D has unit (km) → needs cp-readout__unit
-      // d has unit (km) → needs cp-readout__unit
+      // theta display has dynamic unit (deg/arcmin/arcsec) -- needs cp-readout__unit
+      // theta (deg) has unit (deg) -- needs cp-readout__unit
+      // D has unit (km) -- needs cp-readout__unit
+      // d has unit (km) -- needs cp-readout__unit
       const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
       expect(unitSpans.length).toBeGreaterThanOrEqual(3);
     });
 
     it("readout labels do not contain parenthesized units", () => {
-      // Labels like "Angular diameter θ (deg)" should become "Angular diameter θ"
+      // Labels like "Angular diameter theta (deg)" should become "Angular diameter theta"
       // with the unit in a separate span
       const labels = html.match(/class="cp-readout__label"[^>]*>([^<]*)</g) || [];
       const parenthesizedUnits = labels.filter((l) => /\((?:deg|km|arcmin|arcsec)\)/.test(l));
