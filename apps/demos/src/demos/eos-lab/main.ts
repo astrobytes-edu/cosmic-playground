@@ -143,8 +143,12 @@ const TEMPERATURE_MAX_K = 1e9;
 const DENSITY_MIN_G_PER_CM3 = 1e-10;
 const DENSITY_MAX_G_PER_CM3 = 1e10;
 const REGIME_MAP_REBUILD_DEBOUNCE_MS = 80;
-const REGIME_MAP_GRID_RENDER_X = 42;
-const REGIME_MAP_GRID_RENDER_Y = 34;
+const REGIME_MAP_MIN_X = 64;
+const REGIME_MAP_MAX_X = 180;
+const REGIME_MAP_MIN_Y = 48;
+const REGIME_MAP_MAX_Y = 132;
+const REGIME_MAP_CELL_SIZE_DESKTOP_PX = 5.5;
+const REGIME_MAP_CELL_SIZE_COARSE_PX = 7.5;
 const PRESSURE_CURVE_SAMPLES = 96;
 
 const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
@@ -754,10 +758,44 @@ function compositionRegimeKey(composition: StellarCompositionFractions, radiatio
 
 let regimeMapCacheKey: string | null = null;
 let pendingRegimeMapKey: string | null = null;
+let pendingRegimeMapResolution: RegimeMapGridResolution | null = null;
 let regimeMapRebuildTimer: number | null = null;
 let regimeMapBuildCount = 0;
 let regimePresetMarkersBuilt = false;
 let regimeGridBuilt = false;
+let regimeMapLastResolution = "0x0";
+
+type RegimeMapGridResolution = {
+  xCells: number;
+  yCells: number;
+  signature: string;
+};
+
+function regimeMapGridResolution(): RegimeMapGridResolution {
+  const rect = regimeMap.getBoundingClientRect();
+  const widthPx = rect.width > 0 ? rect.width : 500;
+  const heightPx = rect.height > 0 ? rect.height : widthPx / 1.45;
+
+  const cellSizePx =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(pointer: coarse)").matches
+      ? REGIME_MAP_CELL_SIZE_COARSE_PX
+      : REGIME_MAP_CELL_SIZE_DESKTOP_PX;
+
+  const xCells = Math.round(
+    clamp(widthPx / cellSizePx, REGIME_MAP_MIN_X, REGIME_MAP_MAX_X)
+  );
+  const yCells = Math.round(
+    clamp(heightPx / cellSizePx, REGIME_MAP_MIN_Y, REGIME_MAP_MAX_Y)
+  );
+
+  return {
+    xCells,
+    yCells,
+    signature: `${xCells}x${yCells}`
+  };
+}
 
 function cancelRegimeMapRebuildTimer(): void {
   if (regimeMapRebuildTimer === null) return;
@@ -769,15 +807,21 @@ function flushRegimeMapRebuild(): void {
   cancelRegimeMapRebuildTimer();
   if (!pendingRegimeMapKey || pendingRegimeMapKey === regimeMapCacheKey) {
     pendingRegimeMapKey = null;
+    pendingRegimeMapResolution = null;
     return;
   }
-  buildRegimeMapField();
+  buildRegimeMapField(pendingRegimeMapResolution ?? regimeMapGridResolution());
   regimeMapCacheKey = pendingRegimeMapKey;
   pendingRegimeMapKey = null;
+  pendingRegimeMapResolution = null;
 }
 
-function scheduleRegimeMapRebuild(nextKey: string): void {
+function scheduleRegimeMapRebuild(
+  nextKey: string,
+  resolution: RegimeMapGridResolution
+): void {
   pendingRegimeMapKey = nextKey;
+  pendingRegimeMapResolution = resolution;
   cancelRegimeMapRebuildTimer();
   regimeMapRebuildTimer = window.setTimeout(() => {
     regimeMapRebuildTimer = null;
@@ -785,17 +829,18 @@ function scheduleRegimeMapRebuild(nextKey: string): void {
   }, REGIME_MAP_REBUILD_DEBOUNCE_MS);
 }
 
-function buildRegimeMapField(): void {
+function buildRegimeMapField(resolution: RegimeMapGridResolution): void {
   regimeMapBuildCount += 1;
+  regimeMapLastResolution = resolution.signature;
   const svgNs = "http://www.w3.org/2000/svg";
-  const cellWidth = 100 / REGIME_MAP_GRID_RENDER_X;
-  const cellHeight = 100 / REGIME_MAP_GRID_RENDER_Y;
+  const cellWidth = 100 / resolution.xCells;
+  const cellHeight = 100 / resolution.yCells;
 
   regimeCells.replaceChildren();
-  for (let iy = 0; iy < REGIME_MAP_GRID_RENDER_Y; iy += 1) {
-    for (let ix = 0; ix < REGIME_MAP_GRID_RENDER_X; ix += 1) {
-      const xFrac = (ix + 0.5) / REGIME_MAP_GRID_RENDER_X;
-      const yFrac = (iy + 0.5) / REGIME_MAP_GRID_RENDER_Y;
+  for (let iy = 0; iy < resolution.yCells; iy += 1) {
+    for (let ix = 0; ix < resolution.xCells; ix += 1) {
+      const xFrac = (ix + 0.5) / resolution.xCells;
+      const yFrac = (iy + 0.5) / resolution.yCells;
       const temperatureK = Math.pow(
         10,
         Math.log10(TEMPERATURE_MIN_K) + xFrac * (Math.log10(TEMPERATURE_MAX_K) - Math.log10(TEMPERATURE_MIN_K))
@@ -879,12 +924,14 @@ function renderRegimeMap(
   model: StellarEosStateCgs,
   args: { deferRegimeMapFieldRebuild?: boolean } = {}
 ): void {
-  const nextKey = compositionRegimeKey(state.composition, state.radiationDepartureEta);
+  const resolution = regimeMapGridResolution();
+  const nextKey = `${compositionRegimeKey(state.composition, state.radiationDepartureEta)}|${resolution.signature}`;
   if (nextKey !== regimeMapCacheKey) {
     if (args.deferRegimeMapFieldRebuild) {
-      scheduleRegimeMapRebuild(nextKey);
+      scheduleRegimeMapRebuild(nextKey, resolution);
     } else {
       pendingRegimeMapKey = nextKey;
+      pendingRegimeMapResolution = resolution;
       flushRegimeMapRebuild();
     }
   }
@@ -1120,6 +1167,7 @@ function render(args: { deferRegimeMapFieldRebuild?: boolean } = {}): void {
     slug: "eos-lab",
     mode: runtime.mode,
     regimeMapBuildCount,
+    regimeMapGridResolution: regimeMapLastResolution,
     exportResults: () => exportResults(model)
   };
 }
@@ -1321,6 +1369,15 @@ const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield
 if (starfieldCanvas) {
   initStarfield({ canvas: starfieldCanvas });
 }
+
+let resizeFrame: number | null = null;
+window.addEventListener("resize", () => {
+  if (resizeFrame !== null) return;
+  resizeFrame = window.requestAnimationFrame(() => {
+    resizeFrame = null;
+    renderRegimeMap(evaluateModel(), { deferRegimeMapFieldRebuild: true });
+  });
+});
 
 window.addEventListener(
   "beforeunload",
