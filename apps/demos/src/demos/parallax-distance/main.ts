@@ -1,4 +1,4 @@
-import { createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { ParallaxDistanceModel } from "@cosmic/physics";
 import { nearbyStars } from "@cosmic/data-astr101";
@@ -389,5 +389,10 @@ copyResults.addEventListener("click", () => {
       )
     );
 });
+
+const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
+if (starfieldCanvas) {
+  initStarfield({ canvas: starfieldCanvas });
+}
 
 initMath(document);
