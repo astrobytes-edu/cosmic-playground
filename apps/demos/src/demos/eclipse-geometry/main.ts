@@ -1,6 +1,19 @@
 import { AstroConstants, EclipseGeometryModel } from "@cosmic/physics";
 import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
+import {
+  clamp,
+  formatNumber,
+  phaseInfo,
+  outcomeLabel,
+  computeDerived,
+  buildStationRow,
+  formatSimSummary,
+  SYZYGY_TOLERANCE_DEG,
+  DISTANCE_PRESETS_KM,
+  snapToNearestPreset,
+} from "./logic";
+import type { EclipseModelCallbacks, EclipseDemoState, DistancePresetKey, SimulationCounts } from "./logic";
 
 const setNewMoonEl = document.querySelector<HTMLButtonElement>("#setNewMoon");
 const setFullMoonEl = document.querySelector<HTMLButtonElement>("#setFullMoon");
@@ -161,16 +174,6 @@ const runtime = createInstrumentRuntime({
 
 copyResults.disabled = false;
 
-const SYZYGY_TOLERANCE_DEG = 5;
-
-const DISTANCE_PRESETS_KM = {
-  perigee: 363300,
-  mean: 384400,
-  apogee: 405500
-} as const;
-
-type DistancePresetKey = keyof typeof DISTANCE_PRESETS_KM;
-
 type State = {
   sunLonDeg: number;
   moonLonDeg: number;
@@ -205,136 +208,22 @@ if (prefersReducedMotion) {
   motionNote.textContent = "Animation and simulation disabled due to reduced-motion preference.";
 }
 
-type EclipseDemoState = {
-  moonLonDeg: number;
-  sunLonDeg: number;
-  nodeLonDeg: number;
-  orbitalTiltDeg: number;
-  earthMoonDistanceKm: number;
-  phaseAngleDeg: number;
-  betaDeg: number;
-  absBetaDeg: number;
-  nearestNodeDeg: number;
-  solarType: "none" | "partial-solar" | "annular-solar" | "total-solar";
-  lunarType: "none" | "penumbral-lunar" | "partial-lunar" | "total-lunar";
+/** Wire real physics model into the DI interface */
+const model: EclipseModelCallbacks = {
+  phaseAngleDeg: EclipseGeometryModel.phaseAngleDeg,
+  eclipticLatitudeDeg: EclipseGeometryModel.eclipticLatitudeDeg,
+  nearestNodeDistanceDeg: EclipseGeometryModel.nearestNodeDistanceDeg,
+  angularSeparationDeg: EclipseGeometryModel.angularSeparationDeg,
+  solarEclipseType: EclipseGeometryModel.solarEclipseTypeFromBetaDeg,
+  lunarEclipseType: EclipseGeometryModel.lunarEclipseTypeFromBetaDeg,
 };
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function formatNumber(value: number, digits: number) {
-  if (!Number.isFinite(value)) return "—";
-  return value.toFixed(digits);
-}
-
-function phaseInfo(phaseAngleDeg: number): {
-  label: string;
-  isNew: boolean;
-  isFull: boolean;
-} {
-  const dNew = EclipseGeometryModel.angularSeparationDeg(phaseAngleDeg, 0);
-  const dFull = EclipseGeometryModel.angularSeparationDeg(phaseAngleDeg, 180);
-  const dFirst = EclipseGeometryModel.angularSeparationDeg(phaseAngleDeg, 90);
-  const dThird = EclipseGeometryModel.angularSeparationDeg(phaseAngleDeg, 270);
-
-  if (dNew <= 10) return { label: "New Moon", isNew: true, isFull: false };
-  if (dFull <= 10) return { label: "Full Moon", isNew: false, isFull: true };
-  if (dFirst <= 10) return { label: "First quarter", isNew: false, isFull: false };
-  if (dThird <= 10) return { label: "Third quarter", isNew: false, isFull: false };
-
-  const norm = EclipseGeometryModel.normalizeAngleDeg(phaseAngleDeg);
-  if (norm > 0 && norm < 180) {
-    return {
-      label: norm < 90 ? "Waxing crescent" : "Waxing gibbous",
-      isNew: false,
-      isFull: false
-    };
-  }
-  return {
-    label: norm > 180 && norm < 270 ? "Waning gibbous" : "Waning crescent",
-    isNew: false,
-    isFull: false
-  };
-}
-
-function computeDerived(args: {
-  sunLonDeg: number;
-  moonLonDeg: number;
-  nodeLonDeg: number;
-  orbitalTiltDeg: number;
-  earthMoonDistanceKm: number;
-}): EclipseDemoState {
-  const phaseAngleDegValue = EclipseGeometryModel.phaseAngleDeg({
-    moonLonDeg: args.moonLonDeg,
-    sunLonDeg: args.sunLonDeg
-  });
-
-  const betaDeg = EclipseGeometryModel.eclipticLatitudeDeg({
-    tiltDeg: args.orbitalTiltDeg,
-    moonLonDeg: args.moonLonDeg,
-    nodeLonDeg: args.nodeLonDeg
-  });
-
-  const absBetaDegValue = Math.abs(betaDeg);
-  const nearestNodeDeg = EclipseGeometryModel.nearestNodeDistanceDeg({
-    moonLonDeg: args.moonLonDeg,
-    nodeLonDeg: args.nodeLonDeg
-  });
-
-  const isNewSyzygy =
-    EclipseGeometryModel.angularSeparationDeg(phaseAngleDegValue, 0) <=
-    SYZYGY_TOLERANCE_DEG;
-  const isFullSyzygy =
-    EclipseGeometryModel.angularSeparationDeg(phaseAngleDegValue, 180) <=
-    SYZYGY_TOLERANCE_DEG;
-
-  const solarType = isNewSyzygy
-    ? EclipseGeometryModel.solarEclipseTypeFromBetaDeg({
-        betaDeg,
-        earthMoonDistanceKm: args.earthMoonDistanceKm
-      }).type
-    : "none";
-
-  const lunarType = isFullSyzygy
-    ? EclipseGeometryModel.lunarEclipseTypeFromBetaDeg({
-        betaDeg,
-        earthMoonDistanceKm: args.earthMoonDistanceKm
-      }).type
-    : "none";
-
-  return {
-    moonLonDeg: args.moonLonDeg,
-    sunLonDeg: args.sunLonDeg,
-    nodeLonDeg: args.nodeLonDeg,
-    orbitalTiltDeg: args.orbitalTiltDeg,
-    earthMoonDistanceKm: args.earthMoonDistanceKm,
-    phaseAngleDeg: phaseAngleDegValue,
-    betaDeg,
-    absBetaDeg: absBetaDegValue,
-    nearestNodeDeg,
-    solarType,
-    lunarType
-  };
-}
-
-function outcomeLabel(type: string): string {
-  if (type === "none") return "None";
-  if (type === "partial-solar") return "Partial solar";
-  if (type === "annular-solar") return "Annular solar";
-  if (type === "total-solar") return "Total solar";
-  if (type === "penumbral-lunar") return "Penumbral lunar";
-  if (type === "partial-lunar") return "Partial lunar";
-  if (type === "total-lunar") return "Total lunar";
-  return type;
-}
 
 function populateDistancePresets() {
   distancePreset.innerHTML = "";
   const entries: Array<{ key: DistancePresetKey; label: string; valueKm: number }> = [
     { key: "perigee", label: "Perigee", valueKm: DISTANCE_PRESETS_KM.perigee },
     { key: "mean", label: "Mean", valueKm: DISTANCE_PRESETS_KM.mean },
-    { key: "apogee", label: "Apogee", valueKm: DISTANCE_PRESETS_KM.apogee }
+    { key: "apogee", label: "Apogee", valueKm: DISTANCE_PRESETS_KM.apogee },
   ];
   for (const entry of entries) {
     const opt = document.createElement("option");
@@ -343,6 +232,19 @@ function populateDistancePresets() {
     distancePreset.appendChild(opt);
   }
   distancePreset.value = state.distancePresetKey;
+}
+
+/** Helpers using the real physics model */
+function getPhaseInfo(phaseAngleDeg: number) {
+  return phaseInfo(
+    phaseAngleDeg,
+    EclipseGeometryModel.angularSeparationDeg,
+    EclipseGeometryModel.normalizeAngleDeg,
+  );
+}
+
+function getDerived(args: Parameters<typeof computeDerived>[0]) {
+  return computeDerived(args, model);
 }
 
 function renderStage(args: {
@@ -413,19 +315,19 @@ function render() {
   state.distancePresetKey = presetKey;
   state.earthMoonDistanceKm = DISTANCE_PRESETS_KM[presetKey] ?? DISTANCE_PRESETS_KM.mean;
 
-  const derived = computeDerived({
+  const derived = getDerived({
     sunLonDeg: state.sunLonDeg,
     moonLonDeg: state.moonLonDeg,
     nodeLonDeg: state.nodeLonDeg,
     orbitalTiltDeg: state.orbitalTiltDeg,
-    earthMoonDistanceKm: state.earthMoonDistanceKm
+    earthMoonDistanceKm: state.earthMoonDistanceKm,
   });
 
   const thresholds = EclipseGeometryModel.eclipseThresholdsDeg({
-    earthMoonDistanceKm: state.earthMoonDistanceKm
+    earthMoonDistanceKm: state.earthMoonDistanceKm,
   });
 
-  const phase = phaseInfo(derived.phaseAngleDeg);
+  const phase = getPhaseInfo(derived.phaseAngleDeg);
 
   moonLonValue.textContent = `${Math.round(moonLonDeg)} deg`;
   nodeLonValue.textContent = `${Math.round(nodeLonDeg)} deg`;
@@ -455,12 +357,12 @@ function render() {
 }
 
 function getState(): EclipseDemoState {
-  return computeDerived({
+  return getDerived({
     sunLonDeg: state.sunLonDeg,
     moonLonDeg: state.moonLonDeg,
     nodeLonDeg: state.nodeLonDeg,
     orbitalTiltDeg: state.orbitalTiltDeg,
-    earthMoonDistanceKm: state.earthMoonDistanceKm
+    earthMoonDistanceKm: state.earthMoonDistanceKm,
   });
 }
 
@@ -475,18 +377,7 @@ function setState(next: unknown): void {
   if (obj.distancePresetKey && obj.distancePresetKey in DISTANCE_PRESETS_KM) {
     distancePreset.value = obj.distancePresetKey;
   } else if (Number.isFinite(obj.earthMoonDistanceKm)) {
-    // Snap to nearest preset for simplicity.
-    const target = obj.earthMoonDistanceKm as number;
-    const entries: Array<[DistancePresetKey, number]> = [
-      ["perigee", DISTANCE_PRESETS_KM.perigee],
-      ["mean", DISTANCE_PRESETS_KM.mean],
-      ["apogee", DISTANCE_PRESETS_KM.apogee]
-    ];
-    const nearest = entries.reduce(
-      (best, entry) => (Math.abs(entry[1] - target) < Math.abs(best[1] - target) ? entry : best),
-      entries[0]
-    );
-    distancePreset.value = nearest[0];
+    distancePreset.value = snapToNearestPreset(obj.earthMoonDistanceKm as number);
   }
 
   render();
@@ -496,7 +387,7 @@ function exportResults(st: EclipseDemoState): ExportPayloadV1 {
   const thresholds = EclipseGeometryModel.eclipseThresholdsDeg({
     earthMoonDistanceKm: st.earthMoonDistanceKm
   });
-  const phase = phaseInfo(st.phaseAngleDeg);
+  const phase = getPhaseInfo(st.phaseAngleDeg);
 
   const notes: string[] = [];
   notes.push("Units: angles in degrees (deg); distances in kilometers (km).");
@@ -530,28 +421,6 @@ function exportResults(st: EclipseDemoState): ExportPayloadV1 {
       { name: "Lunar penumbral threshold abs(beta) (deg)", value: formatNumber(thresholds.lunarPenumbralDeg, 2) }
     ],
     notes
-  };
-}
-
-function buildStationRow(args: {
-  label: string;
-  phaseLabel: string;
-  phaseAngleDeg: number;
-  absBetaDeg: number;
-  nearestNodeDeg: number;
-  orbitalTiltDeg: number;
-  earthMoonDistanceKm: number;
-  outcome: string;
-}) {
-  return {
-    case: args.label,
-    phase: args.phaseLabel,
-    phaseAngleDeg: formatNumber(args.phaseAngleDeg, 1),
-    absBetaDeg: formatNumber(args.absBetaDeg, 3),
-    nearestNodeDeg: formatNumber(args.nearestNodeDeg, 2),
-    tiltDeg: formatNumber(args.orbitalTiltDeg, 3),
-    earthMoonDistanceKm: String(Math.round(args.earthMoonDistanceKm)),
-    outcome: args.outcome
   };
 }
 
@@ -595,59 +464,31 @@ const demoModes = createDemoModes({
       { key: "outcome", label: "Outcome" }
     ],
     getSnapshotRow: () => {
-      const phaseAngleDegValue = EclipseGeometryModel.phaseAngleDeg({
+      const derived = getDerived({
+        sunLonDeg: state.sunLonDeg,
         moonLonDeg: state.moonLonDeg,
-        sunLonDeg: state.sunLonDeg
+        nodeLonDeg: state.nodeLonDeg,
+        orbitalTiltDeg: state.orbitalTiltDeg,
+        earthMoonDistanceKm: state.earthMoonDistanceKm,
       });
-      const betaDeg = EclipseGeometryModel.eclipticLatitudeDeg({
-        tiltDeg: state.orbitalTiltDeg,
-        moonLonDeg: state.moonLonDeg,
-        nodeLonDeg: state.nodeLonDeg
-      });
-      const absBetaDegValue = Math.abs(betaDeg);
-      const nearestNodeDeg = EclipseGeometryModel.nearestNodeDistanceDeg({
-        moonLonDeg: state.moonLonDeg,
-        nodeLonDeg: state.nodeLonDeg
-      });
-
-      const phase = phaseInfo(phaseAngleDegValue);
-      const isNewSyzygy =
-        EclipseGeometryModel.angularSeparationDeg(phaseAngleDegValue, 0) <=
-        SYZYGY_TOLERANCE_DEG;
-      const isFullSyzygy =
-        EclipseGeometryModel.angularSeparationDeg(phaseAngleDegValue, 180) <=
-        SYZYGY_TOLERANCE_DEG;
-
-      const solarType = isNewSyzygy
-        ? EclipseGeometryModel.solarEclipseTypeFromBetaDeg({
-            betaDeg,
-            earthMoonDistanceKm: state.earthMoonDistanceKm
-          }).type
-        : "none";
-
-      const lunarType = isFullSyzygy
-        ? EclipseGeometryModel.lunarEclipseTypeFromBetaDeg({
-            betaDeg,
-            earthMoonDistanceKm: state.earthMoonDistanceKm
-          }).type
-        : "none";
+      const phase = getPhaseInfo(derived.phaseAngleDeg);
 
       const outcome =
-        solarType !== "none"
-          ? outcomeLabel(solarType)
-          : lunarType !== "none"
-            ? outcomeLabel(lunarType)
+        derived.solarType !== "none"
+          ? outcomeLabel(derived.solarType)
+          : derived.lunarType !== "none"
+            ? outcomeLabel(derived.lunarType)
             : "None";
 
       return buildStationRow({
         label: phase.label,
         phaseLabel: phase.label,
-        phaseAngleDeg: phaseAngleDegValue,
-        absBetaDeg: absBetaDegValue,
-        nearestNodeDeg,
+        phaseAngleDeg: derived.phaseAngleDeg,
+        absBetaDeg: derived.absBetaDeg,
+        nearestNodeDeg: derived.nearestNodeDeg,
         orbitalTiltDeg: state.orbitalTiltDeg,
         earthMoonDistanceKm: state.earthMoonDistanceKm,
-        outcome
+        outcome,
       });
     },
     snapshotLabel: "Add row (snapshot)",
@@ -909,13 +750,6 @@ let rafId: number | null = null;
 let lastT = 0;
 let animateYearRemainingDays = 0;
 
-type SimulationCounts = {
-  solar: { partial: number; annular: number; total: number };
-  lunar: { penumbral: number; partial: number; total: number };
-  newWindows: number;
-  fullWindows: number;
-};
-
 type SyzygyWindowBest = { tDays: number; betaDeg: number; absBetaDeg: number; sepDeg: number };
 
 type SimulationState = {
@@ -958,25 +792,8 @@ function updateTimeButtonLabels() {
   runSimulation.textContent = runMode === "simulate" ? "Running…" : "Run simulation";
 }
 
-function formatSimSummary(sim: SimulationState): string {
-  const years = sim.totalDays / TROPICAL_YEAR_DAYS;
-  const lines: string[] = [];
-  lines.push(
-    `Simulated ${years.toFixed(0)} year(s) @ distance=${Math.round(sim.earthMoonDistanceKm).toLocaleString()} km, i=${sim.orbitalTiltDeg.toFixed(3)} deg`
-  );
-  lines.push(`Syzygies checked: New=${sim.counts.newWindows}, Full=${sim.counts.fullWindows}`);
-  lines.push(
-    `Solar eclipses: partial=${sim.counts.solar.partial}, annular=${sim.counts.solar.annular}, total=${sim.counts.solar.total}`
-  );
-  lines.push(
-    `Lunar eclipses: penumbral=${sim.counts.lunar.penumbral}, partial=${sim.counts.lunar.partial}, total=${sim.counts.lunar.total}`
-  );
-  if (sim.sampleEvents.length) {
-    lines.push("");
-    lines.push("Examples:");
-    for (const e of sim.sampleEvents.slice(0, 10)) lines.push(`- ${e}`);
-  }
-  return lines.join("\n");
+function getSimSummary(sim: SimulationState): string {
+  return formatSimSummary(sim, TROPICAL_YEAR_DAYS);
 }
 
 function recordSyzygyWindow(kind: "new" | "full") {
@@ -1133,13 +950,13 @@ function tick(t: number) {
 
     const pct = Math.min(1, simulation.tDays / simulation.totalDays);
     simOutput.hidden = false;
-    simOutput.textContent = `${formatSimSummary(simulation)}\n\nProgress: ${(pct * 100).toFixed(1)}%`;
+    simOutput.textContent = `${getSimSummary(simulation)}\n\nProgress: ${(pct * 100).toFixed(1)}%`;
 
     if (simulation.tDays >= simulation.totalDays) {
       if (simulation.inNewWindow) recordSyzygyWindow("new");
       if (simulation.inFullWindow) recordSyzygyWindow("full");
 
-      simOutput.textContent = formatSimSummary(simulation);
+      simOutput.textContent = getSimSummary(simulation);
       stopLoop();
       stopSimulation.disabled = true;
       runSimulation.disabled = prefersReducedMotion;
@@ -1248,7 +1065,7 @@ runSimulation.addEventListener("click", () => {
   animateMonth.disabled = true;
   animateYear.disabled = true;
   simOutput.hidden = false;
-  simOutput.textContent = formatSimSummary(simulation);
+  simOutput.textContent = getSimSummary(simulation);
   updateTimeButtonLabels();
   setLiveRegionText(status, "Simulation running…");
   rafId = requestAnimationFrame(tick);
