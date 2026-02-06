@@ -117,6 +117,13 @@ describe("EM Spectrum -- Design System Contracts", () => {
     it("scale objects container exists", () => {
       expect(html).toMatch(/id="spectrumScale"/);
     });
+
+    it("includes powers-of-ten guide for SI connection", () => {
+      expect(html).toContain("spectrum__powers");
+      expect(html).toContain("Power-of-ten guide");
+      expect(html).toContain("10^{4}");
+      expect(html).toContain("10^{-14}");
+    });
   });
 
   describe("Instrument layer wrapper", () => {

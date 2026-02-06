@@ -134,6 +134,7 @@ export function formatWavelength(lambdaCm: number): { value: string; unit: strin
   if (!Number.isFinite(lambdaCm) || lambdaCm <= 0) return { value: "\u2014", unit: "" };
   if (lambdaCm >= 1e5) return { value: (lambdaCm / 1e5).toPrecision(3), unit: "km" };
   if (lambdaCm >= 100) return { value: (lambdaCm / 100).toPrecision(3), unit: "m" };
+  if (lambdaCm >= 1) return { value: lambdaCm.toPrecision(3), unit: "cm" };
   if (lambdaCm >= 0.1) return { value: (lambdaCm * 10).toPrecision(3), unit: "mm" };
   if (lambdaCm >= 1e-4) return { value: (lambdaCm / 1e-4).toPrecision(3), unit: "um" };
   if (lambdaCm >= 1e-7) return { value: (lambdaCm / 1e-7).toPrecision(3), unit: "nm" };
@@ -179,12 +180,20 @@ export function formatEnergyFromErg(
  * Determine which EM band a wavelength (cm) falls into.
  */
 export function bandFromWavelengthCm(lambdaCm: number): BandKey {
-  for (const key of Object.keys(BANDS) as BandKey[]) {
-    const band = BANDS[key];
-    if (lambdaCm >= band.lambdaMinCm && lambdaCm <= band.lambdaMaxCm) return key;
+  // Teaching policy: visible-light boundaries (380 nm and 700 nm) map to visible.
+  if (lambdaCm >= BANDS.visible.lambdaMinCm && lambdaCm <= BANDS.visible.lambdaMaxCm) {
+    return "visible";
   }
-  if (lambdaCm > BANDS.radio.lambdaMaxCm) return "radio";
-  if (lambdaCm < BANDS.gamma.lambdaMinCm) return "gamma";
+  if (lambdaCm > BANDS.visible.lambdaMaxCm) {
+    if (lambdaCm <= BANDS.infrared.lambdaMaxCm) return "infrared";
+    if (lambdaCm <= BANDS.microwave.lambdaMaxCm) return "microwave";
+    return "radio";
+  }
+  if (lambdaCm < BANDS.visible.lambdaMinCm) {
+    if (lambdaCm >= BANDS.ultraviolet.lambdaMinCm) return "ultraviolet";
+    if (lambdaCm >= BANDS.xray.lambdaMinCm) return "xray";
+    return "gamma";
+  }
   return "visible";
 }
 

@@ -44,6 +44,13 @@ test.describe("EM Spectrum -- E2E", () => {
     expect(count).toBeGreaterThanOrEqual(5);
   });
 
+  test("powers-of-ten SI guide is visible above spectrum ticks", async ({ page }) => {
+    const powers = page.locator(".spectrum__powers");
+    await expect(powers).toBeVisible();
+    await expect(page.locator(".spectrum__powers > span")).toHaveCount(7);
+    await expect(powers).toContainText("10");
+  });
+
   // --- Visual Regression (skipped -- re-enable when baselines are generated) ---
 
   test.skip("screenshot: default state", async ({ page }) => {
@@ -105,6 +112,15 @@ test.describe("EM Spectrum -- E2E", () => {
     await page.locator("#wavelengthSlider").dispatchEvent("input");
     const after = await page.locator("#readoutWavelength").textContent();
     expect(after).not.toBe(before);
+  });
+
+  test("wavelength slider exposes physical aria-valuetext", async ({ page }) => {
+    const slider = page.locator("#wavelengthSlider");
+    await slider.fill("100");
+    await slider.dispatchEvent("input");
+    const valueText = await slider.getAttribute("aria-valuetext");
+    expect(valueText).toBeTruthy();
+    expect(valueText).toMatch(/[a-zA-Z]/);
   });
 
   test("slider changes update band badge", async ({ page }) => {

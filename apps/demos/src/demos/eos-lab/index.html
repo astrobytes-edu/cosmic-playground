@@ -163,18 +163,20 @@
               </ul>
             </div>
             <div class="regime-map__plot">
-              <svg
-                id="regimeMap"
-                viewBox="0 0 100 100"
-                role="img"
-                aria-label="EOS dominance map over log density and log temperature"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                <g id="regimeGrid"></g>
-                <g id="regimeCells"></g>
-                <g id="regimePresetMarkers"></g>
-                <circle id="regimeCurrentPoint" cx="50" cy="50" r="2.35"></circle>
-              </svg>
+              <div class="regime-map__viewport">
+                <canvas id="regimeField" aria-hidden="true"></canvas>
+                <svg
+                  id="regimeMap"
+                  viewBox="0 0 100 100"
+                  role="img"
+                  aria-label="EOS dominance map over log density and log temperature"
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  <g id="regimeGrid"></g>
+                  <g id="regimePresetMarkers"></g>
+                  <circle id="regimeCurrentPoint" cx="50" cy="50" r="2.35"></circle>
+                </svg>
+              </div>
               <ul class="regime-map__x-ticks" aria-label="Temperature axis ticks">
                 <li>$10^3$</li>
                 <li>$10^4$</li>

@@ -244,7 +244,9 @@ function renderReadouts(lambdaCm: number) {
   readoutFrequencyUnit.textContent = f.unit;
   readoutEnergy.textContent = e.value;
   readoutEnergyUnit.textContent = e.unit;
-  wavelengthValue.textContent = `${w.value} ${w.unit}`.trim();
+  const wavelengthDisplay = `${w.value} ${w.unit}`.trim();
+  wavelengthValue.textContent = wavelengthDisplay;
+  wavelengthSlider.setAttribute("aria-valuetext", wavelengthDisplay);
 }
 
 function renderLists(lambdaCm: number) {

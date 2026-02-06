@@ -167,11 +167,10 @@ describe("EM Spectrum -- Logic", () => {
       expect(r.unit).toBe("fm");
       expect(parseFloat(r.value)).toBeCloseTo(10, 0);
     });
-    it("21 cm line displays as millimeters", () => {
-      // 21 cm >= 0.1 triggers the mm branch: 21 * 10 = 210 mm
+    it("21 cm line displays in centimeters", () => {
       const r = formatWavelength(21);
-      expect(r.unit).toBe("mm");
-      expect(parseFloat(r.value)).toBeCloseTo(210, 0);
+      expect(r.unit).toBe("cm");
+      expect(parseFloat(r.value)).toBeCloseTo(21, 0);
     });
 
     // Boundary tests: verify correct unit at exact thresholds
@@ -180,6 +179,9 @@ describe("EM Spectrum -- Logic", () => {
     });
     it("uses m at exactly 100 cm", () => {
       expect(formatWavelength(100).unit).toBe("m");
+    });
+    it("uses cm at exactly 1 cm", () => {
+      expect(formatWavelength(1).unit).toBe("cm");
     });
     it("uses mm at exactly 0.1 cm", () => {
       expect(formatWavelength(0.1).unit).toBe("mm");
@@ -376,17 +378,13 @@ describe("EM Spectrum -- Logic", () => {
     it("returns gamma for very short wavelengths beyond range", () => {
       expect(bandFromWavelengthCm(1e-15)).toBe("gamma");
     });
-    it("returns correct band at band boundaries", () => {
-      // At the visible/infrared boundary (700 nm = 7e-5 cm)
-      // This should be in visible (lambdaMaxCm) OR infrared (lambdaMinCm)
-      // Both include the boundary value -- whichever is iterated first wins
+    it("returns visible at the visible/infrared boundary (700 nm)", () => {
       const band = bandFromWavelengthCm(7e-5);
-      expect(["visible", "infrared"]).toContain(band);
+      expect(band).toBe("visible");
     });
-    it("returns correct band at the visible/UV boundary", () => {
-      // 380 nm = 3.8e-5 cm
+    it("returns visible at the visible/UV boundary (380 nm)", () => {
       const band = bandFromWavelengthCm(3.8e-5);
-      expect(["visible", "ultraviolet"]).toContain(band);
+      expect(band).toBe("visible");
     });
   });
 
