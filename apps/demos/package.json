@@ -20,6 +20,7 @@
     "dev": "node ../../scripts/copy-katex-assets.mjs && vite",
     "build": "node ../../scripts/copy-katex-assets.mjs && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
   }
 }
