@@ -21,6 +21,13 @@
   --cp-violet-hover: #c4b5fd;
 }
 
+/* --- Instrument surface tokens (translucent panels over starfield) --- */
+.cp-layer-instrument {
+  --cp-instr-panel-bg: rgba(23, 27, 34, 0.88);
+  --cp-instr-panel-bg-muted: rgba(23, 27, 34, 0.75);
+  --cp-instr-panel-border: rgba(109, 119, 148, 0.25);
+}
+
 /* --- Glow intensity overrides (visible, not invisible) --- */
 .cp-layer-instrument {
   --cp-glow-teal: 0 0 20px rgba(45, 212, 191, 0.40);
@@ -35,8 +42,8 @@
 
 /* --- Translucent panels (starfield shows through) --- */
 .cp-layer-instrument .cp-panel {
-  background: rgba(23, 27, 34, 0.88);
-  border: 1px solid rgba(109, 119, 148, 0.25);
+  background: var(--cp-instr-panel-bg);
+  border: 1px solid var(--cp-instr-panel-border);
   border-radius: var(--cp-r-2);
   box-shadow: var(--cp-shadow-1);
   backdrop-filter: blur(8px);
@@ -45,7 +52,7 @@
 
 .cp-layer-instrument .cp-panel-header {
   padding: var(--cp-space-3) var(--cp-space-4);
-  border-bottom: 1px solid rgba(109, 119, 148, 0.15);
+  border-bottom: 1px solid color-mix(in srgb, var(--cp-instr-panel-border) 60%, transparent);
   color: var(--cp-muted);
   font-size: 0.9rem;
   letter-spacing: 0.02em;

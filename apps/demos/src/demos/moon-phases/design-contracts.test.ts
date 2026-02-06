@@ -101,7 +101,7 @@ describe("Moon Phases — Design System Contracts", () => {
 
   describe("Panel translucency", () => {
     it("demo CSS uses translucent backgrounds for viz panels", () => {
-      expect(css).toMatch(/\.viz-panel[\s\S]*?background:\s*rgba\(/);
+      expect(css).toMatch(/\.viz-panel[\s\S]*?background:\s*var\(--cp-instr-panel-bg\)/);
     });
 
     it("demo CSS uses backdrop-filter for viz panels", () => {
