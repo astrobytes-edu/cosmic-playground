@@ -118,6 +118,7 @@ canvas {
   border: 1px solid var(--cp-border);
   background: var(--cp-bg3);
   box-shadow: var(--cp-card-glow);
+  filter: drop-shadow(var(--cp-glow-star));
 }
 
 .star-preview__label {
