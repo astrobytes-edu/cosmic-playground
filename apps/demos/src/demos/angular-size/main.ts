@@ -38,6 +38,7 @@ const objectLabelEl = document.querySelector<SVGTextElement>("#objectLabel");
 const angleLabelEl = document.querySelector<SVGTextElement>("#angleLabel");
 
 const thetaDisplayEl = document.querySelector<HTMLSpanElement>("#thetaDisplay");
+const thetaDisplayUnitEl = document.querySelector<HTMLSpanElement>("#thetaDisplayUnit");
 const thetaDegEl = document.querySelector<HTMLSpanElement>("#thetaDeg");
 const diameterKmEl = document.querySelector<HTMLSpanElement>("#diameterKm");
 const distanceKmEl = document.querySelector<HTMLSpanElement>("#distanceKm");
@@ -76,6 +77,7 @@ if (
   !objectLabelEl ||
   !angleLabelEl ||
   !thetaDisplayEl ||
+  !thetaDisplayUnitEl ||
   !thetaDegEl ||
   !diameterKmEl ||
   !distanceKmEl ||
@@ -116,6 +118,7 @@ const objectLabel = objectLabelEl;
 const angleLabel = angleLabelEl;
 
 const thetaDisplay = thetaDisplayEl;
+const thetaDisplayUnit = thetaDisplayUnitEl;
 const thetaDeg = thetaDegEl;
 const diameterKm = diameterKmEl;
 const distanceKm = distanceKmEl;
@@ -718,8 +721,9 @@ function render() {
     moonRecessionValue.textContent = "—";
   }
 
-  thetaDisplay.textContent = `${display.text} ${display.unit}`.trim();
-  thetaDeg.textContent = `${formatNumber(thetaDegValue, 6)} deg`;
+  thetaDisplay.textContent = display.text;
+  thetaDisplayUnit.textContent = display.unit;
+  thetaDeg.textContent = formatNumber(thetaDegValue, 6);
   diameterKm.textContent = formatNumber(state.diameterKm, 6);
   distanceKm.textContent = formatNumber(state.distanceKm, 6);
 
