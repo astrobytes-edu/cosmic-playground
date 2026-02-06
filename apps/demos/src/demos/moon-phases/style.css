@@ -31,6 +31,10 @@
   display: block;
 }
 
+#earth-group circle {
+  filter: drop-shadow(var(--cp-glow-planet));
+}
+
 .drag-hint,
 .schematic-note {
   text-align: center;

@@ -175,6 +175,14 @@
                 <clipPath id="moonLitHalfClip" clipPathUnits="userSpaceOnUse">
                   <rect id="moon-lit-half-clip" x="305" y="185" width="15" height="30" />
                 </clipPath>
+
+                <filter id="sun-glow-filter" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
               </defs>
 
               <g id="sunlight-arrows" opacity="0.4">
@@ -187,7 +195,7 @@
                 </text>
               </g>
 
-              <circle cx="-60" cy="200" r="80" fill="url(#sunGlow)" opacity="0.8" />
+              <circle cx="-60" cy="200" r="80" fill="url(#sunGlow)" opacity="0.8" filter="url(#sun-glow-filter)" />
 
               <circle
                 cx="200"
