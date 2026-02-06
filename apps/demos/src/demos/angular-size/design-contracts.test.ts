@@ -116,8 +116,10 @@ describe("Angular Size — Design System Contracts", () => {
 
   describe("Entry animations", () => {
     it("demo shell sections have entry animations", () => {
-      expect(css).toMatch(/\.cp-demo__controls[\s\S]*?animation.*cp-slide-up/);
+      expect(css).toMatch(/\.cp-demo__sidebar[\s\S]*?animation.*cp-slide-up/);
       expect(css).toMatch(/\.cp-demo__stage[\s\S]*?animation.*cp-fade-in/);
+      expect(css).toMatch(/\.cp-demo__readouts[\s\S]*?animation.*cp-slide-up/);
+      expect(css).toMatch(/\.cp-demo__shelf[\s\S]*?animation.*cp-slide-up/);
     });
   });
 
@@ -151,6 +153,45 @@ describe("Angular Size — Design System Contracts", () => {
       const mainTs = fs.readFileSync(mainPath, "utf-8");
       expect(mainTs).toContain("initStarfield");
       expect(mainTs).toMatch(/initStarfield\s*\(/);
+    });
+  });
+
+  describe("Sky View panel", () => {
+    it("HTML has a sky view SVG with clip path and glow filter", () => {
+      expect(html).toContain('id="skyViewSvg"');
+      expect(html).toContain('id="skyClip"');
+      expect(html).toContain('id="skyGlow"');
+    });
+
+    it("sky view background uses --cp-bg0 token, not hardcoded color", () => {
+      const skyFieldBg = html.match(/<radialGradient id="skyFieldBg"[\s\S]*?<\/radialGradient>/);
+      expect(skyFieldBg).not.toBeNull();
+      expect(skyFieldBg![0]).toContain("--cp-bg0");
+    });
+
+    it("sky view border uses --cp-border token", () => {
+      expect(html).toMatch(/id="skyViewSvg"[\s\S]*?stroke="var\(--cp-border\)"/);
+    });
+
+    it("main.ts renders sky view with celestial color tokens", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("--cp-celestial-sun-core");
+      expect(mainTs).toContain("--cp-celestial-moon");
+      expect(mainTs).toContain("--cp-celestial-earth");
+      expect(mainTs).toContain("renderSkyView");
+    });
+  });
+
+  describe("Dual-panel layout", () => {
+    it("stage uses viz-layout with viz-panel containers", () => {
+      expect(html).toContain('class="viz-layout"');
+      expect(html).toMatch(/class="viz-panel"/);
+    });
+
+    it("viz-panel uses design system panel tokens", () => {
+      expect(css).toMatch(/\.viz-panel[\s\S]*?--cp-instr-panel-bg/);
+      expect(css).toMatch(/\.viz-panel[\s\S]*?backdrop-filter/);
     });
   });
 

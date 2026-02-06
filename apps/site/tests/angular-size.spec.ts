@@ -9,10 +9,10 @@ test.describe("Angular Size -- E2E", () => {
   // --- Layout & Visual ---
 
   test("demo loads with all four shell sections visible", async ({ page }) => {
-    await expect(page.locator(".cp-demo__controls")).toBeVisible();
+    await expect(page.locator(".cp-demo__sidebar")).toBeVisible();
     await expect(page.locator(".cp-demo__stage")).toBeVisible();
     await expect(page.locator(".cp-demo__readouts")).toBeVisible();
-    await expect(page.locator(".cp-demo__drawer")).toBeVisible();
+    await expect(page.locator(".cp-demo__shelf")).toBeVisible();
   });
 
   test("starfield canvas is present and visible", async ({ page }) => {
@@ -22,9 +22,20 @@ test.describe("Angular Size -- E2E", () => {
 
   test("SVG stage has correct viewBox and accessible label", async ({ page }) => {
     const svg = page.locator("#stageSvg");
-    await expect(svg).toHaveAttribute("viewBox", "0 0 640 360");
+    await expect(svg).toHaveAttribute("viewBox", "20 40 640 300");
     await expect(svg).toHaveAttribute("role", "img");
-    await expect(svg).toHaveAttribute("aria-label", "Angular size visualization");
+    await expect(svg).toHaveAttribute("aria-label", "Angular size geometry");
+  });
+
+  test("sky view panel is present and renders object", async ({ page }) => {
+    const skyView = page.locator("#skyViewSvg");
+    await expect(skyView).toBeVisible();
+    await expect(skyView).toHaveAttribute("role", "img");
+    const skyObject = page.locator("#skyObject");
+    await expect(skyObject).toBeAttached();
+    // FOV label should be populated
+    const fov = page.locator("#skyFov");
+    await expect(fov).not.toBeEmpty();
   });
 
   // --- Visual Regression (skipped -- re-enable when baselines are generated) ---
@@ -57,7 +68,7 @@ test.describe("Angular Size -- E2E", () => {
   });
 
   test.skip("screenshot: challenge mode active", async ({ page }) => {
-    await page.locator("#challengeMode").click();
+    await page.locator("#btn-challenges").click();
     await expect(page.locator(".cp-challenge-panel")).toBeVisible();
     await page.waitForTimeout(500);
     await expect(page).toHaveScreenshot("angular-size-challenge.png", {
@@ -180,26 +191,29 @@ test.describe("Angular Size -- E2E", () => {
     expect(marsUnit?.trim()).toBe("arcsec");
   });
 
-  // --- Accordion / Drawer ---
+  // --- Tabs / Shelf ---
 
-  test("What to notice accordion is open by default", async ({ page }) => {
-    const firstAccordion = page.locator(".cp-accordion").first();
-    await expect(firstAccordion).toHaveAttribute("open", "");
-    await expect(firstAccordion).toContainText("What to notice");
+  test("What to notice tab is active by default", async ({ page }) => {
+    const noticeTab = page.getByRole("tab", { name: "What to notice" });
+    await expect(noticeTab).toHaveAttribute("aria-selected", "true");
+    const noticePanel = page.locator("#tab-notice");
+    await expect(noticePanel).toBeVisible();
+    await expect(noticePanel).toContainText("Nearer objects look larger");
   });
 
-  test("Model notes accordion can be opened and shows equations", async ({ page }) => {
-    const modelNotes = page.locator(".cp-accordion").nth(1);
-    await modelNotes.locator("summary").click();
-    await expect(modelNotes).toHaveAttribute("open", "");
-    // Should contain the formula
-    await expect(modelNotes).toContainText("Exact geometry");
+  test("Model notes tab can be activated and shows equations", async ({ page }) => {
+    const modelTab = page.getByRole("tab", { name: "Model notes" });
+    await modelTab.click();
+    await expect(modelTab).toHaveAttribute("aria-selected", "true");
+    const modelPanel = page.locator("#tab-model");
+    await expect(modelPanel).toBeVisible();
+    await expect(modelPanel).toContainText("Exact geometry");
   });
 
   // --- Station Mode ---
 
   test("station mode button activates station UI", async ({ page }) => {
-    const stationBtn = page.locator("#stationMode");
+    const stationBtn = page.locator("#btn-station-mode");
     await expect(stationBtn).toBeVisible();
     await expect(stationBtn).toBeEnabled();
     await stationBtn.click();
@@ -213,7 +227,7 @@ test.describe("Angular Size -- E2E", () => {
   // --- Challenge Mode ---
 
   test("challenge mode is enabled and starts challenges", async ({ page }) => {
-    const challengeBtn = page.locator("#challengeMode");
+    const challengeBtn = page.locator("#btn-challenges");
     await expect(challengeBtn).toBeVisible();
     await expect(challengeBtn).toBeEnabled();
     await challengeBtn.click();
@@ -231,17 +245,17 @@ test.describe("Angular Size -- E2E", () => {
   });
 
   test("controls panel has accessible label", async ({ page }) => {
-    const controls = page.locator(".cp-demo__controls");
+    const controls = page.locator(".cp-demo__sidebar");
     await expect(controls).toHaveAttribute("aria-label", "Controls panel");
   });
 
-  test("readouts panel has accessible label", async ({ page }) => {
+  test("readouts strip has accessible label", async ({ page }) => {
     const readouts = page.locator(".cp-demo__readouts");
-    await expect(readouts).toHaveAttribute("aria-label", "Readouts panel");
+    await expect(readouts).toHaveAttribute("aria-label", "Readouts");
   });
 
   test("help button opens help modal", async ({ page }) => {
-    const helpBtn = page.locator("#help");
+    const helpBtn = page.locator("#btn-help");
     await expect(helpBtn).toBeVisible();
     await expect(helpBtn).toBeEnabled();
     await helpBtn.click();

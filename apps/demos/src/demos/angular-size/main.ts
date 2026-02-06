@@ -1,4 +1,4 @@
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, initTabs, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AngularSizeModel, AstroConstants, AstroUnits } from "@cosmic/physics";
@@ -36,7 +36,6 @@ const sizeStageLabelEl =
 const distanceStageLabelEl =
   document.querySelector<SVGTextElement>("#distanceStageLabel");
 const objectLabelEl = document.querySelector<SVGTextElement>("#objectLabel");
-const angleLabelEl = document.querySelector<SVGTextElement>("#angleLabel");
 
 const thetaDisplayEl = document.querySelector<HTMLSpanElement>("#thetaDisplay");
 const thetaDisplayUnitEl = document.querySelector<HTMLSpanElement>("#thetaDisplayUnit");
@@ -44,10 +43,16 @@ const thetaDegEl = document.querySelector<HTMLSpanElement>("#thetaDeg");
 const diameterKmEl = document.querySelector<HTMLSpanElement>("#diameterKm");
 const distanceKmEl = document.querySelector<HTMLSpanElement>("#distanceKm");
 
-const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
+const skyObjectEl = document.querySelector<SVGCircleElement>("#skyObject");
+const skyRefRingEl = document.querySelector<SVGCircleElement>("#skyRefRing");
+const skyRefLabelEl = document.querySelector<SVGTextElement>("#skyRefLabel");
+const skyFovEl = document.querySelector<HTMLSpanElement>("#skyFov");
+
+const stationModeEl = document.querySelector<HTMLButtonElement>("#btn-station-mode");
 const challengeModeEl =
-  document.querySelector<HTMLButtonElement>("#challengeMode");
-const helpEl = document.querySelector<HTMLButtonElement>("#help");
+  document.querySelector<HTMLButtonElement>("#btn-challenges");
+const helpEl = document.querySelector<HTMLButtonElement>("#btn-help");
+const challengeContainerEl = document.querySelector<HTMLDivElement>("#challenge-container");
 
 const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
 const statusEl = document.querySelector<HTMLParagraphElement>("#status");
@@ -76,15 +81,19 @@ if (
   !sizeStageLabelEl ||
   !distanceStageLabelEl ||
   !objectLabelEl ||
-  !angleLabelEl ||
   !thetaDisplayEl ||
   !thetaDisplayUnitEl ||
   !thetaDegEl ||
   !diameterKmEl ||
   !distanceKmEl ||
+  !skyObjectEl ||
+  !skyRefRingEl ||
+  !skyRefLabelEl ||
+  !skyFovEl ||
   !stationModeEl ||
   !challengeModeEl ||
   !helpEl ||
+  !challengeContainerEl ||
   !copyResultsEl ||
   !statusEl
 ) {
@@ -116,7 +125,6 @@ const sizeLine = sizeLineEl;
 const sizeStageLabel = sizeStageLabelEl;
 const distanceStageLabel = distanceStageLabelEl;
 const objectLabel = objectLabelEl;
-const angleLabel = angleLabelEl;
 
 const thetaDisplay = thetaDisplayEl;
 const thetaDisplayUnit = thetaDisplayUnitEl;
@@ -124,9 +132,15 @@ const thetaDeg = thetaDegEl;
 const diameterKm = diameterKmEl;
 const distanceKm = distanceKmEl;
 
+const skyObject = skyObjectEl;
+const skyRefRing = skyRefRingEl;
+const skyRefLabel = skyRefLabelEl;
+const skyFov = skyFovEl;
+
 const stationMode = stationModeEl;
 const challengeMode = challengeModeEl;
 const help = helpEl;
+const challengeContainer = challengeContainerEl;
 
 const copyResults = copyResultsEl;
 const status = statusEl;
@@ -315,6 +329,49 @@ function renderStage(thetaDegValue: number) {
     stageSvg.classList.add("stage__svg--wide");
   } else {
     stageSvg.classList.remove("stage__svg--wide");
+  }
+}
+
+const SKY_COLORS: Record<string, string> = {
+  sun: "var(--cp-celestial-sun-core)",
+  moon: "var(--cp-celestial-moon)",
+  planet: "var(--cp-celestial-earth)",
+  mars: "var(--cp-celestial-mars)",
+  galaxy: "var(--cp-celestial-orbit)",
+  object: "var(--cp-celestial-star)",
+};
+
+function renderSkyView(thetaDegValue: number, presetColor: string) {
+  const VIEWPORT_R = 140;
+  const FULL_MOON_DEG = 0.533;
+
+  // Adaptive FOV: object fills ~1/3 of viewport
+  const fovDeg = clamp(3 * thetaDegValue, 0.5, 60);
+
+  // Object radius in sky view
+  const objR = clamp((thetaDegValue / fovDeg) * VIEWPORT_R, 2, VIEWPORT_R - 2);
+  skyObject.setAttribute("r", String(objR));
+  skyObject.setAttribute("fill", SKY_COLORS[presetColor] ?? SKY_COLORS.object);
+
+  // Reference ring (Full Moon ~0.53 deg)
+  const refR = (FULL_MOON_DEG / fovDeg) * VIEWPORT_R;
+  if (refR > 5 && refR < VIEWPORT_R - 5) {
+    skyRefRing.setAttribute("r", String(refR));
+    skyRefRing.style.display = "";
+    skyRefLabel.style.display = "";
+    skyRefLabel.setAttribute("y", String(150 + refR + 14));
+  } else {
+    skyRefRing.style.display = "none";
+    skyRefLabel.style.display = "none";
+  }
+
+  // FOV label
+  if (fovDeg >= 1) {
+    skyFov.textContent = `(${fovDeg.toFixed(1)}\u00b0 field)`;
+  } else if (fovDeg >= 1 / 60) {
+    skyFov.textContent = `(${(fovDeg * 60).toFixed(1)}\u2032 field)`;
+  } else {
+    skyFov.textContent = `(${(fovDeg * 3600).toFixed(1)}\u2033 field)`;
   }
 }
 
@@ -638,7 +695,6 @@ function render() {
   diameterKm.textContent = formatNumber(state.diameterKm, 6);
   distanceKm.textContent = formatNumber(state.distanceKm, 6);
 
-  angleLabel.textContent = `Angular diameter: ${`${display.text} ${display.unit}`.trim()}`;
   sizeStageLabel.textContent = `D ~ ${formatNumber(state.diameterKm, 3)} km`;
   distanceStageLabel.textContent = `d ~ ${formatNumber(state.distanceKm, 3)} km`;
 
@@ -660,6 +716,7 @@ function render() {
   objectCircle.setAttribute("fill", `url(#${gradientId})`);
 
   renderStage(thetaDegValue);
+  renderSkyView(thetaDegValue, presetMeta.color);
 
   (window as any).__cp = {
     slug: "angular-size",
@@ -668,11 +725,6 @@ function render() {
   };
 }
 
-function getControlsBody(): HTMLElement {
-  const el = document.querySelector<HTMLElement>(".cp-demo__controls .cp-panel-body");
-  if (!el) throw new Error("Missing controls container for challenge mode.");
-  return el;
-}
 
 const baselineBasketball = (() => {
   const diameterKm0 = AngularSizeModel.presets.basketball.diameter;
@@ -799,7 +851,7 @@ const challenges: Challenge[] = [
 ];
 
 const challengeEngine = new ChallengeEngine(challenges, {
-  container: getControlsBody(),
+  container: challengeContainer,
   showUI: true,
   getState,
   setState
@@ -895,6 +947,12 @@ copyResults.addEventListener("click", () => {
 });
 
 initMath(document);
+
+const demoRoot = document.getElementById("cp-demo");
+if (demoRoot) {
+  initPopovers(demoRoot);
+  initTabs(demoRoot);
+}
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>('.cp-starfield');
 if (starfieldCanvas) {

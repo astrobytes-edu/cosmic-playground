@@ -1,76 +1,98 @@
 @import "../../shared/stub-demo.css";
 
-.control {
-  display: grid;
-  gap: 8px;
-}
-
-.control__value {
-  color: var(--cp-muted);
-  font-size: 0.95rem;
-}
+/* --- Moon controls (conditional section) --- */
 
 .radio-row {
   display: grid;
-  gap: 10px;
-  margin-top: 10px;
+  gap: var(--cp-space-2);
+  margin-top: var(--cp-space-2);
 }
 
 .radio {
   display: flex;
-  gap: 10px;
+  gap: var(--cp-space-2);
   align-items: center;
   color: var(--cp-muted);
 }
 
+/* --- Viz layout (two-panel grid inside stage) --- */
+
 .stage {
-  display: grid;
-  place-items: center;
   padding: var(--cp-space-4);
 }
+
+.viz-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--cp-space-4);
+}
+
+.viz-panel {
+  background: var(--cp-instr-panel-bg);
+  border: 1px solid var(--cp-instr-panel-border);
+  border-radius: 12px;
+  padding: var(--cp-space-3);
+  display: grid;
+  gap: var(--cp-space-2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.panel-title {
+  font-size: 0.85rem;
+  font-weight: var(--cp-font-semibold);
+  color: var(--cp-text2);
+}
+
+/* --- Stage SVG --- */
 
 .stage__svg {
   width: 100%;
   max-width: none;
   height: auto;
-  border-radius: 18px;
-  border: 1px solid var(--cp-border);
-  background:
-    radial-gradient(
-      circle at 20% 30%,
-      var(--cp-glow-teal),
-      color-mix(in srgb, var(--cp-bg0) 78%, transparent)
-    ),
-    radial-gradient(circle at 84% 18%, var(--cp-glow-violet), transparent 55%),
-    radial-gradient(
-      circle at 12% 16%,
-      color-mix(in srgb, var(--cp-text) 18%, transparent) 0 1px,
-      transparent 2px
-    ),
-    radial-gradient(
-      circle at 22% 74%,
-      color-mix(in srgb, var(--cp-text) 14%, transparent) 0 1px,
-      transparent 2px
-    ),
-    radial-gradient(
-      circle at 66% 58%,
-      color-mix(in srgb, var(--cp-text) 12%, transparent) 0 1px,
-      transparent 2px
-    ),
-    radial-gradient(
-      circle at 76% 34%,
-      color-mix(in srgb, var(--cp-text) 10%, transparent) 0 1px,
-      transparent 2px
-    ),
-    radial-gradient(
-      circle at 46% 22%,
-      color-mix(in srgb, var(--cp-text) 10%, transparent) 0 1px,
-      transparent 2px
-    ),
-    color-mix(in srgb, var(--cp-bg0) 70%, transparent);
-  box-shadow: 0 24px 50px color-mix(in srgb, var(--cp-bg0) 65%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+}
+
+/* --- Sky View panel --- */
+
+.sky-view__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.sky-star {
+  fill: var(--cp-text);
+  opacity: 0.25;
+}
+
+.sky-ref-ring {
+  stroke: var(--cp-muted);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  opacity: 0.4;
+}
+
+.sky-ref-label {
+  fill: var(--cp-muted);
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+.sky-object {
+  fill: var(--cp-celestial-star);
+}
+
+.sky-crosshair {
+  stroke: var(--cp-muted);
+  stroke-width: 0.5;
+  opacity: 0.3;
+}
+
+.sky-fov-label {
+  font-size: 0.7rem;
+  color: var(--cp-muted);
+  font-weight: normal;
+  margin-left: var(--cp-space-2);
 }
 
 .stage__observer {
@@ -147,23 +169,9 @@
   font-weight: 700;
 }
 
-.stage__angle {
-  fill: var(--cp-text);
-  font-family: var(--cp-font-mono);
-  font-size: 18px;
-  font-weight: 800;
-}
+/* --- Entry animations (staggered) --- */
 
-.stage__note {
-  fill: var(--cp-muted);
-  font-size: 12px;
-}
-
-.stage__svg--wide .stage__angle {
-  font-size: 16px;
-}
-
-.cp-demo__controls {
+.cp-demo__sidebar {
   animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
 }
 
@@ -177,7 +185,7 @@
   animation-delay: calc(var(--cp-stagger) * 2);
 }
 
-.cp-demo__drawer {
+.cp-demo__shelf {
   animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 3);
 }

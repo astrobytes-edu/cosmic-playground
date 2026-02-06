@@ -10,27 +10,78 @@
   <body>
     <canvas class="cp-starfield" aria-hidden="true"></canvas>
     <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Angular Size instrument">
-      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
-        <div class="cp-panel-header">Angular Size: The Sky’s Ruler</div>
-        <div class="cp-panel-body">
-          <p class="cp-muted">Compare apparent sizes and see why distance matters.</p>
+
+      <!-- ═══════════════════════════════════════════
+           SIDEBAR — physics controls
+           ═══════════════════════════════════════════ -->
+      <aside class="cp-demo__sidebar cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Angular Size</div>
+        <div class="cp-panel-body cp-scroll-shadow">
+
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button class="cp-utility-btn" id="btn-station-mode" aria-label="Station mode" title="Station mode">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"/>
+                <line x1="7" y1="7" x2="13" y2="7"/>
+                <line x1="7" y1="10" x2="13" y2="10"/>
+                <line x1="7" y1="13" x2="10" y2="13"/>
+              </svg>
+            </button>
+            <button class="cp-utility-btn" id="btn-help" aria-label="Help and shortcuts" title="Help / Keys">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"/>
+                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"/>
+                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"/>
+              </svg>
+            </button>
+            <button class="cp-utility-btn" id="btn-challenges" aria-label="Challenges" title="Challenges">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 2l2.2 4.5 5 .7-3.6 3.5.8 5L10 13.4 5.6 15.7l.8-5L2.8 7.2l5-.7z"/>
+              </svg>
+            </button>
+            <button type="button" class="cp-utility-btn" id="copyResults" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"/>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"/>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation" aria-expanded="false" aria-controls="navPopover" title="More links">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"/>
+                  <circle cx="10" cy="10" r="1.5"/>
+                  <circle cx="16" cy="10" r="1.5"/>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/angular-size/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/angular-size/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/angular-size/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
+          </div>
+
+          <div id="challenge-container"></div>
 
           <div class="cp-callout" data-kind="tip">
             <strong>Quick sky rule</strong>
             <div>
-              Your thumb at arm’s length covers about <strong>$2^\circ$</strong>. The Sun and Moon are about <strong>$0.5^\circ$</strong>.
+              Thumb at arm&#x2019;s length &#x2248; 2&#xb0;. Sun &amp; Moon &#x2248; 0.5&#xb0;.
             </div>
           </div>
 
-          <label class="control">
-            <span>Preset</span>
-            <select id="preset"></select>
+          <label class="cp-field">
+            <span class="cp-label">Preset</span>
+            <select id="preset" class="cp-select"></select>
           </label>
 
-          <label class="control">
-            <span>Distance $d$ (km)</span>
+          <label class="cp-field">
+            <span class="cp-label">Distance <em>d</em> (km)</span>
             <input
               id="distanceSlider"
+              class="cp-range"
               type="range"
               min="0"
               max="1000"
@@ -38,13 +89,14 @@
               step="1"
               data-tooltip-source="#distanceValue"
             />
-            <span class="control__value"><span id="distanceValue"></span></span>
+            <div class="cp-muted"><span id="distanceValue"></span></div>
           </label>
 
-          <label class="control">
-            <span>Diameter $D$ (km)</span>
+          <label class="cp-field">
+            <span class="cp-label">Diameter <em>D</em> (km)</span>
             <input
               id="diameterSlider"
+              class="cp-range"
               type="range"
               min="0"
               max="1000"
@@ -52,19 +104,20 @@
               step="1"
               data-tooltip-source="#diameterValue"
             />
-            <span class="control__value"><span id="diameterValue"></span></span>
+            <div class="cp-muted"><span id="diameterValue"></span></div>
           </label>
 
           <section id="moonControls" class="cp-notice" aria-label="Moon controls" hidden>
             <h3>Moon time mode</h3>
             <div class="cp-muted">
-              The Moon’s apparent size changes across its orbit, and its distance changes slowly over geologic time.
+              The Moon&#x2019;s apparent size changes across its orbit,
+              and its distance changes slowly over geologic time.
             </div>
 
             <div class="radio-row" role="radiogroup" aria-label="Moon time mode">
               <label class="radio">
                 <input id="moonModeOrbit" type="radio" name="moonMode" value="orbit" checked />
-                Orbit (perigee ↔ apogee)
+                Orbit (perigee &#x2194; apogee)
               </label>
               <label class="radio">
                 <input id="moonModeRecession" type="radio" name="moonMode" value="recession" />
@@ -72,10 +125,11 @@
               </label>
             </div>
 
-            <label id="moonOrbitRow" class="control">
-              <span>Orbit angle (deg)</span>
+            <label id="moonOrbitRow" class="cp-field">
+              <span class="cp-label">Orbit angle (deg)</span>
               <input
                 id="moonOrbitAngle"
+                class="cp-range"
                 type="range"
                 min="0"
                 max="360"
@@ -83,13 +137,14 @@
                 step="1"
                 data-tooltip-source="#moonOrbitValue"
               />
-              <span class="control__value"><span id="moonOrbitValue"></span></span>
+              <div class="cp-muted"><span id="moonOrbitValue"></span></div>
             </label>
 
-            <label id="moonRecessionRow" class="control" hidden>
-              <span>Recession time (Myr)</span>
+            <label id="moonRecessionRow" class="cp-field" hidden>
+              <span class="cp-label">Recession time (Myr)</span>
               <input
                 id="moonRecessionTime"
+                class="cp-range"
                 type="range"
                 min="-1000"
                 max="1000"
@@ -97,36 +152,29 @@
                 step="10"
                 data-tooltip-source="#moonRecessionValue"
               />
-              <span class="control__value"><span id="moonRecessionValue"></span></span>
+              <div class="cp-muted"><span id="moonRecessionValue"></span></div>
             </label>
           </section>
 
-          <button id="stationMode" class="cp-action" type="button">Station mode</button>
-          <button id="challengeMode" class="cp-action" type="button" disabled>Challenge mode</button>
-          <button id="help" class="cp-action" type="button">Help / shortcuts</button>
-
-          <button id="copyResults" class="cp-action" type="button">Copy results</button>
-          <div class="cp-muted">
-            Station Mode builds a snapshot table. Challenge Mode gives goals to hit. Copy Results exports the current state.
-          </div>
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
-
-          <div class="cp-actions">
-            <a class="cp-button" href="../../exhibits/angular-size/">Open exhibit</a>
-            <a class="cp-button cp-button--outline" href="../../stations/angular-size/">Station card</a>
-            <a class="cp-button cp-button--outline" href="../../instructor/angular-size/">Instructor notes</a>
-          </div>
         </div>
       </aside>
 
+      <!-- ═══════════════════════════════════════════
+           STAGE — visualization
+           ═══════════════════════════════════════════ -->
       <section class="cp-demo__stage cp-stage stage" aria-label="Visualization stage">
-        <svg
-          id="stageSvg"
-          class="stage__svg"
-          viewBox="0 0 640 360"
-          role="img"
-          aria-label="Angular size visualization"
-        >
+        <div class="viz-layout">
+          <!-- LEFT: Geometry diagram -->
+          <div class="viz-panel">
+            <div class="panel-title">Geometry</div>
+            <svg
+              id="stageSvg"
+              class="stage__svg"
+              viewBox="20 40 640 300"
+              role="img"
+              aria-label="Angular size geometry"
+            >
           <defs>
             <radialGradient id="sunGlow">
               <stop offset="0%" stop-color="var(--cp-celestial-sun-core)" stop-opacity="0.98" />
@@ -189,73 +237,112 @@
 
             <text id="objectLabel" class="stage__label stage__label--object" x="520" y="116" text-anchor="middle"></text>
           </g>
+            </svg>
+          </div>
 
-          <text id="angleLabel" class="stage__angle" x="120" y="48"></text>
-          <text id="noteLabel" class="stage__note" x="120" y="72">
-            Diagram is visually scaled; numeric readouts are authoritative.
-          </text>
-        </svg>
-      </section>
+          <!-- RIGHT: Sky View (apparent size) -->
+          <div class="viz-panel">
+            <div class="panel-title">Sky View <span id="skyFov" class="sky-fov-label"></span></div>
+            <svg id="skyViewSvg" class="sky-view__svg" viewBox="0 0 300 300" role="img" aria-label="Apparent size in sky">
+              <defs>
+                <clipPath id="skyClip"><circle cx="150" cy="150" r="140" /></clipPath>
+                <filter id="skyGlow" x="-80%" y="-80%" width="260%" height="260%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <radialGradient id="skyFieldBg">
+                  <stop offset="0%" stop-color="var(--cp-bg0)" stop-opacity="0.5" />
+                  <stop offset="80%" stop-color="var(--cp-bg0)" stop-opacity="0.8" />
+                  <stop offset="100%" stop-color="var(--cp-bg0)" stop-opacity="0.95" />
+                </radialGradient>
+              </defs>
 
-      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
-        <div class="cp-panel-header">Readouts</div>
-        <div class="cp-panel-body">
-          <div class="cp-readout">
-            <div class="cp-readout__label">Angular diameter $\theta$ (auto)</div>
-            <div class="cp-readout__value"><span id="thetaDisplay"></span><span id="thetaDisplayUnit" class="cp-readout__unit"></span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Angular diameter $\theta$ (decimal)</div>
-            <div class="cp-readout__value"><span id="thetaDeg"></span><span class="cp-readout__unit">deg</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Diameter $D$</div>
-            <div class="cp-readout__value"><span id="diameterKm"></span><span class="cp-readout__unit">km</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Distance $d$</div>
-            <div class="cp-readout__value"><span id="distanceKm"></span><span class="cp-readout__unit">km</span></div>
+              <!-- Sky field background -->
+              <circle cx="150" cy="150" r="140" fill="url(#skyFieldBg)" />
+              <circle cx="150" cy="150" r="140" fill="none" stroke="var(--cp-border)" stroke-width="1" />
+
+              <g clip-path="url(#skyClip)">
+                <!-- Decorative stars -->
+                <circle cx="62" cy="55" r="1" class="sky-star" />
+                <circle cx="230" cy="80" r="0.8" class="sky-star" />
+                <circle cx="95" cy="240" r="0.6" class="sky-star" />
+                <circle cx="200" cy="210" r="0.9" class="sky-star" />
+                <circle cx="140" cy="45" r="0.7" class="sky-star" />
+                <circle cx="260" cy="160" r="0.5" class="sky-star" />
+                <circle cx="50" cy="170" r="0.8" class="sky-star" />
+                <circle cx="180" cy="265" r="0.6" class="sky-star" />
+
+                <!-- Reference ring: Full Moon angular size -->
+                <circle id="skyRefRing" cx="150" cy="150" r="0" fill="none" class="sky-ref-ring" />
+                <text id="skyRefLabel" x="150" y="210" text-anchor="middle" class="sky-ref-label">Full Moon</text>
+
+                <!-- The object at apparent angular size -->
+                <circle id="skyObject" cx="150" cy="150" r="20" filter="url(#skyGlow)" class="sky-object" />
+              </g>
+
+              <!-- Crosshair (center mark) -->
+              <line x1="145" y1="150" x2="155" y2="150" class="sky-crosshair" />
+              <line x1="150" y1="145" x2="150" y2="155" class="sky-crosshair" />
+            </svg>
           </div>
         </div>
-      </aside>
+      </section>
 
-      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
-        <div class="cp-panels">
-          <details class="cp-accordion" open>
-            <summary>
-              <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">2 bullets</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <ul>
-                <li>Nearer objects look larger even if they are smaller.</li>
-                <li>Different (size, distance) pairs can look the same.</li>
-              </ul>
-            </div>
-          </details>
+      <!-- ═══════════════════════════════════════════
+           READOUT STRIP — pinned readouts
+           ═══════════════════════════════════════════ -->
+      <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
+        <div class="cp-readout">
+          <span class="cp-readout__label">&#x03B8; (auto)</span>
+          <span class="cp-readout__value"><span id="thetaDisplay"></span><span id="thetaDisplayUnit" class="cp-readout__unit"></span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">&#x03B8; (decimal)</span>
+          <span class="cp-readout__value"><span id="thetaDeg"></span><span class="cp-readout__unit">deg</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Diameter</span>
+          <span class="cp-readout__value"><span id="diameterKm"></span><span class="cp-readout__unit">km</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Distance</span>
+          <span class="cp-readout__value"><span id="distanceKm"></span><span class="cp-readout__unit">km</span></span>
+        </div>
+      </div>
 
-          <details class="cp-accordion">
-            <summary>
-              <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">geometry</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <ul>
-                <li>
-                  Exact geometry:
-                  $$\theta = 2\tan^{-1}\left(\frac{D}{2d}\right)$$
-                </li>
-                <li>$D$ is physical diameter (km). $d$ is distance from the observer to the object (km).</li>
-                <li>
-                  Small-angle approximation (when $D \ll d$):
-                  $$\theta \approx \frac{D}{d}\ \text{(radians)}$$
-                  $$\theta_{\mathrm{deg}} \approx \frac{180}{\pi}\,\frac{D}{d}$$
-                </li>
-                <li>Units: internal distance/diameter are always km; $\theta$ may display in $^\circ$ / $^\prime$ / $^{\prime\prime}$.</li>
-                <li>This is a geometry model (no lensing, no atmospheric effects, no finite detector resolution).</li>
-              </ul>
-            </div>
-          </details>
+      <!-- ═══════════════════════════════════════════
+           SHELF — tabbed pedagogical content
+           ═══════════════════════════════════════════ -->
+      <section class="cp-demo__shelf" aria-label="Information panels">
+        <div class="cp-tabs-container">
+          <div class="cp-tabs" role="tablist" aria-label="Demo information">
+            <button class="cp-tab cp-tab--active" role="tab" aria-selected="true"
+                    aria-controls="tab-notice" id="tab-btn-notice">What to notice</button>
+            <button class="cp-tab" role="tab" aria-selected="false"
+                    aria-controls="tab-model" id="tab-btn-model">Model notes</button>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-notice" aria-labelledby="tab-btn-notice">
+            <ul>
+              <li>Nearer objects look larger even if they are smaller.</li>
+              <li>Different (size, distance) pairs can look the same.</li>
+            </ul>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-model" aria-labelledby="tab-btn-model" hidden>
+            <ul>
+              <li>
+                Exact geometry:
+                $$\theta = 2\tan^{-1}\left(\frac{D}{2d}\right)$$
+              </li>
+              <li>$D$ is physical diameter (km). $d$ is distance from the observer to the object (km).</li>
+              <li>
+                Small-angle approximation (when $D \ll d$):
+                $$\theta \approx \frac{D}{d}\ \text{(radians)}$$
+                $$\theta_{\mathrm{deg}} \approx \frac{180}{\pi}\,\frac{D}{d}$$
+              </li>
+              <li>Units: internal distance/diameter are always km; $\theta$ may display in $^\circ$ / $^\prime$ / $^{\prime\prime}$.</li>
+              <li>Diagram is visually scaled; numeric readouts are authoritative.</li>
+            </ul>
+          </div>
         </div>
       </section>
     </div>
