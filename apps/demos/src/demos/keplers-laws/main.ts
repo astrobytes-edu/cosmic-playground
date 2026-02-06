@@ -560,7 +560,7 @@ function setupDrag() {
     pt.x = clientX;
     pt.y = clientY;
     const svgP = pt.matrixTransform(svg.getScreenCTM()!.inverse());
-    return Math.atan2(SVG_CENTER.y - svgP.y, svgP.x - SVG_CENTER.x);
+    return Math.atan2(SVG_CENTER.y - svgP.y, SVG_CENTER.x - svgP.x);
   }
 
   const onMove = (event: MouseEvent | TouchEvent) => {
