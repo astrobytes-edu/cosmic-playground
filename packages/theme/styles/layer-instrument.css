@@ -1,13 +1,31 @@
-/* Apply to demo root: <div class="cp-layer-instrument cp-demo"> */
+/* ============================================
+   Instrument Layer — "Spacecraft Control Panel"
+
+   Applied to demo roots via:
+     <div class="cp-layer-instrument cp-demo">
+
+   Overrides the muted museum aesthetic with
+   vivid accents, visible glows, and translucent
+   panels that float over the starfield.
+   ============================================ */
+
+/* --- Vivid accent overrides --- */
 .cp-layer-instrument {
   background: var(--cp-bg0);
+
+  --cp-accent: #2dd4bf;
+  --cp-accent-hover: #5eead4;
+  --cp-pink: #f472b6;
+  --cp-pink-hover: #f9a8d4;
+  --cp-violet: #a78bfa;
+  --cp-violet-hover: #c4b5fd;
 }
 
-/* Reduce ambient glow; instrument mode should be calmer */
+/* --- Glow intensity overrides (visible, not invisible) --- */
 .cp-layer-instrument {
-  --cp-glow-teal: color-mix(in srgb, var(--cp-accent) 8%, transparent);
-  --cp-glow-pink: color-mix(in srgb, var(--cp-pink) 5%, transparent);
-  --cp-glow-violet: color-mix(in srgb, var(--cp-violet) 6%, transparent);
+  --cp-glow-teal: 0 0 20px rgba(45, 212, 191, 0.40);
+  --cp-glow-pink: 0 0 20px rgba(244, 114, 182, 0.35);
+  --cp-glow-violet: 0 0 20px rgba(167, 139, 250, 0.35);
 
   /* Legacy */
   --cp-glow-accent: var(--cp-glow-teal);
@@ -15,38 +33,118 @@
   --cp-glow-magenta: var(--cp-glow-pink);
 }
 
-.cp-panel {
-  background: var(--cp-bg1);
-  border: 1px solid var(--cp-border);
+/* --- Translucent panels (starfield shows through) --- */
+.cp-layer-instrument .cp-panel {
+  background: rgba(23, 27, 34, 0.88);
+  border: 1px solid rgba(109, 119, 148, 0.25);
   border-radius: var(--cp-r-2);
   box-shadow: var(--cp-shadow-1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.cp-panel-header {
+.cp-layer-instrument .cp-panel-header {
   padding: var(--cp-space-3) var(--cp-space-4);
-  border-bottom: 1px solid var(--cp-border);
+  border-bottom: 1px solid rgba(109, 119, 148, 0.15);
   color: var(--cp-muted);
   font-size: 0.9rem;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
-.cp-panel-body {
+.cp-layer-instrument .cp-panel-body {
   padding: var(--cp-space-4);
 }
 
-.cp-callout {
+/* --- Readout styling --- */
+.cp-layer-instrument .cp-readout {
+  background: rgba(33, 34, 43, 0.7);
+  border-radius: var(--cp-r-1);
+  padding: var(--cp-space-3);
+}
+
+.cp-layer-instrument .cp-readout__label {
+  font-size: var(--cp-readout-label-size);
+  font-weight: var(--cp-readout-label-weight);
+  letter-spacing: var(--cp-readout-label-tracking);
+  color: var(--cp-readout-label-color);
+  text-transform: uppercase;
+  margin-bottom: var(--cp-space-1);
+}
+
+.cp-layer-instrument .cp-readout__value {
+  font-size: var(--cp-readout-value-size);
+  font-weight: var(--cp-readout-value-weight);
+  color: var(--cp-readout-value-color);
+  font-family: var(--cp-readout-value-font);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--cp-leading-tight);
+}
+
+.cp-layer-instrument .cp-readout__unit {
+  font-size: var(--cp-readout-unit-size);
+  font-weight: var(--cp-readout-unit-weight);
+  color: var(--cp-readout-unit-color);
+  margin-left: 0.25em;
+}
+
+/* --- Callouts --- */
+.cp-layer-instrument .cp-callout {
   border-left: 3px solid var(--cp-accent);
   background: color-mix(in srgb, var(--cp-accent) 8%, transparent);
   padding: var(--cp-space-3) var(--cp-space-4);
   border-radius: var(--cp-r-2);
 }
 
-.cp-callout[data-kind="model"] {
+.cp-layer-instrument .cp-callout[data-kind="model"] {
   border-left-color: var(--cp-violet);
   background: color-mix(in srgb, var(--cp-violet) 8%, transparent);
 }
 
-.cp-callout[data-kind="misconception"] {
+.cp-layer-instrument .cp-callout[data-kind="misconception"] {
   border-left-color: var(--cp-pink);
   background: color-mix(in srgb, var(--cp-pink) 8%, transparent);
+}
+
+/* --- Celestial object utility classes (for SVG elements) --- */
+.cp-layer-instrument .celestial-sun {
+  fill: var(--cp-celestial-sun);
+  filter: drop-shadow(var(--cp-glow-sun));
+}
+
+.cp-layer-instrument .celestial-moon {
+  fill: var(--cp-celestial-moon);
+  filter: drop-shadow(var(--cp-glow-moon));
+}
+
+.cp-layer-instrument .celestial-earth {
+  fill: var(--cp-celestial-earth);
+  filter: drop-shadow(var(--cp-glow-planet));
+}
+
+.cp-layer-instrument .celestial-mars {
+  fill: var(--cp-celestial-mars);
+  filter: drop-shadow(var(--cp-glow-planet));
+}
+
+.cp-layer-instrument .celestial-star-generic {
+  fill: var(--cp-celestial-star);
+  filter: drop-shadow(var(--cp-glow-star));
+}
+
+.cp-layer-instrument .orbit-path {
+  stroke: var(--cp-celestial-orbit);
+  fill: none;
+  opacity: 0.5;
+}
+
+/* --- Interactive glow states --- */
+.cp-layer-instrument .cp-button:hover,
+.cp-layer-instrument .cp-button:focus-visible {
+  box-shadow: var(--cp-glow-teal);
+}
+
+.cp-layer-instrument .cp-button--accent:hover,
+.cp-layer-instrument .cp-button--accent:focus-visible {
+  box-shadow: var(--cp-glow-pink);
 }
