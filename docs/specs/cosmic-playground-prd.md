@@ -1,6 +1,6 @@
 # Cosmic Playground — Product Requirements Document
 
-**Version:** 1.3
+**Version:** 1.5
 **Date:** February 5, 2026
 **Author:** Dr. Anna Rosen (SDSU)
 **Status:** Draft
@@ -12,6 +12,8 @@
 | 1.1 | Feb 5, 2026 | Added visual design system (5.4.3-5.4.8): two-layer philosophy, starfield, glow system, celestial palette, instrument accents, readout typography. Updated shell layouts to compositional system. |
 | 1.2 | Feb 6, 2026 | Added testing requirements (5.8): four-layer testing protocol (physics, contract, logic, E2E). Updated success metrics with contract/E2E coverage. Updated Phase 2 timeline with testing steps. |
 | 1.3 | Feb 6, 2026 | Clarified layout strategy (`data-shell` + `data-layout` hybrid), refined package roles (`@cosmic/ui`, `@cosmic/renderer`), removed calendar timelines, added launch-gate framing, and updated runtime/theme implementation status (`initStarfield` implemented). |
+| 1.4 | Feb 6, 2026 | Added foundational hardening section: contract precedence, data/model/parity/release-state gates, UI/renderer decision guardrails, required accessibility checks, export schema stability, and explicit v1 non-goals. |
+| 1.5 | Feb 6, 2026 | Elevated Demo Readiness Metadata to highest-priority migration gate and added detailed parity template, CI contract enforcement requirements, and export compatibility matrix requirements. |
 
 ---
 
@@ -519,7 +521,33 @@ Every demo must include:
 | Instructor notes | Pedagogy, misconceptions, activities |
 | Challenges (optional) | Prediction challenges with feedback |
 
+#### 5.7.1 Demo Readiness Metadata (P0 — Highest Priority)
+
+Every demo content entry must include explicit readiness metadata.
+
+**Required fields:**
+
+| Field | Type | Allowed Values / Format | Purpose |
+|-------|------|--------------------------|---------|
+| `readiness` | enum | `stub`, `experimental`, `candidate`, `launch-ready` | Canonical release state |
+| `readinessReason` | string | short justification | Why demo is in this state |
+| `parityAuditPath` | path string | `docs/audits/migrations/<slug>-parity.md` | Traceable parity evidence |
+| `lastVerifiedAt` | ISO date | `YYYY-MM-DD` | Most recent verification date |
+
+**Example frontmatter (demo content):**
+```yaml
+title: Blackbody Radiation
+slug: blackbody-radiation
+readiness: experimental
+readinessReason: "Physics and UX parity pass; export parity pending."
+parityAuditPath: docs/audits/migrations/blackbody-radiation-parity.md
+lastVerifiedAt: 2026-02-06
+```
+
 **Acceptance Criteria:**
+- [ ] Demo content includes all required readiness metadata fields.
+- [ ] Explore/discovery surfaces can hide or clearly label non-`launch-ready` demos.
+- [ ] Promotion to `launch-ready` is blocked unless Section 6.1 launch gates pass.
 - [ ] Demo uses shared UI primitives (`@cosmic/ui` components where available, otherwise approved theme/runtime patterns)
 - [ ] Demo imports physics from `@cosmic/physics` (no inline equations)
 - [ ] Demo works standalone (open `index.html` in browser after build)
@@ -576,11 +604,23 @@ Every migrated demo must have Playwright E2E tests covering:
 - Visual regression screenshots (committed as baselines with `toHaveScreenshot()`)
 - Accordion/drawer behavior (open/close, content visibility)
 
+#### 5.8.5 Automated CI Contract Enforcement
+
+CI must enforce foundational migration contracts automatically, not only via reviewer memory.
+
+**Required CI checks:**
+- Readiness metadata completeness for every demo content entry.
+- Parity audit artifact exists for every migrated demo slug.
+- No runtime `fetch()` usage for core datasets in demo runtime paths.
+- PR includes contract section citations when migration-related files are changed.
+- Export snapshots updated (or unchanged with explicit assertion) when export fields change.
+
 **Acceptance Criteria:**
 - [ ] Physics models have 90%+ line coverage
 - [ ] Every demo has `design-contracts.test.ts` adapted from moon-phases golden reference
 - [ ] Every demo with UI logic has `logic.ts` + `logic.test.ts`
 - [ ] Every migrated demo has Playwright E2E tests with visual regression screenshots
+- [ ] CI enforces readiness/parity/data-contract invariants for migration PRs
 - [ ] All tests pass in CI before merge
 - [ ] Zero architecture violations (no inline physics, no hardcoded colors)
 
@@ -595,6 +635,8 @@ Every migrated demo must have Playwright E2E tests covering:
 | Contract checks | 100% pass | `pnpm lint` + contract validators |
 | Build and type integrity | 100% pass | `pnpm -r typecheck` and `pnpm build` |
 | Demo test coverage | 100% migrated demos covered | design-contract + logic + E2E coverage map |
+| Demo readiness metadata | 100% demos with required fields | content schema/contract validation |
+| Parity audit coverage | 100% migrated demos with audit artifact | audit-file existence + reviewer signoff |
 | Base-path safety | 100% pass | `CP_BASE_PATH=/cosmic-playground/ ... test:e2e` |
 | Export stability | 100% migrated demos | v1 export snapshot/assertion tests |
 | Accessibility regressions | 0 open P0/P1 | keyboard/focus/live-region E2E checks |
@@ -637,7 +679,283 @@ Every migrated demo must have Playwright E2E tests covering:
 
 ---
 
-## 8. Execution Order (No Calendar Commitment)
+## 8. Foundational Contract Additions (v1 Hardening)
+
+This section defines mandatory guardrails that make migration quality measurable and enforceable before student-facing launch.
+
+### 8.0 Priority Order (Explicit)
+
+Implementation priority inside this section is:
+1. Demo Readiness Metadata (`8.5`) — highest priority, blocks accidental exposure.
+2. Migration Parity Template + Audits (`8.4`) — prevents hidden regressions.
+3. Automated CI Contract Enforcement (`8.11`) — reduces manual review risk.
+4. Export Compatibility Matrix (`8.12`) — protects downstream instructor workflows.
+
+### 8.1 Contract Precedence and Conflict Resolution
+
+The following contracts are all active and binding:
+- `docs/specs/cosmic-playground-prd.md` (product scope and launch gates)
+- `docs/specs/cosmic-playground-site-spec.md` (site/runtime architecture)
+- `docs/specs/cosmic-playground-model-contract.md` (physics/model correctness)
+- `docs/specs/cosmic-playground-data-contract.md` (datasets and metadata)
+
+If requirements conflict:
+1. `model-contract` and `data-contract` invariants take precedence for correctness.
+2. `site-spec` governs routing/runtime/build behavior.
+3. PRD is updated to resolve drift before merge.
+
+**Acceptance Criteria:**
+- [ ] Migration PR descriptions cite relevant sections from all applicable contracts.
+- [ ] No merge proceeds with unresolved contract conflicts.
+- [ ] Contract drift is resolved via spec update in the same PR or a linked prerequisite PR.
+
+**Verification:**
+- [ ] PR checklist includes "contract sections cited" and "no unresolved conflicts".
+- [ ] Reviewer confirms cited section references are accurate.
+
+### 8.2 Data Contract Launch Gates
+
+Data-bearing demos must satisfy all `data-contract` invariants:
+- No runtime fetch for core datasets.
+- Explicit units in field names and metadata.
+- `manifest.json` exists for each `packages/data-*`.
+- Provenance and license fields are present (or explicitly `UNSPECIFIED` until resolved).
+- Dataset metadata exports (`*Meta`) match manifest definitions.
+
+**Acceptance Criteria:**
+- [ ] All migrated data demos pass dataset contract checks.
+- [ ] No core demo behavior depends on network fetch at runtime.
+- [ ] Dataset schemas, units, and metadata are machine-checkable.
+
+**Verification:**
+- [ ] `corepack pnpm test:datasets`
+- [ ] Spot-check for accidental runtime fetch usage in migrated demos.
+
+### 8.3 Model Verification Matrix
+
+Each migrated demo must have a model verification record containing:
+- Governing equations and assumptions.
+- Unit system and conversion boundaries.
+- Known-answer test cases with tolerances.
+- Explicit statement of pedagogical approximations.
+
+**Acceptance Criteria:**
+- [ ] Every migrated demo has model tests aligned to its governing equations.
+- [ ] All user-facing readouts and exports use explicit units.
+- [ ] No demo introduces natural-unit shortcuts (`G = 1`) in student-facing contexts.
+
+**Verification:**
+- [ ] `corepack pnpm test:physics-contract`
+- [ ] Demo model tests pass in CI.
+
+### 8.4 Migration Parity Rubric (Legacy -> Cosmic)
+
+Each migrated demo is evaluated against legacy in four dimensions:
+- Behavior parity (controls and responses).
+- Visual/interaction parity (or justified UX improvement).
+- Export parity (schema + semantic meaning).
+- Pedagogical parity (predict/play/explain affordances preserved or improved).
+
+**Acceptance Criteria:**
+- [ ] Each migrated demo includes a parity audit record and pass/fail decision.
+- [ ] Deviations from legacy are documented as intentional with rationale.
+- [ ] Regressions in physics correctness or pedagogical affordances block promotion.
+
+**Required audit template (per demo):**
+```md
+# <slug> Migration Parity Audit
+
+## 1) Behavior parity
+- Legacy baseline:
+- Cosmic result:
+- Status: pass | fail
+
+## 2) Visual/interaction parity
+- Legacy baseline:
+- Cosmic result:
+- Status: pass | fail
+
+## 3) Export parity
+- Legacy baseline:
+- Cosmic result:
+- Status: pass | fail
+
+## 4) Pedagogical parity
+- Legacy baseline:
+- Cosmic result:
+- Status: pass | fail
+
+## 5) Intentional deltas
+- Delta:
+- Rationale:
+- Risk:
+
+## 6) Promotion recommendation
+- Recommended state: stub | experimental | candidate | launch-ready
+- Blockers:
+```
+
+**Artifact location convention:** `docs/audits/migrations/<slug>-parity.md`
+
+**Verification:**
+- [ ] Audit artifacts exist for each migrated demo and are linked from PRs.
+- [ ] Reviewer signoff includes parity rubric status.
+
+### 8.5 Demo Release States and Promotion Rules
+
+Every demo has a release state:
+- `stub`: placeholder only; not student-ready.
+- `experimental`: functional but missing one or more launch gates.
+- `candidate`: passes migration gates, awaiting launch hardening verification.
+- `launch-ready`: all launch gates pass; eligible for student-facing use.
+
+**P0 policy:** this is the highest-priority migration control. No demo is considered "ready" unless readiness metadata and state promotion rules are satisfied.
+
+**State transition rules:**
+- `stub` -> `experimental`: demo runs, core controls work, basic model tests pass.
+- `experimental` -> `candidate`: parity audit complete, major regressions resolved, required tests present.
+- `candidate` -> `launch-ready`: all Section 6.1 launch gates pass with no open P0/P1 blockers.
+
+**Acceptance Criteria:**
+- [ ] Demo state is explicit in content/metadata and visible to maintainers.
+- [ ] `stub` and non-ready demos are hidden or clearly flagged in public discovery surfaces.
+- [ ] Promotion to `launch-ready` requires all Section 6.1 gates.
+
+**Verification:**
+- [ ] Demo inventory includes current release state for each slug.
+- [ ] Explore/catalog excludes or labels non-launch-ready demos per policy.
+
+### 8.6 UI Architecture Promotion Guardrails
+
+Use this rule when deciding native HTML + theme vs `@cosmic/ui` component:
+- Start with theme + semantic HTML for one-off controls.
+- Promote to `@cosmic/ui` when the same behavior/semantics appear in 2+ demos.
+- Promotion is mandatory when accessibility behavior is duplicated or inconsistent.
+
+**Acceptance Criteria:**
+- [ ] Shared controls converge toward `@cosmic/ui` or documented equivalent primitives.
+- [ ] Per-demo control drift decreases over migration waves.
+- [ ] Accessibility behavior for shared controls is centralized and reusable.
+
+**Verification:**
+- [ ] UI review checks for duplicate control implementations across demos.
+- [ ] Keyboard/focus/announcement behavior remains consistent cross-demo.
+
+### 8.7 Renderer Decision Policy (Canvas2D vs Three.js)
+
+Renderer choice must be explicit and justified:
+- Prefer Canvas2D for 2D pedagogical visualizations with low scene complexity.
+- Use Three.js/WebGL for true 3D spatial reasoning where camera/scene depth adds instructional value.
+- Renderer selection must not change model equations or unit semantics.
+
+**Acceptance Criteria:**
+- [ ] Each demo declares renderer strategy and rationale.
+- [ ] Renderer abstraction code remains separate from model equations.
+- [ ] Performance remains projection-usable at lecture scale.
+
+**Verification:**
+- [ ] Architecture review confirms renderer/model separation.
+- [ ] Performance checks for target demos meet launch thresholds.
+
+### 8.8 Required Accessibility Test Cases
+
+Accessibility acceptance requires explicit checks for:
+- Full keyboard path through controls, drawer, dialogs, and mode switches.
+- Visible focus styling on all interactive elements.
+- Live-region announcements for important state/readout changes.
+- Reduced-motion behavior when OS preference requests it.
+
+**Acceptance Criteria:**
+- [ ] Each migrated demo has accessibility checks in E2E coverage.
+- [ ] No P0/P1 accessibility regressions are open at promotion time.
+- [ ] Accessibility behavior is preserved across shell variants (`instrument`, `triad`, `viz-first`).
+
+**Verification:**
+- [ ] `CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e`
+- [ ] Accessibility-focused test assertions pass for migrated demos.
+
+### 8.9 Export Schema Stability Policy
+
+Export outputs are treated as stable contracts:
+- Use explicit schema versioning.
+- Additive changes are allowed without breaking existing parsing.
+- Breaking changes require version bump and migration note.
+- Export labels and units must match UI labels and units.
+
+**Acceptance Criteria:**
+- [ ] Every export payload includes schema/version metadata.
+- [ ] Breaking export changes are documented and gated.
+- [ ] Export snapshots prevent silent schema drift.
+- [ ] Export compatibility matrix is updated when schema changes.
+
+**Verification:**
+- [ ] Export snapshot/assertion tests pass.
+- [ ] Release notes include export schema changes when applicable.
+
+### 8.10 Explicit v1 Non-Goals (Scope Protection)
+
+To keep foundational quality high, the following remain out of v1 launch scope:
+- Leaderboards or competitive gamification systems.
+- Complex analytics pipelines beyond minimal operational diagnostics.
+- New framework migrations or major dependency churn unrelated to migration correctness.
+
+**Acceptance Criteria:**
+- [ ] New work items that violate v1 non-goals are deferred or separately approved.
+- [ ] Launch scope remains focused on correctness, stability, and pedagogy parity.
+
+**Verification:**
+- [ ] PR review labels identify out-of-scope proposals.
+- [ ] Deferred items are tracked separately from launch-critical work.
+
+### 8.11 Automated CI Contract Enforcement (Operational)
+
+CI must run a contract-enforcement bundle for migration-related PRs.
+
+**Minimum checks in bundle:**
+- Readiness metadata validation for all demo entries.
+- Parity audit file existence for migrated demo slugs.
+- Data contract checks (`no runtime fetch`, manifest/metadata conformance).
+- Export contract checks (schema snapshot stability).
+- Contract citation check in PR template/checklist.
+
+**Acceptance Criteria:**
+- [ ] Contract-enforcement CI job is required status for merge.
+- [ ] CI failures provide actionable error messages (missing field/path/check).
+- [ ] Local command exists to run same checks before pushing.
+
+**Verification:**
+- [ ] Required CI status appears on migration PRs.
+- [ ] Local preflight command is documented and reproducible.
+
+### 8.12 Export Compatibility Matrix (Operational Reference)
+
+Maintain a compatibility table that maps each demo and schema version to downstream consumers.
+
+**Required fields per row:**
+- Demo slug
+- Export schema version
+- Required fields (with units in names)
+- Known consumers (station cards, instructor notes, copy-results workflows)
+- Backward compatibility status (`compatible`, `requires migration`)
+
+**Example row:**
+
+| Demo | Schema | Required Fields | Consumers | Compatibility |
+|------|--------|-----------------|-----------|---------------|
+| `keplers-laws` | `v1.2` | `semiMajorAxis_AU`, `period_yr`, `eccentricity` | station table, instructor worksheet | compatible with `v1.1` |
+
+**Acceptance Criteria:**
+- [ ] Matrix exists and includes every `launch-ready` demo.
+- [ ] Matrix updated in same PR as any export schema change.
+- [ ] Consumer-impact notes are explicit for breaking changes.
+
+**Verification:**
+- [ ] PR touching export fields includes matrix update.
+- [ ] Reviewer confirms consumer impact has been addressed.
+
+---
+
+## 9. Execution Order (No Calendar Commitment)
 
 ### Stage A: Foundations and Contracts
 - Strengthen validators and CI gates.
@@ -660,7 +978,7 @@ Every migrated demo must have Playwright E2E tests covering:
 
 ---
 
-## 9. Appendix: Existing Package Inventory
+## 10. Appendix: Existing Package Inventory
 
 ### `@cosmic/physics` (Implemented)
 - `AstroConstants` — Physical constants with explicit units
@@ -697,7 +1015,7 @@ Every migrated demo must have Playwright E2E tests covering:
 
 ---
 
-## 10. Appendix: Design Principles
+## 11. Appendix: Design Principles
 
 1. **Physical correctness over simplicity** — Never sacrifice accuracy for ease of implementation. If a simplification introduces misconceptions, find a better approach.
 

@@ -27,6 +27,7 @@ Process skills (how to work):
 - `superpowers:test-driven-development` — test-first for behavior changes.
 
 Cosmic Playground personal skills (what to enforce):
+- `cosmic-frontend` — high-quality frontend implementation for Cosmic Playground with contract-safe UX, flexible layout composition, and non-generic visual direction.
 - `cosmic-spec-to-implementation` — turn specs into PR-sized slices with acceptance + commands.
 - `cosmic-astro-site-engineering` — Astro base-path safety + static-first museum pages + KaTeX runtime.
 - `cosmic-basepath-smoke-tests` — triage/fix GH Pages base-path regressions across site/content/demos.
@@ -60,6 +61,15 @@ Cosmic Playground personal skills (what to enforce):
 ### Conventions
 - Use `import.meta.env.BASE_URL` for internal site links/asset URLs (GitHub Pages base path support).
 - Instructor pages are public; optionally `noindex` and omitted from primary nav.
+
+### Communication mode (explanatory default)
+- Provide educational, repo-specific explanations while completing tasks.
+- Before and after non-trivial code changes, include a concise insight block in chat output using this exact wrapper:
+  - `` `★ Insight ─────────────────────────────────────` ``
+  - 2-3 key educational points tied to this codebase and the current change
+  - `` `─────────────────────────────────────────────────` ``
+- Explanations should clarify implementation choices, tradeoffs, and invariants (not generic programming trivia).
+- Do not put insight blocks inside repo files unless explicitly requested; keep them in conversation output.
 
 ### Verification / base path
 - Primary gates:
