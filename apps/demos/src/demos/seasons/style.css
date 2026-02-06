@@ -61,13 +61,13 @@
 
 .stage__orbit {
   fill: none;
-  stroke: color-mix(in srgb, var(--cp-accent3) 34%, transparent);
+  stroke: color-mix(in srgb, var(--cp-celestial-orbit) 34%, transparent);
   stroke-width: 2px;
 }
 
 .stage__sun {
   fill: url(#sunGlow);
-  stroke: var(--cp-warning);
+  stroke: var(--cp-celestial-sun);
   stroke-opacity: 0.5;
   stroke-width: 2px;
 }
@@ -75,20 +75,20 @@
 .stage__earth,
 .stage__earthDisk {
   fill: url(#earthGlow);
-  stroke: color-mix(in srgb, var(--cp-accent3) 58%, transparent);
+  stroke: color-mix(in srgb, var(--cp-celestial-earth) 58%, transparent);
   stroke-width: 2px;
 }
 
 .stage__ray {
   fill: none;
-  stroke: var(--cp-warning);
+  stroke: var(--cp-celestial-sun);
   stroke-opacity: 0.75;
   stroke-width: 3px;
   stroke-linecap: round;
 }
 
 .stage__axis {
-  stroke: color-mix(in srgb, var(--cp-accent3) 58%, transparent);
+  stroke: color-mix(in srgb, var(--cp-celestial-earth) 58%, transparent);
   stroke-width: 3px;
   stroke-linecap: round;
 }
@@ -109,7 +109,7 @@
 }
 
 .stage__markerSun {
-  fill: var(--cp-warning);
+  fill: var(--cp-celestial-sun);
   fill-opacity: 0.95;
 }
 
