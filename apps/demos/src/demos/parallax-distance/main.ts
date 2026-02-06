@@ -2,6 +2,7 @@ import { createDemoModes, createInstrumentRuntime, initMath, initStarfield, setL
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { ParallaxDistanceModel } from "@cosmic/physics";
 import { nearbyStars } from "@cosmic/data-astr101";
+import { clamp, formatNumber, signalToNoise, diagramHalfAngle, diagramStarY } from "./logic";
 
 const starPresetEl = document.querySelector<HTMLSelectElement>("#starPreset");
 const parallaxMasEl = document.querySelector<HTMLInputElement>("#parallaxMas");
@@ -89,15 +90,6 @@ const distancePcValue = distancePcEl;
 const distanceLyValue = distanceLyEl;
 const snrValue = snrEl;
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-function formatNumber(value: number, digits = 2): string {
-  if (!Number.isFinite(value)) return "—";
-  return value.toFixed(digits);
-}
-
 function currentPresetLabel(): string {
   const idx = starPreset.selectedIndex;
   const opt = idx >= 0 ? starPreset.options[idx] : null;
@@ -152,17 +144,8 @@ function renderDiagram(inputs: { parallaxMas: number }) {
   baselineLabel.setAttribute("y", String(baselineY + 44));
   baselineLabel.setAttribute("text-anchor", "middle");
 
-  const pArcsec = inputs.parallaxMas / 1000;
-  const pRad = (pArcsec * Math.PI) / (180 * 3600);
-  const exaggeration = 6000;
-  const halfAngle = clamp(pRad * exaggeration, 0.02, 0.34);
-
-  let starY = baselineY - (baselineLen / 2) / Math.tan(halfAngle);
-  let clamped = false;
-  if (starY < 80) {
-    starY = 80;
-    clamped = true;
-  }
+  const { halfAngle } = diagramHalfAngle(inputs.parallaxMas);
+  const { starY, clamped } = diagramStarY(baselineY, baselineLen, halfAngle);
   const starX = cx;
 
   star.setAttribute("cx", String(starX));
@@ -205,7 +188,7 @@ function render() {
   const dPc = ParallaxDistanceModel.distanceParsecFromParallaxMas(inputs.parallaxMas);
   const dLy = ParallaxDistanceModel.distanceLyFromParsec(dPc);
 
-  const snr = inputs.sigmaMas > 0 ? inputs.parallaxMas / inputs.sigmaMas : Infinity;
+  const snr = signalToNoise(inputs.parallaxMas, inputs.sigmaMas);
 
   parallaxMasValue.textContent = `${Math.round(inputs.parallaxMas)} mas`;
   sigmaMasValue.textContent = `${formatNumber(inputs.sigmaMas, 1)} mas`;
@@ -223,7 +206,7 @@ function exportResults(): ExportPayloadV1 {
   const pArcsec = inputs.parallaxMas / 1000;
   const dPc = ParallaxDistanceModel.distanceParsecFromParallaxMas(inputs.parallaxMas);
   const dLy = ParallaxDistanceModel.distanceLyFromParsec(dPc);
-  const snr = inputs.sigmaMas > 0 ? inputs.parallaxMas / inputs.sigmaMas : Infinity;
+  const snr = signalToNoise(inputs.parallaxMas, inputs.sigmaMas);
 
   return {
     version: 1,
@@ -298,7 +281,7 @@ const demoModes = createDemoModes({
       const inputs = currentInputs();
       const dPc = ParallaxDistanceModel.distanceParsecFromParallaxMas(inputs.parallaxMas);
       const dLy = ParallaxDistanceModel.distanceLyFromParsec(dPc);
-      const snr = inputs.sigmaMas > 0 ? inputs.parallaxMas / inputs.sigmaMas : Infinity;
+      const snr = signalToNoise(inputs.parallaxMas, inputs.sigmaMas);
       return {
         case: "Snapshot",
         preset: currentPresetLabel(),
