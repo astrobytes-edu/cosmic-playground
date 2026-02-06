@@ -1,489 +1,714 @@
 import { createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AstroUnits, KeplersLawsModel, TwoBodyAnalytic } from "@cosmic/physics";
+import {
+  buildExportPayload,
+  buildReadouts,
+  logSliderToValue,
+  meanAnomalyRadFromTime,
+  timeFromMeanAnomalyRad,
+  valueToLogSlider
+} from "./keplers-laws-logic";
 
-const aAuEl = document.querySelector<HTMLInputElement>("#aAu");
-const aAuValueEl = document.querySelector<HTMLSpanElement>("#aAuValue");
-const eccEl = document.querySelector<HTMLInputElement>("#ecc");
-const eccValueEl = document.querySelector<HTMLSpanElement>("#eccValue");
-const newtonModeEl = document.querySelector<HTMLInputElement>("#newtonMode");
-const centralMassEl = document.querySelector<HTMLInputElement>("#centralMassSolar");
-const centralMassValueEl = document.querySelector<HTMLSpanElement>("#centralMassValue");
-const meanAnomalyEl = document.querySelector<HTMLInputElement>("#meanAnomalyDeg");
-const meanAnomalyValueEl = document.querySelector<HTMLSpanElement>("#meanAnomalyValue");
+const SVG_CENTER = { x: 300, y: 200 };
+const SVG_SCALE = 150;
+const TAU = 2 * Math.PI;
 
-const showApsidesEl = document.querySelector<HTMLInputElement>("#showApsides");
-const showEqualAreasEl = document.querySelector<HTMLInputElement>("#showEqualAreas");
-const showVelocityEl = document.querySelector<HTMLInputElement>("#showVelocity");
-
-const animateEl = document.querySelector<HTMLButtonElement>("#animate");
-const motionNoteEl = document.querySelector<HTMLParagraphElement>("#motionNote");
-
-const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
-const helpEl = document.querySelector<HTMLButtonElement>("#help");
-
-const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
-const statusEl = document.querySelector<HTMLParagraphElement>("#status");
-
-const canvasEl = document.querySelector<HTMLCanvasElement>("#orbitCanvas");
-
-const periodYrEl = document.querySelector<HTMLSpanElement>("#periodYr");
-const perihelionAuEl = document.querySelector<HTMLSpanElement>("#perihelionAu");
-const aphelionAuEl = document.querySelector<HTMLSpanElement>("#aphelionAu");
-const rAuEl = document.querySelector<HTMLSpanElement>("#rAu");
-const speedKmSEl = document.querySelector<HTMLSpanElement>("#speedKmS");
-
-if (
-  !aAuEl ||
-  !aAuValueEl ||
-  !eccEl ||
-  !eccValueEl ||
-  !newtonModeEl ||
-  !centralMassEl ||
-  !centralMassValueEl ||
-  !meanAnomalyEl ||
-  !meanAnomalyValueEl ||
-  !showApsidesEl ||
-  !showEqualAreasEl ||
-  !showVelocityEl ||
-  !animateEl ||
-  !motionNoteEl ||
-  !stationModeEl ||
-  !helpEl ||
-  !copyResultsEl ||
-  !statusEl ||
-  !canvasEl ||
-  !periodYrEl ||
-  !perihelionAuEl ||
-  !aphelionAuEl ||
-  !rAuEl ||
-  !speedKmSEl
-) {
-  throw new Error("Missing required DOM elements for keplers-laws demo.");
-}
-
-const ctxEl = canvasEl.getContext("2d");
-if (!ctxEl) throw new Error("Canvas 2D context unavailable.");
-
-const aAu = aAuEl;
-const aAuValue = aAuValueEl;
-const ecc = eccEl;
-const eccValue = eccValueEl;
-const newtonMode = newtonModeEl;
-const centralMassSolar = centralMassEl;
-const centralMassValue = centralMassValueEl;
-const meanAnomalyDeg = meanAnomalyEl;
-const meanAnomalyValue = meanAnomalyValueEl;
-const showApsides = showApsidesEl;
-const showEqualAreas = showEqualAreasEl;
-const showVelocity = showVelocityEl;
-const animateButton = animateEl;
-const motionNote = motionNoteEl;
-const stationModeButton = stationModeEl;
-const helpButton = helpEl;
-const copyResults = copyResultsEl;
-const status = statusEl;
-const canvas = canvasEl;
-const ctx = ctxEl;
-const periodYrValue = periodYrEl;
-const perihelionAuValue = perihelionAuEl;
-const aphelionAuValue = aphelionAuEl;
-const rAuValue = rAuEl;
-const speedKmSValue = speedKmSEl;
-
-const prefersReducedMotion =
-  typeof window !== "undefined" &&
-  typeof window.matchMedia !== "undefined" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-function formatNumber(value: number, digits = 2): string {
-  if (!Number.isFinite(value)) return "—";
-  return value.toFixed(digits);
-}
-
-function cssVar(name: string): string {
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
-  if (value.length === 0) throw new Error(`Missing required CSS variable: ${name}`);
-  return value;
-}
-
-const colorProbe = document.createElement("span");
-colorProbe.style.position = "absolute";
-colorProbe.style.left = "-9999px";
-colorProbe.style.top = "-9999px";
-colorProbe.style.visibility = "hidden";
-document.body.appendChild(colorProbe);
-
-function resolveCssColor(raw: string): string {
-  colorProbe.style.color = raw;
-  return getComputedStyle(colorProbe).color;
-}
-
-const canvasTheme = {
-  orbit: resolveCssColor(cssVar("--cp-border")),
-  axes: resolveCssColor(cssVar("--cp-border-subtle")),
-  text: resolveCssColor(cssVar("--cp-text")),
-  muted: resolveCssColor(cssVar("--cp-muted")),
-  sun: resolveCssColor(cssVar("--cp-warning")),
-  planet: resolveCssColor(cssVar("--cp-chart-1")),
-  area: resolveCssColor(cssVar("--cp-glow-violet")),
-  vector: resolveCssColor(cssVar("--cp-chart-2"))
+const elements = {
+  modeKepler: document.querySelector<HTMLButtonElement>("#modeKepler"),
+  modeNewton: document.querySelector<HTMLButtonElement>("#modeNewton"),
+  unit101: document.querySelector<HTMLButtonElement>("#unit101"),
+  unit201: document.querySelector<HTMLButtonElement>("#unit201"),
+  aSlider: document.querySelector<HTMLInputElement>("#aSlider"),
+  aDisplay: document.querySelector<HTMLDivElement>("#aDisplay"),
+  eSlider: document.querySelector<HTMLInputElement>("#eSlider"),
+  eDisplay: document.querySelector<HTMLDivElement>("#eDisplay"),
+  massField: document.querySelector<HTMLDivElement>("#massField"),
+  massSlider: document.querySelector<HTMLInputElement>("#massSlider"),
+  massDisplay: document.querySelector<HTMLDivElement>("#massDisplay"),
+  timelineScrub: document.querySelector<HTMLInputElement>("#timelineScrub"),
+  phaseDisplay: document.querySelector<HTMLDivElement>("#phaseDisplay"),
+  play: document.querySelector<HTMLButtonElement>("#play"),
+  pause: document.querySelector<HTMLButtonElement>("#pause"),
+  reset: document.querySelector<HTMLButtonElement>("#reset"),
+  speedSelect: document.querySelector<HTMLSelectElement>("#speedSelect"),
+  presets: Array.from(document.querySelectorAll<HTMLButtonElement>(".preset")),
+  toggleFoci: document.querySelector<HTMLInputElement>("#toggleFoci"),
+  toggleApsides: document.querySelector<HTMLInputElement>("#toggleApsides"),
+  toggleEqualAreas: document.querySelector<HTMLInputElement>("#toggleEqualAreas"),
+  toggleVectors: document.querySelector<HTMLInputElement>("#toggleVectors"),
+  toggleVectorsLabel: document.querySelector<HTMLLabelElement>("#toggleVectorsLabel"),
+  stationMode: document.querySelector<HTMLButtonElement>("#stationMode"),
+  help: document.querySelector<HTMLButtonElement>("#help"),
+  copyResults: document.querySelector<HTMLButtonElement>("#copyResults"),
+  status: document.querySelector<HTMLParagraphElement>("#status"),
+  orbitStatus: document.querySelector<HTMLParagraphElement>("#orbitStatus"),
+  orbitSvg: document.querySelector<SVGSVGElement>("#orbitSvg"),
+  orbitPath: document.querySelector<SVGEllipseElement>("#orbitPath"),
+  planetGroup: document.querySelector<SVGGElement>("#planetGroup"),
+  planet: document.querySelector<SVGCircleElement>("#planet"),
+  star: document.querySelector<SVGCircleElement>("#star"),
+  fociGroup: document.querySelector<SVGGElement>("#fociGroup"),
+  focus1: document.querySelector<SVGCircleElement>("#focus1"),
+  focus2: document.querySelector<SVGCircleElement>("#focus2"),
+  focus1Label: document.querySelector<SVGTextElement>("#focus1Label"),
+  apsidesGroup: document.querySelector<SVGGElement>("#apsidesGroup"),
+  perihelionMarker: document.querySelector<SVGCircleElement>("#perihelionMarker"),
+  perihelionLabel: document.querySelector<SVGTextElement>("#perihelionLabel"),
+  aphelionMarker: document.querySelector<SVGCircleElement>("#aphelionMarker"),
+  aphelionLabel: document.querySelector<SVGTextElement>("#aphelionLabel"),
+  equalAreasGroup: document.querySelector<SVGGElement>("#equalAreasGroup"),
+  equalAreasWedge: document.querySelector<SVGPathElement>("#equalAreasWedge"),
+  equalTimeMarkers: document.querySelector<SVGGElement>("#equalTimeMarkers"),
+  distanceLine: document.querySelector<SVGLineElement>("#distanceLine"),
+  distanceText: document.querySelector<SVGTextElement>("#distanceText"),
+  velocityVector: document.querySelector<SVGGElement>("#velocityVector"),
+  velocityLine: document.querySelector<SVGLineElement>("#velocityLine"),
+  forceVector: document.querySelector<SVGGElement>("#forceVector"),
+  forceLine: document.querySelector<SVGLineElement>("#forceLine"),
+  distanceValue: document.querySelector<HTMLDivElement>("#distanceValue"),
+  velocityValue: document.querySelector<HTMLDivElement>("#velocityValue"),
+  velocityUnit: document.querySelector<HTMLDivElement>("#velocityUnit"),
+  accelValue: document.querySelector<HTMLDivElement>("#accelValue"),
+  accelUnit: document.querySelector<HTMLDivElement>("#accelUnit"),
+  periodValue: document.querySelector<HTMLDivElement>("#periodValue"),
+  kineticValue: document.querySelector<HTMLDivElement>("#kineticValue"),
+  kineticUnit: document.querySelector<HTMLDivElement>("#kineticUnit"),
+  potentialValue: document.querySelector<HTMLDivElement>("#potentialValue"),
+  potentialUnit: document.querySelector<HTMLDivElement>("#potentialUnit"),
+  energyValue: document.querySelector<HTMLDivElement>("#energyValue"),
+  energyUnit: document.querySelector<HTMLDivElement>("#energyUnit"),
+  angmomValue: document.querySelector<HTMLDivElement>("#angmomValue"),
+  angmomUnit: document.querySelector<HTMLDivElement>("#angmomUnit"),
+  arealValue: document.querySelector<HTMLDivElement>("#arealValue"),
+  arealUnit: document.querySelector<HTMLDivElement>("#arealUnit")
 };
 
-function resizeCanvasToCssPixels(
-  canvas: HTMLCanvasElement,
-  ctx: CanvasRenderingContext2D
-): { width: number; height: number } {
-  const rect = canvas.getBoundingClientRect();
-  const width = Math.max(1, rect.width);
-  const height = Math.max(1, rect.height);
-  const dpr = window.devicePixelRatio || 1;
+const required = Object.entries(elements).filter(([, value]) => value === null);
+if (required.length > 0) {
+  throw new Error(`Missing required DOM elements: ${required.map(([key]) => key).join(", ")}`);
+}
 
-  const nextWidth = Math.max(1, Math.round(width * dpr));
-  const nextHeight = Math.max(1, Math.round(height * dpr));
-  if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
-    canvas.width = nextWidth;
-    canvas.height = nextHeight;
+const state = {
+  mode: "kepler" as "kepler" | "newton",
+  units: "101" as "101" | "201",
+  aAu: 1,
+  e: 0.017,
+  massSolar: 1,
+  meanAnomalyRad: 0,
+  thetaRad: 0,
+  tYr: 0,
+  playing: false,
+  speed: 1,
+  animationId: 0,
+  overlays: {
+    foci: true,
+    apsides: true,
+    equalAreas: false,
+    vectors: false
   }
+};
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { width, height };
+let lastAnnounce = 0;
+function maybeAnnouncePosition(force = false) {
+  const now = performance.now();
+  if (!force && now - lastAnnounce < 500) return;
+  lastAnnounce = now;
+  announcePosition();
 }
 
-function currentInputs(): { aAu: number; e: number; centralMassSolar: number; meanAnomalyDeg: number } {
-  const a = clamp(Number(aAu.value), 0.3, 12);
-  const e = KeplersLawsModel.clampEccentricity(Number(ecc.value));
-  const m = newtonMode.checked ? clamp(Number(centralMassSolar.value), 0.2, 4) : 1;
-  const Mdeg = clamp(Number(meanAnomalyDeg.value), 0, 360);
-  return { aAu: a, e, centralMassSolar: m, meanAnomalyDeg: Mdeg };
+function prefersReducedMotionEnabled() {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 }
 
-function orbitViewBounds(inputs: { aAu: number; e: number }) {
-  const { aAu: a, e } = inputs;
-  const { perihelionAu: rp, aphelionAu: ra } = KeplersLawsModel.orbitExtremaAu({ aAu: a, e });
-  const b = a * Math.sqrt(1 - e * e);
-  const pad = 0.2 * a;
+function orbitalToSvg(rAu: number, thetaRad: number) {
+  const scale = SVG_SCALE / Math.max(state.aAu, 1);
+  const xOrb = -rAu * Math.cos(thetaRad);
+  const yOrb = rAu * Math.sin(thetaRad);
   return {
-    xMin: -ra - pad,
-    xMax: rp + pad,
-    yMax: b + pad
+    x: SVG_CENTER.x + xOrb * scale,
+    y: SVG_CENTER.y - yOrb * scale
   };
 }
 
-function drawArrow(args: { x: number; y: number; dx: number; dy: number; color: string }) {
-  const { x, y, dx, dy, color } = args;
-  const len = Math.hypot(dx, dy);
-  if (!(len > 0)) return;
-
-  ctx.save();
-  ctx.strokeStyle = color;
-  ctx.fillStyle = color;
-  ctx.lineWidth = 2;
-
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x + dx, y + dy);
-  ctx.stroke();
-
-  const ux = dx / len;
-  const uy = dy / len;
-  const head = 10;
-  const wing = 6;
-  const hx = x + dx;
-  const hy = y + dy;
-  ctx.beginPath();
-  ctx.moveTo(hx, hy);
-  ctx.lineTo(hx - head * ux + wing * -uy, hy - head * uy + wing * ux);
-  ctx.lineTo(hx - head * ux - wing * -uy, hy - head * uy - wing * ux);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
+function updateOrbitPath() {
+  const scale = SVG_SCALE / Math.max(state.aAu, 1);
+  const rx = state.aAu * scale;
+  const ry = state.aAu * Math.sqrt(1 - state.e * state.e) * scale;
+  const c = state.aAu * state.e * scale;
+  elements.orbitPath!.setAttribute("cx", String(SVG_CENTER.x + c));
+  elements.orbitPath!.setAttribute("cy", String(SVG_CENTER.y));
+  elements.orbitPath!.setAttribute("rx", String(rx));
+  elements.orbitPath!.setAttribute("ry", String(ry));
 }
 
-function render() {
-  const inputs = currentInputs();
-  const meanAnomalyRad = AstroUnits.degToRad(inputs.meanAnomalyDeg);
-  const state = KeplersLawsModel.stateAtMeanAnomalyRad({
-    aAu: inputs.aAu,
-    e: inputs.e,
-    centralMassSolar: inputs.centralMassSolar,
-    meanAnomalyRad
+function updatePlanetPosition(rAu: number, thetaRad: number) {
+  const pos = orbitalToSvg(rAu, thetaRad);
+  elements.planet!.setAttribute("cx", String(pos.x));
+  elements.planet!.setAttribute("cy", String(pos.y));
+}
+
+function updateFociMarkers() {
+  const scale = SVG_SCALE / Math.max(state.aAu, 1);
+  const c = state.aAu * state.e * scale;
+
+  elements.star!.setAttribute("cx", String(SVG_CENTER.x));
+  elements.star!.setAttribute("cy", String(SVG_CENTER.y));
+  elements.focus1!.setAttribute("cx", String(SVG_CENTER.x));
+  elements.focus1!.setAttribute("cy", String(SVG_CENTER.y));
+  elements.focus1Label!.setAttribute("x", String(SVG_CENTER.x));
+  elements.focus1Label!.setAttribute("y", String(SVG_CENTER.y + 35));
+
+  elements.focus2!.setAttribute("cx", String(SVG_CENTER.x + 2 * c));
+  elements.focus2!.setAttribute("cy", String(SVG_CENTER.y));
+
+  setSvgVisible(elements.fociGroup!, state.overlays.foci);
+}
+
+function updateApsidesMarkers() {
+  const scale = SVG_SCALE / Math.max(state.aAu, 1);
+  const c = state.aAu * state.e * scale;
+  const rx = state.aAu * scale;
+
+  const periX = SVG_CENTER.x - (rx - c);
+  elements.perihelionMarker!.setAttribute("cx", String(periX));
+  elements.perihelionMarker!.setAttribute("cy", String(SVG_CENTER.y));
+  elements.perihelionLabel!.setAttribute("x", String(periX));
+  elements.perihelionLabel!.setAttribute("y", String(SVG_CENTER.y + 15));
+
+  const periDist = state.aAu * (1 - state.e);
+  elements.perihelionLabel!.textContent = `Perihelion (${periDist.toPrecision(3)} AU)`;
+
+  const aphX = SVG_CENTER.x + (rx + c);
+  elements.aphelionMarker!.setAttribute("cx", String(aphX));
+  elements.aphelionMarker!.setAttribute("cy", String(SVG_CENTER.y));
+  elements.aphelionLabel!.setAttribute("x", String(aphX));
+  elements.aphelionLabel!.setAttribute("y", String(SVG_CENTER.y + 15));
+
+  const aphDist = state.aAu * (1 + state.e);
+  elements.aphelionLabel!.textContent = `Aphelion (${aphDist.toPrecision(3)} AU)`;
+
+  setSvgVisible(elements.apsidesGroup!, state.overlays.apsides);
+}
+
+function updateDistanceLine(rAu: number, thetaRad: number) {
+  const pos = orbitalToSvg(rAu, thetaRad);
+  elements.distanceLine!.setAttribute("x1", String(SVG_CENTER.x));
+  elements.distanceLine!.setAttribute("y1", String(SVG_CENTER.y));
+  elements.distanceLine!.setAttribute("x2", String(pos.x));
+  elements.distanceLine!.setAttribute("y2", String(pos.y));
+
+  const midX = (SVG_CENTER.x + pos.x) / 2;
+  const midY = (SVG_CENTER.y + pos.y) / 2 - 10;
+  elements.distanceText!.setAttribute("x", String(midX));
+  elements.distanceText!.setAttribute("y", String(midY));
+  elements.distanceText!.textContent = `r = ${rAu.toPrecision(3)} AU`;
+}
+
+function updateVectors(stateAtM: ReturnType<typeof KeplersLawsModel.stateAtMeanAnomalyRad>) {
+  if (state.mode !== "newton" || !state.overlays.vectors) {
+    setSvgVisible(elements.velocityVector!, false);
+    setSvgVisible(elements.forceVector!, false);
+    return;
+  }
+
+  const rAu = stateAtM.rAu;
+  const pos = orbitalToSvg(rAu, stateAtM.trueAnomalyRad);
+  const vx = -stateAtM.vxAuPerYr;
+  const vy = stateAtM.vyAuPerYr;
+
+  const maxSpeed = stateAtM.speedAuPerYr;
+  const vScale = maxSpeed > 0 ? 60 / maxSpeed : 0;
+
+  setSvgVisible(elements.velocityVector!, true);
+  elements.velocityLine!.setAttribute("x1", String(pos.x));
+  elements.velocityLine!.setAttribute("y1", String(pos.y));
+  elements.velocityLine!.setAttribute("x2", String(pos.x + vx * vScale));
+  elements.velocityLine!.setAttribute("y2", String(pos.y - vy * vScale));
+
+  const forceAngle = Math.atan2(SVG_CENTER.y - pos.y, SVG_CENTER.x - pos.x);
+  const fLen = 40;
+  setSvgVisible(elements.forceVector!, true);
+  elements.forceLine!.setAttribute("x1", String(pos.x));
+  elements.forceLine!.setAttribute("y1", String(pos.y));
+  elements.forceLine!.setAttribute("x2", String(pos.x + fLen * Math.cos(forceAngle)));
+  elements.forceLine!.setAttribute("y2", String(pos.y + fLen * Math.sin(forceAngle)));
+}
+
+function updateEqualAreas() {
+  if (!state.overlays.equalAreas) {
+    setSvgVisible(elements.equalAreasGroup!, false);
+    return;
+  }
+
+  setSvgVisible(elements.equalAreasGroup!, true);
+  const period = KeplersLawsModel.orbitalPeriodYr({ aAu: state.aAu, centralMassSolar: state.massSolar });
+  const sweepTime = period * 0.1;
+
+  const currentM = state.meanAnomalyRad;
+  const startM = currentM - (sweepTime / period) * TAU;
+  const startTheta = TwoBodyAnalytic.meanToTrueAnomalyRad({ meanAnomalyRad: startM, e: state.e });
+
+  const numPoints = 30;
+  let pathD = `M ${SVG_CENTER.x} ${SVG_CENTER.y}`;
+  for (let i = 0; i <= numPoints; i++) {
+    const t = i / numPoints;
+    const theta = startTheta + t * (state.thetaRad - startTheta);
+    const rAu = KeplersLawsModel.stateAtMeanAnomalyRad({
+      aAu: state.aAu,
+      e: state.e,
+      centralMassSolar: state.massSolar,
+      meanAnomalyRad: TwoBodyAnalytic.trueToMeanAnomalyRad({ thetaRad: theta, e: state.e })
+    }).rAu;
+    const pos = orbitalToSvg(rAu, theta);
+    pathD += ` L ${pos.x} ${pos.y}`;
+  }
+  pathD += " Z";
+  elements.equalAreasWedge!.setAttribute("d", pathD);
+
+  const N = 12;
+  const group = elements.equalTimeMarkers!;
+  if (group.childElementCount !== N) {
+    group.innerHTML = "";
+    for (let i = 0; i < N; i++) {
+      const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("r", "2");
+      c.setAttribute("fill", "var(--cp-chart-2)");
+      c.setAttribute("opacity", "0.75");
+      group.appendChild(c);
+    }
+  }
+
+  for (let i = 0; i < N; i++) {
+    const M = (TAU * i) / N;
+    const theta = TwoBodyAnalytic.meanToTrueAnomalyRad({ meanAnomalyRad: M, e: state.e });
+    const rAu = KeplersLawsModel.stateAtMeanAnomalyRad({
+      aAu: state.aAu,
+      e: state.e,
+      centralMassSolar: state.massSolar,
+      meanAnomalyRad: M
+    }).rAu;
+    const pos = orbitalToSvg(rAu, theta);
+    const c = group.children[i] as SVGCircleElement;
+    c.setAttribute("cx", String(pos.x));
+    c.setAttribute("cy", String(pos.y));
+  }
+}
+
+function setSvgVisible(el: SVGElement, visible: boolean) {
+  el.style.display = visible ? "block" : "none";
+}
+
+function updateReadouts(stateAtM: ReturnType<typeof KeplersLawsModel.stateAtMeanAnomalyRad>) {
+  const readouts = buildReadouts({
+    rAu: stateAtM.rAu,
+    speedAuPerYr: stateAtM.speedAuPerYr,
+    accelAuPerYr2: stateAtM.accelAuPerYr2,
+    periodYr: KeplersLawsModel.orbitalPeriodYr({ aAu: state.aAu, centralMassSolar: state.massSolar }),
+    specificEnergyAu2Yr2: stateAtM.specificEnergyAu2Yr2,
+    specificAngularMomentumAu2Yr: stateAtM.specificAngularMomentumAu2Yr,
+    arealVelocityAu2Yr: stateAtM.arealVelocityAu2Yr,
+    units: state.units
   });
 
-  const periodYr = KeplersLawsModel.orbitalPeriodYr({
-    aAu: inputs.aAu,
-    centralMassSolar: inputs.centralMassSolar
+  elements.distanceValue!.textContent = readouts.distance.value.toPrecision(3);
+  elements.velocityValue!.textContent = readouts.velocity.value.toPrecision(3);
+  elements.velocityUnit!.textContent = readouts.velocity.unit;
+  elements.accelValue!.textContent = readouts.acceleration.value.toPrecision(3);
+  elements.accelUnit!.textContent = readouts.acceleration.unit;
+  elements.periodValue!.textContent = readouts.period.value.toPrecision(3);
+
+  elements.kineticValue!.textContent = readouts.conservation.kinetic.value.toPrecision(4);
+  elements.kineticUnit!.textContent = readouts.conservation.kinetic.unit;
+  elements.potentialValue!.textContent = readouts.conservation.potential.value.toPrecision(4);
+  elements.potentialUnit!.textContent = readouts.conservation.potential.unit;
+  elements.energyValue!.textContent = readouts.conservation.total.value.toPrecision(4);
+  elements.energyUnit!.textContent = readouts.conservation.total.unit;
+  elements.angmomValue!.textContent = readouts.conservation.h.value.toPrecision(4);
+  elements.angmomUnit!.textContent = readouts.conservation.h.unit;
+  elements.arealValue!.textContent = readouts.conservation.areal.value.toPrecision(4);
+  elements.arealUnit!.textContent = readouts.conservation.areal.unit;
+}
+
+function updateTimeline() {
+  const period = KeplersLawsModel.orbitalPeriodYr({ aAu: state.aAu, centralMassSolar: state.massSolar });
+  const fraction = period > 0 ? (state.tYr % period) / period : 0;
+  elements.timelineScrub!.value = String(Math.round(fraction * 1000));
+  elements.phaseDisplay!.textContent = `${state.tYr.toPrecision(3)} / ${period.toPrecision(3)} yr`;
+}
+
+function updateSliderDisplays() {
+  const aText = state.aAu < 1 ? state.aAu.toFixed(3) : state.aAu < 10 ? state.aAu.toFixed(2) : state.aAu.toFixed(1);
+  elements.aDisplay!.textContent = `${aText} AU`;
+  elements.eDisplay!.textContent = state.e.toFixed(3);
+  elements.massDisplay!.textContent = `${state.massSolar.toFixed(1)} M_sun`;
+}
+
+function update() {
+  const stateAtM = KeplersLawsModel.stateAtMeanAnomalyRad({
+    aAu: state.aAu,
+    e: state.e,
+    centralMassSolar: state.massSolar,
+    meanAnomalyRad: state.meanAnomalyRad
   });
-  const extrema = KeplersLawsModel.orbitExtremaAu({ aAu: inputs.aAu, e: inputs.e });
-  const speedKmS = AstroUnits.auPerYrToKmPerS(state.speedAuPerYr);
+  state.thetaRad = stateAtM.trueAnomalyRad;
 
-  aAuValue.textContent = `${formatNumber(inputs.aAu, 2)} AU`;
-  eccValue.textContent = formatNumber(inputs.e, 2);
-  centralMassValue.textContent = `${formatNumber(inputs.centralMassSolar, 2)} Msun`;
-  meanAnomalyValue.textContent = `${Math.round(inputs.meanAnomalyDeg)} deg`;
-
-  periodYrValue.textContent = formatNumber(periodYr, 3);
-  perihelionAuValue.textContent = formatNumber(extrema.perihelionAu, 3);
-  aphelionAuValue.textContent = formatNumber(extrema.aphelionAu, 3);
-  rAuValue.textContent = formatNumber(state.rAu, 3);
-  speedKmSValue.textContent = formatNumber(speedKmS, 2);
-
-  const { width: w, height: h } = resizeCanvasToCssPixels(canvas, ctx);
-  ctx.clearRect(0, 0, w, h);
-
-  const bounds = orbitViewBounds(inputs);
-  const margin = 36;
-  const plotW = Math.max(1, w - 2 * margin);
-  const plotH = Math.max(1, h - 2 * margin);
-  const scale = Math.min(plotW / (bounds.xMax - bounds.xMin), plotH / (2 * bounds.yMax));
-
-  const cx = margin + (-bounds.xMin) * scale;
-  const cy = h / 2;
-  function toCanvas(xAu: number, yAu: number) {
-    return { x: cx + xAu * scale, y: cy - yAu * scale };
-  }
-
-  // Axes (schematic).
-  ctx.save();
-  ctx.strokeStyle = canvasTheme.axes;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(margin, cy);
-  ctx.lineTo(w - margin, cy);
-  ctx.stroke();
-  ctx.restore();
-
-  // Equal-area slices: draw N triangles using equal mean-anomaly steps.
-  if (showEqualAreas.checked) {
-    const slices = 8;
-    ctx.save();
-    ctx.fillStyle = canvasTheme.area;
-    ctx.globalAlpha = 0.18;
-    for (let i = 0; i < slices; i++) {
-      const m0 = (i * 2 * Math.PI) / slices;
-      const m1 = ((i + 1) * 2 * Math.PI) / slices;
-      const s0 = KeplersLawsModel.stateAtMeanAnomalyRad({
-        aAu: inputs.aAu,
-        e: inputs.e,
-        centralMassSolar: inputs.centralMassSolar,
-        meanAnomalyRad: m0
-      });
-      const s1 = KeplersLawsModel.stateAtMeanAnomalyRad({
-        aAu: inputs.aAu,
-        e: inputs.e,
-        centralMassSolar: inputs.centralMassSolar,
-        meanAnomalyRad: m1
-      });
-      const p0 = toCanvas(0, 0);
-      const p1 = toCanvas(s0.xAu, s0.yAu);
-      const p2 = toCanvas(s1.xAu, s1.yAu);
-      ctx.beginPath();
-      ctx.moveTo(p0.x, p0.y);
-      ctx.lineTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  // Orbit path (sampled).
-  ctx.save();
-  ctx.strokeStyle = canvasTheme.orbit;
-  ctx.lineWidth = 2;
-  ctx.setLineDash([8, 6]);
-  ctx.beginPath();
-  const samples = 360;
-  for (let i = 0; i <= samples; i++) {
-    const theta = (i * 2 * Math.PI) / samples;
-    const r = KeplersLawsModel.stateAtMeanAnomalyRad({
-      aAu: inputs.aAu,
-      e: inputs.e,
-      centralMassSolar: inputs.centralMassSolar,
-      meanAnomalyRad: TwoBodyAnalytic.trueToMeanAnomalyRad({ thetaRad: theta, e: inputs.e })
-    });
-    const pt = toCanvas(r.xAu, r.yAu);
-    if (i === 0) ctx.moveTo(pt.x, pt.y);
-    else ctx.lineTo(pt.x, pt.y);
-  }
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
-
-  // Sun at focus (origin).
-  const sun = toCanvas(0, 0);
-  ctx.save();
-  ctx.fillStyle = canvasTheme.sun;
-  ctx.globalAlpha = 0.95;
-  ctx.beginPath();
-  ctx.arc(sun.x, sun.y, 8, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-  // Foci + apsides overlay.
-  if (showApsides.checked) {
-    const focus2XAu = -2 * inputs.aAu * inputs.e;
-    const f2 = toCanvas(focus2XAu, 0);
-    const rp = toCanvas(extrema.perihelionAu, 0);
-    const ra = toCanvas(-extrema.aphelionAu, 0);
-
-    ctx.save();
-    ctx.strokeStyle = canvasTheme.axes;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([6, 6]);
-    ctx.beginPath();
-    ctx.moveTo(ra.x, ra.y);
-    ctx.lineTo(rp.x, rp.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = canvasTheme.muted;
-    ctx.globalAlpha = 0.9;
-    for (const p of [f2, rp, ra]) {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  // Planet marker.
-  const planet = toCanvas(state.xAu, state.yAu);
-  ctx.save();
-  ctx.fillStyle = canvasTheme.planet;
-  ctx.globalAlpha = 0.95;
-  ctx.beginPath();
-  ctx.arc(planet.x, planet.y, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-  // Velocity vector.
-  if (showVelocity.checked) {
-    const peri = KeplersLawsModel.stateAtMeanAnomalyRad({
-      aAu: inputs.aAu,
-      e: inputs.e,
-      centralMassSolar: inputs.centralMassSolar,
-      meanAnomalyRad: 0
-    });
-    const aph = KeplersLawsModel.stateAtMeanAnomalyRad({
-      aAu: inputs.aAu,
-      e: inputs.e,
-      centralMassSolar: inputs.centralMassSolar,
-      meanAnomalyRad: Math.PI
-    });
-    const maxSpeed = Math.max(peri.speedAuPerYr, aph.speedAuPerYr, state.speedAuPerYr);
-    const vScaleAuToPx =
-      maxSpeed > 0 ? (0.22 * Math.min(plotW, plotH)) / maxSpeed : 0;
-    drawArrow({
-      x: planet.x,
-      y: planet.y,
-      dx: state.vxAuPerYr * vScaleAuToPx,
-      dy: -state.vyAuPerYr * vScaleAuToPx,
-      color: canvasTheme.vector
-    });
-  }
-
-  // Labels.
-  ctx.save();
-  ctx.fillStyle = canvasTheme.text;
-  ctx.font = `600 14px ${cssVar("--cp-font-sans")}`;
-  ctx.fillText("Sun (focus)", sun.x + 12, sun.y - 10);
-  ctx.restore();
+  updateOrbitPath();
+  updatePlanetPosition(stateAtM.rAu, state.thetaRad);
+  updateFociMarkers();
+  updateApsidesMarkers();
+  updateDistanceLine(stateAtM.rAu, state.thetaRad);
+  updateEqualAreas();
+  updateVectors(stateAtM);
+  updateReadouts(stateAtM);
+  updateTimeline();
+  updateSliderDisplays();
+  maybeAnnouncePosition();
 }
 
-function syncNewtonModeUI() {
-  if (newtonMode.checked) {
-    centralMassSolar.disabled = false;
-    centralMassSolar.setAttribute("aria-disabled", "false");
-  } else {
-    centralMassSolar.disabled = true;
-    centralMassSolar.setAttribute("aria-disabled", "true");
-    centralMassSolar.value = "1";
+function setMode(mode: "kepler" | "newton") {
+  state.mode = mode;
+  const isNewton = mode === "newton";
+  elements.modeKepler!.classList.toggle("cp-button--active", !isNewton);
+  elements.modeKepler!.classList.toggle("cp-button--outline", isNewton);
+  elements.modeNewton!.classList.toggle("cp-button--active", isNewton);
+  elements.modeNewton!.classList.toggle("cp-button--outline", !isNewton);
+  elements.massField!.hidden = !isNewton;
+  elements.toggleVectorsLabel!.hidden = !isNewton;
+  if (!isNewton) {
+    state.massSolar = 1;
+    elements.massSlider!.value = "100";
   }
+  update();
 }
 
-let isAnimating = false;
-let intervalId: number | null = null;
-let lastT = 0;
-const meanAnomalyDegPerSecond = 36;
+function setUnits(units: "101" | "201") {
+  state.units = units;
+  elements.unit101!.classList.toggle("cp-button--active", units === "101");
+  elements.unit101!.classList.toggle("cp-button--outline", units === "201");
+  elements.unit201!.classList.toggle("cp-button--active", units === "201");
+  elements.unit201!.classList.toggle("cp-button--outline", units === "101");
+  update();
+}
 
-function stopAnimation() {
-  if (!isAnimating) return;
-  isAnimating = false;
-  animateButton.textContent = "Animate";
-  if (intervalId !== null) {
-    window.clearInterval(intervalId);
-    intervalId = null;
-  }
-  lastT = 0;
+function clearPresetHighlight() {
+  elements.presets.forEach((btn) => btn.classList.remove("preset--active"));
+}
+
+function applyPreset(btn: HTMLButtonElement) {
+  const a = Number(btn.dataset.a);
+  const e = Number(btn.dataset.e);
+  if (!Number.isFinite(a) || !Number.isFinite(e)) return;
+  state.aAu = a;
+  state.e = KeplersLawsModel.clampEccentricity(e);
+  state.meanAnomalyRad = 0;
+  state.tYr = 0;
+
+  elements.aSlider!.value = String(valueToLogSlider(a, 0.3, 40));
+  elements.eSlider!.value = String(Math.round(state.e * 1000));
+
+  clearPresetHighlight();
+  btn.classList.add("preset--active");
+  update();
 }
 
 function startAnimation() {
-  if (prefersReducedMotion) return;
-  if (isAnimating) return;
-  isAnimating = true;
-  animateButton.textContent = "Stop";
+  if (prefersReducedMotionEnabled()) return;
+  if (state.playing) return;
+  state.playing = true;
+  elements.play!.disabled = true;
+  elements.pause!.disabled = false;
 
-  // Use a time-based loop that does not depend on requestAnimationFrame scheduling.
-  // (Headless environments can throttle rAF and make animation appear stuck.)
-  lastT = performance.now();
-  intervalId = window.setInterval(() => {
-    if (!isAnimating) return;
-    const now = performance.now();
-    const dt = Math.min(0.05, (now - lastT) / 1000);
-    lastT = now;
+  let lastTime = performance.now();
+  const step = (now: number) => {
+    if (!state.playing) return;
+    const dt = (now - lastTime) / 1000;
+    lastTime = now;
 
-    const next = (Number(meanAnomalyDeg.value) + meanAnomalyDegPerSecond * dt) % 360;
-    meanAnomalyDeg.value = String(next);
-    render();
-  }, 1000 / 60);
+    const period = KeplersLawsModel.orbitalPeriodYr({ aAu: state.aAu, centralMassSolar: state.massSolar });
+    state.tYr += dt * state.speed;
+    state.meanAnomalyRad = meanAnomalyRadFromTime(state.tYr, period);
+    update();
+
+    state.animationId = requestAnimationFrame(step);
+  };
+
+  state.animationId = requestAnimationFrame(step);
+}
+
+function stopAnimation() {
+  if (!state.playing) return;
+  state.playing = false;
+  cancelAnimationFrame(state.animationId);
+  elements.play!.disabled = false;
+  elements.pause!.disabled = true;
+}
+
+function resetAnimation() {
+  stopAnimation();
+  state.meanAnomalyRad = 0;
+  state.tYr = 0;
+  update();
+}
+
+function updateFromTimeline() {
+  stopAnimation();
+  const fraction = Number(elements.timelineScrub!.value) / 1000;
+  const period = KeplersLawsModel.orbitalPeriodYr({ aAu: state.aAu, centralMassSolar: state.massSolar });
+  state.tYr = fraction * period;
+  state.meanAnomalyRad = TAU * fraction;
+  update();
+  maybeAnnouncePosition(true);
+}
+
+function setupDrag() {
+  let dragging = false;
+
+  function getAngleFromEvent(event: MouseEvent | TouchEvent) {
+    const svg = elements.orbitSvg!;
+    const pt = svg.createSVGPoint();
+    const clientX = "touches" in event ? event.touches[0].clientX : event.clientX;
+    const clientY = "touches" in event ? event.touches[0].clientY : event.clientY;
+    pt.x = clientX;
+    pt.y = clientY;
+    const svgP = pt.matrixTransform(svg.getScreenCTM()!.inverse());
+    return Math.atan2(SVG_CENTER.y - svgP.y, svgP.x - SVG_CENTER.x);
+  }
+
+  const onMove = (event: MouseEvent | TouchEvent) => {
+    if (!dragging) return;
+    const theta = getAngleFromEvent(event);
+    state.meanAnomalyRad = TwoBodyAnalytic.trueToMeanAnomalyRad({ thetaRad: theta, e: state.e });
+    const period = KeplersLawsModel.orbitalPeriodYr({ aAu: state.aAu, centralMassSolar: state.massSolar });
+    state.tYr = timeFromMeanAnomalyRad(state.meanAnomalyRad, period);
+    update();
+    maybeAnnouncePosition();
+  };
+
+  elements.planetGroup!.addEventListener("mousedown", (event) => {
+    dragging = true;
+    stopAnimation();
+    event.preventDefault();
+  });
+  elements.planetGroup!.addEventListener("touchstart", (event) => {
+    dragging = true;
+    stopAnimation();
+    event.preventDefault();
+  });
+
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("touchmove", onMove, { passive: false });
+  document.addEventListener("mouseup", () => {
+    dragging = false;
+  });
+  document.addEventListener("touchend", () => {
+    dragging = false;
+  });
+}
+
+function announcePosition() {
+  const stateAtM = KeplersLawsModel.stateAtMeanAnomalyRad({
+    aAu: state.aAu,
+    e: state.e,
+    centralMassSolar: state.massSolar,
+    meanAnomalyRad: state.meanAnomalyRad
+  });
+  const rAu = stateAtM.rAu;
+  const vKmS = AstroUnits.auPerYrToKmPerS(stateAtM.speedAuPerYr);
+  const normalized = ((state.thetaRad % TAU) + TAU) % TAU;
+  const phasePct = ((normalized / TAU) * 100).toFixed(0);
+
+  let position = "orbit";
+  if (Math.abs(state.thetaRad) < 0.1) position = "perihelion";
+  else if (Math.abs(state.thetaRad - Math.PI) < 0.1) position = "aphelion";
+
+  setLiveRegionText(
+    elements.orbitStatus!,
+    `${position}, distance ${rAu.toFixed(2)} AU, velocity ${vKmS.toFixed(1)} km/s, ${phasePct}% through orbit`
+  );
+
+  elements.planetGroup!.setAttribute("aria-valuenow", String(Math.round(AstroUnits.radToDeg(state.thetaRad))));
+  elements.planetGroup!.setAttribute("aria-valuetext", `${position}, ${rAu.toFixed(2)} AU from star`);
+}
+
+function bindEvents() {
+  elements.modeKepler!.addEventListener("click", () => setMode("kepler"));
+  elements.modeNewton!.addEventListener("click", () => setMode("newton"));
+  elements.unit101!.addEventListener("click", () => setUnits("101"));
+  elements.unit201!.addEventListener("click", () => setUnits("201"));
+
+  elements.aSlider!.addEventListener("input", () => {
+    stopAnimation();
+    state.aAu = logSliderToValue(Number(elements.aSlider!.value), 0.3, 40);
+    clearPresetHighlight();
+    update();
+    maybeAnnouncePosition(true);
+  });
+
+  elements.eSlider!.addEventListener("input", () => {
+    stopAnimation();
+    state.e = KeplersLawsModel.clampEccentricity(Number(elements.eSlider!.value) / 1000);
+    clearPresetHighlight();
+    update();
+    maybeAnnouncePosition(true);
+  });
+
+  elements.massSlider!.addEventListener("input", () => {
+    stopAnimation();
+    state.massSolar = Number(elements.massSlider!.value) / 100;
+    update();
+    maybeAnnouncePosition(true);
+  });
+
+  elements.speedSelect!.addEventListener("change", () => {
+    state.speed = Number(elements.speedSelect!.value);
+  });
+
+  elements.timelineScrub!.addEventListener("input", updateFromTimeline);
+
+  elements.play!.addEventListener("click", startAnimation);
+  elements.pause!.addEventListener("click", stopAnimation);
+  elements.reset!.addEventListener("click", resetAnimation);
+
+  elements.presets.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      applyPreset(btn);
+      maybeAnnouncePosition(true);
+    });
+  });
+
+  elements.toggleFoci!.addEventListener("change", () => {
+    state.overlays.foci = elements.toggleFoci!.checked;
+    update();
+    maybeAnnouncePosition(true);
+  });
+  elements.toggleApsides!.addEventListener("change", () => {
+    state.overlays.apsides = elements.toggleApsides!.checked;
+    update();
+    maybeAnnouncePosition(true);
+  });
+  elements.toggleEqualAreas!.addEventListener("change", () => {
+    state.overlays.equalAreas = elements.toggleEqualAreas!.checked;
+    update();
+    maybeAnnouncePosition(true);
+  });
+  elements.toggleVectors!.addEventListener("change", () => {
+    state.overlays.vectors = elements.toggleVectors!.checked;
+    update();
+    maybeAnnouncePosition(true);
+  });
+
+  elements.planetGroup!.addEventListener("keydown", (event) => {
+    const period = KeplersLawsModel.orbitalPeriodYr({ aAu: state.aAu, centralMassSolar: state.massSolar });
+    let delta = 0;
+    let jumpAngle: number | null = null;
+
+    switch (event.key) {
+      case "ArrowLeft":
+        delta = event.shiftKey ? -0.01 : -0.05;
+        break;
+      case "ArrowRight":
+        delta = event.shiftKey ? 0.01 : 0.05;
+        break;
+      case "Home":
+        jumpAngle = 0;
+        break;
+      case "End":
+        jumpAngle = Math.PI;
+        break;
+      case " ":
+        event.preventDefault();
+        if (prefersReducedMotionEnabled()) return;
+        if (state.playing) stopAnimation();
+        else startAnimation();
+        return;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    stopAnimation();
+
+    if (jumpAngle !== null) {
+      state.meanAnomalyRad = TwoBodyAnalytic.trueToMeanAnomalyRad({ thetaRad: jumpAngle, e: state.e });
+      state.tYr = timeFromMeanAnomalyRad(state.meanAnomalyRad, period);
+    } else if (delta !== 0) {
+      state.meanAnomalyRad = (state.meanAnomalyRad + delta * TAU + TAU) % TAU;
+      state.tYr = timeFromMeanAnomalyRad(state.meanAnomalyRad, period);
+    }
+
+    update();
+    maybeAnnouncePosition(true);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
+
+    switch (event.key) {
+      case "k":
+      case "K":
+        setMode("kepler");
+        break;
+      case "n":
+      case "N":
+        setMode("newton");
+        break;
+      case "1":
+        elements.presets[0]?.click();
+        break;
+      case "2":
+        elements.presets[1]?.click();
+        break;
+      case "3":
+        elements.presets[2]?.click();
+        break;
+      case "4":
+        elements.presets[3]?.click();
+        break;
+      case "5":
+        elements.presets[4]?.click();
+        break;
+      case "6":
+        elements.presets[5]?.click();
+        break;
+      default:
+        break;
+    }
+  });
 }
 
 function exportResults(): ExportPayloadV1 {
-  const inputs = currentInputs();
-  const meanAnomalyRad = AstroUnits.degToRad(inputs.meanAnomalyDeg);
-  const state = KeplersLawsModel.stateAtMeanAnomalyRad({
-    aAu: inputs.aAu,
-    e: inputs.e,
-    centralMassSolar: inputs.centralMassSolar,
-    meanAnomalyRad
+  const stateAtM = KeplersLawsModel.stateAtMeanAnomalyRad({
+    aAu: state.aAu,
+    e: state.e,
+    centralMassSolar: state.massSolar,
+    meanAnomalyRad: state.meanAnomalyRad
   });
 
-  const periodYr = KeplersLawsModel.orbitalPeriodYr({
-    aAu: inputs.aAu,
-    centralMassSolar: inputs.centralMassSolar
-  });
-  const extrema = KeplersLawsModel.orbitExtremaAu({ aAu: inputs.aAu, e: inputs.e });
-  const speedKmS = AstroUnits.auPerYrToKmPerS(state.speedAuPerYr);
+  const period = KeplersLawsModel.orbitalPeriodYr({ aAu: state.aAu, centralMassSolar: state.massSolar });
+  const speedKmS = AstroUnits.auPerYrToKmPerS(stateAtM.speedAuPerYr);
+  const accelMs2 = AstroUnits.auPerYr2ToMPerS2(stateAtM.accelAuPerYr2);
 
-  return {
-    version: 1,
-    timestamp: new Date().toISOString(),
-    parameters: [
-      { name: "Semi-major axis a (AU)", value: formatNumber(inputs.aAu, 3) },
-      { name: "Eccentricity e", value: formatNumber(inputs.e, 3) },
-      { name: "Central mass M (Msun)", value: formatNumber(inputs.centralMassSolar, 3) },
-      { name: "Mean anomaly M (deg)", value: String(Math.round(inputs.meanAnomalyDeg)) }
-    ],
-    readouts: [
-      { name: "Orbital period P (yr)", value: formatNumber(periodYr, 6) },
-      { name: "Perihelion r_p (AU)", value: formatNumber(extrema.perihelionAu, 6) },
-      { name: "Aphelion r_a (AU)", value: formatNumber(extrema.aphelionAu, 6) },
-      { name: "Current distance r (AU)", value: formatNumber(state.rAu, 6) },
-      { name: "Speed v (km/s)", value: formatNumber(speedKmS, 6) }
-    ],
-    notes: [
-      "Teaching units: AU / yr / Msun with G = 4*pi^2 AU^3/(yr^2 Msun).",
-      "Kepler 3: P^2 = a^3/M in these units.",
-      "The time slider advances mean anomaly uniformly (a time proxy), producing varying speed around an ellipse."
-    ]
-  };
+  return buildExportPayload({
+    mode: state.mode,
+    units: state.units,
+    speed: state.speed,
+    aAu: state.aAu,
+    e: state.e,
+    centralMassSolar: state.massSolar,
+    meanAnomalyDeg: Math.round(AstroUnits.radToDeg(state.meanAnomalyRad)),
+    rAu: stateAtM.rAu,
+    speedKmS,
+    accelMs2: state.units === "201" ? accelMs2 * 100 : accelMs2 * 1000,
+    periodYr: period,
+    specificEnergy: stateAtM.specificEnergyAu2Yr2,
+    specificAngularMomentum: stateAtM.specificAngularMomentumAu2Yr,
+    arealVelocity: stateAtM.arealVelocityAu2Yr
+  });
 }
 
 const runtime = createInstrumentRuntime({
@@ -502,7 +727,9 @@ const demoModes = createDemoModes({
         type: "shortcuts",
         items: [
           { key: "?", action: "Toggle help" },
-          { key: "g", action: "Toggle station mode" }
+          { key: "g", action: "Toggle station mode" },
+          { key: "Space", action: "Play/Pause" },
+          { key: "Home/End", action: "Perihelion/Aphelion" }
         ]
       },
       {
@@ -510,55 +737,50 @@ const demoModes = createDemoModes({
         type: "html",
         html: `
           <ul style="margin: 0; padding-left: 1.2rem;">
-            <li>Increase eccentricity $e$ and compare the speed near perihelion vs aphelion.</li>
-            <li>Turn on “equal-area slices” and notice the areas look similar even though the arc lengths differ.</li>
-            <li>Change $a$ to see period scaling: $P \\propto a^{3/2}$ when $M$ is fixed.</li>
+            <li>Increase eccentricity e and compare speed near perihelion vs aphelion.</li>
+            <li>Turn on equal-area slices and notice the areas look similar even when arc lengths differ.</li>
+            <li>Change a to see period scaling: P propto a^{3/2} when M is fixed.</li>
           </ul>
         `
       }
     ]
   },
   station: {
-    title: "Station Mode: Kepler’s Laws",
+    title: "Station Mode: Kepler's Laws",
     subtitle: "Add snapshot rows, then copy CSV or print.",
     steps: [
-      "Pick an orbit ($a$, $e$).",
-      "Record a snapshot at two different times (mean anomaly $M$) and compare $r$ and $v$.",
-      "Double $a$ (same $M$) and record how $P$ changes."
+      "Pick an orbit (a, e).",
+      "Record a snapshot at two different times and compare r and v.",
+      "Double a (same M) and record how P changes."
     ],
     columns: [
       { key: "case", label: "Case" },
       { key: "aAu", label: "a (AU)" },
       { key: "e", label: "e" },
-      { key: "mSolar", label: "M (Msun)" },
+      { key: "mSolar", label: "M (M_sun)" },
       { key: "meanAnomalyDeg", label: "M (deg)" },
       { key: "periodYr", label: "P (yr)" },
       { key: "rAu", label: "r (AU)" },
       { key: "vKmS", label: "v (km/s)" }
     ],
     getSnapshotRow() {
-      const inputs = currentInputs();
-      const meanAnomalyRad = AstroUnits.degToRad(inputs.meanAnomalyDeg);
-      const st = KeplersLawsModel.stateAtMeanAnomalyRad({
-        aAu: inputs.aAu,
-        e: inputs.e,
-        centralMassSolar: inputs.centralMassSolar,
-        meanAnomalyRad
+      const stateAtM = KeplersLawsModel.stateAtMeanAnomalyRad({
+        aAu: state.aAu,
+        e: state.e,
+        centralMassSolar: state.massSolar,
+        meanAnomalyRad: state.meanAnomalyRad
       });
-      const periodYr = KeplersLawsModel.orbitalPeriodYr({
-        aAu: inputs.aAu,
-        centralMassSolar: inputs.centralMassSolar
-      });
-      const vKmS = AstroUnits.auPerYrToKmPerS(st.speedAuPerYr);
+      const period = KeplersLawsModel.orbitalPeriodYr({ aAu: state.aAu, centralMassSolar: state.massSolar });
+      const vKmS = AstroUnits.auPerYrToKmPerS(stateAtM.speedAuPerYr);
       return {
         case: "Snapshot",
-        aAu: formatNumber(inputs.aAu, 3),
-        e: formatNumber(inputs.e, 3),
-        mSolar: formatNumber(inputs.centralMassSolar, 3),
-        meanAnomalyDeg: String(Math.round(inputs.meanAnomalyDeg)),
-        periodYr: formatNumber(periodYr, 3),
-        rAu: formatNumber(st.rAu, 3),
-        vKmS: formatNumber(vKmS, 2)
+        aAu: state.aAu.toFixed(3),
+        e: state.e.toFixed(3),
+        mSolar: state.massSolar.toFixed(3),
+        meanAnomalyDeg: String(Math.round(AstroUnits.radToDeg(state.meanAnomalyRad))),
+        periodYr: period.toFixed(3),
+        rAu: stateAtM.rAu.toFixed(3),
+        vKmS: vKmS.toFixed(2)
       };
     },
     snapshotLabel: "Add row (snapshot)",
@@ -572,7 +794,7 @@ const demoModes = createDemoModes({
             { label: "Jupiter", aAu: 5.204, e: 0.049 }
           ];
           return cases.map((c) => {
-            const periodYr = KeplersLawsModel.orbitalPeriodYr({ aAu: c.aAu, centralMassSolar: 1 });
+            const period = KeplersLawsModel.orbitalPeriodYr({ aAu: c.aAu, centralMassSolar: 1 });
             const st = KeplersLawsModel.stateAtMeanAnomalyRad({
               aAu: c.aAu,
               e: c.e,
@@ -582,13 +804,13 @@ const demoModes = createDemoModes({
             const vKmS = AstroUnits.auPerYrToKmPerS(st.speedAuPerYr);
             return {
               case: c.label,
-              aAu: formatNumber(c.aAu, 3),
-              e: formatNumber(c.e, 3),
+              aAu: c.aAu.toFixed(3),
+              e: c.e.toFixed(3),
               mSolar: "1.000",
               meanAnomalyDeg: "0",
-              periodYr: formatNumber(periodYr, 3),
-              rAu: formatNumber(st.rAu, 3),
-              vKmS: formatNumber(vKmS, 2)
+              periodYr: period.toFixed(3),
+              rAu: st.rAu.toFixed(3),
+              vKmS: vKmS.toFixed(2)
             };
           });
         }
@@ -600,65 +822,29 @@ const demoModes = createDemoModes({
 });
 
 demoModes.bindButtons({
-  helpButton,
-  stationButton: stationModeButton
+  helpButton: elements.help!,
+  stationButton: elements.stationMode!
 });
 
-syncNewtonModeUI();
-render();
+bindEvents();
+setupDrag();
+setMode("kepler");
+setUnits("101");
 
-newtonMode.addEventListener("change", () => {
-  stopAnimation();
-  syncNewtonModeUI();
-  render();
-});
-
-aAu.addEventListener("input", () => {
-  stopAnimation();
-  render();
-});
-ecc.addEventListener("input", () => {
-  stopAnimation();
-  render();
-});
-centralMassSolar.addEventListener("input", () => {
-  stopAnimation();
-  render();
-});
-meanAnomalyDeg.addEventListener("input", () => {
-  stopAnimation();
-  render();
-});
-showApsides.addEventListener("change", render);
-showEqualAreas.addEventListener("change", render);
-showVelocity.addEventListener("change", render);
-
-if (prefersReducedMotion) {
-  animateButton.disabled = true;
-  motionNote.hidden = false;
-  motionNote.textContent = "Reduced motion: animation is disabled (use the time slider).";
-} else {
-  animateButton.addEventListener("click", () => {
-    if (isAnimating) stopAnimation();
-    else startAnimation();
-  });
+if (prefersReducedMotionEnabled()) {
+  elements.play!.disabled = true;
+  elements.pause!.disabled = true;
 }
 
-if (typeof ResizeObserver !== "undefined") {
-  new ResizeObserver(() => render()).observe(canvas);
-} else {
-  window.addEventListener("resize", () => render());
-}
-
-copyResults.addEventListener("click", () => {
+elements.copyResults!.addEventListener("click", () => {
   stopAnimation();
-  setLiveRegionText(status, "Copying…");
+  setLiveRegionText(elements.status!, "Copying...");
   void runtime
     .copyResults(exportResults())
-    .then(() => setLiveRegionText(status, "Copied results to clipboard."))
+    .then(() => setLiveRegionText(elements.status!, "Copied results to clipboard."))
     .catch((err) =>
       setLiveRegionText(
-        status,
+        elements.status!,
         err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed."
       )
     );

@@ -41,6 +41,11 @@ export type KeplerOrbitState = {
   vxAuPerYr: number;
   vyAuPerYr: number;
   speedAuPerYr: number;
+
+  accelAuPerYr2: number;
+  specificEnergyAu2Yr2: number;
+  specificAngularMomentumAu2Yr: number;
+  arealVelocityAu2Yr: number;
 };
 
 export const KeplersLawsModel = {
@@ -50,7 +55,7 @@ export const KeplersLawsModel = {
    */
   clampEccentricity(e: number): number {
     if (!Number.isFinite(e)) return 0;
-    return clamp(e, 0, 0.95);
+    return clamp(e, 0, 0.99);
   },
 
   orbitExtremaAu(args: { aAu: number; e: number }): { perihelionAu: number; aphelionAu: number } {
@@ -98,7 +103,11 @@ export const KeplersLawsModel = {
         yAu: Number.NaN,
         vxAuPerYr: Number.NaN,
         vyAuPerYr: Number.NaN,
-        speedAuPerYr: Number.NaN
+        speedAuPerYr: Number.NaN,
+        accelAuPerYr2: Number.NaN,
+        specificEnergyAu2Yr2: Number.NaN,
+        specificAngularMomentumAu2Yr: Number.NaN,
+        arealVelocityAu2Yr: Number.NaN
       };
     }
 
@@ -135,6 +144,21 @@ export const KeplersLawsModel = {
       muAu3Yr2
     });
 
+    const accelAuPerYr2 = muAu3Yr2 / (rAu * rAu);
+    const specificEnergyAu2Yr2 = TwoBodyAnalytic.specificEnergyAu2Yr2({
+      rAu,
+      vRelAuYr: speedAuPerYr,
+      muAu3Yr2
+    });
+    const specificAngularMomentumAu2Yr = TwoBodyAnalytic.specificAngularMomentumAu2YrFromOrbit({
+      aAu,
+      e,
+      muAu3Yr2
+    });
+    const arealVelocityAu2Yr = TwoBodyAnalytic.arealVelocityAu2Yr({
+      hAu2Yr: specificAngularMomentumAu2Yr
+    });
+
     // Numerical cross-check (dev sanity): speed computed from components should match vis-viva.
     // Keep the model pure: no asserts/throws; callers can validate if desired.
     void pAu; // (kept for clarity; used implicitly in h above)
@@ -151,8 +175,11 @@ export const KeplersLawsModel = {
       yAu,
       vxAuPerYr,
       vyAuPerYr,
-      speedAuPerYr
+      speedAuPerYr,
+      accelAuPerYr2,
+      specificEnergyAu2Yr2,
+      specificAngularMomentumAu2Yr,
+      arealVelocityAu2Yr
     };
   }
 } as const;
-

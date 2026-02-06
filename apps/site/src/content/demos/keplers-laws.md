@@ -16,7 +16,7 @@ misconceptions:
   - "Planets move at the same speed all along their orbits."
 predict_prompt: "Where in an elliptical orbit do you think a planet moves fastest: near perihelion or aphelion?"
 play_steps:
-  - "Increase eccentricity $e$, then use the time slider to compare speed near perihelion vs aphelion."
+  - "Increase eccentricity $e$, then use Play/Pause or the timeline scrub to compare speed near perihelion vs aphelion."
   - "Turn on equal-area slices and check whether the slice areas look similar even when arc lengths differ."
   - "Compare two semi-major axes $a$ (same $M$) and observe how the period $P$ changes."
 explain_prompt: "Write a claim consistent with a Kepler law and back it with a specific observation from the demo."
@@ -27,7 +27,7 @@ model_notes:
 demo_path: "/play/keplers-laws/"
 station_path: "/stations/keplers-laws/"
 instructor_path: "/instructor/keplers-laws/"
-last_updated: "2026-02-02"
+last_updated: "2026-02-04"
 ---
 
 Use this instrument to connect orbit shape to speed changes (Kepler 2) and connect orbit size to period scaling (Kepler 3).

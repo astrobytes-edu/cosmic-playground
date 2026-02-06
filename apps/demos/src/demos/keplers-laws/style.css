@@ -1,49 +1,81 @@
 @import "../../shared/stub-demo.css";
 
-.control {
-  display: grid;
-  gap: 8px;
-}
-
-.control__value {
-  color: var(--cp-muted);
-  font-size: 0.95rem;
-}
-
-.check-row {
-  display: grid;
-  gap: var(--cp-space-2);
-}
-
-.check {
-  display: flex;
-  gap: var(--cp-space-2);
-  align-items: center;
-  color: var(--cp-muted);
-  font-size: 0.95rem;
-}
-
-.check input[type="checkbox"] {
-  accent-color: var(--cp-accent);
-}
-
-.stage {
-  display: grid;
-  place-items: center;
-  padding: var(--cp-space-4);
-}
-
-canvas {
+.stage-surface {
   width: 100%;
-  height: auto;
-  max-width: 980px;
-  aspect-ratio: 16 / 9;
-  display: block;
-  border-radius: 18px;
+  border-radius: var(--cp-radius-lg);
   border: 1px solid var(--cp-border);
+  padding: var(--cp-space-3);
   background: radial-gradient(
     circle at 20% 20%,
-    var(--cp-glow-teal),
-    color-mix(in srgb, var(--cp-bg0) 75%, transparent)
+    color-mix(in srgb, var(--cp-accent) 35%, transparent),
+    var(--cp-bg0)
   );
+}
+
+#orbitSvg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.cp-button-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--cp-space-2);
+  margin-bottom: var(--cp-space-3);
+}
+
+.cp-button--active {
+  background: var(--cp-accent);
+  color: var(--cp-on-accent);
+  border-color: var(--cp-accent);
+}
+
+.cp-button-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--cp-space-2);
+}
+
+.preset--active {
+  border-color: var(--cp-accent);
+  color: var(--cp-accent);
+}
+
+.cp-check {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  color: var(--cp-muted);
+  margin-bottom: var(--cp-space-1);
+}
+
+.cp-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--cp-muted);
+}
+
+.planet-draggable:focus-visible #planet {
+  stroke: var(--cp-accent);
+  stroke-width: 3;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #orbitPath,
+  #planet {
+    transition: none;
+  }
 }

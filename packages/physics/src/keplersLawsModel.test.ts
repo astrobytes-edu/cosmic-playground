@@ -45,5 +45,23 @@ describe("KeplersLawsModel (AU / yr / M☉ teaching units)", () => {
     expect(peri.rAu).toBeLessThan(aph.rAu);
     expect(peri.speedAuPerYr).toBeGreaterThan(aph.speedAuPerYr);
   });
-});
 
+  test("clamps eccentricity to 0.99 (legacy max)", () => {
+    expect(KeplersLawsModel.clampEccentricity(0.999)).toBeCloseTo(0.99, 12);
+  });
+
+  test("returns conservation quantities for a circular orbit", () => {
+    const st = KeplersLawsModel.stateAtMeanAnomalyRad({
+      aAu: 1,
+      e: 0,
+      centralMassSolar: 1,
+      meanAnomalyRad: 0
+    });
+
+    expect(st.accelAuPerYr2).toBeGreaterThan(39);
+    expect(st.accelAuPerYr2).toBeLessThan(40);
+    expect(st.specificEnergyAu2Yr2).toBeCloseTo(-2 * Math.PI * Math.PI, 8);
+    expect(st.specificAngularMomentumAu2Yr).toBeCloseTo(2 * Math.PI, 8);
+    expect(st.arealVelocityAu2Yr).toBeCloseTo(Math.PI, 8);
+  });
+});
