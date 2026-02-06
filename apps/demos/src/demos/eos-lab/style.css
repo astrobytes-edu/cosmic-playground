@@ -137,26 +137,69 @@
   margin: 0 0 var(--cp-space-2);
 }
 
-.regime-map__plot {
+.regime-map__chart {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
   gap: var(--cp-space-2);
 }
 
-.regime-map__y-axis,
-.regime-map__x-axis {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--cp-space-2);
-  font-size: 0.82rem;
+.regime-map__y-strip {
+  width: 5.25rem;
+  min-width: 5.25rem;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--cp-space-1);
+}
+
+.regime-map__axis-label {
+  font-size: 0.8rem;
+  color: var(--cp-text);
+  line-height: 1.15;
+}
+
+.regime-map__axis-label--x {
+  text-align: center;
+  margin-top: calc(var(--cp-space-1) * -0.25);
+}
+
+.regime-map__y-ticks,
+.regime-map__x-ticks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   color: var(--cp-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.regime-map__y-ticks {
+  display: grid;
+  height: 100%;
+  min-height: 15.5rem;
+  align-content: space-between;
+  justify-items: end;
+  padding-right: var(--cp-space-1);
+}
+
+.regime-map__plot {
+  display: grid;
+  gap: var(--cp-space-1);
+}
+
+.regime-map__x-ticks {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--cp-space-1);
+  justify-items: center;
+  padding-inline: var(--cp-space-1);
 }
 
 #regimeMap {
   display: block;
-  width: min(100%, 560px);
+  width: min(100%, 500px);
   margin-inline: auto;
-  aspect-ratio: 1.35 / 1;
+  aspect-ratio: 1.45 / 1;
   height: auto;
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-r-2);
@@ -189,8 +232,7 @@
 }
 
 #regimeCells rect {
-  stroke: color-mix(in srgb, var(--cp-bg0) 48%, transparent);
-  stroke-width: 0.06;
+  stroke: none;
 }
 
 #regimePresetMarkers circle {
@@ -219,7 +261,7 @@
   display: flex;
   align-items: center;
   gap: var(--cp-space-2);
-  color: var(--cp-muted);
+  color: var(--cp-text);
 }
 
 .regime-map__legend span {
@@ -256,6 +298,24 @@
 
   .presets__grid {
     grid-template-columns: 1fr;
+  }
+
+  .regime-map__chart {
+    grid-template-columns: 1fr;
+  }
+
+  .regime-map__y-strip {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .regime-map__y-ticks {
+    min-height: 0;
+    height: auto;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    justify-items: center;
+    padding-right: 0;
   }
 
   .regime-map__legend {

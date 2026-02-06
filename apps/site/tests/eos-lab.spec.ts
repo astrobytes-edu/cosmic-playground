@@ -46,6 +46,8 @@ test.describe("EOS Lab -- E2E", () => {
   test("regime map includes legend and point details for interpretation", async ({ page }) => {
     await expect(page.locator(".regime-map__legend")).toBeVisible();
     await expect(page.locator(".regime-map__legend li")).toHaveCount(4);
+    await expect(page.locator(".regime-map__x-ticks li")).toHaveCount(7);
+    await expect(page.locator(".regime-map__y-ticks li")).toHaveCount(5);
     await expect(page.locator("#regimeDetail")).toContainText("log10(T/K)");
     await expect(page.locator("#regimeDetail")).toContainText("log10(rho/(g cm^-3))");
   });

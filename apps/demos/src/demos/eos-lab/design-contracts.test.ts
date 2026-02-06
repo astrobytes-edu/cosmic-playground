@@ -72,6 +72,10 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(html).toContain('id="regimeDetail"');
     expect(html).toContain('id="regimeSummary"');
     expect(html).toContain("regime-map__legend");
+    expect(html).toContain("regime-map__x-ticks");
+    expect(html).toContain("regime-map__y-ticks");
+    expect(html).toContain("$P_{\\rm gas}$ dominant");
+    expect(html).toContain("$\\log_{10}\\rho$");
     expect(mainTs).toContain("renderRegimeMap");
   });
 

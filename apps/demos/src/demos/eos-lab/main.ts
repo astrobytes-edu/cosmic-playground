@@ -134,8 +134,8 @@ const TEMPERATURE_MAX_K = 1e9;
 const DENSITY_MIN_G_PER_CM3 = 1e-10;
 const DENSITY_MAX_G_PER_CM3 = 1e10;
 const REGIME_MAP_REBUILD_DEBOUNCE_MS = 80;
-const REGIME_MAP_GRID_RENDER_X = 28;
-const REGIME_MAP_GRID_RENDER_Y = 24;
+const REGIME_MAP_GRID_RENDER_X = 42;
+const REGIME_MAP_GRID_RENDER_Y = 34;
 
 const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
 const tempValueEl = document.querySelector<HTMLSpanElement>("#tempValue");
