@@ -15,7 +15,7 @@
     "test:play-dirs": "vitest run scripts/validate-play-dirs.test.mjs",
     "test:datasets": "vitest run scripts/validate-datasets.test.mjs",
     "test:physics-contract": "vitest run scripts/validate-physics-models.test.mjs",
-    "test": "corepack pnpm -C packages/physics test && corepack pnpm -C packages/theme test && corepack pnpm test:invariants && corepack pnpm test:play-dirs && corepack pnpm test:datasets && corepack pnpm test:physics-contract"
+    "test": "corepack pnpm -C packages/physics test && corepack pnpm -C packages/theme test && corepack pnpm -C apps/demos test && corepack pnpm test:invariants && corepack pnpm test:play-dirs && corepack pnpm test:datasets && corepack pnpm test:physics-contract"
   },
   "devDependencies": {
     "vitest": "^4.0.18"
