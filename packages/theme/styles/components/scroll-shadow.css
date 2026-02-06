@@ -1,0 +1,23 @@
+/* ============================================
+   CpScrollShadow — Pure CSS scroll indicators
+   Uses background-attachment: local trick for
+   top/bottom scroll affordance gradients.
+   ============================================ */
+
+.cp-scroll-shadow {
+  background:
+    /* Top cover (scrolls with content) */
+    linear-gradient(var(--cp-bg1) 30%, transparent) local,
+    /* Bottom cover (scrolls with content) */
+    linear-gradient(transparent, var(--cp-bg1) 70%) 0 100% local,
+    /* Top shadow (fixed) */
+    radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.3), transparent) scroll,
+    /* Bottom shadow (fixed) */
+    radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.3), transparent) 0 100% scroll;
+  background-repeat: no-repeat;
+  background-size:
+    100% 40px,
+    100% 40px,
+    100% 12px,
+    100% 12px;
+}

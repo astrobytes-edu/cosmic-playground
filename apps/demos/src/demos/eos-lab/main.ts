@@ -7,6 +7,7 @@ import {
   renderMath,
   setLiveRegionText
 } from "@cosmic/runtime";
+import { linspace } from "@cosmic/math";
 import type { ExportPayloadV1, PlotSpec, PlotTrace } from "@cosmic/runtime";
 import {
   StellarEosModel,
@@ -357,10 +358,10 @@ function pressureCurveTraces(plotState: EosPressurePlotState): PlotTrace[] {
 
   const logDensityMin = Math.log10(DENSITY_MIN_G_PER_CM3);
   const logDensityMax = Math.log10(DENSITY_MAX_G_PER_CM3);
+  const logDensityGrid = linspace(logDensityMin, logDensityMax, PRESSURE_CURVE_SAMPLES);
 
-  for (let index = 0; index < PRESSURE_CURVE_SAMPLES; index += 1) {
-    const fraction = index / (PRESSURE_CURVE_SAMPLES - 1);
-    const densityGPerCm3 = Math.pow(10, logDensityMin + fraction * (logDensityMax - logDensityMin));
+  for (const logDensity of logDensityGrid) {
+    const densityGPerCm3 = Math.pow(10, logDensity);
     const sample = StellarEosModel.evaluateStateCgs({
       input: {
         temperatureK: plotState.temperatureK,

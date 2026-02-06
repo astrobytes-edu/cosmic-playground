@@ -1,0 +1,67 @@
+/* ============================================
+   CpBottomSheet — Mobile controls drawer
+   Only visible below the sacred 1024px breakpoint.
+   ============================================ */
+
+.cp-bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--cp-z-sticky);
+  background: var(--cp-instr-panel-bg, var(--cp-bg2));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--cp-border);
+  border-radius: var(--cp-r-3) var(--cp-r-3) 0 0;
+  transition: transform 0.3s var(--cp-ease-out);
+  will-change: transform;
+}
+
+/* Snap states — JS sets data-snap, CSS owns geometry */
+.cp-bottom-sheet[data-snap="collapsed"] {
+  transform: translateY(calc(100% - 10svh));
+}
+
+.cp-bottom-sheet[data-snap="half"] {
+  transform: translateY(50%);
+}
+
+.cp-bottom-sheet[data-snap="full"] {
+  transform: translateY(10%);
+}
+
+/* Drag handle */
+.cp-bottom-sheet__handle {
+  display: flex;
+  justify-content: center;
+  padding: var(--cp-space-2);
+  cursor: grab;
+  touch-action: none;
+}
+
+.cp-bottom-sheet__handle:active {
+  cursor: grabbing;
+}
+
+.cp-bottom-sheet__grip {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--cp-muted);
+}
+
+/* Scrollable content area */
+.cp-bottom-sheet__content {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(90svh - 40px);
+  padding: 0 var(--cp-space-3) var(--cp-space-4);
+}
+
+/* Hide on desktop — layout uses sidebar instead */
+@media (min-width: 1024px) {
+  .cp-bottom-sheet {
+    display: none;
+  }
+}
