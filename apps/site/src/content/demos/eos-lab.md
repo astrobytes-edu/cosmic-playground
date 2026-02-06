@@ -11,6 +11,8 @@ readiness: experimental
 readinessReason: "EOS core channels + diagnostics + regime map are implemented with finite-T Fermi branches; neutron/pair-rich extensions remain planned."
 parityAuditPath: "docs/audits/migrations/eos-lab-parity.md"
 lastVerifiedAt: "2026-02-06"
+plotContractVersion: 1
+plotParityAudit: "pass"
 learning_goals:
   - "Compare gas, radiation, and electron-degeneracy pressure channels using cgs units."
   - "Explain how composition enters EOS through mu and mu_e."

@@ -29,6 +29,8 @@ const demos = defineCollection({
     readinessReason: z.string().min(1),
     parityAuditPath: z.string().min(1),
     lastVerifiedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    plotContractVersion: z.number().int().positive().optional(),
+    plotParityAudit: z.enum(["pass", "fail", "n/a"]).optional(),
     learning_goals: z.array(z.string().min(1)).min(1),
     misconceptions: z.array(z.string().min(1)).min(1),
     predict_prompt: z.string().min(1),

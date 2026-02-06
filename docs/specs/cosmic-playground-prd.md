@@ -534,6 +534,8 @@ Every demo content entry must include explicit readiness metadata.
 | `readinessReason` | string | short justification | Why demo is in this state |
 | `parityAuditPath` | path string | `docs/audits/migrations/<slug>-parity.md` | Traceable parity evidence |
 | `lastVerifiedAt` | ISO date | `YYYY-MM-DD` | Most recent verification date |
+| `plotContractVersion` | integer (conditional) | `1` (required for demos that mount runtime plots) | Declares active plot-instrument contract version |
+| `plotParityAudit` | enum (conditional) | `pass`, `fail`, `n/a` (required for demos that mount runtime plots) | Plot-specific parity status in migration audits |
 
 **Example frontmatter (demo content):**
 ```yaml
@@ -543,10 +545,13 @@ readiness: experimental
 readinessReason: "Physics and UX parity pass; export parity pending."
 parityAuditPath: docs/audits/migrations/blackbody-radiation-parity.md
 lastVerifiedAt: 2026-02-06
+plotContractVersion: 1
+plotParityAudit: pass
 ```
 
 **Acceptance Criteria:**
 - [ ] Demo content includes all required readiness metadata fields.
+- [ ] Plot-bearing demos include required conditional plot metadata fields.
 - [ ] Explore/discovery surfaces can hide or clearly label non-`launch-ready` demos.
 - [ ] Promotion to `launch-ready` is blocked unless Section 6.1 launch gates pass.
 - [ ] Demo uses shared UI primitives (`@cosmic/ui` components where available, otherwise approved theme/runtime patterns)
@@ -613,6 +618,8 @@ CI must enforce foundational migration contracts automatically, not only via rev
 - Readiness metadata completeness for every demo content entry.
 - Parity audit artifact exists for every migrated demo slug.
 - No runtime `fetch()` usage for core datasets in demo runtime paths.
+- No direct Plotly imports/calls outside `packages/runtime/src/plots`.
+- Plot specs that mount runtime plots include axis metadata (`axes.x.label`, `axes.y.label`).
 - PR includes contract section citations when migration-related files are changed.
 - Export snapshots updated (or unchanged with explicit assertion) when export fields change.
 
@@ -756,6 +763,7 @@ Each migrated demo is evaluated against legacy in four dimensions:
 - Visual/interaction parity (or justified UX improvement).
 - Export parity (schema + semantic meaning).
 - Pedagogical parity (predict/play/explain affordances preserved or improved).
+- Plot instrument parity (for plot-bearing demos: axis labels/units, interaction defaults, runtime ownership).
 
 **Acceptance Criteria:**
 - [ ] Each migrated demo includes a parity audit record and pass/fail decision.
@@ -786,12 +794,17 @@ Each migrated demo is evaluated against legacy in four dimensions:
 - Cosmic result:
 - Status: pass | fail
 
-## 5) Intentional deltas
+## 5) Plot instrument parity (if demo has runtime plot)
+- Legacy baseline:
+- Cosmic result:
+- Status: pass | fail | n/a
+
+## 6) Intentional deltas
 - Delta:
 - Rationale:
 - Risk:
 
-## 6) Promotion recommendation
+## 7) Promotion recommendation
 - Recommended state: stub | experimental | candidate | launch-ready
 - Blockers:
 ```
@@ -916,6 +929,7 @@ CI must run a contract-enforcement bundle for migration-related PRs.
 - Readiness metadata validation for all demo entries.
 - Parity audit file existence for migrated demo slugs.
 - Data contract checks (`no runtime fetch`, manifest/metadata conformance).
+- Plot contract checks (no direct Plotly outside runtime plot module + axis metadata presence).
 - Export contract checks (schema snapshot stability).
 - Contract citation check in PR template/checklist.
 
@@ -936,6 +950,7 @@ Maintain a compatibility table that maps each demo and schema version to downstr
 - Demo slug
 - Export schema version
 - Required fields (with units in names)
+- Plot-derived field notes (if exported values come directly from plotted quantities)
 - Known consumers (station cards, instructor notes, copy-results workflows)
 - Backward compatibility status (`compatible`, `requires migration`)
 

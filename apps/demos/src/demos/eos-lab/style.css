@@ -120,6 +120,27 @@
   margin-top: var(--cp-space-2);
 }
 
+.pressure-plot {
+  margin-top: var(--cp-space-3);
+  padding: var(--cp-space-3);
+  border-radius: var(--cp-r-3);
+  border: 1px solid var(--cp-border);
+  background: color-mix(in srgb, var(--cp-bg1) 90%, transparent);
+}
+
+.pressure-plot h3 {
+  margin: 0 0 var(--cp-space-2);
+  font-size: 0.98rem;
+}
+
+.pressure-plot__help {
+  margin: 0 0 var(--cp-space-2);
+}
+
+.pressure-plot__surface {
+  min-height: 19rem;
+}
+
 .regime-map {
   margin-top: var(--cp-space-3);
   padding: var(--cp-space-3);

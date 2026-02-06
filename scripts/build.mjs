@@ -41,6 +41,7 @@ async function main() {
   await run("node", [path.join(repoRoot, "scripts", "validate-math-formatting.mjs")]);
   await run("node", [path.join(repoRoot, "scripts", "validate-datasets.mjs")]);
   await run("node", [path.join(repoRoot, "scripts", "validate-physics-models.mjs")]);
+  await run("node", [path.join(repoRoot, "scripts", "validate-plot-contract.mjs")]);
   await run("node", [path.join(repoRoot, "scripts", "copy-katex-assets.mjs")]);
   await run("corepack", ["pnpm", "-C", demosDir, "build"]);
 

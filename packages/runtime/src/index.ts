@@ -37,6 +37,20 @@ export { ChallengeEngine } from "./challengeEngine";
 export type { Challenge, ChallengeOptions, ChallengeResult, ChallengeStats } from "./challengeEngine";
 export { initStarfield } from "./starfield";
 export type { StarfieldConfig } from "./starfield";
+export { mountPlot } from "./plots/plotEngine";
+export type {
+  AxisSpec,
+  PlotController,
+  PlotDomain,
+  PlotInit,
+  PlotLineDash,
+  PlotPoint,
+  PlotRenderMode,
+  PlotScale,
+  PlotSpec,
+  PlotTrace,
+  PlotUpdate
+} from "./plots/plotTypes";
 
 function isExportPayloadV1(value: unknown): value is ExportPayloadV1 {
   if (!value || typeof value !== "object") return false;

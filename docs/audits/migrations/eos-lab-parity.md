@@ -17,13 +17,18 @@ Demo slug: `eos-lab`
 - Added benchmark/scaling/sanity tests for EOS channels and diagnostics.
 - Added T and rho sliders plus canonical presets.
 - Added LTE framing chip and deep-dive panel content per pressure source.
+- Added runtime-owned plot contract integration (`mountPlot`) with real-time pressure-channel curves.
+- Added plot contract metadata in demo frontmatter (`plotContractVersion`, `plotParityAudit`).
+
+## Plot instrument parity
+- Legacy baseline: n/a (new demo in Cosmic Playground; no prior in-repo implementation).
+- Cosmic result: centralized runtime plot with explicit axis labels/units, state-driven traces, and no direct Plotly usage in demo code.
+- Status: pass
 
 ## Gaps intentionally deferred
-- Finite-temperature Fermi-Dirac correction.
 - Optional neutron-degeneracy extension implementation (API hook exists).
-- Dedicated regime-map plot in log rho-log T space.
+- Additional parity evidence against external/legacy EOS tools if a migration baseline is later designated.
 
 ## Next promotion criteria
-- Add quantitative regime map visualization and detailed equation-anatomy tabs.
 - Add instructor override content bundle for `eos-lab`.
 - Validate full launch gates (`build`, `e2e`, invariant suites) on candidate promotion.

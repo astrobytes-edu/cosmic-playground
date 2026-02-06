@@ -66,6 +66,7 @@ describe("EOS Lab -- Design System Contracts", () => {
   });
 
   it("includes regime-map scaffold and rendering hook", () => {
+    expect(html).toContain('id="pressureCurvePlot"');
     expect(html).toContain('id="regimeMap"');
     expect(html).toContain('id="regimeGrid"');
     expect(html).toContain('id="regimeCurrentPoint"');
@@ -77,6 +78,14 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(html).toContain("$P_{\\rm gas}$ dominant");
     expect(html).toContain("$\\log_{10}\\rho$");
     expect(mainTs).toContain("renderRegimeMap");
+  });
+
+  it("mounts runtime plot contract with explicit axis labels", () => {
+    expect(mainTs).toContain("mountPlot");
+    expect(mainTs).toContain('id: "eos-pressure-curves"');
+    expect(mainTs).toContain('label: "Density rho"');
+    expect(mainTs).toContain('label: "Pressure P"');
+    expect(mainTs).toContain("pressureCurvePlotController.update");
   });
 
   it("renders diagnostic inequalities with LaTeX formatting", () => {

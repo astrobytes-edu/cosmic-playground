@@ -2,11 +2,12 @@ import {
   createDemoModes,
   createInstrumentRuntime,
   initMath,
+  mountPlot,
   initStarfield,
   renderMath,
   setLiveRegionText
 } from "@cosmic/runtime";
-import type { ExportPayloadV1 } from "@cosmic/runtime";
+import type { ExportPayloadV1, PlotSpec, PlotTrace } from "@cosmic/runtime";
 import {
   StellarEosModel,
   type StellarCompositionFractions,
@@ -137,6 +138,7 @@ const DENSITY_MAX_G_PER_CM3 = 1e10;
 const REGIME_MAP_REBUILD_DEBOUNCE_MS = 80;
 const REGIME_MAP_GRID_RENDER_X = 42;
 const REGIME_MAP_GRID_RENDER_Y = 34;
+const PRESSURE_CURVE_SAMPLES = 96;
 
 const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
 const tempValueEl = document.querySelector<HTMLSpanElement>("#tempValue");
@@ -169,6 +171,7 @@ const pDegValueEl = document.querySelector<HTMLElement>("#pDegValue");
 const pDegBarEl = document.querySelector<HTMLElement>("#pDegBar");
 const pTotalValueEl = document.querySelector<HTMLElement>("#pTotalValue");
 const dominantChannelEl = document.querySelector<HTMLElement>("#dominantChannel");
+const pressureCurvePlotEl = document.querySelector<HTMLElement>("#pressureCurvePlot");
 const regimeMapEl = document.querySelector<SVGSVGElement>("#regimeMap");
 const regimeGridEl = document.querySelector<SVGGElement>("#regimeGrid");
 const regimeCellsEl = document.querySelector<SVGGElement>("#regimeCells");
@@ -220,6 +223,7 @@ if (
   !pDegBarEl ||
   !pTotalValueEl ||
   !dominantChannelEl ||
+  !pressureCurvePlotEl ||
   !regimeMapEl ||
   !regimeGridEl ||
   !regimeCellsEl ||
@@ -274,6 +278,7 @@ const pDegValue = pDegValueEl;
 const pDegBar = pDegBarEl;
 const pTotalValue = pTotalValueEl;
 const dominantChannel = dominantChannelEl;
+const pressureCurvePlot = pressureCurvePlotEl;
 const regimeMap = regimeMapEl;
 const regimeGrid = regimeGridEl;
 const regimeCells = regimeCellsEl;
@@ -322,6 +327,130 @@ const state: DemoState = {
   radiationDepartureEta: 1
 };
 
+type EosPressurePlotState = {
+  temperatureK: number;
+  densityGPerCm3: number;
+  composition: StellarCompositionFractions;
+  radiationDepartureEta: number;
+  currentModel: StellarEosStateCgs;
+};
+
+function pressurePlotStateFromModel(model: StellarEosStateCgs): EosPressurePlotState {
+  return {
+    temperatureK: model.input.temperatureK,
+    densityGPerCm3: model.input.densityGPerCm3,
+    composition: {
+      hydrogenMassFractionX: model.normalizedComposition.hydrogenMassFractionX,
+      heliumMassFractionY: model.normalizedComposition.heliumMassFractionY,
+      metalMassFractionZ: model.normalizedComposition.metalMassFractionZ
+    },
+    radiationDepartureEta: model.input.radiationDepartureEta,
+    currentModel: model
+  };
+}
+
+function pressureCurveTraces(plotState: EosPressurePlotState): PlotTrace[] {
+  const gasPoints: Array<{ x: number; y: number }> = [];
+  const radiationPoints: Array<{ x: number; y: number }> = [];
+  const degeneracyPoints: Array<{ x: number; y: number }> = [];
+  const totalPoints: Array<{ x: number; y: number }> = [];
+
+  const logDensityMin = Math.log10(DENSITY_MIN_G_PER_CM3);
+  const logDensityMax = Math.log10(DENSITY_MAX_G_PER_CM3);
+
+  for (let index = 0; index < PRESSURE_CURVE_SAMPLES; index += 1) {
+    const fraction = index / (PRESSURE_CURVE_SAMPLES - 1);
+    const densityGPerCm3 = Math.pow(10, logDensityMin + fraction * (logDensityMax - logDensityMin));
+    const sample = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: plotState.temperatureK,
+        densityGPerCm3,
+        composition: plotState.composition,
+        radiationDepartureEta: plotState.radiationDepartureEta
+      }
+    });
+
+    gasPoints.push({ x: densityGPerCm3, y: sample.gasPressureDynePerCm2 });
+    radiationPoints.push({ x: densityGPerCm3, y: sample.radiationPressureDynePerCm2 });
+    degeneracyPoints.push({ x: densityGPerCm3, y: sample.electronDegeneracyPressureDynePerCm2 });
+    totalPoints.push({ x: densityGPerCm3, y: sample.totalPressureDynePerCm2 });
+  }
+
+  return [
+    {
+      id: "p-gas",
+      label: "P_gas",
+      points: gasPoints,
+      colorVar: "var(--cp-success)"
+    },
+    {
+      id: "p-rad",
+      label: "P_rad",
+      points: radiationPoints,
+      colorVar: "var(--cp-accent)"
+    },
+    {
+      id: "p-deg-e",
+      label: "P_deg,e",
+      points: degeneracyPoints,
+      colorVar: "var(--cp-glow-teal)"
+    },
+    {
+      id: "p-total",
+      label: "P_tot",
+      points: totalPoints,
+      colorVar: "var(--cp-text)",
+      lineDash: "dash"
+    },
+    {
+      id: "current-state",
+      label: "Current state",
+      mode: "points",
+      pointRadius: 4,
+      colorVar: "var(--cp-warn)",
+      points: [
+        {
+          x: plotState.densityGPerCm3,
+          y: plotState.currentModel.totalPressureDynePerCm2
+        }
+      ]
+    }
+  ];
+}
+
+const eosPressurePlotSpec: PlotSpec<EosPressurePlotState> = {
+  id: "eos-pressure-curves",
+  axes: {
+    x: {
+      label: "Density rho",
+      unit: "g cm^-3",
+      scale: "log",
+      min: DENSITY_MIN_G_PER_CM3,
+      max: DENSITY_MAX_G_PER_CM3
+    },
+    y: {
+      label: "Pressure P",
+      unit: "dyne cm^-2",
+      scale: "log"
+    }
+  },
+  interaction: {
+    hover: true,
+    zoom: false,
+    pan: false
+  },
+  init(plotState) {
+    return {
+      traces: pressureCurveTraces(plotState)
+    };
+  },
+  update(plotState) {
+    return {
+      traces: pressureCurveTraces(plotState)
+    };
+  }
+};
+
 function evaluateModel(): StellarEosStateCgs {
   return StellarEosModel.evaluateStateCgs({
     input: {
@@ -332,6 +461,12 @@ function evaluateModel(): StellarEosStateCgs {
     }
   });
 }
+
+const pressureCurvePlotController = mountPlot(
+  pressureCurvePlot,
+  eosPressurePlotSpec,
+  pressurePlotStateFromModel(evaluateModel())
+);
 
 function applyPreset(presetId: Preset["id"]): void {
   const preset = PRESET_BY_ID[presetId];
@@ -800,6 +935,7 @@ function render(args: { deferRegimeMapFieldRebuild?: boolean } = {}): void {
   zValue.textContent = formatFraction(z, 3);
 
   const model = evaluateModel();
+  pressureCurvePlotController.update(pressurePlotStateFromModel(model));
   const dominantPressureDynePerCm2 = dominantPressureValue(model);
 
   setPressureCard(
@@ -1041,3 +1177,11 @@ const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield
 if (starfieldCanvas) {
   initStarfield({ canvas: starfieldCanvas });
 }
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+    pressureCurvePlotController.destroy();
+  },
+  { once: true }
+);

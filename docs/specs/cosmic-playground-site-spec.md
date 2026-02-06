@@ -341,6 +341,16 @@ Minimum component set:
 * Common orbit solvers/utilities
 * Numerical helpers (stable clamps, interpolation)
 
+### 9.5 Plot instrument contract (runtime-owned)
+
+Interactive plots are treated as instruments, not ad-hoc per-demo chart helpers.
+
+* Plot rendering ownership lives in shared runtime code.
+* Demos provide state-derived trace data and axis semantics.
+* Runtime owns layout/theme/mobile/performance/accessibility behavior.
+
+Authoritative contract: `docs/specs/cosmic-playground-plot-contract.md`
+
 ---
 
 ## 10. Design system (packages/theme)

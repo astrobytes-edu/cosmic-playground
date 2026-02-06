@@ -146,6 +146,14 @@
           <p><strong>Dominant channel:</strong> <span id="dominantChannel"></span></p>
         </div>
 
+        <section class="pressure-plot" aria-label="Pressure-channel curve plot">
+          <h3>Pressure Curves at Fixed Temperature</h3>
+          <p class="cp-muted pressure-plot__help">
+            Move sliders in real time to see how $P_{\rm gas}$, $P_{\rm rad}$, and $P_{\rm deg,e}$ vary with density at the current temperature and composition.
+          </p>
+          <div id="pressureCurvePlot" class="pressure-plot__surface"></div>
+        </section>
+
         <section class="regime-map" aria-label="EOS regime map">
           <h3>Regime Map ($\log_{10}\rho$ vs $\log_{10}T$)</h3>
           <p class="cp-muted regime-map__help">
