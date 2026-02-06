@@ -577,36 +577,41 @@ describe("snapToNearestPreset", () => {
 });
 
 describe("svgPointToAngleDeg", () => {
+  // The function uses SVG rendering convention: 0=right, angles increase
+  // clockwise (matching cos(a) for x, sin(a) for y in SVG coords).
+
   it("returns 0 for point directly to the right", () => {
     expect(svgPointToAngleDeg(0, 0, 10, 0)).toBeCloseTo(0, 5);
   });
 
-  it("returns 90 for point directly above (SVG y-inverted)", () => {
-    // In SVG, y decreases upward, so (0, -10) is "above"
-    expect(svgPointToAngleDeg(0, 0, 0, -10)).toBeCloseTo(90, 5);
+  it("returns 90 for point directly below (SVG y-down = clockwise 90)", () => {
+    // In SVG rendering: sin(90) = 1 => y = center + r => below center
+    expect(svgPointToAngleDeg(0, 0, 0, 10)).toBeCloseTo(90, 5);
   });
 
   it("returns 180 for point directly to the left", () => {
     expect(svgPointToAngleDeg(0, 0, -10, 0)).toBeCloseTo(180, 5);
   });
 
-  it("returns 270 for point directly below (SVG y-inverted)", () => {
-    // In SVG, y increases downward, so (0, 10) is "below"
-    expect(svgPointToAngleDeg(0, 0, 0, 10)).toBeCloseTo(270, 5);
+  it("returns 270 for point directly above (SVG y-up = clockwise 270)", () => {
+    // In SVG rendering: sin(270) = -1 => y = center - r => above center
+    expect(svgPointToAngleDeg(0, 0, 0, -10)).toBeCloseTo(270, 5);
   });
 
-  it("returns 45 for upper-right diagonal", () => {
-    expect(svgPointToAngleDeg(0, 0, 10, -10)).toBeCloseTo(45, 5);
+  it("returns 315 for upper-right diagonal (clockwise from right)", () => {
+    // dx=10, dy=-10 => atan2(-10, 10) = -45 => +360 = 315
+    expect(svgPointToAngleDeg(0, 0, 10, -10)).toBeCloseTo(315, 5);
   });
 
-  it("returns 135 for upper-left diagonal", () => {
-    expect(svgPointToAngleDeg(0, 0, -10, -10)).toBeCloseTo(135, 5);
+  it("returns 225 for upper-left diagonal", () => {
+    // dx=-10, dy=-10 => atan2(-10, -10) = -135 => +360 = 225
+    expect(svgPointToAngleDeg(0, 0, -10, -10)).toBeCloseTo(225, 5);
   });
 
   it("works with non-zero center coordinates", () => {
-    // Point at (120, 50) relative to center (100, 60) => dx=20, dy=10 (SVG inverted)
-    // atan2(10, 20) ~ 26.57 deg
-    expect(svgPointToAngleDeg(100, 60, 120, 50)).toBeCloseTo(26.565, 1);
+    // Point at (120, 50) relative to center (100, 60) => dx=20, dy=-10
+    // atan2(-10, 20) ~ -26.57 deg => +360 = 333.43 deg
+    expect(svgPointToAngleDeg(100, 60, 120, 50)).toBeCloseTo(360 - 26.565, 1);
   });
 
   it("always returns a value in [0, 360)", () => {
@@ -619,6 +624,18 @@ describe("svgPointToAngleDeg", () => {
     for (const a of angles) {
       expect(a).toBeGreaterThanOrEqual(0);
       expect(a).toBeLessThan(360);
+    }
+  });
+
+  it("round-trips with orbit rendering convention", () => {
+    // Rendering: x = cx + r*cos(angle), y = cy + r*sin(angle)
+    // Drag should recover the same angle from (x, y)
+    for (const angle of [0, 45, 90, 135, 180, 225, 270, 315]) {
+      const rad = (angle * Math.PI) / 180;
+      const r = 140;
+      const x = r * Math.cos(rad);
+      const y = r * Math.sin(rad);
+      expect(svgPointToAngleDeg(0, 0, x, y)).toBeCloseTo(angle, 3);
     }
   });
 });
@@ -676,8 +693,9 @@ describe("buildBetaCurvePath", () => {
     });
     const minY = Math.min(...points);
     const maxY = Math.max(...points);
-    // Amplitude should be approximately tilt * yScale = 5.145 * 10 = 51.45
-    // So extremes at ~100 - 51.45 and ~100 + 51.45
+    // Amplitude = tilt * yScale = 5.145 * 10 = 51.45
+    // Positive beta (above ecliptic) => smaller y in SVG (negated)
+    // So: min y ~ panelCenterY - amplitude, max y ~ panelCenterY + amplitude
     expect(minY).toBeCloseTo(100 - 5.145 * 10, 0);
     expect(maxY).toBeCloseTo(100 + 5.145 * 10, 0);
   });

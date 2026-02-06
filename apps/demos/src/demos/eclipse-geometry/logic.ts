@@ -22,8 +22,11 @@ export function formatNumber(value: number, digits: number): string {
 /*  SVG coordinate angle (for drag interaction)                       */
 /* ------------------------------------------------------------------ */
 
-/** Convert SVG coordinates to angle (degrees) relative to center point.
- *  Returns a value in [0, 360). SVG y-axis is inverted (down = positive). */
+/** Convert SVG coordinates to angle (degrees) matching the orbit rendering
+ *  convention: 0 = right, angles increase clockwise (SVG y-down = positive).
+ *  This matches renderStage() which uses cos(angle) for x and sin(angle) for y
+ *  without negating the SVG y-axis.
+ *  Returns a value in [0, 360). */
 export function svgPointToAngleDeg(
   centerX: number,
   centerY: number,
@@ -31,7 +34,7 @@ export function svgPointToAngleDeg(
   pointY: number
 ): number {
   const dx = pointX - centerX;
-  const dy = centerY - pointY; // invert SVG y-axis
+  const dy = pointY - centerY; // SVG convention: y increases downward
   return ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360;
 }
 
@@ -57,8 +60,8 @@ export function buildBetaCurvePath(args: {
     const moonLonDeg = (i / steps) * 360;
     const x = args.panelX + (i / steps) * args.panelWidth;
     const beta = args.eclipticLatDeg(moonLonDeg, args.tiltDeg, args.nodeLonDeg);
-    // y increases downward in SVG, so negative beta (above ecliptic) goes up
-    const y = args.panelCenterY + beta * args.yScale;
+    // SVG y increases downward, so negate: positive beta (above ecliptic) goes up
+    const y = args.panelCenterY - beta * args.yScale;
     const pt = `${x.toFixed(2)},${y.toFixed(2)}`;
     parts.push(i === 0 ? `M ${pt}` : `L ${pt}`);
   }

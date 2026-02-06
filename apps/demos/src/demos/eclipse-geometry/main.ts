@@ -326,7 +326,7 @@ function renderStage(args: {
   // Beta panel marker: positioned on the curve at Moon's orbital position
   const moonFraction = EclipseGeometryModel.normalizeAngleDeg(args.moonLonDeg) / 360;
   const markerX = moonFraction * BETA_PANEL_WIDTH;
-  const markerY = clamp(args.betaDeg * BETA_Y_SCALE, -140, 140);
+  const markerY = clamp(-args.betaDeg * BETA_Y_SCALE, -140, 140);
   betaMarker.setAttribute("cx", formatNumber(markerX, 2));
   betaMarker.setAttribute("cy", formatNumber(markerY, 2));
   betaLabel.setAttribute("x", formatNumber(markerX, 2));
@@ -1230,6 +1230,7 @@ function handleDragStart(e: MouseEvent | TouchEvent) {
 
 function handleDragMove(e: MouseEvent | TouchEvent) {
   if (!isDragging) return;
+  if ("touches" in e && e.touches.length === 0) return;
   const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
   const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
   const pt = clientToSvg(clientX, clientY);
