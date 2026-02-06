@@ -1,13 +1,10 @@
 {
-  "name": "@cosmic/physics",
+  "name": "@cosmic/math",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
-  },
-  "dependencies": {
-    "@cosmic/math": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.5.4"

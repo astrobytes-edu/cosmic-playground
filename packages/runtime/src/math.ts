@@ -2,6 +2,17 @@
 
 import katex from "katex";
 import renderMathInElement from "katex/contrib/auto-render";
+export {
+  EPS,
+  clamp,
+  findRootBisection,
+  findRootNewton,
+  integrateSimpson,
+  integrateSimpsonSamples,
+  integrateTrapz,
+  interp1,
+  linspace
+} from "@cosmic/math";
 
 const DEFAULT_IGNORED_TAGS = [
   "script",

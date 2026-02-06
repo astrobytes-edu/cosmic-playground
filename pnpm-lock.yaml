@@ -23,6 +23,9 @@ importers:
       '@cosmic/data-telescopes':
         specifier: workspace:*
         version: link:../../packages/data-telescopes
+      '@cosmic/math':
+        specifier: workspace:*
+        version: link:../../packages/math
       '@cosmic/physics':
         specifier: workspace:*
         version: link:../../packages/physics
@@ -86,7 +89,17 @@ importers:
         specifier: ^5.5.4
         version: 5.9.3
 
+  packages/math:
+    devDependencies:
+      typescript:
+        specifier: ^5.5.4
+        version: 5.9.3
+
   packages/physics:
+    dependencies:
+      '@cosmic/math':
+        specifier: workspace:*
+        version: link:../math
     devDependencies:
       typescript:
         specifier: ^5.5.4
@@ -94,6 +107,9 @@ importers:
 
   packages/runtime:
     dependencies:
+      '@cosmic/math':
+        specifier: workspace:*
+        version: link:../math
       katex:
         specifier: ^0.16.28
         version: 0.16.28

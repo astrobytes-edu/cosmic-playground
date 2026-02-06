@@ -10,10 +10,7 @@
  */
 
 import { TwoBodyAnalytic } from "./twoBodyAnalytic";
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
+import { clamp } from "@cosmic/math";
 
 function isFinitePositive(value: number): boolean {
   return Number.isFinite(value) && value > 0;

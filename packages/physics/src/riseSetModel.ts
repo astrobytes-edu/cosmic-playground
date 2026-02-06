@@ -1,10 +1,8 @@
+import { clamp } from "@cosmic/math";
+
 const SOLAR_OBLIQUITY_DEG = 23.44;
 const HOURS_PER_DAY = 24;
 const DEG_PER_HOUR = 15;
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
 
 function toRadians(deg: number): number {
   return (deg * Math.PI) / 180;

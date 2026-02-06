@@ -1,3 +1,9 @@
+import {
+  findRootBisection,
+  integrateSimpsonSamples,
+  linspace
+} from "@cosmic/math";
+
 const CGS_CONSTANTS = {
   kBoltzmannErgPerK: 1.380649e-16,
   atomicMassUnitG: 1.6605390666e-24,
@@ -320,26 +326,26 @@ function simpsonIntegratePair(args: {
   intervals: number;
   evaluate: (x: number) => { numberIntegrand: number; pressureIntegrand: number };
 }): { numberIntegral: number; pressureIntegral: number } {
-  const { xMin, xMax } = args;
   let intervals = Math.max(2, Math.floor(args.intervals));
   if (intervals % 2 !== 0) intervals += 1;
 
-  const h = (xMax - xMin) / intervals;
-  let numberSum = 0;
-  let pressureSum = 0;
-
-  for (let i = 0; i <= intervals; i += 1) {
-    const x = xMin + i * h;
-    const values = args.evaluate(x);
-    const weight = i === 0 || i === intervals ? 1 : i % 2 === 0 ? 2 : 4;
-    numberSum += weight * values.numberIntegrand;
-    pressureSum += weight * values.pressureIntegrand;
+  try {
+    const xGrid = linspace(args.xMin, args.xMax, intervals + 1);
+    const samples = xGrid.map((x) => args.evaluate(x));
+    const numberValues = samples.map((sample) => sample.numberIntegrand);
+    const pressureValues = samples.map((sample) => sample.pressureIntegrand);
+    const numberIntegral = integrateSimpsonSamples(numberValues, xGrid);
+    const pressureIntegral = integrateSimpsonSamples(pressureValues, xGrid);
+    return {
+      numberIntegral,
+      pressureIntegral
+    };
+  } catch {
+    return {
+      numberIntegral: Number.NaN,
+      pressureIntegral: Number.NaN
+    };
   }
-
-  return {
-    numberIntegral: (h / 3) * numberSum,
-    pressureIntegral: (h / 3) * pressureSum
-  };
 }
 
 function solveBisection(args: {
@@ -349,43 +355,35 @@ function solveBisection(args: {
   relativeTolerance: number;
   evaluate: (x: number) => number;
 }): { root: number; converged: boolean } {
-  let lower = args.lower;
-  let upper = args.upper;
-  let fLower = args.evaluate(lower);
-  let fUpper = args.evaluate(upper);
+  const lower = Math.min(args.lower, args.upper);
+  const upper = Math.max(args.lower, args.upper);
+  const fLower = args.evaluate(lower);
+  const fUpper = args.evaluate(upper);
 
   if (!Number.isFinite(fLower) || !Number.isFinite(fUpper) || fLower > 0 || fUpper < 0) {
     return { root: Number.NaN, converged: false };
   }
 
-  let best = 0.5 * (lower + upper);
-  for (let i = 0; i < args.maxIterations; i += 1) {
-    const mid = 0.5 * (lower + upper);
-    const fMid = args.evaluate(mid);
-    if (!Number.isFinite(fMid)) return { root: Number.NaN, converged: false };
-
-    best = mid;
-    const width = Math.max(1, Math.abs(mid));
-    if (Math.abs(fMid) <= args.relativeTolerance) {
-      return { root: mid, converged: true };
-    }
-    if ((upper - lower) / width < args.relativeTolerance) {
-      return { root: mid, converged: true };
-    }
-
-    if (fMid < 0) {
-      lower = mid;
-      fLower = fMid;
-    } else {
-      upper = mid;
-      fUpper = fMid;
-    }
-    if (!Number.isFinite(fLower) || !Number.isFinite(fUpper)) {
+  try {
+    const root = findRootBisection(
+      args.evaluate,
+      lower,
+      upper,
+      args.relativeTolerance,
+      args.maxIterations
+    );
+    if (!Number.isFinite(root)) {
       return { root: Number.NaN, converged: false };
     }
+    const fRoot = args.evaluate(root);
+    const widthScale = Math.max(1, Math.abs(root));
+    const converged =
+      Number.isFinite(fRoot) &&
+      (Math.abs(fRoot) <= args.relativeTolerance || (upper - lower) / widthScale < args.relativeTolerance);
+    return { root, converged };
+  } catch {
+    return { root: Number.NaN, converged: false };
   }
-
-  return { root: best, converged: false };
 }
 
 function electronPressureFiniteTNonRelDynePerCm2(args: {

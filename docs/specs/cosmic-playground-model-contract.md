@@ -50,6 +50,13 @@ For any new `packages/physics/src/*Model.ts`:
   - one limiting-case check
   - one sanity invariant check (monotonicity, bounds, symmetry, etc., as appropriate)
 
+### 5) Numerical methods must come from one shared source
+
+For reusable numerical methods (for example: clamp, interpolation, integration, root-finding):
+- use `@cosmic/math` (`packages/math/src/math.ts`) as the canonical implementation.
+- do not copy generic numerical routines into demo files or physics models.
+- if a new reusable numerical routine is needed, add it to `@cosmic/math` with tests first.
+
 ## Machine enforcement
 
 This contract is enforced (partially) by:
@@ -69,4 +76,3 @@ and must stay green as part of:
 - [ ] Build + base-path e2e gates pass:
   - `corepack pnpm build`
   - `CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e`
-
