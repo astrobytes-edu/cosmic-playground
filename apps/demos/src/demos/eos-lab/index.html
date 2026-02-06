@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EOS Lab — Cosmic Playground</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
+  </head>
+  <body>
+    <canvas class="cp-starfield" aria-hidden="true"></canvas>
+    <div
+      id="cp-demo"
+      class="cp-layer-instrument cp-demo"
+      data-shell="triad"
+      aria-label="Equation of state lab instrument"
+    >
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Equation of State Lab</div>
+        <div class="cp-panel-body">
+          <p class="cp-muted">
+            Compare stellar pressure channels with explicit cgs units and assumption framing.
+          </p>
+
+          <div id="radiationClosureChip" class="cp-callout" data-kind="tip" role="note" aria-label="Radiation closure framing">
+            <strong id="radiationClosureLabel">LTE closure likely reasonable</strong>
+            <div id="radiationClosureNote">
+              Radiation pressure uses $P_{\rm rad}=aT^4/3$ in optically thick LTE-like conditions.
+            </div>
+          </div>
+
+          <label class="control">
+            <span>Temperature $T$ (K)</span>
+            <input
+              id="tempSlider"
+              type="range"
+              min="0"
+              max="1000"
+              value="500"
+              step="1"
+              data-tooltip-source="#tempValue"
+            />
+            <span class="control__value"><span id="tempValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Density $\rho$ (g cm$^{-3}$)</span>
+            <input
+              id="rhoSlider"
+              type="range"
+              min="0"
+              max="1000"
+              value="500"
+              step="1"
+              data-tooltip-source="#rhoValue"
+            />
+            <span class="control__value"><span id="rhoValue"></span></span>
+          </label>
+
+          <div class="presets">
+            <div class="presets__label">Preset states (ASTR 201)</div>
+            <div id="presetButtons" class="presets__grid" role="group" aria-label="Preset states">
+              <button class="cp-action cp-action--ghost preset" type="button" data-preset-id="solar-core">Solar core</button>
+              <button class="cp-action cp-action--ghost preset" type="button" data-preset-id="solar-envelope">Solar envelope</button>
+              <button class="cp-action cp-action--ghost preset" type="button" data-preset-id="massive-core">Massive-star core</button>
+              <button class="cp-action cp-action--ghost preset" type="button" data-preset-id="red-giant-envelope">Red giant envelope</button>
+              <button class="cp-action cp-action--ghost preset" type="button" data-preset-id="white-dwarf-core">White dwarf core</button>
+              <button class="cp-action cp-action--ghost preset" type="button" data-preset-id="brown-dwarf-interior">Brown dwarf interior</button>
+            </div>
+            <p id="presetNote" class="cp-muted"></p>
+          </div>
+
+          <button id="stationMode" class="cp-action" type="button">Station mode</button>
+          <button id="help" class="cp-action cp-action--ghost" type="button">Help / shortcuts</button>
+
+          <button id="copyResults" class="cp-action" type="button">Copy results</button>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+
+          <div class="cp-actions">
+            <a class="cp-button" href="../../exhibits/eos-lab/">Open exhibit</a>
+            <a class="cp-button cp-button--outline" href="../../stations/eos-lab/">Station card</a>
+            <a class="cp-button cp-button--outline" href="../../instructor/eos-lab/">Instructor notes</a>
+          </div>
+        </div>
+      </aside>
+
+      <section class="cp-demo__stage cp-stage" aria-label="Pressure comparison stage">
+        <div class="pressure-grid" aria-live="off">
+          <article id="cardGas" class="pressure-card" data-tone="secondary">
+            <h2>$P_{\rm gas}$</h2>
+            <p class="pressure-card__value"><span id="pGasValue"></span> <span class="pressure-card__unit">dyne cm$^{-2}$</span></p>
+            <div class="pressure-card__bar" aria-hidden="true"><span id="pGasBar"></span></div>
+            <p class="pressure-card__hint">Thermal particle collisions; scales as $\rho T$.</p>
+          </article>
+
+          <article id="cardRadiation" class="pressure-card" data-tone="secondary">
+            <h2>$P_{\rm rad}$</h2>
+            <p class="pressure-card__value"><span id="pRadValue"></span> <span class="pressure-card__unit">dyne cm$^{-2}$</span></p>
+            <div class="pressure-card__bar" aria-hidden="true"><span id="pRadBar"></span></div>
+            <p class="pressure-card__hint">Photon momentum flux; scales as $T^4$ under LTE closure.</p>
+          </article>
+
+          <article id="cardDegeneracy" class="pressure-card" data-tone="secondary">
+            <h2>$P_{\rm deg,e}$</h2>
+            <p class="pressure-card__value"><span id="pDegValue"></span> <span class="pressure-card__unit">dyne cm$^{-2}$</span></p>
+            <div class="pressure-card__bar" aria-hidden="true"><span id="pDegBar"></span></div>
+            <p class="pressure-card__hint">Pauli exclusion support; depends strongly on electron density.</p>
+          </article>
+        </div>
+
+        <div class="stage-summary">
+          <p><strong>Total pressure $P_{\rm tot}$:</strong> <span id="pTotalValue"></span> dyne cm$^{-2}$</p>
+          <p><strong>Dominant channel:</strong> <span id="dominantChannel"></span></p>
+        </div>
+      </section>
+
+      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
+        <div class="cp-panel-header">Readouts</div>
+        <div class="cp-panel-body">
+          <div class="cp-readout">
+            <div class="cp-readout__label">$\mu$ (mean mass per particle in $m_u$)</div>
+            <div class="cp-readout__value">
+              <span id="muValue"></span>
+              <span class="cp-readout__unit">m_u</span>
+            </div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">$\mu_e$ (mean mass per electron in $m_u$)</div>
+            <div class="cp-readout__value">
+              <span id="muEValue"></span>
+              <span class="cp-readout__unit">m_u</span>
+            </div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">$\beta=P_{\rm gas}/P_{\rm tot}$</div>
+            <div class="cp-readout__value"><span id="betaValue"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">$P_{\rm rad}/P_{\rm gas}$</div>
+            <div class="cp-readout__value">
+              <span id="radGasValue"></span>
+              <span class="cp-readout__unit">ratio</span>
+            </div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">$P_{\rm deg,e}/P_{\rm tot}$</div>
+            <div class="cp-readout__value"><span id="degTotalValue"></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">$\chi_{\rm deg}=T/T_F$</div>
+            <div class="cp-readout__value"><span id="chiDegValue"></span></div>
+            <div class="cp-muted" id="degRegimeValue"></div>
+          </div>
+          <div class="cp-notice">
+            <h3>Composition interpretation</h3>
+            <p class="cp-muted">
+              Smaller $\mu$ means more particles per gram, so gas pressure increases at fixed $(\rho,T)$.
+            </p>
+          </div>
+        </div>
+      </aside>
+
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">3 prompts</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>At fixed density, radiation pressure climbs much faster with $T$ than gas pressure.</li>
+                <li>At high density, electron degeneracy can dominate even when thermal pressure is large.</li>
+                <li>Composition shifts $\mu$ and $\mu_e$, changing both gas and degeneracy channels.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">cgs + assumptions</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Gas pressure: $P_{\rm gas}=\rho k_B T/(\mu m_u)$.</li>
+                <li>Radiation pressure: $P_{\rm rad}=\eta_{\rm rad} aT^4/3$ (default $\eta_{\rm rad}=1$).</li>
+                <li>Electron degeneracy uses a zero-$T$ Chandrasekhar EOS baseline with diagnostics in $x_F$ and $T/T_F$.</li>
+                <li>$\mu$ and $\mu_e$ for fully ionized mixtures: $\mu^{-1}\approx2X+\frac{3}{4}Y+\frac{1}{2}Z$, $\mu_e^{-1}\approx X+\frac{Y}{2}+\frac{Z}{2}$.</li>
+                <li>
+                  Future hook: the kernel accepts additional pressure terms and alternate degeneracy providers for finite-$T$ Fermi and neutron extensions.
+                </li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Deep Dive: Gas Pressure</span>
+              <span class="cp-accordion__meta">cause + limits</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p><strong>Physical cause:</strong> momentum transfer from thermal particle collisions.</p>
+              <p><strong>Limits:</strong> assumes ideal fully ionized plasma; no Coulomb or partial-ionization corrections.</p>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Deep Dive: Radiation Pressure</span>
+              <span class="cp-accordion__meta">cause + limits</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p><strong>Physical cause:</strong> photon momentum flux from a near-thermal radiation field.</p>
+              <p><strong>Limits:</strong> LTE closure can fail in optically thin or strongly non-equilibrium regimes.</p>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Deep Dive: Degeneracy Pressure</span>
+              <span class="cp-accordion__meta">cause + limits</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p><strong>Physical cause:</strong> Pauli exclusion fills momentum states even at low temperature.</p>
+              <p><strong>Limits:</strong> v1 uses zero-$T$ electron degeneracy; finite-$T$ and neutron channels are deferred plugins.</p>
+            </div>
+          </details>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

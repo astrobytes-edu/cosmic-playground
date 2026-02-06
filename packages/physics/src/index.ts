@@ -10,6 +10,16 @@ export { ParallaxDistanceModel } from "./parallaxDistanceModel";
 export { PhotonModel } from "./photonModel";
 export { RetrogradeMotionModel } from "./retrogradeMotionModel";
 export { SeasonsModel } from "./seasonsModel";
+export { StellarEosModel } from "./stellarEosModel";
+export type {
+  AdditionalPressureTerm,
+  DegeneracyRegime,
+  PressureDominance,
+  RadiationClosureAssessment,
+  StellarCompositionFractions,
+  StellarEosInputCgs,
+  StellarEosStateCgs
+} from "./stellarEosModel";
 export { TelescopeResolutionModel } from "./telescopeResolutionModel";
 export { TwoBodyAnalytic } from "./twoBodyAnalytic";
 export { solarDeclinationDegFromDayOfYear } from "./riseSetModel";

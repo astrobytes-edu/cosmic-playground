@@ -1,0 +1,131 @@
+@import "../../shared/stub-demo.css";
+
+.control {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.control__value {
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.presets {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.presets__label {
+  color: var(--cp-muted);
+  font-size: 0.9rem;
+}
+
+.presets__grid {
+  display: grid;
+  gap: var(--cp-space-1);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.preset.cp-action {
+  padding: var(--cp-space-1) var(--cp-space-2);
+  font-size: 0.82rem;
+}
+
+.preset.is-active {
+  border-color: color-mix(in srgb, var(--cp-border) 52%, var(--cp-accent));
+  background: color-mix(in srgb, var(--cp-bg2) 78%, transparent);
+}
+
+.pressure-grid {
+  display: grid;
+  gap: var(--cp-space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+}
+
+.pressure-card {
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-r-3);
+  background: color-mix(in srgb, var(--cp-bg1) 92%, transparent);
+  padding: var(--cp-space-3);
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.pressure-card h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.pressure-card__value {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--cp-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.pressure-card__unit {
+  color: var(--cp-muted);
+  font-size: 0.85rem;
+}
+
+.pressure-card__bar {
+  border-radius: 999px;
+  border: 1px solid var(--cp-border);
+  background: var(--cp-bg2);
+  height: 12px;
+  overflow: hidden;
+}
+
+.pressure-card__bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: color-mix(in srgb, var(--cp-accent) 65%, var(--cp-glow-teal));
+}
+
+.pressure-card__hint {
+  margin: 0;
+  color: var(--cp-muted);
+  font-size: 0.88rem;
+}
+
+.pressure-card[data-tone="dominant"] {
+  border-color: color-mix(in srgb, var(--cp-border) 50%, var(--cp-success));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cp-success) 24%, transparent);
+}
+
+.pressure-card[data-tone="secondary"] {
+  border-color: color-mix(in srgb, var(--cp-border) 58%, var(--cp-accent));
+}
+
+.pressure-card[data-tone="minor"] {
+  opacity: 0.88;
+}
+
+.stage-summary {
+  margin-top: var(--cp-space-3);
+  padding: var(--cp-space-3);
+  border-radius: var(--cp-r-3);
+  border: 1px solid var(--cp-border);
+  background: color-mix(in srgb, var(--cp-bg1) 88%, transparent);
+  color: var(--cp-text);
+}
+
+.stage-summary p {
+  margin: 0;
+}
+
+.stage-summary p + p {
+  margin-top: var(--cp-space-2);
+}
+
+@media (max-width: 980px) {
+  .pressure-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .presets__grid {
+    grid-template-columns: 1fr;
+  }
+}
