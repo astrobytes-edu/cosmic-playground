@@ -17,6 +17,10 @@ const port = Number(process.env.PLAYWRIGHT_PORT ?? "4321");
 
 export default defineConfig({
   testDir: "./tests",
+  /* Platform-independent snapshots: strip the OS suffix so macOS and Linux
+     share the same baseline files. The per-test maxDiffPixelRatio absorbs
+     minor font-rendering differences between platforms. */
+  snapshotPathTemplate: "{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}{ext}",
   use: {
     baseURL: `http://127.0.0.1:${port}${basePath}`
   },
