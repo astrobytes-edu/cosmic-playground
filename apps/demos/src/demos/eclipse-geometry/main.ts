@@ -1260,5 +1260,6 @@ document.addEventListener("touchend", handleDragEnd);
 
 render();
 
-initStarfield();
+const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
+if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 initMath(document);
