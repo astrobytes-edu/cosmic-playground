@@ -1,5 +1,5 @@
 import { AstroConstants, EclipseGeometryModel } from "@cosmic/physics";
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 
 const setNewMoonEl = document.querySelector<HTMLButtonElement>("#setNewMoon");
@@ -433,9 +433,9 @@ function render() {
   distanceValue.textContent = `${state.earthMoonDistanceKm.toLocaleString()} km`;
 
   phaseLabel.textContent = phase.label;
-  phaseAngle.textContent = `${formatNumber(derived.phaseAngleDeg, 1)} deg`;
-  absBeta.textContent = `${formatNumber(derived.absBetaDeg, 3)} deg`;
-  nearestNode.textContent = `${formatNumber(derived.nearestNodeDeg, 2)} deg`;
+  phaseAngle.textContent = formatNumber(derived.phaseAngleDeg, 1);
+  absBeta.textContent = formatNumber(derived.absBetaDeg, 3);
+  nearestNode.textContent = formatNumber(derived.nearestNodeDeg, 2);
 
   solarOutcome.textContent = outcomeLabel(derived.solarType);
   lunarOutcome.textContent = outcomeLabel(derived.lunarType);
@@ -1294,4 +1294,5 @@ distancePreset.addEventListener("change", () => {
 
 render();
 
+initStarfield();
 initMath(document);

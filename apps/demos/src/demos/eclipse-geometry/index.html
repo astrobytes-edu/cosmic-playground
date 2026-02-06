@@ -129,6 +129,7 @@
       </aside>
 
       <section class="cp-demo__stage cp-stage stage" aria-label="Visualization stage">
+        <canvas class="cp-starfield" aria-hidden="true"></canvas>
         <svg
           id="eclipseStage"
           class="stage__svg"
@@ -138,12 +139,12 @@
         >
           <defs>
             <radialGradient id="earthGlow" cx="40%" cy="30%">
-              <stop offset="0%" stop-color="var(--cp-chart-1)" stop-opacity="0.95" />
-              <stop offset="100%" stop-color="var(--cp-chart-1)" stop-opacity="0.3" />
+              <stop offset="0%" stop-color="var(--cp-celestial-earth)" stop-opacity="0.95" />
+              <stop offset="100%" stop-color="var(--cp-celestial-earth)" stop-opacity="0.3" />
             </radialGradient>
             <radialGradient id="moonGlow" cx="40%" cy="30%">
-              <stop offset="0%" stop-color="var(--cp-text)" stop-opacity="0.95" />
-              <stop offset="100%" stop-color="var(--cp-text)" stop-opacity="0.3" />
+              <stop offset="0%" stop-color="var(--cp-celestial-moon)" stop-opacity="0.95" />
+              <stop offset="100%" stop-color="var(--cp-celestial-moon)" stop-opacity="0.3" />
             </radialGradient>
           </defs>
 
@@ -196,15 +197,15 @@
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Phase angle $\Delta$</div>
-            <div class="cp-readout__value"><span id="phaseAngle"></span></div>
+            <div class="cp-readout__value"><span id="phaseAngle"></span> <span class="cp-readout__unit">deg</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">$|\beta|$ (ecliptic latitude)</div>
-            <div class="cp-readout__value"><span id="absBeta"></span></div>
+            <div class="cp-readout__value"><span id="absBeta"></span> <span class="cp-readout__unit">deg</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Nearest node distance</div>
-            <div class="cp-readout__value"><span id="nearestNode"></span></div>
+            <div class="cp-readout__value"><span id="nearestNode"></span> <span class="cp-readout__unit">deg</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Solar outcome</div>

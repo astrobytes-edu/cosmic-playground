@@ -1,5 +1,21 @@
 @import "../../shared/stub-demo.css";
 
+.cp-demo__controls {
+  animation: cp-slide-up 0.5s ease-out both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in 0.6s ease-out 0.1s both;
+}
+
+.cp-demo__readouts {
+  animation: cp-slide-up 0.5s ease-out 0.2s both;
+}
+
+.cp-demo__drawer {
+  animation: cp-fade-in 0.5s ease-out 0.3s both;
+}
+
 .control {
   display: grid;
   gap: 8px;
@@ -53,7 +69,7 @@
 
 .stage__orbit {
   fill: none;
-  stroke: color-mix(in srgb, var(--cp-accent3) 34%, transparent);
+  stroke: color-mix(in srgb, var(--cp-celestial-orbit) 34%, transparent);
   stroke-width: 2px;
 }
 
@@ -65,14 +81,16 @@
 
 .stage__earth {
   fill: url(#earthGlow);
-  stroke: color-mix(in srgb, var(--cp-accent3) 58%, transparent);
+  stroke: color-mix(in srgb, var(--cp-celestial-earth) 58%, transparent);
   stroke-width: 2px;
+  filter: drop-shadow(var(--cp-glow-planet));
 }
 
 .stage__moon {
   fill: url(#moonGlow);
-  stroke: color-mix(in srgb, var(--cp-text) 35%, transparent);
+  stroke: color-mix(in srgb, var(--cp-celestial-moon) 35%, transparent);
   stroke-width: 2px;
+  filter: drop-shadow(var(--cp-glow-moon));
 }
 
 .stage__node {
@@ -80,14 +98,14 @@
 }
 
 .stage__betaLine {
-  stroke: var(--cp-warning);
+  stroke: var(--cp-accent-rose);
   stroke-opacity: 0.9;
   stroke-width: 3px;
   stroke-linecap: round;
 }
 
 .stage__betaAxis {
-  stroke: color-mix(in srgb, var(--cp-accent3) 34%, transparent);
+  stroke: color-mix(in srgb, var(--cp-celestial-orbit) 34%, transparent);
   stroke-width: 2px;
 }
 
@@ -98,6 +116,6 @@
 }
 
 .stage__betaMarker {
-  fill: var(--cp-warning);
+  fill: var(--cp-accent-rose);
   fill-opacity: 0.95;
 }
