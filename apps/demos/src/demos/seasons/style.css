@@ -118,3 +118,23 @@
 .stage__markerObs {
   fill: color-mix(in srgb, var(--cp-text) 85%, transparent);
 }
+
+/* -- Entry animations -------------------------------- */
+.cp-demo__controls {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 1);
+}
+
+.cp-demo__readouts {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 2);
+}
+
+.cp-demo__drawer {
+  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 3);
+}
