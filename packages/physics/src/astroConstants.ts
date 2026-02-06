@@ -81,6 +81,19 @@ export const AstroConstants = {
     //   G = 4π² AU³ / yr² / M☉
     // so that for a 1 M☉ star: P² = a³ with P in years, a in AU.
     G_AU3_YR2_PER_SOLAR_MASS: 4 * Math.PI * Math.PI
+  },
+
+  MOON: {
+    // Present-day mean lunar recession rate.
+    // Source: laser ranging, Williams & Boggs (2016).
+    MEAN_RECESSION_CM_PER_YEAR: 3.8,
+    // Present-day mean Earth-Moon distance (km).
+    DISTANCE_TODAY_KM: 384400,
+    // Mean lunar diameter (km).
+    DIAMETER_KM: 3474,
+    // Angular size extremes observed from Earth (deg).
+    ORBIT_MIN_ANGULAR_SIZE_DEG: 0.49,
+    ORBIT_MAX_ANGULAR_SIZE_DEG: 0.56
   }
 } as const;
 

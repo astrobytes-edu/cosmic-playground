@@ -59,3 +59,48 @@ describe("AngularSizeModel", () => {
   });
 });
 
+describe("Moon orbit model", () => {
+  it("perigee distance is less than apogee", () => {
+    const { perigeeKm, apogeeKm } = AngularSizeModel.moonOrbitPeigeeApogeeKm();
+    expect(perigeeKm).toBeLessThan(apogeeKm);
+    expect(perigeeKm).toBeGreaterThan(350000);
+    expect(apogeeKm).toBeLessThan(420000);
+  });
+
+  it("orbit angle 0 deg returns perigee distance", () => {
+    const { perigeeKm } = AngularSizeModel.moonOrbitPeigeeApogeeKm();
+    const d = AngularSizeModel.moonDistanceAtOrbitAngleDeg(0);
+    expect(Math.abs(d - perigeeKm)).toBeLessThan(1);
+  });
+
+  it("orbit angle 180 deg returns apogee distance", () => {
+    const { apogeeKm } = AngularSizeModel.moonOrbitPeigeeApogeeKm();
+    const d = AngularSizeModel.moonDistanceAtOrbitAngleDeg(180);
+    expect(Math.abs(d - apogeeKm)).toBeLessThan(1);
+  });
+
+  it("round-trips angle -> distance -> angle", () => {
+    for (const angle of [0, 45, 90, 135, 180]) {
+      const d = AngularSizeModel.moonDistanceAtOrbitAngleDeg(angle);
+      const back = AngularSizeModel.orbitAngleDegFromMoonDistance(d);
+      expect(Math.abs(back - angle)).toBeLessThan(0.01);
+    }
+  });
+
+  it("moonTimeMyrFromDistanceKm returns 0 for today's distance", () => {
+    const t = AngularSizeModel.moonTimeMyrFromDistanceKm(384400);
+    expect(Math.abs(t)).toBeLessThan(0.01);
+  });
+
+  it("moonTimeMyrFromDistanceKm is consistent with moonDistanceKmFromRecession", () => {
+    const timeMyr = 500;
+    const d = AngularSizeModel.moonDistanceKmFromRecession({
+      distanceTodayKm: 384400,
+      recessionCmPerYr: 3.8,
+      timeMyr
+    });
+    const backTime = AngularSizeModel.moonTimeMyrFromDistanceKm(d);
+    expect(Math.abs(backTime - timeMyr)).toBeLessThan(0.1);
+  });
+});
+

@@ -1,7 +1,7 @@
 import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
-import { AngularSizeModel, AstroUnits } from "@cosmic/physics";
+import { AngularSizeModel, AstroConstants, AstroUnits } from "@cosmic/physics";
 
 const presetEl = document.querySelector<HTMLSelectElement>("#preset");
 const distanceSliderEl = document.querySelector<HTMLInputElement>("#distanceSlider");
@@ -142,24 +142,8 @@ const DISTANCE_MAX_KM = 1e20; // ~10 million ly
 const DIAMETER_MIN_KM = 0.00001; // 1 cm
 const DIAMETER_MAX_KM = 1e19; // large galaxy scale
 
-// Moon model controls (teaching defaults)
-const MOON_ORBIT_MIN_ANGULAR_SIZE_DEG = 0.49;
-const MOON_ORBIT_MAX_ANGULAR_SIZE_DEG = 0.56;
-const MOON_RECESSION_CM_PER_YEAR = 3.8; // mean present-day value; varies with time
-const MOON_DISTANCE_TODAY_KM = AngularSizeModel.presets.moon.distance;
-const MOON_DIAMETER_KM = AngularSizeModel.presets.moon.diameter;
-
-const moonOrbit = (() => {
-  const perigeeKm = AngularSizeModel.distanceForAngularDiameterDeg({
-    diameterKm: MOON_DIAMETER_KM,
-    angularDiameterDeg: MOON_ORBIT_MAX_ANGULAR_SIZE_DEG
-  });
-  const apogeeKm = AngularSizeModel.distanceForAngularDiameterDeg({
-    diameterKm: MOON_DIAMETER_KM,
-    angularDiameterDeg: MOON_ORBIT_MIN_ANGULAR_SIZE_DEG
-  });
-  return { perigeeKm, apogeeKm };
-})();
+// Moon orbit distances (cached from physics model)
+const moonOrbit = AngularSizeModel.moonOrbitPeigeeApogeeKm();
 
 type MoonTimeMode = "orbit" | "recession";
 
@@ -231,28 +215,6 @@ function describeMoonRecessionTime(timeMyr: number): string {
   return `+${t} Myr`;
 }
 
-function getMoonDistanceAtOrbitAngle(angleDeg: number): number {
-  const phaseRad = AstroUnits.degToRad(angleDeg);
-  const w = (Math.cos(phaseRad) + 1) / 2; // 1 at 0 deg (perigee), 0 at 180 deg (apogee)
-  return moonOrbit.apogeeKm + w * (moonOrbit.perigeeKm - moonOrbit.apogeeKm);
-}
-
-function orbitAngleFromMoonDistance(distanceKmValue: number): number {
-  const denom = moonOrbit.perigeeKm - moonOrbit.apogeeKm;
-  if (!(denom > 0)) return 0;
-  const w = (distanceKmValue - moonOrbit.apogeeKm) / denom;
-  const clampedW = clamp(w, 0, 1);
-  const cos = 2 * clampedW - 1;
-  const angleRad = Math.acos(clamp(cos, -1, 1));
-  return AstroUnits.radToDeg(angleRad);
-}
-
-function moonTimeMyrFromDistance(distanceKmValue: number): number {
-  const kmPerMyr = MOON_RECESSION_CM_PER_YEAR * 10;
-  if (kmPerMyr === 0) return 0;
-  return (distanceKmValue - MOON_DISTANCE_TODAY_KM) / kmPerMyr;
-}
-
 function setMoonTimeMode(next: MoonTimeMode) {
   state.moonTimeMode = next;
   moonModeOrbit.checked = next === "orbit";
@@ -261,12 +223,12 @@ function setMoonTimeMode(next: MoonTimeMode) {
   if (next === "orbit") {
     moonOrbitRow.hidden = false;
     moonRecessionRow.hidden = true;
-    state.moonOrbitAngleDeg = orbitAngleFromMoonDistance(state.distanceKm);
+    state.moonOrbitAngleDeg = AngularSizeModel.orbitAngleDegFromMoonDistance(state.distanceKm);
     moonOrbitAngle.value = String(Math.round(state.moonOrbitAngleDeg));
   } else {
     moonOrbitRow.hidden = true;
     moonRecessionRow.hidden = false;
-    state.moonRecessionTimeMyr = moonTimeMyrFromDistance(state.distanceKm);
+    state.moonRecessionTimeMyr = AngularSizeModel.moonTimeMyrFromDistanceKm(state.distanceKm);
     moonRecessionTime.value = String(Math.round(state.moonRecessionTimeMyr / 10) * 10);
     state.moonRecessionTimeMyr = Number(moonRecessionTime.value);
   }
@@ -278,15 +240,15 @@ function applyMoonControlsToDistance() {
   if (state.moonTimeMode === "orbit") {
     const angleDeg = clamp(Number(moonOrbitAngle.value), 0, 360);
     state.moonOrbitAngleDeg = angleDeg;
-    state.distanceKm = getMoonDistanceAtOrbitAngle(angleDeg);
+    state.distanceKm = AngularSizeModel.moonDistanceAtOrbitAngleDeg(angleDeg);
     return;
   }
 
   const timeMyr = clamp(Number(moonRecessionTime.value), -1000, 1000);
   state.moonRecessionTimeMyr = timeMyr;
   state.distanceKm = AngularSizeModel.moonDistanceKmFromRecession({
-    distanceTodayKm: MOON_DISTANCE_TODAY_KM,
-    recessionCmPerYr: MOON_RECESSION_CM_PER_YEAR,
+    distanceTodayKm: AstroConstants.MOON.DISTANCE_TODAY_KM,
+    recessionCmPerYr: AstroConstants.MOON.MEAN_RECESSION_CM_PER_YEAR,
     timeMyr
   });
 }
@@ -333,7 +295,7 @@ function setFromPreset(presetId: keyof typeof AngularSizeModel.presets) {
     state.moonTimeMode = "orbit";
     state.moonOrbitAngleDeg = 0;
     state.moonRecessionTimeMyr = 0;
-    state.distanceKm = getMoonDistanceAtOrbitAngle(0);
+    state.distanceKm = AngularSizeModel.moonDistanceAtOrbitAngleDeg(0);
   }
 }
 
@@ -433,7 +395,7 @@ function exportResults(thetaDegValue: number): ExportPayloadV1 {
 
     if (state.moonTimeMode === "recession") {
       notes.push(
-        `Toy model: linear distance change using a constant recession rate of ${MOON_RECESSION_CM_PER_YEAR} cm/yr.`
+        `Toy model: linear distance change using a constant recession rate of ${AstroConstants.MOON.MEAN_RECESSION_CM_PER_YEAR} cm/yr.`
       );
     }
   }
@@ -578,8 +540,8 @@ const demoModes = createDemoModes({
         getRows: () => {
           const distanceAtMyr = (t: number) =>
             AngularSizeModel.moonDistanceKmFromRecession({
-              distanceTodayKm: MOON_DISTANCE_TODAY_KM,
-              recessionCmPerYr: MOON_RECESSION_CM_PER_YEAR,
+              distanceTodayKm: AstroConstants.MOON.DISTANCE_TODAY_KM,
+              recessionCmPerYr: AstroConstants.MOON.MEAN_RECESSION_CM_PER_YEAR,
               timeMyr: t
             });
 
@@ -676,7 +638,7 @@ function setState(next: unknown): void {
     if (state.moonTimeMode === "orbit" && Number.isFinite(obj.moonOrbitAngleDeg)) {
       state.moonOrbitAngleDeg = clamp(obj.moonOrbitAngleDeg as number, 0, 360);
       moonOrbitAngle.value = String(Math.round(state.moonOrbitAngleDeg));
-      state.distanceKm = getMoonDistanceAtOrbitAngle(state.moonOrbitAngleDeg);
+      state.distanceKm = AngularSizeModel.moonDistanceAtOrbitAngleDeg(state.moonOrbitAngleDeg);
     }
 
     if (state.moonTimeMode === "recession" && Number.isFinite(obj.moonRecessionTimeMyr)) {
@@ -684,8 +646,8 @@ function setState(next: unknown): void {
       moonRecessionTime.value = String(Math.round(state.moonRecessionTimeMyr / 10) * 10);
       state.moonRecessionTimeMyr = Number(moonRecessionTime.value);
       state.distanceKm = AngularSizeModel.moonDistanceKmFromRecession({
-        distanceTodayKm: MOON_DISTANCE_TODAY_KM,
-        recessionCmPerYr: MOON_RECESSION_CM_PER_YEAR,
+        distanceTodayKm: AstroConstants.MOON.DISTANCE_TODAY_KM,
+        recessionCmPerYr: AstroConstants.MOON.MEAN_RECESSION_CM_PER_YEAR,
         timeMyr: state.moonRecessionTimeMyr
       });
     }
@@ -918,10 +880,10 @@ distanceSlider.addEventListener("input", () => {
   state.distanceKm = logSliderToValue(Number(distanceSlider.value), DISTANCE_MIN_KM, DISTANCE_MAX_KM);
   if (state.presetId === "moon") {
     if (state.moonTimeMode === "orbit") {
-      state.moonOrbitAngleDeg = orbitAngleFromMoonDistance(state.distanceKm);
+      state.moonOrbitAngleDeg = AngularSizeModel.orbitAngleDegFromMoonDistance(state.distanceKm);
       moonOrbitAngle.value = String(Math.round(state.moonOrbitAngleDeg));
     } else {
-      state.moonRecessionTimeMyr = moonTimeMyrFromDistance(state.distanceKm);
+      state.moonRecessionTimeMyr = AngularSizeModel.moonTimeMyrFromDistanceKm(state.distanceKm);
       moonRecessionTime.value = String(Math.round(state.moonRecessionTimeMyr / 10) * 10);
       state.moonRecessionTimeMyr = Number(moonRecessionTime.value);
     }
@@ -947,7 +909,7 @@ moonModeRecession.addEventListener("change", () => {
 moonOrbitAngle.addEventListener("input", () => {
   if (state.presetId !== "moon") return;
   state.moonOrbitAngleDeg = clamp(Number(moonOrbitAngle.value), 0, 360);
-  state.distanceKm = getMoonDistanceAtOrbitAngle(state.moonOrbitAngleDeg);
+  state.distanceKm = AngularSizeModel.moonDistanceAtOrbitAngleDeg(state.moonOrbitAngleDeg);
   render();
 });
 
@@ -955,8 +917,8 @@ moonRecessionTime.addEventListener("input", () => {
   if (state.presetId !== "moon") return;
   state.moonRecessionTimeMyr = clamp(Number(moonRecessionTime.value), -1000, 1000);
   state.distanceKm = AngularSizeModel.moonDistanceKmFromRecession({
-    distanceTodayKm: MOON_DISTANCE_TODAY_KM,
-    recessionCmPerYr: MOON_RECESSION_CM_PER_YEAR,
+    distanceTodayKm: AstroConstants.MOON.DISTANCE_TODAY_KM,
+    recessionCmPerYr: AstroConstants.MOON.MEAN_RECESSION_CM_PER_YEAR,
     timeMyr: state.moonRecessionTimeMyr
   });
   render();

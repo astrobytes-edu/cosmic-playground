@@ -151,9 +151,49 @@ const presets = {
   }
 } as const;
 
+function moonOrbitPeigeeApogeeKm(): { perigeeKm: number; apogeeKm: number } {
+  const perigeeKm = distanceForAngularDiameterDeg({
+    diameterKm: AstroConstants.MOON.DIAMETER_KM,
+    angularDiameterDeg: AstroConstants.MOON.ORBIT_MAX_ANGULAR_SIZE_DEG
+  });
+  const apogeeKm = distanceForAngularDiameterDeg({
+    diameterKm: AstroConstants.MOON.DIAMETER_KM,
+    angularDiameterDeg: AstroConstants.MOON.ORBIT_MIN_ANGULAR_SIZE_DEG
+  });
+  return { perigeeKm, apogeeKm };
+}
+
+function moonDistanceAtOrbitAngleDeg(angleDeg: number): number {
+  const { perigeeKm, apogeeKm } = moonOrbitPeigeeApogeeKm();
+  const phaseRad = AstroUnits.degToRad(angleDeg);
+  const w = (Math.cos(phaseRad) + 1) / 2;
+  return apogeeKm + w * (perigeeKm - apogeeKm);
+}
+
+function orbitAngleDegFromMoonDistance(distanceKm: number): number {
+  const { perigeeKm, apogeeKm } = moonOrbitPeigeeApogeeKm();
+  const denom = perigeeKm - apogeeKm;
+  if (Math.abs(denom) < 1e-12) return 0;
+  const w = (distanceKm - apogeeKm) / denom;
+  const clampedW = Math.min(1, Math.max(0, w));
+  const cos = 2 * clampedW - 1;
+  const angleRad = Math.acos(Math.min(1, Math.max(-1, cos)));
+  return AstroUnits.radToDeg(angleRad);
+}
+
+function moonTimeMyrFromDistanceKm(distanceKm: number): number {
+  const kmPerMyr = AstroConstants.MOON.MEAN_RECESSION_CM_PER_YEAR * 10;
+  if (kmPerMyr === 0) return 0;
+  return (distanceKm - AstroConstants.MOON.DISTANCE_TODAY_KM) / kmPerMyr;
+}
+
 export const AngularSizeModel = {
   angularDiameterDeg,
   distanceForAngularDiameterDeg,
   moonDistanceKmFromRecession,
+  moonOrbitPeigeeApogeeKm,
+  moonDistanceAtOrbitAngleDeg,
+  orbitAngleDegFromMoonDistance,
+  moonTimeMyrFromDistanceKm,
   presets
 } as const;
