@@ -1,3 +1,19 @@
+/* ============================================
+   Demo Shell — Unified Composable Grid Layout
+   ============================================
+   One grid for ALL demos. Differences are expressed
+   through which *components* a demo includes, not
+   which *layout* it uses. Missing components (e.g.
+   no .cp-playbar) collapse their grid row to 0.
+
+   Grid areas:
+     sidebar  — physics controls (left column)
+     viz      — visualization SVG/Canvas
+     readouts — pinned readout strip
+     playbar  — animation transport (optional)
+     shelf    — tabbed content (What to Notice, etc.)
+   ============================================ */
+
 /* --- Starfield canvas (sits behind all demo content) --- */
 .cp-starfield {
   position: fixed;
@@ -8,29 +24,30 @@
   height: 100%;
 }
 
+/* --- Unified grid (>= 1024px) --- */
 .cp-demo {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  grid-template-columns: clamp(280px, 25vw, 360px) minmax(0, 1fr);
+  grid-template-rows: 1fr auto auto auto;
   grid-template-areas:
-    "controls stage"
-    "controls readouts"
-    "controls drawer";
-  gap: var(--cp-space-4);
+    "sidebar  viz"
+    "sidebar  playbar"
+    "sidebar  readouts"
+    "shelf    shelf";
+  gap: var(--cp-space-3);
   padding: var(--cp-space-4);
   min-height: 100svh;
   align-items: start;
 }
 
-.cp-demo[data-shell="triad"] {
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr) minmax(260px, 320px);
-  grid-template-areas:
-    "controls stage readouts"
-    "controls drawer readouts";
-}
+/* --- Grid area mappings --- */
 
-.cp-demo[data-shell="triad"] .cp-demo__readouts {
+/* Sidebar: physics controls (sticky, scrollable) */
+.cp-demo__controls,
+.cp-demo__sidebar {
+  grid-area: sidebar;
   position: sticky;
   top: var(--cp-space-4);
   align-self: start;
@@ -40,61 +57,49 @@
   flex-direction: column;
 }
 
-.cp-demo[data-shell="triad"] .cp-demo__readouts .cp-panel-body {
-  overflow: auto;
-}
-
-.cp-demo[data-shell="viz-first"] {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-areas:
-    "stage stage"
-    "controls readouts"
-    "drawer drawer";
-}
-
-.cp-demo[data-shell="viz-first"] .cp-demo__controls {
-  position: static;
-  max-height: none;
-  overflow: visible;
-}
-
-.cp-demo__controls {
-  grid-area: controls;
-  position: sticky;
-  top: var(--cp-space-4);
-  align-self: start;
-  max-height: calc(100svh - (2 * var(--cp-space-4)));
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
+/* Stage: visualization area */
 .cp-demo__stage {
-  grid-area: stage;
+  grid-area: viz;
   min-width: 0;
   min-height: clamp(420px, 70svh, 820px);
 }
 
+/* Readouts: below stage (old class or new strip component) */
 .cp-demo__readouts {
   grid-area: readouts;
   min-width: 0;
 }
 
-.cp-demo__drawer {
-  grid-area: drawer;
+/* Playbar: animation transport (collapses to 0 when absent) */
+/* (styled in components/playbar.css, grid-area set there) */
+
+/* Shelf / Drawer: tabbed content below everything.
+   position: relative + z-index ensures the shelf layers ABOVE the
+   sticky sidebar when they overlap during scroll.
+   Background prevents the sidebar from bleeding through.           */
+.cp-demo__drawer,
+.cp-demo__shelf {
+  grid-area: shelf;
   min-width: 0;
+  position: relative;
+  z-index: 2;
+  background: var(--cp-bg1);
 }
 
-.cp-demo__controls .cp-panel-body {
+/* --- Sidebar internals --- */
+.cp-demo__controls .cp-panel-body,
+.cp-demo__sidebar .cp-panel-body {
   overflow: auto;
 }
 
+/* --- Readouts grid (for old-style readout panels) --- */
 .cp-demo__readouts .cp-panel-body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--cp-space-3);
 }
 
+/* --- Stage surface --- */
 .cp-stage {
   background: var(--cp-bg1);
   border: 1px solid var(--cp-border);
@@ -103,6 +108,7 @@
   overflow: hidden;
 }
 
+/* --- Drawer surface (transparent, for accordion stacks) --- */
 .cp-drawer {
   background: transparent;
   border: 0;
@@ -111,6 +117,7 @@
   box-shadow: none;
 }
 
+/* --- Shared panel/accordion components --- */
 .cp-panels {
   display: grid;
   gap: var(--cp-space-3);
@@ -167,19 +174,39 @@
   padding-left: var(--cp-space-5);
 }
 
-/* Note: CSS custom properties can't be used in @media queries directly.
-   Using the raw value but documenting the token. */
+/* ============================================
+   Backward compatibility: data-shell attributes
+   ============================================
+   These map the old layout variants to the
+   unified grid. They are no-ops now but prevent
+   CSS errors in demos that still have the attribute.
+   Remove once all demos are migrated (Phase C).
+   ============================================ */
+.cp-demo[data-shell="triad"],
+.cp-demo[data-shell="viz-first"] {
+  /* Intentionally empty — unified grid handles all layouts */
+}
+
+/* ============================================
+   Mobile layout (< 1024px)
+   ============================================
+   Single-column stack. Bottom sheet replaces
+   sidebar on mobile once demos are migrated
+   (Phase C). Until then, controls stack below.
+   ============================================ */
 @media (max-width: 1024px) { /* --cp-bp-lg */
   .cp-demo {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "stage"
+      "viz"
+      "playbar"
       "readouts"
-      "controls"
-      "drawer";
+      "sidebar"
+      "shelf";
   }
 
-  .cp-demo__controls {
+  .cp-demo__controls,
+  .cp-demo__sidebar {
     position: static;
     max-height: none;
     overflow: visible;
@@ -187,19 +214,5 @@
 
   .cp-demo__stage {
     min-height: clamp(360px, 56svh, 560px);
-  }
-
-  .cp-demo__readouts {
-    /* layout set by grid areas */
-  }
-
-  .cp-demo__drawer {
-    /* layout set by grid areas */
-  }
-
-  .cp-demo[data-shell="triad"] .cp-demo__readouts {
-    position: static;
-    max-height: none;
-    overflow: visible;
   }
 }

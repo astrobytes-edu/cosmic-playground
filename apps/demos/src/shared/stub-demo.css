@@ -4,6 +4,13 @@
 @import "@cosmic/theme/styles/demo-shell.css";
 @import "@cosmic/theme/styles/components/button.css";
 @import "@cosmic/theme/styles/components/form.css";
+@import "@cosmic/theme/styles/components/popover.css";
+@import "@cosmic/theme/styles/components/tabs.css";
+@import "@cosmic/theme/styles/components/playbar.css";
+@import "@cosmic/theme/styles/components/bottom-sheet.css";
+@import "@cosmic/theme/styles/components/utility-toolbar.css";
+@import "@cosmic/theme/styles/components/readout-strip.css";
+@import "@cosmic/theme/styles/components/scroll-shadow.css";
 
 .cp-panel-body {
   display: grid;

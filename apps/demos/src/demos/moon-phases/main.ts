@@ -3,14 +3,15 @@ import {
   createDemoModes,
   createInstrumentRuntime,
   initMath,
+  initPopovers,
   initStarfield,
+  initTabs,
   setLiveRegionText
 } from "@cosmic/runtime";
 import { MoonPhasesModel, moonRiseSetLocalTimeHours } from "@cosmic/physics";
 import { nextAngleDeg } from "./animation";
 import { buildMoonPhasesExport } from "./exportPayload";
-import { buildRiseSetViewModel } from "./riseSetViewModel";
-import { applyPresetDayOfYear, getAdvancedVisibility, getSkyViewVisibility } from "./riseSetUiState";
+import { applyPresetDayOfYear, getAdvancedVisibility, getRiseSetVisibility } from "./riseSetUiState";
 
 function requireEl<T extends Element>(element: T | null, name: string): T {
   if (!element) {
@@ -31,10 +32,6 @@ const angleReadoutEl = requireEl(
   document.querySelector<HTMLElement>("#angleReadout"),
   "#angleReadout"
 );
-const illumFractionEl = requireEl(
-  document.querySelector<HTMLElement>("#illumination-fraction"),
-  "#illumination-fraction"
-);
 const illumPercentEl = requireEl(
   document.querySelector<HTMLElement>("#illumination"),
   "#illumination"
@@ -42,22 +39,6 @@ const illumPercentEl = requireEl(
 const daysSinceNewEl = requireEl(
   document.querySelector<HTMLElement>("#days-since-new"),
   "#days-since-new"
-);
-const waxingWaningEl = requireEl(
-  document.querySelector<HTMLElement>("#waxing-waning"),
-  "#waxing-waning"
-);
-const riseTimeEl = requireEl(
-  document.querySelector<HTMLElement>("#rise-time"),
-  "#rise-time"
-);
-const setTimeEl = requireEl(
-  document.querySelector<HTMLElement>("#set-time"),
-  "#set-time"
-);
-const riseSetStatusEl = requireEl(
-  document.querySelector<HTMLElement>("#rise-set-status"),
-  "#rise-set-status"
 );
 
 const orbitalSvgEl = requireEl(
@@ -92,6 +73,11 @@ const earthShadowGroupEl = requireEl(
 const litPortionEl = requireEl(
   document.querySelector<SVGPathElement>("#lit-portion"),
   "#lit-portion"
+);
+
+const waxingWaningLabelEl = requireEl(
+  document.querySelector<HTMLSpanElement>("#waxing-waning-label"),
+  "#waxing-waning-label"
 );
 
 const timelineDirectionEl = requireEl(
@@ -195,29 +181,17 @@ const presetWinterEl = requireEl(
   document.querySelector<HTMLButtonElement>("#preset-winter"),
   "#preset-winter"
 );
-const skyToggleEl = requireEl(
-  document.querySelector<HTMLInputElement>("#toggle-sky-view"),
-  "#toggle-sky-view"
+const riseSetToggleEl = requireEl(
+  document.querySelector<HTMLInputElement>("#toggle-rise-set"),
+  "#toggle-rise-set"
 );
-const skyViewEl = requireEl(
-  document.querySelector<HTMLDivElement>("#sky-view"),
-  "#sky-view"
+const riseSetLineEl = requireEl(
+  document.querySelector<HTMLDivElement>("#rise-set-line"),
+  "#rise-set-line"
 );
-const skyViewPanelEl = requireEl(
-  document.querySelector<HTMLDivElement>("#sky-view-panel"),
-  "#sky-view-panel"
-);
-const skySummaryEl = requireEl(
-  document.querySelector<HTMLElement>("#sky-summary"),
-  "#sky-summary"
-);
-const skyRiseMarkerEl = requireEl(
-  document.querySelector<SVGCircleElement>("#sky-rise-marker"),
-  "#sky-rise-marker"
-);
-const skySetMarkerEl = requireEl(
-  document.querySelector<SVGCircleElement>("#sky-set-marker"),
-  "#sky-set-marker"
+const riseSetTextEl = requireEl(
+  document.querySelector<HTMLSpanElement>("#rise-set-text"),
+  "#rise-set-text"
 );
 const copyResultsEl = requireEl(
   document.querySelector<HTMLButtonElement>("#copyResults"),
@@ -239,9 +213,6 @@ const MOON_RADIUS = 15;
 const PHASE_MOON_RADIUS = 60;
 const SNAP_DEGREES = 5;
 const PHASE_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
-const HOURS_PER_DAY = 24;
-const SKY_VIEW_X_MIN = 20;
-const SKY_VIEW_X_MAX = 300;
 
 let moonAngleDeg = 0;
 let isAnimating = false;
@@ -251,7 +222,7 @@ let animationSpeed = Number(speedSelectEl.value) || 5;
 let advancedEnabled = advancedToggleEl.checked;
 let latitudeDeg = Number(latitudeInputEl.value) || 0;
 let dayOfYear = Number(dayOfYearInputEl.value) || 80;
-let skyViewEnabled = skyToggleEl.checked;
+let riseSetEnabled = riseSetToggleEl.checked;
 
 const runtime = createInstrumentRuntime({
   hasMathMode: false,
@@ -269,19 +240,36 @@ function shortestAngleDelta(fromDeg: number, toDeg: number): number {
 }
 
 function formatFraction(value: number): string {
-  if (!Number.isFinite(value)) return "—";
+  if (!Number.isFinite(value)) return "\u2014";
   return value.toFixed(3);
 }
 
 function formatDay(value: number): string {
-  if (!Number.isFinite(value)) return "—";
+  if (!Number.isFinite(value)) return "\u2014";
   return value.toFixed(1);
 }
 
-function mapHourToSkyX(hours: number): number {
-  const clamped = Math.max(0, Math.min(HOURS_PER_DAY, hours));
-  const range = SKY_VIEW_X_MAX - SKY_VIEW_X_MIN;
-  return SKY_VIEW_X_MIN + (clamped / HOURS_PER_DAY) * range;
+/**
+ * Format an hour (0-24) as approximate 12-hour time: "~6 PM", "~12 AM", etc.
+ */
+function formatApproxTime(hours: number): string {
+  const h = Math.round(hours) % 24;
+  if (h === 0) return "~12 AM";
+  if (h === 12) return "~12 PM";
+  const ampm = h < 12 ? "AM" : "PM";
+  const h12 = h > 12 ? h - 12 : h;
+  return `~${h12} ${ampm}`;
+}
+
+/**
+ * Approximate rise/set from phase angle alone (no latitude/season).
+ * Full Moon (0 deg) rises ~6 PM, sets ~6 AM.
+ * New Moon (180 deg) rises ~6 AM, sets ~6 PM.
+ */
+function computeApproxRiseSet(phaseAngleDeg: number): { riseHour: number; setHour: number } {
+  const riseHour = (18 + phaseAngleDeg / 15) % 24;
+  const setHour = (riseHour + 12) % 24;
+  return { riseHour, setHour };
 }
 
 function updateAdvancedReadouts() {
@@ -296,48 +284,38 @@ function updateAdvancedVisibility() {
   );
 }
 
-function updateSkyViewVisibility() {
-  const isHidden = getSkyViewVisibility(skyViewEnabled);
-  skyViewEl.classList.toggle("is-hidden", isHidden);
-  skyViewPanelEl.classList.toggle("is-hidden", isHidden);
-}
-
-function updateSkyViewMarkers() {
-  const normalized = normalizeAngle(moonAngleDeg);
-  const result = moonRiseSetLocalTimeHours({
-    phaseAngleDeg: normalized,
-    latitudeDeg,
-    dayOfYear,
-    useAdvanced: advancedEnabled
-  });
-
-  const isHidden = result.status !== "ok" || result.riseHour == null || result.setHour == null;
-  skyRiseMarkerEl.setAttribute("visibility", isHidden ? "hidden" : "visible");
-  skySetMarkerEl.setAttribute("visibility", isHidden ? "hidden" : "visible");
-
-  if (isHidden) {
-    return;
-  }
-
-  skyRiseMarkerEl.setAttribute("cx", mapHourToSkyX(result.riseHour ?? 0).toFixed(1));
-  skySetMarkerEl.setAttribute("cx", mapHourToSkyX(result.setHour ?? 0).toFixed(1));
+function updateRiseSetVisibility() {
+  riseSetLineEl.classList.toggle(
+    "is-hidden",
+    getRiseSetVisibility(riseSetEnabled)
+  );
 }
 
 function updateRiseSetReadouts() {
+  if (!riseSetEnabled) return;
+
   const normalized = normalizeAngle(moonAngleDeg);
-  const viewModel = buildRiseSetViewModel({
-    phaseAngleDeg: normalized,
-    latitudeDeg,
-    dayOfYear,
-    useAdvanced: advancedEnabled
-  });
 
-  riseTimeEl.textContent = viewModel.riseText;
-  setTimeEl.textContent = viewModel.setText;
-  riseSetStatusEl.textContent = viewModel.statusText;
-  skySummaryEl.textContent = `Rise ${viewModel.riseText}, set ${viewModel.setText}. ${viewModel.statusText}`;
+  if (advancedEnabled) {
+    const result = moonRiseSetLocalTimeHours({
+      phaseAngleDeg: normalized,
+      latitudeDeg,
+      dayOfYear,
+      useAdvanced: advancedEnabled
+    });
 
-  updateSkyViewMarkers();
+    if (result.status !== "ok" || result.riseHour == null || result.setHour == null) {
+      riseSetTextEl.textContent = "No rise/set at this latitude (polar)";
+      return;
+    }
+
+    riseSetTextEl.textContent =
+      `Rises ${formatApproxTime(result.riseHour)} \u00B7 Sets ${formatApproxTime(result.setHour)}`;
+  } else {
+    const { riseHour, setHour } = computeApproxRiseSet(normalized);
+    riseSetTextEl.textContent =
+      `Rises ${formatApproxTime(riseHour)} \u00B7 Sets ${formatApproxTime(setHour)}`;
+  }
 }
 
 function updateAngleInput() {
@@ -446,10 +424,9 @@ function updateReadouts() {
 
   phaseNameEl.textContent = phaseName;
   angleReadoutEl.textContent = String(Math.round(normalized));
-  illumFractionEl.textContent = formatFraction(illum);
   illumPercentEl.textContent = String(Math.round(illum * 100));
   daysSinceNewEl.textContent = formatDay(daysSinceNew);
-  waxingWaningEl.textContent = waxingWaning;
+  waxingWaningLabelEl.textContent = waxingWaning;
 
   moonGroupEl.setAttribute("aria-valuenow", String(Math.round(normalized)));
   moonGroupEl.setAttribute(
@@ -464,7 +441,7 @@ function updateTimeline() {
   const daysSinceNew = MoonPhasesModel.daysSinceNewFromPhaseAngleDeg(moonAngleDeg);
   const waxingWaning = MoonPhasesModel.waxingWaningFromPhaseAngleDeg(moonAngleDeg);
 
-  timelineDirectionEl.textContent = waxingWaning === "Waxing" ? "WAXING ->" : "<- WANING";
+  timelineDirectionEl.textContent = waxingWaning === "Waxing" ? "WAXING \u2192" : "\u2190 WANING";
   timelineDirectionEl.classList.toggle("waning", waxingWaning === "Waning");
   timelineDayEl.textContent = `Day ${formatDay(daysSinceNew)} of ${MoonPhasesModel.synodicMonthDays}`;
 
@@ -497,8 +474,8 @@ function applyShadowVisibility(showShadow: boolean, announce = false) {
     setLiveRegionText(
       statusEl,
       showShadow
-        ? "Earth’s shadow cone is now visible. Notice it points away from the Sun."
-        : "Earth’s shadow cone hidden."
+        ? "Earth's shadow cone is now visible. Notice it points away from the Sun."
+        : "Earth's shadow cone hidden."
     );
   }
 }
@@ -758,10 +735,10 @@ function setupAdvancedControls() {
     updateRiseSetReadouts();
   });
 
-  skyToggleEl.addEventListener("change", () => {
-    skyViewEnabled = skyToggleEl.checked;
-    updateSkyViewVisibility();
-    updateSkyViewMarkers();
+  riseSetToggleEl.addEventListener("change", () => {
+    riseSetEnabled = riseSetToggleEl.checked;
+    updateRiseSetVisibility();
+    updateRiseSetReadouts();
   });
 
   latitudeInputEl.addEventListener("input", syncLatitude);
@@ -792,7 +769,7 @@ function setupAdvancedControls() {
   });
 
   updateAdvancedVisibility();
-  updateSkyViewVisibility();
+  updateRiseSetVisibility();
   updateAdvancedReadouts();
 }
 
@@ -802,7 +779,7 @@ function setupChallenges() {
       prompt: "Set the Moon to show a Full Moon phase.",
       hints: [
         "Full Moon is opposite the Sun in this diagram.",
-        "Try $\alpha$ near $0^\circ$ or $360^\circ$."
+        "Try $\\alpha$ near $0^\\circ$ or $360^\\circ$."
       ],
       initialState: { angleDeg: 20 },
       check(state: any) {
@@ -812,17 +789,17 @@ function setupChallenges() {
           return { correct: false, close: false, message: "No valid state yet." };
         }
         if (illum >= 0.95) {
-          return { correct: true, close: false, message: `$f \approx ${formatFraction(illum)}$.` };
+          return { correct: true, close: false, message: `$f \\approx ${formatFraction(illum)}$.` };
         }
         if (illum >= 0.88) {
-          return { correct: false, close: true, message: `Close: $f \approx ${formatFraction(illum)}$.` };
+          return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(illum)}$.` };
         }
-        return { correct: false, close: false, message: "Too dim—move closer to Full." };
+        return { correct: false, close: false, message: "Too dim\u2014move closer to Full." };
       }
     },
     {
       prompt: "Set the Moon to show a New Moon phase.",
-      hints: ["New Moon is between Earth and Sun.", "Try $\alpha$ near $180^\circ$."],
+      hints: ["New Moon is between Earth and Sun.", "Try $\\alpha$ near $180^\\circ$."],
       initialState: { angleDeg: 150 },
       check(state: any) {
         const angleDeg = Number(state?.angleDeg);
@@ -831,17 +808,17 @@ function setupChallenges() {
           return { correct: false, close: false, message: "No valid state yet." };
         }
         if (illum <= 0.05) {
-          return { correct: true, close: false, message: `$f \approx ${formatFraction(illum)}$.` };
+          return { correct: true, close: false, message: `$f \\approx ${formatFraction(illum)}$.` };
         }
         if (illum <= 0.12) {
-          return { correct: false, close: true, message: `Close: $f \approx ${formatFraction(illum)}$.` };
+          return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(illum)}$.` };
         }
-        return { correct: false, close: false, message: "Too bright—move closer to New." };
+        return { correct: false, close: false, message: "Too bright\u2014move closer to New." };
       }
     },
     {
       prompt: "Find the First Quarter Moon position.",
-      hints: ["Quarter phases are about 50% illuminated.", "Try $\alpha$ near $270^\circ$."],
+      hints: ["Quarter phases are about 50% illuminated.", "Try $\\alpha$ near $270^\\circ$."],
       initialState: { angleDeg: 250 },
       check(state: any) {
         const angleDeg = Number(state?.angleDeg);
@@ -851,17 +828,17 @@ function setupChallenges() {
         }
         const diff = Math.abs(illum - 0.5);
         if (diff <= 0.03) {
-          return { correct: true, close: false, message: `$f \approx ${formatFraction(illum)}$.` };
+          return { correct: true, close: false, message: `$f \\approx ${formatFraction(illum)}$.` };
         }
         if (diff <= 0.08) {
-          return { correct: false, close: true, message: `Close: $f \approx ${formatFraction(illum)}$.` };
+          return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(illum)}$.` };
         }
         return { correct: false, close: false, message: "Move toward quarter phase (50% lit)." };
       }
     },
     {
       prompt: "Find the Third Quarter Moon position.",
-      hints: ["Quarter phases are about 50% illuminated.", "Try $\alpha$ near $90^\circ$."],
+      hints: ["Quarter phases are about 50% illuminated.", "Try $\\alpha$ near $90^\\circ$."],
       initialState: { angleDeg: 110 },
       check(state: any) {
         const angleDeg = Number(state?.angleDeg);
@@ -871,16 +848,16 @@ function setupChallenges() {
         }
         const diff = Math.abs(illum - 0.5);
         if (diff <= 0.03) {
-          return { correct: true, close: false, message: `$f \approx ${formatFraction(illum)}$.` };
+          return { correct: true, close: false, message: `$f \\approx ${formatFraction(illum)}$.` };
         }
         if (diff <= 0.08) {
-          return { correct: false, close: true, message: `Close: $f \approx ${formatFraction(illum)}$.` };
+          return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(illum)}$.` };
         }
         return { correct: false, close: false, message: "Move toward quarter phase (50% lit)." };
       }
     },
     {
-      prompt: "Shadow challenge: Can Earth’s shadow touch the Moon?",
+      prompt: "Shadow challenge: Can Earth\u2019s shadow touch the Moon?",
       hints: [
         "Turn on the shadow toggle to see where it points.",
         "The shadow points away from the Sun (toward Full Moon)."
@@ -901,7 +878,7 @@ function setupChallenges() {
           correct: inShadowZone,
           close: false,
           message: inShadowZone
-            ? "Yes — that’s a lunar eclipse alignment."
+            ? "Yes \u2014 that\u2019s a lunar eclipse alignment."
             : "Move the Moon into the shadow cone (near Full Moon)."
         };
       }
@@ -960,14 +937,14 @@ function setupModes() {
             { key: "Shift + arrow keys", action: "Move Moon 1 deg (fine control)" },
             { key: "Home", action: "Jump to Full Moon" },
             { key: "End", action: "Jump to New Moon" },
-            { key: "1–8", action: "Jump to the 8 named phases" }
+            { key: "1\u20138", action: "Jump to the 8 named phases" }
           ]
         },
         {
           heading: "Model",
           type: "bullets",
           items: [
-            "Angle $\\alpha$ is the Sun–Moon–Earth phase angle in this model: $0^\\circ$ = Full, $180^\\circ$ = New.",
+            "Angle $\\alpha$ is the Sun\u2013Moon\u2013Earth phase angle in this model: $0^\\circ$ = Full, $180^\\circ$ = New.",
             "Illumination fraction is $f = \\frac{1 + \\cos\\alpha}{2}$."
           ]
         }
@@ -1040,7 +1017,7 @@ function setupModes() {
 }
 
 async function handleCopyResults() {
-  setLiveRegionText(statusEl, "Copying…");
+  setLiveRegionText(statusEl, "Copying\u2026");
   try {
     await runtime.copyResults(
       buildMoonPhasesExport({
@@ -1082,6 +1059,12 @@ setupModes();
 setAngle(0);
 applyShadowVisibility(false);
 initMath(document);
+
+const demoRoot = document.getElementById("cp-demo");
+if (demoRoot) {
+  initPopovers(demoRoot);
+  initTabs(demoRoot);
+}
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
 if (starfieldCanvas) {

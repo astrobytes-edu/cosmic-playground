@@ -146,14 +146,11 @@ test.describe("Cosmic Playground smoke", () => {
     await presetSummer.click();
     await expect(dayOfYear).toHaveValue("172");
 
-    const skyToggle = page.locator("#toggle-sky-view");
-    const skyView = page.locator("#sky-view");
-    const skyPanel = page.locator("#sky-view-panel");
-    await expect(skyView).toHaveClass(/is-hidden/);
-    await expect(skyPanel).toHaveClass(/is-hidden/);
-    await skyToggle.check();
-    await expect(skyView).not.toHaveClass(/is-hidden/);
-    await expect(skyPanel).not.toHaveClass(/is-hidden/);
+    const riseSetToggle = page.locator("#toggle-rise-set");
+    const riseSetLine = page.locator("#rise-set-line");
+    await expect(riseSetLine).toHaveClass(/is-hidden/);
+    await riseSetToggle.check();
+    await expect(riseSetLine).not.toHaveClass(/is-hidden/);
   });
 
   test("Kepler’s Laws renders with resolved canvas colors and animates", async ({

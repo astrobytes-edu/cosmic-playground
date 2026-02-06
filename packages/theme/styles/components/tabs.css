@@ -1,0 +1,48 @@
+/* ============================================
+   CpTabs — Horizontal tab bar with panel switching
+   ============================================ */
+
+.cp-tabs {
+  display: flex;
+  gap: var(--cp-space-1);
+  border-bottom: 1px solid var(--cp-border);
+  padding: 0 var(--cp-space-3);
+}
+
+.cp-tab {
+  padding: var(--cp-space-2) var(--cp-space-3);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--cp-muted);
+  font-family: var(--cp-font-sans);
+  font-size: var(--cp-text-sm);
+  font-weight: var(--cp-font-semibold);
+  cursor: pointer;
+  transition:
+    color var(--cp-transition-fast) var(--cp-ease-out),
+    border-color var(--cp-transition-fast) var(--cp-ease-out);
+}
+
+.cp-tab:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: -2px;
+}
+
+.cp-tab--active,
+.cp-tab[aria-selected="true"] {
+  color: var(--cp-accent);
+  border-bottom-color: var(--cp-accent);
+}
+
+.cp-tab:hover:not(.cp-tab--active):not([aria-selected="true"]) {
+  color: var(--cp-text);
+}
+
+.cp-tab-panel {
+  padding: var(--cp-space-4);
+}
+
+.cp-tab-panel[hidden] {
+  display: none;
+}

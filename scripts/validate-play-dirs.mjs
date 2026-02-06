@@ -75,9 +75,11 @@ async function main() {
   const requiredMarkers = [
     'id="cp-demo"',
     'id="copyResults"',
-    'id="status"',
-    "cp-demo__drawer"
+    'id="status"'
   ];
+
+  // Demos must have either the legacy drawer OR the new shelf (layout redesign)
+  const drawerOrShelfMarker = ["cp-demo__drawer", "cp-demo__shelf"];
 
   const missingContractMarkers = [];
   for (const slug of slugs) {
@@ -85,6 +87,11 @@ async function main() {
     if (!(await pathExists(indexPath))) continue;
     const html = await readText(indexPath);
     const missing = missingMarkers(html, requiredMarkers);
+    // Check drawer-or-shelf: demo must have at least one
+    const hasDrawerOrShelf = drawerOrShelfMarker.some((m) => html.includes(m));
+    if (!hasDrawerOrShelf) {
+      missing.push("cp-demo__drawer or cp-demo__shelf");
+    }
     if (missing.length > 0) {
       missingContractMarkers.push({ slug, indexPath, missing });
     }

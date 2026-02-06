@@ -11,7 +11,7 @@ export function getAdvancedVisibility(enabled: boolean): boolean {
   return !enabled;
 }
 
-export function getSkyViewVisibility(enabled: boolean): boolean {
+export function getRiseSetVisibility(enabled: boolean): boolean {
   return !enabled;
 }
 

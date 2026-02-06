@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   PRESET_DAY_OF_YEAR,
   getAdvancedVisibility,
-  getSkyViewVisibility,
+  getRiseSetVisibility,
   applyPresetDayOfYear
 } from "./riseSetUiState";
 
@@ -19,9 +19,9 @@ describe("riseSetUiState", () => {
     expect(getAdvancedVisibility(false)).toBe(true);
   });
 
-  test("sky view toggle controls visibility flags", () => {
-    expect(getSkyViewVisibility(true)).toBe(false);
-    expect(getSkyViewVisibility(false)).toBe(true);
+  test("rise/set toggle controls visibility flags", () => {
+    expect(getRiseSetVisibility(true)).toBe(false);
+    expect(getRiseSetVisibility(false)).toBe(true);
   });
 
   test("preset application updates day-of-year", () => {

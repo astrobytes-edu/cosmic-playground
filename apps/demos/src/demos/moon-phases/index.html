@@ -12,21 +12,63 @@
     <div
       id="cp-demo"
       class="cp-layer-instrument cp-demo"
-      data-shell="viz-first"
       aria-label="Moon phases instrument"
     >
-      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+      <!-- ═══════════════════════════════════════════
+           SIDEBAR — physics controls
+           ═══════════════════════════════════════════ -->
+      <aside class="cp-demo__sidebar cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Moon Phases</div>
-        <div class="cp-panel-body">
-          <p class="cp-muted">
-            The Moon is always half lit. Phases show how much of that lit half
-            faces Earth.
-          </p>
+        <div class="cp-panel-body cp-scroll-shadow">
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button class="cp-utility-btn" id="btn-station-mode" aria-label="Station mode" title="Station mode">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"/>
+                <line x1="7" y1="7" x2="13" y2="7"/>
+                <line x1="7" y1="10" x2="13" y2="10"/>
+                <line x1="7" y1="13" x2="10" y2="13"/>
+              </svg>
+            </button>
+            <button class="cp-utility-btn" id="btn-help" aria-label="Help and shortcuts" title="Help / Keys">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"/>
+                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"/>
+                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"/>
+              </svg>
+            </button>
+            <button class="cp-utility-btn" id="btn-challenges" aria-label="Challenges" title="Challenges">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 2l2.2 4.5 5 .7-3.6 3.5.8 5L10 13.4 5.6 15.7l.8-5L2.8 7.2l5-.7z"/>
+              </svg>
+            </button>
+            <button type="button" class="cp-utility-btn" id="copyResults" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"/>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"/>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation" aria-expanded="false" aria-controls="navPopover" title="More links">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"/>
+                  <circle cx="10" cy="10" r="1.5"/>
+                  <circle cx="16" cy="10" r="1.5"/>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/moon-phases/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/moon-phases/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/moon-phases/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
+          </div>
 
           <div id="challenge-container"></div>
 
           <label class="cp-field">
-            <span class="cp-label">Phase angle alpha (deg)</span>
+            <span class="cp-label">Phase angle &#x03B1; (deg)</span>
             <input
               id="angle"
               class="cp-range"
@@ -39,21 +81,28 @@
             />
           </label>
 
-          <div class="cp-field">
-            <span class="cp-label">Key phases</span>
-            <div class="phase-buttons" role="group" aria-label="Key phases">
-              <button class="cp-button cp-button--outline phase-btn" data-angle="180" type="button">
-                New Moon
-              </button>
-              <button class="cp-button cp-button--outline phase-btn" data-angle="270" type="button">
-                First Quarter
-              </button>
-              <button class="cp-button cp-button--outline phase-btn" data-angle="0" type="button">
-                Full Moon
-              </button>
-              <button class="cp-button cp-button--outline phase-btn" data-angle="90" type="button">
-                Third Quarter
-              </button>
+          <div class="cp-popover-anchor">
+            <button class="cp-button cp-button--outline cp-popover-trigger" id="phase-presets-trigger"
+                    aria-expanded="false" aria-controls="phasePresetsPopover" type="button">
+              Phase presets...
+            </button>
+            <div class="cp-popover" id="phasePresetsPopover" hidden>
+              <div class="cp-popover__body">
+                <div class="phase-buttons" role="group" aria-label="Key phases">
+                  <button class="cp-button cp-button--outline phase-btn" data-angle="180" type="button">
+                    New Moon
+                  </button>
+                  <button class="cp-button cp-button--outline phase-btn" data-angle="270" type="button">
+                    First Quarter
+                  </button>
+                  <button class="cp-button cp-button--outline phase-btn" data-angle="0" type="button">
+                    Full Moon
+                  </button>
+                  <button class="cp-button cp-button--outline phase-btn" data-angle="90" type="button">
+                    Third Quarter
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -70,7 +119,7 @@
             </label>
 
             <label class="cp-field">
-              <span class="cp-label">Day of year (1–365)</span>
+              <span class="cp-label">Day of year (1-365)</span>
               <input id="dayOfYear" class="cp-range" type="range" min="1" max="365" value="80" step="1" />
               <div class="cp-muted">Day <span id="dayOfYearReadout">80</span></div>
             </label>
@@ -95,41 +144,23 @@
           </div>
 
           <label class="cp-field">
-            <input id="toggle-sky-view" type="checkbox" />
-            <span>Show sky view</span>
+            <input id="toggle-rise-set" type="checkbox" />
+            <span>Rise/set times</span>
           </label>
-
-          <div class="cp-actions">
-            <button class="cp-button" id="btn-station-mode" type="button">
-              Station Mode
-            </button>
-            <button class="cp-button cp-button--outline" id="btn-help" type="button">
-              Help / Keys
-            </button>
-          </div>
-
-          <div class="cp-actions">
-            <button class="cp-button cp-button--outline" id="btn-challenges" type="button">
-              Challenges
-            </button>
-            <button id="copyResults" class="cp-button" type="button">Copy results</button>
-          </div>
-
-          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
 
           <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">Insights (optional)</span>
-              <span class="cp-accordion__meta">shadow</span>
+              <span class="cp-accordion__meta"></span>
             </summary>
             <div class="cp-accordion__body">
               <p>
-                Earth’s shadow points away from the Sun and only matters during
+                Earth's shadow points away from the Sun and only matters during
                 lunar eclipses.
               </p>
               <label class="shadow-toggle">
                 <input type="checkbox" id="show-shadow-toggle" />
-                <span>Show Earth’s Shadow (Eclipse insight)</span>
+                <span>Show Earth's Shadow (Eclipse insight)</span>
               </label>
               <p>
                 Want the full story? Try
@@ -138,19 +169,18 @@
             </div>
           </details>
 
-          <div class="cp-actions">
-            <a class="cp-button" href="../../exhibits/moon-phases/">Open exhibit</a>
-            <a class="cp-button cp-button--outline" href="../../stations/moon-phases/">Station card</a>
-            <a class="cp-button cp-button--outline" href="../../instructor/moon-phases/">Instructor notes</a>
-          </div>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
       </aside>
 
+      <!-- ═══════════════════════════════════════════
+           VIZ — orbital + phase SVGs
+           ═══════════════════════════════════════════ -->
       <section class="cp-demo__stage cp-stage" aria-label="Visualization stage">
         <div class="viz-layout">
           <div class="viz-panel">
             <div class="panel-title">View from Above (North Pole)</div>
-            <svg id="orbital-svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
+            <svg id="orbital-svg" viewBox="0 45 400 280" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stop-color="var(--cp-celestial-sun-core)" />
@@ -276,12 +306,12 @@
                 </text>
               </g>
             </svg>
-            <div class="drag-hint">Drag the Moon around Earth’s orbit</div>
+            <div class="drag-hint">Drag the Moon around Earth's orbit</div>
           </div>
 
           <div class="viz-panel">
             <div class="panel-title">As Seen from Earth</div>
-            <svg id="phase-svg" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
+            <svg id="phase-svg" viewBox="0 15 200 175" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="moonSurface" cx="30%" cy="30%">
                   <stop offset="0%" stop-color="var(--cp-celestial-moon)" />
@@ -298,52 +328,47 @@
                 <circle r="60" fill="url(#earthshine)" />
                 <path id="lit-portion" d="" fill="url(#moonSurface)" />
               </g>
+
             </svg>
+            <span class="waxing-waning-badge" id="waxing-waning-label">Waxing</span>
             <div class="schematic-note">Schematic (not to scale).</div>
           </div>
         </div>
+      </section>
 
-        <div id="sky-view-panel" class="sky-view-panel">
-          <div class="panel-title">Sky view</div>
-          <div id="sky-view" class="sky-view is-hidden">
-            <svg id="sky-view-svg" viewBox="0 0 320 120" preserveAspectRatio="xMidYMid meet">
-              <line
-                id="sky-horizon"
-                x1="20"
-                y1="80"
-                x2="300"
-                y2="80"
-                stroke="var(--cp-border)"
-                stroke-width="2"
-              />
-              <line
-                x1="20"
-                y1="80"
-                x2="20"
-                y2="92"
-                stroke="var(--cp-muted)"
-                stroke-width="2"
-              />
-              <line
-                x1="300"
-                y1="80"
-                x2="300"
-                y2="92"
-                stroke="var(--cp-muted)"
-                stroke-width="2"
-              />
-              <text x="16" y="108" fill="var(--cp-muted)" font-size="10">E</text>
-              <text x="296" y="108" fill="var(--cp-muted)" font-size="10">W</text>
-              <circle id="sky-rise-marker" cx="60" cy="80" r="5" fill="var(--cp-celestial-earth)" />
-              <circle id="sky-set-marker" cx="260" cy="80" r="5" fill="var(--cp-celestial-sun)" />
-            </svg>
-            <p id="sky-summary" class="cp-muted">Sky view shows rise/set along the horizon.</p>
-          </div>
+      <!-- ═══════════════════════════════════════════
+           PLAYBAR — transport + timeline
+           ═══════════════════════════════════════════ -->
+      <div class="cp-playbar" aria-label="Animation and timeline">
+        <div class="playbar-transport">
+          <button class="cp-playbar__btn" id="btn-play" type="button" aria-label="Play">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6z"/></svg>
+          </button>
+          <button class="cp-playbar__btn" id="btn-pause" type="button" aria-label="Pause" disabled>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12"/><rect x="9.5" y="2" width="3.5" height="12"/></svg>
+          </button>
+          <button class="cp-playbar__btn" id="btn-step-back" type="button" aria-label="Step backward">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="2" height="12"/><path d="M14 2L6 8l8 6z"/></svg>
+          </button>
+          <button class="cp-playbar__btn" id="btn-step-forward" type="button" aria-label="Step forward">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="12" y="2" width="2" height="12"/><path d="M2 2l8 6-8 6z"/></svg>
+          </button>
+          <button class="cp-playbar__btn" id="btn-reset" type="button" aria-label="Reset to Full Moon" title="Reset to Full Moon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1 1 1.8 4.3"/><path d="M2 13V8h5"/></svg>
+          </button>
+          <label class="speed-control" for="speed-select">
+            <span>Speed</span>
+            <select id="speed-select" class="cp-select">
+              <option value="1">1x</option>
+              <option value="5" selected>5x</option>
+              <option value="10">10x</option>
+            </select>
+          </label>
         </div>
 
-        <div class="timeline-panel">
+        <div class="playbar-timeline">
           <div class="timeline-header">
-            <span class="timeline-direction" id="timeline-direction">WAXING -&gt;</span>
+            <span class="timeline-direction" id="timeline-direction">WAXING &#x2192;</span>
             <span class="timeline-day" id="timeline-day">Day 0 of 29.5</span>
           </div>
           <div class="timeline-strip" id="timeline-strip">
@@ -380,100 +405,59 @@
               <span>Crescent</span>
             </button>
           </div>
-        </div>
-
-        <div class="animation-controls">
-          <button class="cp-button" id="btn-play" type="button">▶ Play</button>
-          <button class="cp-button cp-button--outline" id="btn-pause" type="button" disabled>
-            ⏸ Pause
-          </button>
-          <button class="cp-button cp-button--outline" id="btn-step-back" type="button">⏮ Step</button>
-          <button class="cp-button cp-button--outline" id="btn-step-forward" type="button">Step ⏭</button>
-          <button class="cp-button cp-button--outline" id="btn-reset" type="button" title="Reset to Full Moon">
-            ↺ Reset
-          </button>
-          <label class="speed-control" for="speed-select">
-            <span>Speed</span>
-            <select id="speed-select" class="cp-select">
-              <option value="1">1x</option>
-              <option value="5" selected>5x</option>
-              <option value="10">10x</option>
-            </select>
-          </label>
-        </div>
-      </section>
-
-      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
-        <div class="cp-panel-header">Readouts</div>
-        <div class="cp-panel-body">
-          <div class="cp-readout">
-            <div class="cp-readout__label">Phase name</div>
-            <div class="cp-readout__value" id="phase-name">Full Moon</div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Phase angle &#x03B1;</div>
-            <div class="cp-readout__value"><span id="angleReadout">0</span><span class="cp-readout__unit">deg</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Illumination fraction f</div>
-            <div class="cp-readout__value" id="illumination-fraction">1.000</div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Illuminated</div>
-            <div class="cp-readout__value"><span id="illumination">100</span><span class="cp-readout__unit">%</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Days since new</div>
-            <div class="cp-readout__value"><span id="days-since-new">14.8</span><span class="cp-readout__unit">d</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Waxing / Waning</div>
-            <div class="cp-readout__value" id="waxing-waning">Waxing</div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Moon rise</div>
-            <div class="cp-readout__value"><span id="rise-time">--:--</span><span class="cp-readout__unit">LST</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Moon set</div>
-            <div class="cp-readout__value"><span id="set-time">--:--</span><span class="cp-readout__unit">LST</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Rise / set status</div>
-            <div class="cp-readout__value" id="rise-set-status">Local solar time</div>
+          <div id="rise-set-line" class="rise-set-line is-hidden">
+            <span id="rise-set-text">Rises ~6 PM · Sets ~6 AM</span>
           </div>
         </div>
-      </aside>
+      </div>
 
-      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
-        <div class="cp-panels">
-          <details class="cp-accordion" open>
-            <summary>
-              <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">Observable -&gt; Model -&gt; Inference</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <ul>
-                <li><strong>Observable:</strong> the lit fraction grows or shrinks as the Moon moves.</li>
-                <li><strong>Model:</strong> illumination depends on the Sun–Earth–Moon phase angle $\alpha$.</li>
-                <li><strong>Inference:</strong> phases are geometry, not Earth’s shadow.</li>
-              </ul>
-            </div>
-          </details>
+      <!-- ═══════════════════════════════════════════
+           READOUT STRIP — pinned readouts
+           ═══════════════════════════════════════════ -->
+      <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
+        <div class="cp-readout">
+          <span class="cp-readout__label">Phase</span>
+          <span class="cp-readout__value" id="phase-name">Full Moon</span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Angle</span>
+          <span class="cp-readout__value"><span id="angleReadout">0</span><span class="cp-readout__unit">deg</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Illuminated</span>
+          <span class="cp-readout__value"><span id="illumination">100</span><span class="cp-readout__unit">%</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Days since new</span>
+          <span class="cp-readout__value"><span id="days-since-new">14.8</span><span class="cp-readout__unit">d</span></span>
+        </div>
+      </div>
 
-          <details class="cp-accordion">
-            <summary>
-              <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">schematic</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <ul>
-                <li>Schematic geometry (not to scale, no orbital tilt).</li>
-                <li>Illumination uses $f = \frac{1 + \cos\alpha}{2}$ with $\alpha$ in degrees.</li>
-                <li>Earth’s shadow appears only when toggled and only for eclipse insight.</li>
-              </ul>
-            </div>
-          </details>
+      <!-- ═══════════════════════════════════════════
+           SHELF — tabbed pedagogical content
+           ═══════════════════════════════════════════ -->
+      <section class="cp-demo__shelf" aria-label="Information panels">
+        <div class="cp-tabs-container">
+          <div class="cp-tabs" role="tablist" aria-label="Demo information">
+            <button class="cp-tab cp-tab--active" role="tab" aria-selected="true"
+                    aria-controls="tab-notice" id="tab-btn-notice">What to notice</button>
+            <button class="cp-tab" role="tab" aria-selected="false"
+                    aria-controls="tab-model" id="tab-btn-model">Model notes</button>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-notice" aria-labelledby="tab-btn-notice">
+            <ul>
+              <li><strong>Observable:</strong> the lit fraction grows or shrinks as the Moon moves.</li>
+              <li><strong>Model:</strong> illumination depends on the Sun-Earth-Moon phase angle $\alpha$.</li>
+              <li><strong>Inference:</strong> phases are geometry, not Earth's shadow.</li>
+            </ul>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-model" aria-labelledby="tab-btn-model" hidden>
+            <ul>
+              <li>Schematic geometry (not to scale, no orbital tilt).</li>
+              <li>Illumination uses $f = \frac{1 + \cos\alpha}{2}$ with $\alpha$ in degrees.</li>
+              <li>Earth's shadow appears only when toggled and only for eclipse insight.</li>
+            </ul>
+          </div>
         </div>
       </section>
     </div>

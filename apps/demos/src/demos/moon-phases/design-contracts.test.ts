@@ -14,6 +14,7 @@ import path from "node:path";
  *   2. A starfield canvas MUST exist in the HTML
  *   3. Readout values MUST separate units into .cp-readout__unit spans
  *   4. Demo-specific panels MUST use translucent backgrounds
+ *   5. Layout uses composable grid primitives (cp-playbar, cp-readout-strip, cp-tabs)
  */
 
 describe("Moon Phases — Design System Contracts", () => {
@@ -89,11 +90,7 @@ describe("Moon Phases — Design System Contracts", () => {
 
   describe("Readout unit separation", () => {
     it("readout values with units use .cp-readout__unit spans", () => {
-      // Readouts that display units should have separate unit spans
-      // "Phase angle alpha" has unit (deg) → needs cp-readout__unit
-      // "Illumination fraction f" is dimensionless → no unit needed
-      // "Illuminated (%)" has unit (%) → needs cp-readout__unit
-      // "Days since new" has unit (d) → needs cp-readout__unit
+      // Readouts: Angle (deg), Illuminated (%), Days since new (d)
       const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
       expect(unitSpans.length).toBeGreaterThanOrEqual(3);
     });
@@ -114,8 +111,47 @@ describe("Moon Phases — Design System Contracts", () => {
       expect(css).not.toMatch(/\.timeline-phase\.active[\s\S]*?--cp-warning/);
     });
 
-    it("sky markers do not use --cp-accent2", () => {
-      expect(html).not.toMatch(/<circle id="sky-rise-marker"[^>]*--cp-accent2/);
+    it("no --cp-accent2 tokens in HTML", () => {
+      expect(html).not.toContain("--cp-accent2");
+    });
+  });
+
+  describe("Composable layout primitives", () => {
+    it("uses cp-playbar for animation transport + timeline", () => {
+      expect(html).toContain('class="cp-playbar"');
+    });
+
+    it("uses cp-readout-strip for readout strip", () => {
+      expect(html).toContain("cp-readout-strip");
+    });
+
+    it("uses cp-tabs for shelf content", () => {
+      expect(html).toContain('role="tablist"');
+      expect(html).toContain('role="tab"');
+      expect(html).toContain('role="tabpanel"');
+    });
+
+    it("uses cp-utility-toolbar for icon actions", () => {
+      expect(html).toContain("cp-utility-toolbar");
+    });
+
+    it("uses cp-popover for phase presets", () => {
+      expect(html).toContain("phasePresetsPopover");
+      expect(html).toContain("cp-popover-trigger");
+    });
+
+    it("has waxing-waning-label in phase SVG", () => {
+      expect(html).toContain('id="waxing-waning-label"');
+    });
+
+    it("has rise-set-line under timeline", () => {
+      expect(html).toContain('id="rise-set-line"');
+      expect(html).toContain('id="rise-set-text"');
+    });
+
+    it("sky view SVG has been removed", () => {
+      expect(html).not.toContain('id="sky-view-svg"');
+      expect(html).not.toContain('id="sky-rise-marker"');
     });
   });
 });

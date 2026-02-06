@@ -21,7 +21,18 @@ export type ExportPayloadV1 = {
 
 export { copyTextToClipboard } from "./clipboard";
 export { createDemoModes, toCsv } from "./demoModes";
-export { initMath, renderMath } from "./math";
+export {
+  EPS,
+  clamp,
+  findRootBisection,
+  findRootNewton,
+  initMath,
+  integrateSimpson,
+  integrateTrapz,
+  interp1,
+  linspace,
+  renderMath
+} from "./math";
 export { initDemoPolish } from "./polish";
 export { setLiveRegionText } from "./liveRegion";
 export type {
@@ -35,7 +46,9 @@ export type {
 } from "./demoModes";
 export { ChallengeEngine } from "./challengeEngine";
 export type { Challenge, ChallengeOptions, ChallengeResult, ChallengeStats } from "./challengeEngine";
+export { initPopovers } from "./popover";
 export { initStarfield } from "./starfield";
+export { initTabs } from "./tabs";
 export type { StarfieldConfig } from "./starfield";
 export { mountPlot } from "./plots/plotEngine";
 export type {

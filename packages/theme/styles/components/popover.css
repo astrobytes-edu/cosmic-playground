@@ -1,0 +1,48 @@
+/* ============================================
+   CpPopover — Click-triggered floating panel
+   ============================================ */
+
+.cp-popover-anchor {
+  position: relative;
+}
+
+.cp-popover {
+  position: absolute;
+  z-index: var(--cp-z-dropdown);
+  top: calc(100% + var(--cp-space-2));
+  left: 0;
+  min-width: 240px;
+  max-width: 360px;
+  background: var(--cp-instr-panel-bg, var(--cp-bg2));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-r-2);
+  box-shadow: var(--cp-elevation-3);
+  animation: cp-pop-in 0.15s var(--cp-ease-out);
+}
+
+.cp-popover[hidden] {
+  display: none;
+}
+
+.cp-popover__body {
+  padding: var(--cp-space-3);
+  max-height: 400px;
+  overflow: auto;
+}
+
+/* Links inside nav popovers */
+.cp-popover-link {
+  display: block;
+  padding: var(--cp-space-2) var(--cp-space-3);
+  color: var(--cp-text);
+  text-decoration: none;
+  border-radius: var(--cp-r-1);
+  transition: background var(--cp-transition-fast) var(--cp-ease-out);
+}
+
+.cp-popover-link:hover {
+  background: var(--cp-bg2);
+  color: var(--cp-accent);
+}

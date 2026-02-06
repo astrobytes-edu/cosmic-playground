@@ -1,0 +1,64 @@
+/* ============================================
+   CpPlayBar — Compact animation transport bar
+   ============================================ */
+
+.cp-playbar {
+  grid-area: playbar;
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-2) var(--cp-space-3);
+  background: var(--cp-instr-panel-bg, var(--cp-bg2));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-r-2);
+}
+
+.cp-playbar__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-r-1);
+  color: var(--cp-text);
+  font-size: var(--cp-text-md);
+  cursor: pointer;
+  transition:
+    background var(--cp-transition-fast) var(--cp-ease-out),
+    border-color var(--cp-transition-fast) var(--cp-ease-out);
+}
+
+.cp-playbar__btn:hover {
+  background: var(--cp-bg2);
+  border-color: var(--cp-accent);
+}
+
+.cp-playbar__btn:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 2px;
+}
+
+.cp-playbar__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+.cp-playbar__timeline {
+  flex: 1;
+  min-width: 120px;
+}
+
+.cp-playbar__phase {
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-text-sm);
+  white-space: nowrap;
+  min-width: 10ch;
+}

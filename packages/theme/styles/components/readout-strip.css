@@ -1,0 +1,26 @@
+/* ============================================
+   CpReadoutStrip — Pinned horizontal readout bar
+   Sits below the visualization, reuses .cp-readout
+   class from layer-instrument.css for individual items.
+   ============================================ */
+
+.cp-readout-strip {
+  grid-area: readouts;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-3) var(--cp-space-5);
+  padding: var(--cp-space-3) var(--cp-space-4);
+  background: var(--cp-instr-panel-bg, var(--cp-bg2));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--cp-r-2);
+  border: 1px solid var(--cp-border);
+}
+
+/* Ensure readouts inside the strip stay inline */
+.cp-readout-strip .cp-readout {
+  background: transparent;
+  border: none;
+  padding: 0;
+  min-width: auto;
+}

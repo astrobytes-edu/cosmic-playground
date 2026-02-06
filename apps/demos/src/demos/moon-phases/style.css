@@ -1,10 +1,10 @@
 @import "../../shared/stub-demo.css";
 
+/* --- Viz layout (two-panel grid inside stage) --- */
 .viz-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   gap: var(--cp-space-4);
-  margin-bottom: var(--cp-space-4);
 }
 
 .viz-panel {
@@ -35,13 +35,38 @@
   filter: drop-shadow(var(--cp-glow-planet));
 }
 
-.drag-hint,
+.viz-panel {
+  position: relative;
+}
+
+.waxing-waning-badge {
+  position: absolute;
+  top: var(--cp-space-3);
+  right: var(--cp-space-3);
+  font-size: 0.7rem;
+  color: var(--cp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.drag-hint {
+  text-align: center;
+  color: var(--cp-muted);
+  font-size: 0.75rem;
+  position: absolute;
+  bottom: var(--cp-space-3);
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
 .schematic-note {
   text-align: center;
   color: var(--cp-muted);
   font-size: 0.75rem;
 }
 
+/* --- Sidebar controls --- */
 .phase-buttons {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -95,44 +120,37 @@
   outline-offset: 4px;
 }
 
-.timeline-panel {
-  background: var(--cp-instr-panel-bg);
-  border: 1px solid var(--cp-instr-panel-border);
-  border-radius: 12px;
-  padding: var(--cp-space-3);
-  margin-bottom: var(--cp-space-4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+/* --- Playbar: column layout for transport + timeline --- */
+.cp-playbar {
+  flex-direction: column;
+  align-items: stretch;
 }
 
-.sky-view-panel {
-  background: var(--cp-instr-panel-bg);
-  border: 1px solid var(--cp-instr-panel-border);
-  border-radius: 12px;
-  padding: var(--cp-space-3);
-  margin-bottom: var(--cp-space-4);
-  display: grid;
-  gap: var(--cp-space-2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.sky-view {
-  display: grid;
+.playbar-transport {
+  display: flex;
+  align-items: center;
   gap: var(--cp-space-2);
 }
 
-#sky-view-svg {
-  width: 100%;
-  height: auto;
-  display: block;
+.playbar-timeline {
+  display: grid;
+  gap: var(--cp-space-1);
 }
 
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--cp-text2);
+}
+
+/* --- Timeline --- */
 .timeline-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--cp-space-2);
   font-size: 0.85rem;
   color: var(--cp-text2);
 }
@@ -161,11 +179,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--cp-space-1);
-  padding: var(--cp-space-2);
+  gap: 2px;
+  padding: 4px 2px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
   flex: 1;
@@ -198,8 +216,8 @@
 }
 
 .phase-icon {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   position: relative;
   background: var(--cp-bg3);
@@ -224,47 +242,42 @@
 .phase-icon.waxing-gibbous::after { left: 25%; width: 75%; border-radius: 50%; }
 .phase-icon.waning-gibbous::after { left: 0; width: 75%; border-radius: 50%; }
 
-.animation-controls {
-  display: flex;
-  align-items: center;
-  gap: var(--cp-space-2);
-  padding: var(--cp-space-3);
-  background: var(--cp-instr-panel-bg);
-  border: 1px solid var(--cp-instr-panel-border);
-  border-radius: 12px;
-  flex-wrap: wrap;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+/* --- Rise/set sub-line (under timeline) --- */
+.rise-set-line {
+  font-size: 0.8rem;
+  color: var(--cp-accent-ice);
+  text-align: center;
+  padding-top: var(--cp-space-1);
+  border-top: 1px solid var(--cp-border);
 }
 
-.speed-control {
-  display: flex;
-  align-items: center;
-  gap: var(--cp-space-2);
-  margin-left: auto;
-  font-size: 0.85rem;
-  color: var(--cp-text2);
-}
-
-.cp-demo__controls {
+/* --- Entry animations (staggered) --- */
+.cp-demo__sidebar {
   animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
 }
 
 .cp-demo__stage {
+  min-height: clamp(340px, 52svh, 580px);
   animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 1);
 }
 
-.cp-demo__readouts {
+.cp-playbar {
   animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 2);
 }
 
-.cp-demo__drawer {
+.cp-demo__readouts {
   animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 3);
 }
 
+.cp-demo__shelf {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 4);
+}
+
+/* --- Responsive --- */
 @media (max-width: 900px) {
   .viz-layout {
     grid-template-columns: 1fr;
@@ -277,12 +290,8 @@
   }
 
   .phase-icon {
-    width: 24px;
-    height: 24px;
-  }
-
-  .speed-control {
-    margin-left: 0;
+    width: 20px;
+    height: 20px;
   }
 }
 

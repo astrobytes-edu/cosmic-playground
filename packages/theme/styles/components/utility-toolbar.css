@@ -1,0 +1,52 @@
+/* ============================================
+   CpUtilityToolbar — Compact icon-button row
+   Replaces stacked full-width utility buttons.
+   ============================================ */
+
+.cp-utility-toolbar {
+  display: flex;
+  gap: var(--cp-space-1);
+  padding: var(--cp-space-2) 0;
+  border-bottom: 1px solid var(--cp-border-subtle);
+  margin-bottom: var(--cp-space-3);
+}
+
+.cp-utility-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--cp-r-1);
+  color: var(--cp-muted);
+  cursor: pointer;
+  transition:
+    color var(--cp-transition-fast) var(--cp-ease-out),
+    background var(--cp-transition-fast) var(--cp-ease-out),
+    border-color var(--cp-transition-fast) var(--cp-ease-out);
+}
+
+.cp-utility-btn:hover {
+  color: var(--cp-text);
+  background: var(--cp-bg2);
+  border-color: var(--cp-border);
+}
+
+.cp-utility-btn:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 2px;
+}
+
+/* SVG icons inside utility buttons */
+.cp-utility-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
