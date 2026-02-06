@@ -181,8 +181,14 @@ test.describe("Cosmic Playground smoke", () => {
       const h = Math.max(1, rect.height);
       const dpr = window.devicePixelRatio || 1;
 
-      const aAu = Number(a.value);
-      const ecc = Number(e.value);
+      const sliderA = Number(a.value);
+      const sliderE = Number(e.value);
+      const min = 0.3;
+      const max = 40;
+      const minLog = Math.log10(min);
+      const maxLog = Math.log10(max);
+      const aAu = Math.pow(10, minLog + (sliderA / 1000) * (maxLog - minLog));
+      const ecc = sliderE / 1000;
       const rp = aAu * (1 - ecc);
       const ra = aAu * (1 + ecc);
       const b = aAu * Math.sqrt(1 - ecc * ecc);
@@ -217,8 +223,8 @@ test.describe("Cosmic Playground smoke", () => {
     // (2) Verify animation advances the time slider.
     const mean = page.locator("#meanAnomalyDeg");
     const before = await mean.inputValue();
-    await page.locator("#animate").click();
-    await expect(page.locator("#animate")).toContainText("Stop");
+    await page.locator("#play").click();
+    await expect(page.locator("#pause")).toBeEnabled();
     await page.waitForTimeout(350);
     const after = await mean.inputValue();
     expect(after, "Mean anomaly should advance while animating.").not.toEqual(before);

@@ -19,15 +19,16 @@ const elements = {
   modeNewton: document.querySelector<HTMLButtonElement>("#modeNewton"),
   unit101: document.querySelector<HTMLButtonElement>("#unit101"),
   unit201: document.querySelector<HTMLButtonElement>("#unit201"),
-  aSlider: document.querySelector<HTMLInputElement>("#aSlider"),
+  aSlider: document.querySelector<HTMLInputElement>("#aAu"),
   aDisplay: document.querySelector<HTMLDivElement>("#aDisplay"),
-  eSlider: document.querySelector<HTMLInputElement>("#eSlider"),
+  eSlider: document.querySelector<HTMLInputElement>("#ecc"),
   eDisplay: document.querySelector<HTMLDivElement>("#eDisplay"),
   massField: document.querySelector<HTMLDivElement>("#massField"),
   massSlider: document.querySelector<HTMLInputElement>("#massSlider"),
   massDisplay: document.querySelector<HTMLDivElement>("#massDisplay"),
   timelineScrub: document.querySelector<HTMLInputElement>("#timelineScrub"),
   phaseDisplay: document.querySelector<HTMLDivElement>("#phaseDisplay"),
+  meanAnomalyDeg: document.querySelector<HTMLInputElement>("#meanAnomalyDeg"),
   play: document.querySelector<HTMLButtonElement>("#play"),
   pause: document.querySelector<HTMLButtonElement>("#pause"),
   reset: document.querySelector<HTMLButtonElement>("#reset"),
@@ -43,6 +44,7 @@ const elements = {
   copyResults: document.querySelector<HTMLButtonElement>("#copyResults"),
   status: document.querySelector<HTMLParagraphElement>("#status"),
   orbitStatus: document.querySelector<HTMLParagraphElement>("#orbitStatus"),
+  orbitCanvas: document.querySelector<HTMLCanvasElement>("#orbitCanvas"),
   orbitSvg: document.querySelector<SVGSVGElement>("#orbitSvg"),
   orbitPath: document.querySelector<SVGEllipseElement>("#orbitPath"),
   planetGroup: document.querySelector<SVGGElement>("#planetGroup"),
@@ -109,6 +111,21 @@ const state = {
   }
 };
 
+const CANVAS_MARGIN = 36;
+
+function resolveCanvasColor(value: string): string {
+  const probe = document.createElement("span");
+  probe.style.color = value;
+  document.body.appendChild(probe);
+  const resolved = getComputedStyle(probe).color;
+  probe.remove();
+  return resolved;
+}
+
+const canvasColors = {
+  planet: resolveCanvasColor("var(--cp-chart-2)")
+};
+
 let lastAnnounce = 0;
 function maybeAnnouncePosition(force = false) {
   const now = performance.now();
@@ -150,6 +167,52 @@ function updatePlanetPosition(rAu: number, thetaRad: number) {
   const pos = orbitalToSvg(rAu, thetaRad);
   elements.planet!.setAttribute("cx", String(pos.x));
   elements.planet!.setAttribute("cy", String(pos.y));
+}
+
+function drawOrbitCanvas(stateAtM: ReturnType<typeof KeplersLawsModel.stateAtMeanAnomalyRad>) {
+  const canvas = elements.orbitCanvas!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(1, rect.width);
+  const h = Math.max(1, rect.height);
+  const dpr = window.devicePixelRatio || 1;
+  const pixelW = Math.round(w * dpr);
+  const pixelH = Math.round(h * dpr);
+  if (canvas.width !== pixelW || canvas.height !== pixelH) {
+    canvas.width = pixelW;
+    canvas.height = pixelH;
+  }
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+
+  const aAu = state.aAu;
+  const ecc = state.e;
+  const rp = aAu * (1 - ecc);
+  const ra = aAu * (1 + ecc);
+  const b = aAu * Math.sqrt(1 - ecc * ecc);
+  const pad = 0.2 * aAu;
+
+  const plotW = Math.max(1, w - 2 * CANVAS_MARGIN);
+  const plotH = Math.max(1, h - 2 * CANVAS_MARGIN);
+  const xMin = -ra - pad;
+  const xMax = rp + pad;
+  const yMax = b + pad;
+  const scale = Math.min(plotW / (xMax - xMin), plotH / (2 * yMax));
+  const cx = CANVAS_MARGIN + (-xMin) * scale;
+  const cy = h / 2;
+
+  const rAu = stateAtM.rAu;
+  const thetaRad = stateAtM.trueAnomalyRad;
+  const px = cx + rAu * Math.cos(thetaRad) * scale;
+  const py = cy - rAu * Math.sin(thetaRad) * scale;
+
+  ctx.fillStyle = canvasColors.planet;
+  ctx.beginPath();
+  ctx.arc(px, py, 6, 0, TAU);
+  ctx.fill();
 }
 
 function updateFociMarkers() {
@@ -359,6 +422,7 @@ function update() {
 
   updateOrbitPath();
   updatePlanetPosition(stateAtM.rAu, state.thetaRad);
+  drawOrbitCanvas(stateAtM);
   updateFociMarkers();
   updateApsidesMarkers();
   updateDistanceLine(stateAtM.rAu, state.thetaRad);
@@ -367,6 +431,7 @@ function update() {
   updateReadouts(stateAtM);
   updateTimeline();
   updateSliderDisplays();
+  elements.meanAnomalyDeg!.value = String(Math.round(AstroUnits.radToDeg(state.meanAnomalyRad)));
   maybeAnnouncePosition();
 }
 

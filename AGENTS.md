@@ -70,6 +70,20 @@ Cosmic Playground personal skills (what to enforce):
     - `corepack pnpm test:physics-contract`
 - If Playwright is failing due to base paths, check `CP_BASE_PATH` first; an empty/incorrect value can cause `/explore/` and `/play/<slug>/` routes to 404 in e2e.
 
+### Playwright QA (Kepler's Laws)
+- Always capture QA screenshots for `keplers-laws` under `output/playwright/`.
+- Use MCP Playwright first to navigate to:
+  - `http://127.0.0.1:4173/cosmic-playground/play/keplers-laws/`
+- If MCP fails (e.g., `net::ERR_BLOCKED_BY_CLIENT`), fall back to CLI Playwright via `@playwright/test` (no test files required).
+- Ensure preview server is running:
+  - `corepack pnpm -C apps/site preview --host 127.0.0.1 --port 4173`
+- Required captures:
+  - Default view
+  - Newton mode with vectors on
+  - Equal areas on
+  - 201 unit system
+  - Preset Jupiter or High e
+
 ### Git workflow (solo maintainer friendly)
 
 Goal: keep `main` boring and always-green, even if you’re the only developer.

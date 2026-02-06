@@ -41,10 +41,10 @@
           </details>
 
           <div class="cp-field">
-            <label class="cp-label" for="aSlider">Semi-major axis a</label>
+            <label class="cp-label" for="aAu">Semi-major axis a</label>
             <div class="cp-field__value" id="aDisplay">1.00 AU</div>
             <input
-              id="aSlider"
+              id="aAu"
               class="cp-range"
               type="range"
               min="0"
@@ -57,10 +57,10 @@
           </div>
 
           <div class="cp-field">
-            <label class="cp-label" for="eSlider">Eccentricity e</label>
+            <label class="cp-label" for="ecc">Eccentricity e</label>
             <div class="cp-field__value" id="eDisplay">0.017</div>
             <input
-              id="eSlider"
+              id="ecc"
               class="cp-range"
               type="range"
               min="0"
@@ -105,6 +105,7 @@
               value="0"
               step="1"
             />
+            <input id="meanAnomalyDeg" class="sr-only" type="text" aria-hidden="true" value="0" />
           </div>
 
           <div class="cp-button-row" role="group" aria-label="Animation controls">
@@ -175,6 +176,7 @@
 
       <section class="cp-demo__stage cp-stage" aria-label="Orbit visualization stage">
         <div class="stage-surface">
+          <canvas id="orbitCanvas" class="orbit-canvas" aria-hidden="true"></canvas>
           <svg id="orbitSvg" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet">
             <defs>
               <radialGradient id="starGradient">
@@ -317,7 +319,7 @@
             <div class="cp-readout__value" id="distanceValue">1.00</div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Velocity v</div>
+            <div class="cp-readout__label">Speed v</div>
             <div class="cp-readout__value" id="velocityValue">29.8</div>
             <div class="cp-readout__unit" id="velocityUnit">km/s</div>
           </div>
@@ -327,7 +329,7 @@
             <div class="cp-readout__unit" id="accelUnit">mm/s^2</div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Period P (yr)</div>
+            <div class="cp-readout__label">Orbital period P (yr)</div>
             <div class="cp-readout__value" id="periodValue">1.00</div>
           </div>
 

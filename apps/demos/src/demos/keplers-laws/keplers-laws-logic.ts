@@ -136,9 +136,9 @@ export function buildExportPayload(args: {
     ],
     readouts: [
       { name: "Distance r (AU)", value: args.rAu.toFixed(3) },
-      { name: `Velocity v (${velocityUnit})`, value: speedValue.toFixed(2) },
+      { name: `Speed v (${velocityUnit})`, value: speedValue.toFixed(2) },
       { name: `Acceleration (${accelUnit})`, value: args.accelMs2.toFixed(3) },
-      { name: "Period P (yr)", value: args.periodYr.toFixed(3) },
+      { name: "Orbital period P (yr)", value: args.periodYr.toFixed(3) },
       { name: `Kinetic (v^2/2) (${energyUnit})`, value: kinetic.toFixed(4) },
       { name: `Potential (-mu/r) (${energyUnit})`, value: potential.toFixed(4) },
       { name: `Total eps (${energyUnit})`, value: total.toFixed(4) },

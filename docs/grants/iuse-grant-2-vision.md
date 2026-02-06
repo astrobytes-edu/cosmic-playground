@@ -29,6 +29,8 @@ This vision document is organized into four parts:
 2. [The Problem This Grant Addresses](#the-problem-this-grant-addresses)
    - [The Neglected Middle](#the-neglected-middle-why-intermediate-courses-are-understudied)
    - [The Math Anxiety Crisis](#the-math-anxiety-crisis-in-stem)
+   - [What We Actually See in the Classroom](#what-we-actually-see-in-the-classroom)
+   - [What the Research Literature Shows](#what-the-research-literature-shows)
 3. [Why This Matters in an AI-Driven World](#why-this-matters-in-an-ai-driven-world)
 4. [Addressing the Small N Problem](#addressing-the-small-n-problem)
 5. [Transferability: Beyond Astronomy](#transferability-beyond-astronomy)
@@ -42,37 +44,40 @@ This vision document is organized into four parts:
    - [Integrated Theory of Change](#integrated-theory-of-change)
 8. [Scope Strategy](#scope-strategy-curriculum-vs-research)
    - [Whole-Course with Module Checkpoints](#research-design-whole-course-with-module-checkpoints)
-9. [Measuring Equation Fluency: The Assessment Strategy](#measuring-equation-fluency-the-assessment-strategy)
-   - [Related Existing Instruments](#related-existing-instruments)
-   - [The Hybrid Strategy: Astro-EFI](#the-hybrid-strategy-astro-efi-equation-fluency-inventory)
+9. [Rethinking Assessment: What We Actually Care About](#rethinking-assessment-what-we-actually-care-about)
+   - [The Honest Goal](#the-honest-goal)
+   - [Why Existing Instruments Don't Fit](#why-existing-instruments-dont-fit)
+   - [Our Assessment Philosophy](#our-assessment-philosophy-authentic-measurement)
+   - [The Assessment Strategy](#the-assessment-strategy-what-well-actually-do)
+   - [Technical Details: Validated Instruments](#technical-details-the-validated-instruments)
+10. [Measuring Equation Fluency](#measuring-equation-fluency-the-assessment-strategy) (Secondary)
+   - [Astro-EFI Development](#the-hybrid-strategy-astro-efi-equation-fluency-inventory)
    - [Equation Fluency Task Types](#equation-fluency-task-types-astro-efi-items)
-   - [Embedded Assessment Tasks](#embedded-assessment-tasks-simulation-based)
-   - [New: Confidence, Intuition, Equation Preference](#new-assessments-confidence-intuition-and-equation-preference)
-   - [Validation Strategy](#validation-strategy)
-10. [Comparison Group Design](#comparison-group-design)
+11. [Comparison Group Design](#comparison-group-design)
 11. [Research Methodology](#research-methodology)
 12. [Expected Outcomes](#expected-outcomes)
 
 ### Part III: The Intervention
 13. [The Demo Suites](#the-demo-suites)
-    - [Learning Glass Mini-Lectures](#learning-glass-mini-lectures-introducing-equations-in-context)
+    - [Learning Glass Lectures](#learning-glass-lectures-theory-before-exploration)
     - [Shared Infrastructure: Cosmic Core](#shared-infrastructure-the-cosmic-core)
 14. [The ASTR 201 Course Redesign](#the-astr-201-course-redesign)
 15. [How This Builds on Grant 1](#how-this-builds-on-grant-1)
 
 ### Part IV: Strategic & Practical
-16. [Potential Collaborators](#potential-collaborators)
-17. [Budget Categories](#budget-categories-rough-estimate)
-18. [Alignment with NSF IUSE Goals](#alignment-with-nsf-iuse-goals)
-19. [Grant Landscape: Beyond IUSE](#grant-landscape-beyond-iuse)
+16. [PI Qualifications](#pi-qualifications-why-a-computational-astrophysicist)
+17. [Potential Collaborators](#potential-collaborators)
+18. [Budget Categories](#budget-categories-rough-estimate)
+19. [Alignment with NSF IUSE Goals](#alignment-with-nsf-iuse-goals)
+20. [Grant Landscape: Beyond IUSE](#grant-landscape-beyond-iuse)
     - [NSF HSI Programs](#nsf-hsi-programs--high-priority)
     - [NSF CAREER Award](#nsf-career-award-if-eligible)
     - [Private Foundations](#private-foundations)
     - [Strategic Grant Sequencing](#strategic-grant-sequencing)
-20. [Open Questions](#open-questions--needs-further-development)
-21. [Action Items & TODOs](#action-items--todos)
-22. [Next Steps](#next-steps)
-23. [References](#references-preliminary)
+21. [Open Questions](#open-questions--needs-further-development)
+22. [Action Items & TODOs](#action-items--todos)
+23. [Next Steps](#next-steps)
+24. [References](#references-preliminary)
 
 ---
 
@@ -121,6 +126,112 @@ Math anxiety affects 25-80% of college students (Beilock & Maloney, 2015), and i
 2. **Persistence:** Keep teaching the same way → High DFW rates, students drop STEM
 
 Neither works. We need a third path.
+
+### What We Actually See in the Classroom
+
+Three years of teaching ASTR 201 reveals a consistent pattern:
+
+**The problem is math and problem-solving, not memorization.**
+
+Students don't fail because they can't remember facts about stars. They struggle because:
+- They've never been asked to *reason* with equations
+- They don't know how to approach unfamiliar problems
+- They expect to memorize procedures, not understand principles
+- Prior education trained them to pattern-match, not think
+
+**Even students who took Physics 195 struggle.** The physics prerequisite doesn't solve the problem — students arrive having "done" physics but without having learned to *think* with equations.
+
+**For many students, ASTR 201 is their first small STEM class.** They've survived large intro courses (500 students, multiple choice, routine problem sets) with study strategies that don't transfer: memorize definitions, memorize formulas, reproduce on exam.
+
+When those strategies fail in a 40-person class with derivation problems and "explain your reasoning" questions, students are genuinely lost. They ask:
+
+> *"I tried to study like I did in high school and it doesn't work here. What should I do?"*
+
+> *"I memorized all the equations but I still couldn't do the problems."*
+
+**The gap isn't motivation or intelligence. It's skill.** Students have never been taught to reason with equations — and they know it. They're asking for help learning *how to learn*.
+
+### What the Research Literature Shows
+
+These classroom observations align with decades of research documenting systemic problems in STEM education:
+
+#### The Teaching Gap: Procedures Over Understanding
+
+Stigler & Hiebert's landmark TIMSS video studies compared US, German, and Japanese math classrooms. The findings were stark:
+
+- **89% of US math lessons** were rated as containing content of "low quality" by independent evaluators
+- US teachers focused overwhelmingly on **procedures** ("here's how to solve this") rather than **conceptual understanding** ("here's why this works")
+- Japanese teachers spend significantly more class time having students struggle with problems before showing solutions
+
+The core problem: American math instruction prioritizes **getting the right answer quickly** over **understanding why**. Students learn to mimic procedures without building mental models—exactly the pattern we see when they arrive in ASTR 201.
+
+**Citation:** Stigler, J. W., & Hiebert, J. (1999). *The Teaching Gap: Best Ideas from the World's Teachers for Improving Education in the Classroom*. Free Press.
+
+#### Grade Inflation + Achievement Decline
+
+Evidence that the education system is sending false signals:
+
+- **47% of high school students** now graduate with an A average (compared to ~18% in 1998)
+- Meanwhile, **ACT scores have declined** to their lowest levels in 30+ years
+- The disconnect: students receive signals that they're excelling while actually being less prepared
+
+When our students say "I tried studying like I did in high school and it didn't work," they're experiencing this gap. They earned A's with surface-level strategies, then hit a wall when those strategies fail.
+
+**Citation:** Rosinger, K. O., & Ford, K. S. (2019). Pell grant versus income data in postsecondary research. *Educational Researcher*, 48(5), 309-315. [Note: See also ACT annual reports and grade inflation studies by Rojstaczer & Healy, 2012]
+
+#### The College Readiness Crisis
+
+- Approximately **one-third of college freshmen** arrive unprepared for college-level mathematics
+- Even Harvard created "Math Ma" (a pre-calculus bridge course) because students with "good" high school records couldn't handle standard coursework
+- The problem isn't that students are less capable—it's that they've been trained in **procedural mimicry** rather than mathematical reasoning
+
+**Citation:** Chen, X. (2016). *Remedial coursetaking at U.S. public 2- and 4-year institutions: Scope, experiences, and outcomes* (NCES 2016-405). National Center for Education Statistics.
+
+#### "Mile Wide, Inch Deep" Curriculum
+
+US math curricula cover far more topics than high-performing countries but with less depth. The result:
+
+- Surface-level familiarity with many topics
+- No deep understanding of any topic
+- Inability to transfer knowledge to new contexts
+
+When students arrive knowing "about" physics but unable to *reason* with physics, this is the root cause.
+
+**Citation:** Schmidt, W. H., McKnight, C. C., & Raizen, S. A. (1997). *A Splintered Vision: An Investigation of U.S. Science and Mathematics Education*. Kluwer Academic Publishers.
+
+#### Learned Helplessness: Yes, It's Real
+
+Carol Dweck's research provides strong evidence for the mechanism underlying math avoidance:
+
+**The pattern:** When students encounter difficulty and attribute it to **lack of ability** ("I'm just not a math person") rather than **lack of strategy or effort**, they:
+1. Stop trying
+2. Avoid challenges
+3. Perform worse even on tasks they could previously do
+
+**How schools create it:**
+- Emphasis on correct answers over process
+- Timed tests and speed-based assessment (reinforces that math ability = speed)
+- Lack of productive struggle (when teachers immediately rescue struggling students, students learn they can't figure things out themselves)
+- Fixed mindset messaging (subtle cues that mathematical ability is innate)
+
+Math anxiety affects **working memory**—anxious students literally have less cognitive capacity available for problem-solving. The anxiety is often **learned** through negative experiences, not inherent.
+
+**Citations:**
+- Dweck, C. S. (2006). *Mindset: The New Psychology of Success*. Random House.
+- Beilock, S. L. (2010). *Choke: What the Secrets of the Brain Reveal About Getting It Right When You Have To*. Free Press.
+
+#### Implications for This Grant
+
+These findings explain why simply "teaching the material well" is insufficient. Students arrive with:
+
+| Deficit | Root Cause | Required Intervention |
+|---------|------------|----------------------|
+| Procedural without conceptual | Years of procedure-focused instruction | Build mental models through simulation |
+| False confidence from grades | Grade inflation masked gaps | Low-stakes exploration reveals actual understanding |
+| Math avoidance as coping | Learned helplessness from repeated failure | Productive failure in safe environment |
+| Inability to transfer | "Mile wide, inch deep" coverage | Deep engagement with fewer concepts |
+
+**The intervention must address all four.** Demos alone aren't enough—the pedagogical framework (Grounded Cognition + Productive Failure + Self-Efficacy) specifically targets each deficit.
 
 ### The Hypothesis
 
@@ -1158,21 +1269,346 @@ At each checkpoint, open-ended questions to capture qualitative shifts:
 
 ---
 
-## Measuring Equation Fluency: The Assessment Strategy
+## Rethinking Assessment: What We Actually Care About
 
-### The Measurement Problem
+### The Honest Goal
 
-**Core challenge:** "Equation fluency" as we've defined it—the ability to predict equation behavior, identify dominant terms, diagnose misapplication, and transfer understanding—is not well-captured by existing validated instruments. This creates a tension:
+Let's be direct about what success looks like for ASTR 201.
 
-1. **Validated instruments** (PIQL, QuaRCS) measure related constructs but may miss what makes demo-based learning unique
-2. **New instrument development** is publishable and high-impact, but requires psychometrics expertise and significant effort
-3. **Custom tasks** capture exactly what we want to measure, but lack validation
+**Most students will not become astrophysicists.** Of the 25-30 students per year, maybe 2-3 will pursue graduate school in astronomy. The rest will become engineers, teachers, data scientists, or professionals in unrelated fields.
 
-**Our solution:** A hybrid approach that adapts existing instruments while piloting astronomy-specific equation fluency tasks.
+**So what's the real win?**
+
+| What We Don't Need | What We Actually Need |
+|--------------------|----------------------|
+| Students become experts in stellar structure | Students lose their fear of equations |
+| Perfect scores on concept tests | Confidence that they *can* reason quantitatively |
+| Mastery of every derivation | Willingness to engage with mathematical models |
+| Flawless problem-solving | Belief that equations are tools, not barriers |
+
+**The transformative outcome isn't expertise. It's attitude.**
+
+If students leave ASTR 201:
+- Believing they can figure out what an equation means
+- Willing to engage with quantitative problems rather than avoiding them
+- Seeing equations as concise summaries rather than incomprehensible symbols
+- Confident enough to take another math-heavy course
+
+...then we've succeeded, even if they can't reproduce the Lane-Emden equation from memory.
 
 ---
 
-### Related Existing Instruments
+### Why Existing Instruments Don't Fit
+
+#### The Problem with Astronomy Diagnostic Tests
+
+The most commonly used astronomy assessments (ADT, LSCI, TOAST) were designed for **Astro 101**: large lecture courses teaching scientific literacy to non-majors.
+
+| Instrument | Designed For | What It Measures | Fit for ASTR 201? |
+|------------|--------------|------------------|-------------------|
+| ADT (Astronomy Diagnostic Test) | Astro 101 | Basic astronomical facts, common misconceptions | ❌ Too basic |
+| LSCI (Lunar Shapes Concept Inventory) | Astro 101 | Moon phases understanding | ❌ Irrelevant content |
+| TOAST (Test of Astronomy Standards) | K-12/Intro | Standards-aligned astronomical knowledge | ❌ Wrong level |
+
+**These instruments test whether students know facts about astronomy.** They don't test whether students can:
+- Reason with equations
+- Predict physical behavior
+- Evaluate model assumptions
+- Engage confidently with quantitative problems
+
+Using Astro 101 instruments to assess ASTR 201 learning is like using a spelling test to assess essay writing.
+
+#### The Problem with Physics Concept Inventories
+
+Physics education has better instruments (FCI, BEMA, CSEM), but they share a fundamental limitation: **they measure conceptual understanding as right/wrong answers to multiple-choice questions.**
+
+This approach:
+- Rewards test-taking strategies over genuine understanding
+- Misses the *process* of reasoning
+- Can't capture confidence, willingness, or attitude change
+- Treats learning as binary (correct/incorrect) rather than developmental
+
+#### The Problem with "Validated" as a Gold Standard
+
+Education research has developed a culture where "validated instrument" is synonymous with "good measurement." But validation just means the instrument reliably measures *something* — not necessarily the *right* thing.
+
+**An instrument can be perfectly validated and still useless for your research question.**
+
+The existing instruments were validated to answer questions like:
+- "Do students have correct Newtonian intuitions?" (FCI)
+- "Do students understand basic astronomical phenomena?" (ADT)
+- "Can students reason proportionally?" (PIQL)
+
+Our question is different:
+
+> **"Do students' attitudes toward equations shift from avoidance to engagement?"**
+
+No existing instrument measures this. Using proxy measures (PIQL scores, concept inventory gains) would be measuring the wrong thing.
+
+---
+
+### Our Assessment Philosophy: Authentic Measurement
+
+**Principle:** Measure what we actually care about, in the context where it actually matters.
+
+Instead of pulling students out of the learning environment to take artificial tests, we embed assessment *in* the learning activities. The demos themselves become assessment instruments.
+
+#### Why Authentic Assessment?
+
+| Traditional Assessment | Authentic Assessment |
+|-----------------------|---------------------|
+| Separate from learning | Embedded in learning |
+| Artificial context (test conditions) | Natural context (demo exploration) |
+| Single snapshot (pre/post) | Continuous trajectory |
+| Measures recall | Measures reasoning process |
+| Student knows they're being tested | Assessment is invisible |
+| Rewards test-taking skills | Rewards genuine engagement |
+
+**The key insight:** Our demos already capture rich data on how students think. Every prediction, every slider adjustment, every exploration path is logged. This is *far more informative* than 20 multiple-choice questions administered twice a semester.
+
+---
+
+### The Assessment Strategy: What We'll Actually Do
+
+#### Tier 1: Validated Touchpoints (Required for Reviewers)
+
+We use validated instruments as "touchpoints" for comparison to existing literature.
+
+**The Complete Assessment Schedule:**
+
+| Timepoint | PIQL | MARS-R | AMAS | Eq. Attitude | Confidence | Time |
+|-----------|:----:|:------:|:----:|:------------:|:----------:|------|
+| **Pre (Week 1)** | ✓ | ✓ | ✓ | ✓ | ✓ | ~40 min |
+| **Checkpoint 1 (after Stellar, ~Wk 5)** | — | — | ✓ | ✓ | ✓ | ~10 min |
+| **Checkpoint 2 (after Galaxies, ~Wk 10)** | — | — | ✓ | ✓ | ✓ | ~10 min |
+| **Post (after Cosmo, ~Wk 15)** | ✓ | ✓ | ✓ | ✓ | ✓ | ~40 min |
+
+---
+
+**PIQL (Physics Inventory of Quantitative Literacy)** — 20 items, ~15 minutes
+- Measures proportional reasoning, covariation, ratio reasoning
+- Why: The least bad option for quantitative reasoning; measures process not facts
+- When: **Pre and Post only**
+- Purpose: Establish that our students show comparable gains to other active learning interventions
+
+**MARS-R (Math Anxiety Rating Scale - Revised)** — 24 items, ~10 minutes
+- Comprehensive math anxiety measure across multiple dimensions (test anxiety, numerical task anxiety, course anxiety)
+- Why: Gold standard for math anxiety; well-validated, widely cited in literature
+- When: **Pre and Post only** (too long for repeated administration)
+- Purpose: Detailed anxiety profile at endpoints; publishable pre/post comparison
+
+**AMAS (Abbreviated Math Anxiety Scale)** — 9 items, ~3 minutes
+- Short-form anxiety measure, validated against full MARS (r > 0.85)
+- Why: Short enough to administer repeatedly without survey fatigue
+- When: **All four timepoints**
+- Purpose: **Track anxiety trajectory** — when does anxiety drop? Gradually? After Suite 1? Plateau then breakthrough?
+
+**Why both MARS-R and AMAS?**
+- MARS-R at endpoints gives detailed, publishable pre/post comparison
+- AMAS at all timepoints tracks the *evolution* of anxiety across the semester
+- Administering both at pre/post validates they correlate in our population
+- The trajectory data is the novel contribution — nobody tracks anxiety evolution through a course
+
+**Why PIQL only at endpoints?**
+- Quantitative reasoning changes slowly; checkpoint measurement adds noise
+- 15 minutes is too long to administer 4 times
+- Pre/post is the standard in the literature; more wouldn't add insight
+
+#### Tier 2: Attitude and Confidence Measures (Our Primary Outcomes)
+
+These directly measure what we actually care about:
+
+**Equation Attitude Survey** — Custom, ~10 items, ~5 minutes
+
+| Item | What It Measures |
+|------|------------------|
+| "When I see an equation, my first instinct is to skip it" | Avoidance |
+| "I can usually figure out what an equation means if I think about it" | Confidence |
+| "Equations are a barrier to understanding physics" | Attitude |
+| "I would rather have things explained in words than equations" | Preference |
+| "When I successfully use an equation, I feel accomplished" | Affect |
+| "I am capable of reasoning with mathematical relationships" | Self-efficacy |
+| "Equations help me understand physics more deeply" | Value |
+| "I avoid courses that involve a lot of math" | Behavioral intention |
+
+Administered: Pre, each checkpoint, post
+Analysis: Track trajectory, identify when shifts occur
+
+**Physical Intuition Confidence** — 3 items per module
+
+After each demo suite:
+1. "How confident are you that you can predict what will happen in a physical system before calculating?" (1-5)
+2. "How confident are you in your physical intuition about [stellar structure / galaxies / cosmology]?" (1-5)
+3. "Compared to before this unit, my comfort with equations has: decreased / stayed same / increased"
+
+**Why attitudes matter more than test scores:** A student who finishes ASTR 201 with slightly improved PIQL scores but persistent math avoidance will struggle in every subsequent STEM course. A student who finishes with *confidence* will keep engaging, keep learning, keep growing. Attitude predicts trajectory.
+
+#### Tier 3: Authentic Embedded Assessment (Our Richest Data)
+
+**Prediction Accuracy Tracking**
+
+Every demo includes prediction mode. Students must:
+1. Commit to a prediction (slider position, qualitative direction, or multiple choice)
+2. State confidence (1-5)
+3. Observe the result
+4. Explain any discrepancy
+
+Data captured automatically via autolog:
+- Prediction accuracy over time (learning curve)
+- Confidence calibration (do confident predictions become more accurate?)
+- Explanation quality (coded from text responses)
+
+**This is the gold standard.** We're measuring whether students can predict physical behavior *in context*, with real equations, during actual learning. No multiple-choice test captures this.
+
+**Exploration Pattern Analytics**
+
+Autologs capture:
+- Which parameters students explore first
+- How systematically they vary parameters (one-at-a-time vs. random)
+- Whether they test limiting cases
+- Time spent on equation panel vs. visualization
+- Whether they return to equations after exploring
+
+Research question: Do exploration patterns predict attitude change? Do students who engage more systematically show greater confidence gains?
+
+**Equation Map Quality**
+
+Equation Maps require students to explain each term in an equation in their own words.
+
+Rubric-scored on:
+- Correctness of term identification
+- Physical interpretation (not just restating symbols)
+- Connection to demo behavior
+- Appropriate use of limiting cases
+
+This measures *depth* of equation understanding, not just whether students can pick the right multiple-choice answer.
+
+**Synthesis Memo Analysis**
+
+Three memos per semester. Qualitative analysis:
+- Do students voluntarily use equations when words would suffice?
+- How do they talk about equations? (barrier vs. tool language)
+- Does equation usage increase over the semester?
+
+#### Tier 4: Downstream Outcomes (Long-Term)
+
+**Course Performance**
+- DFW rates compared to historical
+- Exam performance on equation-based questions (your exams, your rubric)
+- Final grades
+
+**Persistence**
+- Enrollment in upper-division courses (ASTR 301, 302, 303)
+- Grades in subsequent courses
+- Retention in major
+
+**Why not make these primary outcomes?** Grades are confounded (you control the exams). Persistence is slow to measure. But they're valuable supporting evidence.
+
+---
+
+### Why This Approach Is Defensible
+
+Reviewers may ask: "Why aren't you using validated concept inventories as primary outcomes?"
+
+**Our response:**
+
+> "Existing astronomy concept inventories (ADT, LSCI, TOAST) were designed for introductory courses and measure factual knowledge and common misconceptions. They do not assess the quantitative reasoning and attitude change that are the primary outcomes of this intervention.
+>
+> We use the Physics Inventory of Quantitative Literacy (PIQL) to measure reasoning gains, allowing comparison to the broader physics education literature. For our primary outcomes — attitude change, confidence development, and equation preference shift — we employ authentic embedded assessments that capture learning *in context* rather than through artificial testing situations.
+>
+> This approach provides ecological validity: we measure whether students can predict physical behavior while actually working with physics models, not whether they can recall correct answers under test conditions. The rich autolog data from demo interactions offers continuous insight into learning trajectories, something no pre/post instrument can provide."
+
+---
+
+### Comparison to Traditional Approach
+
+| Aspect | Traditional Ed Research | Our Approach |
+|--------|------------------------|--------------|
+| Primary outcome | Concept inventory gains | Attitude/confidence trajectory |
+| Data collection | Pre/post testing | Continuous embedded assessment |
+| Context | Artificial test conditions | Authentic learning context |
+| What's valued | Correctness | Engagement, reasoning process |
+| Underlying assumption | Learning = acquiring facts | Learning = changing relationship with material |
+| Sample required | Large N for statistical power | Rich data from smaller N |
+| Generalizability | High (standardized measure) | Moderate (context-specific) |
+| Validity for our question | Low (measures wrong construct) | High (measures what we care about) |
+
+**We're trading some generalizability for validity.** A study that uses the wrong measures to get publishable results helps no one. A study that measures what actually matters — even with non-standard methods — advances understanding.
+
+---
+
+## Technical Details: The Validated Instruments
+
+### PIQL (Physics Inventory of Quantitative Literacy)
+
+**What it is:** A 20-item assessment measuring quantitative reasoning in physics contexts.
+
+**What it measures:**
+- **Proportional reasoning:** If X doubles, what happens to Y?
+- **Covariation:** How do two quantities change together?
+- **Signed quantities:** Reasoning about negative rates, directions
+- **Ratio reasoning:** Comparing fractions, rates, slopes
+
+**Sample item:** "A car travels at constant speed. If it goes twice as far, it takes _____ as long."
+
+**Why we use it:** Unlike concept inventories that test physics facts, PIQL tests *reasoning ability*. This is closer to what we care about — it measures whether students can think quantitatively, not whether they know that seasons are caused by axial tilt.
+
+**Limitations:** Still multiple choice. General reasoning, not equation-specific. Doesn't capture attitudes.
+
+**Administration:** ~15-20 minutes. Pre (Week 1), Post (Week 15).
+
+**Citation:** White Brahmia, S., Boudreaux, A., & Kanim, S. E. (2016). Developing Mathematization with Physics Inventory of Quantitative Literacy. *PERC Proceedings*.
+
+### MARS-R (Math Anxiety Rating Scale - Revised)
+
+**What it is:** A 24-item comprehensive assessment of math anxiety, the most widely used and validated instrument in the field.
+
+**What it measures:**
+- **Math Test Anxiety:** Anxiety about being evaluated on math
+- **Numerical Task Anxiety:** Anxiety about everyday math tasks (calculating tips, checking receipts)
+- **Math Course Anxiety:** Anxiety about math classes and instruction
+
+**Sample items:** (Rate your anxiety 1-5 when...)
+- "Taking an examination in a math course"
+- "Being given a 'pop' quiz in a math class"
+- "Buying a math textbook"
+- "Listening to a lecture in a math class"
+
+**Why we use it:** The gold standard for math anxiety measurement. Extensively validated across populations. Allows comparison to decades of published research on math anxiety interventions.
+
+**Limitations:** Too long for repeated administration (survey fatigue). That's why we use AMAS for trajectory tracking and MARS-R for detailed endpoints.
+
+**Administration:** ~10 minutes. Pre (Week 1), Post (Week 15) only.
+
+**Citation:** Plake, B. S., & Parker, C. S. (1982). The development and validation of a revised version of the Mathematics Anxiety Rating Scale. *Educational and Psychological Measurement*, 42(2), 551-557.
+
+### AMAS (Abbreviated Math Anxiety Scale)
+
+**What it is:** A 9-item scale measuring math anxiety, validated as a short form of the full MARS.
+
+**What it measures:**
+- Anxiety about math tests
+- Anxiety about math courses
+- Anxiety about everyday numerical tasks
+
+**Sample items:**
+- "Thinking about an upcoming math test"
+- "Being given a homework assignment of many difficult problems"
+- "Watching a teacher work an algebraic equation on the board"
+
+Response scale: 1 (Low anxiety) to 5 (High anxiety)
+
+**Why we use it:** Short enough to administer repeatedly (every checkpoint) without survey fatigue. Validated. Allows trajectory tracking.
+
+**Limitations:** Measures general math anxiety, not equation-specific or physics-specific attitudes.
+
+**Administration:** ~3 minutes. Pre, Checkpoint 1, Checkpoint 2, Post.
+
+**Citation:** Hopko, D. R., Mahadevan, R., Bare, R. L., & Hunt, M. K. (2003). The Abbreviated Math Anxiety Scale (AMAS): Construction, validity, and reliability. *Assessment*, 10(2), 178-182.
+
+---
+
+## Measuring Equation Fluency: The Assessment Strategy
 
 #### 1. Symbol Sense (Arcavi, 1994)
 
@@ -1376,24 +1812,45 @@ Demo autologs capture:
 
 ### How This Positions the Research
 
+**The contribution is attitude-centered:**
+
+Our primary research question isn't "Do students learn more physics?" — it's **"Do students change their relationship with equations?"**
+
+This reframing positions the research differently:
+
+| Traditional Framing | Our Framing |
+|--------------------|-------------|
+| Measure concept gains with validated instruments | Measure attitude trajectory with authentic assessment |
+| Success = higher test scores | Success = reduced fear, increased confidence |
+| Primary outcome = learning | Primary outcome = willingness to engage |
+| Students as test subjects | Students as developing learners |
+
 **The contribution is three-fold:**
 
-1. **Primary outcomes** use validated instruments (PIQL, QuaRCS, MARS-R)
-   - Satisfies reviewers
-   - Comparable to existing literature
-   - Publishable even if Astro-EFI development is incomplete
+1. **Primary outcomes: Attitude and Confidence Trajectory**
+   - Custom Equation Attitude Survey (pre/checkpoint/post)
+   - AMAS anxiety tracking across semester
+   - Confidence self-reports at each module
+   - Behavioral evidence from synthesis memos (do they choose equations?)
 
-2. **Secondary outcomes** use the new Astro-EFI
-   - Tests whether demos build *equation-specific* skills beyond general reasoning
-   - Generates pilot data for future instrument validation grant
+2. **Secondary outcomes: Authentic Embedded Assessment**
+   - Prediction accuracy trajectory (from autologs)
+   - Exploration pattern analytics
+   - Equation Map quality over time
+   - Explanation depth in discrepancy responses
 
-3. **Exploratory outcomes** use embedded simulation tasks
-   - Rich process data on how students learn
-   - Qualitative insights that inform theory
+3. **Touchpoint outcomes: Validated Instruments**
+   - PIQL for quantitative reasoning (comparison to literature)
+   - AMAS for anxiety (validated trajectory measure)
+   - Course grades, DFW rates, persistence (institutional data)
 
 **The framing to reviewers:**
 
-> "We use established validated instruments for our primary outcomes while simultaneously piloting a new assessment—the Astronomy Equation Fluency Inventory (Astro-EFI)—that targets the specific skills demo-based learning develops. This mixed approach ensures rigorous, publishable findings while advancing assessment methodology in astronomy education."
+> "This study addresses a gap in astronomy education research: the measurement and development of productive attitudes toward equations. Existing instruments assess factual knowledge or general anxiety; none capture whether students come to see equations as useful tools rather than barriers.
+>
+> We employ authentic embedded assessment — using the rich data generated during demo exploration — to track attitude trajectories with ecological validity. Validated instruments (PIQL, AMAS) serve as touchpoints connecting our findings to the broader literature, not as primary outcomes.
+>
+> Our goal is not to produce students who score higher on tests. It is to produce students who are willing to engage with quantitative reasoning — a prerequisite for success in any subsequent STEM course."
 
 ---
 
@@ -1454,41 +1911,55 @@ For detecting medium effect sizes (d = 0.5) on math anxiety reduction:
 
 ## Expected Outcomes
 
-### For Students
+### For Students: Attitudes First, Expertise Second
+
+The primary outcomes are attitude-based. The secondary outcomes are skill-based.
+
+**Primary Outcomes (What We Actually Care About):**
 
 | Outcome | Metric | Target |
 |---------|--------|--------|
-| **Reduced math anxiety** | MARS-R score decrease | >0.5 SD reduction |
-| **Improved quantitative reasoning** | PIQL score | >0.3 normalized gain |
-| **Improved equation fluency** | Astro-EFI | Positive correlation with demo engagement |
-| **Better prediction accuracy** | Embedded prediction tasks | Improvement trajectory over semester |
-| **Increased confidence** | Confidence survey | Significant pre→post increase |
-| **Shift to equation preference** | Equation Preference Scale | Net positive shift (words → equations) |
-| **Stronger physical intuition** | Physical Intuition Assessment | Pre→post improvement |
-| **Lower DFW rates** | Course grades | 40-50% reduction |
-| **Upper-div success** | Grades in 301/302/303 | Improved vs. historical |
+| **Reduced equation avoidance** | Equation Attitude Survey | Significant shift toward engagement |
+| **Increased confidence** | Confidence items at checkpoints | Positive trajectory across semester |
+| **Reduced math anxiety** | AMAS score decrease | >0.5 SD reduction |
+| **Shift to equation preference** | "I prefer equations to words" items | Net positive shift |
+| **Willingness to engage** | Behavioral: voluntary equation use in memos | Increases over semester |
 
-### The "Equation Preference" Outcome (Primary Novel Outcome)
+**Secondary Outcomes (Traditional Metrics):**
+
+| Outcome | Metric | Target |
+|---------|--------|--------|
+| **Better prediction accuracy** | Embedded prediction tasks (autolog) | Improvement trajectory |
+| **Improved quantitative reasoning** | PIQL score | >0.3 normalized gain |
+| **Lower DFW rates** | Course grades | Reduction vs. historical |
+| **Upper-div persistence** | Enrollment in 301/302/303 | Improved vs. historical |
+
+### The Attitude Shift (Primary Novel Outcome)
 
 **The signature result we're seeking:**
 
-> By semester's end, students express preference for equations as explanatory tools — they see equations not as barriers but as elegant, concise summaries of physical understanding.
+> By semester's end, students believe they *can* engage with equations — even if they still find them challenging. The fear is gone. The avoidance is gone. They're willing to try.
 
 This is measurable via:
-1. Equation Preference Scale (quantitative pre/post)
-2. Module reflections (qualitative shift in language)
-3. Synthesis memos (voluntary use of equations when words would suffice)
+1. Equation Attitude Survey trajectory (quantitative, checkpoint-tracked)
+2. Module reflections (qualitative shift in language about equations)
+3. Synthesis memos (behavioral: do they voluntarily use equations?)
+4. Self-reported confidence (do they believe they can figure out what an equation means?)
 
-**Why this matters:** This represents a fundamental shift in relationship with mathematics — the transition from "math avoider" to "equation owner."
+**Why attitudes matter more than test scores:**
+
+A student who finishes with slightly higher PIQL scores but persistent equation avoidance will struggle in every subsequent STEM course. A student who finishes with *confidence* and *willingness* will keep engaging, keep practicing, keep improving.
+
+Attitudes predict trajectory. Test scores measure a snapshot.
 
 ### For the Field
 
 1. **Open-source demo suites** available to any institution
-2. **Validated assessment instruments** (Astro-EFI, Equation Preference Scale)
+2. **Equation Attitude Survey** (pilot-tested, ready for others to adapt)
 3. **Learning Glass video library** for theory introduction
 4. **Implementation guides** for instructors adopting demo-based pedagogy
-5. **Research publications** on equation fluency development trajectories
-6. **Replication package** for other institutions to conduct similar studies
+5. **Research publications** on attitude trajectory development
+6. **Authentic assessment examples** showing how to measure learning in context
 
 ### For SDSU
 
@@ -1511,6 +1982,95 @@ This is measurable via:
 | Single-institution pilot | Multi-section comparison; replication potential |
 
 **The Logic:** Grant 1 proves that interactive demos work for intro astronomy. Grant 2 asks: *Can they solve the harder problem of math anxiety and equation fluency in physics-heavy courses?*
+
+---
+
+## PI Qualifications: Why a Computational Astrophysicist?
+
+### Background
+
+**Dr. Anna Rosen** is a computational astrophysicist at San Diego State University. Her research involves building and running complex simulations of star formation, radiation hydrodynamics, and stellar feedback — work that requires deep comfort with equations as tools for understanding physical systems.
+
+She is not a STEM education researcher. But that's a feature, not a bug.
+
+---
+
+### Direct Classroom Experience: 3 Years Teaching ASTR 201
+
+Dr. Rosen has taught ASTR 201 for three years, giving her direct, repeated observation of where students struggle.
+
+**The core finding: It's math and problem-solving, not memorization.**
+
+Students don't fail ASTR 201 because they can't remember facts. They struggle because:
+- They've never been asked to *reason* with equations
+- They don't know how to approach a problem they haven't seen before
+- They expect to memorize procedures rather than understand principles
+- They've been trained to pattern-match, not think
+
+**Even students who have taken Physics 195 struggle.** The physics prerequisite doesn't solve the problem — students arrive having "done" physics but not having internalized how to *think* with equations.
+
+---
+
+### The Transition Problem: First Small STEM Class
+
+For many students, ASTR 201 is their **first STEM course that isn't 500 students**.
+
+In large intro courses:
+- Assessment is often multiple choice
+- Problem sets may be routine plug-and-chug
+- Studying = memorizing definitions and formulas
+- Individual attention is limited
+
+In ASTR 201 (~40 students):
+- Problems require genuine reasoning
+- Exams ask "derive" and "explain," not just "calculate"
+- The instructor notices when you're lost
+- Coasting doesn't work
+
+**The result:** Students experience a shock. The study strategies that got them through Astro 101, Physics 195, and high school simply don't work.
+
+---
+
+### What Students Actually Say
+
+Direct quotes from student conversations:
+
+> *"I tried to study like I did in high school and realized it doesn't work here."*
+
+> *"I memorized all the equations but I still couldn't do the problems."*
+
+> *"I don't even know how to start when I see a problem I haven't seen before."*
+
+Students ask for study advice, for help understanding *how* to learn, not just *what* to learn. They recognize the gap — they just don't know how to bridge it.
+
+---
+
+### Why This Background Matters for the Proposal
+
+| PI Characteristic | Why It Helps |
+|-------------------|--------------|
+| **Computational astrophysicist** | Genuinely loves equations; can model the relationship students should develop |
+| **3 years teaching ASTR 201** | Direct observation of where students struggle; knows the problem firsthand |
+| **Not an ed researcher** | Brings authentic domain expertise; teaches the actual course; will sustain beyond grant |
+| **Can build demos** | Computational skills enable rapid development of scientifically accurate simulations |
+| **Sees the math gap clearly** | Knows it's problem-solving, not memorization; intervention is targeted at real issue |
+
+**The key insight:** Students aren't failing because astronomy is hard. They're failing because no one has taught them to *reason with equations*. They've been trained to memorize and reproduce, and that doesn't work in courses that require genuine understanding.
+
+This proposal is designed to fix that — not by lowering standards, but by helping students develop the skills they need to meet them.
+
+---
+
+### What the PI Needs (Addressed Through Collaboration)
+
+| Gap | How Addressed |
+|-----|---------------|
+| No ed research publication record | Co-PI with STEM education expertise (Matt Anderson) |
+| No psychometrics training | PER/AER consultant for instrument validation |
+| No literature expertise in PER/AER | Collaborators provide connections and guidance |
+| Study design methodology | Co-PI leads research methodology |
+
+**The team model:** Domain expert (PI) + Education researcher (Co-PI) + Assessment expert (Consultant). This is the standard model for Discipline-Based Education Research, and it's stronger than either type of expertise alone.
 
 ---
 

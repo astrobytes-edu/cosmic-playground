@@ -1,6 +1,7 @@
 @import "../../shared/stub-demo.css";
 
 .stage-surface {
+  position: relative;
   width: 100%;
   border-radius: var(--cp-radius-lg);
   border: 1px solid var(--cp-border);
@@ -12,7 +13,18 @@
   );
 }
 
+.orbit-canvas {
+  position: absolute;
+  inset: var(--cp-space-3);
+  width: calc(100% - (2 * var(--cp-space-3)));
+  height: calc(100% - (2 * var(--cp-space-3)));
+  opacity: 0;
+  pointer-events: none;
+}
+
 #orbitSvg {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: auto;
   display: block;

@@ -76,9 +76,9 @@ test("export payload order matches UI controls/readouts", () => {
 
   expect(payload.readouts.map((r) => r.name).slice(0, 4)).toEqual([
     "Distance r (AU)",
-    "Velocity v (km/s)",
+    "Speed v (km/s)",
     "Acceleration (mm/s^2)",
-    "Period P (yr)"
+    "Orbital period P (yr)"
   ]);
 });
 
@@ -100,7 +100,7 @@ test("export payload converts velocity to cm/s in 201 units", () => {
     arealVelocity: 3.1416
   });
 
-  const velocityRow = payload.readouts.find((row) => row.name.startsWith("Velocity v"));
+  const velocityRow = payload.readouts.find((row) => row.name.startsWith("Speed v"));
   expect(velocityRow).toBeTruthy();
   expect(Number(velocityRow!.value)).toBeCloseTo(100000, 2);
 });
@@ -123,7 +123,7 @@ test("export payload converts velocity to cm/s in 201 units", () => {
     arealVelocity: 3.1416
   });
 
-  const velocityRow = payload.readouts.find((row) => row.name.startsWith("Velocity v"));
+  const velocityRow = payload.readouts.find((row) => row.name.startsWith("Speed v"));
   expect(velocityRow).toBeTruthy();
   expect(Number(velocityRow!.value)).toBeCloseTo(100000, 2);
 });
