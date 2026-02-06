@@ -6,6 +6,10 @@ topics: [EarthSky, Orbits]
 time_minutes: 8
 has_math_mode: false
 tags: ["conjunctions", "opposition", "synodic period", "relative motion"]
+readiness: experimental
+readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+parityAuditPath: "docs/audits/migrations/planetary-conjunctions-parity.md"
+lastVerifiedAt: "2026-02-01"
 learning_goals:
   - "Define conjunction and opposition as seen from Earth."
   - "Explain why conjunctions repeat using Earth’s motion relative to another planet."

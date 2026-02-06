@@ -7,6 +7,10 @@ topics: [Telescopes]
 time_minutes: 10
 has_math_mode: false
 tags: ["resolution", "aperture", "diffraction"]
+readiness: experimental
+readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+parityAuditPath: "docs/audits/migrations/telescope-resolution-parity.md"
+lastVerifiedAt: "2026-02-02"
 learning_goals:
   - "Distinguish magnification from resolution."
   - "Explain how aperture affects the ability to separate close objects."

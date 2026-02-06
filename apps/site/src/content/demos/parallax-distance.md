@@ -7,6 +7,10 @@ topics: [DataInference]
 time_minutes: 12
 has_math_mode: false
 tags: ["parallax", "triangles", "distance"]
+readiness: experimental
+readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+parityAuditPath: "docs/audits/migrations/parallax-distance-parity.md"
+lastVerifiedAt: "2026-02-02"
 learning_goals:
   - "Explain parallax as apparent shift from two viewpoints."
   - "Connect smaller parallax angles to larger distances."

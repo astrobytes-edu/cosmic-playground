@@ -7,6 +7,10 @@ topics: [LightSpectra]
 time_minutes: 10
 has_math_mode: false
 tags: ["wavelength", "frequency", "spectrum"]
+readiness: experimental
+readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+parityAuditPath: "docs/audits/migrations/em-spectrum-parity.md"
+lastVerifiedAt: "2026-02-02"
 learning_goals:
   - "Order EM bands by wavelength and frequency."
   - "Connect wavelength to what kinds of detectors/observations are needed."

@@ -14,6 +14,7 @@ export { StellarEosModel } from "./stellarEosModel";
 export type {
   AdditionalPressureTerm,
   DegeneracyRegime,
+  FiniteTemperatureDegeneracyAssessment,
   FermiRelativityRegime,
   PressureDominance,
   RadiationClosureAssessment,

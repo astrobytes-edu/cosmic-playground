@@ -7,6 +7,10 @@ topics: [Orbits]
 time_minutes: 12
 has_math_mode: false
 tags: ["orbits", "period", "ellipses"]
+readiness: experimental
+readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+parityAuditPath: "docs/audits/migrations/keplers-laws-parity.md"
+lastVerifiedAt: "2026-02-04"
 featured: true
 learning_goals:
   - "Describe how orbital speed changes along an ellipse."

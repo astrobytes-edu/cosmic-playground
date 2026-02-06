@@ -7,6 +7,10 @@ topics: [EarthSky]
 time_minutes: 8
 has_math_mode: false
 tags: ["phases", "illumination", "geometry"]
+readiness: candidate
+readinessReason: "Beta demo with strong behavior and test coverage; final parity and launch-gate signoff pending."
+parityAuditPath: "docs/audits/migrations/moon-phases-parity.md"
+lastVerifiedAt: "2026-02-02"
 learning_goals:
   - "Explain why the Moon has phases using the Sun–Earth–Moon geometry."
   - "Connect phase angle to the fraction of the Moon that appears lit."

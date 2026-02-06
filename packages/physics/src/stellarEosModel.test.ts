@@ -227,8 +227,8 @@ describe("StellarEosModel", () => {
   it("reports finite-temperature degeneracy proxy diagnostics", () => {
     const state = StellarEosModel.evaluateStateCgs({
       input: {
-        temperatureK: 1e7,
-        densityGPerCm3: 1e6,
+        temperatureK: 1e4,
+        densityGPerCm3: 1e4,
         composition: {
           hydrogenMassFractionX: 0.0,
           heliumMassFractionY: 1.0,
@@ -239,6 +239,7 @@ describe("StellarEosModel", () => {
     });
 
     expect(state.finiteTemperatureDegeneracyCorrectionFactor).toBeGreaterThan(1);
+    expect(state.finiteTemperatureDegeneracyAssessment.tag).toBe("applicable");
     expect(state.electronDegeneracyPressureSommerfeldDynePerCm2).toBeGreaterThan(
       state.electronDegeneracyPressureDynePerCm2
     );
@@ -264,5 +265,83 @@ describe("StellarEosModel", () => {
 
     expect(state.neutronExtensionPressureDynePerCm2).toBeCloseTo(2.5e15, 3);
     expect(state.neutronExtensionPressureFractionOfTotal).toBeGreaterThan(0);
+  });
+
+  it("classifies extension terms as dominant when they exceed base channels", () => {
+    const base = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e7,
+        densityGPerCm3: 1e3,
+        composition: {
+          hydrogenMassFractionX: 0.7,
+          heliumMassFractionY: 0.28,
+          metalMassFractionZ: 0.02
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    const withDominantExtension = StellarEosModel.evaluateStateCgs({
+      input: base.input,
+      additionalPressureTerms: [
+        {
+          id: "neutron-extension-dominant",
+          pressureDynePerCm2: 10 * base.totalPressureDynePerCm2
+        }
+      ]
+    });
+
+    expect(withDominantExtension.dominantPressureChannel).toBe("extension");
+  });
+
+  it("only reports finite-T Sommerfeld proxy in its validity regime", () => {
+    const strongValidity = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e4,
+        densityGPerCm3: 1e4,
+        composition: {
+          hydrogenMassFractionX: 0,
+          heliumMassFractionY: 1,
+          metalMassFractionZ: 0
+        },
+        radiationDepartureEta: 1
+      }
+    });
+    const outsideValidity = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e8,
+        densityGPerCm3: 1e2,
+        composition: {
+          hydrogenMassFractionX: 0.7,
+          heliumMassFractionY: 0.28,
+          metalMassFractionZ: 0.02
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    expect(strongValidity.finiteTemperatureDegeneracyCorrectionFactor).toBeGreaterThan(1);
+    expect(strongValidity.finiteTemperatureDegeneracyAssessment.tag).toBe("applicable");
+
+    expect(Number.isNaN(outsideValidity.finiteTemperatureDegeneracyCorrectionFactor)).toBe(true);
+    expect(outsideValidity.finiteTemperatureDegeneracyAssessment.tag).toBe("outside-validity");
+  });
+
+  it("keeps eta_rad=0 consistent between closure framing and pressure channel", () => {
+    const state = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e6,
+        densityGPerCm3: 1,
+        composition: {
+          hydrogenMassFractionX: 0.7,
+          heliumMassFractionY: 0.28,
+          metalMassFractionZ: 0.02
+        },
+        radiationDepartureEta: 0
+      }
+    });
+
+    expect(state.radiationPressureDynePerCm2).toBeCloseTo(0, 12);
+    expect(state.radiationClosureAssessment.tag).toBe("proxy");
   });
 });

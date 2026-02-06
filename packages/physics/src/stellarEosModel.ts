@@ -42,7 +42,19 @@ export type FermiRelativityRegime = {
   label: string;
 };
 
-export type PressureDominance = "gas" | "radiation" | "degeneracy" | "mixed" | "invalid";
+export type FiniteTemperatureDegeneracyAssessment = {
+  tag: "applicable" | "outside-validity" | "invalid";
+  label: string;
+  note: string;
+};
+
+export type PressureDominance =
+  | "gas"
+  | "radiation"
+  | "degeneracy"
+  | "extension"
+  | "mixed"
+  | "invalid";
 
 export type StellarEosStateCgs = {
   input: StellarEosInputCgs;
@@ -60,11 +72,13 @@ export type StellarEosStateCgs = {
     gas: number;
     radiation: number;
     degeneracy: number;
+    extension: number;
   };
   pressureRatios: {
     radiationToGas: number;
     degeneracyToTotal: number;
     betaGasToTotal: number;
+    extensionToTotal: number;
   };
   fermiMomentumGCmPerS: number;
   fermiRelativityX: number;
@@ -73,8 +87,10 @@ export type StellarEosStateCgs = {
   chiDegeneracy: number;
   degeneracyRegime: DegeneracyRegime;
   fermiRelativityRegime: FermiRelativityRegime;
+  finiteTemperatureDegeneracyAssessment: FiniteTemperatureDegeneracyAssessment;
   finiteTemperatureDegeneracyCorrectionFactor: number;
   electronDegeneracyPressureSommerfeldDynePerCm2: number;
+  extensionPressureDynePerCm2: number;
   neutronExtensionPressureDynePerCm2: number;
   neutronExtensionPressureFractionOfTotal: number;
   dominantPressureChannel: PressureDominance;
@@ -240,11 +256,45 @@ function classifyFermiRelativityRegime(args: {
 
 function finiteTemperatureDegeneracyCorrectionFactor(args: {
   chiDegeneracy: number;
+  fermiRelativityX: number;
 }): number {
-  const { chiDegeneracy: chi } = args;
-  if (!Number.isFinite(chi) || chi <= 0) return Number.NaN;
-  const correction = 1 + Math.min(0.4, (Math.PI * Math.PI * chi * chi) / 12);
+  const { chiDegeneracy: chi, fermiRelativityX: xF } = args;
+  if (!Number.isFinite(chi) || chi <= 0 || !Number.isFinite(xF) || xF <= 0) return Number.NaN;
+
+  // Non-relativistic Sommerfeld expansion for pressure:
+  // P(T)/P(0) ≈ 1 + (5π²/12)(T/T_F)², valid for x_F << 1 and T/T_F << 1.
+  if (xF >= 0.3 || chi > 0.3) return Number.NaN;
+
+  const correction = 1 + (5 * Math.PI * Math.PI * chi * chi) / 12;
   return correction;
+}
+
+function assessFiniteTemperatureDegeneracy(args: {
+  chiDegeneracy: number;
+  fermiRelativityX: number;
+}): FiniteTemperatureDegeneracyAssessment {
+  const { chiDegeneracy: chi, fermiRelativityX: xF } = args;
+  if (!Number.isFinite(chi) || chi <= 0 || !Number.isFinite(xF) || xF <= 0) {
+    return {
+      tag: "invalid",
+      label: "Finite-T degeneracy proxy unavailable",
+      note: "Needs positive finite x_F and T/T_F."
+    };
+  }
+
+  if (xF < 0.3 && chi <= 0.3) {
+    return {
+      tag: "applicable",
+      label: "Sommerfeld proxy applicable",
+      note: "Uses non-relativistic low-temperature expansion (x_F << 1 and T/T_F << 1)."
+    };
+  }
+
+  return {
+    tag: "outside-validity",
+    label: "Sommerfeld proxy outside validity",
+    note: "Displayed only in non-relativistic, strongly degenerate states."
+  };
 }
 
 function assessRadiationClosure(args: {
@@ -254,11 +304,19 @@ function assessRadiationClosure(args: {
 }): RadiationClosureAssessment {
   const { densityGPerCm3: rho, temperatureK: temperatureK, radiationDepartureEta: eta } = args;
 
-  if (!isFinitePositive(temperatureK) || !isFinitePositive(rho) || !isFinitePositive(eta)) {
+  if (!isFinitePositive(temperatureK) || !isFinitePositive(rho) || !isFiniteNonNegative(eta)) {
     return {
       tag: "invalid",
       label: "Radiation closure unavailable",
-      note: "Provide positive T, rho, and eta_rad to evaluate LTE framing."
+      note: "Provide positive T, rho, and non-negative eta_rad to evaluate LTE framing."
+    };
+  }
+
+  if (eta === 0) {
+    return {
+      tag: "proxy",
+      label: "Radiation channel suppressed (eta_rad = 0)",
+      note: "Radiation pressure is set to zero as a pedagogical override."
     };
   }
 
@@ -290,14 +348,19 @@ function classifyDominantPressure(args: {
   gasPressureDynePerCm2: number;
   radiationPressureDynePerCm2: number;
   electronDegeneracyPressureDynePerCm2: number;
+  extensionPressureDynePerCm2: number;
 }): PressureDominance {
-  const values = [
+  const values: Array<[Exclude<PressureDominance, "mixed" | "invalid">, number]> = [
     ["gas", args.gasPressureDynePerCm2],
     ["radiation", args.radiationPressureDynePerCm2],
     ["degeneracy", args.electronDegeneracyPressureDynePerCm2]
-  ] as const;
+  ];
 
-  if (!values.every(([, value]) => isFinitePositive(value))) return "invalid";
+  if (args.extensionPressureDynePerCm2 > 0) {
+    values.push(["extension", args.extensionPressureDynePerCm2]);
+  }
+
+  if (!values.every(([, value]) => Number.isFinite(value) && value >= 0)) return "invalid";
 
   const sorted = values.slice().sort((a, b) => b[1] - a[1]);
   const top = sorted[0][1];
@@ -389,6 +452,7 @@ export const StellarEosModel = {
       (sum, term) => sum + term.pressureDynePerCm2,
       0
     );
+    const extensionPressure = additionalPressureSum;
 
     const neutronExtensionPressure = additionalPressureTerms
       .filter((term) => term.id.toLowerCase().includes("neutron"))
@@ -398,8 +462,13 @@ export const StellarEosModel = {
       gasPressure + radiationPressure + degeneracyPressure + additionalPressureSum;
 
     const chiDeg = safeRatio(args.input.temperatureK, tF);
+    const finiteTempAssessment = assessFiniteTemperatureDegeneracy({
+      chiDegeneracy: chiDeg,
+      fermiRelativityX: xF
+    });
     const finiteTempCorrection = finiteTemperatureDegeneracyCorrectionFactor({
-      chiDegeneracy: chiDeg
+      chiDegeneracy: chiDeg,
+      fermiRelativityX: xF
     });
     const sommerfeldDegeneracyPressure =
       Number.isFinite(degeneracyPressure) && Number.isFinite(finiteTempCorrection)
@@ -421,12 +490,14 @@ export const StellarEosModel = {
       pressureFractions: {
         gas: safeRatio(gasPressure, totalPressure),
         radiation: safeRatio(radiationPressure, totalPressure),
-        degeneracy: safeRatio(degeneracyPressure, totalPressure)
+        degeneracy: safeRatio(degeneracyPressure, totalPressure),
+        extension: safeRatio(extensionPressure, totalPressure)
       },
       pressureRatios: {
         radiationToGas: safeRatio(radiationPressure, gasPressure),
         degeneracyToTotal: safeRatio(degeneracyPressure, totalPressure),
-        betaGasToTotal: safeRatio(gasPressure, totalPressure)
+        betaGasToTotal: safeRatio(gasPressure, totalPressure),
+        extensionToTotal: safeRatio(extensionPressure, totalPressure)
       },
       fermiMomentumGCmPerS: pF,
       fermiRelativityX: xF,
@@ -435,14 +506,17 @@ export const StellarEosModel = {
       chiDegeneracy: chiDeg,
       degeneracyRegime: classifyDegeneracyRegime({ chiDegeneracy: chiDeg }),
       fermiRelativityRegime: classifyFermiRelativityRegime({ fermiRelativityX: xF }),
+      finiteTemperatureDegeneracyAssessment: finiteTempAssessment,
       finiteTemperatureDegeneracyCorrectionFactor: finiteTempCorrection,
       electronDegeneracyPressureSommerfeldDynePerCm2: sommerfeldDegeneracyPressure,
+      extensionPressureDynePerCm2: extensionPressure,
       neutronExtensionPressureDynePerCm2: neutronExtensionPressure,
       neutronExtensionPressureFractionOfTotal: safeRatio(neutronExtensionPressure, totalPressure),
       dominantPressureChannel: classifyDominantPressure({
         gasPressureDynePerCm2: gasPressure,
         radiationPressureDynePerCm2: radiationPressure,
-        electronDegeneracyPressureDynePerCm2: degeneracyPressure
+        electronDegeneracyPressureDynePerCm2: degeneracyPressure,
+        extensionPressureDynePerCm2: extensionPressure
       }),
       radiationClosureAssessment: assessRadiationClosure({
         densityGPerCm3: args.input.densityGPerCm3,

@@ -223,11 +223,12 @@
               </div>
             </div>
             <div class="cp-readout">
-              <div class="cp-readout__label">Sommerfeld proxy factor</div>
+              <div class="cp-readout__label">Sommerfeld factor $1+\frac{5\pi^2}{12}\left(T/T_F\right)^2$</div>
               <div class="cp-readout__value">
                 <span id="finiteTCorrectionValue"></span>
                 <span class="cp-readout__unit">factor</span>
               </div>
+              <div class="cp-muted" id="finiteTValidityValue"></div>
             </div>
             <div class="cp-readout">
               <div class="cp-readout__label">Neutron extension pressure</div>
@@ -266,6 +267,9 @@
                 <li>Gas pressure: $P_{\rm gas}=\rho k_B T/(\mu m_u)$.</li>
                 <li>Radiation pressure: $P_{\rm rad}=\eta_{\rm rad} aT^4/3$ (default $\eta_{\rm rad}=1$).</li>
                 <li>Electron degeneracy uses a zero-$T$ Chandrasekhar EOS baseline with diagnostics in $x_F$ and $T/T_F$.</li>
+                <li>
+                  Finite-$T$ proxy uses $1+\frac{5\pi^2}{12}\left(T/T_F\right)^2$ only when $x_F\ll1$ and $T/T_F\ll1$.
+                </li>
                 <li>$\mu$ and $\mu_e$ for fully ionized mixtures: $\mu^{-1}\approx2X+\frac{3}{4}Y+\frac{1}{2}Z$, $\mu_e^{-1}\approx X+\frac{Y}{2}+\frac{Z}{2}$.</li>
                 <li>
                   Future hook: the kernel accepts additional pressure terms and alternate degeneracy providers for finite-$T$ Fermi and neutron extensions.

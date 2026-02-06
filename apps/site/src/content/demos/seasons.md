@@ -7,6 +7,10 @@ topics: [EarthSky]
 time_minutes: 12
 has_math_mode: false
 tags: ["tilt", "sunlight", "insolation"]
+readiness: experimental
+readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+parityAuditPath: "docs/audits/migrations/seasons-parity.md"
+lastVerifiedAt: "2026-02-02"
 learning_goals:
   - "Explain why axial tilt causes seasons."
   - "Relate sun angle/day length to heating."

@@ -183,6 +183,7 @@ const degRegimeValueEl = document.querySelector<HTMLElement>("#degRegimeValue");
 const xFValueEl = document.querySelector<HTMLElement>("#xFValue");
 const fermiRegimeValueEl = document.querySelector<HTMLElement>("#fermiRegimeValue");
 const finiteTCorrectionValueEl = document.querySelector<HTMLElement>("#finiteTCorrectionValue");
+const finiteTValidityValueEl = document.querySelector<HTMLElement>("#finiteTValidityValue");
 const neutronExtensionValueEl = document.querySelector<HTMLElement>("#neutronExtensionValue");
 
 const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
@@ -230,6 +231,7 @@ if (
   !xFValueEl ||
   !fermiRegimeValueEl ||
   !finiteTCorrectionValueEl ||
+  !finiteTValidityValueEl ||
   !neutronExtensionValueEl ||
   !stationModeEl ||
   !helpEl ||
@@ -282,6 +284,7 @@ const degRegimeValue = degRegimeValueEl;
 const xFValue = xFValueEl;
 const fermiRegimeValue = fermiRegimeValueEl;
 const finiteTCorrectionValue = finiteTCorrectionValueEl;
+const finiteTValidityValue = finiteTValidityValueEl;
 const neutronExtensionValue = neutronExtensionValueEl;
 
 const stationModeButton = stationModeEl;
@@ -400,6 +403,8 @@ function dominantChannelLabel(model: StellarEosStateCgs): string {
       return "Radiation pressure";
     case "degeneracy":
       return "Electron degeneracy pressure";
+    case "extension":
+      return "Extension pressure term(s)";
     case "mixed":
       return "Mixed (no single dominant channel)";
     default:
@@ -411,7 +416,19 @@ function mapChannel(channel: StellarEosStateCgs["dominantPressureChannel"]): str
   return channel;
 }
 
-function renderRegimeMap(model: StellarEosStateCgs): void {
+function compositionRegimeKey(composition: StellarCompositionFractions, radiationDepartureEta: number): string {
+  return [
+    composition.hydrogenMassFractionX.toFixed(6),
+    composition.heliumMassFractionY.toFixed(6),
+    composition.metalMassFractionZ.toFixed(6),
+    radiationDepartureEta.toFixed(6)
+  ].join("|");
+}
+
+let regimeMapCacheKey: string | null = null;
+let regimePresetMarkersBuilt = false;
+
+function buildRegimeMapField(): void {
   const svgNs = "http://www.w3.org/2000/svg";
   const cellWidth = 100 / REGIME_MAP_GRID_X;
   const cellHeight = 100 / REGIME_MAP_GRID_Y;
@@ -448,7 +465,11 @@ function renderRegimeMap(model: StellarEosStateCgs): void {
       regimeCells.append(rect);
     }
   }
+}
 
+function buildRegimePresetMarkers(): void {
+  if (regimePresetMarkersBuilt) return;
+  const svgNs = "http://www.w3.org/2000/svg";
   regimePresetMarkers.replaceChildren();
   for (const preset of PRESETS) {
     const coords = regimeMapCoordinates({
@@ -470,6 +491,16 @@ function renderRegimeMap(model: StellarEosStateCgs): void {
     marker.append(title);
     regimePresetMarkers.append(marker);
   }
+  regimePresetMarkersBuilt = true;
+}
+
+function renderRegimeMap(model: StellarEosStateCgs): void {
+  const nextKey = compositionRegimeKey(state.composition, state.radiationDepartureEta);
+  if (nextKey !== regimeMapCacheKey) {
+    buildRegimeMapField();
+    regimeMapCacheKey = nextKey;
+  }
+  buildRegimePresetMarkers();
 
   const currentCoords = regimeMapCoordinates({
     temperatureK: model.input.temperatureK,
@@ -493,10 +524,10 @@ function renderRegimeMap(model: StellarEosStateCgs): void {
 function renderAdvancedDiagnostics(model: StellarEosStateCgs): void {
   xFValue.textContent = formatScientific(model.fermiRelativityX, 5);
   fermiRegimeValue.textContent = model.fermiRelativityRegime.label;
-  finiteTCorrectionValue.textContent = formatScientific(
-    model.finiteTemperatureDegeneracyCorrectionFactor,
-    5
-  );
+  finiteTCorrectionValue.textContent = Number.isFinite(model.finiteTemperatureDegeneracyCorrectionFactor)
+    ? formatScientific(model.finiteTemperatureDegeneracyCorrectionFactor, 5)
+    : "—";
+  finiteTValidityValue.textContent = model.finiteTemperatureDegeneracyAssessment.label;
   neutronExtensionValue.textContent = formatScientific(
     model.neutronExtensionPressureDynePerCm2,
     5
@@ -560,6 +591,32 @@ function exportResults(model: StellarEosStateCgs): ExportPayloadV1 {
         value: formatScientific(model.chiDegeneracy, 5)
       },
       {
+        name: "x_F=p_F/(m_e c)",
+        value: formatScientific(model.fermiRelativityX, 5)
+      },
+      {
+        name: "Fermi relativity regime",
+        value: model.fermiRelativityRegime.label
+      },
+      {
+        name: "Sommerfeld factor (non-rel low-T only)",
+        value: Number.isFinite(model.finiteTemperatureDegeneracyCorrectionFactor)
+          ? formatScientific(model.finiteTemperatureDegeneracyCorrectionFactor, 5)
+          : "—"
+      },
+      {
+        name: "Finite-T validity",
+        value: model.finiteTemperatureDegeneracyAssessment.label
+      },
+      {
+        name: "Extension pressure P_ext (dyne cm^-2)",
+        value: formatScientific(model.extensionPressureDynePerCm2, 5)
+      },
+      {
+        name: "Neutron extension pressure (dyne cm^-2)",
+        value: formatScientific(model.neutronExtensionPressureDynePerCm2, 5)
+      },
+      {
         name: "Dominant pressure channel",
         value: dominantChannelLabel(model)
       }
@@ -568,6 +625,7 @@ function exportResults(model: StellarEosStateCgs): ExportPayloadV1 {
       "Gas pressure uses P_gas = rho k_B T / (mu m_u).",
       "Radiation pressure uses an LTE-like closure P_rad = eta_rad a T^4 / 3 (default eta_rad=1).",
       "Electron degeneracy uses a zero-temperature Chandrasekhar baseline with diagnostics in x_F and T/T_F.",
+      "Finite-temperature Sommerfeld factor uses 1 + (5*pi^2/12)(T/T_F)^2 only in the non-relativistic strongly degenerate regime.",
       "Kernel supports additional pressure terms for future finite-T Fermi and neutron extensions without API breakage."
     ]
   };

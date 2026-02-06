@@ -7,6 +7,10 @@ topics: [Orbits]
 time_minutes: 12
 has_math_mode: false
 tags: ["binaries", "center of mass", "gravity"]
+readiness: experimental
+readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+parityAuditPath: "docs/audits/migrations/binary-orbits-parity.md"
+lastVerifiedAt: "2026-02-02"
 featured: true
 learning_goals:
   - "Describe how two masses orbit a shared center of mass."

@@ -7,6 +7,10 @@ topics: [EarthSky]
 time_minutes: 10
 has_math_mode: false
 tags: ["angles", "apparent size", "distance"]
+readiness: experimental
+readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+parityAuditPath: "docs/audits/migrations/angular-size-parity.md"
+lastVerifiedAt: "2026-02-02"
 learning_goals:
   - "Relate an object’s apparent size to its physical size and distance."
   - "Interpret small angles as a practical measurement tool in astronomy."

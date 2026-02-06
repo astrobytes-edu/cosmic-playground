@@ -7,6 +7,10 @@ topics: [LightSpectra]
 time_minutes: 12
 has_math_mode: false
 tags: ["blackbody", "temperature", "spectrum"]
+readiness: experimental
+readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+parityAuditPath: "docs/audits/migrations/blackbody-radiation-parity.md"
+lastVerifiedAt: "2026-02-02"
 learning_goals:
   - "Relate temperature to the shape and peak of a thermal spectrum."
   - "Explain why hotter objects can appear ‘bluer’ and cooler ones ‘redder’."

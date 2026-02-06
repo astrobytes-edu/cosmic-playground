@@ -70,4 +70,16 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(html).toContain('id="regimeSummary"');
     expect(mainTs).toContain("renderRegimeMap");
   });
+
+  it("exports advanced diagnostics in copy-results payload", () => {
+    expect(mainTs).toContain("x_F=p_F/(m_e c)");
+    expect(mainTs).toContain("Fermi relativity regime");
+    expect(mainTs).toContain("Sommerfeld factor");
+    expect(mainTs).toContain("Neutron extension pressure");
+  });
+
+  it("caches regime-map field rendering between composition changes", () => {
+    expect(mainTs).toContain("regimeMapCacheKey");
+    expect(mainTs).toContain("buildRegimeMapField");
+  });
 });

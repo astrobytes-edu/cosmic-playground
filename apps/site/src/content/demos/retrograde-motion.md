@@ -7,6 +7,10 @@ topics: [EarthSky, Orbits]
 time_minutes: 12
 has_math_mode: false
 tags: ["retrograde", "stationary points", "relative motion", "apparent longitude", "inferior conjunction", "opposition"]
+readiness: experimental
+readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+parityAuditPath: "docs/audits/migrations/retrograde-motion-parity.md"
+lastVerifiedAt: "2026-02-03"
 featured: true
 learning_goals:
   - "Define retrograde motion as an apparent reversal caused by viewing geometry and relative motion."

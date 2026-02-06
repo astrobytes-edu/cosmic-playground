@@ -7,6 +7,10 @@ topics: [EarthSky]
 time_minutes: 12
 has_math_mode: false
 tags: ["eclipses", "shadows", "alignment"]
+readiness: experimental
+readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+parityAuditPath: "docs/audits/migrations/eclipse-geometry-parity.md"
+lastVerifiedAt: "2026-02-02"
 learning_goals:
   - "Explain eclipses using alignment and shadow geometry."
   - "Distinguish umbra vs penumbra in a qualitative way."
