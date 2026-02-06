@@ -6,6 +6,9 @@ describe("Design tokens", () => {
   const tokensPath = path.resolve(__dirname, "../styles/tokens.css");
   const css = fs.readFileSync(tokensPath, "utf-8");
 
+  const animPath = path.resolve(__dirname, "../styles/animations.css");
+  const animCss = fs.existsSync(animPath) ? fs.readFileSync(animPath, "utf-8") : "";
+
   describe("Typography scale", () => {
     it("defines all text size tokens", () => {
       const requiredTokens = [
@@ -229,6 +232,26 @@ describe("Design tokens", () => {
 
     it("readout values use amber color", () => {
       expect(css).toMatch(/--cp-readout-value-color:.*amber/);
+    });
+  });
+
+  describe("Animation keyframes", () => {
+    it("defines required keyframe animations", () => {
+      const requiredKeyframes = [
+        "@keyframes cp-pulse",
+        "@keyframes cp-glow-pulse",
+        "@keyframes cp-value-flash",
+        "@keyframes cp-slide-up",
+        "@keyframes cp-pop-in",
+        "@keyframes cp-fade-in",
+      ];
+      for (const kf of requiredKeyframes) {
+        expect(animCss).toContain(kf);
+      }
+    });
+
+    it("includes reduced-motion override", () => {
+      expect(animCss).toContain("prefers-reduced-motion");
     });
   });
 });
