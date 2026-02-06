@@ -772,7 +772,7 @@ Visual regression is a first-class gate throughout the redesign. Screenshots cap
 
 **Phase C per-demo screenshots (after each demo migration):**
 
-Each demo gets 3-4 new screenshot tests added to its `.spec.ts`:
+Each demo gets **2 targeted screenshots** (not exhaustive pixel coverage — that kills velocity):
 
 ```ts
 test("screenshot: new layout default state", async ({ page }) => {
@@ -782,55 +782,29 @@ test("screenshot: new layout default state", async ({ page }) => {
   });
 });
 
-test("screenshot: popover open", async ({ page }) => {
-  await page.locator(".cp-popover-trigger").first().click();
-  await expect(page).toHaveScreenshot("<slug>-layout-popover.png", {
-    maxDiffPixelRatio: 0.03,
+test("screenshot: mobile collapsed", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.waitForTimeout(500);
+  await expect(page).toHaveScreenshot("<slug>-mobile-collapsed.png", {
+    maxDiffPixelRatio: 0.05,
   });
-});
-
-test("screenshot: readout strip with values", async ({ page }) => {
-  // interact to change values
-  await expect(page.locator(".cp-readout-strip")).toHaveScreenshot(
-    "<slug>-readout-strip.png", { maxDiffPixelRatio: 0.03 }
-  );
 });
 ```
 
-For animation demos, add:
+For animation demos (seasons, eclipse-geometry, keplers-laws), add one more:
 ```ts
-test("screenshot: play bar with animation running", async ({ page }) => {
-  await page.locator("#play").click();
-  await page.waitForTimeout(1000);
-  await page.locator("#pause").click();
+test("screenshot: play bar visible", async ({ page }) => {
   await expect(page.locator(".cp-playbar")).toHaveScreenshot(
     "<slug>-playbar.png", { maxDiffPixelRatio: 0.05 }
   );
 });
 ```
 
-**Mobile screenshots (Phase C, after bottom sheet is wired):**
-```ts
-test("screenshot: mobile layout with bottom sheet collapsed", async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
-  await page.waitForTimeout(500);
-  await expect(page).toHaveScreenshot("<slug>-mobile-collapsed.png", {
-    maxDiffPixelRatio: 0.03,
-  });
-});
-
-test("screenshot: mobile layout with bottom sheet half", async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
-  await page.locator(".cp-bottom-sheet__handle").tap();
-  await expect(page).toHaveScreenshot("<slug>-mobile-half.png", {
-    maxDiffPixelRatio: 0.05,
-  });
-});
-```
-
 **Screenshot naming convention:** `<slug>-layout-<state>.png` for desktop, `<slug>-mobile-<state>.png` for mobile.
 
-**Total estimated new screenshots:** ~4 desktop + ~2 mobile = ~6 per demo x 10 demos = ~60 new visual regression screenshots.
+**Scope rationale:** Shell-level screenshots (full page at default state + mobile collapsed) catch layout regressions without testing every component state. Component-level behavior (popover open, tab switch) is covered by functional E2E tests, not pixel screenshots. This keeps the screenshot count manageable (~25 total) while still catching the layout problems the redesign is meant to fix.
+
+**Total estimated new screenshots:** ~2-3 per demo x 10 demos = ~25 new visual regression screenshots.
 
 ---
 
@@ -867,17 +841,24 @@ test("screenshot: mobile layout with bottom sheet half", async ({ page }) => {
 
 ### 7.4 Visual regression
 
-- [ ] Each demo has 3-4 desktop layout screenshots (default state, popover open, readout strip, play bar)
-- [ ] Each demo has 2 mobile screenshots (bottom sheet collapsed, bottom sheet half)
+- [ ] Each demo has 1 desktop layout screenshot (default state at 1280x800)
+- [ ] Each demo has 1 mobile screenshot (bottom sheet collapsed at 375x812)
+- [ ] Animation demos have 1 play bar screenshot
 - [ ] All screenshots pass with maxDiffPixelRatio <= 0.05
 - [ ] Baselines committed and reviewed for each phase
 
-### 7.5 Regression
+### 7.5 Accessibility
+
+- [ ] All interactive primitives pass the accessibility checklist (Section 3.7)
+- [ ] One demo tested fully keyboard-only at mobile width
+- [ ] All components degrade gracefully without JS (content visible, not interactive)
+
+### 7.6 Regression
 
 - [ ] All existing 1051 tests pass
 - [ ] All existing E2E tests pass (updated selectors where needed)
 - [ ] Build succeeds with no new warnings
-- [ ] ~60 new visual regression screenshots committed with reviewed baselines
+- [ ] ~25 new visual regression screenshots committed with reviewed baselines
 
 ---
 
@@ -909,3 +890,15 @@ Target: sidebar content fits in ~700px (800px minus padding).
 | **Total savings** | | | **560-660px** |
 
 This means even the most complex demo (keplers-laws with mode switch + 2 sliders + timeline + overlays) fits comfortably in ~300px of sidebar content — well within the 700px budget.
+
+## Appendix C: Future Work (Phase D — not in scope)
+
+**Semantic control layer:** A thin TypeScript abstraction that classifies controls by role:
+
+```ts
+type ControlRole = "continuous" | "selection" | "transport" | "toggle" | "mode" | "pedagogical" | "meta";
+```
+
+This would enable auto-placement of controls into the correct container (sidebar, popover, play bar, shelf) based on role declaration rather than manual HTML authoring. It could also generate consistent mobile layouts and instructor documentation automatically.
+
+**Not implementing now** — the manual composition approach in this plan is correct for 10 demos. Revisit if/when demo count exceeds ~15 or when adding Worksheet/Background sidebar tabs.
