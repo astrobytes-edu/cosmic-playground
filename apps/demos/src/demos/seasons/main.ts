@@ -1,4 +1,4 @@
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
 
@@ -755,5 +755,10 @@ copyResults.addEventListener("click", () => {
 });
 
 render();
+
+const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
+if (starfieldCanvas) {
+  initStarfield({ canvas: starfieldCanvas });
+}
 
 initMath(document);
