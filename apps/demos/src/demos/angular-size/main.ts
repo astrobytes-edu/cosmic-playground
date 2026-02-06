@@ -2,6 +2,7 @@ import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, in
 import type { Challenge } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AngularSizeModel, AstroConstants, AstroUnits } from "@cosmic/physics";
+import { clamp, logSliderToValue, valueToLogSlider, formatNumber, formatAngleDisplay, describeMoonOrbitAngle, describeMoonRecessionTime } from "./logic";
 
 const presetEl = document.querySelector<HTMLSelectElement>("#preset");
 const distanceSliderEl = document.querySelector<HTMLInputElement>("#distanceSlider");
@@ -162,58 +163,6 @@ const state: {
   moonOrbitAngleDeg: 0,
   moonRecessionTimeMyr: 0
 };
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function logSliderToValue(sliderVal: number, minVal: number, maxVal: number) {
-  const minLog = Math.log10(minVal);
-  const maxLog = Math.log10(maxVal);
-  const fraction = sliderVal / 1000;
-  const logVal = minLog + fraction * (maxLog - minLog);
-  return Math.pow(10, logVal);
-}
-
-function valueToLogSlider(value: number, minVal: number, maxVal: number) {
-  if (!Number.isFinite(value) || value <= 0) return 0;
-  const minLog = Math.log10(minVal);
-  const maxLog = Math.log10(maxVal);
-  const logVal = Math.log10(value);
-  const frac = (logVal - minLog) / (maxLog - minLog);
-  return clamp(Math.round(frac * 1000), 0, 1000);
-}
-
-function formatNumber(value: number, digits = 3) {
-  if (!Number.isFinite(value)) return "—";
-  if (value === 0) return "0";
-  const abs = Math.abs(value);
-  if (abs >= 1e6 || abs < 1e-3) return value.toExponential(digits - 1);
-  return value.toFixed(digits);
-}
-
-function formatAngleDisplay(thetaDegValue: number): { text: string; unit: string } {
-  if (!Number.isFinite(thetaDegValue)) return { text: "—", unit: "" };
-
-  const abs = Math.abs(thetaDegValue);
-  if (abs >= 1) return { text: thetaDegValue.toFixed(2), unit: "deg" };
-  if (abs >= 1 / 60) return { text: AstroUnits.degToArcmin(thetaDegValue).toFixed(1), unit: "arcmin" };
-  return { text: AstroUnits.degToArcsec(thetaDegValue).toFixed(0), unit: "arcsec" };
-}
-
-function describeMoonOrbitAngle(angleDeg: number): string {
-  const normalized = ((angleDeg % 360) + 360) % 360;
-  if (Math.abs(normalized - 0) <= 1 || Math.abs(normalized - 360) <= 1) return "Perigee";
-  if (Math.abs(normalized - 180) <= 1) return "Apogee";
-  return `${Math.round(normalized)} deg`;
-}
-
-function describeMoonRecessionTime(timeMyr: number): string {
-  const t = Math.round(timeMyr);
-  if (t === 0) return "Today";
-  if (t < 0) return `${Math.abs(t)} Myr ago`;
-  return `+${t} Myr`;
-}
 
 function setMoonTimeMode(next: MoonTimeMode) {
   state.moonTimeMode = next;
