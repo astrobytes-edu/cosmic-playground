@@ -153,19 +153,19 @@
             <svg id="orbital-svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stop-color="var(--cp-warning)" />
-                  <stop offset="60%" stop-color="var(--cp-warning)" stop-opacity="0.6" />
-                  <stop offset="100%" stop-color="var(--cp-warning)" stop-opacity="0" />
+                  <stop offset="0%" stop-color="var(--cp-celestial-sun-core)" />
+                  <stop offset="60%" stop-color="var(--cp-celestial-sun)" stop-opacity="0.6" />
+                  <stop offset="100%" stop-color="var(--cp-celestial-sun)" stop-opacity="0" />
                 </radialGradient>
 
                 <radialGradient id="earthGradient" cx="30%" cy="30%">
-                  <stop offset="0%" stop-color="var(--cp-accent2)" />
-                  <stop offset="100%" stop-color="var(--cp-border)" />
+                  <stop offset="0%" stop-color="var(--cp-celestial-earth)" />
+                  <stop offset="100%" stop-color="var(--cp-celestial-earth-land)" />
                 </radialGradient>
 
                 <radialGradient id="moonLit" cx="30%" cy="30%">
-                  <stop offset="0%" stop-color="var(--cp-text)" />
-                  <stop offset="100%" stop-color="var(--cp-muted)" />
+                  <stop offset="0%" stop-color="var(--cp-celestial-moon)" />
+                  <stop offset="100%" stop-color="var(--cp-celestial-moon-dark)" />
                 </radialGradient>
 
                 <clipPath id="moonClip">
@@ -178,11 +178,11 @@
               </defs>
 
               <g id="sunlight-arrows" opacity="0.4">
-                <line x1="0" y1="100" x2="80" y2="100" stroke="var(--cp-warning)" stroke-width="2" />
-                <line x1="0" y1="200" x2="80" y2="200" stroke="var(--cp-warning)" stroke-width="2" />
-                <line x1="0" y1="300" x2="80" y2="300" stroke="var(--cp-warning)" stroke-width="2" />
-                <text x="10" y="60" fill="var(--cp-warning)" font-size="11">Sunlight -&gt;</text>
-                <text x="10" y="72" fill="var(--cp-warning)" font-size="9" opacity="0.85">
+                <line x1="0" y1="100" x2="80" y2="100" stroke="var(--cp-celestial-sun)" stroke-width="2" />
+                <line x1="0" y1="200" x2="80" y2="200" stroke="var(--cp-celestial-sun)" stroke-width="2" />
+                <line x1="0" y1="300" x2="80" y2="300" stroke="var(--cp-celestial-sun)" stroke-width="2" />
+                <text x="10" y="60" fill="var(--cp-celestial-sun)" font-size="11">Sunlight -&gt;</text>
+                <text x="10" y="72" fill="var(--cp-celestial-sun)" font-size="9" opacity="0.85">
                   from the Sun
                 </text>
               </g>
@@ -194,7 +194,7 @@
                 cy="200"
                 r="120"
                 fill="none"
-                stroke="var(--cp-border)"
+                stroke="var(--cp-celestial-orbit)"
                 stroke-width="1"
                 stroke-dasharray="4 4"
                 opacity="0.6"
@@ -228,10 +228,10 @@
                   stroke-width="1"
                   stroke-dasharray="4 2"
                 />
-                <text x="320" y="155" fill="var(--cp-warning)" font-size="10" opacity="0.8">
-                  Earth’s Shadow
+                <text x="320" y="155" fill="var(--cp-celestial-sun)" font-size="10" opacity="0.8">
+                  Earth's Shadow
                 </text>
-                <text x="300" y="168" fill="var(--cp-warning)" font-size="9" opacity="0.6">
+                <text x="300" y="168" fill="var(--cp-celestial-sun)" font-size="9" opacity="0.6">
                   (only matters for eclipses)
                 </text>
               </g>
@@ -247,7 +247,7 @@
                 aria-valuetext="Full Moon, 100% illuminated"
                 tabindex="0"
               >
-                <circle id="moon-dark" cx="320" cy="200" r="15" fill="var(--cp-bg3)" />
+                <circle id="moon-dark" cx="320" cy="200" r="15" fill="var(--cp-celestial-moon-dark)" />
                 <circle id="moon-lit" cx="320" cy="200" r="15" fill="url(#moonLit)" clip-path="url(#moonLitHalfClip)" />
                 <line
                   id="moon-terminator"
@@ -262,8 +262,8 @@
               </g>
 
               <g id="view-indicator" opacity="0.5">
-                <path d="M 200 175 L 200 140" stroke="var(--cp-accent2)" stroke-width="1" stroke-dasharray="3 3" />
-                <text x="200" y="130" text-anchor="middle" fill="var(--cp-accent2)" font-size="9">
+                <path d="M 200 175 L 200 140" stroke="var(--cp-celestial-earth)" stroke-width="1" stroke-dasharray="3 3" />
+                <text x="200" y="130" text-anchor="middle" fill="var(--cp-celestial-earth)" font-size="9">
                   Your view
                 </text>
               </g>
@@ -276,8 +276,8 @@
             <svg id="phase-svg" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="moonSurface" cx="30%" cy="30%">
-                  <stop offset="0%" stop-color="var(--cp-text)" />
-                  <stop offset="100%" stop-color="var(--cp-muted)" />
+                  <stop offset="0%" stop-color="var(--cp-celestial-moon)" />
+                  <stop offset="100%" stop-color="var(--cp-celestial-moon-dark)" />
                 </radialGradient>
 
                 <radialGradient id="earthshine" cx="70%" cy="30%">
@@ -326,8 +326,8 @@
               />
               <text x="16" y="108" fill="var(--cp-muted)" font-size="10">E</text>
               <text x="296" y="108" fill="var(--cp-muted)" font-size="10">W</text>
-              <circle id="sky-rise-marker" cx="60" cy="80" r="5" fill="var(--cp-accent2)" />
-              <circle id="sky-set-marker" cx="260" cy="80" r="5" fill="var(--cp-warning)" />
+              <circle id="sky-rise-marker" cx="60" cy="80" r="5" fill="var(--cp-celestial-earth)" />
+              <circle id="sky-set-marker" cx="260" cy="80" r="5" fill="var(--cp-celestial-sun)" />
             </svg>
             <p id="sky-summary" class="cp-muted">Sky view shows rise/set along the horizon.</p>
           </div>
