@@ -3,6 +3,7 @@ import {
   createDemoModes,
   createInstrumentRuntime,
   initMath,
+  initStarfield,
   setLiveRegionText
 } from "@cosmic/runtime";
 import { MoonPhasesModel, moonRiseSetLocalTimeHours } from "@cosmic/physics";
@@ -1081,3 +1082,8 @@ setupModes();
 setAngle(0);
 applyShadowVisibility(false);
 initMath(document);
+
+const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
+if (starfieldCanvas) {
+  initStarfield({ canvas: starfieldCanvas });
+}
