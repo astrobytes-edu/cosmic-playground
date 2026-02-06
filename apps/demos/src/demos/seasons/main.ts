@@ -1,6 +1,8 @@
 import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
+import { clamp, formatNumber, formatDateFromDayOfYear, seasonFromPhaseNorth, oppositeSeason, orbitPosition, axisEndpoint, diskMarkerY } from "./logic";
+import type { Season } from "./logic";
 
 const dayOfYearEl = document.querySelector<HTMLInputElement>("#dayOfYear");
 const dayOfYearValueEl = document.querySelector<HTMLSpanElement>("#dayOfYearValue");
@@ -291,58 +293,6 @@ let isAnimating = false;
 let rafId: number | null = null;
 let lastT = 0;
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function formatNumber(value: number, digits: number) {
-  if (!Number.isFinite(value)) return "—";
-  return value.toFixed(digits);
-}
-
-const MONTHS = [
-  { name: "Jan", days: 31 },
-  { name: "Feb", days: 28 },
-  { name: "Mar", days: 31 },
-  { name: "Apr", days: 30 },
-  { name: "May", days: 31 },
-  { name: "Jun", days: 30 },
-  { name: "Jul", days: 31 },
-  { name: "Aug", days: 31 },
-  { name: "Sep", days: 30 },
-  { name: "Oct", days: 31 },
-  { name: "Nov", days: 30 },
-  { name: "Dec", days: 31 }
-] as const;
-
-function formatDateFromDayOfYear(day: number): string {
-  let d = clamp(Math.round(day), 1, 365);
-  for (const m of MONTHS) {
-    if (d <= m.days) return `${m.name} ${d}`;
-    d -= m.days;
-  }
-  return "Dec 31";
-}
-
-function seasonFromPhaseNorth(dayOfYearValue: number): "Spring" | "Summer" | "Autumn" | "Winter" {
-  const yearDays = 365.2422;
-  const dayOfMarchEquinox = 80;
-  const phase = ((dayOfYearValue - dayOfMarchEquinox) / yearDays) % 1;
-  const wrapped = phase < 0 ? phase + 1 : phase;
-  const quadrant = Math.floor(wrapped * 4) % 4;
-  if (quadrant === 0) return "Spring";
-  if (quadrant === 1) return "Summer";
-  if (quadrant === 2) return "Autumn";
-  return "Winter";
-}
-
-function oppositeSeason(season: "Spring" | "Summer" | "Autumn" | "Winter") {
-  if (season === "Spring") return "Autumn";
-  if (season === "Autumn") return "Spring";
-  if (season === "Summer") return "Winter";
-  return "Summer";
-}
-
 function stopAnimation() {
   isAnimating = false;
   animateYear.textContent = "Animate year";
@@ -385,25 +335,19 @@ function renderStage(args: {
   const orbitR = 140;
 
   const angle = SeasonsModel.orbitAngleRadFromDay({ dayOfYear: args.dayOfYear });
-  const rScaled = orbitR * clamp(args.distanceAu, 0.95, 1.05);
-  const x = rScaled * Math.cos(angle);
-  const y = rScaled * Math.sin(angle);
+  const { x, y } = orbitPosition(angle, args.distanceAu, orbitR);
   earthOrbitDot.setAttribute("cx", formatNumber(x, 2));
   earthOrbitDot.setAttribute("cy", formatNumber(y, 2));
   orbitLabel.textContent = `r ~ ${formatNumber(args.distanceAu, 3)} AU`;
 
   // Tilt panel
   const diskR = 92;
-  const declRad = (args.declinationDeg * Math.PI) / 180;
-  const latRad = (args.latitudeDeg * Math.PI) / 180;
 
-  const axisRad = (-args.axialTiltDeg * Math.PI) / 180;
-  const axisX = Math.sin(axisRad) * 120;
-  const axisY = -Math.cos(axisRad) * 120;
-  axisLine.setAttribute("x1", formatNumber(-axisX, 2));
-  axisLine.setAttribute("y1", formatNumber(-axisY, 2));
-  axisLine.setAttribute("x2", formatNumber(axisX, 2));
-  axisLine.setAttribute("y2", formatNumber(axisY, 2));
+  const axisEnd = axisEndpoint(args.axialTiltDeg, 120);
+  axisLine.setAttribute("x1", formatNumber(-axisEnd.x, 2));
+  axisLine.setAttribute("y1", formatNumber(-axisEnd.y, 2));
+  axisLine.setAttribute("x2", formatNumber(axisEnd.x, 2));
+  axisLine.setAttribute("y2", formatNumber(axisEnd.y, 2));
 
   // Keep the equator line horizontal (schematic), regardless of axis tilt.
   equatorLine.setAttribute("x1", "-120");
@@ -413,13 +357,13 @@ function renderStage(args: {
 
   // Subsolar point at latitude = declination (schematic marker on the sun-facing meridian).
   const sunFacingX = 0.85 * diskR;
-  const subY = -Math.sin(declRad) * 0.85 * diskR;
+  const subY = diskMarkerY(args.declinationDeg, diskR);
   subsolarDot.setAttribute("cx", formatNumber(sunFacingX, 2));
   subsolarDot.setAttribute("cy", formatNumber(subY, 2));
   subsolarLabel.textContent = `delta = ${formatNumber(args.declinationDeg, 1)} deg`;
 
   // Observer marker at chosen latitude.
-  const obsY = -Math.sin(latRad) * 0.85 * diskR;
+  const obsY = diskMarkerY(args.latitudeDeg, diskR);
   observerDot.setAttribute("cx", formatNumber(sunFacingX, 2));
   observerDot.setAttribute("cy", formatNumber(obsY, 2));
   observerLabel.textContent = `lat = ${Math.round(args.latitudeDeg)} deg`;
