@@ -20,7 +20,7 @@
           <p class="cp-muted">Energy + angular momentum determine orbit shape and escape.</p>
 
           <label class="control">
-            <span>Central mass $M$ ($M_{\\odot}$)</span>
+            <span>Central mass $M$ ($M_{\odot}$)</span>
             <input id="massSlider" type="range" min="-1" max="1" step="0.01" value="0" />
             <span class="control__value"><span id="massValue"></span></span>
           </label>
@@ -32,10 +32,10 @@
           </label>
 
           <label class="control">
-            <span>Speed factor $v/v_{\\rm circ}$</span>
+            <span>Speed factor $v/v_{\rm circ}$</span>
             <input id="speedFactor" type="range" min="0" max="2.5" step="0.01" value="1" />
             <span class="control__value"
-              ><span id="speedValue"></span> <span class="cp-muted">(escape at $\\sqrt{2}$)</span></span
+              ><span id="speedValue"></span> <span class="cp-muted">(escape at $\sqrt{2}$)</span></span
             >
           </label>
 
@@ -112,7 +112,7 @@
             <div class="cp-readout__value"><span id="ecc"></span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Specific energy $\\varepsilon$ (AU$^2$/yr$^2$)</div>
+            <div class="cp-readout__label">Specific energy $\varepsilon$ (AU$^2$/yr$^2$)</div>
             <div class="cp-readout__value"><span id="eps"></span></div>
           </div>
           <div class="cp-readout">
@@ -139,9 +139,9 @@
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>Escape is set by energy: $\\varepsilon&lt;0$ (bound), $\\varepsilon=0$ (escape), $\\varepsilon&gt;0$ (unbound).</li>
+                <li>Escape is set by energy: $\varepsilon&lt;0$ (bound), $\varepsilon=0$ (escape), $\varepsilon&gt;0$ (unbound).</li>
                 <li>Angular momentum controls how close you get: larger $|h|$ prevents deep plunges.</li>
-                <li>At the same $r_0$, $v_{\\rm esc}=\\sqrt{2}\\,v_{\\rm circ}$.</li>
+                <li>At the same $r_0$, $v_{\rm esc}=\sqrt{2}\,v_{\rm circ}$.</li>
               </ul>
             </div>
           </details>
@@ -149,12 +149,12 @@
           <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">AU / yr / $M_\\odot$</span>
+              <span class="cp-accordion__meta">AU / yr / $M_\odot$</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>Teaching units: AU / yr / $M_{\\odot}$ with $G=4\\pi^2\\,\\mathrm{AU}^3/(\\mathrm{yr}^2\\,M_{\\odot})$.</li>
-                <li>We start at $r_0$ on the +x axis and set $v$ using $v/v_{\\rm circ}$ and a direction offset from tangential.</li>
+                <li>Teaching units: AU / yr / $M_{\odot}$ with $G=4\pi^2\,\mathrm{AU}^3/(\mathrm{yr}^2\,M_{\odot})$.</li>
+                <li>We start at $r_0$ on the +x axis and set $v$ using $v/v_{\rm circ}$ and a direction offset from tangential.</li>
                 <li>For open orbits, the plotted path is clipped to a finite radius window for visibility.</li>
               </ul>
             </div>

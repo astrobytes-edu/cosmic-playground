@@ -113,7 +113,7 @@
           <div class="retrograde__plotWrap">
             <div class="retrograde__plotHeader">
               <div class="retrograde__plotTitle">
-                Apparent (sky) longitude $\\lambda_{\\mathrm{app}}$
+                Apparent (sky) longitude $\lambda_{\mathrm{app}}$
               </div>
               <div class="retrograde__plotHint cp-muted">
                 Click/drag to scrub; use arrow keys when focused.
@@ -128,7 +128,7 @@
             <div class="retrograde__plotHeader">
               <div class="retrograde__plotTitle">Orbit view (top-down)</div>
               <div class="retrograde__plotHint cp-muted">
-                Inertial axis: $0^\\circ$ is $+x$.
+                Inertial axis: $0^\circ$ is $+x$.
               </div>
             </div>
             <svg id="orbitSvg" class="retrograde__orbitSvg" viewBox="0 0 420 420"></svg>
@@ -145,13 +145,13 @@
 
           <div class="cp-readout">
             <div class="cp-readout__label">
-              Apparent (sky) longitude $\\lambda_{\\mathrm{app}}$ (deg)
+              Apparent (sky) longitude $\lambda_{\mathrm{app}}$ (deg)
             </div>
             <div class="cp-readout__value"><span id="readoutLambda">—</span></div>
           </div>
 
           <div class="cp-readout">
-            <div class="cp-readout__label">$d\\tilde{\\lambda}/dt$ (deg/day)</div>
+            <div class="cp-readout__label">$d\tilde{\lambda}/dt$ (deg/day)</div>
             <div class="cp-readout__value"><span id="readoutSlope">—</span></div>
           </div>
 
@@ -194,15 +194,15 @@
               </li>
               <li>
                 Planets move on coplanar Keplerian ellipses around the Sun with elements
-                $(a,e,\\varpi,L_0)$ defined at an epoch $t_0$.
+                $(a,e,\varpi,L_0)$ defined at an epoch $t_0$.
               </li>
               <li>
                 Apparent (sky) longitude is computed from the observer-to-target direction:
-                $\\lambda_{\\mathrm{app}}(t)=\\operatorname{wrap}_{0..360}(\\arctan2(y_t-y_o, x_t-x_o))$.
+                $\lambda_{\mathrm{app}}(t)=\operatorname{wrap}_{0..360}(\arctan2(y_t-y_o, x_t-x_o))$.
               </li>
               <li>
                 We unwrap the sampled series with the 180-deg jump rule to get
-                $\\tilde{\\lambda}(t)$, then define retrograde by $d\\tilde{\\lambda}/dt &lt; 0$.
+                $\tilde{\lambda}(t)$, then define retrograde by $d\tilde{\lambda}/dt &lt; 0$.
               </li>
             </ul>
           </div>
