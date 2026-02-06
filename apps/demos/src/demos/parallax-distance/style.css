@@ -31,6 +31,8 @@
     radial-gradient(circle at 82% 20%, var(--cp-glow-violet), transparent 55%),
     color-mix(in srgb, var(--cp-bg0) 72%, transparent);
   box-shadow: 0 24px 50px color-mix(in srgb, var(--cp-bg0) 65%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .stage__bg {
@@ -91,4 +93,24 @@
   fill: var(--cp-muted);
   font-family: var(--cp-font-sans);
   font-size: 14px;
+}
+
+/* --- Entry animations --- */
+.cp-demo__controls {
+  animation: cp-slide-up var(--cp-transition-slow) var(--cp-ease-out) both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in var(--cp-transition-slow) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 1);
+}
+
+.cp-demo__readouts {
+  animation: cp-slide-up var(--cp-transition-slow) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 2);
+}
+
+.cp-demo__drawer {
+  animation: cp-fade-in var(--cp-transition-slow) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 3);
 }
