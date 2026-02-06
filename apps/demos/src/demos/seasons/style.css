@@ -70,6 +70,7 @@
   stroke: var(--cp-celestial-sun);
   stroke-opacity: 0.5;
   stroke-width: 2px;
+  filter: drop-shadow(var(--cp-glow-sun));
 }
 
 .stage__earth,
@@ -77,6 +78,7 @@
   fill: url(#earthGlow);
   stroke: color-mix(in srgb, var(--cp-celestial-earth) 58%, transparent);
   stroke-width: 2px;
+  filter: drop-shadow(var(--cp-glow-planet));
 }
 
 .stage__ray {
