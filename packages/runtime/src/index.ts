@@ -35,6 +35,8 @@ export type {
 } from "./demoModes";
 export { ChallengeEngine } from "./challengeEngine";
 export type { Challenge, ChallengeOptions, ChallengeResult, ChallengeStats } from "./challengeEngine";
+export { initStarfield } from "./starfield";
+export type { StarfieldConfig } from "./starfield";
 
 function isExportPayloadV1(value: unknown): value is ExportPayloadV1 {
   if (!value || typeof value !== "object") return false;
