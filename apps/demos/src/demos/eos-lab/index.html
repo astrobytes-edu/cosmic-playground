@@ -166,45 +166,12 @@
             <p class="cp-muted regime-map__help">
               Colors show the dominant pressure channel at each $(\rho,T)$ state for the current composition.
             </p>
-            <div class="regime-map__chart">
-              <div class="regime-map__y-strip">
-                <div class="regime-map__axis-label">$\log_{10}\rho$ (g cm$^{-3}$)</div>
-                <ul class="regime-map__y-ticks" aria-label="Density axis ticks">
-                  <li>$10^{10}$</li>
-                  <li>$10^5$</li>
-                  <li>$10^0$</li>
-                  <li>$10^{-5}$</li>
-                  <li>$10^{-10}$</li>
-                </ul>
-              </div>
-              <div class="regime-map__plot">
-                <div class="regime-map__viewport">
-                  <canvas id="regimeField" aria-hidden="true"></canvas>
-                  <svg
-                    id="regimeMap"
-                    viewBox="0 0 100 100"
-                    role="img"
-                    aria-label="EOS dominance map over log density and log temperature"
-                    preserveAspectRatio="xMidYMid meet"
-                  >
-                    <g id="regimeCells"></g>
-                    <g id="regimeGrid"></g>
-                    <g id="regimePresetMarkers"></g>
-                    <circle id="regimeCurrentPoint" cx="50" cy="50" r="2.35"></circle>
-                  </svg>
-                </div>
-                <ul class="regime-map__x-ticks" aria-label="Temperature axis ticks">
-                  <li>$10^3$</li>
-                  <li>$10^4$</li>
-                  <li>$10^5$</li>
-                  <li>$10^6$</li>
-                  <li>$10^7$</li>
-                  <li>$10^8$</li>
-                  <li>$10^9$</li>
-                </ul>
-                <div class="regime-map__axis-label regime-map__axis-label--x">$T$ (K)</div>
-              </div>
-            </div>
+            <div
+              id="regimeMap"
+              class="regime-map__surface"
+              role="img"
+              aria-label="EOS dominance map over log density and log temperature"
+            ></div>
             <ul class="regime-map__legend" aria-label="Regime legend">
               <li><span data-channel="gas"></span>$P_{\rm gas}$ dominant</li>
               <li><span data-channel="radiation"></span>$P_{\rm rad}$ dominant</li>

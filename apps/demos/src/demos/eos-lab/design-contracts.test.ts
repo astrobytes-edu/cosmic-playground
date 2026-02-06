@@ -68,16 +68,14 @@ describe("EOS Lab -- Design System Contracts", () => {
   it("includes regime-map scaffold and rendering hook", () => {
     expect(html).toContain('id="pressureCurvePlot"');
     expect(html).toContain('id="regimeMap"');
-    expect(html).toContain('id="regimeGrid"');
-    expect(html).toContain('id="regimeCurrentPoint"');
     expect(html).toContain('id="regimeDetail"');
     expect(html).toContain('id="regimeSummary"');
     expect(html).toContain("regime-map__legend");
-    expect(html).toContain("regime-map__x-ticks");
-    expect(html).toContain("regime-map__y-ticks");
     expect(html).toContain("$P_{\\rm gas}$ dominant");
     expect(html).toContain("$\\log_{10}\\rho$");
-    expect(mainTs).toContain("renderRegimeMap");
+    expect(mainTs).toContain("regimeMapPatch");
+    expect(mainTs).toContain('kind: "heatmap"');
+    expect(mainTs).toContain("eosRegimeMapPlotSpec");
   });
 
   it("mounts runtime plot contract with explicit axis labels", () => {

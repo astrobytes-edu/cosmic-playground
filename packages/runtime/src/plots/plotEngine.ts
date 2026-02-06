@@ -25,27 +25,7 @@ import type {
 } from "./plotTypes";
 
 type PlotlyTrace = {
-  x: number[];
-  y: number[];
-  type: "scatter" | "scattergl";
-  mode: "lines" | "markers" | "lines+markers";
-  name: string;
-  line?: {
-    color: string;
-    width: number;
-    dash?: "solid" | "dash" | "dot";
-    shape?: "linear";
-  };
-  marker?: {
-    color: string;
-    size: number;
-    symbol?: string;
-    line?: {
-      color: string;
-      width: number;
-    };
-  };
-  hovertemplate: string;
+  [key: string]: unknown;
 };
 
 type PlotlyLayout = Record<string, unknown>;
@@ -139,7 +119,7 @@ function domainToPlotlyRange(
   return [min, max];
 }
 
-function toPlotlyMode(mode: PlotTrace["mode"]): PlotlyTrace["mode"] {
+function toPlotlyMode(mode: unknown): "lines" | "markers" | "lines+markers" {
   const normalized = normalizeTraceMode(mode);
   if (normalized === "points") return "markers";
   if (normalized === "line+points") return "lines+markers";
@@ -155,11 +135,40 @@ function toPlotlyTraces(args: {
 }): PlotlyTrace[] {
   const xFormat = hoverNumberFormat(args.xScale);
   const yFormat = hoverNumberFormat(args.yScale);
-  const totalPoints = args.traces.reduce((sum, trace) => sum + trace.points.length, 0);
+  const totalPoints = args.traces.reduce((sum, trace) => {
+    if (trace.kind === "heatmap") return sum;
+    return sum + trace.points.length;
+  }, 0);
   const globalWebGl = totalPoints >= WEBGL_TOTAL_POINT_THRESHOLD;
+  let colorIndex = 0;
 
-  return args.traces.map((trace, index) => {
-    const color = traceColor(index, trace.colorVar);
+  return args.traces.map((trace) => {
+    if (trace.kind === "heatmap") {
+      const heatmapTrace: PlotlyTrace = {
+        type: "heatmap",
+        name: trace.label,
+        x: trace.x,
+        y: trace.y,
+        z: trace.z,
+        zmin: trace.zMin,
+        zmax: trace.zMax,
+        showscale: trace.showScale ?? false,
+        colorscale: trace.colorScale,
+        customdata: trace.customData,
+        hovertemplate:
+          trace.hoverTemplate ??
+          `<b>${trace.label}</b><br>` +
+            `${args.xAxisLabel}=%{x:.3f}<br>` +
+            `${args.yAxisLabel}=%{y:.3f}<extra></extra>`,
+        zsmooth: trace.smooth,
+        opacity: trace.opacity,
+        showlegend: trace.showLegend ?? false
+      };
+      return heatmapTrace;
+    }
+
+    const color = traceColor(colorIndex, trace.colorVar);
+    colorIndex += 1;
     const points = sanitizePoints(trace.points, args.xScale, args.yScale);
     const xValues = points.map((point) => point.x);
     const yValues = points.map((point) => point.y);
@@ -172,11 +181,13 @@ function toPlotlyTraces(args: {
       type: useWebGl ? "scattergl" : "scatter",
       mode,
       name: trace.label,
+      showlegend: trace.showLegend ?? true,
       hovertemplate:
-        `<b>${trace.label}</b><br>` +
-        `${args.xAxisLabel}=%{x:${xFormat}}<br>` +
-        `${args.yAxisLabel}=%{y:${yFormat}}` +
-        "<extra></extra>"
+        trace.hoverTemplate ??
+        (`<b>${trace.label}</b><br>` +
+          `${args.xAxisLabel}=%{x:${xFormat}}<br>` +
+          `${args.yAxisLabel}=%{y:${yFormat}}` +
+          "<extra></extra>")
     };
 
     if (mode === "lines" || mode === "lines+markers") {
@@ -198,10 +209,10 @@ function toPlotlyTraces(args: {
             : isCurrentState
               ? 11
               : 6,
-        symbol: isCurrentState ? "diamond" : "circle",
+        symbol: trace.markerSymbol ?? (isCurrentState ? "diamond" : "circle"),
         line: {
-          color: cssVar("--cp-bg0", "#081018"),
-          width: 1
+          color: trace.markerLineColor ?? cssVar("--cp-bg0", "#081018"),
+          width: typeof trace.markerLineWidth === "number" ? trace.markerLineWidth : 1
         }
       };
     }
@@ -426,10 +437,21 @@ export function mountPlot<State>(
 
   function setTraceState(nextTraces: PlotTrace[] | undefined): void {
     if (!nextTraces) return;
-    traces = nextTraces.map((trace) => ({
-      ...trace,
-      points: trace.points.map((point: PlotPoint) => ({ ...point }))
-    }));
+    traces = nextTraces.map((trace) => {
+      if (trace.kind === "heatmap") {
+        return {
+          ...trace,
+          x: [...trace.x],
+          y: [...trace.y],
+          z: trace.z.map((row) => [...row]),
+          customData: trace.customData?.map((row) => [...row])
+        };
+      }
+      return {
+        ...trace,
+        points: trace.points.map((point: PlotPoint) => ({ ...point }))
+      };
+    });
   }
 
   function setDomains(args: { xDomain?: PlotDomain; yDomain?: PlotDomain }): void {

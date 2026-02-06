@@ -1,9 +1,18 @@
 @import "../../shared/stub-demo.css";
 
+.cp-demo__stage {
+  min-height: 0;
+  padding: var(--cp-space-4);
+  display: grid;
+  gap: var(--cp-space-4);
+  align-content: start;
+}
+
 .eos-stage-grid {
   display: grid;
-  gap: var(--cp-space-3);
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: var(--cp-space-4);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: stretch;
 }
 
 .control {
@@ -12,8 +21,9 @@
 }
 
 .control__value {
-  color: var(--cp-muted);
-  font-size: 0.95rem;
+  color: color-mix(in srgb, var(--cp-text) 84%, var(--cp-muted));
+  font-size: 0.98rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .presets {
@@ -44,24 +54,24 @@
 
 .pressure-grid {
   display: grid;
-  gap: var(--cp-space-3);
+  gap: var(--cp-space-2);
   grid-template-columns: repeat(3, minmax(0, 1fr));
   width: 100%;
-  margin-top: var(--cp-space-3);
 }
 
 .pressure-card {
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-r-3);
   background: color-mix(in srgb, var(--cp-bg1) 92%, transparent);
-  padding: var(--cp-space-3);
+  padding: calc(var(--cp-space-3) + 1px);
   display: grid;
   gap: var(--cp-space-2);
+  min-height: 10.75rem;
 }
 
 .pressure-card h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.05rem;
 }
 
 .pressure-card__value {
@@ -94,7 +104,8 @@
 .pressure-card__hint {
   margin: 0;
   color: var(--cp-muted);
-  font-size: 0.88rem;
+  font-size: 0.9rem;
+  line-height: 1.35;
 }
 
 .pressure-card[data-tone="dominant"] {
@@ -111,20 +122,23 @@
 }
 
 .stage-summary {
-  margin-top: var(--cp-space-3);
   padding: var(--cp-space-3);
   border-radius: var(--cp-r-3);
   border: 1px solid var(--cp-border);
   background: color-mix(in srgb, var(--cp-bg1) 88%, transparent);
   color: var(--cp-text);
+  display: grid;
+  gap: var(--cp-space-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .stage-summary p {
   margin: 0;
+  font-size: 0.98rem;
 }
 
 .stage-summary p + p {
-  margin-top: var(--cp-space-2);
+  margin-top: 0;
 }
 
 .pressure-plot {
@@ -135,16 +149,20 @@
 }
 
 .pressure-plot h3 {
-  margin: 0 0 var(--cp-space-2);
-  font-size: 0.98rem;
+  margin: 0 0 var(--cp-space-1);
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
 }
 
 .pressure-plot__help {
-  margin: 0 0 var(--cp-space-2);
+  margin: 0 0 var(--cp-space-3);
+  font-size: 0.98rem;
+  line-height: 1.45;
+  max-width: 62ch;
 }
 
 .pressure-plot__surface {
-  min-height: 19rem;
+  min-height: 24rem;
 }
 
 .regime-map {
@@ -155,122 +173,20 @@
 }
 
 .regime-map h3 {
-  margin: 0 0 var(--cp-space-2);
-  font-size: 0.98rem;
+  margin: 0 0 var(--cp-space-1);
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
 }
 
 .regime-map__help {
-  margin: 0 0 var(--cp-space-2);
+  margin: 0 0 var(--cp-space-3);
+  font-size: 0.98rem;
+  line-height: 1.45;
+  max-width: 48ch;
 }
 
-.regime-map__chart {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: var(--cp-space-2);
-}
-
-.regime-map__y-strip {
-  width: 5.25rem;
-  min-width: 5.25rem;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: var(--cp-space-1);
-}
-
-.regime-map__axis-label {
-  font-size: 0.8rem;
-  color: var(--cp-text);
-  line-height: 1.15;
-}
-
-.regime-map__axis-label--x {
-  text-align: center;
-  margin-top: calc(var(--cp-space-1) * -0.25);
-}
-
-.regime-map__y-ticks,
-.regime-map__x-ticks {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  color: var(--cp-muted);
-  font-size: 0.78rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.regime-map__y-ticks {
-  display: grid;
-  height: 100%;
-  min-height: 15.5rem;
-  align-content: space-between;
-  justify-items: end;
-  padding-right: var(--cp-space-1);
-}
-
-.regime-map__plot {
-  display: grid;
-  gap: var(--cp-space-1);
-}
-
-.regime-map__x-ticks {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: var(--cp-space-1);
-  justify-items: center;
-  padding-inline: var(--cp-space-1);
-}
-
-#regimeMap {
-  display: block;
-  width: min(100%, 500px);
-  margin-inline: auto;
-  aspect-ratio: 1.45 / 1;
-  height: auto;
-  border: 1px solid var(--cp-border);
-  border-radius: var(--cp-r-2);
-  background: color-mix(in srgb, var(--cp-bg2) 88%, transparent);
-}
-
-#regimeGrid line {
-  stroke: color-mix(in srgb, var(--cp-border) 60%, transparent);
-  stroke-width: 0.25;
-}
-
-#regimeCells rect[data-channel="gas"] {
-  fill: color-mix(in srgb, var(--cp-success) 32%, transparent);
-}
-
-#regimeCells rect[data-channel="radiation"] {
-  fill: color-mix(in srgb, var(--cp-accent) 36%, transparent);
-}
-
-#regimeCells rect[data-channel="degeneracy"] {
-  fill: color-mix(in srgb, var(--cp-glow-teal) 38%, transparent);
-}
-
-#regimeCells rect[data-channel="mixed"] {
-  fill: color-mix(in srgb, var(--cp-warn) 32%, transparent);
-}
-
-#regimeCells rect[data-channel="invalid"] {
-  fill: color-mix(in srgb, var(--cp-muted) 20%, transparent);
-}
-
-#regimeCells rect {
-  stroke: none;
-}
-
-#regimePresetMarkers circle {
-  fill: color-mix(in srgb, var(--cp-text) 72%, transparent);
-  stroke: var(--cp-bg0);
-  stroke-width: 0.6;
-}
-
-#regimeCurrentPoint {
-  fill: var(--cp-accent);
-  stroke: var(--cp-bg0);
-  stroke-width: 1;
+.regime-map__surface {
+  min-height: 24rem;
 }
 
 .regime-map__legend {
@@ -278,23 +194,26 @@
   padding: 0;
   list-style: none;
   display: grid;
-  gap: var(--cp-space-1);
+  gap: var(--cp-space-2);
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  font-size: 0.84rem;
+  font-size: 0.9rem;
 }
 
 .regime-map__legend li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--cp-space-2);
   color: var(--cp-text);
+  line-height: 1.3;
 }
 
 .regime-map__legend span {
-  width: 0.95rem;
-  height: 0.95rem;
-  border-radius: 0.2rem;
+  width: 0.9rem;
+  min-width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--cp-border) 75%, transparent);
+  margin-top: 0.18rem;
 }
 
 .regime-map__legend span[data-channel="gas"] {
@@ -314,7 +233,19 @@
 }
 
 #regimeDetail {
-  margin-top: var(--cp-space-2);
+  margin-top: var(--cp-space-3);
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
+#regimeSummary {
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
+.pressure-plot__surface .cp-runtime-plot__surface,
+.regime-map__surface .cp-runtime-plot__surface {
+  min-height: inherit;
 }
 
 .cp-readout--stack {
@@ -329,6 +260,10 @@
 }
 
 @media (max-width: 980px) {
+  .cp-demo__stage {
+    padding: var(--cp-space-3);
+  }
+
   .eos-stage-grid {
     grid-template-columns: 1fr;
   }
@@ -341,25 +276,11 @@
     grid-template-columns: 1fr;
   }
 
-  .regime-map__chart {
+  .regime-map__legend {
     grid-template-columns: 1fr;
   }
 
-  .regime-map__y-strip {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .regime-map__y-ticks {
-    min-height: 0;
-    height: auto;
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    justify-items: center;
-    padding-right: 0;
-  }
-
-  .regime-map__legend {
+  .stage-summary {
     grid-template-columns: 1fr;
   }
 }

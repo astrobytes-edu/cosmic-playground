@@ -29,7 +29,6 @@ import {
   percent,
   pressureBarPercent,
   pressureTone,
-  regimeMapCoordinates,
   valueToLogSlider
 } from "./logic";
 
@@ -143,13 +142,13 @@ const TEMPERATURE_MAX_K = 1e9;
 const DENSITY_MIN_G_PER_CM3 = 1e-10;
 const DENSITY_MAX_G_PER_CM3 = 1e10;
 const REGIME_MAP_REBUILD_DEBOUNCE_MS = 80;
-const REGIME_MAP_MIN_X = 64;
-const REGIME_MAP_MAX_X = 180;
-const REGIME_MAP_MIN_Y = 48;
-const REGIME_MAP_MAX_Y = 132;
-const REGIME_MAP_CELL_SIZE_DESKTOP_PX = 5.5;
-const REGIME_MAP_CELL_SIZE_COARSE_PX = 7.5;
-const PRESSURE_CURVE_SAMPLES = 96;
+const REGIME_MAP_MIN_X = 120;
+const REGIME_MAP_MAX_X = 280;
+const REGIME_MAP_MIN_Y = 90;
+const REGIME_MAP_MAX_Y = 210;
+const REGIME_MAP_CELL_SIZE_DESKTOP_PX = 3.2;
+const REGIME_MAP_CELL_SIZE_COARSE_PX = 4.8;
+const PRESSURE_CURVE_SAMPLES = 180;
 
 const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
 const tempValueEl = document.querySelector<HTMLSpanElement>("#tempValue");
@@ -183,11 +182,7 @@ const pDegBarEl = document.querySelector<HTMLElement>("#pDegBar");
 const pTotalValueEl = document.querySelector<HTMLElement>("#pTotalValue");
 const dominantChannelEl = document.querySelector<HTMLElement>("#dominantChannel");
 const pressureCurvePlotEl = document.querySelector<HTMLElement>("#pressureCurvePlot");
-const regimeMapEl = document.querySelector<SVGSVGElement>("#regimeMap");
-const regimeGridEl = document.querySelector<SVGGElement>("#regimeGrid");
-const regimeCellsEl = document.querySelector<SVGGElement>("#regimeCells");
-const regimePresetMarkersEl = document.querySelector<SVGGElement>("#regimePresetMarkers");
-const regimeCurrentPointEl = document.querySelector<SVGCircleElement>("#regimeCurrentPoint");
+const regimeMapEl = document.querySelector<HTMLElement>("#regimeMap");
 const regimeDetailEl = document.querySelector<HTMLElement>("#regimeDetail");
 const regimeSummaryEl = document.querySelector<HTMLElement>("#regimeSummary");
 
@@ -236,10 +231,6 @@ if (
   !dominantChannelEl ||
   !pressureCurvePlotEl ||
   !regimeMapEl ||
-  !regimeGridEl ||
-  !regimeCellsEl ||
-  !regimePresetMarkersEl ||
-  !regimeCurrentPointEl ||
   !regimeDetailEl ||
   !regimeSummaryEl ||
   !muValueEl ||
@@ -291,10 +282,6 @@ const pTotalValue = pTotalValueEl;
 const dominantChannel = dominantChannelEl;
 const pressureCurvePlot = pressureCurvePlotEl;
 const regimeMap = regimeMapEl;
-const regimeGrid = regimeGridEl;
-const regimeCells = regimeCellsEl;
-const regimePresetMarkers = regimePresetMarkersEl;
-const regimeCurrentPoint = regimeCurrentPointEl;
 const regimeDetail = regimeDetailEl;
 const regimeSummary = regimeSummaryEl;
 
@@ -391,36 +378,37 @@ function pressureCurveTraces(plotState: EosPressurePlotState): PlotTrace[] {
       id: "p-gas",
       label: "P_gas",
       points: gasPoints,
-      colorVar: "var(--cp-success)",
-      lineWidth: 3
+      colorVar: "#2c7fb8",
+      lineWidth: 3.2
     },
     {
       id: "p-rad",
       label: "P_rad",
       points: radiationPoints,
-      colorVar: "var(--cp-accent)",
-      lineWidth: 3
+      colorVar: "#f28e2b",
+      lineWidth: 3.2
     },
     {
       id: "p-deg-e",
       label: "P_deg,e",
       points: degeneracyPoints,
-      colorVar: "var(--cp-glow-teal)",
-      lineWidth: 3
+      colorVar: "#59a14f",
+      lineWidth: 3.2
     },
     {
       id: "p-total",
       label: "P_tot",
       points: totalPoints,
-      colorVar: "var(--cp-text)",
-      lineWidth: 3.4
+      colorVar: "#e15759",
+      lineWidth: 3.6
     },
     {
       id: "current-state",
       label: "Current state",
       mode: "points",
-      pointRadius: 5,
-      colorVar: "var(--cp-warn)",
+      pointRadius: 5.8,
+      colorVar: "#f4d35e",
+      showLegend: false,
       points: [
         {
           x: plotState.densityGPerCm3,
@@ -435,6 +423,7 @@ function pressureCurveYDomain(traces: PlotTrace[]): [number, number] | undefined
   let minY = Number.POSITIVE_INFINITY;
   let maxY = Number.NEGATIVE_INFINITY;
   for (const trace of traces) {
+    if (trace.kind === "heatmap") continue;
     for (const point of trace.points) {
       if (!Number.isFinite(point.y) || !(point.y > 0)) continue;
       minY = Math.min(minY, point.y);
@@ -456,20 +445,8 @@ function pressureCurveYDomain(traces: PlotTrace[]): [number, number] | undefined
 }
 
 function pressureCurveLayoutOverrides(args: {
-  plotState: EosPressurePlotState;
   yDomain: [number, number] | undefined;
 }): PlotLayoutOverrides {
-  const current = args.plotState.currentModel;
-  const dominantLabel = dominantChannelLabel(current);
-  const currentDensity = args.plotState.densityGPerCm3;
-  const currentTotalPressure = current.totalPressureDynePerCm2;
-  const annotation = [
-    `T = ${formatScientific(args.plotState.temperatureK, 3)} K`,
-    `rho = ${formatScientific(currentDensity, 3)} g cm^-3`,
-    `P_tot = ${formatScientific(currentTotalPressure, 3)} dyne cm^-2`,
-    `Dominant: ${dominantLabel}`
-  ].join("<br>");
-
   const yAxisOverride: Record<string, unknown> = {
     exponentformat: "power",
     showexponent: "all",
@@ -481,68 +458,56 @@ function pressureCurveLayoutOverrides(args: {
 
   return {
     hovermode: "x unified",
+    margin: { l: 84, r: 20, t: 28, b: 92 },
+    showlegend: true,
     legend: {
       orientation: "h",
       x: 0,
       xanchor: "left",
-      y: 1.18,
-      yanchor: "top",
-      traceorder: "normal"
+      y: -0.28,
+      yanchor: "bottom",
+      traceorder: "normal",
+      itemwidth: 58,
+      font: { size: 12, color: "#e8efff" }
+    },
+    hoverlabel: {
+      bgcolor: "rgba(8, 16, 24, 0.94)",
+      bordercolor: "rgba(132, 156, 188, 0.6)",
+      font: { size: 12, color: "#e8efff" }
     },
     xaxis: {
+      title: { text: "Density rho (g cm<sup>-3</sup>)", standoff: 8 },
+      tickvals: [-9, -6, -3, 0, 3, 6, 9].map((value) => Math.pow(10, value)),
+      ticktext: [
+        "10<sup>-9</sup>",
+        "10<sup>-6</sup>",
+        "10<sup>-3</sup>",
+        "10<sup>0</sup>",
+        "10<sup>3</sup>",
+        "10<sup>6</sup>",
+        "10<sup>9</sup>"
+      ],
       exponentformat: "power",
       showexponent: "all",
-      tickformat: ".1e"
+      tickformat: ".1e",
+      automargin: true
     },
     yaxis: {
+      title: { text: "Pressure P (dyne cm<sup>-2</sup>)", standoff: 8 },
+      tickvals: [-4, 0, 4, 8, 12, 16, 20, 24].map((value) => Math.pow(10, value)),
+      ticktext: [
+        "10<sup>-4</sup>",
+        "10<sup>0</sup>",
+        "10<sup>4</sup>",
+        "10<sup>8</sup>",
+        "10<sup>12</sup>",
+        "10<sup>16</sup>",
+        "10<sup>20</sup>",
+        "10<sup>24</sup>"
+      ],
+      automargin: true,
       ...yAxisOverride
-    },
-    shapes: [
-      {
-        type: "line",
-        xref: "x",
-        yref: "paper",
-        x0: currentDensity,
-        x1: currentDensity,
-        y0: 0,
-        y1: 1,
-        line: {
-          color: "#7BC7FF",
-          width: 1,
-          dash: "dot"
-        }
-      },
-      {
-        type: "line",
-        xref: "paper",
-        yref: "y",
-        x0: 0,
-        x1: 1,
-        y0: currentTotalPressure,
-        y1: currentTotalPressure,
-        line: {
-          color: "#FFC857",
-          width: 1,
-          dash: "dot"
-        }
-      }
-    ],
-    annotations: [
-      {
-        xref: "paper",
-        yref: "paper",
-        x: 0.01,
-        y: 0.98,
-        xanchor: "left",
-        yanchor: "top",
-        align: "left",
-        text: annotation,
-        showarrow: false,
-        borderpad: 5,
-        bgcolor: "rgba(8, 16, 24, 0.72)",
-        bordercolor: "rgba(120, 154, 196, 0.42)"
-      }
-    ]
+    }
   };
 }
 
@@ -556,7 +521,7 @@ function pressureCurvePatch(plotState: EosPressurePlotState): {
   return {
     traces,
     ...(yDomain ? { yDomain } : {}),
-    layoutOverrides: pressureCurveLayoutOverrides({ plotState, yDomain })
+    layoutOverrides: pressureCurveLayoutOverrides({ yDomain })
   };
 }
 
@@ -698,10 +663,6 @@ function dominantChannelLabel(model: StellarEosStateCgs): string {
   }
 }
 
-function mapChannel(channel: StellarEosStateCgs["dominantPressureChannel"]): string {
-  return channel;
-}
-
 function electronDegeneracyMethodLabel(
   method: StellarEosStateCgs["electronDegeneracyMethod"]
 ): string {
@@ -756,14 +717,7 @@ function compositionRegimeKey(composition: StellarCompositionFractions, radiatio
   ].join("|");
 }
 
-let regimeMapCacheKey: string | null = null;
-let pendingRegimeMapKey: string | null = null;
-let pendingRegimeMapResolution: RegimeMapGridResolution | null = null;
-let regimeMapRebuildTimer: number | null = null;
-let regimeMapBuildCount = 0;
-let regimePresetMarkersBuilt = false;
-let regimeGridBuilt = false;
-let regimeMapLastResolution = "0x0";
+type RegimeChannelCode = 0 | 1 | 2 | 3;
 
 type RegimeMapGridResolution = {
   xCells: number;
@@ -771,10 +725,66 @@ type RegimeMapGridResolution = {
   signature: string;
 };
 
+type RegimeMapGridData = {
+  xLog: number[];
+  yLog: number[];
+  z: RegimeChannelCode[][];
+  labels: string[][];
+};
+
+function channelCode(channel: StellarEosStateCgs["dominantPressureChannel"]): RegimeChannelCode {
+  switch (channel) {
+    case "gas":
+      return 0;
+    case "radiation":
+      return 1;
+    case "degeneracy":
+      return 2;
+    case "mixed":
+    case "extension":
+    default:
+      return 3;
+  }
+}
+
+function channelLabelFromCode(code: RegimeChannelCode): string {
+  switch (code) {
+    case 0:
+      return "P_gas dominant";
+    case 1:
+      return "P_rad dominant";
+    case 2:
+      return "P_deg,e dominant";
+    case 3:
+    default:
+      return "Mixed dominance";
+  }
+}
+
+const EOS_REGIME_COLOR_SCALE: Array<[number, string]> = [
+  [0, "rgba(61, 186, 138, 0.82)"],
+  [0.249, "rgba(61, 186, 138, 0.82)"],
+  [0.25, "rgba(91, 153, 222, 0.82)"],
+  [0.499, "rgba(91, 153, 222, 0.82)"],
+  [0.5, "rgba(84, 205, 220, 0.82)"],
+  [0.749, "rgba(84, 205, 220, 0.82)"],
+  [0.75, "rgba(239, 187, 86, 0.84)"],
+  [1, "rgba(239, 187, 86, 0.84)"]
+];
+
+let regimeMapCacheKey: string | null = null;
+let pendingRegimeMapKey: string | null = null;
+let pendingRegimeMapResolution: RegimeMapGridResolution | null = null;
+let regimeMapRebuildTimer: number | null = null;
+let regimeMapBuildCount = 0;
+let regimeMapLastResolution = "0x0";
+let regimeMapGridData: RegimeMapGridData | null = null;
+let regimeMapCurrentLogPoint = { log10Temperature: Number.NaN, log10Density: Number.NaN };
+
 function regimeMapGridResolution(): RegimeMapGridResolution {
   const rect = regimeMap.getBoundingClientRect();
-  const widthPx = rect.width > 0 ? rect.width : 500;
-  const heightPx = rect.height > 0 ? rect.height : widthPx / 1.45;
+  const widthPx = rect.width > 0 ? rect.width : 540;
+  const heightPx = rect.height > 0 ? rect.height : 360;
 
   const cellSizePx =
     typeof window !== "undefined" &&
@@ -832,102 +842,68 @@ function scheduleRegimeMapRebuild(
 function buildRegimeMapField(resolution: RegimeMapGridResolution): void {
   regimeMapBuildCount += 1;
   regimeMapLastResolution = resolution.signature;
-  const svgNs = "http://www.w3.org/2000/svg";
-  const cellWidth = 100 / resolution.xCells;
-  const cellHeight = 100 / resolution.yCells;
+  const xLog = logspace(
+    Math.log10(TEMPERATURE_MIN_K),
+    Math.log10(TEMPERATURE_MAX_K),
+    resolution.xCells
+  ).map((value) => Math.log10(value));
+  const yLog = logspace(
+    Math.log10(DENSITY_MIN_G_PER_CM3),
+    Math.log10(DENSITY_MAX_G_PER_CM3),
+    resolution.yCells
+  ).map((value) => Math.log10(value));
 
-  regimeCells.replaceChildren();
-  for (let iy = 0; iy < resolution.yCells; iy += 1) {
-    for (let ix = 0; ix < resolution.xCells; ix += 1) {
-      const xFrac = (ix + 0.5) / resolution.xCells;
-      const yFrac = (iy + 0.5) / resolution.yCells;
-      const temperatureK = Math.pow(
-        10,
-        Math.log10(TEMPERATURE_MIN_K) + xFrac * (Math.log10(TEMPERATURE_MAX_K) - Math.log10(TEMPERATURE_MIN_K))
-      );
-      const densityGPerCm3 = Math.pow(
-        10,
-        Math.log10(DENSITY_MAX_G_PER_CM3) - yFrac * (Math.log10(DENSITY_MAX_G_PER_CM3) - Math.log10(DENSITY_MIN_G_PER_CM3))
-      );
+  const z: RegimeChannelCode[][] = [];
+  const labels: string[][] = [];
 
+  for (const logDensity of yLog) {
+    const zRow: RegimeChannelCode[] = [];
+    const labelRow: string[] = [];
+    for (const logTemperature of xLog) {
       const sample = StellarEosModel.evaluateStateCgs({
         input: {
-          temperatureK,
-          densityGPerCm3,
+          temperatureK: Math.pow(10, logTemperature),
+          densityGPerCm3: Math.pow(10, logDensity),
           composition: state.composition,
           radiationDepartureEta: state.radiationDepartureEta
         }
       });
-
-      const rect = document.createElementNS(svgNs, "rect");
-      rect.setAttribute("x", String(ix * cellWidth));
-      rect.setAttribute("y", String(iy * cellHeight));
-      rect.setAttribute("width", String(cellWidth));
-      rect.setAttribute("height", String(cellHeight));
-      rect.dataset.channel = mapChannel(sample.dominantPressureChannel);
-      regimeCells.append(rect);
+      const code = channelCode(sample.dominantPressureChannel);
+      zRow.push(code);
+      labelRow.push(channelLabelFromCode(code));
     }
+    z.push(zRow);
+    labels.push(labelRow);
   }
+  regimeMapGridData = { xLog, yLog, z, labels };
 }
 
-function buildRegimeGridLines(): void {
-  if (regimeGridBuilt) return;
-  const svgNs = "http://www.w3.org/2000/svg";
-  regimeGrid.replaceChildren();
-  const ticks = [0, 25, 50, 75, 100];
-  for (const pct of ticks) {
-    const vertical = document.createElementNS(svgNs, "line");
-    vertical.setAttribute("x1", String(pct));
-    vertical.setAttribute("y1", "0");
-    vertical.setAttribute("x2", String(pct));
-    vertical.setAttribute("y2", "100");
-    regimeGrid.append(vertical);
+type RegimeMapPlotState = {
+  model: StellarEosStateCgs;
+  deferRegimeMapFieldRebuild?: boolean;
+};
 
-    const horizontal = document.createElementNS(svgNs, "line");
-    horizontal.setAttribute("x1", "0");
-    horizontal.setAttribute("y1", String(pct));
-    horizontal.setAttribute("x2", "100");
-    horizontal.setAttribute("y2", String(pct));
-    regimeGrid.append(horizontal);
-  }
-  regimeGridBuilt = true;
-}
-
-function buildRegimePresetMarkers(): void {
-  if (regimePresetMarkersBuilt) return;
-  const svgNs = "http://www.w3.org/2000/svg";
-  regimePresetMarkers.replaceChildren();
-  for (const preset of PRESETS) {
-    const coords = regimeMapCoordinates({
-      temperatureK: preset.temperatureK,
-      densityGPerCm3: preset.densityGPerCm3,
-      temperatureMinK: TEMPERATURE_MIN_K,
-      temperatureMaxK: TEMPERATURE_MAX_K,
-      densityMinGPerCm3: DENSITY_MIN_G_PER_CM3,
-      densityMaxGPerCm3: DENSITY_MAX_G_PER_CM3
-    });
-
-    const marker = document.createElementNS(svgNs, "circle");
-    marker.setAttribute("cx", coords.xPct.toFixed(2));
-    marker.setAttribute("cy", coords.yPct.toFixed(2));
-    marker.setAttribute("r", "1.35");
-    marker.setAttribute("data-preset-id", preset.id);
-    const title = document.createElementNS(svgNs, "title");
-    title.textContent = preset.label;
-    marker.append(title);
-    regimePresetMarkers.append(marker);
-  }
-  regimePresetMarkersBuilt = true;
-}
-
-function renderRegimeMap(
+function regimeMapPlotStateFromModel(
   model: StellarEosStateCgs,
   args: { deferRegimeMapFieldRebuild?: boolean } = {}
-): void {
+): RegimeMapPlotState {
+  return {
+    model,
+    deferRegimeMapFieldRebuild: args.deferRegimeMapFieldRebuild
+  };
+}
+
+function regimeMapPatch(plotState: RegimeMapPlotState): {
+  traces: PlotTrace[];
+  xDomain: [number, number];
+  yDomain: [number, number];
+  layoutOverrides: PlotLayoutOverrides;
+} {
+  const model = plotState.model;
   const resolution = regimeMapGridResolution();
   const nextKey = `${compositionRegimeKey(state.composition, state.radiationDepartureEta)}|${resolution.signature}`;
   if (nextKey !== regimeMapCacheKey) {
-    if (args.deferRegimeMapFieldRebuild) {
+    if (plotState.deferRegimeMapFieldRebuild) {
       scheduleRegimeMapRebuild(nextKey, resolution);
     } else {
       pendingRegimeMapKey = nextKey;
@@ -935,30 +911,169 @@ function renderRegimeMap(
       flushRegimeMapRebuild();
     }
   }
-  buildRegimeGridLines();
-  buildRegimePresetMarkers();
 
-  const currentCoords = regimeMapCoordinates({
-    temperatureK: model.input.temperatureK,
-    densityGPerCm3: model.input.densityGPerCm3,
-    temperatureMinK: TEMPERATURE_MIN_K,
-    temperatureMaxK: TEMPERATURE_MAX_K,
-    densityMinGPerCm3: DENSITY_MIN_G_PER_CM3,
-    densityMaxGPerCm3: DENSITY_MAX_G_PER_CM3
-  });
-  regimeCurrentPoint.setAttribute("cx", currentCoords.xPct.toFixed(2));
-  regimeCurrentPoint.setAttribute("cy", currentCoords.yPct.toFixed(2));
-  regimeCurrentPoint.setAttribute("aria-label", "Current EOS state");
+  if (!regimeMapGridData) {
+    buildRegimeMapField(resolution);
+  }
+  if (!regimeMapGridData) {
+    return {
+      traces: [],
+      xDomain: [Math.log10(TEMPERATURE_MIN_K), Math.log10(TEMPERATURE_MAX_K)],
+      yDomain: [Math.log10(DENSITY_MIN_G_PER_CM3), Math.log10(DENSITY_MAX_G_PER_CM3)],
+      layoutOverrides: {}
+    };
+  }
+
+  const currentLogT = Math.log10(model.input.temperatureK);
+  const currentLogRho = Math.log10(model.input.densityGPerCm3);
+  regimeMapCurrentLogPoint = {
+    log10Temperature: currentLogT,
+    log10Density: currentLogRho
+  };
+
+  const presetLogT = PRESETS.map((preset) => Math.log10(preset.temperatureK));
+  const presetLogRho = PRESETS.map((preset) => Math.log10(preset.densityGPerCm3));
+
+  const traces: PlotTrace[] = [
+    {
+      kind: "heatmap",
+      id: "dominance-field",
+      label: "Dominant channel field",
+      x: regimeMapGridData.xLog,
+      y: regimeMapGridData.yLog,
+      z: regimeMapGridData.z,
+      customData: regimeMapGridData.labels,
+      hoverTemplate:
+        "log10(T/K)=%{x:.2f}<br>log10(rho/(g cm^-3))=%{y:.2f}<br>%{customdata}<extra></extra>",
+      zMin: 0,
+      zMax: 3,
+      showScale: false,
+      colorScale: EOS_REGIME_COLOR_SCALE,
+      smooth: "best",
+      showLegend: false
+    },
+    {
+      id: "preset-anchors",
+      label: "Preset anchors",
+      mode: "points",
+      pointRadius: 3.8,
+      colorVar: "rgba(244, 249, 255, 0.76)",
+      markerLineColor: "rgba(8, 14, 22, 0.92)",
+      markerLineWidth: 1.1,
+      hoverTemplate: "Preset anchors<extra></extra>",
+      showLegend: false,
+      points: presetLogT.map((logT, index) => ({ x: logT, y: presetLogRho[index] }))
+    },
+    {
+      id: "current-state",
+      label: "Current state",
+      mode: "points",
+      pointRadius: 5.6,
+      colorVar: "#4ce0ea",
+      markerSymbol: "diamond",
+      markerLineColor: "rgba(8, 12, 20, 0.96)",
+      markerLineWidth: 1.6,
+      hoverTemplate: "Current state<extra></extra>",
+      showLegend: false,
+      points: [{ x: currentLogT, y: currentLogRho }]
+    }
+  ];
 
   const log10Temperature = Math.log10(model.input.temperatureK);
   const log10Density = Math.log10(model.input.densityGPerCm3);
-  regimeDetail.textContent = `Point details: log10(T/K)=${formatFraction(log10Temperature, 2)}, log10(rho/(g cm^-3))=${formatFraction(log10Density, 2)}, P_rad/P_gas=${formatScientific(model.pressureRatios.radiationToGas, 3)}, P_deg,e/P_tot=${formatScientific(model.pressureRatios.degeneracyToTotal, 3)}.`;
-  regimeSummary.textContent = `Interpretation: ${dominantChannelLabel(model)} dominates at the current point (marker); preset dots provide quick reference anchors.`;
+  regimeDetail.textContent = `Point details: $\\log_{10}(T/\\mathrm{K})=${formatFraction(log10Temperature, 2)}$, $\\log_{10}(\\rho/(\\mathrm{g\\ cm^{-3}}))=${formatFraction(log10Density, 2)}$, $P_{\\rm rad}/P_{\\rm gas}=${formatScientific(model.pressureRatios.radiationToGas, 3)}$, $P_{\\rm deg,e}/P_{\\rm tot}=${formatScientific(model.pressureRatios.degeneracyToTotal, 3)}$.`;
+  regimeSummary.textContent = `Interpretation: ${dominantChannelLabel(model)} dominates at the highlighted state; white markers show preset anchors.`;
+  renderMath(regimeDetail);
+  renderMath(regimeSummary);
   regimeMap.setAttribute(
     "aria-label",
-    "EOS dominance map over log density and log temperature with current-state marker"
+    "EOS dominance heatmap over log density and log temperature with current-state marker"
   );
+
+  return {
+    traces,
+    xDomain: [Math.log10(TEMPERATURE_MIN_K), Math.log10(TEMPERATURE_MAX_K)],
+    yDomain: [Math.log10(DENSITY_MIN_G_PER_CM3), Math.log10(DENSITY_MAX_G_PER_CM3)],
+    layoutOverrides: {
+      showlegend: false,
+      margin: { l: 84, r: 20, t: 16, b: 62 },
+      plot_bgcolor: "rgba(5, 12, 21, 0.98)",
+      hoverlabel: {
+        bgcolor: "rgba(8, 16, 24, 0.96)",
+        bordercolor: "rgba(132, 156, 188, 0.66)",
+        font: { size: 12, color: "#e8efff" }
+      },
+      xaxis: {
+        title: { text: "log<sub>10</sub>(T/K)", standoff: 8 },
+        tickvals: [3, 4, 5, 6, 7, 8, 9],
+        ticktext: [
+          "10<sup>3</sup>",
+          "10<sup>4</sup>",
+          "10<sup>5</sup>",
+          "10<sup>6</sup>",
+          "10<sup>7</sup>",
+          "10<sup>8</sup>",
+          "10<sup>9</sup>"
+        ],
+        automargin: true
+      },
+      yaxis: {
+        title: { text: "log<sub>10</sub>(rho/(g cm<sup>-3</sup>))", standoff: 8 },
+        tickvals: [-10, -5, 0, 5, 10],
+        ticktext: [
+          "10<sup>-10</sup>",
+          "10<sup>-5</sup>",
+          "10<sup>0</sup>",
+          "10<sup>5</sup>",
+          "10<sup>10</sup>"
+        ],
+        automargin: true
+      },
+      uirevision: "cp-eos-regime-map"
+    }
+  };
 }
+
+const eosRegimeMapPlotSpec: PlotSpec<RegimeMapPlotState> = {
+  id: "eos-regime-map",
+  axes: {
+    x: {
+      label: "log10(T/K)",
+      scale: "linear",
+      min: Math.log10(TEMPERATURE_MIN_K),
+      max: Math.log10(TEMPERATURE_MAX_K),
+      tickCount: 7,
+      tickCountMobile: 6
+    },
+    y: {
+      label: "log10(rho/(g cm^-3))",
+      scale: "linear",
+      min: Math.log10(DENSITY_MIN_G_PER_CM3),
+      max: Math.log10(DENSITY_MAX_G_PER_CM3),
+      tickCount: 6,
+      tickCountMobile: 5
+    }
+  },
+  interaction: {
+    hover: true,
+    zoom: false,
+    pan: false,
+    crosshair: false
+  },
+  ariaLabel: "EOS dominance heatmap over log density and log temperature",
+  init(plotState) {
+    return regimeMapPatch(plotState);
+  },
+  update(plotState) {
+    return regimeMapPatch(plotState);
+  }
+};
+
+const regimeMapPlotController = mountPlot(
+  regimeMap,
+  eosRegimeMapPlotSpec,
+  regimeMapPlotStateFromModel(evaluateModel())
+);
 
 function renderAdvancedDiagnostics(model: StellarEosStateCgs): void {
   xFValue.textContent = formatScientific(model.fermiRelativityX, 5);
@@ -1160,7 +1275,11 @@ function render(args: { deferRegimeMapFieldRebuild?: boolean } = {}): void {
 
   renderRadiationClosure(model);
   renderAdvancedDiagnostics(model);
-  renderRegimeMap(model, { deferRegimeMapFieldRebuild: args.deferRegimeMapFieldRebuild });
+  regimeMapPlotController.update(
+    regimeMapPlotStateFromModel(model, {
+      deferRegimeMapFieldRebuild: args.deferRegimeMapFieldRebuild
+    })
+  );
   renderPresetState();
 
   (window as Window & { __cp?: unknown }).__cp = {
@@ -1168,6 +1287,7 @@ function render(args: { deferRegimeMapFieldRebuild?: boolean } = {}): void {
     mode: runtime.mode,
     regimeMapBuildCount,
     regimeMapGridResolution: regimeMapLastResolution,
+    regimeMapCurrentLogPoint,
     exportResults: () => exportResults(model)
   };
 }
@@ -1375,14 +1495,18 @@ window.addEventListener("resize", () => {
   if (resizeFrame !== null) return;
   resizeFrame = window.requestAnimationFrame(() => {
     resizeFrame = null;
-    renderRegimeMap(evaluateModel(), { deferRegimeMapFieldRebuild: true });
+    regimeMapPlotController.update(
+      regimeMapPlotStateFromModel(evaluateModel(), { deferRegimeMapFieldRebuild: true })
+    );
   });
 });
 
 window.addEventListener(
   "beforeunload",
   () => {
+    cancelRegimeMapRebuildTimer();
     pressureCurvePlotController.destroy();
+    regimeMapPlotController.destroy();
   },
   { once: true }
 );

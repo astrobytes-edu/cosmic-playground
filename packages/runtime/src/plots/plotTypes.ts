@@ -11,6 +11,8 @@ export type PlotPoint = {
   y: number;
 };
 
+export type PlotColorScaleStop = [number, string];
+
 export type AxisSpec = {
   label: string;
   unit?: string;
@@ -21,7 +23,8 @@ export type AxisSpec = {
   tickCountMobile?: number;
 };
 
-export type PlotTrace = {
+export type PlotSeriesTrace = {
+  kind?: "series";
   id: string;
   label: string;
   points: PlotPoint[];
@@ -30,7 +33,32 @@ export type PlotTrace = {
   lineWidth?: number;
   pointRadius?: number;
   colorVar?: string;
+  markerSymbol?: string;
+  markerLineColor?: string;
+  markerLineWidth?: number;
+  hoverTemplate?: string;
+  showLegend?: boolean;
 };
+
+export type PlotHeatmapTrace = {
+  kind: "heatmap";
+  id: string;
+  label: string;
+  x: number[];
+  y: number[];
+  z: number[][];
+  zMin?: number;
+  zMax?: number;
+  showScale?: boolean;
+  colorScale?: PlotColorScaleStop[];
+  customData?: Array<Array<string | number | null>>;
+  hoverTemplate?: string;
+  smooth?: "best" | "fast";
+  opacity?: number;
+  showLegend?: boolean;
+};
+
+export type PlotTrace = PlotSeriesTrace | PlotHeatmapTrace;
 
 export type PlotInit = {
   traces: PlotTrace[];

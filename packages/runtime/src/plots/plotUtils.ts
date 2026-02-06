@@ -19,7 +19,7 @@ export function normalizeScale(scale: PlotScale | undefined): PlotScale {
 }
 
 export function normalizeTraceMode(
-  mode: "line" | "points" | "line+points" | undefined
+  mode: unknown
 ): "line" | "points" | "line+points" {
   if (mode === "points" || mode === "line+points") return mode;
   return "line";
@@ -47,6 +47,7 @@ function dataExtent(
   let max = Number.NEGATIVE_INFINITY;
 
   for (const trace of traces) {
+    if (trace.kind === "heatmap") continue;
     for (const point of trace.points) {
       const value = point[key];
       if (!isFiniteNumber(value)) continue;

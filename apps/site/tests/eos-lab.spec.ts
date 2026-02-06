@@ -40,32 +40,41 @@ test.describe("EOS Lab -- E2E", () => {
 
   test("regime map is visible with current-state marker", async ({ page }) => {
     await expect(page.locator("#regimeMap")).toBeVisible();
-    await expect(page.locator("#regimeCurrentPoint")).toBeVisible();
+    await expect(page.locator("#regimeMap .js-plotly-plot")).toBeVisible();
   });
 
   test("regime map includes legend and point details for interpretation", async ({ page }) => {
     await expect(page.locator(".regime-map__legend")).toBeVisible();
     await expect(page.locator(".regime-map__legend li")).toHaveCount(4);
-    await expect(page.locator(".regime-map__x-ticks li")).toHaveCount(7);
-    await expect(page.locator(".regime-map__y-ticks li")).toHaveCount(5);
-    await expect(page.locator("#regimeDetail")).toContainText("log10(T/K)");
-    await expect(page.locator("#regimeDetail")).toContainText("log10(rho/(g cm^-3))");
+    await expect(page.locator("#regimeDetail")).toContainText("Point details:");
+    await expect(page.locator("#regimeDetail .katex")).toHaveCount(4);
   });
 
   test("regime marker moves when sliders change", async ({ page }) => {
-    const marker = page.locator("#regimeCurrentPoint");
-    const beforeCx = await marker.getAttribute("cx");
-    const beforeCy = await marker.getAttribute("cy");
+    const beforePoint = await page.evaluate(() => {
+      return (
+        window as Window & {
+          __cp?: { regimeMapCurrentLogPoint?: { log10Temperature: number; log10Density: number } };
+        }
+      ).__cp?.regimeMapCurrentLogPoint;
+    });
+    expect(beforePoint).toBeDefined();
 
     await page.locator("#tempSlider").fill("900");
     await page.locator("#tempSlider").dispatchEvent("input");
     await page.locator("#rhoSlider").fill("150");
     await page.locator("#rhoSlider").dispatchEvent("input");
 
-    const afterCx = await marker.getAttribute("cx");
-    const afterCy = await marker.getAttribute("cy");
-    expect(afterCx).not.toBe(beforeCx);
-    expect(afterCy).not.toBe(beforeCy);
+    const afterPoint = await page.evaluate(() => {
+      return (
+        window as Window & {
+          __cp?: { regimeMapCurrentLogPoint?: { log10Temperature: number; log10Density: number } };
+        }
+      ).__cp?.regimeMapCurrentLogPoint;
+    });
+    expect(afterPoint).toBeDefined();
+    expect(afterPoint?.log10Temperature).not.toBe(beforePoint?.log10Temperature);
+    expect(afterPoint?.log10Density).not.toBe(beforePoint?.log10Density);
   });
 
   test("composition sliders update mu readout", async ({ page }) => {
