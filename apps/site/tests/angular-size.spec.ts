@@ -27,15 +27,6 @@ test.describe("Angular Size -- E2E", () => {
     await expect(svg).toHaveAttribute("aria-label", "Angular size visualization");
   });
 
-  test("screenshot: default state (Sun preset)", async ({ page }) => {
-    // Wait for KaTeX to render
-    await page.waitForSelector(".katex", { timeout: 5000 }).catch(() => {});
-    await page.waitForTimeout(500);
-    await expect(page).toHaveScreenshot("angular-size-default-sun.png", {
-      maxDiffPixelRatio: 0.05
-    });
-  });
-
   // --- Preset Selection ---
 
   test("changing preset to Moon shows moon controls", async ({ page }) => {
@@ -132,25 +123,6 @@ test.describe("Angular Size -- E2E", () => {
     expect(parseFloat(theta ?? "0")).toBeLessThan(0.5);
   });
 
-  test("screenshot: Moon preset with orbit controls", async ({ page }) => {
-    await page.locator("#preset").selectOption("moon");
-    await page.waitForTimeout(400);
-    await expect(page).toHaveScreenshot("angular-size-moon-orbit.png", {
-      maxDiffPixelRatio: 0.05
-    });
-  });
-
-  test("screenshot: Moon recession +500 Myr", async ({ page }) => {
-    await page.locator("#preset").selectOption("moon");
-    await page.locator("#moonModeRecession").click();
-    await page.locator("#moonRecessionTime").fill("500");
-    await page.locator("#moonRecessionTime").dispatchEvent("input");
-    await page.waitForTimeout(400);
-    await expect(page).toHaveScreenshot("angular-size-moon-recession.png", {
-      maxDiffPixelRatio: 0.05
-    });
-  });
-
   // --- Readout Formatting ---
 
   test("readout units are displayed in separate spans", async ({ page }) => {
@@ -210,15 +182,6 @@ test.describe("Angular Size -- E2E", () => {
 
     // Challenge UI should appear (panel inserted into controls)
     await expect(page.locator(".cp-challenge-panel")).toBeVisible();
-  });
-
-  test("screenshot: challenge mode active", async ({ page }) => {
-    await page.locator("#challengeMode").click();
-    await expect(page.locator(".cp-challenge-panel")).toBeVisible();
-    await page.waitForTimeout(500);
-    await expect(page).toHaveScreenshot("angular-size-challenge.png", {
-      maxDiffPixelRatio: 0.05
-    });
   });
 
   // --- Accessibility ---

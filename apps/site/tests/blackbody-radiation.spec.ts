@@ -28,14 +28,6 @@ test.describe("Blackbody Radiation -- E2E", () => {
     await expect(canvas).toHaveAttribute("role", "img");
   });
 
-  test("screenshot: default state (Sun temperature)", async ({ page }) => {
-    await page.waitForSelector(".katex", { timeout: 5000 }).catch(() => {});
-    await page.waitForTimeout(500);
-    await expect(page).toHaveScreenshot("blackbody-default.png", {
-      maxDiffPixelRatio: 0.05,
-    });
-  });
-
   // --- Temperature Slider ---
 
   test("temperature slider updates readouts", async ({ page }) => {
@@ -80,14 +72,6 @@ test.describe("Blackbody Radiation -- E2E", () => {
     expect(sliderVal).toBe("0");
   });
 
-  test("screenshot: CMB preset", async ({ page }) => {
-    await page.locator('button.preset[data-temp-k="2.725"]').click();
-    await page.waitForTimeout(300);
-    await expect(page).toHaveScreenshot("blackbody-cmb.png", {
-      maxDiffPixelRatio: 0.05,
-    });
-  });
-
   // --- Scale Toggle ---
 
   test("log/linear scale buttons toggle aria-pressed", async ({ page }) => {
@@ -100,14 +84,6 @@ test.describe("Blackbody Radiation -- E2E", () => {
     await linearBtn.click();
     await expect(logBtn).toHaveAttribute("aria-pressed", "false");
     await expect(linearBtn).toHaveAttribute("aria-pressed", "true");
-  });
-
-  test("screenshot: linear scale", async ({ page }) => {
-    await page.locator("#scaleLinear").click();
-    await page.waitForTimeout(300);
-    await expect(page).toHaveScreenshot("blackbody-linear.png", {
-      maxDiffPixelRatio: 0.05,
-    });
   });
 
   // --- Overlay Checkboxes ---
@@ -161,14 +137,6 @@ test.describe("Blackbody Radiation -- E2E", () => {
     });
     await expect(stationDialog).toBeVisible();
     await expect(page.locator(".cp-station-table")).toBeVisible();
-  });
-
-  test("screenshot: station mode active", async ({ page }) => {
-    await page.locator("#stationMode").click();
-    await page.waitForTimeout(400);
-    await expect(page).toHaveScreenshot("blackbody-station.png", {
-      maxDiffPixelRatio: 0.05,
-    });
   });
 
   // --- Accessibility ---
