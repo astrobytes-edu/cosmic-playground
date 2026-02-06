@@ -36,6 +36,38 @@ export const CSS_VARS = {
   // Focus
   focus: "--cp-focus",
   selectionBg: "--cp-selection-bg",
+
+  // Celestial glows (30-50% opacity)
+  glowSun: "--cp-glow-sun",
+  glowMoon: "--cp-glow-moon",
+  glowPlanet: "--cp-glow-planet",
+  glowStar: "--cp-glow-star",
+  glowAccentTeal: "--cp-glow-accent-teal",
+  glowAccentRose: "--cp-glow-accent-rose",
+  glowAccentViolet: "--cp-glow-accent-violet",
+
+  // Celestial object palette
+  celestialSun: "--cp-celestial-sun",
+  celestialSunCore: "--cp-celestial-sun-core",
+  celestialSunCorona: "--cp-celestial-sun-corona",
+  celestialMoon: "--cp-celestial-moon",
+  celestialMoonDark: "--cp-celestial-moon-dark",
+  celestialEarth: "--cp-celestial-earth",
+  celestialMars: "--cp-celestial-mars",
+  celestialStar: "--cp-celestial-star",
+  celestialOrbit: "--cp-celestial-orbit",
+
+  // Instrument accents
+  accentAmber: "--cp-accent-amber",
+  accentGreen: "--cp-accent-green",
+  accentIce: "--cp-accent-ice",
+  accentRose: "--cp-accent-rose",
+
+  // Readout typography
+  readoutLabelColor: "--cp-readout-label-color",
+  readoutValueColor: "--cp-readout-value-color",
+  readoutValueFont: "--cp-readout-value-font",
+  readoutUnitColor: "--cp-readout-unit-color",
 } as const;
 
 export type CssVarKey = keyof typeof CSS_VARS;
