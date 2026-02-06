@@ -147,4 +147,34 @@ describe("Design tokens", () => {
       expect(css).toContain("--cp-duration-exit");
     });
   });
+
+  describe("Glow system", () => {
+    it("defines celestial glow tokens at 30-50% opacity", () => {
+      const requiredTokens = [
+        "--cp-glow-sun",
+        "--cp-glow-moon",
+        "--cp-glow-planet",
+        "--cp-glow-star",
+        "--cp-glow-accent-teal",
+        "--cp-glow-accent-rose",
+      ];
+      for (const token of requiredTokens) {
+        expect(css).toContain(token);
+      }
+    });
+
+    it("glow tokens use 30-50% opacity range", () => {
+      const glowPattern = /--cp-glow-(?:sun|moon|planet|star|accent-teal|accent-rose|accent-violet):.*?rgba\([^)]*,\s*([\d.]+)\)/g;
+      let match;
+      const opacities: number[] = [];
+      while ((match = glowPattern.exec(css)) !== null) {
+        opacities.push(parseFloat(match[1]));
+      }
+      expect(opacities.length).toBeGreaterThanOrEqual(4);
+      for (const opacity of opacities) {
+        expect(opacity).toBeGreaterThanOrEqual(0.3);
+        expect(opacity).toBeLessThanOrEqual(0.5);
+      }
+    });
+  });
 });

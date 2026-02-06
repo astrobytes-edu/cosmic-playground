@@ -53,6 +53,15 @@
   --cp-glow-blue: var(--cp-glow-violet);  /* map old blue → violet */
   --cp-glow-magenta: var(--cp-glow-pink);
 
+  /* ---------- Glow System (30-50% opacity — celestial objects emit light) ---------- */
+  --cp-glow-sun: 0 0 40px 10px rgba(255, 200, 100, 0.45);
+  --cp-glow-moon: 0 0 30px 8px rgba(200, 200, 220, 0.35);
+  --cp-glow-planet: 0 0 20px 5px rgba(100, 150, 255, 0.30);
+  --cp-glow-star: 0 0 15px 3px rgba(255, 255, 255, 0.40);
+  --cp-glow-accent-teal: 0 0 25px 6px rgba(45, 212, 191, 0.35);
+  --cp-glow-accent-rose: 0 0 25px 6px rgba(244, 114, 182, 0.35);
+  --cp-glow-accent-violet: 0 0 25px 6px rgba(167, 139, 250, 0.35);
+
   /* ---------- Data Visualization ---------- */
   /* Categorical palette - perceptually distinct, colorblind-safe */
   --cp-chart-1: var(--cp-accent);     /* teal */
