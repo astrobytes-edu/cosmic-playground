@@ -1,4 +1,4 @@
-import { createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { BlackbodyRadiationModel } from "@cosmic/physics";
 
@@ -498,3 +498,8 @@ if (prefersReducedMotion) {
 
 render();
 initMath(document);
+
+const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
+if (starfieldCanvas) {
+  initStarfield({ canvas: starfieldCanvas });
+}
