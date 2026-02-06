@@ -17,6 +17,7 @@ import {
 import type {
   PlotController,
   PlotDomain,
+  PlotLayoutOverrides,
   PlotPoint,
   PlotScale,
   PlotSpec,
@@ -49,6 +50,32 @@ type PlotlyTrace = {
 
 type PlotlyLayout = Record<string, unknown>;
 type PlotlyConfig = Record<string, unknown>;
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function mergeLayoutRecursive(
+  base: Record<string, unknown>,
+  overrides: Record<string, unknown>
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(overrides)) {
+    const previous = merged[key];
+    if (isPlainObject(previous) && isPlainObject(value)) {
+      merged[key] = mergeLayoutRecursive(previous, value);
+      continue;
+    }
+    merged[key] = value;
+  }
+  return merged;
+}
+
+function mergeLayout(base: PlotlyLayout, overrides?: PlotLayoutOverrides): PlotlyLayout {
+  if (!overrides) return base;
+  if (!isPlainObject(overrides)) return base;
+  return mergeLayoutRecursive(base, overrides);
+}
 
 const INTERACTION_MODEBAR_BUTTONS = [
   "zoom2d",
@@ -376,6 +403,7 @@ export function mountPlot<State>(
   let traces: PlotTrace[] = [];
   let explicitXDomain: PlotDomain | undefined;
   let explicitYDomain: PlotDomain | undefined;
+  let layoutOverrides: PlotLayoutOverrides | undefined;
   let destroyed = false;
   let didInitialRender = false;
   let pendingState: State | null = null;
@@ -447,6 +475,7 @@ export function mountPlot<State>(
       yRange,
       hoverEnabled
     });
+    const mergedLayout = mergeLayout(layout, layoutOverrides);
     const config = baseConfig(spec);
 
     const transitionDurationMs = prefersReducedMotion() ? 0 : 110;
@@ -459,11 +488,11 @@ export function mountPlot<State>(
     };
 
     if (!didInitialRender) {
-      await Plotly.newPlot(plotDiv, plotlyTraces, layout, config);
+      await Plotly.newPlot(plotDiv, plotlyTraces, mergedLayout, config);
       didInitialRender = true;
       return;
     }
-    await Plotly.react(plotDiv, plotlyTraces, layout, config, reactOptions);
+    await Plotly.react(plotDiv, plotlyTraces, mergedLayout, config, reactOptions);
   }
 
   function scheduleUpdate(state: State): void {
@@ -480,6 +509,9 @@ export function mountPlot<State>(
       const patch = spec.update(nextState);
       setTraceState(patch.traces);
       setDomains({ xDomain: patch.xDomain, yDomain: patch.yDomain });
+      if ("layoutOverrides" in patch) {
+        layoutOverrides = patch.layoutOverrides;
+      }
       void renderPlot();
     });
   }
@@ -487,6 +519,7 @@ export function mountPlot<State>(
   const initialPatch = spec.init(initialState);
   setTraceState(initialPatch.traces);
   setDomains({ xDomain: initialPatch.xDomain, yDomain: initialPatch.yDomain });
+  layoutOverrides = initialPatch.layoutOverrides;
   void renderPlot();
 
   const resize = () => {
@@ -516,6 +549,9 @@ export function mountPlot<State>(
       if (patch) {
         setTraceState(patch.traces);
         setDomains({ xDomain: patch.xDomain, yDomain: patch.yDomain });
+        if ("layoutOverrides" in patch) {
+          layoutOverrides = patch.layoutOverrides;
+        }
         void renderPlot();
       }
 

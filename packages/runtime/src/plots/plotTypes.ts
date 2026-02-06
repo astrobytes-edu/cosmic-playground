@@ -36,13 +36,17 @@ export type PlotInit = {
   traces: PlotTrace[];
   xDomain?: PlotDomain;
   yDomain?: PlotDomain;
+  layoutOverrides?: PlotLayoutOverrides;
 };
 
 export type PlotUpdate = {
   traces?: PlotTrace[];
   xDomain?: PlotDomain;
   yDomain?: PlotDomain;
+  layoutOverrides?: PlotLayoutOverrides;
 };
+
+export type PlotLayoutOverrides = Record<string, unknown>;
 
 export type PlotSpec<State> = {
   id: string;

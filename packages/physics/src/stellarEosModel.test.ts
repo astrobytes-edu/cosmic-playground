@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { StellarEosModel } from "./stellarEosModel";
 
+function expectRelativeClose(actual: number, expected: number, relativeTolerance: number): void {
+  const scale = Math.max(Math.abs(expected), 1);
+  expect(Math.abs(actual - expected) / scale).toBeLessThanOrEqual(relativeTolerance);
+}
+
 describe("StellarEosModel", () => {
   it("keeps solar-core-like state gas dominated with non-negligible radiation", () => {
     const state = StellarEosModel.evaluateStateCgs({
@@ -480,5 +485,55 @@ describe("StellarEosModel", () => {
       0
     );
     expect(state.electronDegeneracyPressureDynePerCm2).toBeCloseTo(reconstructed, 8);
+  });
+
+  it("matches the solar-core EOS checkpoint reference values", () => {
+    const state = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1.57e7,
+        densityGPerCm3: 150,
+        composition: {
+          hydrogenMassFractionX: 0.34,
+          heliumMassFractionY: 0.64,
+          metalMassFractionZ: 0.02
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    expect(state.dominantPressureChannel).toBe("gas");
+    expectRelativeClose(state.meanMolecularWeightMu, 0.8547008547008546, 1e-12);
+    expectRelativeClose(state.meanMolecularWeightMuE, 1.4925373134328357, 1e-12);
+    expectRelativeClose(state.gasPressureDynePerCm2, 2.2909254582845485e17, 1e-9);
+    expectRelativeClose(state.radiationPressureDynePerCm2, 1.5322388556019003e14, 1e-9);
+    expectRelativeClose(state.electronDegeneracyPressureDynePerCm2, 5.808123130210272e15, 5e-4);
+    expectRelativeClose(state.totalPressureDynePerCm2, 2.350538928442253e17, 5e-4);
+    expectRelativeClose(state.fermiRelativityX, 0.04690427747699773, 1e-6);
+    expectRelativeClose(state.chiDegeneracy, 2.408220754220397, 1e-6);
+  });
+
+  it("matches the white-dwarf-core EOS checkpoint reference values", () => {
+    const state = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e7,
+        densityGPerCm3: 1e6,
+        composition: {
+          hydrogenMassFractionX: 0,
+          heliumMassFractionY: 1,
+          metalMassFractionZ: 0
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    expect(state.dominantPressureChannel).toBe("degeneracy");
+    expectRelativeClose(state.meanMolecularWeightMu, 1.3333333333333333, 1e-12);
+    expectRelativeClose(state.meanMolecularWeightMuE, 2, 1e-12);
+    expectRelativeClose(state.gasPressureDynePerCm2, 6.235846965769906e20, 1e-9);
+    expectRelativeClose(state.radiationPressureDynePerCm2, 2.5219e13, 1e-9);
+    expectRelativeClose(state.electronDegeneracyPressureDynePerCm2, 2.58568828569252e22, 1e-3);
+    expectRelativeClose(state.totalPressureDynePerCm2, 2.648046757872119e22, 1e-3);
+    expectRelativeClose(state.fermiRelativityX, 0.8007195483017491, 1e-6);
+    expectRelativeClose(state.chiDegeneracy, 0.005999726901107544, 1e-6);
   });
 });

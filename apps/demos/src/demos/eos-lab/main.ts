@@ -8,7 +8,12 @@ import {
   setLiveRegionText
 } from "@cosmic/runtime";
 import { linspace } from "@cosmic/math";
-import type { ExportPayloadV1, PlotSpec, PlotTrace } from "@cosmic/runtime";
+import type {
+  ExportPayloadV1,
+  PlotLayoutOverrides,
+  PlotSpec,
+  PlotTrace
+} from "@cosmic/runtime";
 import {
   StellarEosModel,
   type StellarCompositionFractions,
@@ -382,32 +387,35 @@ function pressureCurveTraces(plotState: EosPressurePlotState): PlotTrace[] {
       id: "p-gas",
       label: "P_gas",
       points: gasPoints,
-      colorVar: "var(--cp-success)"
+      colorVar: "var(--cp-success)",
+      lineWidth: 3
     },
     {
       id: "p-rad",
       label: "P_rad",
       points: radiationPoints,
-      colorVar: "var(--cp-accent)"
+      colorVar: "var(--cp-accent)",
+      lineWidth: 3
     },
     {
       id: "p-deg-e",
       label: "P_deg,e",
       points: degeneracyPoints,
-      colorVar: "var(--cp-glow-teal)"
+      colorVar: "var(--cp-glow-teal)",
+      lineWidth: 3
     },
     {
       id: "p-total",
       label: "P_tot",
       points: totalPoints,
       colorVar: "var(--cp-text)",
-      lineDash: "dash"
+      lineWidth: 3.4
     },
     {
       id: "current-state",
       label: "Current state",
       mode: "points",
-      pointRadius: 4,
+      pointRadius: 5,
       colorVar: "var(--cp-warn)",
       points: [
         {
@@ -419,6 +427,135 @@ function pressureCurveTraces(plotState: EosPressurePlotState): PlotTrace[] {
   ];
 }
 
+function pressureCurveYDomain(traces: PlotTrace[]): [number, number] | undefined {
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const trace of traces) {
+    for (const point of trace.points) {
+      if (!Number.isFinite(point.y) || !(point.y > 0)) continue;
+      minY = Math.min(minY, point.y);
+      maxY = Math.max(maxY, point.y);
+    }
+  }
+
+  if (!(Number.isFinite(minY) && Number.isFinite(maxY) && maxY > 0)) {
+    return undefined;
+  }
+  if (!(maxY > minY)) {
+    return [minY * 0.8, maxY * 1.2];
+  }
+
+  const minLog = Math.log10(minY);
+  const maxLog = Math.log10(maxY);
+  const paddingDex = Math.max(0.18, 0.06 * (maxLog - minLog));
+  return [Math.pow(10, minLog - paddingDex), Math.pow(10, maxLog + paddingDex)];
+}
+
+function pressureCurveLayoutOverrides(args: {
+  plotState: EosPressurePlotState;
+  yDomain: [number, number] | undefined;
+}): PlotLayoutOverrides {
+  const current = args.plotState.currentModel;
+  const dominantLabel = dominantChannelLabel(current);
+  const currentDensity = args.plotState.densityGPerCm3;
+  const currentTotalPressure = current.totalPressureDynePerCm2;
+  const annotation = [
+    `T = ${formatScientific(args.plotState.temperatureK, 3)} K`,
+    `rho = ${formatScientific(currentDensity, 3)} g cm^-3`,
+    `P_tot = ${formatScientific(currentTotalPressure, 3)} dyne cm^-2`,
+    `Dominant: ${dominantLabel}`
+  ].join("<br>");
+
+  const yAxisOverride: Record<string, unknown> = {
+    exponentformat: "power",
+    showexponent: "all",
+    tickformat: ".1e"
+  };
+  if (args.yDomain) {
+    yAxisOverride.range = [Math.log10(args.yDomain[0]), Math.log10(args.yDomain[1])];
+  }
+
+  return {
+    hovermode: "x unified",
+    legend: {
+      orientation: "h",
+      x: 0,
+      xanchor: "left",
+      y: 1.18,
+      yanchor: "top",
+      traceorder: "normal"
+    },
+    xaxis: {
+      exponentformat: "power",
+      showexponent: "all",
+      tickformat: ".1e"
+    },
+    yaxis: {
+      ...yAxisOverride
+    },
+    shapes: [
+      {
+        type: "line",
+        xref: "x",
+        yref: "paper",
+        x0: currentDensity,
+        x1: currentDensity,
+        y0: 0,
+        y1: 1,
+        line: {
+          color: "#7BC7FF",
+          width: 1,
+          dash: "dot"
+        }
+      },
+      {
+        type: "line",
+        xref: "paper",
+        yref: "y",
+        x0: 0,
+        x1: 1,
+        y0: currentTotalPressure,
+        y1: currentTotalPressure,
+        line: {
+          color: "#FFC857",
+          width: 1,
+          dash: "dot"
+        }
+      }
+    ],
+    annotations: [
+      {
+        xref: "paper",
+        yref: "paper",
+        x: 0.01,
+        y: 0.98,
+        xanchor: "left",
+        yanchor: "top",
+        align: "left",
+        text: annotation,
+        showarrow: false,
+        borderpad: 5,
+        bgcolor: "rgba(8, 16, 24, 0.72)",
+        bordercolor: "rgba(120, 154, 196, 0.42)"
+      }
+    ]
+  };
+}
+
+function pressureCurvePatch(plotState: EosPressurePlotState): {
+  traces: PlotTrace[];
+  yDomain?: [number, number];
+  layoutOverrides: PlotLayoutOverrides;
+} {
+  const traces = pressureCurveTraces(plotState);
+  const yDomain = pressureCurveYDomain(traces);
+  return {
+    traces,
+    ...(yDomain ? { yDomain } : {}),
+    layoutOverrides: pressureCurveLayoutOverrides({ plotState, yDomain })
+  };
+}
+
 const eosPressurePlotSpec: PlotSpec<EosPressurePlotState> = {
   id: "eos-pressure-curves",
   axes: {
@@ -427,28 +564,29 @@ const eosPressurePlotSpec: PlotSpec<EosPressurePlotState> = {
       unit: "g cm^-3",
       scale: "log",
       min: DENSITY_MIN_G_PER_CM3,
-      max: DENSITY_MAX_G_PER_CM3
+      max: DENSITY_MAX_G_PER_CM3,
+      tickCount: 7,
+      tickCountMobile: 5
     },
     y: {
       label: "Pressure P",
       unit: "dyne cm^-2",
-      scale: "log"
+      scale: "log",
+      tickCount: 7,
+      tickCountMobile: 5
     }
   },
   interaction: {
     hover: true,
     zoom: false,
-    pan: false
+    pan: false,
+    crosshair: true
   },
   init(plotState) {
-    return {
-      traces: pressureCurveTraces(plotState)
-    };
+    return pressureCurvePatch(plotState);
   },
   update(plotState) {
-    return {
-      traces: pressureCurveTraces(plotState)
-    };
+    return pressureCurvePatch(plotState);
   }
 };
 

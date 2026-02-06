@@ -253,6 +253,80 @@ describe("mountPlot (Plotly engine)", () => {
     host.remove();
   });
 
+  it("applies and updates layout overrides from PlotSpec patches", async () => {
+    const host = document.createElement("div");
+    host.style.width = "720px";
+    host.style.height = "360px";
+    document.body.appendChild(host);
+
+    const spec: PlotSpec<number> = {
+      id: "layout-overrides",
+      axes: {
+        x: { label: "x", min: 0, max: 1 },
+        y: { label: "y", min: 0, max: 10 }
+      },
+      init(state) {
+        return {
+          traces: [
+            {
+              id: "line",
+              label: "line",
+              points: [
+                { x: 0, y: 0 },
+                { x: 1, y: state }
+              ]
+            }
+          ],
+          layoutOverrides: {
+            legend: { orientation: "v", x: 1, xanchor: "right" },
+            hovermode: "x unified",
+            annotations: [{ text: "initial", x: 0.5, y: 0.9, xref: "paper", yref: "paper" }]
+          }
+        };
+      },
+      update(state) {
+        return {
+          traces: [
+            {
+              id: "line",
+              label: "line",
+              points: [
+                { x: 0, y: 0 },
+                { x: 1, y: state }
+              ]
+            }
+          ],
+          layoutOverrides: {
+            legend: { orientation: "v", x: 1, xanchor: "right" },
+            hovermode: "x unified",
+            annotations: [{ text: "updated", x: 0.5, y: 0.9, xref: "paper", yref: "paper" }]
+          }
+        };
+      }
+    };
+
+    const controller = mountPlot(host, spec, 2);
+    await waitForFrame();
+    const initialLayout = plotlyMocks.newPlot.mock.calls[0][2] as Record<string, unknown>;
+    expect(initialLayout.hovermode).toBe("x unified");
+    expect((initialLayout.legend as Record<string, unknown>).orientation).toBe("v");
+    expect(
+      ((initialLayout.annotations as Array<Record<string, unknown>>)[0] as Record<string, unknown>).text
+    ).toBe("initial");
+
+    controller.update(4);
+    await waitForFrame();
+    const updatedLayout = plotlyMocks.react.mock.calls[0][2] as Record<string, unknown>;
+    expect(updatedLayout.hovermode).toBe("x unified");
+    expect((updatedLayout.legend as Record<string, unknown>).orientation).toBe("v");
+    expect(
+      ((updatedLayout.annotations as Array<Record<string, unknown>>)[0] as Record<string, unknown>).text
+    ).toBe("updated");
+
+    controller.destroy();
+    host.remove();
+  });
+
   it("purges plot on destroy", async () => {
     const host = document.createElement("div");
     host.style.width = "620px";
