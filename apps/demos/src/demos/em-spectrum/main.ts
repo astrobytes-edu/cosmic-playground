@@ -1,6 +1,7 @@
 import {
   createInstrumentRuntime,
   initMath,
+  initStarfield,
   setLiveRegionText
 } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
@@ -271,6 +272,9 @@ const runtime = createInstrumentRuntime({
   storageKey: "cp:em-spectrum:mode",
   url: new URL(window.location.href)
 });
+
+const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
+if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 
 const state: { wavelengthCm: number; band: BandKey } = {
   wavelengthCm: AstroUnits.nmToCm(520),
