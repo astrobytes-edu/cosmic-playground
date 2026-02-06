@@ -92,12 +92,60 @@ const presets = {
     description: "At opposition"
   },
   andromeda: {
-    name: "Andromeda",
+    name: "Andromeda (M31)",
     diameter: 1.26e18,
     distance: 2.4e19,
     category: "astronomical",
     color: "galaxy",
     description: "Nearest large galaxy (bright disk)"
+  },
+  pleiades: {
+    name: "Pleiades (M45)",
+    diameter: 1.234e14,
+    distance: 4.197e15,
+    category: "astronomical",
+    color: "galaxy",
+    description: "Open star cluster"
+  },
+  orionNebula: {
+    name: "Orion Nebula (M42)",
+    diameter: 2.469e14,
+    distance: 1.271e16,
+    category: "astronomical",
+    color: "galaxy",
+    description: "Nearest massive star-forming region"
+  },
+  lmc: {
+    name: "LMC",
+    diameter: 2.901e17,
+    distance: 1.543e18,
+    category: "astronomical",
+    color: "galaxy",
+    description: "Large Magellanic Cloud"
+  },
+  smc: {
+    name: "SMC",
+    diameter: 1.713e17,
+    distance: 1.882e18,
+    category: "astronomical",
+    color: "galaxy",
+    description: "Small Magellanic Cloud"
+  },
+  virgoCluster: {
+    name: "Virgo Cluster",
+    diameter: 7.129e19,
+    distance: 5.092e20,
+    category: "astronomical",
+    color: "galaxy",
+    description: "Nearest large galaxy cluster"
+  },
+  comaCluster: {
+    name: "Coma Cluster",
+    diameter: 1.864e20,
+    distance: 3.055e21,
+    category: "astronomical",
+    color: "galaxy",
+    description: "Richest nearby galaxy cluster"
   },
 
   // Everyday objects (diameters/distances in km)

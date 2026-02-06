@@ -15,6 +15,14 @@
   color: var(--cp-muted);
 }
 
+/* --- Unit selector row --- */
+
+.unit-selectors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cp-space-2);
+}
+
 /* --- Viz layout (two-panel grid inside stage) --- */
 
 .stage {
@@ -50,6 +58,7 @@
   width: 100%;
   max-width: none;
   height: auto;
+  overflow: visible;
 }
 
 /* --- Sky View panel --- */

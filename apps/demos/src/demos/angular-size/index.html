@@ -78,7 +78,7 @@
           </label>
 
           <label class="cp-field">
-            <span class="cp-label">Distance <em>d</em> (km)</span>
+            <span class="cp-label">Distance <em>d</em></span>
             <input
               id="distanceSlider"
               class="cp-range"
@@ -93,7 +93,7 @@
           </label>
 
           <label class="cp-field">
-            <span class="cp-label">Diameter <em>D</em> (km)</span>
+            <span class="cp-label">Diameter <em>D</em></span>
             <input
               id="diameterSlider"
               class="cp-range"
@@ -106,6 +106,32 @@
             />
             <div class="cp-muted"><span id="diameterValue"></span></div>
           </label>
+
+          <div class="unit-selectors">
+            <label class="cp-field cp-field--inline">
+              <span class="cp-label">Distance unit</span>
+              <select id="distanceUnitSelect" class="cp-select cp-select--sm">
+                <option value="auto" selected>auto</option>
+                <option value="cm">cm</option>
+                <option value="m">m</option>
+                <option value="km">km</option>
+                <option value="AU">AU</option>
+                <option value="pc">pc</option>
+                <option value="kpc">kpc</option>
+                <option value="Mpc">Mpc</option>
+                <option value="Gpc">Gpc</option>
+              </select>
+            </label>
+            <label class="cp-field cp-field--inline">
+              <span class="cp-label">Angle unit</span>
+              <select id="angleUnitSelect" class="cp-select cp-select--sm">
+                <option value="auto" selected>auto</option>
+                <option value="deg">deg</option>
+                <option value="arcmin">arcmin</option>
+                <option value="arcsec">arcsec</option>
+              </select>
+            </label>
+          </div>
 
           <section id="moonControls" class="cp-notice" aria-label="Moon controls" hidden>
             <h3>Moon time mode</h3>
@@ -293,20 +319,20 @@
            ═══════════════════════════════════════════ -->
       <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
         <div class="cp-readout">
-          <span class="cp-readout__label">&#x03B8; (auto)</span>
+          <span class="cp-readout__label">&#x03B8;</span>
           <span class="cp-readout__value"><span id="thetaDisplay"></span><span id="thetaDisplayUnit" class="cp-readout__unit"></span></span>
         </div>
         <div class="cp-readout">
           <span class="cp-readout__label">&#x03B8; (decimal)</span>
-          <span class="cp-readout__value"><span id="thetaDeg"></span><span class="cp-readout__unit">deg</span></span>
+          <span class="cp-readout__value"><span id="thetaDeg"></span><span id="thetaDegUnit" class="cp-readout__unit">deg</span></span>
         </div>
         <div class="cp-readout">
           <span class="cp-readout__label">Diameter</span>
-          <span class="cp-readout__value"><span id="diameterKm"></span><span class="cp-readout__unit">km</span></span>
+          <span class="cp-readout__value"><span id="diameterKm"></span><span id="diameterUnit" class="cp-readout__unit"></span></span>
         </div>
         <div class="cp-readout">
           <span class="cp-readout__label">Distance</span>
-          <span class="cp-readout__value"><span id="distanceKm"></span><span class="cp-readout__unit">km</span></span>
+          <span class="cp-readout__value"><span id="distanceKm"></span><span id="distanceUnit" class="cp-readout__unit"></span></span>
         </div>
       </div>
 

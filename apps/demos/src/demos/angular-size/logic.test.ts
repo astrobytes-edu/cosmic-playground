@@ -7,6 +7,10 @@ import {
   formatAngleDisplay,
   describeMoonOrbitAngle,
   describeMoonRecessionTime,
+  toSuperscript,
+  formatSci,
+  formatDistanceAuto,
+  formatDiameterAuto,
 } from "./logic";
 
 describe("Angular Size -- UI Logic", () => {
@@ -120,6 +124,133 @@ describe("Angular Size -- UI Logic", () => {
     });
     it("formats positive as future", () => {
       expect(describeMoonRecessionTime(500)).toBe("+500 Myr");
+    });
+  });
+
+  describe("toSuperscript", () => {
+    it("converts single digit", () => {
+      expect(toSuperscript(3)).toBe("\u00B3");
+    });
+    it("converts multi-digit number", () => {
+      expect(toSuperscript(12)).toBe("\u00B9\u00B2");
+    });
+    it("converts negative exponent", () => {
+      expect(toSuperscript(-4)).toBe("\u207B\u2074");
+    });
+    it("converts zero", () => {
+      expect(toSuperscript(0)).toBe("\u2070");
+    });
+    it("converts all digits 0-9", () => {
+      expect(toSuperscript(1234567890)).toBe(
+        "\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u2070"
+      );
+    });
+  });
+
+  describe("formatSci", () => {
+    it("formats numbers in normal range without exponent", () => {
+      expect(formatSci(150, 3)).toBe("150");
+    });
+    it("formats decimal in normal range", () => {
+      expect(formatSci(1.5, 3)).toBe("1.50");
+    });
+    it("formats small decimal in normal range", () => {
+      expect(formatSci(0.5, 3)).toBe("0.500");
+    });
+    it("uses Unicode exponent for large numbers", () => {
+      expect(formatSci(1.5e8, 3)).toBe("1.50 \u00D7 10\u2078");
+    });
+    it("uses Unicode exponent for small numbers", () => {
+      expect(formatSci(0.00012, 3)).toBe("1.20 \u00D7 10\u207B\u2074");
+    });
+    it("returns em-dash for NaN", () => {
+      expect(formatSci(NaN)).toBe("\u2014");
+    });
+    it("returns em-dash for Infinity", () => {
+      expect(formatSci(Infinity)).toBe("\u2014");
+    });
+    it("returns 0 for zero", () => {
+      expect(formatSci(0)).toBe("0");
+    });
+    it("respects custom sig figs", () => {
+      expect(formatSci(6779, 4)).toBe("6779");
+      expect(formatSci(6779, 3)).toBe("6.78 \u00D7 10\u00B3");
+    });
+    it("handles negative numbers", () => {
+      expect(formatSci(-150, 3)).toBe("-150");
+      expect(formatSci(-1.5e8, 3)).toBe("-1.50 \u00D7 10\u2078");
+    });
+  });
+
+  describe("formatDistanceAuto", () => {
+    it("shows cm for sub-meter distances", () => {
+      expect(formatDistanceAuto(0.0007)).toEqual({ text: "70.0", unit: "cm" });
+    });
+    it("shows m for sub-km distances", () => {
+      expect(formatDistanceAuto(0.01)).toEqual({ text: "10.0", unit: "m" });
+    });
+    it("shows km for moderate distances", () => {
+      const r = formatDistanceAuto(384400);
+      expect(r.unit).toBe("km");
+    });
+    it("shows AU for planetary distances (Sun)", () => {
+      const r = formatDistanceAuto(149597870.7);
+      expect(r.unit).toBe("AU");
+      expect(r.text).toBe("1.00");
+    });
+    it("shows AU for Mars distance", () => {
+      const r = formatDistanceAuto(5.46e7);
+      expect(r.unit).toBe("AU");
+    });
+    it("shows pc for stellar distances", () => {
+      const r = formatDistanceAuto(3.086e14);
+      expect(r.unit).toBe("pc");
+    });
+    it("shows kpc for galactic distances", () => {
+      const r = formatDistanceAuto(2.4e19);
+      expect(r.unit).toBe("kpc");
+    });
+    it("shows Mpc for galaxy cluster distances", () => {
+      const r = formatDistanceAuto(5e20);
+      expect(r.unit).toBe("Mpc");
+    });
+    it("shows Gpc for cosmological distances", () => {
+      const r = formatDistanceAuto(4e23);
+      expect(r.unit).toBe("Gpc");
+    });
+    it("returns em-dash for NaN", () => {
+      expect(formatDistanceAuto(NaN)).toEqual({ text: "\u2014", unit: "" });
+    });
+  });
+
+  describe("formatDiameterAuto", () => {
+    it("shows cm for tiny objects (quarter coin)", () => {
+      const r = formatDiameterAuto(0.0000243);
+      expect(r.unit).toBe("cm");
+      expect(parseFloat(r.text)).toBeCloseTo(2.43, 1);
+    });
+    it("shows m for sub-km objects (basketball)", () => {
+      const r = formatDiameterAuto(0.000239);
+      expect(r.unit).toBe("m");
+    });
+    it("shows km for planets", () => {
+      const r = formatDiameterAuto(6779);
+      expect(r.unit).toBe("km");
+    });
+    it("shows km for stars (Sun)", () => {
+      const r = formatDiameterAuto(1.392e6);
+      expect(r.unit).toBe("km");
+    });
+    it("shows kpc for galaxies (Andromeda)", () => {
+      const r = formatDiameterAuto(2.9e17);
+      expect(r.unit).toBe("kpc");
+    });
+    it("shows Mpc for galaxy clusters", () => {
+      const r = formatDiameterAuto(7e19);
+      expect(r.unit).toBe("Mpc");
+    });
+    it("returns em-dash for NaN", () => {
+      expect(formatDiameterAuto(NaN)).toEqual({ text: "\u2014", unit: "" });
     });
   });
 });

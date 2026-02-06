@@ -2,7 +2,7 @@ import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, in
 import type { Challenge } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AngularSizeModel, AstroConstants, AstroUnits } from "@cosmic/physics";
-import { clamp, logSliderToValue, valueToLogSlider, formatNumber, formatAngleDisplay, describeMoonOrbitAngle, describeMoonRecessionTime } from "./logic";
+import { clamp, logSliderToValue, valueToLogSlider, formatNumber, formatSci, formatAngleDisplay, formatDistanceAuto, formatDiameterAuto, describeMoonOrbitAngle, describeMoonRecessionTime } from "./logic";
 
 const presetEl = document.querySelector<HTMLSelectElement>("#preset");
 const distanceSliderEl = document.querySelector<HTMLInputElement>("#distanceSlider");
@@ -40,8 +40,14 @@ const objectLabelEl = document.querySelector<SVGTextElement>("#objectLabel");
 const thetaDisplayEl = document.querySelector<HTMLSpanElement>("#thetaDisplay");
 const thetaDisplayUnitEl = document.querySelector<HTMLSpanElement>("#thetaDisplayUnit");
 const thetaDegEl = document.querySelector<HTMLSpanElement>("#thetaDeg");
+const thetaDegUnitEl = document.querySelector<HTMLSpanElement>("#thetaDegUnit");
 const diameterKmEl = document.querySelector<HTMLSpanElement>("#diameterKm");
+const diameterUnitEl = document.querySelector<HTMLSpanElement>("#diameterUnit");
 const distanceKmEl = document.querySelector<HTMLSpanElement>("#distanceKm");
+const distanceUnitEl = document.querySelector<HTMLSpanElement>("#distanceUnit");
+
+const distanceUnitSelectEl = document.querySelector<HTMLSelectElement>("#distanceUnitSelect");
+const angleUnitSelectEl = document.querySelector<HTMLSelectElement>("#angleUnitSelect");
 
 const skyObjectEl = document.querySelector<SVGCircleElement>("#skyObject");
 const skyRefRingEl = document.querySelector<SVGCircleElement>("#skyRefRing");
@@ -84,8 +90,13 @@ if (
   !thetaDisplayEl ||
   !thetaDisplayUnitEl ||
   !thetaDegEl ||
+  !thetaDegUnitEl ||
   !diameterKmEl ||
+  !diameterUnitEl ||
   !distanceKmEl ||
+  !distanceUnitEl ||
+  !distanceUnitSelectEl ||
+  !angleUnitSelectEl ||
   !skyObjectEl ||
   !skyRefRingEl ||
   !skyRefLabelEl ||
@@ -129,8 +140,13 @@ const objectLabel = objectLabelEl;
 const thetaDisplay = thetaDisplayEl;
 const thetaDisplayUnit = thetaDisplayUnitEl;
 const thetaDeg = thetaDegEl;
+const thetaDegUnit = thetaDegUnitEl;
 const diameterKm = diameterKmEl;
+const diameterUnit = diameterUnitEl;
 const distanceKm = distanceKmEl;
+const distanceUnit = distanceUnitEl;
+const distanceUnitSelect = distanceUnitSelectEl;
+const angleUnitSelect = angleUnitSelectEl;
 
 const skyObject = skyObjectEl;
 const skyRefRing = skyRefRingEl;
@@ -663,6 +679,37 @@ function setState(next: unknown): void {
   render();
 }
 
+/** Format distance in a specific forced unit, or use auto-selection. */
+function formatDistanceInUnit(km: number, unit: string, sigFigs = 3): { text: string; unit: string } {
+  if (unit === "auto") return formatDistanceAuto(km, sigFigs);
+  if (!Number.isFinite(km)) return { text: "\u2014", unit: "" };
+  const KM_PER_AU_V = AstroConstants.LENGTH.KM_PER_AU;
+  const KM_PER_PC_V = AstroConstants.LENGTH.KM_PER_PC;
+  switch (unit) {
+    case "cm": return { text: formatSci(km * 1e5, sigFigs), unit: "cm" };
+    case "m": return { text: formatSci(km * 1000, sigFigs), unit: "m" };
+    case "km": return { text: formatSci(km, sigFigs), unit: "km" };
+    case "AU": return { text: formatSci(km / KM_PER_AU_V, sigFigs), unit: "AU" };
+    case "pc": return { text: formatSci(km / KM_PER_PC_V, sigFigs), unit: "pc" };
+    case "kpc": return { text: formatSci(km / (1e3 * KM_PER_PC_V), sigFigs), unit: "kpc" };
+    case "Mpc": return { text: formatSci(km / (1e6 * KM_PER_PC_V), sigFigs), unit: "Mpc" };
+    case "Gpc": return { text: formatSci(km / (1e9 * KM_PER_PC_V), sigFigs), unit: "Gpc" };
+    default: return formatDistanceAuto(km, sigFigs);
+  }
+}
+
+/** Format angle in a specific forced unit, or use auto-selection. */
+function formatAngleInUnit(thetaDeg: number, unit: string): { text: string; unit: string } {
+  if (unit === "auto") return formatAngleDisplay(thetaDeg);
+  if (!Number.isFinite(thetaDeg)) return { text: "\u2014", unit: "" };
+  switch (unit) {
+    case "deg": return { text: formatSci(thetaDeg, 4), unit: "deg" };
+    case "arcmin": return { text: formatSci(AstroUnits.degToArcmin(thetaDeg), 4), unit: "arcmin" };
+    case "arcsec": return { text: formatSci(AstroUnits.degToArcsec(thetaDeg), 4), unit: "arcsec" };
+    default: return formatAngleDisplay(thetaDeg);
+  }
+}
+
 function render() {
   // Keep Moon distance consistent with Moon controls.
   applyMoonControlsToDistance();
@@ -672,31 +719,47 @@ function render() {
     distanceKm: state.distanceKm
   });
 
-  const display = formatAngleDisplay(thetaDegValue);
+  const selectedAngleUnit = angleUnitSelect.value;
+  const selectedDistUnit = distanceUnitSelect.value;
+  const display = formatAngleInUnit(thetaDegValue, selectedAngleUnit);
 
   preset.value = state.presetId;
   distanceSlider.value = String(valueToLogSlider(state.distanceKm, DISTANCE_MIN_KM, DISTANCE_MAX_KM));
   diameterSlider.value = String(valueToLogSlider(state.diameterKm, DIAMETER_MIN_KM, DIAMETER_MAX_KM));
 
-  distanceValue.textContent = `${formatNumber(state.distanceKm, 4)} km`;
-  diameterValue.textContent = `${formatNumber(state.diameterKm, 4)} km`;
+  // Slider value labels use auto-formatted distance/diameter
+  const distSliderFmt = formatDistanceAuto(state.distanceKm);
+  const diamSliderFmt = formatDiameterAuto(state.diameterKm);
+  distanceValue.textContent = `${distSliderFmt.text} ${distSliderFmt.unit}`;
+  diameterValue.textContent = `${diamSliderFmt.text} ${diamSliderFmt.unit}`;
 
   if (state.presetId === "moon") {
     moonOrbitValue.textContent = `${Math.round(state.moonOrbitAngleDeg)} deg`;
     moonRecessionValue.textContent = describeMoonRecessionTime(state.moonRecessionTimeMyr);
   } else {
-    moonOrbitValue.textContent = "—";
-    moonRecessionValue.textContent = "—";
+    moonOrbitValue.textContent = "\u2014";
+    moonRecessionValue.textContent = "\u2014";
   }
 
+  // Readout strip
   thetaDisplay.textContent = display.text;
   thetaDisplayUnit.textContent = display.unit;
-  thetaDeg.textContent = formatNumber(thetaDegValue, 6);
-  diameterKm.textContent = formatNumber(state.diameterKm, 6);
-  distanceKm.textContent = formatNumber(state.distanceKm, 6);
+  thetaDeg.textContent = formatSci(thetaDegValue, 4);
+  thetaDegUnit.textContent = "deg";
 
-  sizeStageLabel.textContent = `D ~ ${formatNumber(state.diameterKm, 3)} km`;
-  distanceStageLabel.textContent = `d ~ ${formatNumber(state.distanceKm, 3)} km`;
+  const distReadout = formatDistanceInUnit(state.distanceKm, selectedDistUnit, 4);
+  distanceKm.textContent = distReadout.text;
+  distanceUnit.textContent = distReadout.unit;
+
+  const diamReadout = formatDiameterAuto(state.diameterKm, 4);
+  diameterKm.textContent = diamReadout.text;
+  diameterUnit.textContent = diamReadout.unit;
+
+  // SVG stage labels use auto-formatted units
+  const distLabel = formatDistanceAuto(state.distanceKm);
+  const diamLabel = formatDiameterAuto(state.diameterKm);
+  sizeStageLabel.textContent = `D ~ ${diamLabel.text} ${diamLabel.unit}`;
+  distanceStageLabel.textContent = `d ~ ${distLabel.text} ${distLabel.unit}`;
 
   const presetMeta = AngularSizeModel.presets[state.presetId];
   objectLabel.textContent = presetMeta.name;
@@ -945,6 +1008,9 @@ copyResults.addEventListener("click", () => {
       );
     });
 });
+
+distanceUnitSelect.addEventListener("change", () => render());
+angleUnitSelect.addEventListener("change", () => render());
 
 initMath(document);
 

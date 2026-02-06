@@ -90,8 +90,9 @@ test.describe("Angular Size -- E2E", () => {
 
   test("preset changes update diameter and distance readouts", async ({ page }) => {
     await page.locator("#preset").selectOption("mars");
-    // Mars diameter is 6779 km
+    // Mars diameter is 6779 km, shown with auto-formatting
     await expect(page.locator("#diameterKm")).toContainText("6779");
+    await expect(page.locator("#diameterUnit")).toContainText("km");
     await expect(page.locator("#objectLabel")).toContainText("Mars");
   });
 
@@ -106,6 +107,7 @@ test.describe("Angular Size -- E2E", () => {
 
     const presetKeys = [
       "sun", "moon", "jupiter", "venus", "mars", "andromeda",
+      "pleiades", "orionNebula", "lmc", "smc", "virgoCluster", "comaCluster",
       "basketball", "soccerball", "quarter", "thumb", "airplane", "iss"
     ];
 
@@ -172,6 +174,20 @@ test.describe("Angular Size -- E2E", () => {
     expect(parseFloat(theta ?? "0")).toBeLessThan(0.5);
   });
 
+  // --- New Presets ---
+
+  test("deep-sky presets work (LMC, Virgo Cluster)", async ({ page }) => {
+    await page.locator("#preset").selectOption("lmc");
+    await expect(page.locator("#objectLabel")).toContainText("LMC");
+    // LMC distance should show in kpc
+    await expect(page.locator("#distanceUnit")).toContainText("kpc");
+
+    await page.locator("#preset").selectOption("virgoCluster");
+    await expect(page.locator("#objectLabel")).toContainText("Virgo");
+    // Virgo Cluster distance should show in Mpc
+    await expect(page.locator("#distanceUnit")).toContainText("Mpc");
+  });
+
   // --- Readout Formatting ---
 
   test("readout units are displayed in separate spans", async ({ page }) => {
@@ -189,6 +205,56 @@ test.describe("Angular Size -- E2E", () => {
     await page.locator("#preset").selectOption("mars");
     const marsUnit = await page.locator("#thetaDisplayUnit").textContent();
     expect(marsUnit?.trim()).toBe("arcsec");
+  });
+
+  test("distance readout uses auto-formatted units", async ({ page }) => {
+    // Sun default: distance ~1 AU
+    await expect(page.locator("#distanceUnit")).toContainText("AU");
+
+    // Switch to basketball: distance in m
+    await page.locator("#preset").selectOption("basketball");
+    await expect(page.locator("#distanceUnit")).toContainText("m");
+  });
+
+  test("diameter readout uses auto-formatted units", async ({ page }) => {
+    // Sun: diameter ~1.39e6 km
+    await expect(page.locator("#diameterUnit")).toContainText("km");
+
+    // Switch to quarter: diameter in cm
+    await page.locator("#preset").selectOption("quarter");
+    await expect(page.locator("#diameterUnit")).toContainText("cm");
+  });
+
+  // --- Unit Conversion Controls ---
+
+  test("distance unit selector changes readout unit", async ({ page }) => {
+    // Default is auto (AU for Sun)
+    await expect(page.locator("#distanceUnit")).toContainText("AU");
+
+    // Force km
+    await page.locator("#distanceUnitSelect").selectOption("km");
+    await expect(page.locator("#distanceUnit")).toContainText("km");
+
+    // Force pc
+    await page.locator("#distanceUnitSelect").selectOption("pc");
+    await expect(page.locator("#distanceUnit")).toContainText("pc");
+
+    // Back to auto
+    await page.locator("#distanceUnitSelect").selectOption("auto");
+    await expect(page.locator("#distanceUnit")).toContainText("AU");
+  });
+
+  test("angle unit selector changes theta display unit", async ({ page }) => {
+    // Default is auto (arcmin for Sun)
+    await expect(page.locator("#thetaDisplayUnit")).toContainText("arcmin");
+
+    // Force deg
+    await page.locator("#angleUnitSelect").selectOption("deg");
+    await expect(page.locator("#thetaDisplayUnit")).toContainText("deg");
+
+    // Force arcsec
+    await page.locator("#angleUnitSelect").selectOption("arcsec");
+    await expect(page.locator("#thetaDisplayUnit")).toContainText("arcsec");
   });
 
   // --- Tabs / Shelf ---
