@@ -75,12 +75,12 @@
 
 .stage__observer {
   fill: color-mix(in srgb, var(--cp-bg0) 55%, transparent);
-  stroke: color-mix(in srgb, var(--cp-accent3) 60%, transparent);
+  stroke: color-mix(in srgb, var(--cp-accent) 60%, transparent);
   stroke-width: 2px;
 }
 
 .stage__observer-eye {
-  fill: color-mix(in srgb, var(--cp-accent3) 72%, var(--cp-text));
+  fill: color-mix(in srgb, var(--cp-accent) 72%, var(--cp-text));
 }
 
 .stage__observer-eyeHighlight {
@@ -89,7 +89,7 @@
 }
 
 .stage__ray {
-  stroke: color-mix(in srgb, var(--cp-accent3) 58%, transparent);
+  stroke: color-mix(in srgb, var(--cp-accent) 58%, transparent);
   stroke-width: 2px;
   stroke-linecap: round;
   opacity: 0.9;
