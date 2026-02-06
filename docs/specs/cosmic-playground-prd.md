@@ -1,6 +1,6 @@
 # Cosmic Playground — Product Requirements Document
 
-**Version:** 1.2
+**Version:** 1.3
 **Date:** February 5, 2026
 **Author:** Dr. Anna Rosen (SDSU)
 **Status:** Draft
@@ -11,6 +11,7 @@
 | 1.0 | Feb 5, 2026 | Initial draft |
 | 1.1 | Feb 5, 2026 | Added visual design system (5.4.3-5.4.8): two-layer philosophy, starfield, glow system, celestial palette, instrument accents, readout typography. Updated shell layouts to compositional system. |
 | 1.2 | Feb 6, 2026 | Added testing requirements (5.8): four-layer testing protocol (physics, contract, logic, E2E). Updated success metrics with contract/E2E coverage. Updated Phase 2 timeline with testing steps. |
+| 1.3 | Feb 6, 2026 | Clarified layout strategy (`data-shell` + `data-layout` hybrid), refined package roles (`@cosmic/ui`, `@cosmic/renderer`), removed calendar timelines, added launch-gate framing, and updated runtime/theme implementation status (`initStarfield` implemented). |
 
 ---
 
@@ -111,8 +112,8 @@ packages/
 ├── @cosmic/physics    # Pure physics models (no DOM)
 ├── @cosmic/runtime    # Demo lifecycle, modes, export, a11y
 ├── @cosmic/theme      # Design tokens + CSS layers
-├── @cosmic/ui         # Shared UI components (Web Components)
-├── @cosmic/renderer   # Canvas/Three.js abstractions
+├── @cosmic/ui         # Shared Web Components for controls/readouts/panels (incremental)
+├── @cosmic/renderer   # Shared Canvas2D/Three.js rendering utilities (incremental)
 └── @cosmic/data-*     # Domain datasets
 apps/
 ├── demos/             # Individual demo implementations
@@ -120,10 +121,54 @@ apps/
 ```
 
 **Acceptance Criteria:**
-- [ ] All demos import UI components from `@cosmic/ui`, not define their own
 - [ ] Physics models have no DOM dependencies and can be unit tested in isolation
 - [ ] Changing a token in `@cosmic/theme` updates all demos on rebuild
+- [ ] Shared runtime patterns (`@cosmic/runtime`) are used for copy/export, modes, and accessibility behaviors
 - [ ] Adding a new demo requires no changes to shared packages
+
+#### 5.1.4 Package Role Clarification (`@cosmic/ui` and `@cosmic/renderer`)
+
+These two packages are both valid and useful, but they solve different problems:
+
+- `@cosmic/ui` (Web Components layer):
+  - Purpose: reusable interaction primitives (`<cp-slider>`, `<cp-button>`, `<cp-readout>`, `<cp-panel>`) with consistent semantics, events, and keyboard behavior.
+  - Scope: web control/readout surface only (inputs, labels, status messaging, disclosure/panel patterns), not physics or drawing.
+  - Value: prevents per-demo control drift, centralizes accessibility behavior (`aria-*`, focus, live updates), and keeps controls visually consistent via theme tokens.
+  - Rollout: incremental. Demos can use theme classes + native HTML first, then adopt Web Components as they stabilize.
+
+- `@cosmic/renderer` (Canvas/Three.js layer):
+  - Purpose: shared drawing helpers and scene lifecycle abstractions for Canvas2D and Three.js/WebGL demos.
+  - Scope: render loop, DPI/resize handling, coordinate transforms, camera/scene setup, and reusable drawing primitives; no model equations.
+  - Value: avoids re-implementing draw loops, transforms, projection math glue, and viewport handling in every demo.
+  - Rollout: incremental. Model correctness remains in `@cosmic/physics`; renderer abstracts drawing mechanics only.
+
+Design intent: keep both in the architecture, but do not block migration on full initial implementation.
+
+#### 5.1.5 UI vs Renderer Boundary Rules (Plain-Language Reference)
+
+Use this quick rule:
+- If the user interacts with it in the browser UI (controls/readouts/panels), it belongs in `@cosmic/ui`.
+- If pixels are being drawn to Canvas2D/WebGL/Three.js, it belongs in `@cosmic/renderer`.
+
+| Question | `@cosmic/ui` (Web Components) | `@cosmic/renderer` (Canvas/Three.js) |
+|----------|-------------------------------|---------------------------------------|
+| Primary purpose | Inputs, controls, readouts, and instrument chrome | Visualization drawing and scene rendering |
+| Typical artifacts | `<cp-slider>`, `<cp-button>`, `<cp-readout>`, `<cp-panel>` | `createRenderer()`, render loop helpers, camera/scene setup, draw utilities |
+| Owns accessibility semantics? | Yes (`aria-*`, focus order, keyboard behavior, live announcements) | No (except canvas-level labeling hooks exposed to UI/runtime) |
+| Owns layout/chrome styling? | Yes (control panels, readout groups, panel states) | No (only viewport/canvas sizing mechanics) |
+| Owns physics equations? | No | No (physics belongs in `@cosmic/physics`) |
+| Owns drawing pipeline? | No | Yes (frame timing, DPI/resize sync, transforms) |
+
+**Concrete examples:**
+- A slider that changes orbital eccentricity and shows value + units: `@cosmic/ui`.
+- A scene update that redraws the orbit curve each frame: `@cosmic/renderer`.
+- Equation evaluation for orbital period: `@cosmic/physics` (called by runtime/UI, never inside renderer internals).
+
+**Anti-drift guardrails:**
+- Do not embed per-demo custom slider logic directly in demo HTML if a shared control exists or can be promoted.
+- Do not hide model math in render callbacks.
+- Do not place ARIA/state announcement logic inside render-loop code.
+- Keep event flow explicit: `ui event -> runtime state update -> physics compute -> renderer draw -> ui/readout update`.
 
 #### 5.1.2 TypeScript Throughout
 All source code must be TypeScript with strict mode enabled.
@@ -144,10 +189,10 @@ Physics models must use explicit, pedagogically-appropriate units.
 - [ ] Unit conversion helpers in `@cosmic/physics` (AstroUnits)
 - [ ] Physics models have accompanying test suites with known-answer tests
 
-### 5.2 UI Component Library (P0 — Must Have)
+### 5.2 UI Component Library (P1 — Incremental, High Value)
 
 #### 5.2.1 Core Components (`@cosmic/ui`)
-Implement as Web Components (Lit-based) for framework independence:
+Implement as reusable components with framework-independent APIs where feasible. Web Components remain a valid target, but are not required as a migration blocker.
 
 | Component | Description |
 |-----------|-------------|
@@ -161,17 +206,24 @@ Implement as Web Components (Lit-based) for framework independence:
 | `<cp-badge>` | Status/category indicator |
 
 **Acceptance Criteria:**
-- [ ] Components render identically in Astro site and standalone demo HTML
-- [ ] All components support keyboard navigation
-- [ ] All components announce state changes to screen readers
-- [ ] Components use only CSS custom properties from `@cosmic/theme`
-- [ ] Components scale appropriately for projection (min 18px base font)
+- [ ] Components (or equivalent shared primitives) render identically in Astro site and standalone demo HTML
+- [ ] Shared controls support keyboard navigation and visible focus
+- [ ] Shared controls announce state changes where appropriate
+- [ ] Shared controls use CSS custom properties from `@cosmic/theme`
+- [ ] Controls remain projection-legible (min 18px base font)
 
-#### 5.2.2 Compositional Demo Shell Layouts
-Replace rigid named shells with a compositional attribute system:
+#### 5.2.2 Flexible Demo Layouts (`data-shell` + `data-layout`)
+Use a two-level layout strategy:
+
+- `data-shell` controls macro instrument layout (default/instrument, triad, viz-first).
+- `data-layout` is optional and controls local arrangement within shell regions (for dense readouts or stage overlays).
+
+This keeps cross-demo consistency while allowing flexible, larger stage-first layouts when needed.
 
 | Attribute | Purpose |
 |-----------|---------|
+| `data-shell` | Macro layout variant for `.cp-demo` (`instrument`, `triad`, `viz-first`) |
+| `data-layout` | Optional sub-layout rule for child regions (`rows`, `columns`, `overlay`) |
 | `data-stage` | Main visualization canvas |
 | `data-controls` | Input controls (sliders, toggles, selects) |
 | `data-readouts` | Output displays (values, equations, status) |
@@ -180,33 +232,28 @@ Replace rigid named shells with a compositional attribute system:
 **Common Compositions:**
 
 ```html
-<!-- Classic triad: controls | stage | readouts -->
-<div class="demo-shell" data-layout="columns">
-  <aside data-controls>...</aside>
-  <main data-stage>...</main>
-  <aside data-readouts>...</aside>
+<!-- Macro shell + local layout -->
+<div id="cp-demo" class="cp-layer-instrument cp-demo" data-shell="triad">
+  <aside class="cp-demo__controls" data-controls>...</aside>
+  <main class="cp-demo__stage" data-stage data-layout="overlay">...</main>
+  <aside class="cp-demo__readouts" data-readouts data-layout="rows">...</aside>
+  <section class="cp-demo__drawer">...</section>
 </div>
 
-<!-- Viz-first: stage on top, controls below -->
-<div class="demo-shell" data-layout="rows">
-  <main data-stage>...</main>
-  <footer data-controls data-readouts>...</footer>
-</div>
-
-<!-- Station mode: stage only, floating toolbar -->
-<div class="demo-shell" data-layout="fullscreen">
-  <main data-stage>...</main>
-  <div data-toolbar class="floating">...</div>
+<!-- Viz-first for large stage -->
+<div id="cp-demo" class="cp-layer-instrument cp-demo" data-shell="viz-first">
+  ...
 </div>
 ```
 
 **Acceptance Criteria:**
 - [ ] Shells are responsive (collapse to single column on narrow viewports)
-- [ ] Demos compose layouts from primitives rather than selecting named shells
-- [ ] CSS Grid handles layout based on `data-layout` attribute
-- [ ] Custom layouts achievable without modifying `@cosmic/theme`
+- [ ] Demos use approved `data-shell` variants for macro structure
+- [ ] `data-layout` enables local flexibility without breaking shell contract
+- [ ] Stage-first and wide-stage configurations are available without per-demo bespoke grid systems
+- [ ] Custom layouts are achievable through tokenized/theme-supported patterns
 
-### 5.3 Rendering Layer (P0 — Must Have)
+### 5.3 Rendering Layer (P1 — Incremental, High Value)
 
 #### 5.3.1 Canvas2D Abstraction (`@cosmic/renderer`)
 Provide a thin wrapper for 2D rendering:
@@ -473,7 +520,7 @@ Every demo must include:
 | Challenges (optional) | Prediction challenges with feedback |
 
 **Acceptance Criteria:**
-- [ ] Demo uses only `@cosmic/ui` components (no custom buttons/sliders)
+- [ ] Demo uses shared UI primitives (`@cosmic/ui` components where available, otherwise approved theme/runtime patterns)
 - [ ] Demo imports physics from `@cosmic/physics` (no inline equations)
 - [ ] Demo works standalone (open `index.html` in browser after build)
 - [ ] Demo works embedded in site iframe
@@ -541,7 +588,18 @@ Every migrated demo must have Playwright E2E tests covering:
 
 ## 6. Success Metrics
 
-### Leading Indicators (Days to Weeks Post-Launch)
+### 6.1 Launch Gates (Engineering Readiness)
+
+| Gate | Target | Measurement |
+|------|--------|-------------|
+| Contract checks | 100% pass | `pnpm lint` + contract validators |
+| Build and type integrity | 100% pass | `pnpm -r typecheck` and `pnpm build` |
+| Demo test coverage | 100% migrated demos covered | design-contract + logic + E2E coverage map |
+| Base-path safety | 100% pass | `CP_BASE_PATH=/cosmic-playground/ ... test:e2e` |
+| Export stability | 100% migrated demos | v1 export snapshot/assertion tests |
+| Accessibility regressions | 0 open P0/P1 | keyboard/focus/live-region E2E checks |
+
+### 6.2 Leading Indicators (Post-Launch)
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
@@ -554,7 +612,7 @@ Every migrated demo must have Playwright E2E tests covering:
 | Architecture compliance | 0 violations | No inline physics in demo code |
 | Visual regression | 0 unintended changes | Playwright screenshot diff |
 
-### Lagging Indicators (Semester-Scale)
+### 6.3 Lagging Indicators (Semester-Scale Research Outcomes)
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
@@ -564,22 +622,13 @@ Every migrated demo must have Playwright E2E tests covering:
 | Demo completion | 70%+ finish challenges | Embedded tracking |
 | Student confidence | 20%+ improvement | Custom equation attitude survey |
 
-### Evaluation Timeline
-
-| Timepoint | Check |
-|-----------|-------|
-| 1 week post-launch | Technical metrics (performance, a11y) |
-| 1 month | Instructor feedback, bug reports |
-| End of semester | Student outcomes (anxiety, confidence) |
-| 1 year | Cross-institution adoption |
-
 ---
 
 ## 7. Open Questions
 
 | Question | Owner | Blocking? |
 |----------|-------|-----------|
-| Should `@cosmic/ui` use Lit, Stencil, or vanilla Web Components? | Engineering | Yes — affects dev experience |
+| Should `@cosmic/ui` use Lit, Stencil, or vanilla Web Components? | Engineering | No — can proceed with incremental shared primitives while finalizing |
 | How to handle demo versioning when physics models change? | Engineering | No — can decide during implementation |
 | Should we add analytics for usage tracking? | Product | No — can add later, privacy concerns |
 | What's the minimum WebGL version for 3D demos? | Engineering | No — affects subset of demos |
@@ -588,32 +637,26 @@ Every migrated demo must have Playwright E2E tests covering:
 
 ---
 
-## 8. Timeline & Phasing
+## 8. Execution Order (No Calendar Commitment)
 
-### Phase 1: Foundation (4 weeks)
-- Implement `@cosmic/ui` core components
-- Implement `@cosmic/renderer` Canvas2D abstraction
-- Migrate 1 demo (moon-phases) as reference implementation
-- Set up visual regression testing
+### Stage A: Foundations and Contracts
+- Strengthen validators and CI gates.
+- Ensure base-path, export, and accessibility invariants are enforced.
+- Keep migration contract and PRD aligned with enforceable reality.
 
-### Phase 2: Migration (6 weeks)
-- Migrate remaining 13 demos to shared component architecture
-- **For each demo: write contract tests first (RED), then implement (GREEN)**
-- **Extract UI logic to `logic.ts`, add unit tests**
-- **Add Playwright E2E tests with visual regression screenshots**
-- Validate physics models against legacy behavior
-- Complete instructor materials for all demos
+### Stage B: Migration and Refactoring
+- Migrate demos with parity checks and model correctness tests.
+- Extract reusable runtime patterns and reduce per-demo duplication.
+- Expand demo-level test coverage (design contracts + logic + E2E).
 
-### Phase 3: Polish (4 weeks)
-- Visual refinement pass on all demos
-- Accessibility audit and fixes
-- Performance optimization
-- Documentation completion
+### Stage C: Launch Hardening
+- Remove or quarantine stubs from launch-facing discovery.
+- Complete cross-demo accessibility and export stability coverage.
+- Run full launch gates repeatedly until zero P0/P1 defects remain.
 
-### Phase 4: Pilot (1 semester)
-- Deploy for ASTR 101/201 Spring 2026
-- Collect pre/post assessment data
-- Iterate based on instructor/student feedback
+### Stage D: Post-Launch Research Evaluation
+- Run classroom/outcome instrumentation and analyze lagging indicators.
+- Feed results into pedagogical and UX iteration cycles.
 
 ---
 
@@ -634,14 +677,14 @@ Every migrated demo must have Playwright E2E tests covering:
 - `setLiveRegionText()` — Accessibility announcements ✓
 - `initDemoPolish()` — Tooltip/range enhancements ✓
 - Export payload formatting (v1 schema) ✓
-- **Missing:** `initStarfield()` — Animated starfield background module
+- `initStarfield()` — Animated starfield background module ✓
 
 ### `@cosmic/theme` (Partially Implemented — Needs Enhancement)
 - CSS tokens (colors, spacing, typography, shadows) ✓
-- Layer system (museum vs instrument contexts) — needs vivid instrument overrides
-- Demo shell layouts — needs compositional attribute system
+- Layer system (museum vs instrument contexts) ✓
+- Demo shell layouts (shell variants) ✓
 - Component styles (panel, accordion, button, form) ✓
-- **Missing:** Starfield module, glow system tokens, celestial object palette, instrument accents, readout typography tokens
+- Needs continued migration-time refinement: glow token consistency, celestial palette consistency, instrument accent consistency, and readout typography tuning
 
 ### `@cosmic/ui` (Stub — Needs Implementation)
 - Currently exports only `PACKAGE_NAME`
