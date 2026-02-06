@@ -133,9 +133,9 @@ const TEMPERATURE_MIN_K = 1e3;
 const TEMPERATURE_MAX_K = 1e9;
 const DENSITY_MIN_G_PER_CM3 = 1e-10;
 const DENSITY_MAX_G_PER_CM3 = 1e10;
-const REGIME_MAP_GRID_X = 16;
-const REGIME_MAP_GRID_Y = 16;
 const REGIME_MAP_REBUILD_DEBOUNCE_MS = 80;
+const REGIME_MAP_GRID_RENDER_X = 28;
+const REGIME_MAP_GRID_RENDER_Y = 24;
 
 const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
 const tempValueEl = document.querySelector<HTMLSpanElement>("#tempValue");
@@ -169,9 +169,11 @@ const pDegBarEl = document.querySelector<HTMLElement>("#pDegBar");
 const pTotalValueEl = document.querySelector<HTMLElement>("#pTotalValue");
 const dominantChannelEl = document.querySelector<HTMLElement>("#dominantChannel");
 const regimeMapEl = document.querySelector<SVGSVGElement>("#regimeMap");
+const regimeGridEl = document.querySelector<SVGGElement>("#regimeGrid");
 const regimeCellsEl = document.querySelector<SVGGElement>("#regimeCells");
 const regimePresetMarkersEl = document.querySelector<SVGGElement>("#regimePresetMarkers");
 const regimeCurrentPointEl = document.querySelector<SVGCircleElement>("#regimeCurrentPoint");
+const regimeDetailEl = document.querySelector<HTMLElement>("#regimeDetail");
 const regimeSummaryEl = document.querySelector<HTMLElement>("#regimeSummary");
 
 const muValueEl = document.querySelector<HTMLElement>("#muValue");
@@ -218,9 +220,11 @@ if (
   !pTotalValueEl ||
   !dominantChannelEl ||
   !regimeMapEl ||
+  !regimeGridEl ||
   !regimeCellsEl ||
   !regimePresetMarkersEl ||
   !regimeCurrentPointEl ||
+  !regimeDetailEl ||
   !regimeSummaryEl ||
   !muValueEl ||
   !muEValueEl ||
@@ -270,9 +274,11 @@ const pDegBar = pDegBarEl;
 const pTotalValue = pTotalValueEl;
 const dominantChannel = dominantChannelEl;
 const regimeMap = regimeMapEl;
+const regimeGrid = regimeGridEl;
 const regimeCells = regimeCellsEl;
 const regimePresetMarkers = regimePresetMarkersEl;
 const regimeCurrentPoint = regimeCurrentPointEl;
+const regimeDetail = regimeDetailEl;
 const regimeSummary = regimeSummaryEl;
 
 const muValue = muValueEl;
@@ -450,6 +456,7 @@ let pendingRegimeMapKey: string | null = null;
 let regimeMapRebuildTimer: number | null = null;
 let regimeMapBuildCount = 0;
 let regimePresetMarkersBuilt = false;
+let regimeGridBuilt = false;
 
 function cancelRegimeMapRebuildTimer(): void {
   if (regimeMapRebuildTimer === null) return;
@@ -480,14 +487,14 @@ function scheduleRegimeMapRebuild(nextKey: string): void {
 function buildRegimeMapField(): void {
   regimeMapBuildCount += 1;
   const svgNs = "http://www.w3.org/2000/svg";
-  const cellWidth = 100 / REGIME_MAP_GRID_X;
-  const cellHeight = 100 / REGIME_MAP_GRID_Y;
+  const cellWidth = 100 / REGIME_MAP_GRID_RENDER_X;
+  const cellHeight = 100 / REGIME_MAP_GRID_RENDER_Y;
 
   regimeCells.replaceChildren();
-  for (let iy = 0; iy < REGIME_MAP_GRID_Y; iy += 1) {
-    for (let ix = 0; ix < REGIME_MAP_GRID_X; ix += 1) {
-      const xFrac = (ix + 0.5) / REGIME_MAP_GRID_X;
-      const yFrac = (iy + 0.5) / REGIME_MAP_GRID_Y;
+  for (let iy = 0; iy < REGIME_MAP_GRID_RENDER_Y; iy += 1) {
+    for (let ix = 0; ix < REGIME_MAP_GRID_RENDER_X; ix += 1) {
+      const xFrac = (ix + 0.5) / REGIME_MAP_GRID_RENDER_X;
+      const yFrac = (iy + 0.5) / REGIME_MAP_GRID_RENDER_Y;
       const temperatureK = Math.pow(
         10,
         Math.log10(TEMPERATURE_MIN_K) + xFrac * (Math.log10(TEMPERATURE_MAX_K) - Math.log10(TEMPERATURE_MIN_K))
@@ -509,12 +516,35 @@ function buildRegimeMapField(): void {
       const rect = document.createElementNS(svgNs, "rect");
       rect.setAttribute("x", String(ix * cellWidth));
       rect.setAttribute("y", String(iy * cellHeight));
-      rect.setAttribute("width", String(cellWidth + 0.1));
-      rect.setAttribute("height", String(cellHeight + 0.1));
+      rect.setAttribute("width", String(cellWidth));
+      rect.setAttribute("height", String(cellHeight));
       rect.dataset.channel = mapChannel(sample.dominantPressureChannel);
       regimeCells.append(rect);
     }
   }
+}
+
+function buildRegimeGridLines(): void {
+  if (regimeGridBuilt) return;
+  const svgNs = "http://www.w3.org/2000/svg";
+  regimeGrid.replaceChildren();
+  const ticks = [0, 25, 50, 75, 100];
+  for (const pct of ticks) {
+    const vertical = document.createElementNS(svgNs, "line");
+    vertical.setAttribute("x1", String(pct));
+    vertical.setAttribute("y1", "0");
+    vertical.setAttribute("x2", String(pct));
+    vertical.setAttribute("y2", "100");
+    regimeGrid.append(vertical);
+
+    const horizontal = document.createElementNS(svgNs, "line");
+    horizontal.setAttribute("x1", "0");
+    horizontal.setAttribute("y1", String(pct));
+    horizontal.setAttribute("x2", "100");
+    horizontal.setAttribute("y2", String(pct));
+    regimeGrid.append(horizontal);
+  }
+  regimeGridBuilt = true;
 }
 
 function buildRegimePresetMarkers(): void {
@@ -557,6 +587,7 @@ function renderRegimeMap(
       flushRegimeMapRebuild();
     }
   }
+  buildRegimeGridLines();
   buildRegimePresetMarkers();
 
   const currentCoords = regimeMapCoordinates({
@@ -571,7 +602,10 @@ function renderRegimeMap(
   regimeCurrentPoint.setAttribute("cy", currentCoords.yPct.toFixed(2));
   regimeCurrentPoint.setAttribute("aria-label", "Current EOS state");
 
-  regimeSummary.textContent = `Current state in map: ${dominantChannelLabel(model)} dominates for this composition.`;
+  const log10Temperature = Math.log10(model.input.temperatureK);
+  const log10Density = Math.log10(model.input.densityGPerCm3);
+  regimeDetail.textContent = `Point details: log10(T/K)=${formatFraction(log10Temperature, 2)}, log10(rho/(g cm^-3))=${formatFraction(log10Density, 2)}, P_rad/P_gas=${formatScientific(model.pressureRatios.radiationToGas, 3)}, P_deg,e/P_tot=${formatScientific(model.pressureRatios.degeneracyToTotal, 3)}.`;
+  regimeSummary.textContent = `Interpretation: ${dominantChannelLabel(model)} dominates at the current point (marker); preset dots provide quick reference anchors.`;
   regimeMap.setAttribute(
     "aria-label",
     "EOS dominance map over log density and log temperature with current-state marker"

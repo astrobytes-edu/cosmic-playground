@@ -133,33 +133,64 @@
   font-size: 0.98rem;
 }
 
+.regime-map__help {
+  margin: 0 0 var(--cp-space-2);
+}
+
+.regime-map__plot {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.regime-map__y-axis,
+.regime-map__x-axis {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--cp-space-2);
+  font-size: 0.82rem;
+  color: var(--cp-muted);
+}
+
 #regimeMap {
   display: block;
-  width: 100%;
-  min-height: 210px;
+  width: min(100%, 560px);
+  margin-inline: auto;
+  aspect-ratio: 1.35 / 1;
+  height: auto;
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-r-2);
   background: color-mix(in srgb, var(--cp-bg2) 88%, transparent);
 }
 
+#regimeGrid line {
+  stroke: color-mix(in srgb, var(--cp-border) 60%, transparent);
+  stroke-width: 0.25;
+}
+
 #regimeCells rect[data-channel="gas"] {
-  fill: color-mix(in srgb, var(--cp-success) 28%, transparent);
+  fill: color-mix(in srgb, var(--cp-success) 32%, transparent);
 }
 
 #regimeCells rect[data-channel="radiation"] {
-  fill: color-mix(in srgb, var(--cp-accent) 32%, transparent);
+  fill: color-mix(in srgb, var(--cp-accent) 36%, transparent);
 }
 
 #regimeCells rect[data-channel="degeneracy"] {
-  fill: color-mix(in srgb, var(--cp-glow-teal) 34%, transparent);
+  fill: color-mix(in srgb, var(--cp-glow-teal) 38%, transparent);
 }
 
 #regimeCells rect[data-channel="mixed"] {
-  fill: color-mix(in srgb, var(--cp-warn) 26%, transparent);
+  fill: color-mix(in srgb, var(--cp-warn) 32%, transparent);
 }
 
 #regimeCells rect[data-channel="invalid"] {
   fill: color-mix(in srgb, var(--cp-muted) 20%, transparent);
+}
+
+#regimeCells rect {
+  stroke: color-mix(in srgb, var(--cp-bg0) 48%, transparent);
+  stroke-width: 0.06;
 }
 
 #regimePresetMarkers circle {
@@ -174,12 +205,60 @@
   stroke-width: 1;
 }
 
+.regime-map__legend {
+  margin: var(--cp-space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--cp-space-1);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  font-size: 0.84rem;
+}
+
+.regime-map__legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  color: var(--cp-muted);
+}
+
+.regime-map__legend span {
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 0.2rem;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 75%, transparent);
+}
+
+.regime-map__legend span[data-channel="gas"] {
+  background: color-mix(in srgb, var(--cp-success) 42%, transparent);
+}
+
+.regime-map__legend span[data-channel="radiation"] {
+  background: color-mix(in srgb, var(--cp-accent) 45%, transparent);
+}
+
+.regime-map__legend span[data-channel="degeneracy"] {
+  background: color-mix(in srgb, var(--cp-glow-teal) 50%, transparent);
+}
+
+.regime-map__legend span[data-channel="mixed"] {
+  background: color-mix(in srgb, var(--cp-warn) 44%, transparent);
+}
+
+#regimeDetail {
+  margin-top: var(--cp-space-2);
+}
+
 @media (max-width: 980px) {
   .pressure-grid {
     grid-template-columns: 1fr;
   }
 
   .presets__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .regime-map__legend {
     grid-template-columns: 1fr;
   }
 }

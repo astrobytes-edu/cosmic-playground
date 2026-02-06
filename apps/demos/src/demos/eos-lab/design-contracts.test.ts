@@ -67,8 +67,11 @@ describe("EOS Lab -- Design System Contracts", () => {
 
   it("includes regime-map scaffold and rendering hook", () => {
     expect(html).toContain('id="regimeMap"');
+    expect(html).toContain('id="regimeGrid"');
     expect(html).toContain('id="regimeCurrentPoint"');
+    expect(html).toContain('id="regimeDetail"');
     expect(html).toContain('id="regimeSummary"');
+    expect(html).toContain("regime-map__legend");
     expect(mainTs).toContain("renderRegimeMap");
   });
 

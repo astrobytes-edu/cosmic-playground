@@ -43,6 +43,13 @@ test.describe("EOS Lab -- E2E", () => {
     await expect(page.locator("#regimeCurrentPoint")).toBeVisible();
   });
 
+  test("regime map includes legend and point details for interpretation", async ({ page }) => {
+    await expect(page.locator(".regime-map__legend")).toBeVisible();
+    await expect(page.locator(".regime-map__legend li")).toHaveCount(4);
+    await expect(page.locator("#regimeDetail")).toContainText("log10(T/K)");
+    await expect(page.locator("#regimeDetail")).toContainText("log10(rho/(g cm^-3))");
+  });
+
   test("regime marker moves when sliders change", async ({ page }) => {
     const marker = page.locator("#regimeCurrentPoint");
     const beforeCx = await marker.getAttribute("cx");

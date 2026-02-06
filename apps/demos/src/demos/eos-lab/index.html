@@ -148,17 +148,38 @@
 
         <section class="regime-map" aria-label="EOS regime map">
           <h3>Regime Map ($\log_{10}\rho$ vs $\log_{10}T$)</h3>
-          <svg
-            id="regimeMap"
-            viewBox="0 0 100 100"
-            role="img"
-            aria-label="EOS dominance map over log density and log temperature"
-            preserveAspectRatio="none"
-          >
-            <g id="regimeCells"></g>
-            <g id="regimePresetMarkers"></g>
-            <circle id="regimeCurrentPoint" cx="50" cy="50" r="2.6"></circle>
-          </svg>
+          <p class="cp-muted regime-map__help">
+            Colors show the dominant pressure channel at each $(\rho,T)$ state for the current composition.
+          </p>
+          <div class="regime-map__plot">
+            <div class="regime-map__y-axis">
+              <span>$\log_{10}\rho$ (g cm$^{-3}$)</span>
+              <span class="cp-muted">+10 to -10</span>
+            </div>
+            <svg
+              id="regimeMap"
+              viewBox="0 0 100 100"
+              role="img"
+              aria-label="EOS dominance map over log density and log temperature"
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <g id="regimeGrid"></g>
+              <g id="regimeCells"></g>
+              <g id="regimePresetMarkers"></g>
+              <circle id="regimeCurrentPoint" cx="50" cy="50" r="2.35"></circle>
+            </svg>
+            <div class="regime-map__x-axis">
+              <span>$\log_{10}T$ (K)</span>
+              <span class="cp-muted">$10^3$ to $10^9$</span>
+            </div>
+          </div>
+          <ul class="regime-map__legend" aria-label="Regime legend">
+            <li><span data-channel="gas"></span>Gas-dominated</li>
+            <li><span data-channel="radiation"></span>Radiation-dominated</li>
+            <li><span data-channel="degeneracy"></span>Degeneracy-dominated</li>
+            <li><span data-channel="mixed"></span>Mixed channels</li>
+          </ul>
+          <p id="regimeDetail" class="cp-muted"></p>
           <p id="regimeSummary" class="cp-muted"></p>
         </section>
       </section>
