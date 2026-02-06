@@ -234,13 +234,30 @@ test.describe("Eclipse Geometry -- E2E", () => {
 
   // --- Simulation Controls ---
 
-  test("simulation years slider exists and is adjustable", async ({ page }) => {
+  test("simulation years slider uses log scale (max shows 1,000)", async ({ page }) => {
     const slider = page.locator("#simYears");
     await expect(slider).toBeVisible();
-    await slider.fill("20");
-    await slider.dispatchEvent("input");
+    // Set slider to max (100) which should map to 1000 years
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "100";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
     const value = await page.locator("#simYearsValue").textContent();
-    expect(value).toContain("20");
+    expect(value).toMatch(/1[,.]?000/);
+  });
+
+  test("simulation years slider default is ~10 years", async ({ page }) => {
+    const value = await page.locator("#simYearsValue").textContent();
+    expect(value).toContain("10");
+  });
+
+  test("simulation slider has tick labels", async ({ page }) => {
+    const ticks = page.locator(".sim-ticks span");
+    const count = await ticks.count();
+    expect(count).toBe(4);
+    const texts = await ticks.allTextContents();
+    expect(texts[0]).toBe("1");
+    expect(texts[3]).toMatch(/1[,.]?000/);
   });
 
   test("simulation speed dropdown has three options", async ({ page }) => {
@@ -300,5 +317,37 @@ test.describe("Eclipse Geometry -- E2E", () => {
   test("time controls group has aria-label", async ({ page }) => {
     const group = page.locator('[role="group"][aria-label="Time controls"]');
     await expect(group).toBeAttached();
+  });
+
+  // --- Moon Drag ---
+
+  // --- Beta Curve ---
+
+  test("beta curve path element exists with non-empty d attribute", async ({ page }) => {
+    const path = page.locator("#betaCurve");
+    await expect(path).toBeAttached();
+    const d = await path.getAttribute("d");
+    expect(d).toBeTruthy();
+    expect(d!.startsWith("M")).toBe(true);
+  });
+
+  // --- Moon Drag ---
+
+  test("moon dot has grab cursor for drag interaction", async ({ page }) => {
+    const cursor = await page.locator(".stage__moon").evaluate(
+      (el) => getComputedStyle(el).cursor
+    );
+    expect(cursor).toBe("grab");
+  });
+
+  // --- Challenges ---
+
+  test("challenge mode offers 5 challenges", async ({ page }) => {
+    await page.locator("#challengeMode").click();
+    // Challenge progress shows "1 / N" format
+    const progress = page.locator(".cp-challenge-progress");
+    await expect(progress).toBeVisible();
+    const text = await progress.textContent();
+    expect(text).toContain("/ 5");
   });
 });

@@ -32,6 +32,14 @@
   gap: 10px;
 }
 
+.sim-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--cp-muted);
+  padding: 0 2px;
+}
+
 .stage {
   display: grid;
   place-items: center;
@@ -91,6 +99,11 @@
   stroke: color-mix(in srgb, var(--cp-celestial-moon) 35%, transparent);
   stroke-width: 2px;
   filter: drop-shadow(var(--cp-glow-moon));
+  cursor: grab;
+}
+
+.stage__moon--dragging {
+  cursor: grabbing;
 }
 
 .stage__node {
@@ -113,6 +126,13 @@
   stroke: color-mix(in srgb, white 30%, transparent);
   stroke-width: 2px;
   stroke-dasharray: 6 6;
+}
+
+.stage__betaCurve {
+  fill: none;
+  stroke: color-mix(in srgb, var(--cp-accent-rose) 50%, transparent);
+  stroke-width: 2px;
+  stroke-dasharray: 6 4;
 }
 
 .stage__betaMarker {

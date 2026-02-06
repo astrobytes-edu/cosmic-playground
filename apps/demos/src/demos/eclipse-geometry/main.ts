@@ -12,6 +12,12 @@ import {
   SYZYGY_TOLERANCE_DEG,
   DISTANCE_PRESETS_KM,
   snapToNearestPreset,
+  svgPointToAngleDeg,
+  buildBetaCurvePath,
+  sliderToYears,
+  formatYearsLabel,
+  checkWhyNotEveryMonth,
+  checkEclipseStatistics,
 } from "./logic";
 import type { EclipseModelCallbacks, EclipseDemoState, DistancePresetKey, SimulationCounts } from "./logic";
 
@@ -61,6 +67,7 @@ const nearestNodeEl = document.querySelector<HTMLSpanElement>("#nearestNode");
 const solarOutcomeEl = document.querySelector<HTMLSpanElement>("#solarOutcome");
 const lunarOutcomeEl = document.querySelector<HTMLSpanElement>("#lunarOutcome");
 
+const eclipseSvgEl = document.querySelector<SVGSVGElement>("#eclipseStage");
 const moonDotEl = document.querySelector<SVGCircleElement>("#moonDot");
 const betaLineEl = document.querySelector<SVGLineElement>("#betaLine");
 const ascNodeDotEl = document.querySelector<SVGCircleElement>("#ascNodeDot");
@@ -68,10 +75,12 @@ const descNodeDotEl = document.querySelector<SVGCircleElement>("#descNodeDot");
 const ascNodeLabelEl = document.querySelector<SVGTextElement>("#ascNodeLabel");
 const descNodeLabelEl =
   document.querySelector<SVGTextElement>("#descNodeLabel");
+const betaCurveEl = document.querySelector<SVGPathElement>("#betaCurve");
 const betaMarkerEl = document.querySelector<SVGCircleElement>("#betaMarker");
 const betaLabelEl = document.querySelector<SVGTextElement>("#betaLabel");
 
 if (
+  !eclipseSvgEl ||
   !setNewMoonEl ||
   !setFullMoonEl ||
   !animateMonthEl ||
@@ -109,6 +118,7 @@ if (
   !descNodeDotEl ||
   !ascNodeLabelEl ||
   !descNodeLabelEl ||
+  !betaCurveEl ||
   !betaMarkerEl ||
   !betaLabelEl
 ) {
@@ -150,12 +160,14 @@ const nearestNode = nearestNodeEl;
 const solarOutcome = solarOutcomeEl;
 const lunarOutcome = lunarOutcomeEl;
 
+const eclipseSvg = eclipseSvgEl;
 const moonDot = moonDotEl;
 const betaLine = betaLineEl;
 const ascNodeDot = ascNodeDotEl;
 const descNodeDot = descNodeDotEl;
 const ascNodeLabel = ascNodeLabelEl;
 const descNodeLabel = descNodeLabelEl;
+const betaCurve = betaCurveEl;
 const betaMarker = betaMarkerEl;
 const betaLabel = betaLabelEl;
 
@@ -192,7 +204,7 @@ const state: State = {
   distancePresetKey: "mean"
 };
 
-simYearsValue.textContent = `${simYears.value} yr`;
+simYearsValue.textContent = `${formatYearsLabel(sliderToYears(Number(simYears.value)))} yr`;
 
 const prefersReducedMotion =
   typeof window !== "undefined" &&
@@ -296,10 +308,29 @@ function renderStage(args: {
   betaLine.setAttribute("x2", formatNumber(mx, 2));
   betaLine.setAttribute("y2", formatNumber(by, 2));
 
-  // beta panel marker: y = -beta
-  const betaPanelScale = 12;
-  const y = clamp(-args.betaDeg * betaPanelScale, -140, 140);
-  betaMarker.setAttribute("cy", formatNumber(y, 2));
+  // Beta curve: sinusoidal path across the full beta panel
+  const BETA_PANEL_WIDTH = 300;
+  const BETA_Y_SCALE = 20; // pixels per degree of latitude
+  const betaCurvePath = buildBetaCurvePath({
+    tiltDeg: state.orbitalTiltDeg,
+    nodeLonDeg: args.nodeLonDeg,
+    panelX: 0,
+    panelWidth: BETA_PANEL_WIDTH,
+    panelCenterY: 0,
+    yScale: BETA_Y_SCALE,
+    eclipticLatDeg: (moonLonDeg, tiltDeg, nodeLonDeg) =>
+      EclipseGeometryModel.eclipticLatitudeDeg({ tiltDeg, moonLonDeg, nodeLonDeg }),
+  });
+  betaCurve.setAttribute("d", betaCurvePath);
+
+  // Beta panel marker: positioned on the curve at Moon's orbital position
+  const moonFraction = EclipseGeometryModel.normalizeAngleDeg(args.moonLonDeg) / 360;
+  const markerX = moonFraction * BETA_PANEL_WIDTH;
+  const markerY = clamp(args.betaDeg * BETA_Y_SCALE, -140, 140);
+  betaMarker.setAttribute("cx", formatNumber(markerX, 2));
+  betaMarker.setAttribute("cy", formatNumber(markerY, 2));
+  betaLabel.setAttribute("x", formatNumber(markerX, 2));
+  betaLabel.setAttribute("y", formatNumber(markerY - 14, 2));
   betaLabel.textContent = `beta ~ ${formatNumber(args.betaDeg, 2)} deg`;
 }
 
@@ -699,6 +730,61 @@ const challenges: Challenge[] = [
 
       return { correct: false, close: false, message: "Unexpected: eclipse types were none at $\\beta=0^\\circ$." };
     }
+  },
+  {
+    type: "custom",
+    prompt: "Why not every month? Find a Full Moon that does NOT cause a lunar eclipse.",
+    initialState: {
+      moonLonDeg: 180,
+      nodeLonDeg: 90,
+      orbitalTiltDeg: 5.145,
+      distancePresetKey: "mean"
+    },
+    hints: [
+      "Click \u201CFull Moon\u201D to get phase close to $180^\\circ$.",
+      "Then move the node longitude far from the Moon (try $\\Omega$ near $90^\\circ$). With the Moon far from a node, $|\\beta|$ is too large for an eclipse."
+    ],
+    check: (s: unknown) => {
+      const st = s as Partial<EclipseDemoState>;
+      const delta = Number(st.phaseAngleDeg);
+      const lunarType = st.lunarType ?? "none";
+      if (!Number.isFinite(delta)) {
+        return { correct: false, close: false, message: "State is not finite." };
+      }
+      return checkWhyNotEveryMonth({
+        phaseAngleDeg: delta,
+        lunarType,
+        angularSep: EclipseGeometryModel.angularSeparationDeg,
+      });
+    }
+  },
+  {
+    type: "custom",
+    prompt: "Eclipse statistics: Run a simulation of at least 10 years. Are total eclipses more common than partial?",
+    initialState: {
+      moonLonDeg: 180,
+      nodeLonDeg: 210,
+      orbitalTiltDeg: 5.145,
+      distancePresetKey: "mean"
+    },
+    hints: [
+      "Set years to 10 or more on the log-scale slider, then click Run Simulation.",
+      "When the simulation completes, compare total vs. partial counts in the output."
+    ],
+    check: () => {
+      if (!lastCompletedSim) {
+        return { correct: false, close: false, message: "Run a simulation first (use the simulation controls above)." };
+      }
+      const c = lastCompletedSim.counts;
+      const totalEclipses =
+        c.solar.partial + c.solar.annular + c.solar.total +
+        c.lunar.penumbral + c.lunar.partial + c.lunar.total;
+      return checkEclipseStatistics({
+        yearsSimulated: lastCompletedSim.yearsSimulated,
+        totalEclipses,
+        counts: c,
+      });
+    }
   }
 ];
 
@@ -769,6 +855,7 @@ type SimulationState = {
 };
 
 let simulation: SimulationState | null = null;
+let lastCompletedSim: { yearsSimulated: number; counts: SimulationCounts } | null = null;
 
 function stopLoop() {
   if (rafId !== null) cancelAnimationFrame(rafId);
@@ -957,6 +1044,10 @@ function tick(t: number) {
       if (simulation.inFullWindow) recordSyzygyWindow("full");
 
       simOutput.textContent = getSimSummary(simulation);
+      lastCompletedSim = {
+        yearsSimulated: simulation.tDays / TROPICAL_YEAR_DAYS,
+        counts: { ...simulation.counts, solar: { ...simulation.counts.solar }, lunar: { ...simulation.counts.lunar } },
+      };
       stopLoop();
       stopSimulation.disabled = true;
       runSimulation.disabled = prefersReducedMotion;
@@ -994,7 +1085,7 @@ setFullMoon.addEventListener("click", () => {
 });
 
 simYears.addEventListener("input", () => {
-  simYearsValue.textContent = `${simYears.value} yr`;
+  simYearsValue.textContent = `${formatYearsLabel(sliderToYears(Number(simYears.value)))} yr`;
 });
 
 animateMonth.addEventListener("click", () => {
@@ -1035,7 +1126,7 @@ runSimulation.addEventListener("click", () => {
   stopLoop();
   render(); // ensure state is synced with controls
 
-  const years = clamp(Number(simYears.value), 1, 100);
+  const years = clamp(sliderToYears(Number(simYears.value)), 1, 1000);
   const totalDays = years * TROPICAL_YEAR_DAYS;
 
   simulation = {
@@ -1108,6 +1199,63 @@ distancePreset.addEventListener("change", () => {
   stopTimeActions();
   render();
 });
+
+/* ------------------------------------------------------------------ */
+/*  Moon drag interaction on orbit SVG                                 */
+/* ------------------------------------------------------------------ */
+
+let isDragging = false;
+
+/** Convert client (screen) coords to SVG user-space coords. */
+function clientToSvg(clientX: number, clientY: number): { x: number; y: number } | null {
+  const ctm = eclipseSvg.getScreenCTM();
+  if (!ctm) return null;
+  const inv = ctm.inverse();
+  return {
+    x: inv.a * clientX + inv.c * clientY + inv.e,
+    y: inv.b * clientX + inv.d * clientY + inv.f,
+  };
+}
+
+// Orbit center in SVG coords: orbitPanel translate(40,40) + inner translate(220,180)
+const ORBIT_CX_SVG = 40 + 220;
+const ORBIT_CY_SVG = 40 + 180;
+
+function handleDragStart(e: MouseEvent | TouchEvent) {
+  e.preventDefault();
+  isDragging = true;
+  moonDot.classList.add("stage__moon--dragging");
+  stopTimeActions();
+}
+
+function handleDragMove(e: MouseEvent | TouchEvent) {
+  if (!isDragging) return;
+  const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+  const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+  const pt = clientToSvg(clientX, clientY);
+  if (!pt) return;
+
+  // Angle in SVG display coords (Sun-fixed frame)
+  const displayAngleDeg = svgPointToAngleDeg(ORBIT_CX_SVG, ORBIT_CY_SVG, pt.x, pt.y);
+  // Convert back to ecliptic longitude: moonLon = displayAngle + sunLon
+  const newMoonLon = EclipseGeometryModel.normalizeAngleDeg(displayAngleDeg + state.sunLonDeg);
+
+  moonLon.value = String(Math.round(newMoonLon));
+  render();
+}
+
+function handleDragEnd() {
+  if (!isDragging) return;
+  isDragging = false;
+  moonDot.classList.remove("stage__moon--dragging");
+}
+
+moonDot.addEventListener("mousedown", handleDragStart);
+moonDot.addEventListener("touchstart", handleDragStart, { passive: false });
+eclipseSvg.addEventListener("mousemove", handleDragMove);
+eclipseSvg.addEventListener("touchmove", handleDragMove, { passive: false });
+document.addEventListener("mouseup", handleDragEnd);
+document.addEventListener("touchend", handleDragEnd);
 
 render();
 

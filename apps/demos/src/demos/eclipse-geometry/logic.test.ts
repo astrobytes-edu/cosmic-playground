@@ -10,6 +10,13 @@ import {
   SYZYGY_TOLERANCE_DEG,
   DISTANCE_PRESETS_KM,
   snapToNearestPreset,
+  svgPointToAngleDeg,
+  buildBetaCurvePath,
+  sliderToYears,
+  yearsToSlider,
+  formatYearsLabel,
+  checkWhyNotEveryMonth,
+  checkEclipseStatistics,
 } from "./logic";
 import type { EclipseModelCallbacks, SimulationSummaryInput } from "./logic";
 
@@ -566,5 +573,301 @@ describe("snapToNearestPreset", () => {
   it("handles extreme values", () => {
     expect(snapToNearestPreset(0)).toBe("perigee");
     expect(snapToNearestPreset(1e6)).toBe("apogee");
+  });
+});
+
+describe("svgPointToAngleDeg", () => {
+  it("returns 0 for point directly to the right", () => {
+    expect(svgPointToAngleDeg(0, 0, 10, 0)).toBeCloseTo(0, 5);
+  });
+
+  it("returns 90 for point directly above (SVG y-inverted)", () => {
+    // In SVG, y decreases upward, so (0, -10) is "above"
+    expect(svgPointToAngleDeg(0, 0, 0, -10)).toBeCloseTo(90, 5);
+  });
+
+  it("returns 180 for point directly to the left", () => {
+    expect(svgPointToAngleDeg(0, 0, -10, 0)).toBeCloseTo(180, 5);
+  });
+
+  it("returns 270 for point directly below (SVG y-inverted)", () => {
+    // In SVG, y increases downward, so (0, 10) is "below"
+    expect(svgPointToAngleDeg(0, 0, 0, 10)).toBeCloseTo(270, 5);
+  });
+
+  it("returns 45 for upper-right diagonal", () => {
+    expect(svgPointToAngleDeg(0, 0, 10, -10)).toBeCloseTo(45, 5);
+  });
+
+  it("returns 135 for upper-left diagonal", () => {
+    expect(svgPointToAngleDeg(0, 0, -10, -10)).toBeCloseTo(135, 5);
+  });
+
+  it("works with non-zero center coordinates", () => {
+    // Point at (120, 50) relative to center (100, 60) => dx=20, dy=10 (SVG inverted)
+    // atan2(10, 20) ~ 26.57 deg
+    expect(svgPointToAngleDeg(100, 60, 120, 50)).toBeCloseTo(26.565, 1);
+  });
+
+  it("always returns a value in [0, 360)", () => {
+    const angles = [
+      svgPointToAngleDeg(0, 0, 10, 0),
+      svgPointToAngleDeg(0, 0, 0, -10),
+      svgPointToAngleDeg(0, 0, -10, 0),
+      svgPointToAngleDeg(0, 0, 0, 10),
+    ];
+    for (const a of angles) {
+      expect(a).toBeGreaterThanOrEqual(0);
+      expect(a).toBeLessThan(360);
+    }
+  });
+});
+
+describe("buildBetaCurvePath", () => {
+  /** Simple ecliptic latitude model: tilt * sin(moonLon - nodeLon) */
+  const eclipticLatDeg = (moonLonDeg: number, tiltDeg: number, nodeLonDeg: number) =>
+    tiltDeg * Math.sin(((moonLonDeg - nodeLonDeg) * Math.PI) / 180);
+
+  const baseArgs = {
+    tiltDeg: 5.145,
+    nodeLonDeg: 0,
+    panelX: 0,
+    panelWidth: 200,
+    panelCenterY: 100,
+    yScale: 10,
+    eclipticLatDeg,
+  };
+
+  it("starts with M (moveto)", () => {
+    const path = buildBetaCurvePath(baseArgs);
+    expect(path).toMatch(/^M/);
+  });
+
+  it("contains the expected number of L segments", () => {
+    // default steps = 72 => 1 M + 72 L = 73 points total => 72 L commands
+    const path = buildBetaCurvePath(baseArgs);
+    const lCount = (path.match(/ L /g) || []).length;
+    expect(lCount).toBe(72);
+  });
+
+  it("respects custom steps parameter", () => {
+    const path = buildBetaCurvePath({ ...baseArgs, steps: 36 });
+    const lCount = (path.match(/ L /g) || []).length;
+    expect(lCount).toBe(36);
+  });
+
+  it("produces a flat line when tilt is 0", () => {
+    const path = buildBetaCurvePath({ ...baseArgs, tiltDeg: 0 });
+    // All y values should be at panelCenterY (100)
+    const points = path.replace("M ", "").split(" L ").map((p) => {
+      const [, y] = p.split(",");
+      return parseFloat(y);
+    });
+    for (const y of points) {
+      expect(y).toBeCloseTo(100, 2);
+    }
+  });
+
+  it("y-values reflect sinusoidal shape (extremes at tilt amplitude)", () => {
+    const path = buildBetaCurvePath(baseArgs);
+    const points = path.replace("M ", "").split(" L ").map((p) => {
+      const [, y] = p.split(",");
+      return parseFloat(y);
+    });
+    const minY = Math.min(...points);
+    const maxY = Math.max(...points);
+    // Amplitude should be approximately tilt * yScale = 5.145 * 10 = 51.45
+    // So extremes at ~100 - 51.45 and ~100 + 51.45
+    expect(minY).toBeCloseTo(100 - 5.145 * 10, 0);
+    expect(maxY).toBeCloseTo(100 + 5.145 * 10, 0);
+  });
+
+  it("x-values span from panelX to panelX + panelWidth", () => {
+    const path = buildBetaCurvePath(baseArgs);
+    const points = path.replace("M ", "").split(" L ").map((p) => {
+      const [x] = p.split(",");
+      return parseFloat(x);
+    });
+    expect(points[0]).toBeCloseTo(0, 1);
+    expect(points[points.length - 1]).toBeCloseTo(200, 1);
+  });
+});
+
+describe("sliderToYears", () => {
+  it("maps 0 to 1 year", () => {
+    expect(sliderToYears(0)).toBeCloseTo(1, 5);
+  });
+
+  it("maps 100 to 1000 years", () => {
+    expect(sliderToYears(100)).toBeCloseTo(1000, 5);
+  });
+
+  it("maps 33.333 to ~10 years", () => {
+    expect(sliderToYears(100 / 3)).toBeCloseTo(10, 0);
+  });
+
+  it("maps 66.667 to ~100 years", () => {
+    expect(sliderToYears(200 / 3)).toBeCloseTo(100, 0);
+  });
+
+  it("is monotonically increasing", () => {
+    let prev = sliderToYears(0);
+    for (let v = 1; v <= 100; v++) {
+      const cur = sliderToYears(v);
+      expect(cur).toBeGreaterThan(prev);
+      prev = cur;
+    }
+  });
+});
+
+describe("yearsToSlider", () => {
+  it("maps 1 year to 0", () => {
+    expect(yearsToSlider(1)).toBeCloseTo(0, 5);
+  });
+
+  it("maps 1000 years to 100", () => {
+    expect(yearsToSlider(1000)).toBeCloseTo(100, 5);
+  });
+
+  it("maps 10 years to ~33.3", () => {
+    expect(yearsToSlider(10)).toBeCloseTo(100 / 3, 1);
+  });
+
+  it("round-trips with sliderToYears", () => {
+    for (const v of [0, 10, 25, 50, 75, 100]) {
+      const years = sliderToYears(v);
+      expect(yearsToSlider(years)).toBeCloseTo(v, 3);
+    }
+  });
+
+  it("clamps values below 1 to slider 0", () => {
+    expect(yearsToSlider(0)).toBe(0);
+    expect(yearsToSlider(-5)).toBe(0);
+  });
+});
+
+describe("formatYearsLabel", () => {
+  it("formats small values without commas", () => {
+    expect(formatYearsLabel(10)).toBe("10");
+  });
+
+  it("formats 1000 with locale string", () => {
+    // Note: toLocaleString is locale-dependent, but 1000 is commonly "1,000"
+    const result = formatYearsLabel(1000);
+    expect(result).toMatch(/1[,.]?000/);
+  });
+
+  it("rounds to nearest integer", () => {
+    expect(formatYearsLabel(10.7)).toBe("11");
+    expect(formatYearsLabel(3.14)).toBe("3");
+  });
+});
+
+describe("checkWhyNotEveryMonth", () => {
+  it("correct when Full Moon and no lunar eclipse", () => {
+    const result = checkWhyNotEveryMonth({
+      phaseAngleDeg: 180,
+      lunarType: "none",
+      angularSep: angularSeparationDeg,
+    });
+    expect(result.correct).toBe(true);
+  });
+
+  it("close when Full Moon but eclipse present", () => {
+    const result = checkWhyNotEveryMonth({
+      phaseAngleDeg: 180,
+      lunarType: "total-lunar",
+      angularSep: angularSeparationDeg,
+    });
+    expect(result.correct).toBe(false);
+    expect(result.close).toBe(true);
+  });
+
+  it("wrong when not near Full Moon", () => {
+    const result = checkWhyNotEveryMonth({
+      phaseAngleDeg: 90,
+      lunarType: "none",
+      angularSep: angularSeparationDeg,
+    });
+    expect(result.correct).toBe(false);
+    expect(result.close).toBe(false);
+  });
+
+  it("accepts Full Moon within tolerance (175 deg)", () => {
+    const result = checkWhyNotEveryMonth({
+      phaseAngleDeg: 175,
+      lunarType: "none",
+      angularSep: angularSeparationDeg,
+    });
+    expect(result.correct).toBe(true);
+  });
+
+  it("rejects phase angle far from Full Moon (140 deg)", () => {
+    const result = checkWhyNotEveryMonth({
+      phaseAngleDeg: 140,
+      lunarType: "none",
+      angularSep: angularSeparationDeg,
+    });
+    expect(result.correct).toBe(false);
+  });
+});
+
+describe("checkEclipseStatistics", () => {
+  const baseCounts = {
+    solar: { partial: 5, annular: 3, total: 1 },
+    lunar: { penumbral: 8, partial: 3, total: 1 },
+    newWindows: 130,
+    fullWindows: 130,
+  };
+
+  it("correct when >= 9 years and eclipses found", () => {
+    const result = checkEclipseStatistics({
+      yearsSimulated: 10,
+      totalEclipses: 21,
+      counts: baseCounts,
+    });
+    expect(result.correct).toBe(true);
+  });
+
+  it("wrong when < 9 years", () => {
+    const result = checkEclipseStatistics({
+      yearsSimulated: 5,
+      totalEclipses: 10,
+      counts: baseCounts,
+    });
+    expect(result.correct).toBe(false);
+  });
+
+  it("wrong when no eclipses detected", () => {
+    const result = checkEclipseStatistics({
+      yearsSimulated: 20,
+      totalEclipses: 0,
+      counts: {
+        ...baseCounts,
+        solar: { partial: 0, annular: 0, total: 0 },
+        lunar: { penumbral: 0, partial: 0, total: 0 },
+      },
+    });
+    expect(result.correct).toBe(false);
+  });
+
+  it("close when years is between 5 and 9", () => {
+    const result = checkEclipseStatistics({
+      yearsSimulated: 7,
+      totalEclipses: 10,
+      counts: baseCounts,
+    });
+    expect(result.correct).toBe(false);
+    expect(result.close).toBe(true);
+  });
+
+  it("provides a message with eclipse breakdown", () => {
+    const result = checkEclipseStatistics({
+      yearsSimulated: 15,
+      totalEclipses: 21,
+      counts: baseCounts,
+    });
+    expect(result.message).toBeTruthy();
+    expect(typeof result.message).toBe("string");
   });
 });

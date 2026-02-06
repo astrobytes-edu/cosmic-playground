@@ -19,6 +19,53 @@ export function formatNumber(value: number, digits: number): string {
 }
 
 /* ------------------------------------------------------------------ */
+/*  SVG coordinate angle (for drag interaction)                       */
+/* ------------------------------------------------------------------ */
+
+/** Convert SVG coordinates to angle (degrees) relative to center point.
+ *  Returns a value in [0, 360). SVG y-axis is inverted (down = positive). */
+export function svgPointToAngleDeg(
+  centerX: number,
+  centerY: number,
+  pointX: number,
+  pointY: number
+): number {
+  const dx = pointX - centerX;
+  const dy = centerY - pointY; // invert SVG y-axis
+  return ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sinusoidal beta curve path builder                                */
+/* ------------------------------------------------------------------ */
+
+/** Build an SVG path d-string for the sinusoidal beta curve in the beta panel.
+ *  The curve shows ecliptic latitude as a function of Moon orbital position. */
+export function buildBetaCurvePath(args: {
+  tiltDeg: number;
+  nodeLonDeg: number;
+  panelX: number;
+  panelWidth: number;
+  panelCenterY: number;
+  yScale: number;
+  eclipticLatDeg: (moonLonDeg: number, tiltDeg: number, nodeLonDeg: number) => number;
+  steps?: number;
+}): string {
+  const steps = args.steps ?? 72;
+  const parts: string[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const moonLonDeg = (i / steps) * 360;
+    const x = args.panelX + (i / steps) * args.panelWidth;
+    const beta = args.eclipticLatDeg(moonLonDeg, args.tiltDeg, args.nodeLonDeg);
+    // y increases downward in SVG, so negative beta (above ecliptic) goes up
+    const y = args.panelCenterY + beta * args.yScale;
+    const pt = `${x.toFixed(2)},${y.toFixed(2)}`;
+    parts.push(i === 0 ? `M ${pt}` : `L ${pt}`);
+  }
+  return parts.join(" ");
+}
+
+/* ------------------------------------------------------------------ */
 /*  Phase labeling                                                    */
 /* ------------------------------------------------------------------ */
 
@@ -275,6 +322,102 @@ export const DISTANCE_PRESETS_KM = {
 } as const;
 
 export type DistancePresetKey = keyof typeof DISTANCE_PRESETS_KM;
+
+/* ------------------------------------------------------------------ */
+/*  Log-scale simulation slider mapping                               */
+/* ------------------------------------------------------------------ */
+
+/** Log-scale: slider 0-100 maps to 1-1000 years (10^0 to 10^3). */
+export function sliderToYears(sliderVal: number): number {
+  return Math.pow(10, (sliderVal / 100) * 3);
+}
+
+/** Inverse: years 1-1000 maps to slider 0-100. */
+export function yearsToSlider(years: number): number {
+  return (Math.log10(Math.max(1, years)) / 3) * 100;
+}
+
+/** Format years for display with locale grouping. */
+export function formatYearsLabel(years: number): string {
+  return Math.round(years).toLocaleString();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Challenge check functions                                         */
+/* ------------------------------------------------------------------ */
+
+const FULL_MOON_TOLERANCE_DEG = 15;
+
+export type ChallengeResult = { correct: boolean; close: boolean; message: string };
+
+/** Challenge: "Why not every month" — find Full Moon with no eclipse. */
+export function checkWhyNotEveryMonth(args: {
+  phaseAngleDeg: number;
+  lunarType: string;
+  angularSep: (a: number, b: number) => number;
+}): ChallengeResult {
+  const sepFromFull = args.angularSep(args.phaseAngleDeg, 180);
+  const isNearFull = sepFromFull <= FULL_MOON_TOLERANCE_DEG;
+
+  if (!isNearFull) {
+    return {
+      correct: false,
+      close: false,
+      message: "First get close to Full Moon (phase angle near 180 deg).",
+    };
+  }
+
+  if (args.lunarType === "none") {
+    return {
+      correct: true,
+      close: true,
+      message: "Correct! This Full Moon does NOT cause an eclipse because the Moon is far from a node.",
+    };
+  }
+
+  return {
+    correct: false,
+    close: true,
+    message: "You're at Full Moon, but this one still causes an eclipse. Move the node farther away.",
+  };
+}
+
+/** Challenge: "Eclipse statistics" — run a long simulation. */
+export function checkEclipseStatistics(args: {
+  yearsSimulated: number;
+  totalEclipses: number;
+  counts: SimulationCounts;
+}): ChallengeResult {
+  if (args.yearsSimulated < 9) {
+    return {
+      correct: false,
+      close: args.yearsSimulated >= 5,
+      message: `Simulation ran ${args.yearsSimulated.toFixed(0)} years. Need at least ~10 years for good statistics.`,
+    };
+  }
+
+  if (args.totalEclipses === 0) {
+    return {
+      correct: false,
+      close: false,
+      message: "No eclipses detected. Check that tilt is realistic (~5 deg) and try again.",
+    };
+  }
+
+  const s = args.counts.solar;
+  const l = args.counts.lunar;
+  const totalSolar = s.partial + s.annular + s.total;
+  const totalLunar = l.penumbral + l.partial + l.total;
+  return {
+    correct: true,
+    close: true,
+    message:
+      `Over ${args.yearsSimulated.toFixed(0)} years: ` +
+      `${totalSolar} solar (${s.partial}P + ${s.annular}A + ${s.total}T) and ` +
+      `${totalLunar} lunar (${l.penumbral}Pen + ${l.partial}P + ${l.total}T). ` +
+      `Total eclipses are the rarest type!`,
+  };
+}
 
 export function snapToNearestPreset(
   targetKm: number
