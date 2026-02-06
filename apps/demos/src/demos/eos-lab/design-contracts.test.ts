@@ -18,8 +18,8 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(html).toContain("cp-demo__drawer");
   });
 
-  it("uses triad shell layout for controls-stage-readouts", () => {
-    expect(html).toContain('data-shell="triad"');
+  it("uses viz-first shell layout for controls-stage-readouts", () => {
+    expect(html).toContain('data-shell="viz-first"');
     expect(html).toContain("cp-demo__controls");
     expect(html).toContain("cp-demo__stage");
     expect(html).toContain("cp-demo__readouts");

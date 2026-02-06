@@ -6,7 +6,7 @@ test.describe("EOS Lab -- E2E", () => {
     await expect(page.locator("#cp-demo")).toBeVisible();
   });
 
-  test("demo loads with triad shell sections visible", async ({ page }) => {
+  test("demo loads with viz-first shell sections visible", async ({ page }) => {
     await expect(page.locator(".cp-demo__controls")).toBeVisible();
     await expect(page.locator(".cp-demo__stage")).toBeVisible();
     await expect(page.locator(".cp-demo__readouts")).toBeVisible();
