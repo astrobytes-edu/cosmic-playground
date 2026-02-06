@@ -464,10 +464,10 @@ function render() {
   tiltValue.textContent = `${formatNumber(axialTiltDeg, 1)} deg`;
   latitudeValue.textContent = `${Math.round(latitudeDeg)} deg`;
 
-  declinationValue.textContent = `${formatNumber(declinationDegValue, 1)} deg`;
-  dayLengthValue.textContent = `${formatNumber(dayLengthHoursValue, 2)} h`;
-  noonAltitudeValue.textContent = `${formatNumber(noonAltitudeDegValue, 1)} deg`;
-  distanceAuValue.textContent = `${formatNumber(distanceAu, 3)} AU`;
+  declinationValue.textContent = formatNumber(declinationDegValue, 1);
+  dayLengthValue.textContent = formatNumber(dayLengthHoursValue, 2);
+  noonAltitudeValue.textContent = formatNumber(noonAltitudeDegValue, 1);
+  distanceAuValue.textContent = formatNumber(distanceAu, 3);
   seasonNorthValue.textContent = north;
   seasonSouthValue.textContent = south;
 
