@@ -191,7 +191,7 @@
            ═══════════════════════════════════════════ -->
       <section class="cp-demo__stage cp-stage stage" aria-label="Visualization stage">
         <div class="viz-layout">
-          <!-- LEFT: Geometry diagram -->
+          <!-- LEFT: Geometry diagram + readouts -->
           <div class="viz-panel">
             <div class="panel-title">Geometry</div>
             <svg
@@ -264,6 +264,26 @@
             <text id="objectLabel" class="stage__label stage__label--object" x="520" y="116" text-anchor="middle"></text>
           </g>
             </svg>
+
+            <!-- Readouts pinned under geometry diagram -->
+            <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
+              <div class="cp-readout">
+                <span class="cp-readout__label">&#x03B8;</span>
+                <span class="cp-readout__value"><span id="thetaDisplay"></span><span id="thetaDisplayUnit" class="cp-readout__unit"></span></span>
+              </div>
+              <div class="cp-readout">
+                <span class="cp-readout__label">&#x03B8; (decimal)</span>
+                <span class="cp-readout__value"><span id="thetaDeg"></span><span id="thetaDegUnit" class="cp-readout__unit">deg</span></span>
+              </div>
+              <div class="cp-readout">
+                <span class="cp-readout__label">Diameter</span>
+                <span class="cp-readout__value"><span id="diameterKm"></span><span id="diameterUnit" class="cp-readout__unit"></span></span>
+              </div>
+              <div class="cp-readout">
+                <span class="cp-readout__label">Distance</span>
+                <span class="cp-readout__value"><span id="distanceKm"></span><span id="distanceUnit" class="cp-readout__unit"></span></span>
+              </div>
+            </div>
           </div>
 
           <!-- RIGHT: Sky View (apparent size) -->
@@ -313,28 +333,6 @@
           </div>
         </div>
       </section>
-
-      <!-- ═══════════════════════════════════════════
-           READOUT STRIP — pinned readouts
-           ═══════════════════════════════════════════ -->
-      <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
-        <div class="cp-readout">
-          <span class="cp-readout__label">&#x03B8;</span>
-          <span class="cp-readout__value"><span id="thetaDisplay"></span><span id="thetaDisplayUnit" class="cp-readout__unit"></span></span>
-        </div>
-        <div class="cp-readout">
-          <span class="cp-readout__label">&#x03B8; (decimal)</span>
-          <span class="cp-readout__value"><span id="thetaDeg"></span><span id="thetaDegUnit" class="cp-readout__unit">deg</span></span>
-        </div>
-        <div class="cp-readout">
-          <span class="cp-readout__label">Diameter</span>
-          <span class="cp-readout__value"><span id="diameterKm"></span><span id="diameterUnit" class="cp-readout__unit"></span></span>
-        </div>
-        <div class="cp-readout">
-          <span class="cp-readout__label">Distance</span>
-          <span class="cp-readout__value"><span id="distanceKm"></span><span id="distanceUnit" class="cp-readout__unit"></span></span>
-        </div>
-      </div>
 
       <!-- ═══════════════════════════════════════════
            SHELF — tabbed pedagogical content

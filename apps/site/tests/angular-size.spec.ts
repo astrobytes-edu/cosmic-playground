@@ -8,7 +8,7 @@ test.describe("Angular Size -- E2E", () => {
 
   // --- Layout & Visual ---
 
-  test("demo loads with all four shell sections visible", async ({ page }) => {
+  test("demo loads with shell sections and readouts visible", async ({ page }) => {
     await expect(page.locator(".cp-demo__sidebar")).toBeVisible();
     await expect(page.locator(".cp-demo__stage")).toBeVisible();
     await expect(page.locator(".cp-demo__readouts")).toBeVisible();
