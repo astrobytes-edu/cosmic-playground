@@ -86,3 +86,20 @@
   box-shadow: 0 24px 50px color-mix(in srgb, var(--cp-bg0) 65%, transparent);
 }
 
+/* Entry animations */
+.cp-demo__controls {
+  animation: cp-slide-up 0.6s ease-out both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in 0.8s ease-out 0.1s both;
+}
+
+.cp-demo__readouts {
+  animation: cp-fade-in 0.8s ease-out 0.2s both;
+}
+
+.cp-demo__drawer {
+  animation: cp-fade-in 0.8s ease-out 0.3s both;
+}
+
