@@ -91,9 +91,9 @@
   border: 1px solid var(--cp-border);
   background: linear-gradient(
     to right,
-    color-mix(in srgb, var(--cp-accent2) 50%, var(--cp-bg1)),
+    color-mix(in srgb, var(--cp-violet) 50%, var(--cp-bg1)),
     color-mix(in srgb, var(--cp-accent) 55%, var(--cp-bg1)),
-    color-mix(in srgb, var(--cp-accent3) 55%, var(--cp-bg1))
+    color-mix(in srgb, var(--cp-pink) 55%, var(--cp-bg1))
   );
   overflow: hidden;
 }
@@ -217,4 +217,21 @@
 
 .list li {
   line-height: 1.3;
+}
+
+/* Entry animations */
+.cp-demo__controls {
+  animation: cp-slide-up 0.6s ease-out both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in 0.8s ease-out 0.1s both;
+}
+
+.cp-demo__readouts {
+  animation: cp-fade-in 0.8s ease-out 0.2s both;
+}
+
+.cp-demo__drawer {
+  animation: cp-fade-in 0.8s ease-out 0.3s both;
 }
