@@ -14,6 +14,7 @@
       data-shell="viz-first"
       aria-label="Kepler's Laws instrument"
     >
+      <canvas class="cp-starfield" aria-hidden="true"></canvas>
       <section class="cp-demo__stage cp-stage" aria-label="Orbit visualization stage">
         <div class="kepler-stage-header">
           <div>
@@ -29,13 +30,13 @@
           <svg id="orbitSvg" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet">
             <defs>
               <radialGradient id="starGradient">
-                <stop offset="0%" stop-color="var(--cp-text)" />
-                <stop offset="70%" stop-color="var(--cp-warning)" />
-                <stop offset="100%" stop-color="var(--cp-accent)" />
+                <stop offset="0%" stop-color="var(--cp-celestial-sun-core)" />
+                <stop offset="70%" stop-color="var(--cp-celestial-sun-mid)" />
+                <stop offset="100%" stop-color="var(--cp-celestial-sun)" />
               </radialGradient>
               <radialGradient id="planetGradient" cx="30%" cy="30%">
-                <stop offset="0%" stop-color="var(--cp-chart-1)" />
-                <stop offset="100%" stop-color="var(--cp-chart-2)" />
+                <stop offset="0%" stop-color="var(--cp-celestial-earth)" />
+                <stop offset="100%" stop-color="var(--cp-celestial-earth-dark)" />
               </radialGradient>
               <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur stdDeviation="3" result="blur" />
@@ -65,16 +66,16 @@
             <g id="equalAreasGroup" hidden>
               <path
                 id="equalAreasWedge"
-                fill="var(--cp-chart-1)"
+                fill="var(--cp-accent-teal)"
                 fill-opacity="0.2"
-                stroke="var(--cp-chart-1)"
+                stroke="var(--cp-accent-teal)"
                 stroke-width="1"
               />
               <g id="equalTimeMarkers"></g>
             </g>
 
             <g id="fociGroup">
-              <circle id="focus1" cx="300" cy="200" r="4" fill="var(--cp-warning)" />
+              <circle id="focus1" cx="300" cy="200" r="4" fill="var(--cp-celestial-sun)" />
               <circle id="focus2" cx="300" cy="200" r="3" fill="var(--cp-muted)" opacity="0.6" />
               <text id="focus1Label" x="300" y="215" text-anchor="middle" fill="var(--cp-muted)" font-size="10">
                 Focus (Star)
@@ -82,17 +83,17 @@
             </g>
 
             <g id="apsidesGroup">
-              <circle id="perihelionMarker" cx="100" cy="200" r="4" fill="var(--cp-warning)" />
-              <text id="perihelionLabel" x="100" y="220" text-anchor="middle" fill="var(--cp-warning)" font-size="9">
+              <circle id="perihelionMarker" cx="100" cy="200" r="4" fill="var(--cp-accent-rose)" />
+              <text id="perihelionLabel" x="100" y="220" text-anchor="middle" fill="var(--cp-accent-rose)" font-size="9">
                 Perihelion
               </text>
-              <circle id="aphelionMarker" cx="500" cy="200" r="4" fill="var(--cp-chart-2)" />
-              <text id="aphelionLabel" x="500" y="220" text-anchor="middle" fill="var(--cp-chart-2)" font-size="9">
+              <circle id="aphelionMarker" cx="500" cy="200" r="4" fill="var(--cp-accent-ice)" />
+              <text id="aphelionLabel" x="500" y="220" text-anchor="middle" fill="var(--cp-accent-ice)" font-size="9">
                 Aphelion
               </text>
             </g>
 
-            <circle id="star" cx="300" cy="200" r="20" fill="url(#starGradient)" filter="url(#glow)" />
+            <circle id="star" cx="300" cy="200" r="20" fill="url(#starGradient)" filter="url(#glow)" style="filter: drop-shadow(var(--cp-glow-sun))" />
 
             <line
               id="distanceLine"
@@ -112,11 +113,11 @@
                 y1="200"
                 x2="400"
                 y2="150"
-                stroke="var(--cp-chart-2)"
+                stroke="var(--cp-accent-ice)"
                 stroke-width="2"
                 marker-end="url(#arrowhead)"
               />
-              <text id="velocityLabel" x="410" y="145" fill="var(--cp-chart-2)" font-size="10">v</text>
+              <text id="velocityLabel" x="410" y="145" fill="var(--cp-accent-ice)" font-size="10">v</text>
             </g>
 
             <g id="forceVector" class="newton-only" hidden>
