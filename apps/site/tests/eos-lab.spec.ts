@@ -67,6 +67,42 @@ test.describe("EOS Lab -- E2E", () => {
     expect(after).not.toBe(before);
   });
 
+  test("composition drag defers expensive regime-map field rebuilds", async ({ page }) => {
+    const beforeBuildCount = await page.evaluate(() => {
+      return (window as Window & { __cp?: { regimeMapBuildCount?: number } }).__cp
+        ?.regimeMapBuildCount;
+    });
+    expect(beforeBuildCount).toBeDefined();
+    expect(beforeBuildCount).toBeGreaterThan(0);
+
+    await page.evaluate(() => {
+      const slider = document.querySelector<HTMLInputElement>("#xSlider");
+      if (!slider) return;
+      for (let value = 120; value <= 900; value += 60) {
+        slider.value = String(value);
+        slider.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+
+    const duringBuildCount = await page.evaluate(() => {
+      return (window as Window & { __cp?: { regimeMapBuildCount?: number } }).__cp
+        ?.regimeMapBuildCount;
+    });
+    expect(duringBuildCount).toBeDefined();
+
+    expect(duringBuildCount! - beforeBuildCount!).toBeLessThanOrEqual(2);
+
+    await page.locator("#xSlider").dispatchEvent("change");
+    await page.waitForTimeout(50);
+
+    const afterBuildCount = await page.evaluate(() => {
+      return (window as Window & { __cp?: { regimeMapBuildCount?: number } }).__cp
+        ?.regimeMapBuildCount;
+    });
+    expect(afterBuildCount).toBeDefined();
+    expect(afterBuildCount!).toBeGreaterThanOrEqual(duringBuildCount!);
+  });
+
   test("composition constraints keep X + Y + Z = 1", async ({ page }) => {
     await page.locator("#xSlider").fill("900");
     await page.locator("#xSlider").dispatchEvent("input");

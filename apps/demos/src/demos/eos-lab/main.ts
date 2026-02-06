@@ -135,6 +135,7 @@ const DENSITY_MIN_G_PER_CM3 = 1e-10;
 const DENSITY_MAX_G_PER_CM3 = 1e10;
 const REGIME_MAP_GRID_X = 16;
 const REGIME_MAP_GRID_Y = 16;
+const REGIME_MAP_REBUILD_DEBOUNCE_MS = 80;
 
 const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
 const tempValueEl = document.querySelector<HTMLSpanElement>("#tempValue");
@@ -445,9 +446,39 @@ function compositionRegimeKey(composition: StellarCompositionFractions, radiatio
 }
 
 let regimeMapCacheKey: string | null = null;
+let pendingRegimeMapKey: string | null = null;
+let regimeMapRebuildTimer: number | null = null;
+let regimeMapBuildCount = 0;
 let regimePresetMarkersBuilt = false;
 
+function cancelRegimeMapRebuildTimer(): void {
+  if (regimeMapRebuildTimer === null) return;
+  window.clearTimeout(regimeMapRebuildTimer);
+  regimeMapRebuildTimer = null;
+}
+
+function flushRegimeMapRebuild(): void {
+  cancelRegimeMapRebuildTimer();
+  if (!pendingRegimeMapKey || pendingRegimeMapKey === regimeMapCacheKey) {
+    pendingRegimeMapKey = null;
+    return;
+  }
+  buildRegimeMapField();
+  regimeMapCacheKey = pendingRegimeMapKey;
+  pendingRegimeMapKey = null;
+}
+
+function scheduleRegimeMapRebuild(nextKey: string): void {
+  pendingRegimeMapKey = nextKey;
+  cancelRegimeMapRebuildTimer();
+  regimeMapRebuildTimer = window.setTimeout(() => {
+    regimeMapRebuildTimer = null;
+    flushRegimeMapRebuild();
+  }, REGIME_MAP_REBUILD_DEBOUNCE_MS);
+}
+
 function buildRegimeMapField(): void {
+  regimeMapBuildCount += 1;
   const svgNs = "http://www.w3.org/2000/svg";
   const cellWidth = 100 / REGIME_MAP_GRID_X;
   const cellHeight = 100 / REGIME_MAP_GRID_Y;
@@ -513,11 +544,18 @@ function buildRegimePresetMarkers(): void {
   regimePresetMarkersBuilt = true;
 }
 
-function renderRegimeMap(model: StellarEosStateCgs): void {
+function renderRegimeMap(
+  model: StellarEosStateCgs,
+  args: { deferRegimeMapFieldRebuild?: boolean } = {}
+): void {
   const nextKey = compositionRegimeKey(state.composition, state.radiationDepartureEta);
   if (nextKey !== regimeMapCacheKey) {
-    buildRegimeMapField();
-    regimeMapCacheKey = nextKey;
+    if (args.deferRegimeMapFieldRebuild) {
+      scheduleRegimeMapRebuild(nextKey);
+    } else {
+      pendingRegimeMapKey = nextKey;
+      flushRegimeMapRebuild();
+    }
   }
   buildRegimePresetMarkers();
 
@@ -659,7 +697,7 @@ function exportResults(model: StellarEosStateCgs): ExportPayloadV1 {
   };
 }
 
-function render(): void {
+function render(args: { deferRegimeMapFieldRebuild?: boolean } = {}): void {
   const temperatureSliderValue = valueToLogSlider({
     value: state.temperatureK,
     sliderMin: 0,
@@ -736,12 +774,13 @@ function render(): void {
 
   renderRadiationClosure(model);
   renderAdvancedDiagnostics(model);
-  renderRegimeMap(model);
+  renderRegimeMap(model, { deferRegimeMapFieldRebuild: args.deferRegimeMapFieldRebuild });
   renderPresetState();
 
   (window as Window & { __cp?: unknown }).__cp = {
     slug: "eos-lab",
     mode: runtime.mode,
+    regimeMapBuildCount,
     exportResults: () => exportResults(model)
   };
 }
@@ -892,7 +931,7 @@ xSlider.addEventListener("input", () => {
     hydrogenMassFractionX: nextX,
     heliumMassFractionY: state.composition.heliumMassFractionY
   });
-  render();
+  render({ deferRegimeMapFieldRebuild: true });
 });
 
 ySlider.addEventListener("input", () => {
@@ -901,8 +940,18 @@ ySlider.addEventListener("input", () => {
     hydrogenMassFractionX: state.composition.hydrogenMassFractionX,
     heliumMassFractionY: nextY
   });
-  render();
+  render({ deferRegimeMapFieldRebuild: true });
 });
+
+function finalizeCompositionInteraction(): void {
+  flushRegimeMapRebuild();
+  render();
+}
+
+xSlider.addEventListener("change", finalizeCompositionInteraction);
+ySlider.addEventListener("change", finalizeCompositionInteraction);
+xSlider.addEventListener("pointerup", finalizeCompositionInteraction);
+ySlider.addEventListener("pointerup", finalizeCompositionInteraction);
 
 copyResults.addEventListener("click", () => {
   const model = evaluateModel();
