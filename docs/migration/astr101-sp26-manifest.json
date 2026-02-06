@@ -455,13 +455,44 @@
         ]
       },
       "target": {
-        "demo_status": "stub",
-        "needsPhysicsPort": true,
+        "demo_status": "ported",
+        "needsPhysicsPort": false,
         "content_imported": {
           "station": true,
           "instructor": true
         },
-        "content_verified": false
+        "content_verified": true,
+        "notes": "Full instrument with PSF visualization, atmosphere/AO controls, telescope presets, wavelength bands, exports v1. Math Mode UI deferred."
+      }
+    },
+    {
+      "slug": "retrograde-motion",
+      "title": "Retrograde Motion: Apparent Reversal",
+      "migration_wave": 2,
+      "legacy": {
+        "demo_dir": "retrograde-motion",
+        "entry_script": null,
+        "entry_style": null,
+        "model_file": null,
+        "station_card_include": null,
+        "uses": {
+          "katex": false,
+          "mathMode": false,
+          "demoModes": false,
+          "tourEngine": false,
+          "challengeEngine": false
+        },
+        "dataFiles": []
+      },
+      "target": {
+        "demo_status": "ported",
+        "needsPhysicsPort": false,
+        "content_imported": {
+          "station": false,
+          "instructor": false
+        },
+        "content_verified": false,
+        "notes": "Full instrument with Keplerian 2D model, SVG plots, orbit diagram, stationary point detection, exports v1. Station mode not yet wired."
       }
     },
     {

@@ -1,16 +1,16 @@
-# Demo Migration Dashboard + TODOs (as of 2026-02-02)
+# Demo Migration Dashboard + TODOs (as of 2026-02-05)
 
-This document is the planning “control panel” for finishing the demo migration from `~/Teaching/astr101-sp26/demos/` into `cosmic-playground`.
+This document is the planning "control panel" for finishing the demo migration from `~/Teaching/astr101-sp26/demos/` into `cosmic-playground`.
 
 ## Snapshot (current repo state)
 
-**Cosmic Playground demo slugs (content + source): 12.**
+**Cosmic Playground demo slugs (content + source): 13.**
 
-- **Interactive (migrated): 10**
+- **Interactive (migrated): 12**
   - `angular-size`, `binary-orbits`, `blackbody-radiation`, `conservation-laws`, `eclipse-geometry`, `moon-phases`, `seasons`, `keplers-laws`, `parallax-distance`
-  - `em-spectrum`
-- **Stub (instrument shell only): 2**
-  - `telescope-resolution`, `planetary-conjunctions`
+  - `em-spectrum`, `retrograde-motion`, `telescope-resolution`
+- **Stub (instrument shell only): 1**
+  - `planetary-conjunctions`
 
 **Legacy demo directories found in `~/Teaching/astr101-sp26/demos/`: 14**
 
@@ -48,7 +48,8 @@ Legend:
 | `keplers-laws` | yes | 2 | **Interactive** | Uses `@cosmic/physics` `KeplersLawsModel`; Station mode wired; export v1 wired |
 | `em-spectrum` | yes | 3 | **Interactive** | Uses `@cosmic/physics` `PhotonModel` + `@cosmic/data-spectra`; Convert + Telescopes + Objects panels |
 | `parallax-distance` | yes | 3 | **Interactive** | Uses `@cosmic/physics` `ParallaxDistanceModel` + `@cosmic/data-astr101` `nearbyStars`; Station + export v1 wired |
-| `telescope-resolution` | yes | 3 | **Stub** | Legacy had Math Mode + telescope dataset; needs data packaging + UI |
+| `telescope-resolution` | yes | 3 | **Interactive** | Full UI with PSF rendering, atmosphere/AO controls, exports v1; Math Mode still deferred |
+| `retrograde-motion` | yes | — | **Interactive** | Full UI with Keplerian motion model, SVG plots, exports v1 |
 | `planetary-conjunctions` | no | — | **Stub (New)** | New demo concept; needs scope + model + UI |
 | `doppler-shift-spectrometer` | yes | — | **Missing** | Newer legacy demo; uses shared spectra dataset + Doppler model |
 | `spectral-lines-lab` | yes | — | **Missing** | Newer legacy demo; uses spectra datasets + data contract |
@@ -102,6 +103,22 @@ Legend:
   - [ ] Decide whether it needs Challenge mode (or keep it as station-only).
   - [ ] Add `aria-atomic` to `#status`.
 
+### `retrograde-motion` (interactive)
+
+- Current: Full instrument with Keplerian 2D model, SVG plots (unwrapped + wrapped longitude), orbit diagram, stationary point detection, retrograde interval highlighting; exports v1.
+- TODOs:
+  - [ ] Add station mode (currently missing).
+  - [ ] Add `aria-atomic` to `#status`.
+  - [ ] Add site content (demo.md, instructor notes).
+
+### `telescope-resolution` (interactive)
+
+- Current: Full instrument with telescope presets, wavelength band selector, binary star mode, atmosphere/seeing controls, adaptive optics toggle, PSF visualization canvas, exports v1; station mode wired.
+- TODOs:
+  - [ ] Decide whether to reintroduce Math Mode (legacy had it).
+  - [ ] Add Challenge mode or confirm disabled state is intentional.
+  - [ ] Add `aria-atomic` to `#status`.
+
 ## Stub demos: migration TODOs (Wave 2 + Wave 3 + New)
 
 ### Shared approach for each stub demo
@@ -118,10 +135,10 @@ Legend:
 - [x] `blackbody-radiation` — migrated to interactive instrument (model + viz + exports v1). Math Mode UI still a backlog decision.
 - [x] `conservation-laws` — migrated to interactive instrument (model + viz + exports v1).
 
-### Wave 3 stubs (data-heavy)
+### Wave 3 demos (data-heavy)
 
 - [x] `em-spectrum` — migrate telescope/object datasets into repo-owned modules (no fetch); port UI; confirm accessibility for selectable items/legend.
-- [ ] `telescope-resolution` — migrate telescope dataset; port optics model; decide whether to reintroduce Math Mode.
+- [x] `telescope-resolution` — Full instrument with telescope presets, wavelength bands, atmosphere/AO controls, PSF visualization, exports v1. Math Mode UI still deferred.
 
 ### New stub (not in legacy repo)
 
