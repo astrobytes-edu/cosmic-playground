@@ -101,8 +101,8 @@ describe("Blackbody Radiation -- Design System Contracts", () => {
     });
 
     it("canvas stage uses design-system tokens for background", () => {
-      // The radial-gradient on the canvas should use token-based colors, not hardcoded hex/rgba
-      expect(css).toMatch(/canvas[\s\S]*?background[\s\S]*?var\(--cp-/);
+      // The radial-gradient on the spectrum canvas should use token-based colors
+      expect(css).toMatch(/#spectrumCanvas[\s\S]*?background[\s\S]*?var\(--cp-/);
     });
 
     it("star preview circle uses token-based styling", () => {

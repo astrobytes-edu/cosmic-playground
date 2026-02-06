@@ -1,7 +1,7 @@
 import { createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { BlackbodyRadiationModel } from "@cosmic/physics";
-import { clamp, logSliderToValue, valueToLogSlider, formatNumber, wavelengthDomainNm, sampleLogSpace } from "./logic";
+import { clamp, logSliderToValue, valueToLogSlider, formatNumber, wavelengthDomainNm, sampleLogSpace, wavelengthToApproxRgb, formatWavelengthLabel, wavelengthToLogFraction, formatWavelengthReadout } from "./logic";
 
 const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
 const tempValueEl = document.querySelector<HTMLSpanElement>("#tempValue");
@@ -24,6 +24,7 @@ const starCircleEl = document.querySelector<HTMLDivElement>("#starCircle");
 const spectralClassEl = document.querySelector<HTMLSpanElement>("#spectralClass");
 const colorNameEl = document.querySelector<HTMLSpanElement>("#colorName");
 const peakNmEl = document.querySelector<HTMLSpanElement>("#peakNm");
+const peakUnitEl = peakNmEl?.parentElement?.querySelector<HTMLSpanElement>(".cp-readout__unit");
 const lumRatioEl = document.querySelector<HTMLSpanElement>("#lumRatio");
 
 if (
@@ -136,22 +137,32 @@ const canvasTheme = {
   text: resolveCssColor(cssVar("--cp-text2"))
 };
 
+/** Tick wavelengths for X-axis (log-scale divisions). */
+const X_TICKS_NM = [10, 100, 1000, 10000, 100000, 1000000];
+const FONT_LABEL = "bold 13px system-ui, -apple-system, sans-serif";
+const FONT_TICK = "11px system-ui, -apple-system, sans-serif";
+const FONT_PEAK = "bold 12px system-ui, -apple-system, sans-serif";
+const EM_BAND_HEIGHT = 16;
+
 function drawSpectrum() {
   const { width: w, height: h } = resizeCanvasToCssPixels(canvas, ctx);
   ctx.clearRect(0, 0, w, h);
 
-  // Background fill (canvas CSS background is not guaranteed after resizing).
+  // Background fill
   ctx.save();
   ctx.fillStyle = canvasTheme.bg;
   ctx.fillRect(0, 0, w, h);
   ctx.restore();
 
-  const margin = 44;
-  const plotW = Math.max(1, w - 2 * margin);
-  const plotH = Math.max(1, h - 2 * margin);
+  // Margins — extra room for axis labels, tick labels, and EM band bar
+  const mL = 62, mR = 16, mT = 24, mB = 64;
+  const plotW = Math.max(1, w - mL - mR);
+  const plotH = Math.max(1, h - mT - mB);
 
   const { minNm, maxNm } = wavelengthDomainNm();
-  const wavelengthsNm = sampleLogSpace(minNm, maxNm, 480);
+  const logMin = Math.log10(minNm);
+  const logMax = Math.log10(maxNm);
+  const wavelengthsNm = sampleLogSpace(minNm, maxNm, 500);
   const radiance = wavelengthsNm.map((nm) =>
     BlackbodyRadiationModel.planckSpectralRadianceCgs({
       wavelengthCm: nm * BlackbodyRadiationModel.CONSTANTS.nmToCm,
@@ -162,103 +173,278 @@ function drawSpectrum() {
   const maxB = Math.max(...radiance);
   const peakNm = BlackbodyRadiationModel.wienPeakNm(state.temperatureK);
 
-  // Visible band (approx) — emphasize as a region, not as a rainbow.
+  // Helper: wavelength nm -> x pixel
+  const nmToX = (nm: number) => mL + wavelengthToLogFraction(nm, minNm, maxNm) * plotW;
+
+  // --- Visible band highlight ---
   if (showVisibleBand.checked) {
-    const vMin = 380;
-    const vMax = 750;
-    const x0 = margin + (Math.log10(vMin) - Math.log10(minNm)) / (Math.log10(maxNm) - Math.log10(minNm)) * plotW;
-    const x1 = margin + (Math.log10(vMax) - Math.log10(minNm)) / (Math.log10(maxNm) - Math.log10(minNm)) * plotW;
+    const vMin = 380, vMax = 750;
+    const x0 = nmToX(vMin), x1 = nmToX(vMax);
     ctx.save();
     ctx.fillStyle = canvasTheme.highlight;
-    ctx.fillRect(x0, margin, x1 - x0, plotH);
+    ctx.globalAlpha = 0.15;
+    ctx.fillRect(x0, mT, x1 - x0, plotH);
+    ctx.globalAlpha = 1;
+    // "VISIBLE" label centered in band
+    ctx.fillStyle = canvasTheme.text;
+    ctx.globalAlpha = 0.5;
+    ctx.font = "bold 10px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("VISIBLE", (x0 + x1) / 2, mT + 14);
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 
-  // Grid lines.
+  // --- Grid lines at X tick positions ---
   ctx.save();
   ctx.strokeStyle = canvasTheme.grid;
   ctx.lineWidth = 1;
-  for (let i = 0; i <= 8; i++) {
-    const x = margin + (i / 8) * plotW;
+  ctx.globalAlpha = 0.5;
+  for (const tickNm of X_TICKS_NM) {
+    const x = nmToX(tickNm);
     ctx.beginPath();
-    ctx.moveTo(x, margin);
-    ctx.lineTo(x, margin + plotH);
+    ctx.moveTo(x, mT);
+    ctx.lineTo(x, mT + plotH);
     ctx.stroke();
   }
+  // Horizontal grid lines (6 divisions)
   for (let i = 0; i <= 6; i++) {
-    const y = margin + (i / 6) * plotH;
+    const y = mT + (i / 6) * plotH;
     ctx.beginPath();
-    ctx.moveTo(margin, y);
-    ctx.lineTo(margin + plotW, y);
+    ctx.moveTo(mL, y);
+    ctx.lineTo(mL + plotW, y);
     ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // --- Spectral gradient fill under curve ---
+  // Build curve y-values first (shared with curve drawing)
+  const curvePoints: { x: number; y: number; valid: boolean }[] = [];
+  const logB = radiance.map((b) => (b > 0 ? Math.log10(b) : -Infinity));
+  const maxLog = Math.max(...logB);
+  const minLog = maxLog - 6;
+
+  for (let i = 0; i < wavelengthsNm.length; i++) {
+    const t = i / (wavelengthsNm.length - 1);
+    const x = mL + t * plotW;
+    let y: number;
+    let valid: boolean;
+
+    if (state.intensityScale === "linear") {
+      const yNorm = maxB > 0 ? radiance[i] / maxB : 0;
+      y = mT + plotH * (1 - clamp(yNorm, 0, 1));
+      valid = true;
+    } else {
+      const v = logB[i];
+      valid = v > -Infinity && v >= minLog;
+      const yNorm = valid ? (v - minLog) / (maxLog - minLog) : 0;
+      y = mT + plotH * (1 - clamp(yNorm, 0, 1));
+    }
+    curvePoints.push({ x, y, valid });
+  }
+
+  // Draw spectral gradient fill (visible portion gets rainbow, rest gets subtle glow)
+  ctx.save();
+  const grad = ctx.createLinearGradient(mL, 0, mL + plotW, 0);
+  // UV region: dim violet
+  grad.addColorStop(0, "rgba(20, 0, 40, 0.12)");
+  // Visible spectrum stops
+  const specStops: [number, string][] = [
+    [380, "rgba(100, 0, 180, 0.3)"],
+    [420, "rgba(80, 0, 255, 0.3)"],
+    [460, "rgba(0, 80, 255, 0.3)"],
+    [490, "rgba(0, 200, 255, 0.28)"],
+    [520, "rgba(0, 220, 0, 0.25)"],
+    [560, "rgba(200, 220, 0, 0.25)"],
+    [590, "rgba(255, 180, 0, 0.28)"],
+    [620, "rgba(255, 80, 0, 0.3)"],
+    [680, "rgba(200, 0, 0, 0.25)"],
+    [750, "rgba(100, 0, 0, 0.15)"]
+  ];
+  for (const [nm, color] of specStops) {
+    const frac = wavelengthToLogFraction(nm, minNm, maxNm);
+    grad.addColorStop(clamp(frac, 0.001, 0.999), color);
+  }
+  // IR region: dim red
+  grad.addColorStop(1, "rgba(15, 0, 0, 0.06)");
+
+  // Build filled path under the curve
+  ctx.beginPath();
+  let fillStarted = false;
+  for (const pt of curvePoints) {
+    if (!pt.valid && state.intensityScale !== "linear") continue;
+    if (!fillStarted) {
+      ctx.moveTo(pt.x, mT + plotH); // bottom
+      ctx.lineTo(pt.x, pt.y);
+      fillStarted = true;
+    } else {
+      ctx.lineTo(pt.x, pt.y);
+    }
+  }
+  // Close path back to bottom
+  if (fillStarted) {
+    const lastValid = [...curvePoints].reverse().find(p => p.valid || state.intensityScale === "linear");
+    if (lastValid) {
+      ctx.lineTo(lastValid.x, mT + plotH);
+    }
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
   }
   ctx.restore();
 
-  // Curve.
+  // --- Draw the Planck curve ---
   ctx.save();
   ctx.strokeStyle = canvasTheme.curve;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = "round";
   ctx.beginPath();
-
-  if (state.intensityScale === "linear") {
-    for (let i = 0; i < wavelengthsNm.length; i++) {
-      const t = i / (wavelengthsNm.length - 1);
-      const x = margin + t * plotW;
-      const yNorm = maxB > 0 ? radiance[i] / maxB : 0;
-      const y = margin + plotH * (1 - clamp(yNorm, 0, 1));
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+  let started = false;
+  for (const pt of curvePoints) {
+    if (!pt.valid && state.intensityScale !== "linear") {
+      if (started) { ctx.stroke(); ctx.beginPath(); started = false; }
+      continue;
     }
-  } else {
-    const logB = radiance.map((b) => (b > 0 ? Math.log10(b) : -Infinity));
-    const maxLog = Math.max(...logB);
-    const minLog = maxLog - 6;
-    let started = false;
-    for (let i = 0; i < wavelengthsNm.length; i++) {
-      const t = i / (wavelengthsNm.length - 1);
-      const x = margin + t * plotW;
-      const v = logB[i];
-      if (!(v > -Infinity) || v < minLog) {
-        if (started) {
-          ctx.stroke();
-          ctx.beginPath();
-          started = false;
-        }
-        continue;
-      }
-      const yNorm = (v - minLog) / (maxLog - minLog);
-      const y = margin + plotH * (1 - clamp(yNorm, 0, 1));
-      if (!started) {
-        ctx.moveTo(x, y);
-        started = true;
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
+    if (!started) { ctx.moveTo(pt.x, pt.y); started = true; }
+    else ctx.lineTo(pt.x, pt.y);
   }
-
   ctx.stroke();
   ctx.restore();
 
-  // Peak marker.
+  // --- Peak marker ---
   if (showPeakMarker.checked && Number.isFinite(peakNm)) {
-    const x =
-      margin +
-      ((Math.log10(peakNm) - Math.log10(minNm)) / (Math.log10(maxNm) - Math.log10(minNm))) * plotW;
+    const x = nmToX(peakNm);
     ctx.save();
+    ctx.setLineDash([6, 4]);
     ctx.strokeStyle = canvasTheme.peak;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(x, margin);
-    ctx.lineTo(x, margin + plotH);
+    ctx.moveTo(x, mT);
+    ctx.lineTo(x, mT + plotH);
     ctx.stroke();
+    ctx.setLineDash([]);
 
-    ctx.fillStyle = canvasTheme.text;
-    ctx.font = "12px system-ui, -apple-system, Segoe UI, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(`${Math.round(peakNm)} nm`, x, margin - 10);
+    // Peak label above plot (adjust alignment near edges)
+    ctx.fillStyle = canvasTheme.peak;
+    ctx.font = FONT_PEAK;
+    const peakFrac = (x - mL) / plotW;
+    ctx.textAlign = peakFrac < 0.08 ? "left" : peakFrac > 0.92 ? "right" : "center";
+    ctx.fillText(formatWavelengthLabel(peakNm), x, mT - 6);
     ctx.restore();
   }
+
+  // --- Plot border ---
+  ctx.save();
+  ctx.strokeStyle = canvasTheme.grid;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(mL, mT, plotW, plotH);
+  ctx.restore();
+
+  // --- X-axis tick labels ---
+  ctx.save();
+  ctx.fillStyle = canvasTheme.text;
+  ctx.font = FONT_TICK;
+  ctx.textAlign = "center";
+  for (const tickNm of X_TICKS_NM) {
+    const x = nmToX(tickNm);
+    // Tick mark
+    ctx.beginPath();
+    ctx.strokeStyle = canvasTheme.text;
+    ctx.lineWidth = 1;
+    ctx.moveTo(x, mT + plotH);
+    ctx.lineTo(x, mT + plotH + 5);
+    ctx.stroke();
+    // Label
+    ctx.fillText(formatWavelengthLabel(tickNm), x, mT + plotH + 16);
+  }
+  ctx.restore();
+
+  // --- EM spectrum band bar (below tick labels) ---
+  const bandTop = mT + plotH + 24;
+  const bandH = EM_BAND_HEIGHT;
+  ctx.save();
+  // Draw the spectral band using many thin vertical strips
+  const bandSteps = 200;
+  for (let i = 0; i < bandSteps; i++) {
+    const frac0 = i / bandSteps;
+    const frac1 = (i + 1) / bandSteps;
+    const x0 = mL + frac0 * plotW;
+    const x1 = mL + frac1 * plotW;
+    const nm = Math.pow(10, logMin + frac0 * (logMax - logMin));
+    const rgb = wavelengthToApproxRgb(nm);
+    if (rgb.r === 0 && rgb.g === 0 && rgb.b === 0) {
+      // Non-visible: dark strip
+      ctx.fillStyle = "rgba(20, 10, 20, 0.6)";
+    } else {
+      ctx.fillStyle = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+    }
+    ctx.fillRect(x0, bandTop, x1 - x0 + 0.5, bandH);
+  }
+  // Band border
+  ctx.strokeStyle = canvasTheme.grid;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(mL, bandTop, plotW, bandH);
+
+  // Peak marker on EM band
+  if (showPeakMarker.checked && Number.isFinite(peakNm)) {
+    const px = nmToX(peakNm);
+    ctx.fillStyle = canvasTheme.peak;
+    // Triangle marker above band
+    ctx.beginPath();
+    ctx.moveTo(px, bandTop - 3);
+    ctx.lineTo(px - 4, bandTop - 9);
+    ctx.lineTo(px + 4, bandTop - 9);
+    ctx.closePath();
+    ctx.fill();
+    // Vertical line through band
+    ctx.strokeStyle = canvasTheme.peak;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px, bandTop);
+    ctx.lineTo(px, bandTop + bandH);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // --- Y-axis label (rotated) ---
+  ctx.save();
+  ctx.fillStyle = canvasTheme.text;
+  ctx.font = FONT_LABEL;
+  ctx.textAlign = "center";
+  ctx.translate(14, mT + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(state.intensityScale === "log" ? "log Relative Intensity" : "Relative Intensity", 0, 0);
+  ctx.restore();
+
+  // --- X-axis label ---
+  ctx.save();
+  ctx.fillStyle = canvasTheme.text;
+  ctx.font = FONT_LABEL;
+  ctx.textAlign = "center";
+  ctx.fillText("Wavelength", mL + plotW / 2, h - 4);
+  ctx.restore();
+
+  // --- Y-axis tick labels ---
+  ctx.save();
+  ctx.fillStyle = canvasTheme.text;
+  ctx.font = FONT_TICK;
+  ctx.textAlign = "right";
+  if (state.intensityScale === "log") {
+    // Show decade labels: 0, -1, -2, ..., -6 (relative to peak)
+    for (let i = 0; i <= 6; i++) {
+      const y = mT + (i / 6) * plotH;
+      const label = i === 0 ? "peak" : `${-i}`;
+      ctx.fillText(label, mL - 6, y + 4);
+    }
+  } else {
+    // Linear: show 0 to 1
+    for (let i = 0; i <= 5; i++) {
+      const y = mT + ((5 - i) / 5) * plotH;
+      ctx.fillText((i / 5).toFixed(1), mL - 6, y + 4);
+    }
+  }
+  ctx.restore();
 }
 
 function render() {
@@ -280,7 +466,9 @@ function render() {
   const classLetter = BlackbodyRadiationModel.spectralClassLetter({ temperatureK: tempK });
   const name = BlackbodyRadiationModel.colorName({ temperatureK: tempK });
 
-  peakNmValue.textContent = Number.isFinite(peakNm) ? String(Math.round(peakNm)) : "—";
+  const peakReadout = formatWavelengthReadout(peakNm);
+  peakNmValue.textContent = peakReadout.value;
+  if (peakUnitEl) peakUnitEl.textContent = peakReadout.unit;
   lumRatioValue.textContent = formatNumber(lumRatio, 3);
   spectralClass.textContent = classLetter;
   colorName.textContent = name;

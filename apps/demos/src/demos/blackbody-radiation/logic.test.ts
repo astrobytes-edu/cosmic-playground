@@ -6,6 +6,10 @@ import {
   formatNumber,
   wavelengthDomainNm,
   sampleLogSpace,
+  wavelengthToApproxRgb,
+  formatWavelengthLabel,
+  wavelengthToLogFraction,
+  formatWavelengthReadout,
 } from "./logic";
 
 describe("Blackbody Radiation -- UI Logic", () => {
@@ -162,6 +166,115 @@ describe("Blackbody Radiation -- UI Logic", () => {
       const arr = sampleLogSpace(42, 9999, 1);
       expect(arr).toHaveLength(1);
       expect(arr[0]).toBeCloseTo(42, 5);
+    });
+  });
+
+  describe("wavelengthToApproxRgb", () => {
+    it("returns near-black for UV (below 380 nm)", () => {
+      const { r, g, b } = wavelengthToApproxRgb(200);
+      expect(r + g + b).toBe(0);
+    });
+
+    it("returns near-black for far IR (above 750 nm)", () => {
+      const { r, g, b } = wavelengthToApproxRgb(1000);
+      expect(r + g + b).toBe(0);
+    });
+
+    it("returns blue-ish for 450 nm", () => {
+      const { r, g, b } = wavelengthToApproxRgb(450);
+      expect(b).toBeGreaterThan(200);
+      expect(b).toBeGreaterThan(r);
+    });
+
+    it("returns green-ish for 520 nm", () => {
+      const { r, g, b } = wavelengthToApproxRgb(520);
+      expect(g).toBeGreaterThan(200);
+      expect(g).toBeGreaterThan(b);
+    });
+
+    it("returns red-ish for 650 nm", () => {
+      const { r, g, b } = wavelengthToApproxRgb(650);
+      expect(r).toBeGreaterThan(200);
+      expect(g).toBe(0);
+      expect(b).toBe(0);
+    });
+
+    it("returns yellow-ish for 570 nm (r and g both high)", () => {
+      const { r, g, b } = wavelengthToApproxRgb(570);
+      expect(r).toBeGreaterThan(100);
+      expect(g).toBeGreaterThan(100);
+      expect(b).toBe(0);
+    });
+
+    it("all channels are 0-255 integers", () => {
+      for (const nm of [380, 420, 500, 580, 650, 750]) {
+        const { r, g, b } = wavelengthToApproxRgb(nm);
+        expect(Number.isInteger(r)).toBe(true);
+        expect(Number.isInteger(g)).toBe(true);
+        expect(Number.isInteger(b)).toBe(true);
+        expect(r).toBeGreaterThanOrEqual(0);
+        expect(r).toBeLessThanOrEqual(255);
+      }
+    });
+  });
+
+  describe("formatWavelengthLabel", () => {
+    it("formats nm for small wavelengths", () => {
+      expect(formatWavelengthLabel(500)).toBe("500 nm");
+    });
+
+    it("formats um for thousands of nm", () => {
+      expect(formatWavelengthLabel(1500)).toBe("1.5 \u03BCm");
+    });
+
+    it("formats um without decimal for large values", () => {
+      expect(formatWavelengthLabel(50000)).toBe("50 \u03BCm");
+    });
+
+    it("formats mm for >= 1e6 nm", () => {
+      expect(formatWavelengthLabel(1e6)).toBe("1 mm");
+    });
+  });
+
+  describe("wavelengthToLogFraction", () => {
+    it("returns 0 at minNm", () => {
+      expect(wavelengthToLogFraction(10, 10, 1e6)).toBeCloseTo(0, 5);
+    });
+
+    it("returns 1 at maxNm", () => {
+      expect(wavelengthToLogFraction(1e6, 10, 1e6)).toBeCloseTo(1, 5);
+    });
+
+    it("returns 0.5 at geometric midpoint", () => {
+      // Geometric midpoint of 10 and 1e6 = 10^(1+6)/2 = 10^3.5
+      const mid = Math.pow(10, 3.5);
+      expect(wavelengthToLogFraction(mid, 10, 1e6)).toBeCloseTo(0.5, 5);
+    });
+  });
+
+  describe("formatWavelengthReadout", () => {
+    it("returns nm value and unit for visible range", () => {
+      const r = formatWavelengthReadout(502);
+      expect(r.value).toBe("502");
+      expect(r.unit).toBe("nm");
+    });
+
+    it("returns um for near-IR", () => {
+      const r = formatWavelengthReadout(10000);
+      expect(r.value).toBe("10");
+      expect(r.unit).toBe("\u03BCm");
+    });
+
+    it("returns mm for far-IR / microwave", () => {
+      const r = formatWavelengthReadout(1063486);
+      expect(r.value).toBe("1.1");
+      expect(r.unit).toBe("mm");
+    });
+
+    it("returns em-dash for non-finite input", () => {
+      const r = formatWavelengthReadout(NaN);
+      expect(r.value).toBe("\u2014");
+      expect(r.unit).toBe("");
     });
   });
 });
