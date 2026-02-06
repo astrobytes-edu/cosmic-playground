@@ -8,12 +8,14 @@
 }
 
 .viz-panel {
-  background: var(--cp-bg1);
-  border: 1px solid var(--cp-border);
+  background: rgba(23, 27, 34, 0.88);
+  border: 1px solid rgba(109, 119, 148, 0.25);
   border-radius: 12px;
   padding: var(--cp-space-3);
   display: grid;
   gap: var(--cp-space-2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .panel-title {
@@ -46,9 +48,11 @@
   display: grid;
   gap: var(--cp-space-2);
   padding: var(--cp-space-2);
-  border: 1px solid var(--cp-border);
+  border: 1px solid rgba(109, 119, 148, 0.25);
   border-radius: 12px;
-  background: var(--cp-bg0);
+  background: rgba(23, 27, 34, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .preset-buttons {
@@ -88,21 +92,25 @@
 }
 
 .timeline-panel {
-  background: var(--cp-bg1);
-  border: 1px solid var(--cp-border);
+  background: rgba(23, 27, 34, 0.88);
+  border: 1px solid rgba(109, 119, 148, 0.25);
   border-radius: 12px;
   padding: var(--cp-space-3);
   margin-bottom: var(--cp-space-4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .sky-view-panel {
-  background: var(--cp-bg1);
-  border: 1px solid var(--cp-border);
+  background: rgba(23, 27, 34, 0.88);
+  border: 1px solid rgba(109, 119, 148, 0.25);
   border-radius: 12px;
   padding: var(--cp-space-3);
   margin-bottom: var(--cp-space-4);
   display: grid;
   gap: var(--cp-space-2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .sky-view {
@@ -131,7 +139,7 @@
 }
 
 .timeline-direction.waning {
-  color: var(--cp-accent2);
+  color: var(--cp-violet);
 }
 
 .timeline-day {
@@ -171,8 +179,8 @@
 }
 
 .timeline-phase.active {
-  background: color-mix(in srgb, var(--cp-warning) 18%, transparent);
-  border-color: color-mix(in srgb, var(--cp-warning) 60%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-accent-amber) 18%, transparent);
+  border-color: color-mix(in srgb, var(--cp-accent-amber) 60%, var(--cp-border));
 }
 
 .timeline-phase span {
@@ -182,7 +190,7 @@
 }
 
 .timeline-phase.active span {
-  color: var(--cp-warning);
+  color: var(--cp-accent-amber);
 }
 
 .phase-icon {
@@ -217,10 +225,12 @@
   align-items: center;
   gap: var(--cp-space-2);
   padding: var(--cp-space-3);
-  background: var(--cp-bg1);
-  border: 1px solid var(--cp-border);
+  background: rgba(23, 27, 34, 0.88);
+  border: 1px solid rgba(109, 119, 148, 0.25);
   border-radius: 12px;
   flex-wrap: wrap;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .speed-control {
