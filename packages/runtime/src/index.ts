@@ -30,6 +30,7 @@ export {
   integrateSimpson,
   integrateTrapz,
   interp1,
+  logspace,
   linspace,
   renderMath
 } from "./math";
@@ -56,6 +57,7 @@ export type {
   PlotController,
   PlotDomain,
   PlotInit,
+  PlotLayoutOverrides,
   PlotLineDash,
   PlotPoint,
   PlotRenderMode,

@@ -1,5 +1,11 @@
 @import "../../shared/stub-demo.css";
 
+.eos-stage-grid {
+  display: grid;
+  gap: var(--cp-space-3);
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+}
+
 .control {
   display: grid;
   gap: var(--cp-space-2);
@@ -41,6 +47,7 @@
   gap: var(--cp-space-3);
   grid-template-columns: repeat(3, minmax(0, 1fr));
   width: 100%;
+  margin-top: var(--cp-space-3);
 }
 
 .pressure-card {
@@ -121,7 +128,6 @@
 }
 
 .pressure-plot {
-  margin-top: var(--cp-space-3);
   padding: var(--cp-space-3);
   border-radius: var(--cp-r-3);
   border: 1px solid var(--cp-border);
@@ -142,7 +148,6 @@
 }
 
 .regime-map {
-  margin-top: var(--cp-space-3);
   padding: var(--cp-space-3);
   border-radius: var(--cp-r-3);
   border: 1px solid var(--cp-border);
@@ -312,7 +317,22 @@
   margin-top: var(--cp-space-2);
 }
 
+.cp-readout--stack {
+  display: grid;
+  gap: var(--cp-space-1);
+}
+
+.cp-readout__note {
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
 @media (max-width: 980px) {
+  .eos-stage-grid {
+    grid-template-columns: 1fr;
+  }
+
   .pressure-grid {
     grid-template-columns: 1fr;
   }

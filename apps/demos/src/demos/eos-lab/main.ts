@@ -2,12 +2,13 @@ import {
   createDemoModes,
   createInstrumentRuntime,
   initMath,
+  initPopovers,
   mountPlot,
   initStarfield,
   renderMath,
   setLiveRegionText
 } from "@cosmic/runtime";
-import { linspace } from "@cosmic/math";
+import { logspace } from "@cosmic/math";
 import type {
   ExportPayloadV1,
   PlotLayoutOverrides,
@@ -363,10 +364,9 @@ function pressureCurveTraces(plotState: EosPressurePlotState): PlotTrace[] {
 
   const logDensityMin = Math.log10(DENSITY_MIN_G_PER_CM3);
   const logDensityMax = Math.log10(DENSITY_MAX_G_PER_CM3);
-  const logDensityGrid = linspace(logDensityMin, logDensityMax, PRESSURE_CURVE_SAMPLES);
+  const densityGrid = logspace(logDensityMin, logDensityMax, PRESSURE_CURVE_SAMPLES);
 
-  for (const logDensity of logDensityGrid) {
-    const densityGPerCm3 = Math.pow(10, logDensity);
+  for (const densityGPerCm3 of densityGrid) {
     const sample = StellarEosModel.evaluateStateCgs({
       input: {
         temperatureK: plotState.temperatureK,
@@ -1311,6 +1311,11 @@ copyResults.addEventListener("click", () => {
 applyPreset("solar-core");
 render();
 initMath(document);
+
+const demoRoot = document.getElementById("cp-demo");
+if (demoRoot) {
+  initPopovers(demoRoot);
+}
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
 if (starfieldCanvas) {

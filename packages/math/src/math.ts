@@ -10,6 +10,30 @@ export function linspace(min: number, max: number, n: number): number[] {
   return Array.from({ length: n }, (_, index) => min + index * step);
 }
 
+/** Log-spaced grid: base^(linspace(minExponent, maxExponent, n)). */
+export function logspace(
+  minExponent: number,
+  maxExponent: number,
+  n: number,
+  base = 10
+): number[] {
+  if (
+    !Number.isFinite(minExponent) ||
+    !Number.isFinite(maxExponent) ||
+    !Number.isFinite(n) ||
+    !Number.isFinite(base)
+  ) {
+    throw new Error("logspace requires finite numeric arguments");
+  }
+  if (!(base > 0) || Math.abs(base - 1) < EPS) {
+    throw new Error("logspace requires base > 0 and base != 1");
+  }
+  if (n < 2) return [Math.pow(base, minExponent)];
+  return linspace(minExponent, maxExponent, n).map((exponent) =>
+    Math.pow(base, exponent)
+  );
+}
+
 /** Clamp value into [min, max]. */
 export function clamp(x: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, x));

@@ -11,6 +11,7 @@ export {
   integrateSimpsonSamples,
   integrateTrapz,
   interp1,
+  logspace,
   linspace
 } from "@cosmic/math";
 

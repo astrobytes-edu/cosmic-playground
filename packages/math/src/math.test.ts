@@ -8,6 +8,7 @@ import {
   integrateSimpsonSamples,
   integrateTrapz,
   interp1,
+  logspace,
   linspace
 } from "./math";
 
@@ -20,6 +21,20 @@ describe("math numerics", () => {
     it("returns [min] when n < 2", () => {
       expect(linspace(3, 7, 1)).toEqual([3]);
       expect(linspace(3, 7, 0)).toEqual([3]);
+    });
+  });
+
+  describe("logspace", () => {
+    it("returns log-spaced values including endpoints for base 10", () => {
+      expect(logspace(0, 3, 4)).toEqual([1, 10, 100, 1000]);
+    });
+
+    it("supports arbitrary bases", () => {
+      expect(logspace(0, 3, 4, 2)).toEqual([1, 2, 4, 8]);
+    });
+
+    it("returns [base^minExponent] when n < 2", () => {
+      expect(logspace(2, 6, 1)).toEqual([100]);
     });
   });
 
