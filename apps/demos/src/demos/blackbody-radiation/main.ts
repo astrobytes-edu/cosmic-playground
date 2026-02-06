@@ -1,6 +1,7 @@
 import { createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { BlackbodyRadiationModel } from "@cosmic/physics";
+import { clamp, logSliderToValue, valueToLogSlider, formatNumber, wavelengthDomainNm, sampleLogSpace } from "./logic";
 
 const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
 const tempValueEl = document.querySelector<HTMLSpanElement>("#tempValue");
@@ -91,35 +92,6 @@ const state: {
   intensityScale: "log"
 };
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-function logSliderToValue(sliderVal: number, minVal: number, maxVal: number): number {
-  const minLog = Math.log10(minVal);
-  const maxLog = Math.log10(maxVal);
-  const fraction = sliderVal / 1000;
-  const logVal = minLog + fraction * (maxLog - minLog);
-  return Math.pow(10, logVal);
-}
-
-function valueToLogSlider(value: number, minVal: number, maxVal: number): number {
-  if (!Number.isFinite(value) || value <= 0) return 0;
-  const minLog = Math.log10(minVal);
-  const maxLog = Math.log10(maxVal);
-  const logVal = Math.log10(value);
-  const frac = (logVal - minLog) / (maxLog - minLog);
-  return clamp(Math.round(frac * 1000), 0, 1000);
-}
-
-function formatNumber(value: number, digits = 3): string {
-  if (!Number.isFinite(value)) return "—";
-  if (value === 0) return "0";
-  const abs = Math.abs(value);
-  if (abs >= 1e6 || abs < 1e-3) return value.toExponential(Math.max(0, digits - 1));
-  return value.toFixed(digits);
-}
-
 function resizeCanvasToCssPixels(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
   const rect = canvas.getBoundingClientRect();
   const width = Math.max(1, Math.round(rect.width));
@@ -163,22 +135,6 @@ const canvasTheme = {
   peak: resolveCssColor(cssVar("--cp-chart-2")),
   text: resolveCssColor(cssVar("--cp-text2"))
 };
-
-function wavelengthDomainNm() {
-  // Keep a wide domain so very cool and very hot objects still place their peak somewhere sensible.
-  return { minNm: 10, maxNm: 1e6 };
-}
-
-function sampleLogSpace(min: number, max: number, n: number): number[] {
-  const minLog = Math.log10(min);
-  const maxLog = Math.log10(max);
-  const out: number[] = [];
-  for (let i = 0; i < n; i++) {
-    const t = n === 1 ? 0 : i / (n - 1);
-    out.push(Math.pow(10, minLog + t * (maxLog - minLog)));
-  }
-  return out;
-}
 
 function drawSpectrum() {
   const { width: w, height: h } = resizeCanvasToCssPixels(canvas, ctx);
