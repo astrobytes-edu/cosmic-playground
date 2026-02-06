@@ -297,6 +297,14 @@ For EACH demo, make these changes to the COPIED version in `apps/demos/`:
    // NOT inline equations or local physics files
    ```
 
+7. **Write contract tests (RED first)**: Copy `moon-phases/design-contracts.test.ts`, adapt assertions for demo's specific SVG elements, readouts, and CSS.
+
+8. **Extract and test UI logic**: Create `logic.ts` with pure functions (formatters, slider math, label generators). Write `logic.test.ts` with unit tests.
+
+9. **Write Playwright E2E tests**: Create `apps/site/tests/<slug>.spec.ts` with layout, control interaction, readout verification, learning activities, accessibility, and visual regression screenshots.
+
+10. **Verify all GREEN**: Contract tests, logic tests, E2E tests, and full build must all pass.
+
 ### 3.3 Demo Migration Order
 
 Migrate in this order (dependency order):
@@ -317,35 +325,106 @@ Migrate in this order (dependency order):
 
 ---
 
-## Phase 4: Validation & Testing
+## Phase 4: Validation & Testing (Per-Demo, Not End-Stage)
 
-### 4.1 Visual Regression Tests
+**CRITICAL: Testing is not a post-migration activity. Tests are written FIRST for each demo (TDD).**
 
-Set up Playwright screenshot tests:
+### 4.1 Physics Model Tests (before migration)
+
+Every physics model MUST be tested in isolation. Tests live in `packages/physics/src/`:
+
+```bash
+corepack pnpm -C packages/physics test -- --run
+```
+
+Required test types:
+- **Known-answer tests**: Verify against published astronomical values
+- **Round-trip tests**: Forward + inverse functions reproduce input
+- **Edge cases**: Zero, negative, Infinity, NaN inputs
+- **Consistency**: Related functions agree (e.g., recession distance vs time)
+
+### 4.2 Design Contract Tests (RED first, then GREEN)
+
+Every demo gets `design-contracts.test.ts` adapted from the golden reference at `moon-phases/design-contracts.test.ts`.
+
+**Mandatory contract tests:**
+1. SVG celestial gradients use `--cp-celestial-*` tokens
+2. Starfield canvas exists in HTML
+3. Readout units in `<span class="cp-readout__unit">`
+4. Panel translucency (`backdrop-filter`)
+5. No legacy token leakage (`--cp-warning`, `--cp-accent2`, `--cp-accent3`)
+6. No hardcoded color literals (`rgba()` or hex) in demo CSS
+7. `initStarfield()` imported and called in main.ts
+8. Physics imported from `@cosmic/physics` (not inline)
+9. Entry animations use `cp-slide-up` / `cp-fade-in`
+
+```bash
+corepack pnpm -C apps/demos test -- --run src/demos/<slug>/design-contracts
+```
+
+### 4.3 Demo Logic Unit Tests
+
+Demos with non-trivial UI logic (formatting, slider math, state management) MUST extract pure functions to `logic.ts` and test them:
+
+```bash
+corepack pnpm -C apps/demos test -- --run src/demos/<slug>/logic
+```
+
+Test types:
+- Formatting functions (number display, angle unit switching)
+- Slider math (logarithmic scale, round-trips, clamping)
+- Label generation (orbit angle names, recession time strings)
+- State transitions (preset loading, mode switching)
+
+### 4.4 Playwright E2E Tests (per demo)
+
+Every migrated demo gets a Playwright test file at `apps/site/tests/<slug>.spec.ts`:
+
+```bash
+corepack pnpm build
+CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e -- tests/<slug>.spec.ts
+```
+
+**Required E2E coverage per demo:**
+- Layout: All shell sections visible (controls, stage, readouts, drawer)
+- Starfield canvas present
+- Preset/control interaction updates readouts
+- Slider changes update values
+- Mode switching works (if applicable)
+- Station mode activates and shows table
+- Challenge mode starts and presents challenges
+- Accordions open/close
+- Copy results produces formatted export text
+- Accessibility: keyboard reachability, `aria-live`, `aria-label`
+- Visual regression screenshots (committed as baselines)
+
+### 4.5 Visual Regression Screenshots
+
+Use Playwright `toHaveScreenshot()` for baseline comparisons:
 ```typescript
-// tests/visual/demos.spec.ts
-test('moon-phases matches baseline', async ({ page }) => {
-  await page.goto('/play/moon-phases/');
-  await expect(page).toHaveScreenshot('moon-phases.png');
+await expect(page).toHaveScreenshot('demo-default.png', {
+  maxDiffPixelRatio: 0.05
 });
 ```
 
-### 4.2 Physics Model Tests
+Screenshot baselines are committed to `apps/site/tests/<slug>.spec.ts-snapshots/`.
 
-Ensure all physics tests pass:
-```bash
-cd packages/physics && pnpm test
-```
-
-### 4.3 Accessibility Audit
+### 4.6 Accessibility Audit
 
 Run Lighthouse on each demo:
 ```bash
-npx lighthouse http://localhost:4321/play/moon-phases/ --only-categories=accessibility
+npx lighthouse http://localhost:4321/play/<slug>/ --only-categories=accessibility
 # Target: 90+ score
 ```
 
-### 4.4 Component Tests
+### 4.7 Build Validation
+
+Full build must pass (includes `apps:no-color-literals` invariant):
+```bash
+corepack pnpm build
+```
+
+### 4.8 Component Tests
 
 Test each `@cosmic/ui` component:
 - Keyboard navigation (Tab, Enter, Space, Arrow keys)
@@ -378,3 +457,8 @@ The migration is complete when:
 - [ ] All physics tests pass
 - [ ] Visual regression tests establish baselines
 - [ ] Legacy demos in `~/Teaching/astr101-sp26/demos/` are UNCHANGED
+- [ ] Every demo has `design-contracts.test.ts` (adapted from moon-phases golden reference)
+- [ ] Every demo with UI logic has `logic.ts` + `logic.test.ts`
+- [ ] Every demo has Playwright E2E tests at `apps/site/tests/<slug>.spec.ts`
+- [ ] Zero architecture violations (no inline physics, no hardcoded colors)
+- [ ] All test layers pass: physics, contract, logic, E2E, build

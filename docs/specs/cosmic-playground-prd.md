@@ -1,6 +1,6 @@
 # Cosmic Playground — Product Requirements Document
 
-**Version:** 1.1
+**Version:** 1.2
 **Date:** February 5, 2026
 **Author:** Dr. Anna Rosen (SDSU)
 **Status:** Draft
@@ -10,6 +10,7 @@
 |---------|------|---------|
 | 1.0 | Feb 5, 2026 | Initial draft |
 | 1.1 | Feb 5, 2026 | Added visual design system (5.4.3-5.4.8): two-layer philosophy, starfield, glow system, celestial palette, instrument accents, readout typography. Updated shell layouts to compositional system. |
+| 1.2 | Feb 6, 2026 | Added testing requirements (5.8): four-layer testing protocol (physics, contract, logic, E2E). Updated success metrics with contract/E2E coverage. Updated Phase 2 timeline with testing steps. |
 
 ---
 
@@ -478,6 +479,64 @@ Every demo must include:
 - [ ] Demo works embedded in site iframe
 - [ ] Demo passes Lighthouse accessibility audit (90+)
 
+### 5.8 Testing Requirements (P0 — Must Have)
+
+Every demo requires four layers of testing to prevent drift and ensure correctness:
+
+#### 5.8.1 Physics Model Tests (Vitest)
+Location: `packages/physics/src/<model>.test.ts`
+
+Every physics model must have:
+- Known-answer tests against published astronomical values
+- Round-trip / invertibility tests (e.g., angle -> distance -> angle)
+- Edge case tests (zero, negative, Infinity, NaN)
+- Consistency tests between related functions
+
+#### 5.8.2 Design Contract Tests (Vitest)
+Location: `apps/demos/src/demos/<slug>/design-contracts.test.ts`
+
+Every instrument-layer demo must have contract tests enforcing:
+- Celestial token invariants (SVG gradients use `--cp-celestial-*`)
+- Starfield canvas present in HTML
+- `initStarfield()` imported and called in main.ts
+- Readout unit separation (`<span class="cp-readout__unit">`)
+- Panel translucency (`backdrop-filter` present in CSS)
+- No legacy token leakage (`--cp-warning`, `--cp-accent2`, `--cp-accent3`)
+- No hardcoded color literals (no raw `rgba()` or hex values in demo CSS)
+- Architecture compliance (physics imported from `@cosmic/physics`, not inline)
+- Entry animations present (`cp-slide-up` / `cp-fade-in`)
+
+Golden reference: `moon-phases/design-contracts.test.ts` (14 tests). Copy and adapt for each demo.
+
+#### 5.8.3 Demo Logic Unit Tests (Vitest)
+Location: `apps/demos/src/demos/<slug>/logic.test.ts`
+
+Every demo with non-trivial UI logic must extract pure functions to a `logic.ts` module and test them:
+- Formatting function tests (number display, angle units, labels)
+- Slider math round-trip tests (logarithmic scale, clamping)
+- State management tests (preset loading, mode switching)
+- Label generation tests (orbit angle names, recession time strings)
+
+#### 5.8.4 E2E / Playwright Tests
+Location: `apps/site/tests/<slug>.spec.ts`
+
+Every migrated demo must have Playwright E2E tests covering:
+- Layout verification (all shell sections visible)
+- Control interaction tests (presets, sliders, mode switches)
+- Readout correctness verification (values update when controls change)
+- Learning activity tests (station mode, challenge mode, help)
+- Accessibility tests (keyboard reachability, `aria-live`, `aria-label`)
+- Visual regression screenshots (committed as baselines with `toHaveScreenshot()`)
+- Accordion/drawer behavior (open/close, content visibility)
+
+**Acceptance Criteria:**
+- [ ] Physics models have 90%+ line coverage
+- [ ] Every demo has `design-contracts.test.ts` adapted from moon-phases golden reference
+- [ ] Every demo with UI logic has `logic.ts` + `logic.test.ts`
+- [ ] Every migrated demo has Playwright E2E tests with visual regression screenshots
+- [ ] All tests pass in CI before merge
+- [ ] Zero architecture violations (no inline physics, no hardcoded colors)
+
 ---
 
 ## 6. Success Metrics
@@ -490,6 +549,9 @@ Every demo must include:
 | Accessibility score | 90+ | Lighthouse accessibility audit |
 | Component reuse | 100% | No demo-specific UI components |
 | Test coverage | 80%+ for physics | Vitest coverage report |
+| Contract test coverage | 100% of demos | Every demo has `design-contracts.test.ts` |
+| E2E test coverage | 100% of demos | Every demo has Playwright tests |
+| Architecture compliance | 0 violations | No inline physics in demo code |
 | Visual regression | 0 unintended changes | Playwright screenshot diff |
 
 ### Lagging Indicators (Semester-Scale)
@@ -536,6 +598,9 @@ Every demo must include:
 
 ### Phase 2: Migration (6 weeks)
 - Migrate remaining 13 demos to shared component architecture
+- **For each demo: write contract tests first (RED), then implement (GREEN)**
+- **Extract UI logic to `logic.ts`, add unit tests**
+- **Add Playwright E2E tests with visual regression screenshots**
 - Validate physics models against legacy behavior
 - Complete instructor materials for all demos
 
