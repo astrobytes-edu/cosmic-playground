@@ -97,3 +97,31 @@ export function pressureTone(args: {
   if (ratio >= 0.2) return "secondary";
   return "minor";
 }
+
+export type StellarCompositionFractions = {
+  hydrogenMassFractionX: number;
+  heliumMassFractionY: number;
+  metalMassFractionZ: number;
+};
+
+export function compositionFromXY(args: {
+  hydrogenMassFractionX: number;
+  heliumMassFractionY: number;
+}): StellarCompositionFractions {
+  const x = clamp(
+    Number.isFinite(args.hydrogenMassFractionX) ? args.hydrogenMassFractionX : 0,
+    0,
+    1
+  );
+  const y = clamp(
+    Number.isFinite(args.heliumMassFractionY) ? args.heliumMassFractionY : 0,
+    0,
+    1 - x
+  );
+  const z = Math.max(0, 1 - x - y);
+  return {
+    hydrogenMassFractionX: x,
+    heliumMassFractionY: y,
+    metalMassFractionZ: z
+  };
+}

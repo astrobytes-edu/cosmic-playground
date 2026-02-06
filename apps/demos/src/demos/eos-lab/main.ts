@@ -13,6 +13,7 @@ import {
 } from "@cosmic/physics";
 import {
   clamp,
+  compositionFromXY,
   formatFraction,
   formatScientific,
   logSliderToValue,
@@ -136,6 +137,11 @@ const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
 const tempValueEl = document.querySelector<HTMLSpanElement>("#tempValue");
 const rhoSliderEl = document.querySelector<HTMLInputElement>("#rhoSlider");
 const rhoValueEl = document.querySelector<HTMLSpanElement>("#rhoValue");
+const xSliderEl = document.querySelector<HTMLInputElement>("#xSlider");
+const xValueEl = document.querySelector<HTMLSpanElement>("#xValue");
+const ySliderEl = document.querySelector<HTMLInputElement>("#ySlider");
+const yValueEl = document.querySelector<HTMLSpanElement>("#yValue");
+const zValueEl = document.querySelector<HTMLSpanElement>("#zValue");
 
 const presetButtons = Array.from(
   document.querySelectorAll<HTMLButtonElement>('button.preset[data-preset-id]')
@@ -177,6 +183,11 @@ if (
   !tempValueEl ||
   !rhoSliderEl ||
   !rhoValueEl ||
+  !xSliderEl ||
+  !xValueEl ||
+  !ySliderEl ||
+  !yValueEl ||
+  !zValueEl ||
   !presetNoteEl ||
   !radiationClosureChipEl ||
   !radiationClosureLabelEl ||
@@ -211,6 +222,11 @@ const tempSlider = tempSliderEl;
 const tempValue = tempValueEl;
 const rhoSlider = rhoSliderEl;
 const rhoValue = rhoValueEl;
+const xSlider = xSliderEl;
+const xValue = xValueEl;
+const ySlider = ySliderEl;
+const yValue = yValueEl;
+const zValue = zValueEl;
 const presetNote = presetNoteEl;
 
 const radiationClosureChip = radiationClosureChipEl;
@@ -282,6 +298,16 @@ function applyPreset(presetId: Preset["id"]): void {
   state.temperatureK = preset.temperatureK;
   state.densityGPerCm3 = preset.densityGPerCm3;
   state.composition = preset.composition;
+}
+
+function setCompositionFromXY(args: {
+  hydrogenMassFractionX: number;
+  heliumMassFractionY: number;
+}): void {
+  state.composition = compositionFromXY({
+    hydrogenMassFractionX: args.hydrogenMassFractionX,
+    heliumMassFractionY: args.heliumMassFractionY
+  });
 }
 
 function renderPresetState(): void {
@@ -447,6 +473,19 @@ function render(): void {
   tempValue.textContent = `${formatScientific(state.temperatureK, 4)} K`;
   rhoValue.textContent = `${formatScientific(state.densityGPerCm3, 4)} g cm^-3`;
 
+  const x = state.composition.hydrogenMassFractionX;
+  const y = state.composition.heliumMassFractionY;
+  const z = state.composition.metalMassFractionZ;
+  const yMax = Math.max(0, Math.round(1000 * (1 - x)));
+
+  xSlider.value = String(Math.round(1000 * x));
+  ySlider.max = String(yMax);
+  ySlider.value = String(Math.min(Math.round(1000 * y), yMax));
+
+  xValue.textContent = formatFraction(x, 3);
+  yValue.textContent = formatFraction(y, 3);
+  zValue.textContent = formatFraction(z, 3);
+
   const model = evaluateModel();
   const dominantPressureDynePerCm2 = dominantPressureValue(model);
 
@@ -511,7 +550,7 @@ const demoModes = createDemoModes({
         type: "bullets",
         items: [
           "Choose a preset, then move T and rho sliders to test pressure dominance changes.",
-          "Use the readouts to connect mu and mu_e to particle and electron density changes.",
+          "Adjust composition sliders X and Y (with Z computed) to connect mu and mu_e to particle and electron density changes.",
           "Use the LTE closure chip before interpreting P_rad in extreme low-density states."
         ]
       }
@@ -630,6 +669,24 @@ rhoSlider.addEventListener("input", () => {
   if (Number.isFinite(nextDensity)) {
     state.densityGPerCm3 = nextDensity;
   }
+  render();
+});
+
+xSlider.addEventListener("input", () => {
+  const nextX = clamp(Number(xSlider.value) / 1000, 0, 1);
+  setCompositionFromXY({
+    hydrogenMassFractionX: nextX,
+    heliumMassFractionY: state.composition.heliumMassFractionY
+  });
+  render();
+});
+
+ySlider.addEventListener("input", () => {
+  const nextY = clamp(Number(ySlider.value) / 1000, 0, 1);
+  setCompositionFromXY({
+    hydrogenMassFractionX: state.composition.hydrogenMassFractionX,
+    heliumMassFractionY: nextY
+  });
   render();
 });
 

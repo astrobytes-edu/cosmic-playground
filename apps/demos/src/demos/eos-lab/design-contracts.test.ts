@@ -56,4 +56,11 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(html).toContain("LTE");
     expect(mainTs).toContain("radiationDepartureEta");
   });
+
+  it("includes composition controls with computed Z display", () => {
+    expect(html).toContain('id="xSlider"');
+    expect(html).toContain('id="ySlider"');
+    expect(html).toContain('id="zValue"');
+    expect(mainTs).toContain("compositionFromXY");
+  });
 });

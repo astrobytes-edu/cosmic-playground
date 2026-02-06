@@ -57,6 +57,39 @@
             <span class="control__value"><span id="rhoValue"></span></span>
           </label>
 
+          <div class="cp-notice">
+            <h3>Composition Controls</h3>
+            <label class="control">
+              <span>Hydrogen mass fraction $X$</span>
+              <input
+                id="xSlider"
+                type="range"
+                min="0"
+                max="1000"
+                value="340"
+                step="1"
+                data-tooltip-source="#xValue"
+              />
+              <span class="control__value"><span id="xValue"></span></span>
+            </label>
+            <label class="control">
+              <span>Helium mass fraction $Y$</span>
+              <input
+                id="ySlider"
+                type="range"
+                min="0"
+                max="1000"
+                value="640"
+                step="1"
+                data-tooltip-source="#yValue"
+              />
+              <span class="control__value"><span id="yValue"></span></span>
+            </label>
+            <p class="cp-muted">
+              Computed metal fraction $Z = 1 - X - Y$: <span id="zValue"></span>
+            </p>
+          </div>
+
           <div class="presets">
             <div class="presets__label">Preset states (ASTR 201)</div>
             <div id="presetButtons" class="presets__grid" role="group" aria-label="Preset states">

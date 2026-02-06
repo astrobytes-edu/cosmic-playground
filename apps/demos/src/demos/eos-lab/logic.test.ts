@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   clamp,
+  compositionFromXY,
   formatScientific,
   logSliderToValue,
   percent,
@@ -71,5 +72,25 @@ describe("EOS Lab -- UI Logic", () => {
     expect(
       pressureTone({ pressureDynePerCm2: 1, dominantPressureDynePerCm2: 10 })
     ).toBe("minor");
+  });
+
+  it("builds composition with X + Y + Z = 1", () => {
+    const composition = compositionFromXY({
+      hydrogenMassFractionX: 0.7,
+      heliumMassFractionY: 0.28
+    });
+    expect(composition.hydrogenMassFractionX).toBeCloseTo(0.7, 8);
+    expect(composition.heliumMassFractionY).toBeCloseTo(0.28, 8);
+    expect(composition.metalMassFractionZ).toBeCloseTo(0.02, 8);
+  });
+
+  it("clamps Y when X + Y would exceed unity", () => {
+    const composition = compositionFromXY({
+      hydrogenMassFractionX: 0.9,
+      heliumMassFractionY: 0.6
+    });
+    expect(composition.hydrogenMassFractionX).toBeCloseTo(0.9, 8);
+    expect(composition.heliumMassFractionY).toBeCloseTo(0.1, 8);
+    expect(composition.metalMassFractionZ).toBeCloseTo(0, 8);
   });
 });

@@ -38,6 +38,23 @@ test.describe("EOS Lab -- E2E", () => {
     expect(after).not.toBe(before);
   });
 
+  test("composition sliders update mu readout", async ({ page }) => {
+    const before = await page.locator("#muValue").textContent();
+    await page.locator("#xSlider").fill("850");
+    await page.locator("#xSlider").dispatchEvent("input");
+    const after = await page.locator("#muValue").textContent();
+    expect(after).not.toBe(before);
+  });
+
+  test("composition constraints keep X + Y + Z = 1", async ({ page }) => {
+    await page.locator("#xSlider").fill("900");
+    await page.locator("#xSlider").dispatchEvent("input");
+    await expect(page.locator("#ySlider")).toHaveAttribute("max", "100");
+    await expect(page.locator("#xValue")).toContainText("0.900");
+    await expect(page.locator("#yValue")).toContainText("0.100");
+    await expect(page.locator("#zValue")).toContainText("0.000");
+  });
+
   test("white dwarf preset selects degeneracy-dominated state", async ({ page }) => {
     await page.locator('button.preset[data-preset-id="white-dwarf-core"]').click();
     await expect(page.locator("#dominantChannel")).toContainText("Electron degeneracy pressure");
