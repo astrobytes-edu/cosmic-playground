@@ -1,4 +1,5 @@
 @import "@cosmic/theme/styles/tokens.css";
+@import "@cosmic/theme/styles/animations.css";
 @import "@cosmic/theme/styles/layer-instrument.css";
 @import "@cosmic/theme/styles/demo-shell.css";
 @import "@cosmic/theme/styles/components/button.css";
