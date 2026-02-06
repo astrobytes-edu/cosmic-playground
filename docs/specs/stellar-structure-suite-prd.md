@@ -732,5 +732,395 @@ $$t_{\rm nuc} \sim \frac{\eta M c^2}{L} \quad (\eta \approx 0.007 \text{ for H b
 
 ---
 
+## 16. ASTR 201 Active Implementation Addendum (2026-02)
+
+This addendum captures active implementation sequencing for ASTR 201 without replacing or deleting prior sections.
+
+### 16.1 Sequencing note
+
+For active development, use this detailed-spec order:
+
+1. Demo 1: Equation of State Lab
+2. Demo 2: Opacity & Photon Diffusion
+3. Demo 3: Hydrostatic Equilibrium (detailed interaction spec deferred)
+
+Mapping note:
+- Current Demo 2 (Opacity & Photon Diffusion) corresponds to the opacity concept previously detailed as Demo 6 in this document.
+
+### 16.2 Demo 1 enhancement addendum (EOS)
+
+This addendum extends the existing Demo 1 spec with deeper ASTR 201 detail.
+
+Physics additions:
+- Keep:
+  - $P_{\rm gas} = \frac{\rho k_B T}{\mu m_u}$
+  - $P_{\rm rad} = \frac{aT^4}{3}$
+- Add electron degeneracy diagnostics:
+  - $n_e = \frac{\rho}{\mu_e m_u}$
+  - $p_F = \hbar(3\pi^2 n_e)^{1/3}$
+  - $x_F = \frac{p_F}{m_e c}$
+  - $T_F = \frac{E_F}{k_B}$ and $T/T_F$ validity indicator
+- Keep and explicitly surface:
+  - $\beta = \frac{P_{\rm gas}}{P_{\rm tot}}$
+  - $\Gamma = \frac{\kappa L}{4\pi c G M}$ (optional diagnostic panel with assumptions note)
+- Composition equations remain visible:
+  - $\frac{1}{\mu} \approx 2X + \frac{3}{4}Y + \frac{1}{2}Z$
+  - $\frac{1}{\mu_e} \approx X + \frac{Y}{2} + \frac{Z}{2}$
+
+Interaction additions:
+- Main compare panel (all channels side-by-side).
+- Click-to-focus deep dive per channel with tabs:
+  - `Physical picture`
+  - `Equation anatomy`
+  - `Scaling sandbox`
+
+Acceptance additions:
+- Real-time diagnostics for $p_F$, $x_F$, and $T/T_F$.
+- Presets include at minimum: solar core, massive-star core, red giant envelope, white dwarf core.
+- Assumption chips include LTE closure language for radiation pressure and assumptions for optional $\Gamma$.
+
+### 16.3 Demo 2 detailed addendum (Opacity & Photon Diffusion)
+
+Purpose:
+- Separate transport physics from EOS support physics so students can reason cleanly about bottlenecks.
+
+Core equations and diagnostics:
+- $\kappa_{\rm tot} = \kappa_{\rm es} + \kappa_{\rm Kr} + \kappa_{{\rm H}^-}$
+- Electron scattering baseline: $\kappa_{\rm es} \approx 0.2(1+X)\ {\rm cm^2\,g^{-1}}$
+- Kramers-like baseline: $\kappa_{\rm Kr} \propto \rho T^{-3.5}$
+- Mean free path: $\lambda = \frac{1}{\kappa \rho}$
+- Optical depth: $\tau(r) = \int_r^R \kappa \rho\,dr$
+- Diffusion scaling: $t_{\rm diff} \sim \frac{3L^2}{c\lambda}$
+
+Required UX behavior:
+- Main compare panel:
+  - regime map in $\log \rho$–$\log T$
+  - per-channel opacity contribution cards
+  - live $\lambda$, $\tau$, and $t_{\rm diff}$ readouts
+- Deep-dive views for channels and diffusion mechanism.
+- Random-walk visualization tied to current $\lambda$ scale.
+- Assumption chip for LTE-like opacity closure and validity notes.
+
+Source modes:
+- Point mode: local $(T,\rho,X,Y,Z)$ exploration.
+- Profile mode: consume `StarProfileSource` and compute $\kappa(r)$, $\lambda(r)$, and $\tau(r)$.
+
+Acceptance additions:
+- Real-time updates of mean free path, optical depth, and diffusion timescale.
+- Profile-aware and preset-only fallback both supported.
+- Advanced mode can overlay OPAL comparison data without changing default lightweight behavior.
+
+### 16.4 Demo 3 hydrostatic addendum (deferred detail)
+
+Demo 3 remains core and will be specified in a dedicated memo next.
+
+Baseline scope to preserve:
+- Explicit workflow:
+  1. choose $\rho(r)$
+  2. compute $M(r)$
+  3. integrate $P(r)$
+- Equations:
+  - $\frac{dP}{dr} = -\frac{\rho G M(r)}{r^2}$
+  - $\frac{dM}{dr} = 4\pi r^2 \rho$
+- Boundary condition selector retained.
+- Conceptual collapse/expand cue allowed but clearly labeled non-hydrodynamic.
+- Export of $P(r)$, $M(r)$, and $\rho(r)$ retained.
+
+---
+
+## 17. Microphysics Fusion Lab Addendum (ASTR 201)
+
+Recommended demo name:
+- **Microphysics Fusion Lab**
+- Student-facing name: *Why Stars Shine*
+- Internal subtitle: *Tunneling, Cycles, and Mass Defect*
+
+### 17.1 Purpose and placement
+
+Add a dedicated fusion-microphysics demo between Opacity (Demo 2) and Hydrostatic (Demo 3) in the active teaching flow.
+
+Proposed conceptual flow:
+1. Demo 1: EOS
+2. Demo 2: Opacity & Diffusion
+3. **Fusion Microphysics Lab** (new)
+4. Demo 3: Hydrostatic Equilibrium
+5. Demo 6: Energy Generation Sandbox
+
+This preserves separation between:
+- local thermodynamic state (EOS),
+- transport bottlenecks (opacity/diffusion),
+- microscopic reaction-rate origin (tunneling/fusion),
+- macroscopic force balance (HSE).
+
+### 17.2 Required physics content
+
+Thermal population proxy:
+$$
+f_{\rm MB}(E) \propto E^{1/2} e^{-E/(k_B T)}
+$$
+
+Tunneling proxy:
+$$
+P_{\rm tun}(E) \propto \exp\!\left(-\sqrt{\frac{E_G}{E}}\right)
+$$
+
+Gamow-window overlap proxy:
+$$
+I(E) \propto f_{\rm MB}(E)\,P_{\rm tun}(E)
+$$
+
+Rate framing:
+$$
+\langle \sigma v \rangle \propto \int_0^\infty I(E)\,dE
+$$
+
+Density dependence framing (required, explicit):
+$$
+r_{12} = n_1 n_2\langle \sigma v \rangle \propto \rho^2 \langle \sigma v \rangle
+$$
+for volumetric reaction rate, and
+$$
+\varepsilon \propto \rho \langle \sigma v \rangle
+$$
+for specific (per-mass) energy-generation scaling.
+
+Mass-defect accounting:
+$$
+Q = \left(\sum m_{\rm reactants}-\sum m_{\rm products}\right)c^2
+$$
+
+Net pp-chain ledger:
+$$
+4\,^1\mathrm{H}\rightarrow\,^4\mathrm{He}+2e^+ +2\nu_e + Q
+$$
+
+Net CNO-cycle ledger (catalytic):
+$$
+4\,^1\mathrm{H}\rightarrow\,^4\mathrm{He}+2e^+ +2\nu_e + Q
+$$
+
+Advanced extension reaction:
+$$
+3\,^4\mathrm{He}\rightarrow\,^{12}\mathrm{C}+\gamma + Q
+$$
+
+### 17.3 UX contract
+
+Main compare panel:
+- $\log_{10}T$ control, $\log_{10}\rho$ control, channel selector (`pp` vs `CNO`)
+- Overlaid curves: $f_{\rm MB}(E)$, $P_{\rm tun}(E)$, and $I(E)$
+- Live readouts: Gamow-window region, relative rate proxy, temperature-sensitivity indicator
+- Add density-sensitivity readout so students can compare response to $\rho$ changes vs $T$ changes at fixed composition.
+
+Deep-dive panels:
+- `pp chain` step map (with branch simplification notes)
+- `CNO cycle` step map (explicit catalyst role)
+- `Mass-defect ledger` (reactant/product masses, $\Delta m$, and $Q$)
+- `3\alpha process` (Advanced tab, with scope note)
+
+### 17.4 Binding-energy-per-nucleon figure requirement
+
+Include a dedicated deep-dive figure:
+- **Binding energy per nucleon vs mass number $A$**
+- Mark key nuclei and pedagogical anchors (H, He, C/O, Fe/Ni region)
+- Explain why fusion is exoergic up to iron-peak scales and why that motivates heavier-element stage transitions
+
+Figure must include:
+- clear axis labels and units,
+- legend/callouts for key regions,
+- concise "what to notice" guidance,
+- alt text for accessibility.
+
+### 17.5 Additional info-figure set (recommended)
+
+Add an `Info Figures` drawer in the demo with:
+1. Coulomb barrier sketch with tunneling pathway.
+2. Gamow-window overlap visualization across two temperatures.
+3. pp vs CNO temperature-sensitivity comparison panel.
+4. Burning-stage ladder (H, He, C, Ne, O, Si) as a future-facing context figure.
+
+### 17.6 Future extension: heavier elements
+
+Yes, include this as an explicit future extension track:
+- Extend from H-burning and He-burning to a qualitative heavy-element sequence.
+- Keep this extension conceptual-first (no full nuclear network solver requirement).
+- Tie back to binding-energy-per-nucleon logic so the sequence is physically motivated, not memorized.
+
+### 17.7 Scope boundaries
+
+In scope:
+- tunneling intuition, rate-proxy comparison, mass-defect accounting, pp/CNO deep dives.
+
+Out of scope for this demo revision:
+- full reaction-network integration,
+- neutrino transport modeling,
+- detailed supernova nucleosynthesis modeling.
+
+### 17.8 Cold-fusion activity connection (pedagogy requirement)
+
+Include a guided activity thread that uses the same physics to analyze why "cold fusion" is often framed as a holy-grail problem.
+
+Activity goals:
+- compare required tunneling probabilities at low thermal energies vs stellar-core conditions,
+- use the model to show why rates collapse when $T$ is far below Gamow-window-relevant scales,
+- distinguish "difficult/low-rate" from "impossible in principle,"
+- practice evidence standards for extraordinary energy claims.
+
+Suggested activity prompts:
+1. Hold $\rho$ fixed, reduce $T$, and track the rate proxy collapse.
+2. Ask students to identify whether changing $\rho$ alone can compensate for very low $T$ in this model.
+3. Use a claim-check worksheet: if a system reports large fusion power at low $T$, what measurable signatures (energy ledger, products, reproducibility) must also appear?
+
+Scope note:
+- This is an analysis and scientific-reasoning activity, not a policy/opinion module.
+- Keep tone neutral and evidence-based.
+
+## 18. Additional ASTR 201 Additions (Approved)
+
+These additions are intentionally additive to the existing suite and are designed to improve physics interpretability without forcing a full re-architecture.
+
+### 18.1 Ionization & $\mu$ Lab (Saha-lite, validity-bounded)
+
+Purpose:
+- Bridge EOS and opacity by showing how ionization state changes effective particle counts and therefore $\mu$, $\mu_e$, and related thermodynamic behavior.
+
+Core content:
+- Keep fully ionized baseline formulas already used in Demo 1:
+  - $\frac{1}{\mu} \approx 2X + \frac{3}{4}Y + \frac{1}{2}Z$
+  - $\frac{1}{\mu_e} \approx X + \frac{Y}{2} + \frac{Z}{2}$
+- Add Saha-lite partial-ionization toggle in bounded parameter ranges (explicit validity badge).
+- Show qualitative ionization-fraction evolution across temperature and density.
+
+Required outputs:
+- live $\mu(T,\rho)$ and $\mu_e(T,\rho)$ under selected approximation mode,
+- mode comparison panel (`fully ionized` vs `Saha-lite`),
+- "where this approximation breaks" warning region.
+
+Recommended placement:
+- standalone mini-demo add-on, or deep-dive panel linked from Demo 1 and Demo 2.
+
+### 18.1A Upgrade directive: full Saha-equation solver (ASTR 201 default)
+
+For ASTR 201, implement a real Saha solve as the default model path (not a Saha-lite approximation).
+
+Core equation for stage $i \rightarrow i+1$:
+$$
+\frac{n_{i+1} n_e}{n_i}
+=
+\frac{2\,U_{i+1}(T)}{U_i(T)}
+\left(\frac{2\pi m_e k_B T}{h^2}\right)^{3/2}
+\exp\!\left(-\frac{\chi_i}{k_B T}\right)
+$$
+
+with:
+- stage populations $n_i$,
+- electron density $n_e$,
+- ionization energy $\chi_i$,
+- partition functions $U_i(T)$.
+
+Numerical contract:
+- Solve coupled ionization-balance + charge-neutrality equations for selected species set.
+- Support at minimum H and He fully; metals can start as grouped representative species with explicit assumptions.
+- Provide robust convergence diagnostics and fallback messaging when parameter choices become numerically stiff.
+
+Derived outputs (required):
+- ionization fractions per species and stage,
+- electron density $n_e$ and electron pressure contribution,
+- resulting $\mu(T,\rho)$ and $\mu_e(T,\rho)$ from solved populations (not fixed presets).
+
+Pedagogy/UX requirements:
+- Keep a "show solver details" panel for advanced students (iteration count, residual, convergence status).
+- Preserve a quick-compare mode against the fully ionized limit for intuition.
+- If a simplified mode exists, it must be clearly labeled as secondary comparison only, not default.
+
+### 18.1B Atmospheres and spectra linkage (explicit expansion)
+
+Use the Ionization Lab as a direct bridge into stellar atmospheres and spectra instruction.
+
+Required bridges:
+1. **Ionization state -> spectral line visibility**
+   - show qualitative line-strength relevance for key transitions as ionization fraction changes.
+2. **Ionization/electron density -> continuum opacity context**
+   - connect solved populations to opacity source dominance discussions.
+3. **Temperature/density sweeps -> spectral-class intuition**
+   - include guided sweeps demonstrating why different photospheric conditions favor different line signatures.
+
+Minimum info figures for this bridge:
+- Saha fraction vs $T$ at fixed $\rho$ for H and He stages,
+- Saha fraction vs $\rho$ at fixed $T$,
+- simple "which lines become prominent/suppressed" map tied to ionization state.
+
+### 18.2 Fusion Energy Ledger Panel (within Microphysics Fusion Lab)
+
+Purpose:
+- Make mass defect and energy conservation explicit for each reaction path.
+
+Required equations:
+$$
+Q = \Delta m\,c^2,\quad \Delta m = \sum m_{\rm reactants}-\sum m_{\rm products}
+$$
+
+Required panel behaviors:
+- Step-by-step ledger rows for pp and CNO net paths.
+- Explicit energy accounting columns:
+  - total $Q$,
+  - electromagnetic/thermal deposition proxy,
+  - neutrino-carried-away channel note (labeled estimate/proxy).
+- "Check your ledger" activity prompt where students identify missing terms.
+
+Acceptance:
+- students can inspect and export the full mass/energy ledger for each selected pathway.
+
+### 18.3 Opacity Source Explorer (deep-dive for transport)
+
+Purpose:
+- Help students connect scalar $\kappa$ values to physical opacity mechanisms.
+
+Required deep-dive modes:
+1. Continuum-focused view (electron scattering + free-free/bound-free proxy).
+2. Line/feature conceptual overlay (teaching-only, not full line-by-line transfer).
+3. Regime-linked explanation cards tied to current $\log\rho$-$\log T$ location.
+
+Required figure additions:
+- channel contribution stack across representative stellar zones,
+- "dominant source map" overlay linked to current state marker.
+
+Scope boundary:
+- keep this conceptual/mesoscopic; no full spectral synthesis or non-LTE RT solver required.
+
+### 18.4 Convection Onset Stress Test (Advanced tab in Demo 7)
+
+Purpose:
+- Let students deliberately perturb transport parameters and observe Schwarzschild-boundary movement.
+
+Core equation (already in suite appendix, surfaced interactively):
+$$
+\nabla_{\rm rad} = \frac{3\kappa L P}{16\pi a c G m T^4}
+$$
+Convection onset condition:
+$$
+\nabla_{\rm rad} > \nabla_{\rm ad}
+$$
+
+Required controls:
+- opacity multiplier,
+- luminosity multiplier,
+- composition selector (linked to opacity behavior),
+- optional $\nabla_{\rm ad}$ override in advanced mode.
+
+Required outputs:
+- boundary-shift visualization along radius,
+- before/after convective-zone overlay,
+- sensitivity summary: which perturbation moved the boundary most.
+
+Acceptance:
+- students can run at least three perturbation scenarios and compare resulting convective/radiative zone structure.
+
+---
+
 *Document maintained as part of Cosmic Playground NSF IUSE Level 2 grant.*
 *Version 1.1: Revised with expert feedback on Eddington parameter, profile source architecture, numerical formulation, and two-layer robustness contract.*
+*Version 1.2: Added ASTR 201 active implementation addendum with Demo 2 opacity-first sequencing and detailed Demo 1/Demo 2 extensions.*
+*Version 1.3: Added Microphysics Fusion Lab addendum (tunneling, mass-defect accounting, pp/CNO/3$\alpha$ deep dives, density-vs-temperature controls, cold-fusion reasoning activity, and binding-energy-per-nucleon/info-figure requirements).*
+*Version 1.4: Added ASTR 201 extensions: Ionization & $\mu$ Lab, Fusion Energy Ledger panel, Opacity Source Explorer deep dive, and Convection Onset Stress Test tab.*
+*Version 1.5: Upgraded Ionization & $\mu$ Lab to require full Saha-equation solving and added explicit stellar-atmosphere/spectra teaching linkage.*

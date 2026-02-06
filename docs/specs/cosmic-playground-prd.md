@@ -1,7 +1,7 @@
 # Cosmic Playground — Product Requirements Document
 
-**Version:** 1.5
-**Date:** February 5, 2026
+**Version:** 1.6
+**Date:** February 6, 2026
 **Author:** Dr. Anna Rosen (SDSU)
 **Status:** Draft
 
@@ -14,6 +14,7 @@
 | 1.3 | Feb 6, 2026 | Clarified layout strategy (`data-shell` + `data-layout` hybrid), refined package roles (`@cosmic/ui`, `@cosmic/renderer`), removed calendar timelines, added launch-gate framing, and updated runtime/theme implementation status (`initStarfield` implemented). |
 | 1.4 | Feb 6, 2026 | Added foundational hardening section: contract precedence, data/model/parity/release-state gates, UI/renderer decision guardrails, required accessibility checks, export schema stability, and explicit v1 non-goals. |
 | 1.5 | Feb 6, 2026 | Elevated Demo Readiness Metadata to highest-priority migration gate and added detailed parity template, CI contract enforcement requirements, and export compatibility matrix requirements. |
+| 1.6 | Feb 6, 2026 | Added migration-first execution policy (demo hardening before instructor-depth expansion) and a deferred backlog section for IA/UX/features to activate after launch-hardening gates pass. |
 
 ---
 
@@ -966,6 +967,7 @@ Maintain a compatibility table that maps each demo and schema version to downstr
 - Migrate demos with parity checks and model correctness tests.
 - Extract reusable runtime patterns and reduce per-demo duplication.
 - Expand demo-level test coverage (design contracts + logic + E2E).
+- Keep demo hardening ahead of instructor-depth work; instructor edits in this stage should be limited to correctness-critical sync with migrated demo behavior.
 
 ### Stage C: Launch Hardening
 - Remove or quarantine stubs from launch-facing discovery.
@@ -975,6 +977,46 @@ Maintain a compatibility table that maps each demo and schema version to downstr
 ### Stage D: Post-Launch Research Evaluation
 - Run classroom/outcome instrumentation and analyze lagging indicators.
 - Feed results into pedagogical and UX iteration cycles.
+
+### 9.1 Migration-First Sequencing Policy (Operational)
+
+Order of operations for each demo family:
+1. Harden demo behavior first (physics correctness, shell/layout contract, accessibility, export stability, parity audit, release-state metadata).
+2. Promote demo release state (`stub`/`experimental`/`candidate`/`launch-ready`) using Section 8.5 rules and Section 6.1 launch gates.
+3. Deepen instructor resources only after demo behavior is stable (activities, assessment, model notes, station refinements).
+
+Allowed instructor work during migration-heavy periods:
+- Fixes that prevent conceptual drift from the current demo behavior.
+- Safety/correctness edits (units, notation, broken links, incorrect claims).
+
+Deferred instructor work until post-hardening:
+- Major pedagogy rewrites disconnected from current demo controls/readouts.
+- New multi-demo instructional frameworks that assume stable feature sets.
+
+### 9.2 Deferred Backlog (Activate After Stage C Hardening)
+
+These items are intentionally deferred to avoid migration thrash:
+
+1. Information architecture expansion:
+   - Add `/instructor/` and `/stations/` index surfaces.
+   - Route and surface `hubs` collection content as first-class navigation.
+2. Explore/discovery upgrades:
+   - Add pedagogy-centric filters (learning goals, misconception tags, classroom-ready view).
+   - Improve topic labels/chips for student/instructor readability.
+3. Exhibit flow upgrades:
+   - Reorder exhibit layout to foreground interaction while preserving predict-play-explain framing.
+   - Add stronger cross-links from exhibit to station/instructor pathways.
+4. Playlist progression features:
+   - Next-step affordances and completion flow across exhibit sequences.
+   - Assignment-friendly sequencing cues.
+5. Guided tours and advanced runtime features:
+   - Standardized tour mode layered on top of runtime hooks.
+   - Shareable preset/state URLs for assignment reproducibility.
+6. Ecosystem expansion (post-v1 hardening):
+   - Media gallery, facts micro-exhibits, Data Playground, and selective 3D wing work.
+
+Backlog intake rule:
+- Any new feature in this list must show that it does not reduce migration velocity or weaken Section 6.1 launch-gate readiness.
 
 ---
 
