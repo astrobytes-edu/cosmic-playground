@@ -344,4 +344,141 @@ describe("StellarEosModel", () => {
     expect(state.radiationPressureDynePerCm2).toBeCloseTo(0, 12);
     expect(state.radiationClosureAssessment.tag).toBe("proxy");
   });
+
+  it("uses nonrel finite-T solver in low-x_F transition states", () => {
+    const state = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 8e5,
+        densityGPerCm3: 3,
+        composition: {
+          hydrogenMassFractionX: 0.7,
+          heliumMassFractionY: 0.28,
+          metalMassFractionZ: 0.02
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    expect(state.fermiRelativityX).toBeLessThan(0.3);
+    expect(state.electronDegeneracyMethod).toBe("nonrel-fd");
+    expect(state.electronPressureFiniteTDynePerCm2).toBeGreaterThan(0);
+  });
+
+  it("uses relativistic finite-T solver in high-x_F transition states", () => {
+    const state = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e8,
+        densityGPerCm3: 1e7,
+        composition: {
+          hydrogenMassFractionX: 0.0,
+          heliumMassFractionY: 1.0,
+          metalMassFractionZ: 0
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    expect(state.fermiRelativityX).toBeGreaterThan(0.3);
+    expect(state.electronDegeneracyMethod).toBe("relativistic-fd");
+    expect(state.electronPressureFiniteTDynePerCm2).toBeGreaterThan(0);
+  });
+
+  it("reduces to classical correction near nondegenerate limit", () => {
+    const state = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e8,
+        densityGPerCm3: 1e-6,
+        composition: {
+          hydrogenMassFractionX: 0.7,
+          heliumMassFractionY: 0.28,
+          metalMassFractionZ: 0.02
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    expect(state.electronDegeneracyMethod).toBe("classical-limit");
+    expect(state.electronDegeneracyPressureDynePerCm2).toBeCloseTo(0, 8);
+  });
+
+  it("uses zero-T branch when T/T_F is extremely small", () => {
+    const state = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 100,
+        densityGPerCm3: 1e6,
+        composition: {
+          hydrogenMassFractionX: 0,
+          heliumMassFractionY: 1,
+          metalMassFractionZ: 0
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    expect(state.chiDegeneracy).toBeLessThan(1e-3);
+    expect(state.electronDegeneracyMethod).toBe("zero-t-limit");
+    expect(state.electronPressureFiniteTDynePerCm2).toBeCloseTo(
+      StellarEosModel.electronDegeneracyPressureZeroTDynePerCm2({
+        fermiRelativityX: state.fermiRelativityX
+      }),
+      6
+    );
+  });
+
+  it("keeps finite-T electron pressure above or equal to classical pressure in FD branches", () => {
+    const nonRelState = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 8e5,
+        densityGPerCm3: 3,
+        composition: {
+          hydrogenMassFractionX: 0.7,
+          heliumMassFractionY: 0.28,
+          metalMassFractionZ: 0.02
+        },
+        radiationDepartureEta: 1
+      }
+    });
+    const relState = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e8,
+        densityGPerCm3: 1e7,
+        composition: {
+          hydrogenMassFractionX: 0,
+          heliumMassFractionY: 1,
+          metalMassFractionZ: 0
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    expect(nonRelState.electronDegeneracyMethod).toBe("nonrel-fd");
+    expect(relState.electronDegeneracyMethod).toBe("relativistic-fd");
+    expect(nonRelState.electronPressureFiniteTDynePerCm2).toBeGreaterThanOrEqual(
+      nonRelState.electronPressureClassicalDynePerCm2
+    );
+    expect(relState.electronPressureFiniteTDynePerCm2).toBeGreaterThanOrEqual(
+      relState.electronPressureClassicalDynePerCm2
+    );
+  });
+
+  it("defines displayed degeneracy as max(P_e,FD - P_e,classical, 0)", () => {
+    const state = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 2e7,
+        densityGPerCm3: 8e4,
+        composition: {
+          hydrogenMassFractionX: 0.2,
+          heliumMassFractionY: 0.78,
+          metalMassFractionZ: 0.02
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    const reconstructed = Math.max(
+      state.electronPressureFiniteTDynePerCm2 - state.electronPressureClassicalDynePerCm2,
+      0
+    );
+    expect(state.electronDegeneracyPressureDynePerCm2).toBeCloseTo(reconstructed, 8);
+  });
 });

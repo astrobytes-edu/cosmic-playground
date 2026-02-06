@@ -48,6 +48,14 @@ export type FiniteTemperatureDegeneracyAssessment = {
   note: string;
 };
 
+export type ElectronDegeneracyMethod =
+  | "zero-t-limit"
+  | "classical-limit"
+  | "nonrel-fd"
+  | "relativistic-fd"
+  | "override"
+  | "invalid";
+
 export type PressureDominance =
   | "gas"
   | "radiation"
@@ -85,6 +93,9 @@ export type StellarEosStateCgs = {
   fermiEnergyErg: number;
   fermiTemperatureK: number;
   chiDegeneracy: number;
+  electronPressureClassicalDynePerCm2: number;
+  electronPressureFiniteTDynePerCm2: number;
+  electronDegeneracyMethod: ElectronDegeneracyMethod;
   degeneracyRegime: DegeneracyRegime;
   fermiRelativityRegime: FermiRelativityRegime;
   finiteTemperatureDegeneracyAssessment: FiniteTemperatureDegeneracyAssessment;
@@ -297,6 +308,320 @@ function assessFiniteTemperatureDegeneracy(args: {
   };
 }
 
+function fermiOccupation(exponent: number): number {
+  if (exponent >= 80) return 0;
+  if (exponent <= -80) return 1;
+  return 1 / (Math.exp(exponent) + 1);
+}
+
+function simpsonIntegratePair(args: {
+  xMin: number;
+  xMax: number;
+  intervals: number;
+  evaluate: (x: number) => { numberIntegrand: number; pressureIntegrand: number };
+}): { numberIntegral: number; pressureIntegral: number } {
+  const { xMin, xMax } = args;
+  let intervals = Math.max(2, Math.floor(args.intervals));
+  if (intervals % 2 !== 0) intervals += 1;
+
+  const h = (xMax - xMin) / intervals;
+  let numberSum = 0;
+  let pressureSum = 0;
+
+  for (let i = 0; i <= intervals; i += 1) {
+    const x = xMin + i * h;
+    const values = args.evaluate(x);
+    const weight = i === 0 || i === intervals ? 1 : i % 2 === 0 ? 2 : 4;
+    numberSum += weight * values.numberIntegrand;
+    pressureSum += weight * values.pressureIntegrand;
+  }
+
+  return {
+    numberIntegral: (h / 3) * numberSum,
+    pressureIntegral: (h / 3) * pressureSum
+  };
+}
+
+function solveBisection(args: {
+  lower: number;
+  upper: number;
+  maxIterations: number;
+  relativeTolerance: number;
+  evaluate: (x: number) => number;
+}): { root: number; converged: boolean } {
+  let lower = args.lower;
+  let upper = args.upper;
+  let fLower = args.evaluate(lower);
+  let fUpper = args.evaluate(upper);
+
+  if (!Number.isFinite(fLower) || !Number.isFinite(fUpper) || fLower > 0 || fUpper < 0) {
+    return { root: Number.NaN, converged: false };
+  }
+
+  let best = 0.5 * (lower + upper);
+  for (let i = 0; i < args.maxIterations; i += 1) {
+    const mid = 0.5 * (lower + upper);
+    const fMid = args.evaluate(mid);
+    if (!Number.isFinite(fMid)) return { root: Number.NaN, converged: false };
+
+    best = mid;
+    const width = Math.max(1, Math.abs(mid));
+    if (Math.abs(fMid) <= args.relativeTolerance) {
+      return { root: mid, converged: true };
+    }
+    if ((upper - lower) / width < args.relativeTolerance) {
+      return { root: mid, converged: true };
+    }
+
+    if (fMid < 0) {
+      lower = mid;
+      fLower = fMid;
+    } else {
+      upper = mid;
+      fUpper = fMid;
+    }
+    if (!Number.isFinite(fLower) || !Number.isFinite(fUpper)) {
+      return { root: Number.NaN, converged: false };
+    }
+  }
+
+  return { root: best, converged: false };
+}
+
+function electronPressureFiniteTNonRelDynePerCm2(args: {
+  electronNumberDensityPerCm3: number;
+  temperatureK: number;
+}): { pressureDynePerCm2: number; converged: boolean } {
+  const { electronNumberDensityPerCm3: nElectron, temperatureK } = args;
+  if (!isFinitePositive(nElectron) || !isFinitePositive(temperatureK)) {
+    return { pressureDynePerCm2: Number.NaN, converged: false };
+  }
+
+  const hErgS = 2 * Math.PI * CGS_CONSTANTS.hbarErgS;
+  const thermalScale = 2 * CGS_CONSTANTS.electronMassG * CGS_CONSTANTS.kBoltzmannErgPerK * temperatureK;
+  const prefactorN =
+    (4 * Math.PI * Math.pow(thermalScale, 1.5)) / Math.pow(hErgS, 3);
+  const prefactorP =
+    (4 * Math.PI * Math.pow(thermalScale, 2.5)) /
+    (3 * Math.pow(hErgS, 3) * CGS_CONSTANTS.electronMassG);
+
+  if (!isFinitePositive(prefactorN) || !isFinitePositive(prefactorP)) {
+    return { pressureDynePerCm2: Number.NaN, converged: false };
+  }
+
+  const evaluateDensityResidual = (eta: number): number => {
+    const yMax = Math.max(40, eta + 40);
+    const integrals = simpsonIntegratePair({
+      xMin: 0,
+      xMax: yMax,
+      intervals: 192,
+      evaluate: (y) => {
+        const rootY = Math.sqrt(y);
+        const occ = fermiOccupation(y - eta);
+        return {
+          numberIntegrand: rootY * occ,
+          pressureIntegrand: y * rootY * occ
+        };
+      }
+    });
+    return prefactorN * integrals.numberIntegral - nElectron;
+  };
+
+  let lower = -40;
+  let upper = 8;
+  let fUpper = evaluateDensityResidual(upper);
+  let guard = 0;
+  while (fUpper < 0 && upper < 240 && guard < 80) {
+    upper += 4;
+    fUpper = evaluateDensityResidual(upper);
+    guard += 1;
+  }
+
+  const solution = solveBisection({
+    lower,
+    upper,
+    maxIterations: 80,
+    relativeTolerance: 1e-6,
+    evaluate: evaluateDensityResidual
+  });
+  if (!Number.isFinite(solution.root)) {
+    return { pressureDynePerCm2: Number.NaN, converged: false };
+  }
+
+  const yMax = Math.max(40, solution.root + 40);
+  const integrals = simpsonIntegratePair({
+    xMin: 0,
+    xMax: yMax,
+    intervals: 192,
+    evaluate: (y) => {
+      const rootY = Math.sqrt(y);
+      const occ = fermiOccupation(y - solution.root);
+      return {
+        numberIntegrand: rootY * occ,
+        pressureIntegrand: y * rootY * occ
+      };
+    }
+  });
+
+  return {
+    pressureDynePerCm2: prefactorP * integrals.pressureIntegral,
+    converged: solution.converged
+  };
+}
+
+function electronPressureFiniteTRelativisticDynePerCm2(args: {
+  electronNumberDensityPerCm3: number;
+  temperatureK: number;
+}): { pressureDynePerCm2: number; converged: boolean } {
+  const { electronNumberDensityPerCm3: nElectron, temperatureK } = args;
+  if (!isFinitePositive(nElectron) || !isFinitePositive(temperatureK)) {
+    return { pressureDynePerCm2: Number.NaN, converged: false };
+  }
+
+  const beta =
+    (CGS_CONSTANTS.kBoltzmannErgPerK * temperatureK) /
+    (CGS_CONSTANTS.electronMassG *
+      CGS_CONSTANTS.speedOfLightCmPerS *
+      CGS_CONSTANTS.speedOfLightCmPerS);
+  if (!isFinitePositive(beta)) {
+    return { pressureDynePerCm2: Number.NaN, converged: false };
+  }
+
+  const prefactorN =
+    Math.pow(CGS_CONSTANTS.electronMassG * CGS_CONSTANTS.speedOfLightCmPerS, 3) /
+    (Math.PI * Math.PI * Math.pow(CGS_CONSTANTS.hbarErgS, 3));
+  const prefactorP =
+    (Math.pow(CGS_CONSTANTS.electronMassG, 4) * Math.pow(CGS_CONSTANTS.speedOfLightCmPerS, 5)) /
+    (3 * Math.PI * Math.PI * Math.pow(CGS_CONSTANTS.hbarErgS, 3));
+  const xFZeroT = Math.cbrt((3 * nElectron) / prefactorN);
+  const thetaZeroT = Math.sqrt(1 + xFZeroT * xFZeroT) - 1;
+
+  const evaluateDensityResidual = (theta: number): number => {
+    const qFEstimate = theta > 0 ? Math.sqrt(theta * (theta + 2)) : 0;
+    const qMax = Math.max(24, qFEstimate + 24);
+    const uMax = Math.asinh(qMax);
+
+    const integrals = simpsonIntegratePair({
+      xMin: 0,
+      xMax: uMax,
+      intervals: 224,
+      evaluate: (u) => {
+        const sinhU = Math.sinh(u);
+        const coshU = Math.cosh(u);
+        const kineticOverMec2 = coshU - 1;
+        const occ = fermiOccupation((kineticOverMec2 - theta) / beta);
+        return {
+          numberIntegrand: sinhU * sinhU * coshU * occ,
+          pressureIntegrand: Math.pow(sinhU, 4) * occ
+        };
+      }
+    });
+
+    return prefactorN * integrals.numberIntegral - nElectron;
+  };
+
+  const lower = -12;
+  let upper = Math.max(4, thetaZeroT + 4);
+  let fUpper = evaluateDensityResidual(upper);
+  let guard = 0;
+  while (fUpper < 0 && upper < 512 && guard < 100) {
+    upper += 6;
+    fUpper = evaluateDensityResidual(upper);
+    guard += 1;
+  }
+
+  const solution = solveBisection({
+    lower,
+    upper,
+    maxIterations: 100,
+    relativeTolerance: 1e-6,
+    evaluate: evaluateDensityResidual
+  });
+  if (!Number.isFinite(solution.root)) {
+    return { pressureDynePerCm2: Number.NaN, converged: false };
+  }
+
+  const qFEstimate = solution.root > 0 ? Math.sqrt(solution.root * (solution.root + 2)) : 0;
+  const qMax = Math.max(24, qFEstimate + 24);
+  const uMax = Math.asinh(qMax);
+  const integrals = simpsonIntegratePair({
+    xMin: 0,
+    xMax: uMax,
+    intervals: 224,
+    evaluate: (u) => {
+      const sinhU = Math.sinh(u);
+      const coshU = Math.cosh(u);
+      const kineticOverMec2 = coshU - 1;
+      const occ = fermiOccupation((kineticOverMec2 - solution.root) / beta);
+      return {
+        numberIntegrand: sinhU * sinhU * coshU * occ,
+        pressureIntegrand: Math.pow(sinhU, 4) * occ
+      };
+    }
+  });
+
+  return {
+    pressureDynePerCm2: prefactorP * integrals.pressureIntegral,
+    converged: solution.converged
+  };
+}
+
+function electronPressureFiniteTDynePerCm2(args: {
+  electronNumberDensityPerCm3: number;
+  temperatureK: number;
+  fermiRelativityX: number;
+  fermiTemperatureK: number;
+  defaultZeroTPressureDynePerCm2: number;
+}): { pressureDynePerCm2: number; method: ElectronDegeneracyMethod; converged: boolean } {
+  const {
+    electronNumberDensityPerCm3: nElectron,
+    temperatureK,
+    fermiRelativityX: xF,
+    fermiTemperatureK: tF,
+    defaultZeroTPressureDynePerCm2: pZeroT
+  } = args;
+  if (!isFinitePositive(nElectron) || !isFinitePositive(temperatureK) || !isFinitePositive(xF)) {
+    return { pressureDynePerCm2: Number.NaN, method: "invalid", converged: false };
+  }
+
+  const chiZeroT = safeRatio(temperatureK, tF);
+  if (Number.isFinite(chiZeroT) && chiZeroT <= 1e-3) {
+    return { pressureDynePerCm2: pZeroT, method: "zero-t-limit", converged: true };
+  }
+
+  const electronClassicalPressure =
+    nElectron * CGS_CONSTANTS.kBoltzmannErgPerK * temperatureK;
+  if (Number.isFinite(chiZeroT) && chiZeroT >= 8) {
+    return {
+      pressureDynePerCm2: electronClassicalPressure,
+      method: "classical-limit",
+      converged: true
+    };
+  }
+
+  if (xF < 0.3) {
+    const nonRel = electronPressureFiniteTNonRelDynePerCm2({
+      electronNumberDensityPerCm3: nElectron,
+      temperatureK
+    });
+    return {
+      pressureDynePerCm2: nonRel.pressureDynePerCm2,
+      method: "nonrel-fd",
+      converged: nonRel.converged
+    };
+  }
+
+  const rel = electronPressureFiniteTRelativisticDynePerCm2({
+    electronNumberDensityPerCm3: nElectron,
+    temperatureK
+  });
+  return {
+    pressureDynePerCm2: rel.pressureDynePerCm2,
+    method: "relativistic-fd",
+    converged: rel.converged
+  };
+}
+
 function assessRadiationClosure(args: {
   densityGPerCm3: number;
   temperatureK: number;
@@ -436,13 +761,35 @@ export const StellarEosModel = {
     const defaultDegPressure = electronDegeneracyPressureZeroTDynePerCm2({
       fermiRelativityX: xF
     });
+    const electronClassicalPressure =
+      Number.isFinite(nElectron) &&
+      Number.isFinite(args.input.temperatureK) &&
+      isFinitePositive(args.input.temperatureK)
+        ? nElectron * CGS_CONSTANTS.kBoltzmannErgPerK * args.input.temperatureK
+        : Number.NaN;
+    const finiteTElectronPressure = electronPressureFiniteTDynePerCm2({
+      electronNumberDensityPerCm3: nElectron,
+      temperatureK: args.input.temperatureK,
+      fermiRelativityX: xF,
+      fermiTemperatureK: tF,
+      defaultZeroTPressureDynePerCm2: defaultDegPressure
+    });
+    const finiteTDegeneracyPressure =
+      Number.isFinite(finiteTElectronPressure.pressureDynePerCm2) &&
+      Number.isFinite(electronClassicalPressure)
+        ? Math.max(0, finiteTElectronPressure.pressureDynePerCm2 - electronClassicalPressure)
+        : Number.NaN;
+
     const degeneracyPressure = args.degeneracyPressureProvider
       ? args.degeneracyPressureProvider({
           fermiRelativityX: xF,
           electronNumberDensityPerCm3: nElectron,
-          defaultPressureDynePerCm2: defaultDegPressure
+          defaultPressureDynePerCm2: finiteTDegeneracyPressure
         })
-      : defaultDegPressure;
+      : finiteTDegeneracyPressure;
+    const electronDegeneracyMethod: ElectronDegeneracyMethod = args.degeneracyPressureProvider
+      ? "override"
+      : finiteTElectronPressure.method;
 
     const additionalPressureTerms = (args.additionalPressureTerms ?? []).filter(
       (term) => term && typeof term.id === "string" && Number.isFinite(term.pressureDynePerCm2)
@@ -504,6 +851,9 @@ export const StellarEosModel = {
       fermiEnergyErg: eF,
       fermiTemperatureK: tF,
       chiDegeneracy: chiDeg,
+      electronPressureClassicalDynePerCm2: electronClassicalPressure,
+      electronPressureFiniteTDynePerCm2: finiteTElectronPressure.pressureDynePerCm2,
+      electronDegeneracyMethod,
       degeneracyRegime: classifyDegeneracyRegime({ chiDegeneracy: chiDeg }),
       fermiRelativityRegime: classifyFermiRelativityRegime({ fermiRelativityX: xF }),
       finiteTemperatureDegeneracyAssessment: finiteTempAssessment,

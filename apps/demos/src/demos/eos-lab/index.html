@@ -25,7 +25,7 @@
           <div id="radiationClosureChip" class="cp-callout" data-kind="tip" role="note" aria-label="Radiation closure framing">
             <strong id="radiationClosureLabel">LTE closure likely reasonable</strong>
             <div id="radiationClosureNote">
-              Radiation pressure uses $P_{\rm rad}=aT^4/3$ in optically thick LTE-like conditions.
+              Radiation pressure uses $P_{\rm rad}=\eta_{\rm rad}aT^4/3$ with default $\eta_{\rm rad}=1$ in optically thick LTE-like conditions.
             </div>
           </div>
 
@@ -137,7 +137,7 @@
             <h2>$P_{\rm deg,e}$</h2>
             <p class="pressure-card__value"><span id="pDegValue"></span> <span class="pressure-card__unit">dyne cm$^{-2}$</span></p>
             <div class="pressure-card__bar" aria-hidden="true"><span id="pDegBar"></span></div>
-            <p class="pressure-card__hint">Pauli exclusion support; depends strongly on electron density.</p>
+            <p class="pressure-card__hint">Quantum correction beyond classical electrons; driven by Pauli exclusion.</p>
           </article>
         </div>
 
@@ -266,13 +266,14 @@
               <ul>
                 <li>Gas pressure: $P_{\rm gas}=\rho k_B T/(\mu m_u)$.</li>
                 <li>Radiation pressure: $P_{\rm rad}=\eta_{\rm rad} aT^4/3$ (default $\eta_{\rm rad}=1$).</li>
-                <li>Electron degeneracy uses a zero-$T$ Chandrasekhar EOS baseline with diagnostics in $x_F$ and $T/T_F$.</li>
+                <li>Finite-$T$ electron EOS uses Fermi-Dirac pressure $P_{e,\rm FD}(n_e,T)$ with nonrelativistic and relativistic branches.</li>
+                <li>Displayed degeneracy channel is $P_{\rm deg,e}=\max\!\left(P_{e,\rm FD}-n_e k_B T,0\right)$.</li>
                 <li>
                   Finite-$T$ proxy uses $1+\frac{5\pi^2}{12}\left(T/T_F\right)^2$ only when $x_F\ll1$ and $T/T_F\ll1$.
                 </li>
                 <li>$\mu$ and $\mu_e$ for fully ionized mixtures: $\mu^{-1}\approx2X+\frac{3}{4}Y+\frac{1}{2}Z$, $\mu_e^{-1}\approx X+\frac{Y}{2}+\frac{Z}{2}$.</li>
                 <li>
-                  Future hook: the kernel accepts additional pressure terms and alternate degeneracy providers for finite-$T$ Fermi and neutron extensions.
+                  Future hook: the kernel accepts additional pressure terms and alternate degeneracy providers for pair-rich and neutron extensions.
                 </li>
               </ul>
             </div>
@@ -301,15 +302,15 @@
           </details>
 
           <details class="cp-accordion">
-            <summary>
-              <span class="cp-accordion__title">Deep Dive: Degeneracy Pressure</span>
-              <span class="cp-accordion__meta">cause + limits</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <p><strong>Physical cause:</strong> Pauli exclusion fills momentum states even at low temperature.</p>
-              <p><strong>Limits:</strong> v1 uses zero-$T$ electron degeneracy; finite-$T$ and neutron channels are deferred plugins.</p>
-            </div>
-          </details>
+              <summary>
+                <span class="cp-accordion__title">Deep Dive: Degeneracy Pressure</span>
+                <span class="cp-accordion__meta">cause + limits</span>
+              </summary>
+              <div class="cp-accordion__body">
+                <p><strong>Physical cause:</strong> Pauli exclusion fills momentum states even at low temperature.</p>
+                <p><strong>Limits:</strong> finite-$T$ Fermi-Dirac electrons are included, but Coulomb/ion corrections and neutron-star matter channels are intentionally out of scope.</p>
+              </div>
+            </details>
         </div>
       </section>
     </div>

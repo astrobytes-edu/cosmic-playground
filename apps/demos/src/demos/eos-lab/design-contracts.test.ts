@@ -54,6 +54,7 @@ describe("EOS Lab -- Design System Contracts", () => {
 
   it("keeps radiation LTE framing visible in HTML copy", () => {
     expect(html).toContain("LTE");
+    expect(html).toContain("eta_{\\rm rad}");
     expect(mainTs).toContain("radiationDepartureEta");
   });
 
@@ -76,6 +77,11 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(mainTs).toContain("Fermi relativity regime");
     expect(mainTs).toContain("Sommerfeld factor");
     expect(mainTs).toContain("Neutron extension pressure");
+  });
+
+  it("does not claim a zero-T-only degeneracy implementation in deep-dive copy", () => {
+    expect(html).not.toContain("v1 uses zero-$T$ electron degeneracy");
+    expect(html).toContain("finite-$T$ Fermi-Dirac electrons are included");
   });
 
   it("caches regime-map field rendering between composition changes", () => {

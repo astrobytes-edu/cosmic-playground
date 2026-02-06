@@ -8,7 +8,7 @@ time_minutes: 12
 has_math_mode: false
 tags: ["stellar-structure", "equation-of-state", "pressure"]
 readiness: experimental
-readinessReason: "EOS core channels + diagnostics + regime map are implemented; full neutron/Fermi extension remains planned."
+readinessReason: "EOS core channels + diagnostics + regime map are implemented with finite-T Fermi branches; neutron/pair-rich extensions remain planned."
 parityAuditPath: "docs/audits/migrations/eos-lab-parity.md"
 lastVerifiedAt: "2026-02-06"
 learning_goals:
@@ -34,7 +34,8 @@ explain_prompt: "Use one table row to explain pressure-channel dominance and one
 model_notes:
   - "Gas pressure uses P_gas = rho k_B T/(mu m_u) with fully ionized mixture approximations for mu and mu_e."
   - "Radiation pressure uses an LTE-like closure with explicit caution framing for low-density/high-temperature cases."
-  - "Electron degeneracy uses a zero-temperature Chandrasekhar baseline with T/T_F diagnostics."
+  - "Finite-temperature electron pressure uses Fermi-Dirac EOS (nonrelativistic branch first, relativistic branch at larger x_F)."
+  - "Displayed degeneracy channel is P_deg,e = max(P_e,FD - n_e k_B T, 0), so classical electron pressure is not double-counted."
 demo_path: "/play/eos-lab/"
 station_path: "/stations/eos-lab/"
 instructor_path: "/instructor/eos-lab/"

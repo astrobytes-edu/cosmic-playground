@@ -416,6 +416,25 @@ function mapChannel(channel: StellarEosStateCgs["dominantPressureChannel"]): str
   return channel;
 }
 
+function electronDegeneracyMethodLabel(
+  method: StellarEosStateCgs["electronDegeneracyMethod"]
+): string {
+  switch (method) {
+    case "nonrel-fd":
+      return "Finite-T nonrelativistic Fermi-Dirac";
+    case "relativistic-fd":
+      return "Finite-T relativistic Fermi-Dirac";
+    case "zero-t-limit":
+      return "Zero-temperature limit";
+    case "classical-limit":
+      return "Classical electron limit";
+    case "override":
+      return "Custom override";
+    default:
+      return "Unavailable";
+  }
+}
+
 function compositionRegimeKey(composition: StellarCompositionFractions, radiationDepartureEta: number): string {
   return [
     composition.hydrogenMassFractionX.toFixed(6),
@@ -527,7 +546,7 @@ function renderAdvancedDiagnostics(model: StellarEosStateCgs): void {
   finiteTCorrectionValue.textContent = Number.isFinite(model.finiteTemperatureDegeneracyCorrectionFactor)
     ? formatScientific(model.finiteTemperatureDegeneracyCorrectionFactor, 5)
     : "—";
-  finiteTValidityValue.textContent = model.finiteTemperatureDegeneracyAssessment.label;
+  finiteTValidityValue.textContent = `${model.finiteTemperatureDegeneracyAssessment.label} (${electronDegeneracyMethodLabel(model.electronDegeneracyMethod)})`;
   neutronExtensionValue.textContent = formatScientific(
     model.neutronExtensionPressureDynePerCm2,
     5
@@ -599,14 +618,22 @@ function exportResults(model: StellarEosStateCgs): ExportPayloadV1 {
         value: model.fermiRelativityRegime.label
       },
       {
-        name: "Sommerfeld factor (non-rel low-T only)",
+        name: "Sommerfeld factor 1 + (5*pi^2/12)(T/T_F)^2",
         value: Number.isFinite(model.finiteTemperatureDegeneracyCorrectionFactor)
           ? formatScientific(model.finiteTemperatureDegeneracyCorrectionFactor, 5)
           : "—"
       },
       {
         name: "Finite-T validity",
-        value: model.finiteTemperatureDegeneracyAssessment.label
+        value: `${model.finiteTemperatureDegeneracyAssessment.label} (${electronDegeneracyMethodLabel(model.electronDegeneracyMethod)})`
+      },
+      {
+        name: "P_e,FD (dyne cm^-2)",
+        value: formatScientific(model.electronPressureFiniteTDynePerCm2, 5)
+      },
+      {
+        name: "P_e,classical (dyne cm^-2)",
+        value: formatScientific(model.electronPressureClassicalDynePerCm2, 5)
       },
       {
         name: "Extension pressure P_ext (dyne cm^-2)",
@@ -624,9 +651,10 @@ function exportResults(model: StellarEosStateCgs): ExportPayloadV1 {
     notes: [
       "Gas pressure uses P_gas = rho k_B T / (mu m_u).",
       "Radiation pressure uses an LTE-like closure P_rad = eta_rad a T^4 / 3 (default eta_rad=1).",
-      "Electron degeneracy uses a zero-temperature Chandrasekhar baseline with diagnostics in x_F and T/T_F.",
+      "Finite-T electron pressure uses Fermi-Dirac EOS (nonrel first, relativistic branch for large x_F).",
+      "Displayed degeneracy channel uses P_deg,e = max(P_e,FD - n_e k_B T, 0) to avoid double-counting classical electrons.",
       "Finite-temperature Sommerfeld factor uses 1 + (5*pi^2/12)(T/T_F)^2 only in the non-relativistic strongly degenerate regime.",
-      "Kernel supports additional pressure terms for future finite-T Fermi and neutron extensions without API breakage."
+      "Kernel supports additional pressure terms for future pair-rich and neutron-matter extensions without API breakage."
     ]
   };
 }
