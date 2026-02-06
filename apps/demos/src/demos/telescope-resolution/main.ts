@@ -1,6 +1,6 @@
 import { telescopePresets, wavelengthBands, seeingConditions } from "@cosmic/data-telescopes";
 import { AstroConstants, AstroUnits, TelescopeResolutionModel } from "@cosmic/physics";
-import { createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 
 import { requiredSelector } from "../../shared/dom";
@@ -47,6 +47,9 @@ const runtime = createInstrumentRuntime({
   storageKey: "cp:telescope-resolution:mode",
   url: new URL(window.location.href)
 });
+
+const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
+if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 
 type PresetId = (typeof telescopePresets)[number]["id"] | "custom";
 type BandId = (typeof wavelengthBands)[number]["id"];
