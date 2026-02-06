@@ -156,6 +156,15 @@ describe("Telescope Resolution -- UI Logic", () => {
     it("uses scientific notation at boundary 1e6", () => {
       expect(formatNumber(1e6, 3)).toBe("1.00e+6");
     });
+
+    it("handles digits=0 safely for scientific notation", () => {
+      // Math.max(0, 0-1) = 0 exponent digits
+      expect(formatNumber(1e8, 0)).toBe("1e+8");
+    });
+
+    it("formats negative normal-range values with toFixed", () => {
+      expect(formatNumber(-42.5, 2)).toBe("-42.50");
+    });
   });
 
   describe("formatApertureM", () => {
