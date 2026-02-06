@@ -6,7 +6,7 @@ import {
   meanAnomalyRadFromTime,
   timeFromMeanAnomalyRad,
   valueToLogSlider
-} from "./keplers-laws-logic";
+} from "./logic";
 
 const EPS = 1e-6;
 
@@ -80,29 +80,6 @@ test("export payload order matches UI controls/readouts", () => {
     "Acceleration (mm/s^2)",
     "Orbital period P (yr)"
   ]);
-});
-
-test("export payload converts velocity to cm/s in 201 units", () => {
-  const payload = buildExportPayload({
-    mode: "kepler",
-    units: "201",
-    speed: 1,
-    aAu: 1,
-    e: 0.017,
-    centralMassSolar: 1,
-    meanAnomalyDeg: 0,
-    rAu: 1,
-    speedKmS: 1,
-    accelMs2: 0.00593,
-    periodYr: 1,
-    specificEnergy: -39.478,
-    specificAngularMomentum: 6.283,
-    arealVelocity: 3.1416
-  });
-
-  const velocityRow = payload.readouts.find((row) => row.name.startsWith("Speed v"));
-  expect(velocityRow).toBeTruthy();
-  expect(Number(velocityRow!.value)).toBeCloseTo(100000, 2);
 });
 
 test("export payload converts velocity to cm/s in 201 units", () => {

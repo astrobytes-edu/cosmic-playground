@@ -1,4 +1,4 @@
-import { createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AstroUnits, KeplersLawsModel, TwoBodyAnalytic } from "@cosmic/physics";
 import {
@@ -8,7 +8,7 @@ import {
   meanAnomalyRadFromTime,
   timeFromMeanAnomalyRad,
   valueToLogSlider
-} from "./keplers-laws-logic";
+} from "./logic";
 
 const SVG_CENTER = { x: 300, y: 200 };
 const SVG_SCALE = 150;
@@ -124,7 +124,7 @@ function resolveCanvasColor(value: string): string {
 }
 
 const canvasColors = {
-  planet: resolveCanvasColor("var(--cp-chart-2)")
+  planet: resolveCanvasColor("var(--cp-celestial-earth)")
 };
 
 let lastAnnounce = 0;
@@ -341,7 +341,7 @@ function updateEqualAreas() {
     for (let i = 0; i < N; i++) {
       const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       c.setAttribute("r", "2");
-      c.setAttribute("fill", "var(--cp-chart-2)");
+      c.setAttribute("fill", "var(--cp-accent-teal)");
       c.setAttribute("opacity", "0.75");
       group.appendChild(c);
     }
@@ -934,4 +934,6 @@ elements.copyResults!.addEventListener("click", () => {
     );
 });
 
+const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
+if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 initMath(document);
