@@ -69,6 +69,8 @@
     ),
     color-mix(in srgb, var(--cp-bg0) 70%, transparent);
   box-shadow: 0 24px 50px color-mix(in srgb, var(--cp-bg0) 65%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .stage__observer {
@@ -95,11 +97,11 @@
 
 .stage__angleArc {
   fill: none;
-  stroke: var(--cp-warning);
+  stroke: var(--cp-accent-amber);
   stroke-opacity: 0.95;
   stroke-width: 3px;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cp-warning) 18%, transparent));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cp-accent-amber) 18%, transparent));
 }
 
 .stage__distanceLine {
@@ -115,12 +117,12 @@
 }
 
 .stage__sizeLine {
-  stroke: var(--cp-warning);
+  stroke: var(--cp-accent-amber);
   stroke-opacity: 0.95;
   stroke-width: 2px;
   stroke-dasharray: 5 4;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cp-warning) 12%, transparent));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cp-accent-amber) 12%, transparent));
 }
 
 .stage__metricLabel {
@@ -130,9 +132,9 @@
 }
 
 .stage__object {
-  stroke: color-mix(in srgb, var(--cp-accent3) 58%, transparent);
+  stroke: color-mix(in srgb, var(--cp-accent) 58%, transparent);
   stroke-width: 2px;
-  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--cp-text) 14%, transparent));
+  filter: drop-shadow(var(--cp-glow-planet));
 }
 
 .stage__label {
@@ -159,4 +161,23 @@
 
 .stage__svg--wide .stage__angle {
   font-size: 16px;
+}
+
+.cp-demo__controls {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 1);
+}
+
+.cp-demo__readouts {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 2);
+}
+
+.cp-demo__drawer {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 3);
 }
