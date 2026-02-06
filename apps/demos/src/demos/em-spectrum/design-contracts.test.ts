@@ -103,9 +103,19 @@ describe("EM Spectrum -- Design System Contracts", () => {
       expect(mainTs).not.toMatch(/6\.626\s*\*\s*1e-27/);
     });
 
-    it("spectrum bar uses design-system tokens for gradient", () => {
-      // The spectrum__bar should use token-based colors (not raw hex/rgba)
-      expect(css).toMatch(/\.spectrum__bar[\s\S]*?background[\s\S]*?var\(--cp-/);
+    it("spectrum bar gradient is applied from logic.ts (spectral data, not CSS tokens)", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      // Gradient is physical spectral data applied via JS, not a design token
+      expect(mainTs).toContain("spectrumGradientCSS");
+    });
+
+    it("spectrum wave canvas exists for chirp overlay", () => {
+      expect(html).toMatch(/<canvas[^>]*id="spectrumWaveCanvas"/);
+    });
+
+    it("scale objects container exists", () => {
+      expect(html).toMatch(/id="spectrumScale"/);
     });
   });
 
@@ -122,6 +132,17 @@ describe("EM Spectrum -- Design System Contracts", () => {
   describe("Readouts panel", () => {
     it("readouts panel has accessible label", () => {
       expect(html).toMatch(/cp-demo__readouts[^>]*aria-label="Readouts panel"/);
+    });
+
+    it("equation callout lives in Model Notes, not readouts", () => {
+      // The relationship equations belong in Model Notes for cleaner readouts
+      const readoutsSection = html.match(
+        /cp-demo__readouts[\s\S]*?<\/aside>/
+      );
+      expect(readoutsSection).not.toBeNull();
+      expect(readoutsSection![0]).not.toContain("cp-callout");
+      // But it should exist somewhere in the page
+      expect(html).toContain('data-kind="model"');
     });
   });
 });

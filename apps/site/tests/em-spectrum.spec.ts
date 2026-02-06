@@ -20,8 +20,28 @@ test.describe("EM Spectrum -- E2E", () => {
     await expect(canvas).toBeVisible();
   });
 
-  test("spectrum bar is present", async ({ page }) => {
-    await expect(page.locator(".spectrum__bar")).toBeVisible();
+  test("spectrum bar is present with rainbow gradient", async ({ page }) => {
+    const bar = page.locator(".spectrum__bar");
+    await expect(bar).toBeVisible();
+    // JS-applied gradient should set inline style
+    const style = await bar.getAttribute("style");
+    expect(style).toContain("linear-gradient");
+  });
+
+  test("chirp wave canvas overlays the spectrum bar", async ({ page }) => {
+    const canvas = page.locator("#spectrumWaveCanvas");
+    await expect(canvas).toBeVisible();
+    // Canvas should have non-zero dimensions (DPI-aware rendering)
+    const width = await canvas.evaluate((el: HTMLCanvasElement) => el.width);
+    expect(width).toBeGreaterThan(0);
+  });
+
+  test("scale objects row is rendered below spectrum", async ({ page }) => {
+    const scale = page.locator("#spectrumScale");
+    await expect(scale).toBeVisible();
+    const items = page.locator(".spectrum__scale-item");
+    const count = await items.count();
+    expect(count).toBeGreaterThanOrEqual(5);
   });
 
   // --- Visual Regression (skipped -- re-enable when baselines are generated) ---
@@ -211,11 +231,14 @@ test.describe("EM Spectrum -- E2E", () => {
     await expect(firstAccordion).toContainText("Explore panels");
   });
 
-  test("Model notes accordion can be opened", async ({ page }) => {
+  test("Model notes accordion can be opened and contains equations", async ({ page }) => {
     const modelNotes = page.locator(".cp-accordion").nth(1);
     await modelNotes.locator("summary").click();
     await expect(modelNotes).toHaveAttribute("open", "");
     await expect(modelNotes).toContainText("Model notes");
+    // Equation callout was moved here from readouts panel
+    const callout = modelNotes.locator('[data-kind="model"]');
+    await expect(callout).toBeVisible();
   });
 
   // --- Accessibility ---
