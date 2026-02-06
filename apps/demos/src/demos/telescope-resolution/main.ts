@@ -4,6 +4,18 @@ import { createDemoModes, createInstrumentRuntime, initMath, initStarfield, setL
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 
 import { requiredSelector } from "../../shared/dom";
+import {
+  clamp,
+  logSliderToValue,
+  valueToLogSlider,
+  formatNumber,
+  formatApertureM,
+  formatWavelengthCm,
+  describeStatus,
+  toneToBadgeAttr,
+  computeFovArcsec,
+  zoomedFov
+} from "./logic";
 
 const presetEl = requiredSelector<HTMLSelectElement>("#preset");
 const apertureEl = requiredSelector<HTMLInputElement>("#aperture");
@@ -84,57 +96,6 @@ const state: {
   seeingArcsec: seeingConditions.find((s) => s.id === DEFAULT_SEEING_ID)?.seeingArcsec ?? 1,
   aoEnabled: false
 };
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function logSliderToValue(sliderVal: number, minVal: number, maxVal: number) {
-  const minLog = Math.log10(minVal);
-  const maxLog = Math.log10(maxVal);
-  const fraction = sliderVal / 1000;
-  const logVal = minLog + fraction * (maxLog - minLog);
-  return Math.pow(10, logVal);
-}
-
-function valueToLogSlider(value: number, minVal: number, maxVal: number) {
-  if (!Number.isFinite(value) || value <= 0) return 0;
-  const minLog = Math.log10(minVal);
-  const maxLog = Math.log10(maxVal);
-  const logVal = Math.log10(value);
-  const frac = (logVal - minLog) / (maxLog - minLog);
-  return clamp(Math.round(frac * 1000), 0, 1000);
-}
-
-function formatNumber(value: number, digits = 3) {
-  if (!Number.isFinite(value)) return "—";
-  if (value === 0) return "0";
-  const abs = Math.abs(value);
-  if (abs >= 1e6 || abs < 1e-3) return value.toExponential(digits - 1);
-  return value.toFixed(digits);
-}
-
-function formatApertureM(apertureM: number): { text: string; unit: string } {
-  if (!Number.isFinite(apertureM) || apertureM <= 0) return { text: "—", unit: "" };
-  if (apertureM >= 1000) return { text: formatNumber(apertureM / 1000, 3), unit: "km" };
-  if (apertureM >= 1) return { text: formatNumber(apertureM, 3), unit: "m" };
-  return { text: formatNumber(apertureM * 100, 3), unit: "cm" };
-}
-
-function formatWavelengthCm(lambdaCm: number): { text: string; unit: string } {
-  if (!Number.isFinite(lambdaCm) || lambdaCm <= 0) return { text: "—", unit: "" };
-  if (lambdaCm >= 100) return { text: formatNumber(lambdaCm / 100, 3), unit: "m" };
-  if (lambdaCm >= 1) return { text: formatNumber(lambdaCm, 3), unit: "cm" };
-  if (lambdaCm >= 0.1) return { text: formatNumber(lambdaCm * 10, 3), unit: "mm" };
-  if (lambdaCm >= 1e-4) return { text: formatNumber(lambdaCm / 1e-4, 3), unit: "um" };
-  return { text: formatNumber(AstroUnits.cmToNm(lambdaCm), 3), unit: "nm" };
-}
-
-function describeStatus(status: string): { label: string; tone: "good" | "warn" | "bad" } {
-  if (status === "resolved") return { label: "Resolved", tone: "good" };
-  if (status === "marginal") return { label: "Marginal", tone: "warn" };
-  return { label: "Unresolved", tone: "bad" };
-}
 
 function getSelectedPreset() {
   if (state.presetId === "custom") return null;
@@ -333,7 +294,7 @@ function drawPsf(args: {
 function exportResults(model: ReturnType<typeof computeModel>): ExportPayloadV1 {
   const preset = getSelectedPreset();
   const band = model.band;
-  const w = formatWavelengthCm(model.wavelengthCm);
+  const w = formatWavelengthCm(model.wavelengthCm, AstroUnits.cmToNm);
 
   const notes: string[] = [];
   notes.push("Units: wavelength is displayed in nm/um/mm/cm but computed in cm; aperture is displayed in m (or km) but computed in cm.");
@@ -402,16 +363,15 @@ function render() {
     const statusInfo = describeStatus(model.status);
     statusReadoutEl.textContent = statusInfo.label;
     statusBadgeEl.textContent = statusInfo.label;
-    statusBadgeEl.dataset.tone =
-      statusInfo.tone === "good" ? "good" : statusInfo.tone === "warn" ? "warn" : "danger";
+    statusBadgeEl.dataset.tone = toneToBadgeAttr(statusInfo.tone);
   } else {
     statusReadoutEl.textContent = "Single star";
     statusBadgeEl.textContent = "Single";
     statusBadgeEl.dataset.tone = "neutral";
   }
 
-  const fovArcsec = Math.max(0.4, Math.min(500, Math.max(6 * model.thetaEffArcsec, 3 * sep)));
-  const zoomedFovArcsec = fovArcsec / clamp(state.zoom, 1, 20);
+  const fovArcsec = computeFovArcsec(model.thetaEffArcsec, sep);
+  const zoomedFovArcsec = zoomedFov(fovArcsec, state.zoom);
   fovLabelEl.textContent = `FOV: ${formatNumber(zoomedFovArcsec, 2)} arcsec (${state.zoom}x)`;
 
   const ctx = canvasEl.getContext("2d");
@@ -486,7 +446,7 @@ const demoModes = createDemoModes({
       const band = getSelectedBand();
       const model = computeModel();
       const a = formatApertureM(state.apertureM);
-      const w = formatWavelengthCm(band.wavelengthCm);
+      const w = formatWavelengthCm(band.wavelengthCm, AstroUnits.cmToNm);
 
       return {
         case: preset ? preset.name : "Custom",
