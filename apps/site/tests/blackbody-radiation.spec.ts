@@ -28,6 +28,40 @@ test.describe("Blackbody Radiation -- E2E", () => {
     await expect(canvas).toHaveAttribute("role", "img");
   });
 
+  // --- Visual Regression (skipped -- re-enable when baselines are generated) ---
+
+  test.skip("screenshot: default state (Sun temperature)", async ({ page }) => {
+    await page.waitForSelector(".katex", { timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(500);
+    await expect(page).toHaveScreenshot("blackbody-default.png", {
+      maxDiffPixelRatio: 0.05,
+    });
+  });
+
+  test.skip("screenshot: CMB preset", async ({ page }) => {
+    await page.locator('button.preset[data-temp-k="2.725"]').click();
+    await page.waitForTimeout(300);
+    await expect(page).toHaveScreenshot("blackbody-cmb.png", {
+      maxDiffPixelRatio: 0.05,
+    });
+  });
+
+  test.skip("screenshot: linear scale", async ({ page }) => {
+    await page.locator("#scaleLinear").click();
+    await page.waitForTimeout(300);
+    await expect(page).toHaveScreenshot("blackbody-linear.png", {
+      maxDiffPixelRatio: 0.05,
+    });
+  });
+
+  test.skip("screenshot: station mode active", async ({ page }) => {
+    await page.locator("#stationMode").click();
+    await page.waitForTimeout(400);
+    await expect(page).toHaveScreenshot("blackbody-station.png", {
+      maxDiffPixelRatio: 0.05,
+    });
+  });
+
   // --- Temperature Slider ---
 
   test("temperature slider updates readouts", async ({ page }) => {

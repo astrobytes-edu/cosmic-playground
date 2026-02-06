@@ -30,6 +30,24 @@ test.describe("Parallax Distance -- E2E", () => {
     );
   });
 
+  // --- Visual Regression (skipped -- re-enable when baselines are generated) ---
+
+  test.skip("screenshot: default state", async ({ page }) => {
+    await page.waitForSelector(".katex", { timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(500);
+    await expect(page).toHaveScreenshot("parallax-distance-default.png", {
+      maxDiffPixelRatio: 0.05,
+    });
+  });
+
+  test.skip("screenshot: station mode active", async ({ page }) => {
+    await page.locator("#stationMode").click();
+    await page.waitForTimeout(400);
+    await expect(page).toHaveScreenshot("parallax-distance-station.png", {
+      maxDiffPixelRatio: 0.05,
+    });
+  });
+
   // --- Slider Interaction ---
 
   test("parallax slider updates readouts when moved", async ({ page }) => {
