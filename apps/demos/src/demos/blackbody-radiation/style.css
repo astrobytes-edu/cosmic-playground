@@ -126,6 +126,22 @@ canvas {
   text-align: center;
 }
 
+.cp-demo__controls {
+  animation: cp-slide-up 0.6s var(--cp-ease-out);
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in 0.8s var(--cp-ease-out) 0.1s backwards;
+}
+
+.cp-demo__readouts {
+  animation: cp-slide-up 0.6s var(--cp-ease-out) 0.2s backwards;
+}
+
+.cp-demo__drawer {
+  animation: cp-fade-in 0.8s var(--cp-ease-out) 0.3s backwards;
+}
+
 @media (min-width: 900px) {
   .presets__row {
     grid-template-columns: repeat(4, minmax(0, 1fr));
