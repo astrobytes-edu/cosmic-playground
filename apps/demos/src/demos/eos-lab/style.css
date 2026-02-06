@@ -120,6 +120,60 @@
   margin-top: var(--cp-space-2);
 }
 
+.regime-map {
+  margin-top: var(--cp-space-3);
+  padding: var(--cp-space-3);
+  border-radius: var(--cp-r-3);
+  border: 1px solid var(--cp-border);
+  background: color-mix(in srgb, var(--cp-bg1) 90%, transparent);
+}
+
+.regime-map h3 {
+  margin: 0 0 var(--cp-space-2);
+  font-size: 0.98rem;
+}
+
+#regimeMap {
+  display: block;
+  width: 100%;
+  min-height: 210px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-r-2);
+  background: color-mix(in srgb, var(--cp-bg2) 88%, transparent);
+}
+
+#regimeCells rect[data-channel="gas"] {
+  fill: color-mix(in srgb, var(--cp-success) 28%, transparent);
+}
+
+#regimeCells rect[data-channel="radiation"] {
+  fill: color-mix(in srgb, var(--cp-accent) 32%, transparent);
+}
+
+#regimeCells rect[data-channel="degeneracy"] {
+  fill: color-mix(in srgb, var(--cp-glow-teal) 34%, transparent);
+}
+
+#regimeCells rect[data-channel="mixed"] {
+  fill: color-mix(in srgb, var(--cp-warn) 26%, transparent);
+}
+
+#regimeCells rect[data-channel="invalid"] {
+  fill: color-mix(in srgb, var(--cp-muted) 20%, transparent);
+}
+
+#regimePresetMarkers circle {
+  fill: color-mix(in srgb, var(--cp-text) 72%, transparent);
+  stroke: var(--cp-bg0);
+  stroke-width: 0.6;
+}
+
+#regimeCurrentPoint {
+  fill: var(--cp-accent);
+  stroke: var(--cp-bg0);
+  stroke-width: 1;
+}
+
 @media (max-width: 980px) {
   .pressure-grid {
     grid-template-columns: 1fr;

@@ -7,6 +7,10 @@ topics: [Stars]
 time_minutes: 12
 has_math_mode: false
 tags: ["stellar-structure", "equation-of-state", "pressure"]
+readiness: experimental
+readinessReason: "EOS core channels + diagnostics + regime map are implemented; full neutron/Fermi extension remains planned."
+parityAuditPath: "docs/audits/migrations/eos-lab-parity.md"
+lastVerifiedAt: "2026-02-06"
 learning_goals:
   - "Compare gas, radiation, and electron-degeneracy pressure channels using cgs units."
   - "Explain how composition enters EOS through mu and mu_e."

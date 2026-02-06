@@ -193,4 +193,76 @@ describe("StellarEosModel", () => {
       4
     );
   });
+
+  it("classifies electron Fermi relativity regime from x_F", () => {
+    const lowDensity = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e7,
+        densityGPerCm3: 1,
+        composition: {
+          hydrogenMassFractionX: 0.7,
+          heliumMassFractionY: 0.28,
+          metalMassFractionZ: 0.02
+        },
+        radiationDepartureEta: 1
+      }
+    });
+    const highDensity = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e7,
+        densityGPerCm3: 1e9,
+        composition: {
+          hydrogenMassFractionX: 0.7,
+          heliumMassFractionY: 0.28,
+          metalMassFractionZ: 0.02
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    expect(lowDensity.fermiRelativityRegime.tag).toBe("non-relativistic");
+    expect(highDensity.fermiRelativityRegime.tag).toBe("relativistic");
+  });
+
+  it("reports finite-temperature degeneracy proxy diagnostics", () => {
+    const state = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e7,
+        densityGPerCm3: 1e6,
+        composition: {
+          hydrogenMassFractionX: 0.0,
+          heliumMassFractionY: 1.0,
+          metalMassFractionZ: 0
+        },
+        radiationDepartureEta: 1
+      }
+    });
+
+    expect(state.finiteTemperatureDegeneracyCorrectionFactor).toBeGreaterThan(1);
+    expect(state.electronDegeneracyPressureSommerfeldDynePerCm2).toBeGreaterThan(
+      state.electronDegeneracyPressureDynePerCm2
+    );
+  });
+
+  it("tracks neutron extension pressure channel when present", () => {
+    const state = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 1e7,
+        densityGPerCm3: 1e6,
+        composition: {
+          hydrogenMassFractionX: 0.0,
+          heliumMassFractionY: 1.0,
+          metalMassFractionZ: 0
+        },
+        radiationDepartureEta: 1
+      },
+      additionalPressureTerms: [
+        { id: "neutron-baseline", pressureDynePerCm2: 2.5e15 },
+        { id: "magnetic", pressureDynePerCm2: 1e12 }
+      ]
+    });
+
+    expect(state.neutronExtensionPressureDynePerCm2).toBeCloseTo(2.5e15, 3);
+    expect(state.neutronExtensionPressureFractionOfTotal).toBeGreaterThan(0);
+  });
 });

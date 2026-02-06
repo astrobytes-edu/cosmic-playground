@@ -20,6 +20,7 @@ import {
   percent,
   pressureBarPercent,
   pressureTone,
+  regimeMapCoordinates,
   valueToLogSlider
 } from "./logic";
 
@@ -132,6 +133,8 @@ const TEMPERATURE_MIN_K = 1e3;
 const TEMPERATURE_MAX_K = 1e9;
 const DENSITY_MIN_G_PER_CM3 = 1e-10;
 const DENSITY_MAX_G_PER_CM3 = 1e10;
+const REGIME_MAP_GRID_X = 16;
+const REGIME_MAP_GRID_Y = 16;
 
 const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
 const tempValueEl = document.querySelector<HTMLSpanElement>("#tempValue");
@@ -164,6 +167,11 @@ const pDegValueEl = document.querySelector<HTMLElement>("#pDegValue");
 const pDegBarEl = document.querySelector<HTMLElement>("#pDegBar");
 const pTotalValueEl = document.querySelector<HTMLElement>("#pTotalValue");
 const dominantChannelEl = document.querySelector<HTMLElement>("#dominantChannel");
+const regimeMapEl = document.querySelector<SVGSVGElement>("#regimeMap");
+const regimeCellsEl = document.querySelector<SVGGElement>("#regimeCells");
+const regimePresetMarkersEl = document.querySelector<SVGGElement>("#regimePresetMarkers");
+const regimeCurrentPointEl = document.querySelector<SVGCircleElement>("#regimeCurrentPoint");
+const regimeSummaryEl = document.querySelector<HTMLElement>("#regimeSummary");
 
 const muValueEl = document.querySelector<HTMLElement>("#muValue");
 const muEValueEl = document.querySelector<HTMLElement>("#muEValue");
@@ -172,6 +180,10 @@ const radGasValueEl = document.querySelector<HTMLElement>("#radGasValue");
 const degTotalValueEl = document.querySelector<HTMLElement>("#degTotalValue");
 const chiDegValueEl = document.querySelector<HTMLElement>("#chiDegValue");
 const degRegimeValueEl = document.querySelector<HTMLElement>("#degRegimeValue");
+const xFValueEl = document.querySelector<HTMLElement>("#xFValue");
+const fermiRegimeValueEl = document.querySelector<HTMLElement>("#fermiRegimeValue");
+const finiteTCorrectionValueEl = document.querySelector<HTMLElement>("#finiteTCorrectionValue");
+const neutronExtensionValueEl = document.querySelector<HTMLElement>("#neutronExtensionValue");
 
 const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
 const helpEl = document.querySelector<HTMLButtonElement>("#help");
@@ -203,6 +215,11 @@ if (
   !pDegBarEl ||
   !pTotalValueEl ||
   !dominantChannelEl ||
+  !regimeMapEl ||
+  !regimeCellsEl ||
+  !regimePresetMarkersEl ||
+  !regimeCurrentPointEl ||
+  !regimeSummaryEl ||
   !muValueEl ||
   !muEValueEl ||
   !betaValueEl ||
@@ -210,6 +227,10 @@ if (
   !degTotalValueEl ||
   !chiDegValueEl ||
   !degRegimeValueEl ||
+  !xFValueEl ||
+  !fermiRegimeValueEl ||
+  !finiteTCorrectionValueEl ||
+  !neutronExtensionValueEl ||
   !stationModeEl ||
   !helpEl ||
   !copyResultsEl ||
@@ -245,6 +266,11 @@ const pDegValue = pDegValueEl;
 const pDegBar = pDegBarEl;
 const pTotalValue = pTotalValueEl;
 const dominantChannel = dominantChannelEl;
+const regimeMap = regimeMapEl;
+const regimeCells = regimeCellsEl;
+const regimePresetMarkers = regimePresetMarkersEl;
+const regimeCurrentPoint = regimeCurrentPointEl;
+const regimeSummary = regimeSummaryEl;
 
 const muValue = muValueEl;
 const muEValue = muEValueEl;
@@ -253,6 +279,10 @@ const radGasValue = radGasValueEl;
 const degTotalValue = degTotalValueEl;
 const chiDegValue = chiDegValueEl;
 const degRegimeValue = degRegimeValueEl;
+const xFValue = xFValueEl;
+const fermiRegimeValue = fermiRegimeValueEl;
+const finiteTCorrectionValue = finiteTCorrectionValueEl;
+const neutronExtensionValue = neutronExtensionValueEl;
 
 const stationModeButton = stationModeEl;
 const helpButton = helpEl;
@@ -375,6 +405,102 @@ function dominantChannelLabel(model: StellarEosStateCgs): string {
     default:
       return "Unavailable";
   }
+}
+
+function mapChannel(channel: StellarEosStateCgs["dominantPressureChannel"]): string {
+  return channel;
+}
+
+function renderRegimeMap(model: StellarEosStateCgs): void {
+  const svgNs = "http://www.w3.org/2000/svg";
+  const cellWidth = 100 / REGIME_MAP_GRID_X;
+  const cellHeight = 100 / REGIME_MAP_GRID_Y;
+
+  regimeCells.replaceChildren();
+  for (let iy = 0; iy < REGIME_MAP_GRID_Y; iy += 1) {
+    for (let ix = 0; ix < REGIME_MAP_GRID_X; ix += 1) {
+      const xFrac = (ix + 0.5) / REGIME_MAP_GRID_X;
+      const yFrac = (iy + 0.5) / REGIME_MAP_GRID_Y;
+      const temperatureK = Math.pow(
+        10,
+        Math.log10(TEMPERATURE_MIN_K) + xFrac * (Math.log10(TEMPERATURE_MAX_K) - Math.log10(TEMPERATURE_MIN_K))
+      );
+      const densityGPerCm3 = Math.pow(
+        10,
+        Math.log10(DENSITY_MAX_G_PER_CM3) - yFrac * (Math.log10(DENSITY_MAX_G_PER_CM3) - Math.log10(DENSITY_MIN_G_PER_CM3))
+      );
+
+      const sample = StellarEosModel.evaluateStateCgs({
+        input: {
+          temperatureK,
+          densityGPerCm3,
+          composition: state.composition,
+          radiationDepartureEta: state.radiationDepartureEta
+        }
+      });
+
+      const rect = document.createElementNS(svgNs, "rect");
+      rect.setAttribute("x", String(ix * cellWidth));
+      rect.setAttribute("y", String(iy * cellHeight));
+      rect.setAttribute("width", String(cellWidth + 0.1));
+      rect.setAttribute("height", String(cellHeight + 0.1));
+      rect.dataset.channel = mapChannel(sample.dominantPressureChannel);
+      regimeCells.append(rect);
+    }
+  }
+
+  regimePresetMarkers.replaceChildren();
+  for (const preset of PRESETS) {
+    const coords = regimeMapCoordinates({
+      temperatureK: preset.temperatureK,
+      densityGPerCm3: preset.densityGPerCm3,
+      temperatureMinK: TEMPERATURE_MIN_K,
+      temperatureMaxK: TEMPERATURE_MAX_K,
+      densityMinGPerCm3: DENSITY_MIN_G_PER_CM3,
+      densityMaxGPerCm3: DENSITY_MAX_G_PER_CM3
+    });
+
+    const marker = document.createElementNS(svgNs, "circle");
+    marker.setAttribute("cx", coords.xPct.toFixed(2));
+    marker.setAttribute("cy", coords.yPct.toFixed(2));
+    marker.setAttribute("r", "1.35");
+    marker.setAttribute("data-preset-id", preset.id);
+    const title = document.createElementNS(svgNs, "title");
+    title.textContent = preset.label;
+    marker.append(title);
+    regimePresetMarkers.append(marker);
+  }
+
+  const currentCoords = regimeMapCoordinates({
+    temperatureK: model.input.temperatureK,
+    densityGPerCm3: model.input.densityGPerCm3,
+    temperatureMinK: TEMPERATURE_MIN_K,
+    temperatureMaxK: TEMPERATURE_MAX_K,
+    densityMinGPerCm3: DENSITY_MIN_G_PER_CM3,
+    densityMaxGPerCm3: DENSITY_MAX_G_PER_CM3
+  });
+  regimeCurrentPoint.setAttribute("cx", currentCoords.xPct.toFixed(2));
+  regimeCurrentPoint.setAttribute("cy", currentCoords.yPct.toFixed(2));
+  regimeCurrentPoint.setAttribute("aria-label", "Current EOS state");
+
+  regimeSummary.textContent = `Current state in map: ${dominantChannelLabel(model)} dominates for this composition.`;
+  regimeMap.setAttribute(
+    "aria-label",
+    "EOS dominance map over log density and log temperature with current-state marker"
+  );
+}
+
+function renderAdvancedDiagnostics(model: StellarEosStateCgs): void {
+  xFValue.textContent = formatScientific(model.fermiRelativityX, 5);
+  fermiRegimeValue.textContent = model.fermiRelativityRegime.label;
+  finiteTCorrectionValue.textContent = formatScientific(
+    model.finiteTemperatureDegeneracyCorrectionFactor,
+    5
+  );
+  neutronExtensionValue.textContent = formatScientific(
+    model.neutronExtensionPressureDynePerCm2,
+    5
+  );
 }
 
 function exportResults(model: StellarEosStateCgs): ExportPayloadV1 {
@@ -523,6 +649,8 @@ function render(): void {
   degRegimeValue.textContent = model.degeneracyRegime.label;
 
   renderRadiationClosure(model);
+  renderAdvancedDiagnostics(model);
+  renderRegimeMap(model);
   renderPresetState();
 
   (window as Window & { __cp?: unknown }).__cp = {

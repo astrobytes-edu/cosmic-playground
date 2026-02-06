@@ -7,6 +7,7 @@ import {
   logSliderToValue,
   percent,
   pressureBarPercent,
+  regimeMapCoordinates,
   pressureTone,
   valueToLogSlider
 } from "./logic";
@@ -92,5 +93,42 @@ describe("EOS Lab -- UI Logic", () => {
     expect(composition.hydrogenMassFractionX).toBeCloseTo(0.9, 8);
     expect(composition.heliumMassFractionY).toBeCloseTo(0.1, 8);
     expect(composition.metalMassFractionZ).toBeCloseTo(0, 8);
+  });
+
+  it("maps regime-map corners into expected plot bounds", () => {
+    const minPoint = regimeMapCoordinates({
+      temperatureK: 1e3,
+      densityGPerCm3: 1e-10,
+      temperatureMinK: 1e3,
+      temperatureMaxK: 1e9,
+      densityMinGPerCm3: 1e-10,
+      densityMaxGPerCm3: 1e10
+    });
+    expect(minPoint.xPct).toBeCloseTo(0, 8);
+    expect(minPoint.yPct).toBeCloseTo(100, 8);
+
+    const maxPoint = regimeMapCoordinates({
+      temperatureK: 1e9,
+      densityGPerCm3: 1e10,
+      temperatureMinK: 1e3,
+      temperatureMaxK: 1e9,
+      densityMinGPerCm3: 1e-10,
+      densityMaxGPerCm3: 1e10
+    });
+    expect(maxPoint.xPct).toBeCloseTo(100, 8);
+    expect(maxPoint.yPct).toBeCloseTo(0, 8);
+  });
+
+  it("clamps regime-map coordinates outside domain", () => {
+    const point = regimeMapCoordinates({
+      temperatureK: 1e12,
+      densityGPerCm3: 1e-20,
+      temperatureMinK: 1e3,
+      temperatureMaxK: 1e9,
+      densityMinGPerCm3: 1e-10,
+      densityMaxGPerCm3: 1e10
+    });
+    expect(point.xPct).toBeCloseTo(100, 8);
+    expect(point.yPct).toBeCloseTo(100, 8);
   });
 });

@@ -125,3 +125,50 @@ export function compositionFromXY(args: {
     metalMassFractionZ: z
   };
 }
+
+export function regimeMapCoordinates(args: {
+  temperatureK: number;
+  densityGPerCm3: number;
+  temperatureMinK: number;
+  temperatureMaxK: number;
+  densityMinGPerCm3: number;
+  densityMaxGPerCm3: number;
+}): { xPct: number; yPct: number } {
+  const {
+    temperatureK,
+    densityGPerCm3,
+    temperatureMinK,
+    temperatureMaxK,
+    densityMinGPerCm3,
+    densityMaxGPerCm3
+  } = args;
+
+  if (
+    !(temperatureMinK > 0) ||
+    !(temperatureMaxK > temperatureMinK) ||
+    !(densityMinGPerCm3 > 0) ||
+    !(densityMaxGPerCm3 > densityMinGPerCm3)
+  ) {
+    return { xPct: Number.NaN, yPct: Number.NaN };
+  }
+
+  const tClamped = clamp(temperatureK, temperatureMinK, temperatureMaxK);
+  const rhoClamped = clamp(densityGPerCm3, densityMinGPerCm3, densityMaxGPerCm3);
+
+  const tLogMin = Math.log10(temperatureMinK);
+  const tLogMax = Math.log10(temperatureMaxK);
+  const rhoLogMin = Math.log10(densityMinGPerCm3);
+  const rhoLogMax = Math.log10(densityMaxGPerCm3);
+
+  const xFrac = clamp((Math.log10(tClamped) - tLogMin) / (tLogMax - tLogMin), 0, 1);
+  const rhoFrac = clamp(
+    (Math.log10(rhoClamped) - rhoLogMin) / (rhoLogMax - rhoLogMin),
+    0,
+    1
+  );
+
+  return {
+    xPct: 100 * xFrac,
+    yPct: 100 * (1 - rhoFrac)
+  };
+}

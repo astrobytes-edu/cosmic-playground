@@ -145,6 +145,22 @@
           <p><strong>Total pressure $P_{\rm tot}$:</strong> <span id="pTotalValue"></span> dyne cm$^{-2}$</p>
           <p><strong>Dominant channel:</strong> <span id="dominantChannel"></span></p>
         </div>
+
+        <section class="regime-map" aria-label="EOS regime map">
+          <h3>Regime Map ($\log_{10}\rho$ vs $\log_{10}T$)</h3>
+          <svg
+            id="regimeMap"
+            viewBox="0 0 100 100"
+            role="img"
+            aria-label="EOS dominance map over log density and log temperature"
+            preserveAspectRatio="none"
+          >
+            <g id="regimeCells"></g>
+            <g id="regimePresetMarkers"></g>
+            <circle id="regimeCurrentPoint" cx="50" cy="50" r="2.6"></circle>
+          </svg>
+          <p id="regimeSummary" class="cp-muted"></p>
+        </section>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
@@ -189,6 +205,37 @@
             <p class="cp-muted">
               Smaller $\mu$ means more particles per gram, so gas pressure increases at fixed $(\rho,T)$.
             </p>
+          </div>
+          <div class="cp-notice">
+            <h3>Advanced diagnostics</h3>
+            <p class="cp-muted">Fermi momentum regime + extension pathway diagnostics.</p>
+            <div class="cp-readout">
+              <div class="cp-readout__label">$x_F=p_F/(m_e c)$</div>
+              <div class="cp-readout__value">
+                <span id="xFValue"></span>
+                <span class="cp-readout__unit">ratio</span>
+              </div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Fermi relativity regime</div>
+              <div class="cp-readout__value">
+                <span id="fermiRegimeValue"></span>
+              </div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Sommerfeld proxy factor</div>
+              <div class="cp-readout__value">
+                <span id="finiteTCorrectionValue"></span>
+                <span class="cp-readout__unit">factor</span>
+              </div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Neutron extension pressure</div>
+              <div class="cp-readout__value">
+                <span id="neutronExtensionValue"></span>
+                <span class="cp-readout__unit">dyne cm$^{-2}$</span>
+              </div>
+            </div>
           </div>
         </div>
       </aside>

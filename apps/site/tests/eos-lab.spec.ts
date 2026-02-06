@@ -38,6 +38,27 @@ test.describe("EOS Lab -- E2E", () => {
     expect(after).not.toBe(before);
   });
 
+  test("regime map is visible with current-state marker", async ({ page }) => {
+    await expect(page.locator("#regimeMap")).toBeVisible();
+    await expect(page.locator("#regimeCurrentPoint")).toBeVisible();
+  });
+
+  test("regime marker moves when sliders change", async ({ page }) => {
+    const marker = page.locator("#regimeCurrentPoint");
+    const beforeCx = await marker.getAttribute("cx");
+    const beforeCy = await marker.getAttribute("cy");
+
+    await page.locator("#tempSlider").fill("900");
+    await page.locator("#tempSlider").dispatchEvent("input");
+    await page.locator("#rhoSlider").fill("150");
+    await page.locator("#rhoSlider").dispatchEvent("input");
+
+    const afterCx = await marker.getAttribute("cx");
+    const afterCy = await marker.getAttribute("cy");
+    expect(afterCx).not.toBe(beforeCx);
+    expect(afterCy).not.toBe(beforeCy);
+  });
+
   test("composition sliders update mu readout", async ({ page }) => {
     const before = await page.locator("#muValue").textContent();
     await page.locator("#xSlider").fill("850");
@@ -58,6 +79,12 @@ test.describe("EOS Lab -- E2E", () => {
   test("white dwarf preset selects degeneracy-dominated state", async ({ page }) => {
     await page.locator('button.preset[data-preset-id="white-dwarf-core"]').click();
     await expect(page.locator("#dominantChannel")).toContainText("Electron degeneracy pressure");
+  });
+
+  test("advanced diagnostics panel exposes fermi and extension readouts", async ({ page }) => {
+    await expect(page.locator("#xFValue")).toBeVisible();
+    await expect(page.locator("#fermiRegimeValue")).toBeVisible();
+    await expect(page.locator("#neutronExtensionValue")).toBeVisible();
   });
 
   test("readout units are displayed in separate spans", async ({ page }) => {
