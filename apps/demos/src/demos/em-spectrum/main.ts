@@ -22,7 +22,10 @@ import {
   formatFrequency,
   formatEnergyFromErg,
   bandFromWavelengthCm,
-  bandCenterCm
+  bandCenterCm,
+  spectrumGradientCSS,
+  drawSpectrumWave,
+  SCALE_OBJECTS
 } from "./logic";
 
 const wavelengthSliderEl = document.querySelector<HTMLInputElement>("#wavelengthSlider");
@@ -68,6 +71,10 @@ const convertEnergyEvEl = document.querySelector<HTMLInputElement>("#convertEner
 const telescopeListEl = document.querySelector<HTMLUListElement>("#telescopeList");
 const objectListEl = document.querySelector<HTMLUListElement>("#objectList");
 const lineListEl = document.querySelector<HTMLUListElement>("#lineList");
+
+const spectrumBarEl = document.querySelector<HTMLDivElement>(".spectrum__bar");
+const spectrumWaveCanvasEl = document.querySelector<HTMLCanvasElement>("#spectrumWaveCanvas");
+const spectrumScaleEl = document.querySelector<HTMLDivElement>("#spectrumScale");
 
 if (
   !wavelengthSliderEl ||
@@ -144,6 +151,42 @@ const runtime = createInstrumentRuntime({
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
 if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
+
+// Apply spectrum gradient
+if (spectrumBarEl) {
+  spectrumBarEl.style.background = spectrumGradientCSS();
+}
+
+// Draw chirp wave overlay
+function renderWaveOverlay() {
+  if (!spectrumWaveCanvasEl) return;
+  const rect = spectrumWaveCanvasEl.parentElement?.getBoundingClientRect();
+  if (!rect) return;
+  const dpr = window.devicePixelRatio || 1;
+  spectrumWaveCanvasEl.width = rect.width * dpr;
+  spectrumWaveCanvasEl.height = rect.height * dpr;
+  const ctx = spectrumWaveCanvasEl.getContext("2d");
+  if (!ctx) return;
+  ctx.scale(dpr, dpr);
+  drawSpectrumWave(ctx, rect.width, rect.height);
+}
+renderWaveOverlay();
+window.addEventListener("resize", renderWaveOverlay);
+
+// Render scale comparison objects
+function renderScaleObjects() {
+  if (!spectrumScaleEl) return;
+  spectrumScaleEl.innerHTML = "";
+  for (const obj of SCALE_OBJECTS) {
+    const pos = clamp(wavelengthToPositionPercent(obj.lambdaCm), 3, 97);
+    const span = document.createElement("span");
+    span.className = "spectrum__scale-item";
+    span.style.left = `${pos}%`;
+    span.textContent = obj.label;
+    spectrumScaleEl.appendChild(span);
+  }
+}
+renderScaleObjects();
 
 const state: { wavelengthCm: number; band: BandKey } = {
   wavelengthCm: AstroUnits.nmToCm(520),

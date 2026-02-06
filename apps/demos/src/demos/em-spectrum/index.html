@@ -65,6 +65,7 @@
 
           <div class="spectrum" aria-label="Spectrum bar">
             <div class="spectrum__bar" aria-hidden="true">
+              <canvas id="spectrumWaveCanvas" class="spectrum__wave"></canvas>
               <div id="bandHighlight" class="spectrum__highlight"></div>
               <div id="marker" class="spectrum__marker">
                 <div id="markerLabel" class="spectrum__markerLabel"></div>
@@ -79,6 +80,7 @@
               <span>1 pm</span>
               <span>10 fm</span>
             </div>
+            <div class="spectrum__scale" aria-hidden="true" id="spectrumScale"></div>
           </div>
 
           <div class="band-card" aria-label="Band description">
