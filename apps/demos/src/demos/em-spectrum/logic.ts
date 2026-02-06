@@ -196,3 +196,102 @@ export function bandCenterCm(key: BandKey): number {
   const band = BANDS[key];
   return Math.sqrt(band.lambdaMinCm * band.lambdaMaxCm);
 }
+
+/**
+ * Scale-object labels positioned at their approximate wavelength.
+ * Used to annotate the spectrum bar with familiar size comparisons.
+ */
+export const SCALE_OBJECTS: Array<{ label: string; lambdaCm: number }> = [
+  { label: "Buildings", lambdaCm: 1e4 },
+  { label: "Humans",    lambdaCm: 1.7e2 },
+  { label: "Insects",   lambdaCm: 1e0 },
+  { label: "Cells",     lambdaCm: 1e-3 },
+  { label: "Molecules", lambdaCm: 1e-7 },
+  { label: "Atoms",     lambdaCm: 1e-8 },
+  { label: "Nuclei",    lambdaCm: 1e-12 },
+];
+
+/**
+ * CSS linear-gradient string for the EM spectrum.
+ *
+ * Uses the legacy demo's color scheme (dark maroon for radio through
+ * the visible rainbow to deep purple/black for gamma), adapted to
+ * log-scale positions. Hex colors here represent physical spectral data,
+ * not design tokens -- acceptable in JS per architecture rules.
+ */
+export function spectrumGradientCSS(): string {
+  const stops: Array<[number, string]> = [
+    // Radio -- dark maroon to warm red
+    [0,    "#800000"],
+    [8,    "#993000"],
+    [15,   "#cc3300"],
+    [22,   "#ff3300"],
+    [28,   "#ff0000"],
+    // Near-IR edge / visible red
+    [32,   "#ff0000"],
+    [34,   "#ff4500"],
+    [37,   "#ffa500"],
+    [40,   "#ffff00"],
+    [44,   "#00ff00"],
+    [48,   "#00ffff"],
+    [52,   "#0000ff"],
+    [55,   "#4b0082"],
+    // UV
+    [58,   "#8b00ff"],
+    [65,   "#9932cc"],
+    // X-ray
+    [80,   "#4b0082"],
+    // Gamma -- deep purple to near-black
+    [100,  "#1a0033"],
+  ];
+  const parts = stops.map(([pos, color]) => `${color} ${pos}%`);
+  return `linear-gradient(to right, ${parts.join(", ")})`;
+}
+
+/**
+ * Draw a chirp wave overlay on a canvas context.
+ *
+ * The wave frequency increases smoothly from left (low freq / radio)
+ * to right (high freq / gamma), visually demonstrating that shorter
+ * wavelengths = higher frequency. The range is normalized so the wave
+ * is visible across the entire bar (not physically literal, since the
+ * actual range spans 20 orders of magnitude).
+ *
+ * @param ctx - Canvas 2D rendering context
+ * @param width - canvas pixel width
+ * @param height - canvas pixel height
+ */
+export function drawSpectrumWave(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number
+): void {
+  const midY = height / 2;
+  const amplitude = height * 0.32;
+
+  // Chirp: frequency increases exponentially from left to right.
+  // minCycles = cycles in leftmost pixel-region, maxCycles = rightmost.
+  // A 10:1 ratio gives a clear visual chirp without extremes.
+  const minFreq = 3;   // cycles across full width at x=0
+  const maxFreq = 60;  // cycles across full width at x=width
+
+  ctx.clearRect(0, 0, width, height);
+  ctx.beginPath();
+
+  let phase = 0;
+  for (let x = 0; x <= width; x++) {
+    // Exponential frequency sweep
+    const t = x / width;
+    const localFreq = minFreq * Math.pow(maxFreq / minFreq, t);
+    // Accumulate phase (integral of frequency)
+    const dx = 1 / width;
+    phase += localFreq * dx * 2 * Math.PI;
+    const y = midY + amplitude * Math.sin(phase);
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}

@@ -10,7 +10,10 @@ import {
   bandCenterCm,
   BANDS,
   LAMBDA_MIN_LOG,
-  LAMBDA_MAX_LOG
+  LAMBDA_MAX_LOG,
+  spectrumGradientCSS,
+  SCALE_OBJECTS,
+  drawSpectrumWave
 } from "./logic";
 
 describe("EM Spectrum -- Logic", () => {
@@ -495,6 +498,64 @@ describe("EM Spectrum -- Logic", () => {
     });
     it("LAMBDA_MAX_LOG is 6", () => {
       expect(LAMBDA_MAX_LOG).toBe(6);
+    });
+  });
+
+  // --- spectrumGradientCSS ---
+
+  describe("spectrumGradientCSS", () => {
+    it("returns a linear-gradient CSS string", () => {
+      const result = spectrumGradientCSS();
+      expect(result).toMatch(/^linear-gradient\(to right,/);
+    });
+
+    it("contains at least 15 color stops", () => {
+      const result = spectrumGradientCSS();
+      const stops = result.match(/#[0-9a-fA-F]{6}/g) || [];
+      expect(stops.length).toBeGreaterThanOrEqual(15);
+    });
+
+    it("starts at 0% and ends at 100%", () => {
+      const result = spectrumGradientCSS();
+      expect(result).toContain("0%");
+      expect(result).toContain("100%");
+    });
+
+    it("contains visible spectrum colors", () => {
+      const result = spectrumGradientCSS();
+      expect(result).toContain("#ff0000"); // red
+      expect(result).toContain("#00ff00"); // green
+      expect(result).toContain("#0000ff"); // blue
+    });
+  });
+
+  // --- SCALE_OBJECTS ---
+
+  describe("SCALE_OBJECTS", () => {
+    it("has 7 scale comparison objects", () => {
+      expect(SCALE_OBJECTS).toHaveLength(7);
+    });
+
+    it("objects are ordered from largest to smallest wavelength", () => {
+      for (let i = 1; i < SCALE_OBJECTS.length; i++) {
+        expect(SCALE_OBJECTS[i].lambdaCm).toBeLessThan(SCALE_OBJECTS[i - 1].lambdaCm);
+      }
+    });
+
+    it("each object has a label and positive wavelength", () => {
+      for (const obj of SCALE_OBJECTS) {
+        expect(obj.label.length).toBeGreaterThan(0);
+        expect(obj.lambdaCm).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  // --- drawSpectrumWave ---
+
+  describe("drawSpectrumWave", () => {
+    it("is a function that accepts ctx, width, height", () => {
+      expect(typeof drawSpectrumWave).toBe("function");
+      expect(drawSpectrumWave.length).toBe(3);
     });
   });
 });
