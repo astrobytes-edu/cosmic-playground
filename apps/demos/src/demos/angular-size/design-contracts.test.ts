@@ -120,4 +120,54 @@ describe("Angular Size — Design System Contracts", () => {
       expect(css).toMatch(/\.cp-demo__stage[\s\S]*?animation.*cp-fade-in/);
     });
   });
+
+  describe("Color literal absence", () => {
+    it("CSS has no hardcoded rgba() color literals", () => {
+      // Allow: rgba inside color-mix() expressions (these are token compositions)
+      // Forbid: standalone rgba() as a direct color value
+      const lines = css.split("\n");
+      const violations = lines.filter((line) => {
+        if (line.trim().startsWith("/*") || line.trim().startsWith("*")) return false;
+        // Match rgba() that is NOT inside color-mix()
+        if (/rgba\s*\(/.test(line) && !line.includes("color-mix")) return true;
+        return false;
+      });
+      expect(violations).toEqual([]);
+    });
+
+    it("CSS has no hardcoded hex color values", () => {
+      const lines = css.split("\n");
+      const violations = lines.filter((line) => {
+        if (line.trim().startsWith("/*") || line.trim().startsWith("*")) return false;
+        return /#[0-9a-fA-F]{3,8}\b/.test(line);
+      });
+      expect(violations).toEqual([]);
+    });
+  });
+
+  describe("Starfield initialization", () => {
+    it("main.ts imports and calls initStarfield", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("initStarfield");
+      expect(mainTs).toMatch(/initStarfield\s*\(/);
+    });
+  });
+
+  describe("Architecture compliance", () => {
+    it("main.ts imports physics from @cosmic/physics, not inline", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("from \"@cosmic/physics\"");
+      // Should NOT define its own angular diameter function
+      expect(mainTs).not.toMatch(/function\s+angularDiameter/);
+    });
+
+    it("no legacy --cp-accent2 or --cp-accent3 aliases in CSS or HTML", () => {
+      expect(css).not.toContain("--cp-accent2");
+      expect(css).not.toContain("--cp-accent3");
+      expect(html).not.toContain("--cp-accent2");
+      expect(html).not.toContain("--cp-accent3");
+    });
+  });
 });
