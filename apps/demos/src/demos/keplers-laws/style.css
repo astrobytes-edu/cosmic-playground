@@ -1,16 +1,58 @@
 @import "../../shared/stub-demo.css";
 
+.kepler-demo .cp-panel,
+.kepler-demo .cp-accordion {
+  background: color-mix(in srgb, var(--cp-bg1) 88%, transparent);
+  border-color: color-mix(in srgb, var(--cp-border) 70%, transparent);
+  box-shadow: none;
+}
+
+.kepler-stage-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cp-space-4);
+  margin-bottom: var(--cp-space-3);
+}
+
+.kepler-stage-title {
+  font-size: var(--cp-text-lg);
+  font-weight: var(--cp-font-bold);
+}
+
+.kepler-stage-subtitle {
+  margin: var(--cp-space-1) 0 0;
+  color: var(--cp-muted);
+}
+
+.kepler-stage-actions {
+  display: flex;
+  gap: var(--cp-space-2);
+}
+
 .stage-surface {
   position: relative;
   width: 100%;
   border-radius: var(--cp-radius-lg);
-  border: 1px solid var(--cp-border);
+  border: 1px solid color-mix(in srgb, var(--cp-border) 80%, transparent);
   padding: var(--cp-space-3);
-  background: radial-gradient(
-    circle at 20% 20%,
-    color-mix(in srgb, var(--cp-accent) 35%, transparent),
-    var(--cp-bg0)
-  );
+  background:
+    radial-gradient(
+      circle at 18% 22%,
+      color-mix(in srgb, var(--cp-warning) 22%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 78% 20%,
+      color-mix(in srgb, var(--cp-accent) 18%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      circle at 70% 72%,
+      color-mix(in srgb, var(--cp-chart-2) 16%, transparent),
+      transparent 65%
+    ),
+    radial-gradient(circle at 50% 50%, var(--cp-bg1), var(--cp-bg0));
 }
 
 .orbit-canvas {
@@ -30,6 +72,12 @@
   display: block;
 }
 
+#orbitPath {
+  stroke: color-mix(in srgb, var(--cp-text) 70%, var(--cp-border));
+  stroke-width: 1.6;
+  opacity: 0.8;
+}
+
 .cp-button-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -47,6 +95,24 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: var(--cp-space-2);
+}
+
+.kepler-presets {
+  display: grid;
+  gap: var(--cp-space-3);
+}
+
+.kepler-preset-label {
+  font-size: var(--cp-text-sm);
+  color: var(--cp-muted);
+  margin-bottom: var(--cp-space-2);
+}
+
+.kepler-unit-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--cp-space-2);
+  margin-bottom: var(--cp-space-3);
 }
 
 .preset--active {

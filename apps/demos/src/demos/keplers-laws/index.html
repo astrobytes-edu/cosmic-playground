@@ -10,171 +10,20 @@
   <body>
     <div
       id="cp-demo"
-      class="cp-layer-instrument cp-demo"
-      data-shell="triad"
+      class="cp-layer-instrument cp-demo kepler-demo"
+      data-shell="viz-first"
       aria-label="Kepler's Laws instrument"
     >
-      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
-        <div class="cp-panel-header">Kepler's Laws Sandbox</div>
-        <div class="cp-panel-body">
-          <p class="cp-muted">Explore orbital mechanics: empirical patterns and physical laws.</p>
-
-          <div class="cp-button-row" role="group" aria-label="Mode">
-            <button id="modeKepler" class="cp-button cp-button--active" type="button">Kepler mode</button>
-            <button id="modeNewton" class="cp-button cp-button--outline" type="button">Newton mode</button>
+      <section class="cp-demo__stage cp-stage" aria-label="Orbit visualization stage">
+        <div class="kepler-stage-header">
+          <div>
+            <div class="kepler-stage-title">Kepler's Laws Sandbox</div>
+            <p class="kepler-stage-subtitle">Explore orbital mechanics: empirical patterns and physical laws.</p>
           </div>
-
-          <details class="cp-accordion">
-            <summary>
-              <span class="cp-accordion__title">Keyboard shortcuts</span>
-              <span class="cp-accordion__meta">Space, arrows, presets</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <ul class="cp-list">
-                <li><kbd>Space</kbd>: Play/Pause</li>
-                <li><kbd>Home</kbd> / <kbd>End</kbd>: Perihelion / Aphelion</li>
-                <li><kbd>Left</kbd> / <kbd>Right</kbd>: Move along orbit (<kbd>Shift</kbd> = fine)</li>
-                <li><kbd>K</kbd> / <kbd>N</kbd>: Kepler / Newton mode</li>
-                <li><kbd>1</kbd>-<kbd>6</kbd>: Presets</li>
-              </ul>
-            </div>
-          </details>
-
-          <div class="cp-field">
-            <label class="cp-label" for="aAu">Semi-major axis a</label>
-            <div class="cp-field__value" id="aDisplay">1.00 AU</div>
-            <input
-              id="aAu"
-              class="cp-range"
-              type="range"
-              min="0"
-              max="1000"
-              value="250"
-              step="1"
-              data-tooltip-source="#aDisplay"
-            />
-            <div class="cp-field__hint">0.3 AU -> 40 AU (log scale)</div>
-          </div>
-
-          <div class="cp-field">
-            <label class="cp-label" for="ecc">Eccentricity e</label>
-            <div class="cp-field__value" id="eDisplay">0.017</div>
-            <input
-              id="ecc"
-              class="cp-range"
-              type="range"
-              min="0"
-              max="990"
-              value="17"
-              step="1"
-              data-tooltip-source="#eDisplay"
-            />
-            <div class="cp-field__hint">0 (circle) -> 0.99</div>
-          </div>
-
-          <div class="cp-field" id="massField" hidden>
-            <label class="cp-label" for="massSlider">Star mass M_star</label>
-            <div class="cp-field__value" id="massDisplay">1.0 M_sun</div>
-            <input
-              id="massSlider"
-              class="cp-range"
-              type="range"
-              min="10"
-              max="1000"
-              value="100"
-              step="1"
-              data-tooltip-source="#massDisplay"
-            />
-            <div class="cp-field__hint">0.1 M_sun -> 10 M_sun</div>
-          </div>
-
-          <div class="cp-button-row" role="group" aria-label="Unit system">
-            <button id="unit101" class="cp-button cp-button--active" type="button">101</button>
-            <button id="unit201" class="cp-button cp-button--outline" type="button">201</button>
-          </div>
-
-          <div class="cp-field">
-            <label class="cp-label" for="timelineScrub">Orbital phase</label>
-            <div class="cp-field__value" id="phaseDisplay">0.00 / 1.00 yr</div>
-            <input
-              id="timelineScrub"
-              class="cp-range"
-              type="range"
-              min="0"
-              max="1000"
-              value="0"
-              step="1"
-            />
-            <input id="meanAnomalyDeg" class="sr-only" type="text" aria-hidden="true" value="0" />
-          </div>
-
-          <div class="cp-button-row" role="group" aria-label="Animation controls">
-            <button id="play" class="cp-button" type="button">Play</button>
-            <button id="pause" class="cp-button cp-button--outline" type="button" disabled>Pause</button>
-            <button id="reset" class="cp-button cp-button--outline" type="button">Reset</button>
-          </div>
-
-          <div class="cp-field">
-            <label class="cp-label" for="speedSelect">Speed (years/sec)</label>
-            <select id="speedSelect" class="cp-select">
-              <option value="0.1">0.1x</option>
-              <option value="0.5">0.5x</option>
-              <option value="1" selected>1x</option>
-              <option value="2">2x</option>
-              <option value="5">5x</option>
-              <option value="10">10x</option>
-            </select>
-          </div>
-
-          <div class="cp-field">
-            <div class="cp-label">Presets</div>
-            <div class="cp-button-grid">
-              <button class="cp-button cp-button--outline preset" data-a="0.387" data-e="0.206">Mercury</button>
-              <button class="cp-button cp-button--outline preset" data-a="0.723" data-e="0.007">Venus</button>
-              <button class="cp-button cp-button--outline preset preset--active" data-a="1.0" data-e="0.017">Earth</button>
-              <button class="cp-button cp-button--outline preset" data-a="1.524" data-e="0.093">Mars</button>
-              <button class="cp-button cp-button--outline preset" data-a="5.203" data-e="0.049">Jupiter</button>
-              <button class="cp-button cp-button--outline preset" data-a="39.48" data-e="0.249">Pluto</button>
-              <button class="cp-button cp-button--outline preset" data-a="17.8" data-e="0.967">Halley</button>
-              <button class="cp-button cp-button--outline preset" data-a="1.0" data-e="0.0">Circular</button>
-              <button class="cp-button cp-button--outline preset" data-a="5.0" data-e="0.9">High e</button>
-            </div>
-          </div>
-
-          <div class="cp-field">
-            <div class="cp-label">Overlays</div>
-            <label class="cp-check">
-              <input id="toggleFoci" type="checkbox" checked /> Foci
-            </label>
-            <label class="cp-check">
-              <input id="toggleApsides" type="checkbox" checked /> Apsides
-            </label>
-            <label class="cp-check">
-              <input id="toggleEqualAreas" type="checkbox" /> Equal areas
-            </label>
-            <label class="cp-check" id="toggleVectorsLabel" hidden>
-              <input id="toggleVectors" type="checkbox" /> Vectors
-            </label>
-          </div>
-
-          <div class="cp-actions">
-            <button id="stationMode" class="cp-action" type="button">Station mode</button>
-            <button id="help" class="cp-action cp-action--ghost" type="button">Help / shortcuts</button>
-          </div>
-
-          <button id="copyResults" class="cp-action" type="button">Copy results</button>
-          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
-          <p id="orbitStatus" class="cp-status sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
-
-          <div class="cp-actions">
-            <a class="cp-button" href="../../exhibits/keplers-laws/">Open exhibit</a>
+          <div class="kepler-stage-actions">
             <a class="cp-button cp-button--outline" href="../../stations/keplers-laws/">Station card</a>
-            <a class="cp-button cp-button--outline" href="../../instructor/keplers-laws/">Instructor notes</a>
           </div>
         </div>
-      </aside>
-
-      <section class="cp-demo__stage cp-stage" aria-label="Orbit visualization stage">
         <div class="stage-surface">
           <canvas id="orbitCanvas" class="orbit-canvas" aria-hidden="true"></canvas>
           <svg id="orbitSvg" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet">
@@ -311,15 +160,183 @@
         </div>
       </section>
 
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Controls</div>
+        <div class="cp-panel-body">
+          <div class="cp-button-row" role="group" aria-label="Mode">
+            <button id="modeKepler" class="cp-button cp-button--active" type="button">Kepler mode</button>
+            <button id="modeNewton" class="cp-button cp-button--outline" type="button">Newton mode</button>
+          </div>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Keyboard shortcuts</span>
+              <span class="cp-accordion__meta">Space, arrows, presets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul class="cp-list">
+                <li><kbd>Space</kbd>: Play/Pause</li>
+                <li><kbd>Home</kbd> / <kbd>End</kbd>: Perihelion / Aphelion</li>
+                <li><kbd>Left</kbd> / <kbd>Right</kbd>: Move along orbit (<kbd>Shift</kbd> = fine)</li>
+                <li><kbd>K</kbd> / <kbd>N</kbd>: Kepler / Newton mode</li>
+                <li><kbd>1</kbd>-<kbd>6</kbd>: Presets</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="cp-field">
+            <label class="cp-label" for="aAu">Semi-major axis $a$</label>
+            <div class="cp-field__value" id="aDisplay">1.00 AU</div>
+            <input
+              id="aAu"
+              class="cp-range"
+              type="range"
+              min="0"
+              max="1000"
+              value="250"
+              step="1"
+              data-tooltip-source="#aDisplay"
+            />
+            <div class="cp-field__hint">0.3 AU $\rightarrow$ 40 AU (log scale)</div>
+          </div>
+
+          <div class="cp-field">
+            <label class="cp-label" for="ecc">Eccentricity $e$</label>
+            <div class="cp-field__value" id="eDisplay">0.017</div>
+            <input
+              id="ecc"
+              class="cp-range"
+              type="range"
+              min="0"
+              max="990"
+              value="17"
+              step="1"
+              data-tooltip-source="#eDisplay"
+            />
+            <div class="cp-field__hint">0 (circle) $\rightarrow$ 0.99</div>
+          </div>
+
+          <div class="cp-field" id="massField" hidden>
+            <label class="cp-label" for="massSlider">Star mass $M_*$</label>
+            <div class="cp-field__value" id="massDisplay">1.0 M_sun</div>
+            <input
+              id="massSlider"
+              class="cp-range"
+              type="range"
+              min="10"
+              max="1000"
+              value="100"
+              step="1"
+              data-tooltip-source="#massDisplay"
+            />
+            <div class="cp-field__hint">0.1 M_sun $\rightarrow$ 10 M_sun</div>
+          </div>
+
+          <div class="cp-field">
+            <label class="cp-label" for="timelineScrub">Orbital phase</label>
+            <div class="cp-field__value" id="phaseDisplay">0.00 / 1.00 yr</div>
+            <input
+              id="timelineScrub"
+              class="cp-range"
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+            />
+            <input id="meanAnomalyDeg" class="sr-only" type="text" aria-hidden="true" value="0" />
+          </div>
+
+          <div class="cp-button-row" role="group" aria-label="Animation controls">
+            <button id="play" class="cp-button" type="button">Play</button>
+            <button id="pause" class="cp-button cp-button--outline" type="button" disabled>Pause</button>
+            <button id="reset" class="cp-button cp-button--outline" type="button">Reset</button>
+          </div>
+
+          <div class="cp-field">
+            <label class="cp-label" for="speedSelect">Speed (yr/s)</label>
+            <select id="speedSelect" class="cp-select">
+              <option value="0.1">0.1x</option>
+              <option value="0.5">0.5x</option>
+              <option value="1" selected>1x</option>
+              <option value="2">2x</option>
+              <option value="5">5x</option>
+              <option value="10">10x</option>
+            </select>
+          </div>
+
+          <div class="cp-field">
+            <div class="cp-label">Presets</div>
+            <div class="kepler-presets">
+              <div class="kepler-preset-group">
+                <div class="kepler-preset-label">Solar system</div>
+                <div class="cp-button-grid">
+                  <button class="cp-button cp-button--outline preset" data-a="0.387" data-e="0.206">Mercury</button>
+                  <button class="cp-button cp-button--outline preset" data-a="0.723" data-e="0.007">Venus</button>
+                  <button class="cp-button cp-button--outline preset preset--active" data-a="1.0" data-e="0.017">Earth</button>
+                  <button class="cp-button cp-button--outline preset" data-a="1.524" data-e="0.093">Mars</button>
+                  <button class="cp-button cp-button--outline preset" data-a="5.203" data-e="0.049">Jupiter</button>
+                  <button class="cp-button cp-button--outline preset" data-a="39.48" data-e="0.249">Pluto</button>
+                </div>
+              </div>
+              <div class="kepler-preset-group">
+                <div class="kepler-preset-label">Extreme orbits</div>
+                <div class="cp-button-grid">
+                  <button class="cp-button cp-button--outline preset" data-a="17.8" data-e="0.967">Halley</button>
+                  <button class="cp-button cp-button--outline preset" data-a="1.0" data-e="0.0">Circular</button>
+                  <button class="cp-button cp-button--outline preset" data-a="5.0" data-e="0.9">High e</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cp-field">
+            <div class="cp-label">Overlays</div>
+            <label class="cp-check">
+              <input id="toggleFoci" type="checkbox" checked /> Foci
+            </label>
+            <label class="cp-check">
+              <input id="toggleApsides" type="checkbox" checked /> Apsides
+            </label>
+            <label class="cp-check">
+              <input id="toggleEqualAreas" type="checkbox" /> Equal areas
+            </label>
+            <label class="cp-check" id="toggleVectorsLabel" hidden>
+              <input id="toggleVectors" type="checkbox" /> Vectors
+            </label>
+          </div>
+
+          <div class="cp-actions">
+            <button id="stationMode" class="cp-action" type="button">Station mode</button>
+            <button id="help" class="cp-action cp-action--ghost" type="button">Help / shortcuts</button>
+          </div>
+
+          <button id="copyResults" class="cp-action" type="button">Copy results</button>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+          <p id="orbitStatus" class="cp-status sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+
+          <div class="cp-actions">
+            <a class="cp-button" href="../../exhibits/keplers-laws/">Open exhibit</a>
+            <a class="cp-button cp-button--outline" href="../../instructor/keplers-laws/">Instructor notes</a>
+          </div>
+        </div>
+      </aside>
+
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
+          <div class="kepler-unit-toggle" role="group" aria-label="Unit system">
+            <button id="unit101" class="cp-button cp-button--active" type="button">101</button>
+            <button id="unit201" class="cp-button cp-button--outline" type="button">201</button>
+          </div>
+
           <div class="cp-readout">
-            <div class="cp-readout__label">Distance r (AU)</div>
+            <div class="cp-readout__label">Distance $r$</div>
             <div class="cp-readout__value" id="distanceValue">1.00</div>
+            <div class="cp-readout__unit" id="distanceUnit">AU</div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Speed v</div>
+            <div class="cp-readout__label">Speed $v$</div>
             <div class="cp-readout__value" id="velocityValue">29.8</div>
             <div class="cp-readout__unit" id="velocityUnit">km/s</div>
           </div>
@@ -329,8 +346,9 @@
             <div class="cp-readout__unit" id="accelUnit">mm/s^2</div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Orbital period P (yr)</div>
+            <div class="cp-readout__label">Period $P$</div>
             <div class="cp-readout__value" id="periodValue">1.00</div>
+            <div class="cp-readout__unit">yr</div>
           </div>
 
           <details class="cp-accordion">
@@ -340,27 +358,27 @@
             </summary>
             <div class="cp-accordion__body">
               <div class="cp-readout">
-                <div class="cp-readout__label">Kinetic (v^2/2)</div>
+                <div class="cp-readout__label">Kinetic ($v^2/2$)</div>
                 <div class="cp-readout__value" id="kineticValue">0</div>
                 <div class="cp-readout__unit" id="kineticUnit">AU^2/yr^2</div>
               </div>
               <div class="cp-readout">
-                <div class="cp-readout__label">Potential (-mu/r)</div>
+                <div class="cp-readout__label">Potential ($-\mu/r$)</div>
                 <div class="cp-readout__value" id="potentialValue">0</div>
                 <div class="cp-readout__unit" id="potentialUnit">AU^2/yr^2</div>
               </div>
               <div class="cp-readout">
-                <div class="cp-readout__label">Total eps</div>
+                <div class="cp-readout__label">Total $\varepsilon$</div>
                 <div class="cp-readout__value" id="energyValue">0</div>
                 <div class="cp-readout__unit" id="energyUnit">AU^2/yr^2</div>
               </div>
               <div class="cp-readout">
-                <div class="cp-readout__label">Angular momentum h</div>
+                <div class="cp-readout__label">Angular momentum $h$</div>
                 <div class="cp-readout__value" id="angmomValue">0</div>
                 <div class="cp-readout__unit" id="angmomUnit">AU^2/yr</div>
               </div>
               <div class="cp-readout">
-                <div class="cp-readout__label">Areal velocity (dA/dt)</div>
+                <div class="cp-readout__label">Areal velocity ($dA/dt$)</div>
                 <div class="cp-readout__value" id="arealValue">0</div>
                 <div class="cp-readout__unit" id="arealUnit">AU^2/yr</div>
               </div>
@@ -378,26 +396,28 @@
             </summary>
             <div class="cp-accordion__body">
               <ul class="cp-list">
-                <li>When e &gt; 0, the planet moves fastest near perihelion (closest point).</li>
+                <li>When $e$ &gt; 0, the planet moves fastest near perihelion (closest point).</li>
                 <li>Equal-area slices stay similar in area even when arc lengths differ.</li>
-                <li>Bigger a means a much longer period (Kepler 3).</li>
+                <li>Bigger $a$ means a much longer period (Kepler 3).</li>
               </ul>
             </div>
           </details>
 
           <details class="cp-accordion">
             <summary>
-              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__title">Model note (teaching model)</span>
               <span class="cp-accordion__meta">AU / yr / M_sun</span>
             </summary>
             <div class="cp-accordion__body">
               <ul class="cp-list">
-                <li>Planar (2D) Kepler orbit with no perturbations.</li>
+                <li>This simulation is a simplified, planar (2D) two-body model.</li>
+                <li>It ignores perturbations and treats the planet as negligible-mass in Newton mode.</li>
+                <li>The animation speed is a teaching scale (years per second), not real time.</li>
                 <li>
                   Teaching normalization:
-                  <span data-math="G = 4\pi^2\,\frac{\mathrm{AU}^3}{\mathrm{yr}^2\,M_{\odot}}"></span>.
+                  $G = 4\pi^2\,\frac{\mathrm{AU}^3}{\mathrm{yr}^2\,M_{\odot}}$.
                 </li>
-                <li>Kepler 3: <span data-math="P^2 = \frac{a^3}{M}"></span>.</li>
+                <li>Kepler 3: $P^2 = \frac{a^3}{M}$.</li>
                 <li>The time slider advances mean anomaly uniformly; position is solved from Kepler's equation.</li>
               </ul>
             </div>

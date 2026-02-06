@@ -69,6 +69,7 @@ const elements = {
   forceVector: document.querySelector<SVGGElement>("#forceVector"),
   forceLine: document.querySelector<SVGLineElement>("#forceLine"),
   distanceValue: document.querySelector<HTMLDivElement>("#distanceValue"),
+  distanceUnit: document.querySelector<HTMLDivElement>("#distanceUnit"),
   velocityValue: document.querySelector<HTMLDivElement>("#velocityValue"),
   velocityUnit: document.querySelector<HTMLDivElement>("#velocityUnit"),
   accelValue: document.querySelector<HTMLDivElement>("#accelValue"),
@@ -380,21 +381,38 @@ function updateReadouts(stateAtM: ReturnType<typeof KeplersLawsModel.stateAtMean
 
   elements.distanceValue!.textContent = readouts.distance.value.toPrecision(3);
   elements.velocityValue!.textContent = readouts.velocity.value.toPrecision(3);
-  elements.velocityUnit!.textContent = readouts.velocity.unit;
   elements.accelValue!.textContent = readouts.acceleration.value.toPrecision(3);
-  elements.accelUnit!.textContent = readouts.acceleration.unit;
   elements.periodValue!.textContent = readouts.period.value.toPrecision(3);
 
   elements.kineticValue!.textContent = readouts.conservation.kinetic.value.toPrecision(4);
-  elements.kineticUnit!.textContent = readouts.conservation.kinetic.unit;
   elements.potentialValue!.textContent = readouts.conservation.potential.value.toPrecision(4);
-  elements.potentialUnit!.textContent = readouts.conservation.potential.unit;
   elements.energyValue!.textContent = readouts.conservation.total.value.toPrecision(4);
-  elements.energyUnit!.textContent = readouts.conservation.total.unit;
   elements.angmomValue!.textContent = readouts.conservation.h.value.toPrecision(4);
-  elements.angmomUnit!.textContent = readouts.conservation.h.unit;
   elements.arealValue!.textContent = readouts.conservation.areal.value.toPrecision(4);
-  elements.arealUnit!.textContent = readouts.conservation.areal.unit;
+}
+
+function setMathLabel(el: HTMLElement, tex: string, unitKey?: string) {
+  if (el.dataset.math === tex) return;
+  el.dataset.math = tex;
+  if (unitKey) el.dataset.unit = unitKey;
+  el.textContent = `$${tex}$`;
+  initMath(el);
+}
+
+function updateUnitLabels() {
+  const velocityTex = state.units === "201" ? "\\mathrm{cm}/\\mathrm{s}" : "\\mathrm{km}/\\mathrm{s}";
+  const accelTex = state.units === "201" ? "\\mathrm{cm}/\\mathrm{s}^2" : "\\mathrm{mm}/\\mathrm{s}^2";
+  const energyTex = state.units === "201" ? "\\mathrm{cm}^2/\\mathrm{s}^2" : "\\mathrm{AU}^2/\\mathrm{yr}^2";
+  const angMomTex = state.units === "201" ? "\\mathrm{cm}^2/\\mathrm{s}" : "\\mathrm{AU}^2/\\mathrm{yr}";
+
+  setMathLabel(elements.distanceUnit!, "\\mathrm{AU}", "AU");
+  setMathLabel(elements.velocityUnit!, velocityTex, state.units === "201" ? "cm/s" : "km/s");
+  setMathLabel(elements.accelUnit!, accelTex, state.units === "201" ? "cm/s^2" : "mm/s^2");
+  setMathLabel(elements.kineticUnit!, energyTex, state.units === "201" ? "cm^2/s^2" : "AU^2/yr^2");
+  setMathLabel(elements.potentialUnit!, energyTex, state.units === "201" ? "cm^2/s^2" : "AU^2/yr^2");
+  setMathLabel(elements.energyUnit!, energyTex, state.units === "201" ? "cm^2/s^2" : "AU^2/yr^2");
+  setMathLabel(elements.angmomUnit!, angMomTex, state.units === "201" ? "cm^2/s" : "AU^2/yr");
+  setMathLabel(elements.arealUnit!, angMomTex, state.units === "201" ? "cm^2/s" : "AU^2/yr");
 }
 
 function updateTimeline() {
@@ -457,6 +475,7 @@ function setUnits(units: "101" | "201") {
   elements.unit101!.classList.toggle("cp-button--outline", units === "201");
   elements.unit201!.classList.toggle("cp-button--active", units === "201");
   elements.unit201!.classList.toggle("cp-button--outline", units === "101");
+  updateUnitLabels();
   update();
 }
 

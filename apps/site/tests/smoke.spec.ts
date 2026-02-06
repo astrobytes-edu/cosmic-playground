@@ -163,6 +163,33 @@ test.describe("Cosmic Playground smoke", () => {
 
     await page.goto("play/keplers-laws/", { waitUntil: "domcontentloaded" });
     await expect(page.locator("#cp-demo")).toBeVisible();
+    await expect(page.locator("#cp-demo")).toHaveAttribute("data-shell", "viz-first");
+    await expect(page.locator('label[for="aAu"] .katex')).toBeVisible();
+    await expect(page.locator('label[for="ecc"] .katex')).toBeVisible();
+
+    // Units toggle should switch to CGS in 201 mode.
+    await page.locator("#unit201").click();
+    await expect(page.locator("#velocityUnit")).toHaveAttribute("data-unit", "cm/s");
+    await expect(page.locator("#accelUnit")).toHaveAttribute("data-unit", "cm/s^2");
+    await expect(page.locator("#velocityUnit .katex")).toBeVisible();
+
+    // Newton mode reveals vectors toggle and renders vectors on request.
+    await page.locator("#modeNewton").click();
+    const vectorsToggle = page.locator("#toggleVectorsLabel");
+    await expect(vectorsToggle).toBeVisible();
+    await expect(page.locator("#massField")).toBeVisible();
+    await page.locator("#toggleVectors").check();
+    await expect(page.locator("#velocityVector")).toBeVisible();
+    await expect(page.locator("#forceVector")).toBeVisible();
+
+    // Equal areas overlay renders when enabled.
+    await page.locator("#toggleEqualAreas").check();
+    await expect(page.locator("#equalAreasGroup")).toBeVisible();
+
+    // Preset updates core parameters.
+    await page.getByRole("button", { name: "Jupiter" }).click();
+    await expect(page.locator("#aDisplay")).toContainText("5.20");
+    await expect(page.locator("#eDisplay")).toHaveText("0.049");
 
     // (1) Verify the planet marker is not rendered with a default/invalid color.
     // When canvas colors come from CSS vars like `var(--cp-accent)` or `color-mix(...)`,
