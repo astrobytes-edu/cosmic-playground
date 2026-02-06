@@ -378,7 +378,9 @@ test.describe("Kepler's Laws -- E2E", () => {
     const accordion = page.locator("details.cp-accordion", { hasText: "Keyboard shortcuts" });
     await expect(accordion).toBeAttached();
     const summary = accordion.locator("summary");
-    await summary.click();
+    await summary.scrollIntoViewIfNeeded();
+    await summary.focus();
+    await summary.press("Enter");
     await expect(accordion).toHaveAttribute("open", "");
   });
 
