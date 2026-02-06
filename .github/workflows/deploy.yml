@@ -17,7 +17,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  verify:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,16 +43,59 @@ jobs:
         run: corepack pnpm test
       - name: Build (demos → copy → site)
         run: corepack pnpm build
-      - name: Install Playwright browsers
-        run: corepack pnpm -C apps/site exec playwright install --with-deps chromium
-      - name: Playwright smoke tests
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+      - name: Install Playwright Chromium
+        run: corepack pnpm -C apps/site exec playwright install chromium
+      - name: Playwright full suite (PR)
         run: corepack pnpm -C apps/site test:e2e
+
+  build:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install deps (workspace root)
+        run: |
+          corepack enable
+          corepack pnpm install --frozen-lockfile
+      - name: Build (demos → copy → site)
+        run: corepack pnpm build
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+      - name: Install Playwright Chromium
+        run: corepack pnpm -C apps/site exec playwright install chromium
+      - name: Playwright deploy smoke
+        run: >
+          corepack pnpm -C apps/site test:e2e
+          tests/smoke.spec.ts
+          --grep "All /play/<slug>/ pages load the instrument root"
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: apps/site/dist
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:
