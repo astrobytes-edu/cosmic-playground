@@ -11,7 +11,6 @@
     <div
       id="cp-demo"
       class="cp-layer-instrument cp-demo"
-      data-shell="triad"
       aria-label="Blackbody Radiation instrument"
     >
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
@@ -20,7 +19,7 @@
           <p class="cp-muted">See how temperature shifts a thermal spectrum and perceived color.</p>
 
           <label class="control">
-            <span>Temperature $T$ (K)</span>
+            <span>Temperature <i>T</i> [K]</span>
             <input
               id="tempSlider"
               type="range"
@@ -71,6 +70,28 @@
             </div>
           </div>
 
+          <div class="star-preview" aria-label="Star preview">
+            <div id="starCircle" class="star-preview__circle" role="img" aria-label="Approximate star color"></div>
+            <div class="star-preview__label">
+              <span id="spectralClass"></span> · <span id="colorName"></span>
+            </div>
+          </div>
+
+          <div class="cp-readout">
+            <div class="cp-readout__label">Peak wavelength $\lambda_{\rm peak}$</div>
+            <div class="cp-readout__value">
+              <span id="peakNm"></span>
+              <span class="cp-readout__unit">nm</span>
+            </div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Luminosity ratio $L/L_{\odot}$</div>
+            <div class="cp-readout__value">
+              <span id="lumRatio"></span>
+              <span class="cp-readout__unit">L<sub>&#x2609;</sub></span>
+            </div>
+          </div>
+
           <button id="stationMode" class="cp-action" type="button">Station mode</button>
           <button id="help" class="cp-action cp-action--ghost" type="button">Help / shortcuts</button>
 
@@ -93,32 +114,6 @@
           aria-label="Blackbody spectrum curve showing relative intensity versus wavelength"
         ></canvas>
       </section>
-
-      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
-        <div class="cp-panel-header">Readouts</div>
-        <div class="cp-panel-body">
-          <div class="star-preview" aria-label="Star preview">
-            <div id="starCircle" class="star-preview__circle" role="img" aria-label="Approximate star color"></div>
-            <div class="star-preview__label">
-              <span id="spectralClass"></span> · <span id="colorName"></span>
-            </div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Peak wavelength $\lambda_{\rm peak}$</div>
-            <div class="cp-readout__value">
-              <span id="peakNm"></span>
-              <span class="cp-readout__unit">nm</span>
-            </div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Luminosity ratio $L/L_{\odot}$</div>
-            <div class="cp-readout__value">
-              <span id="lumRatio"></span>
-              <span class="cp-readout__unit">L<sub>&#x2609;</sub></span>
-            </div>
-          </div>
-        </div>
-      </aside>
 
       <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
         <div class="cp-panels">

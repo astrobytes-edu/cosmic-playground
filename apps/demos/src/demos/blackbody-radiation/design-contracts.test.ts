@@ -121,8 +121,14 @@ describe("Blackbody Radiation -- Design System Contracts", () => {
       expect(html).toContain("cp-layer-instrument");
     });
 
-    it("HTML has triad shell layout", () => {
-      expect(html).toContain('data-shell="triad"');
+    it("readouts are integrated in controls panel (no separate readouts aside)", () => {
+      // Star preview and readouts should be inside the controls panel, not a separate aside
+      expect(html).not.toMatch(/<aside[^>]*cp-demo__readouts/);
+      // Controls panel should contain the readout elements
+      const controlsSection = html.match(/class="cp-demo__controls[\s\S]*?<\/aside>/);
+      expect(controlsSection).not.toBeNull();
+      expect(controlsSection![0]).toContain('class="cp-readout"');
+      expect(controlsSection![0]).toContain('class="star-preview"');
     });
   });
 });

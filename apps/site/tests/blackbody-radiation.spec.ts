@@ -8,11 +8,13 @@ test.describe("Blackbody Radiation -- E2E", () => {
 
   // --- Layout & Visual ---
 
-  test("demo loads with all four shell sections visible", async ({ page }) => {
+  test("demo loads with shell sections visible (readouts in controls)", async ({ page }) => {
     await expect(page.locator(".cp-demo__controls")).toBeVisible();
     await expect(page.locator(".cp-demo__stage")).toBeVisible();
-    await expect(page.locator(".cp-demo__readouts")).toBeVisible();
     await expect(page.locator(".cp-demo__drawer")).toBeVisible();
+    // Readouts are integrated into controls panel, not a separate column
+    await expect(page.locator(".cp-demo__controls .star-preview")).toBeVisible();
+    await expect(page.locator(".cp-demo__controls .cp-readout").first()).toBeVisible();
   });
 
   test("starfield canvas is present and visible", async ({ page }) => {
@@ -182,9 +184,9 @@ test.describe("Blackbody Radiation -- E2E", () => {
     await expect(controls).toHaveAttribute("aria-label", "Controls panel");
   });
 
-  test("readouts panel has accessible label", async ({ page }) => {
-    const readouts = page.locator(".cp-demo__readouts");
-    await expect(readouts).toHaveAttribute("aria-label", "Readouts panel");
+  test("star preview has accessible label", async ({ page }) => {
+    const starPreview = page.locator(".star-preview");
+    await expect(starPreview).toHaveAttribute("aria-label", "Star preview");
   });
 
   test("help button opens help modal", async ({ page }) => {
