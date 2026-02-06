@@ -177,4 +177,58 @@ describe("Design tokens", () => {
       }
     });
   });
+
+  describe("Celestial object palette", () => {
+    it("defines tokens for astronomical objects", () => {
+      const requiredTokens = [
+        "--cp-celestial-sun",
+        "--cp-celestial-moon",
+        "--cp-celestial-earth",
+        "--cp-celestial-mars",
+        "--cp-celestial-star",
+        "--cp-celestial-orbit",
+      ];
+      for (const token of requiredTokens) {
+        expect(css).toContain(token);
+      }
+    });
+  });
+
+  describe("Instrument accent colors", () => {
+    it("defines instrument-specific accent tokens", () => {
+      const requiredTokens = [
+        "--cp-accent-amber",
+        "--cp-accent-green",
+        "--cp-accent-ice",
+        "--cp-accent-rose",
+      ];
+      for (const token of requiredTokens) {
+        expect(css).toContain(token);
+      }
+    });
+  });
+
+  describe("Readout typography", () => {
+    it("defines readout label/value/unit tokens", () => {
+      const requiredTokens = [
+        "--cp-readout-label-size",
+        "--cp-readout-label-weight",
+        "--cp-readout-label-tracking",
+        "--cp-readout-label-color",
+        "--cp-readout-value-size",
+        "--cp-readout-value-weight",
+        "--cp-readout-value-color",
+        "--cp-readout-value-font",
+        "--cp-readout-unit-size",
+        "--cp-readout-unit-color",
+      ];
+      for (const token of requiredTokens) {
+        expect(css).toContain(token);
+      }
+    });
+
+    it("readout values use amber color", () => {
+      expect(css).toMatch(/--cp-readout-value-color:.*amber/);
+    });
+  });
 });

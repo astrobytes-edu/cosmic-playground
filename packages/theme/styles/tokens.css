@@ -62,6 +62,25 @@
   --cp-glow-accent-rose: 0 0 25px 6px rgba(244, 114, 182, 0.35);
   --cp-glow-accent-violet: 0 0 25px 6px rgba(167, 139, 250, 0.35);
 
+  /* ---------- Celestial Object Palette ---------- */
+  --cp-celestial-sun: #fbbf24;
+  --cp-celestial-sun-core: #fff5cc;
+  --cp-celestial-sun-corona: #ff8c00;
+  --cp-celestial-moon: #e2e8f0;
+  --cp-celestial-moon-dark: #3a3a4a;
+  --cp-celestial-earth: #3b82f6;
+  --cp-celestial-earth-land: #4a9d4a;
+  --cp-celestial-mars: #ef4444;
+  --cp-celestial-jupiter: #d4a574;
+  --cp-celestial-star: #ffffff;
+  --cp-celestial-orbit: var(--cp-violet);
+
+  /* ---------- Instrument Accents (spacecraft control panel palette) ---------- */
+  --cp-accent-amber: #FFB86C;
+  --cp-accent-green: #50FA7B;
+  --cp-accent-ice: #8BE9FD;
+  --cp-accent-rose: #FF79C6;
+
   /* ---------- Data Visualization ---------- */
   /* Categorical palette - perceptually distinct, colorblind-safe */
   --cp-chart-1: var(--cp-accent);     /* teal */
@@ -182,6 +201,20 @@
   --cp-card-shadow-hover: 0 14px 36px rgba(0, 0, 0, 0.42);
   --cp-card-border-hover: color-mix(in srgb, var(--cp-accent) 35%, var(--cp-border));
   --cp-card-glow: 0 8px 32px color-mix(in srgb, var(--cp-accent) 10%, transparent);
+
+  /* ---------- Readout Typography (label -> value -> unit hierarchy) ---------- */
+  --cp-readout-label-size: 0.75rem;
+  --cp-readout-label-weight: 600;
+  --cp-readout-label-tracking: 0.05em;
+  --cp-readout-label-color: var(--cp-muted);
+  --cp-readout-value-size: 1.5rem;
+  --cp-readout-value-weight: 500;
+  --cp-readout-value-color: var(--cp-accent-amber);
+  --cp-readout-value-font: "SF Mono", "Fira Code", ui-monospace, SFMono-Regular,
+    Menlo, Monaco, Consolas, monospace;
+  --cp-readout-unit-size: 0.875rem;
+  --cp-readout-unit-weight: 400;
+  --cp-readout-unit-color: var(--cp-accent-ice);
 
   /* ---------- Status ---------- */
   --cp-status-draft-bg: color-mix(in srgb, var(--cp-pink) 18%, transparent);
