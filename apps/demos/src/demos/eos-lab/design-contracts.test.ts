@@ -79,6 +79,14 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(mainTs).toContain("renderRegimeMap");
   });
 
+  it("renders diagnostic inequalities with LaTeX formatting", () => {
+    expect(html).toContain("$m_u$");
+    expect(mainTs).toContain("x_F \\\\ll 1");
+    expect(mainTs).toContain("T/T_F \\\\ll 1");
+    expect(mainTs).toContain("renderMath(degRegimeValue)");
+    expect(mainTs).toContain("renderMath(fermiRegimeValue)");
+  });
+
   it("exports advanced diagnostics in copy-results payload", () => {
     expect(mainTs).toContain("x_F=p_F/(m_e c)");
     expect(mainTs).toContain("Fermi relativity regime");

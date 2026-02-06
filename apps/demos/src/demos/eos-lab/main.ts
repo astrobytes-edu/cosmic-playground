@@ -3,6 +3,7 @@ import {
   createInstrumentRuntime,
   initMath,
   initStarfield,
+  renderMath,
   setLiveRegionText
 } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
@@ -442,6 +443,32 @@ function electronDegeneracyMethodLabel(
   }
 }
 
+function degeneracyRegimeLabelLatex(regime: StellarEosStateCgs["degeneracyRegime"]): string {
+  switch (regime.tag) {
+    case "strong":
+      return `Strongly degenerate ($T/T_F \\ll 1$)`;
+    case "transition":
+      return `Transition regime ($T/T_F \\sim 1$)`;
+    case "weak":
+      return `Weakly/non-degenerate ($T/T_F \\gg 1$)`;
+    default:
+      return "Degeneracy diagnostic unavailable";
+  }
+}
+
+function fermiRelativityRegimeLabelLatex(regime: StellarEosStateCgs["fermiRelativityRegime"]): string {
+  switch (regime.tag) {
+    case "non-relativistic":
+      return `Non-relativistic electron momenta ($x_F \\ll 1$)`;
+    case "trans-relativistic":
+      return `Trans-relativistic electron momenta ($x_F \\sim 1$)`;
+    case "relativistic":
+      return `Relativistic electron momenta ($x_F > 1$)`;
+    default:
+      return "Fermi relativity diagnostic unavailable";
+  }
+}
+
 function compositionRegimeKey(composition: StellarCompositionFractions, radiationDepartureEta: number): string {
   return [
     composition.hydrogenMassFractionX.toFixed(6),
@@ -614,11 +641,13 @@ function renderRegimeMap(
 
 function renderAdvancedDiagnostics(model: StellarEosStateCgs): void {
   xFValue.textContent = formatScientific(model.fermiRelativityX, 5);
-  fermiRegimeValue.textContent = model.fermiRelativityRegime.label;
+  fermiRegimeValue.textContent = fermiRelativityRegimeLabelLatex(model.fermiRelativityRegime);
+  renderMath(fermiRegimeValue);
   finiteTCorrectionValue.textContent = Number.isFinite(model.finiteTemperatureDegeneracyCorrectionFactor)
     ? formatScientific(model.finiteTemperatureDegeneracyCorrectionFactor, 5)
     : "—";
   finiteTValidityValue.textContent = `${model.finiteTemperatureDegeneracyAssessment.label} (${electronDegeneracyMethodLabel(model.electronDegeneracyMethod)})`;
+  renderMath(finiteTValidityValue);
   neutronExtensionValue.textContent = formatScientific(
     model.neutronExtensionPressureDynePerCm2,
     5
@@ -804,7 +833,8 @@ function render(args: { deferRegimeMapFieldRebuild?: boolean } = {}): void {
   radGasValue.textContent = formatScientific(model.pressureRatios.radiationToGas, 5);
   degTotalValue.textContent = percent(model.pressureRatios.degeneracyToTotal, 2);
   chiDegValue.textContent = formatScientific(model.chiDegeneracy, 5);
-  degRegimeValue.textContent = model.degeneracyRegime.label;
+  degRegimeValue.textContent = degeneracyRegimeLabelLatex(model.degeneracyRegime);
+  renderMath(degRegimeValue);
 
   renderRadiationClosure(model);
   renderAdvancedDiagnostics(model);
