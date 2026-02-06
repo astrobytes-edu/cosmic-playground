@@ -184,6 +184,9 @@ const bandDetectionEl = document.querySelector<HTMLDivElement>("#bandDetection")
 const readoutWavelengthEl = document.querySelector<HTMLSpanElement>("#readoutWavelength");
 const readoutFrequencyEl = document.querySelector<HTMLSpanElement>("#readoutFrequency");
 const readoutEnergyEl = document.querySelector<HTMLSpanElement>("#readoutEnergy");
+const readoutWavelengthUnitEl = document.querySelector<HTMLSpanElement>("#readoutWavelengthUnit");
+const readoutFrequencyUnitEl = document.querySelector<HTMLSpanElement>("#readoutFrequencyUnit");
+const readoutEnergyUnitEl = document.querySelector<HTMLSpanElement>("#readoutEnergyUnit");
 
 const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
 const statusEl = document.querySelector<HTMLParagraphElement>("#status");
@@ -222,6 +225,9 @@ if (
   !readoutWavelengthEl ||
   !readoutFrequencyEl ||
   !readoutEnergyEl ||
+  !readoutWavelengthUnitEl ||
+  !readoutFrequencyUnitEl ||
+  !readoutEnergyUnitEl ||
   !copyResultsEl ||
   !statusEl ||
   !tabConvertEl ||
@@ -256,6 +262,9 @@ const bandDetection = bandDetectionEl;
 const readoutWavelength = readoutWavelengthEl;
 const readoutFrequency = readoutFrequencyEl;
 const readoutEnergy = readoutEnergyEl;
+const readoutWavelengthUnit = readoutWavelengthUnitEl;
+const readoutFrequencyUnit = readoutFrequencyUnitEl;
+const readoutEnergyUnit = readoutEnergyUnitEl;
 const copyResults = copyResultsEl;
 const status = statusEl;
 
@@ -326,9 +335,12 @@ function renderReadouts(lambdaCm: number) {
   const f = formatFrequency(nuHz);
   const e = formatEnergyFromErg(energyErg);
 
-  readoutWavelength.textContent = `${w.value} ${w.unit}`.trim();
-  readoutFrequency.textContent = `${f.value} ${f.unit}`.trim();
-  readoutEnergy.textContent = `${e.value} ${e.unit}`.trim();
+  readoutWavelength.textContent = w.value;
+  readoutWavelengthUnit.textContent = w.unit;
+  readoutFrequency.textContent = f.value;
+  readoutFrequencyUnit.textContent = f.unit;
+  readoutEnergy.textContent = e.value;
+  readoutEnergyUnit.textContent = e.unit;
   wavelengthValue.textContent = `${w.value} ${w.unit}`.trim();
 }
 
