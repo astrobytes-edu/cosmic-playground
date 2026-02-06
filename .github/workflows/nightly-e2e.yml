@@ -1,0 +1,41 @@
+name: Nightly Full E2E
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install deps (workspace root)
+        run: |
+          corepack enable
+          corepack pnpm install --frozen-lockfile
+      - name: Build (demos → copy → site)
+        run: corepack pnpm build
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+      - name: Install Playwright Chromium
+        run: corepack pnpm -C apps/site exec playwright install chromium
+      - name: Run full Playwright suite
+        run: corepack pnpm -C apps/site test:e2e
