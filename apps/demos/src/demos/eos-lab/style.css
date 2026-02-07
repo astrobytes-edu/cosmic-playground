@@ -313,6 +313,16 @@
   background: color-mix(in srgb, var(--eos-mixed) 50%, transparent);
 }
 
+.regime-map__overlay-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-1);
+  font-size: 0.8rem;
+  color: var(--cp-muted);
+  margin-top: var(--cp-space-1);
+  cursor: pointer;
+}
+
 #regimeDetail {
   font-size: 0.95rem;
   line-height: 1.4;

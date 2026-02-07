@@ -30,6 +30,7 @@ import {
   gasEquationSymbolic,
   radEquationSymbolic,
   degEquationSymbolic,
+  solarProfileData,
 } from "./logic";
 
 const SOLAR_COMPOSITION = {
@@ -554,5 +555,37 @@ describe("symbolic equation formatters", () => {
     const latex = degEquationSymbolic();
     expect(latex).toContain("P_{\\rm deg}");
     expect(latex).not.toMatch(/\d\.\d+/);
+  });
+});
+
+/* ──────────────────────────────────────────────────
+ * Solar profile data
+ * ────────────────────────────────────────────────── */
+
+describe("solarProfileData", () => {
+  it("returns an array of {logT, logRho} points from core to surface", () => {
+    const profile = solarProfileData();
+    expect(profile.length).toBeGreaterThan(5);
+    // Core should be hot and dense
+    expect(profile[0].logT).toBeGreaterThan(7);
+    expect(profile[0].logRho).toBeGreaterThan(1);
+    // Surface should be cool and sparse
+    const last = profile[profile.length - 1];
+    expect(last.logT).toBeLessThan(4);
+    expect(last.logRho).toBeLessThan(-5);
+  });
+
+  it("has monotonically decreasing temperature from core to surface", () => {
+    const profile = solarProfileData();
+    for (let i = 1; i < profile.length; i++) {
+      expect(profile[i].logT).toBeLessThan(profile[i - 1].logT);
+    }
+  });
+
+  it("includes labeled key points", () => {
+    const profile = solarProfileData();
+    const labels = profile.filter(p => p.label).map(p => p.label);
+    expect(labels).toContain("Core");
+    expect(labels).toContain("Photosphere");
   });
 });

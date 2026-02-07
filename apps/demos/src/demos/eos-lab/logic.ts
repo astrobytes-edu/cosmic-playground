@@ -738,3 +738,30 @@ export function radEquationSymbolic(): string {
 export function degEquationSymbolic(): string {
   return `P_{\\rm deg} = K \\!\\left(\\frac{\\rho}{\\mu_e \\, m_u}\\right)^{\\!5/3} \\;\\text{(NR limit)}`;
 }
+
+/* ──────────────────────────────────────────────────
+ * Solar model profile for regime map overlay
+ * ────────────────────────────────────────────────── */
+
+/**
+ * Standard Solar Model profile (Bahcall et al. 2005, approximate).
+ * Returns ~13 points from core to photosphere in log(T/K), log(rho/g cm^-3).
+ */
+export function solarProfileData(): Array<{ logT: number; logRho: number; label?: string }> {
+  const raw: [number, number, string?][] = [
+    [7.196, 2.176, "Core"],
+    [7.15,  2.0],
+    [7.05,  1.6],
+    [6.9,   1.1],
+    [6.75,  0.5],
+    [6.55, -0.2],
+    [6.35, -0.8, "Radiative zone"],
+    [6.15, -1.5],
+    [5.9,  -2.5, "Base of CZ"],
+    [5.5,  -4.0],
+    [5.0,  -5.5],
+    [4.5,  -6.5],
+    [3.76, -7.0, "Photosphere"],
+  ];
+  return raw.map(([logT, logRho, label]) => ({ logT, logRho, label }));
+}

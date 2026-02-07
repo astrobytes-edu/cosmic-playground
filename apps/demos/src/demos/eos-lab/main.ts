@@ -33,6 +33,7 @@ import {
   superscript,
   valueToLogSlider,
   adiabaticIndex,
+  solarProfileData,
   checkScalingAnswer,
   SCALING_CHALLENGES
 } from "./logic";
@@ -199,6 +200,7 @@ const pressureCurvePlotEl = q("#pressureCurvePlot");
 const regimeMapCanvas = q<HTMLCanvasElement>("#regimeMapCanvas");
 const regimeDetail = q("#regimeDetail");
 const regimeSummary = q("#regimeSummary");
+const showSolarProfileCb = q<HTMLInputElement>("#showSolarProfile");
 
 const muValue = q("#muValue");
 const muEValue = q("#muEValue");
@@ -643,6 +645,7 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
       logRho: Math.log10(p.densityGPerCm3),
     })),
     deferGridRebuild: args.deferGridRebuild,
+    solarProfile: showSolarProfileCb.checked ? solarProfileData() : undefined,
   });
 
   // --- Regime map detail text ---
@@ -1118,6 +1121,8 @@ xSlider.addEventListener("change", finalizeCompositionInteraction);
 ySlider.addEventListener("change", finalizeCompositionInteraction);
 xSlider.addEventListener("pointerup", finalizeCompositionInteraction);
 ySlider.addEventListener("pointerup", finalizeCompositionInteraction);
+
+showSolarProfileCb.addEventListener("change", () => render());
 
 copyResults.addEventListener("click", () => {
   const model = evaluateModel();

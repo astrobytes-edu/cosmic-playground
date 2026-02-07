@@ -29,6 +29,8 @@ import { resolveCssColor } from "./uplotHelpers";
  * Types
  * ────────────────────────────────────────────────── */
 
+export type SolarProfilePoint = { logT: number; logRho: number; label?: string };
+
 export type RegimeMapState = {
   composition: StellarCompositionFractions;
   radiationDepartureEta: number;
@@ -40,6 +42,8 @@ export type RegimeMapState = {
   presets: Array<{ id: string; logT: number; logRho: number }>;
   /** If true, skip grid rebuild (use cached). Used during slider drag. */
   deferGridRebuild?: boolean;
+  /** Optional solar model profile overlay. */
+  solarProfile?: SolarProfilePoint[];
 };
 
 export type RegimeMapConfig = {
@@ -403,6 +407,49 @@ function drawCrosshairs(
 }
 
 /* ──────────────────────────────────────────────────
+ * Solar profile overlay
+ * ────────────────────────────────────────────────── */
+
+function drawSolarProfile(
+  ctx: CanvasRenderingContext2D,
+  pa: ReturnType<typeof plotArea>,
+  cfg: RegimeMapConfig,
+  profile: SolarProfilePoint[],
+): void {
+  ctx.save();
+  ctx.setLineDash([6, 4]);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.beginPath();
+  for (let i = 0; i < profile.length; i++) {
+    const x = logTToX(profile[i].logT, pa, cfg);
+    const y = logRhoToY(profile[i].logRho, pa, cfg);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Labeled dots
+  ctx.font = "10px var(--cp-font-mono, monospace)";
+  ctx.textBaseline = "bottom";
+  for (const pt of profile) {
+    if (!pt.label) continue;
+    const x = logTToX(pt.logT, pa, cfg);
+    const y = logRhoToY(pt.logRho, pa, cfg);
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = "white";
+    ctx.fill();
+    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.textAlign = pt.logRho > 0 ? "left" : "right";
+    const dx = pt.logRho > 0 ? 6 : -6;
+    ctx.fillText(pt.label, x + dx, y - 4);
+  }
+  ctx.restore();
+}
+
+/* ──────────────────────────────────────────────────
  * Public API
  * ────────────────────────────────────────────────── */
 
@@ -488,6 +535,11 @@ export function renderRegimeMap(
     size: 6,
     shape: "diamond",
   });
+
+  // --- Solar profile overlay ---
+  if (state.solarProfile && state.solarProfile.length > 1) {
+    drawSolarProfile(ctx, pa, cfg, state.solarProfile);
+  }
 
   // --- Performance badge ---
   if (gridCache) {
