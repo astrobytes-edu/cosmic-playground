@@ -297,6 +297,8 @@ const state: DemoState = {
 
 /** Most recent model evaluation — used by the marker plugin. */
 let lastModel: StellarEosStateCgs | null = null;
+/** Track previous dominant channel for dominance-switch pulse animation. */
+let prevDominantChannel = "";
 
 function evaluateModel(): StellarEosStateCgs {
   return StellarEosModel.evaluateStateCgs({
@@ -687,6 +689,22 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   pTotalValue.textContent = formatScientific(model.totalPressureDynePerCm2, 4);
   dominantChannel.textContent = dominantChannelLabel(model);
 
+  // Dominance-switch pulse — animate the newly dominant card
+  const curDom = model.dominantPressureChannel;
+  if (curDom !== prevDominantChannel && prevDominantChannel !== "") {
+    const domCard =
+      curDom === "gas" ? cardGas :
+      curDom === "radiation" ? cardRadiation :
+      curDom === "degeneracy" ? cardDegeneracy : null;
+    if (domCard) {
+      domCard.classList.remove("is-newly-dominant");
+      void domCard.offsetWidth; // reflow to retrigger animation
+      domCard.classList.add("is-newly-dominant");
+      domCard.addEventListener("animationend", () => domCard.classList.remove("is-newly-dominant"), { once: true });
+    }
+  }
+  prevDominantChannel = curDom;
+
   // Set dominant channel color for CSS theming (summary bar + label)
   const domColor = dominantChannelColor(model);
   stageSummary.style.setProperty("--eos-dominant", domColor);
@@ -927,9 +945,6 @@ tab2Observer.observe(tab2Panel, { attributes: true, attributeFilter: ["hidden"] 
 
 // Equation toggle — click or keyboard to switch symbolic/substituted
 for (const eq of [compareGasEq, compareRadEq, compareDegEq]) {
-  eq.setAttribute("role", "button");
-  eq.setAttribute("tabindex", "0");
-  eq.title = "Click to toggle symbolic / numerical";
   const toggleEqs = () => {
     showSubstitutedEqs = !showSubstitutedEqs;
     if (lastModel) renderCompareView(lastModel);
@@ -956,7 +971,7 @@ if (scalingContainer) {
     if (!scalingContainer) return;
     const ch = SCALING_CHALLENGES[currentIdx];
 
-    const progress = `<p class="cp-challenge-progress">${currentIdx + 1} / ${SCALING_CHALLENGES.length}</p>`;
+    const progress = `<p class="cp-challenge-progress">${answered.size} / ${SCALING_CHALLENGES.length} scaling laws discovered</p>`;
     const question = `<p class="scaling-detective__question">${ch.question}</p>`;
 
     const optionsHtml = ch.options
@@ -1042,12 +1057,22 @@ const demoModes = createDemoModes({
         ]
       },
       {
+        heading: "Two tabs, two purposes",
+        type: "bullets",
+        items: [
+          "Explore tab: quantitative curves and regime map. Use sliders to discover which pressure channel dominates at each (T, rho) state.",
+          "Understand tab: mechanism animations and scaling laws. Watch what physically happens inside each channel (particle collisions, photon fields, Pauli level-filling).",
+          "Tip: after exploring a few presets on Tab 1, switch to Tab 2 to see the animations and try the Scaling Law Detective quiz."
+        ]
+      },
+      {
         heading: "How to use this lab",
         type: "bullets",
         items: [
           "Choose a preset, then move T and rho sliders to test pressure dominance changes.",
           "Adjust composition sliders X and Y (with Z computed) to connect mu and mu_e to particle and electron density changes.",
-          "Use the LTE closure chip before interpreting P_rad in extreme low-density states."
+          "Use the LTE closure chip before interpreting P_rad in extreme low-density states.",
+          "Click any equation on the Understand tab to toggle between symbolic and numerical form."
         ]
       }
     ]
@@ -1113,8 +1138,12 @@ const demoModes = createDemoModes({
       }
     ],
     synthesisPrompt: `
-      <p><strong>Explain:</strong> EOS support combines channels, but dominance changes with state.</p>
-      <p><strong>Use your table:</strong> Compare one gas-dominated and one degeneracy-dominated case, then justify the LTE caution chip for radiation pressure.</p>
+      <p><strong>Synthesis question:</strong> Stellar pressure support is not a single mechanism&mdash;it is a competition among three channels whose relative strengths depend on temperature, density, and composition.</p>
+      <ol>
+        <li><strong>Compare:</strong> Pick one gas-dominated row and one degeneracy-dominated row from your table. For each, identify which pressure channel dominates and explain <em>why</em> (what physical property of that channel makes it the largest?).</li>
+        <li><strong>Radiation closure:</strong> Find a row where the LTE closure chip shows a warning. Why might $P_{\\rm rad}=aT^4/3$ be unreliable there? What physical condition does LTE require?</li>
+        <li><strong>Scaling test:</strong> If you increased $T$ by 10$\\times$ in your gas-dominated case, which channel would grow the most, and by roughly how much?</li>
+      </ol>
     `
   }
 });
@@ -1239,13 +1268,14 @@ window.addEventListener("beforeunload", () => {
 }, { once: true });
 
 /* ================================================================
- * First-use guided tour — lightweight 3-step walkthrough
+ * First-use guided tour — lightweight 4-step walkthrough
  * ================================================================ */
 
 const TOUR_STEPS = [
   { target: "#tempSlider", text: "Drag temperature to see how each pressure channel responds." },
-  { target: "#regimeMapCanvas", text: "This map shows which pressure dominates at every (T, \u03C1) combination." },
-  { target: "#tab-understand", text: "Switch here to see physical mechanism animations for each channel." },
+  { target: "#regimeMapCanvas", text: "This map shows which pressure dominates at every (T, \u03C1) combination for the current composition." },
+  { target: "#tab-understand", text: "Switch here to see animations of the physical mechanism behind each channel." },
+  { target: ".scaling-detective > summary", text: "Try the Scaling Law Detective quiz to test your understanding of how each pressure scales.", switchTab: "understand" },
 ];
 
 function runTour(): void {
@@ -1273,6 +1303,11 @@ function runTour(): void {
   function show(): void {
     if (step >= TOUR_STEPS.length) { cleanup(); return; }
     const s = TOUR_STEPS[step];
+    // Switch tab if the step requires it (e.g., step 4 targets Tab 2 elements)
+    if ("switchTab" in s && s.switchTab === "understand") {
+      const tabBtn = document.getElementById("tab-understand") as HTMLElement | null;
+      if (tabBtn && tabBtn.getAttribute("aria-selected") !== "true") tabBtn.click();
+    }
     const el = document.querySelector(s.target);
     // Skip elements that are missing or have zero-size rect (hidden by tab)
     if (!el) { step++; show(); return; }

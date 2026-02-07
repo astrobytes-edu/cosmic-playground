@@ -1,6 +1,6 @@
 # EOS Lab — Expert Review: Pedagogy, Science, and Design
 
-**Date**: 2026-02-07 (updated 2026-02-07 post-enhancement)
+**Date**: 2026-02-07 (updated 2026-02-07 Phase 3 pedagogy audit)
 **Reviewer**: Claude Opus 4.6 (three parallel review agents: full-state reader, scientific correctness, competitive landscape)
 **Demo**: `apps/demos/src/demos/eos-lab/`
 **Physics model**: `packages/physics/src/stellarEosModel.ts`
@@ -16,6 +16,8 @@ EOS Lab is **the most sophisticated interactive browser-based stellar EOS teachi
 **Post-enhancement status**: All 7 enhancement tasks completed (`85cea98`..`d86e5ff`). Demo now includes adiabatic index readout, symbolic/substituted equation toggle, solar profile overlay, guided tour, and WD composition tooltip. Test count: 75 demo tests (24 contract + 51 logic) + 24 E2E tests.
 
 **Phase 2 hardening**: All 25 UI/UX issues resolved (`6bed33c`..`d5b6fe0`). Fixes cover density readout format, tour robustness, stability indicator, keyboard accessibility, animation performance, quiz UX, and dead code cleanup.
+
+**Phase 3 pedagogy audit**: Comprehensive re-audit identified 11 pedagogical/UX improvements. Physics model reconfirmed correct (18/18 tests, CODATA 2018 constants, solar core checkpoint to 9 sig figs). Focus: bridging Tab 1 -> Tab 2 cognitive gap, improving discoverability, strengthening active learning scaffolding.
 
 ---
 
@@ -217,7 +219,29 @@ The Chandrasekhar zero-T formula mixed the Shapiro & Teukolsky prefactor (8pi^2)
 
 ---
 
-## 7. Architecture Summary
+## 7. Phase 3: Pedagogy & UX Improvements
+
+Physics model reconfirmed correct (18/18 tests, all constants CODATA 2018 exact, solar core checkpoint to 1e-9 tolerance, white dwarf to 5e-4). No new physics issues. Remaining improvements are pedagogical and UX-focused.
+
+### Identified improvements
+
+| # | Issue | Category | Status |
+|---|---|---|---|
+| P3-1 | Tab 2 animations lack pedagogical bridge text | Learning trajectory | **DONE** |
+| P3-2 | Equation toggle (symbolic/substituted) not discoverable | Affordances | **DONE** |
+| P3-3 | Help modal doesn't explain two-tab structure | Navigation | **DONE** |
+| P3-4 | Guided tour doesn't cover Tab 2 animations | First-use experience | **DONE** |
+| P3-5 | Regime map lacks interpretive guidance | Visual hierarchy | **DONE** |
+| P3-6 | No visual feedback when pressure dominance switches | Feedback loops | **DONE** |
+| P3-7 | Station mode synthesis prompt is vague | Assessment quality | **DONE** |
+| P3-8 | Scaling quiz lacks progress indicator | Active learning | **DONE** |
+| P3-9 | Preset buttons lack :focus-visible styles | Accessibility | **DONE** |
+| P3-10 | Deep-dive accordions lack actionable "Try this" suggestions | Active learning | **DONE** |
+| P3-11 | Composition slider constraint not visually explained | Error prevention | Deferred |
+
+---
+
+## 8. Architecture Summary
 
 ### File structure (post-enhancement)
 

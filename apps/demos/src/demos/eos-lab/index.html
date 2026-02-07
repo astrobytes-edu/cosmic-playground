@@ -268,7 +268,7 @@
             <section class="regime-map" aria-label="EOS regime map">
               <h3>Regime Map ($\log_{10}\rho$ vs $\log_{10}T$)</h3>
               <p class="cp-muted regime-map__help">
-                Colors show the dominant pressure channel at each $(\rho,T)$ state for the current composition.
+                Each color shows which pressure channel dominates at a given $(\rho,T)$. The crosshair tracks your sliders&mdash;move them to explore different stellar regimes. The boundaries shift when you change composition.
               </p>
               <canvas
                 id="regimeMapCanvas"
@@ -375,10 +375,11 @@
                 <h2>$P_{\rm gas}$</h2>
                 <p class="compare-column__subtitle">Thermal particle collisions</p>
               </header>
+              <p class="compare-column__caption">Watch how particle speed and collision rate rise with temperature&mdash;faster particles mean more momentum transferred per collision, so $P_{\rm gas} \propto T$.</p>
               <canvas id="compareGasCanvas" class="compare-column__canvas"
                       role="img" aria-label="Gas particles bouncing in a box"></canvas>
               <p class="compare-column__badge">Dominates in: Sun core, main-sequence stars</p>
-              <div id="compareGasEq" class="compare-column__equation"></div>
+              <div id="compareGasEq" class="compare-column__equation" tabindex="0" role="button" aria-label="Toggle gas equation between symbolic and numerical form"></div>
               <div id="compareGasFlash" class="compare-column__flash" aria-live="polite"></div>
             </article>
 
@@ -388,10 +389,11 @@
                 <h2>$P_{\rm rad}$</h2>
                 <p class="compare-column__subtitle">Photon momentum flux</p>
               </header>
+              <p class="compare-column__caption">More photons appear as temperature rises. Photon energy density scales as $T^4$ and is independent of density&mdash;only temperature matters.</p>
               <canvas id="compareRadCanvas" class="compare-column__canvas"
                       role="img" aria-label="Photons bouncing in a box"></canvas>
               <p class="compare-column__badge">Dominates in: O/B-star envelopes, supernovae</p>
-              <div id="compareRadEq" class="compare-column__equation"></div>
+              <div id="compareRadEq" class="compare-column__equation" tabindex="0" role="button" aria-label="Toggle radiation equation between symbolic and numerical form"></div>
               <div id="compareRadFlash" class="compare-column__flash" aria-live="polite"></div>
             </article>
 
@@ -401,10 +403,11 @@
                 <h2>$P_{\rm deg}$</h2>
                 <p class="compare-column__subtitle">Pauli exclusion pressure</p>
               </header>
+              <p class="compare-column__caption">Energy levels fill from the bottom up (Pauli exclusion&mdash;only 2 electrons per level). Higher density means more electrons, so the top-filled level ($E_F$) rises, driving pressure even at zero temperature.</p>
               <canvas id="compareDegCanvas" class="compare-column__canvas"
                       role="img" aria-label="Electron energy level filling"></canvas>
               <p class="compare-column__badge">Dominates in: White dwarfs, neutron star crusts</p>
-              <div id="compareDegEq" class="compare-column__equation"></div>
+              <div id="compareDegEq" class="compare-column__equation" tabindex="0" role="button" aria-label="Toggle degeneracy equation between symbolic and numerical form"></div>
               <div id="compareDegFlash" class="compare-column__flash" aria-live="polite"></div>
             </article>
           </div>
@@ -464,6 +467,7 @@
             <div class="cp-accordion__body">
               <p><strong>Physical cause:</strong> momentum transfer from thermal particle collisions.</p>
               <p><strong>Limits:</strong> assumes ideal fully ionized plasma; no Coulomb or partial-ionization corrections.</p>
+              <p class="cp-muted"><strong>Try this:</strong> Compare $P_{\rm gas}$ for pure hydrogen ($X=1$) vs. pure helium ($Y=1$) at the same $(T,\rho)$. Which gives higher pressure, and why?</p>
             </div>
           </details>
 
@@ -475,6 +479,7 @@
             <div class="cp-accordion__body">
               <p><strong>Physical cause:</strong> photon momentum flux from a near-thermal radiation field.</p>
               <p><strong>Limits:</strong> LTE closure can fail in optically thin or strongly non-equilibrium regimes.</p>
+              <p class="cp-muted"><strong>Try this:</strong> Fix $\rho$ at the solar core value and increase $T$ until radiation pressure overtakes gas pressure. What temperature marks the crossover?</p>
             </div>
           </details>
 
@@ -486,6 +491,7 @@
               <div class="cp-accordion__body">
                 <p><strong>Physical cause:</strong> Pauli exclusion fills momentum states even at low temperature.</p>
                 <p><strong>Limits:</strong> finite-$T$ Fermi-Dirac electrons are included, but Coulomb/ion corrections and neutron-star matter channels are intentionally out of scope.</p>
+                <p class="cp-muted"><strong>Try this:</strong> Select the white dwarf preset and watch $T/T_F$ in the readout strip. Now raise $T$ slowly&mdash;at what temperature does degeneracy give way to thermal pressure?</p>
               </div>
             </details>
         </div>
