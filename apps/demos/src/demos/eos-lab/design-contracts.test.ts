@@ -146,4 +146,48 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(mainTs).not.toContain("mountPlot");
     expect(mainTs).not.toContain("PlotSpec");
   });
+
+  it("uses two-tab layout with WAI-ARIA tab markup", () => {
+    expect(html).toContain('role="tablist"');
+    const tabButtons = html.match(/role="tab"/g) || [];
+    expect(tabButtons.length).toBe(2);
+    expect(html).toContain('id="tab-explore"');
+    expect(html).toContain('id="tab-understand"');
+    expect(html).toContain('id="panel-explore"');
+    expect(html).toContain('id="panel-understand"');
+    const tabPanels = html.match(/role="tabpanel"/g) || [];
+    expect(tabPanels.length).toBe(2);
+  });
+
+  it("initializes tabs via initTabs from runtime", () => {
+    expect(mainTs).toContain("initTabs");
+    expect(mainTs).toMatch(/initTabs\s*\(/);
+  });
+
+  it("includes entry animations on shell sections", () => {
+    expect(css).toContain("cp-slide-up");
+    expect(css).toContain("cp-fade-in");
+    expect(css).toMatch(/\.cp-demo__controls\s*\{[^}]*animation/);
+    expect(css).toMatch(/\.cp-demo__readouts\s*\{[^}]*animation/);
+  });
+
+  it("constrains chart containers with aspect-ratio instead of unbounded min-height", () => {
+    expect(css).toMatch(/\.pressure-plot__surface\s*\{[^}]*aspect-ratio/);
+    expect(css).toMatch(/\.regime-map__surface\s*\{[^}]*aspect-ratio/);
+    expect(css).toMatch(/\.deep-dive__chart\s*\{[^}]*aspect-ratio/);
+    // Verify no unbounded 24rem min-height remains
+    expect(css).not.toMatch(/min-height:\s*24rem/);
+  });
+
+  it("separates display-only cards (Tab 1) from mechanism cards (Tab 2)", () => {
+    // Tab 2 has mechanism cards with click-to-explore
+    expect(html).toContain('id="mechanismGas"');
+    expect(html).toContain('id="mechanismRadiation"');
+    expect(html).toContain('id="mechanismDegeneracy"');
+    expect(html).toContain("mechanism-grid");
+    // main.ts wires mechanism cards, not display cards
+    expect(mainTs).toContain("mechanismGas");
+    expect(mainTs).toContain("mechanismRadiation");
+    expect(mainTs).toContain("mechanismDegeneracy");
+  });
 });

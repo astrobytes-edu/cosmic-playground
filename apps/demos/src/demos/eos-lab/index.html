@@ -147,173 +147,7 @@
             <p id="presetNote" class="cp-muted"></p>
           </div>
 
-          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
-        </div>
-      </aside>
-
-      <section class="cp-demo__stage cp-stage" aria-label="Pressure comparison stage">
-        <div class="eos-stage-grid">
-          <section class="pressure-plot" aria-label="Pressure-channel curve plot">
-            <h3>Pressure Curves at Fixed Temperature</h3>
-            <p class="cp-muted pressure-plot__help">
-              Move sliders in real time to see how $P_{\rm gas}$, $P_{\rm rad}$, and $P_{\rm deg,e}$ vary with density at the current temperature and composition.
-            </p>
-            <div id="pressureCurvePlot" class="pressure-plot__surface"></div>
-          </section>
-
-          <section class="regime-map" aria-label="EOS regime map">
-            <h3>Regime Map ($\log_{10}\rho$ vs $\log_{10}T$)</h3>
-            <p class="cp-muted regime-map__help">
-              Colors show the dominant pressure channel at each $(\rho,T)$ state for the current composition.
-            </p>
-            <canvas
-              id="regimeMapCanvas"
-              class="regime-map__surface"
-              role="img"
-              aria-label="EOS dominance map over log density and log temperature"
-            ></canvas>
-            <ul class="regime-map__legend" aria-label="Regime legend">
-              <li><span data-channel="gas"></span>$P_{\rm gas}$ dominant</li>
-              <li><span data-channel="radiation"></span>$P_{\rm rad}$ dominant</li>
-              <li><span data-channel="degeneracy"></span>$P_{\rm deg,e}$ dominant</li>
-              <li><span data-channel="mixed"></span>Mixed dominance</li>
-            </ul>
-            <p id="regimeDetail" class="cp-muted"></p>
-            <p id="regimeSummary" class="cp-muted"></p>
-          </section>
-        </div>
-
-        <div class="pressure-grid" aria-live="off">
-          <article id="cardGas" class="pressure-card pressure-card--clickable" data-tone="secondary" role="button" tabindex="0" aria-label="Explore gas pressure deep dive">
-            <h2>$P_{\rm gas}$</h2>
-            <p class="pressure-card__value"><span id="pGasValue"></span> <span class="pressure-card__unit">dyne cm$^{-2}$</span></p>
-            <div class="pressure-card__bar" aria-hidden="true"><span id="pGasBar"></span></div>
-            <p class="pressure-card__hint">Thermal particle collisions; scales as $\rho T$. <em>Click to explore.</em></p>
-          </article>
-
-          <article id="cardRadiation" class="pressure-card pressure-card--clickable" data-tone="secondary" role="button" tabindex="0" aria-label="Explore radiation pressure deep dive">
-            <h2>$P_{\rm rad}$</h2>
-            <p class="pressure-card__value"><span id="pRadValue"></span> <span class="pressure-card__unit">dyne cm$^{-2}$</span></p>
-            <div class="pressure-card__bar" aria-hidden="true"><span id="pRadBar"></span></div>
-            <p class="pressure-card__hint">Photon momentum flux; scales as $T^4$ under LTE closure. <em>Click to explore.</em></p>
-          </article>
-
-          <article id="cardDegeneracy" class="pressure-card pressure-card--clickable" data-tone="secondary" role="button" tabindex="0" aria-label="Explore degeneracy pressure deep dive">
-            <h2>$P_{\rm deg,e}$</h2>
-            <p class="pressure-card__value"><span id="pDegValue"></span> <span class="pressure-card__unit">dyne cm$^{-2}$</span></p>
-            <div class="pressure-card__bar" aria-hidden="true"><span id="pDegBar"></span></div>
-            <p class="pressure-card__hint">Quantum correction beyond classical electrons; driven by Pauli exclusion. <em>Click to explore.</em></p>
-          </article>
-        </div>
-
-        <section id="deepDiveGas" class="deep-dive" hidden>
-          <button class="deep-dive__back cp-button cp-button--outline" type="button">Back to overview</button>
-          <h3 class="deep-dive__title">Gas Pressure: Thermal Particle Collisions</h3>
-          <div class="deep-dive__layout">
-            <div class="deep-dive__animation">
-              <canvas id="gasAnimCanvas" class="deep-dive__canvas" role="img" aria-label="Gas particles bouncing in a box"></canvas>
-              <p class="deep-dive__caption">Particles hit walls &rarr; momentum transfer &rarr; pressure</p>
-            </div>
-            <div class="deep-dive__sandbox">
-              <div id="gasEquation" class="deep-dive__equation"></div>
-              <div class="deep-dive__controls">
-                <label class="cp-field control">
-                  <span class="cp-label">Temperature $T$ (K)</span>
-                  <input id="gasDeepT" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
-                  <span class="control__value"><span id="gasDeepTVal"></span></span>
-                </label>
-                <label class="cp-field control">
-                  <span class="cp-label">Density $\rho$ (g cm$^{-3}$)</span>
-                  <input id="gasDeepRho" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
-                  <span class="control__value"><span id="gasDeepRhoVal"></span></span>
-                </label>
-              </div>
-              <div id="gasDeepChart" class="deep-dive__chart"></div>
-            </div>
-          </div>
-        </section>
-
-        <section id="deepDiveRadiation" class="deep-dive" hidden>
-          <button class="deep-dive__back cp-button cp-button--outline" type="button">Back to overview</button>
-          <h3 class="deep-dive__title">Radiation Pressure: Photon Momentum</h3>
-          <div class="deep-dive__layout">
-            <div class="deep-dive__animation">
-              <canvas id="radAnimCanvas" class="deep-dive__canvas" role="img" aria-label="Photons bouncing in a box"></canvas>
-              <p class="deep-dive__caption">Photon flux &rarr; momentum deposited on walls &rarr; $T^4$ scaling</p>
-            </div>
-            <div class="deep-dive__sandbox">
-              <div id="radEquation" class="deep-dive__equation"></div>
-              <div class="deep-dive__controls">
-                <label class="cp-field control">
-                  <span class="cp-label">Temperature $T$ (K)</span>
-                  <input id="radDeepT" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
-                  <span class="control__value"><span id="radDeepTVal"></span></span>
-                </label>
-              </div>
-              <div id="radDeepChart" class="deep-dive__chart"></div>
-            </div>
-          </div>
-        </section>
-
-        <section id="deepDiveDegeneracy" class="deep-dive" hidden>
-          <button class="deep-dive__back cp-button cp-button--outline" type="button">Back to overview</button>
-          <h3 class="deep-dive__title">Degeneracy Pressure: Pauli Exclusion</h3>
-          <div class="deep-dive__layout">
-            <div class="deep-dive__animation">
-              <canvas id="degAnimCanvas" class="deep-dive__canvas" role="img" aria-label="Electron energy level filling"></canvas>
-              <p class="deep-dive__caption">Fermions fill energy levels &rarr; exclusion forces higher momenta &rarr; pressure</p>
-            </div>
-            <div class="deep-dive__sandbox">
-              <div id="degEquation" class="deep-dive__equation"></div>
-              <div class="deep-dive__controls">
-                <label class="cp-field control">
-                  <span class="cp-label">Density $\rho$ (g cm$^{-3}$)</span>
-                  <input id="degDeepRho" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
-                  <span class="control__value"><span id="degDeepRhoVal"></span></span>
-                </label>
-              </div>
-              <div id="degDeepChart" class="deep-dive__chart"></div>
-            </div>
-          </div>
-        </section>
-
-        <div class="stage-summary">
-          <p><strong>Total pressure $P_{\rm tot}$:</strong> <span id="pTotalValue"></span> dyne cm$^{-2}$</p>
-          <p><strong>Dominant channel:</strong> <span id="dominantChannel"></span></p>
-        </div>
-      </section>
-
-      <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
-        <div class="cp-readout">
-          <span class="cp-readout__label">$\mu$</span>
-          <span class="cp-readout__value"><span id="muValue"></span><span class="cp-readout__unit">$m_u$</span></span>
-        </div>
-        <div class="cp-readout">
-          <span class="cp-readout__label">$\mu_e$</span>
-          <span class="cp-readout__value"><span id="muEValue"></span><span class="cp-readout__unit">$m_u$</span></span>
-        </div>
-        <div class="cp-readout">
-          <span class="cp-readout__label">$\beta=P_{\rm gas}/P_{\rm tot}$</span>
-          <span class="cp-readout__value"><span id="betaValue"></span></span>
-        </div>
-        <div class="cp-readout">
-          <span class="cp-readout__label">$P_{\rm rad}/P_{\rm gas}$</span>
-          <span class="cp-readout__value"><span id="radGasValue"></span><span class="cp-readout__unit">ratio</span></span>
-        </div>
-        <div class="cp-readout">
-          <span class="cp-readout__label">$P_{\rm deg,e}/P_{\rm tot}$</span>
-          <span class="cp-readout__value"><span id="degTotalValue"></span></span>
-        </div>
-        <div class="cp-readout cp-readout--stack">
-          <span class="cp-readout__label">$\chi_{\rm deg}=T/T_F$</span>
-          <span class="cp-readout__value"><span id="chiDegValue"></span></span>
-          <span id="degRegimeValue" class="cp-muted cp-readout__note"></span>
-        </div>
-      </div>
-
-      <section class="cp-demo__drawer cp-demo__shelf cp-drawer" aria-label="Panels">
-        <div class="cp-panels">
-          <details class="cp-accordion" open>
+          <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">What to notice</span>
               <span class="cp-accordion__meta">3 prompts</span>
@@ -351,38 +185,17 @@
 
           <details class="cp-accordion">
             <summary>
-              <span class="cp-accordion__title">Deep Dive: Gas Pressure</span>
-              <span class="cp-accordion__meta">cause + limits</span>
+              <span class="cp-accordion__title">Composition interpretation</span>
+              <span class="cp-accordion__meta">why $\mu$ matters</span>
             </summary>
             <div class="cp-accordion__body">
-              <p><strong>Physical cause:</strong> momentum transfer from thermal particle collisions.</p>
-              <p><strong>Limits:</strong> assumes ideal fully ionized plasma; no Coulomb or partial-ionization corrections.</p>
+              <p class="cp-muted">
+                Smaller $\mu$ means more particles per gram, so gas pressure increases at fixed $(\rho,T)$.
+              </p>
             </div>
           </details>
 
           <details class="cp-accordion">
-            <summary>
-              <span class="cp-accordion__title">Deep Dive: Radiation Pressure</span>
-              <span class="cp-accordion__meta">cause + limits</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <p><strong>Physical cause:</strong> photon momentum flux from a near-thermal radiation field.</p>
-              <p><strong>Limits:</strong> LTE closure can fail in optically thin or strongly non-equilibrium regimes.</p>
-            </div>
-          </details>
-
-          <details class="cp-accordion">
-              <summary>
-                <span class="cp-accordion__title">Deep Dive: Degeneracy Pressure</span>
-                <span class="cp-accordion__meta">cause + limits</span>
-              </summary>
-              <div class="cp-accordion__body">
-                <p><strong>Physical cause:</strong> Pauli exclusion fills momentum states even at low temperature.</p>
-                <p><strong>Limits:</strong> finite-$T$ Fermi-Dirac electrons are included, but Coulomb/ion corrections and neutron-star matter channels are intentionally out of scope.</p>
-              </div>
-            </details>
-
-          <details class="cp-accordion" open>
             <summary>
               <span class="cp-accordion__title">Advanced diagnostics</span>
               <span class="cp-accordion__meta">regime checks</span>
@@ -420,17 +233,240 @@
             </div>
           </details>
 
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </aside>
+
+      <section class="cp-demo__stage cp-stage" aria-label="Pressure comparison stage">
+
+        <!-- Tab bar -->
+        <div class="cp-tabs" role="tablist" aria-label="View mode">
+          <button class="cp-tab" role="tab" aria-selected="true"
+                  aria-controls="panel-explore" id="tab-explore">Explore</button>
+          <button class="cp-tab" role="tab" aria-selected="false"
+                  aria-controls="panel-understand" id="tab-understand">Understand</button>
+        </div>
+
+        <!-- Tab 1: Explore (plot + regime map + cards + summary) -->
+        <div class="cp-tab-panel" role="tabpanel" id="panel-explore"
+             aria-labelledby="tab-explore">
+          <div class="eos-stage-grid">
+            <section class="pressure-plot" aria-label="Pressure-channel curve plot">
+              <h3>Pressure Curves at Fixed Temperature</h3>
+              <p class="cp-muted pressure-plot__help">
+                Move sliders in real time to see how $P_{\rm gas}$, $P_{\rm rad}$, and $P_{\rm deg,e}$ vary with density at the current temperature and composition.
+              </p>
+              <div id="pressureCurvePlot" class="pressure-plot__surface"></div>
+            </section>
+
+            <section class="regime-map" aria-label="EOS regime map">
+              <h3>Regime Map ($\log_{10}\rho$ vs $\log_{10}T$)</h3>
+              <p class="cp-muted regime-map__help">
+                Colors show the dominant pressure channel at each $(\rho,T)$ state for the current composition.
+              </p>
+              <canvas
+                id="regimeMapCanvas"
+                class="regime-map__surface"
+                role="img"
+                aria-label="EOS dominance map over log density and log temperature"
+              ></canvas>
+              <ul class="regime-map__legend" aria-label="Regime legend">
+                <li><span data-channel="gas"></span>$P_{\rm gas}$ dominant</li>
+                <li><span data-channel="radiation"></span>$P_{\rm rad}$ dominant</li>
+                <li><span data-channel="degeneracy"></span>$P_{\rm deg,e}$ dominant</li>
+                <li><span data-channel="mixed"></span>Mixed dominance</li>
+              </ul>
+              <p id="regimeDetail" class="cp-muted"></p>
+              <p id="regimeSummary" class="cp-muted"></p>
+            </section>
+          </div>
+
+          <div class="pressure-grid" aria-live="off">
+            <article id="cardGas" class="pressure-card" data-tone="secondary">
+              <h2>$P_{\rm gas}$</h2>
+              <p class="pressure-card__value"><span id="pGasValue"></span> <span class="pressure-card__unit">dyne cm$^{-2}$</span></p>
+              <div class="pressure-card__bar" aria-hidden="true"><span id="pGasBar"></span></div>
+              <p class="pressure-card__hint">Thermal particle collisions; scales as $\rho T$.</p>
+            </article>
+
+            <article id="cardRadiation" class="pressure-card" data-tone="secondary">
+              <h2>$P_{\rm rad}$</h2>
+              <p class="pressure-card__value"><span id="pRadValue"></span> <span class="pressure-card__unit">dyne cm$^{-2}$</span></p>
+              <div class="pressure-card__bar" aria-hidden="true"><span id="pRadBar"></span></div>
+              <p class="pressure-card__hint">Photon momentum flux; scales as $T^4$ under LTE closure.</p>
+            </article>
+
+            <article id="cardDegeneracy" class="pressure-card" data-tone="secondary">
+              <h2>$P_{\rm deg,e}$</h2>
+              <p class="pressure-card__value"><span id="pDegValue"></span> <span class="pressure-card__unit">dyne cm$^{-2}$</span></p>
+              <div class="pressure-card__bar" aria-hidden="true"><span id="pDegBar"></span></div>
+              <p class="pressure-card__hint">Quantum correction beyond classical electrons; driven by Pauli exclusion.</p>
+            </article>
+          </div>
+
+          <div class="stage-summary">
+            <p><strong>Total pressure $P_{\rm tot}$:</strong> <span id="pTotalValue"></span> dyne cm$^{-2}$</p>
+            <p><strong>Dominant channel:</strong> <span id="dominantChannel"></span></p>
+          </div>
+        </div>
+
+        <!-- Tab 2: Understand (mechanism deep-dives) -->
+        <div class="cp-tab-panel" role="tabpanel" id="panel-understand"
+             aria-labelledby="tab-understand" hidden>
+
+          <div class="mechanism-grid">
+            <article class="pressure-card pressure-card--clickable" id="mechanismGas" role="button" tabindex="0" aria-label="Explore gas pressure deep dive">
+              <h2>$P_{\rm gas}$</h2>
+              <p class="pressure-card__hint">Thermal particle collisions; scales as $\rho T$. <em>Click to explore.</em></p>
+            </article>
+
+            <article class="pressure-card pressure-card--clickable" id="mechanismRadiation" role="button" tabindex="0" aria-label="Explore radiation pressure deep dive">
+              <h2>$P_{\rm rad}$</h2>
+              <p class="pressure-card__hint">Photon momentum flux; scales as $T^4$ under LTE closure. <em>Click to explore.</em></p>
+            </article>
+
+            <article class="pressure-card pressure-card--clickable" id="mechanismDegeneracy" role="button" tabindex="0" aria-label="Explore degeneracy pressure deep dive">
+              <h2>$P_{\rm deg,e}$</h2>
+              <p class="pressure-card__hint">Quantum correction beyond classical electrons; driven by Pauli exclusion. <em>Click to explore.</em></p>
+            </article>
+          </div>
+
+          <section id="deepDiveGas" class="deep-dive" hidden>
+            <button class="deep-dive__back cp-button cp-button--outline" type="button">Back to overview</button>
+            <h3 class="deep-dive__title">Gas Pressure: Thermal Particle Collisions</h3>
+            <div class="deep-dive__layout">
+              <div class="deep-dive__animation">
+                <canvas id="gasAnimCanvas" class="deep-dive__canvas" role="img" aria-label="Gas particles bouncing in a box"></canvas>
+                <p class="deep-dive__caption">Particles hit walls &rarr; momentum transfer &rarr; pressure</p>
+              </div>
+              <div class="deep-dive__sandbox">
+                <div id="gasEquation" class="deep-dive__equation"></div>
+                <div class="deep-dive__controls">
+                  <label class="cp-field control">
+                    <span class="cp-label">Temperature $T$ (K)</span>
+                    <input id="gasDeepT" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
+                    <span class="control__value"><span id="gasDeepTVal"></span></span>
+                  </label>
+                  <label class="cp-field control">
+                    <span class="cp-label">Density $\rho$ (g cm$^{-3}$)</span>
+                    <input id="gasDeepRho" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
+                    <span class="control__value"><span id="gasDeepRhoVal"></span></span>
+                  </label>
+                </div>
+                <div id="gasDeepChart" class="deep-dive__chart"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="deepDiveRadiation" class="deep-dive" hidden>
+            <button class="deep-dive__back cp-button cp-button--outline" type="button">Back to overview</button>
+            <h3 class="deep-dive__title">Radiation Pressure: Photon Momentum</h3>
+            <div class="deep-dive__layout">
+              <div class="deep-dive__animation">
+                <canvas id="radAnimCanvas" class="deep-dive__canvas" role="img" aria-label="Photons bouncing in a box"></canvas>
+                <p class="deep-dive__caption">Photon flux &rarr; momentum deposited on walls &rarr; $T^4$ scaling</p>
+              </div>
+              <div class="deep-dive__sandbox">
+                <div id="radEquation" class="deep-dive__equation"></div>
+                <div class="deep-dive__controls">
+                  <label class="cp-field control">
+                    <span class="cp-label">Temperature $T$ (K)</span>
+                    <input id="radDeepT" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
+                    <span class="control__value"><span id="radDeepTVal"></span></span>
+                  </label>
+                </div>
+                <div id="radDeepChart" class="deep-dive__chart"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="deepDiveDegeneracy" class="deep-dive" hidden>
+            <button class="deep-dive__back cp-button cp-button--outline" type="button">Back to overview</button>
+            <h3 class="deep-dive__title">Degeneracy Pressure: Pauli Exclusion</h3>
+            <div class="deep-dive__layout">
+              <div class="deep-dive__animation">
+                <canvas id="degAnimCanvas" class="deep-dive__canvas" role="img" aria-label="Electron energy level filling"></canvas>
+                <p class="deep-dive__caption">Fermions fill energy levels &rarr; exclusion forces higher momenta &rarr; pressure</p>
+              </div>
+              <div class="deep-dive__sandbox">
+                <div id="degEquation" class="deep-dive__equation"></div>
+                <div class="deep-dive__controls">
+                  <label class="cp-field control">
+                    <span class="cp-label">Density $\rho$ (g cm$^{-3}$)</span>
+                    <input id="degDeepRho" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
+                    <span class="control__value"><span id="degDeepRhoVal"></span></span>
+                  </label>
+                </div>
+                <div id="degDeepChart" class="deep-dive__chart"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+      </section>
+
+      <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
+        <div class="cp-readout">
+          <span class="cp-readout__label">$\mu$</span>
+          <span class="cp-readout__value"><span id="muValue"></span><span class="cp-readout__unit">$m_u$</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">$\mu_e$</span>
+          <span class="cp-readout__value"><span id="muEValue"></span><span class="cp-readout__unit">$m_u$</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">$\beta=P_{\rm gas}/P_{\rm tot}$</span>
+          <span class="cp-readout__value"><span id="betaValue"></span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">$P_{\rm rad}/P_{\rm gas}$</span>
+          <span class="cp-readout__value"><span id="radGasValue"></span><span class="cp-readout__unit">ratio</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">$P_{\rm deg,e}/P_{\rm tot}$</span>
+          <span class="cp-readout__value"><span id="degTotalValue"></span></span>
+        </div>
+        <div class="cp-readout cp-readout--stack">
+          <span class="cp-readout__label">$\chi_{\rm deg}=T/T_F$</span>
+          <span class="cp-readout__value"><span id="chiDegValue"></span></span>
+          <span id="degRegimeValue" class="cp-muted cp-readout__note"></span>
+        </div>
+      </div>
+
+      <section class="cp-demo__drawer cp-demo__shelf cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
           <details class="cp-accordion">
             <summary>
-              <span class="cp-accordion__title">Composition interpretation</span>
-              <span class="cp-accordion__meta">why $\mu$ matters</span>
+              <span class="cp-accordion__title">Deep Dive: Gas Pressure</span>
+              <span class="cp-accordion__meta">cause + limits</span>
             </summary>
             <div class="cp-accordion__body">
-              <p class="cp-muted">
-                Smaller $\mu$ means more particles per gram, so gas pressure increases at fixed $(\rho,T)$.
-              </p>
+              <p><strong>Physical cause:</strong> momentum transfer from thermal particle collisions.</p>
+              <p><strong>Limits:</strong> assumes ideal fully ionized plasma; no Coulomb or partial-ionization corrections.</p>
             </div>
           </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Deep Dive: Radiation Pressure</span>
+              <span class="cp-accordion__meta">cause + limits</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p><strong>Physical cause:</strong> photon momentum flux from a near-thermal radiation field.</p>
+              <p><strong>Limits:</strong> LTE closure can fail in optically thin or strongly non-equilibrium regimes.</p>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+              <summary>
+                <span class="cp-accordion__title">Deep Dive: Degeneracy Pressure</span>
+                <span class="cp-accordion__meta">cause + limits</span>
+              </summary>
+              <div class="cp-accordion__body">
+                <p><strong>Physical cause:</strong> Pauli exclusion fills momentum states even at low temperature.</p>
+                <p><strong>Limits:</strong> finite-$T$ Fermi-Dirac electrons are included, but Coulomb/ion corrections and neutron-star matter channels are intentionally out of scope.</p>
+              </div>
+            </details>
         </div>
       </section>
     </div>

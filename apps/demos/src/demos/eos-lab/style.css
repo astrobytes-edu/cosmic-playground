@@ -1,7 +1,6 @@
 @import "../../shared/stub-demo.css";
 
 .cp-demo__stage {
-  min-height: 0;
   padding: var(--cp-space-4);
   display: grid;
   gap: var(--cp-space-4);
@@ -12,7 +11,7 @@
   display: grid;
   gap: var(--cp-space-4);
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  align-items: stretch;
+  align-items: start;
 }
 
 .control {
@@ -166,7 +165,8 @@
 }
 
 .pressure-plot__surface {
-  min-height: 24rem;
+  aspect-ratio: 5 / 3;
+  min-height: 280px;
 }
 
 .regime-map {
@@ -190,7 +190,9 @@
 }
 
 .regime-map__surface {
-  min-height: 24rem;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-height: 280px;
 }
 
 .regime-map__legend {
@@ -329,7 +331,8 @@
 }
 
 .deep-dive__chart {
-  min-height: 14rem;
+  aspect-ratio: 5 / 3;
+  min-height: 200px;
 }
 
 .cp-readout--stack {
@@ -341,6 +344,37 @@
   display: block;
   font-size: 0.8rem;
   line-height: 1.3;
+}
+
+/* Remove default cp-tab-panel padding for stage tabs —
+   the stage grid already has its own spacing */
+.cp-demo__stage > .cp-tab-panel {
+  padding: 0;
+}
+
+/* Mechanism grid (Tab 2) */
+.mechanism-grid {
+  display: grid;
+  gap: var(--cp-space-2);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+}
+
+/* Entry animations (staggered reveal) */
+.cp-demo__controls {
+  animation: cp-slide-up 0.6s ease-out both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in 0.8s ease-out 0.1s both;
+}
+
+.cp-demo__readouts {
+  animation: cp-fade-in 0.8s ease-out 0.2s both;
+}
+
+.cp-demo__drawer {
+  animation: cp-fade-in 0.8s ease-out 0.3s both;
 }
 
 @media (max-width: 980px) {
@@ -369,6 +403,25 @@
   }
 
   .deep-dive__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pressure-plot__surface {
+    aspect-ratio: 4 / 3;
+    min-height: 240px;
+  }
+
+  .regime-map__surface {
+    aspect-ratio: 4 / 3;
+    min-height: 240px;
+  }
+
+  .deep-dive__chart {
+    aspect-ratio: 4 / 3;
+    min-height: 180px;
+  }
+
+  .mechanism-grid {
     grid-template-columns: 1fr;
   }
 }

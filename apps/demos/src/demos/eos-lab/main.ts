@@ -4,6 +4,7 @@ import {
   initMath,
   initPopovers,
   initStarfield,
+  initTabs,
   renderMath,
   setLiveRegionText
 } from "@cosmic/runtime";
@@ -223,7 +224,10 @@ const presetButtons = Array.from(
  * Deep-dive panel DOM queries
  * ================================================================ */
 
-const pressureGrid = q(".pressure-grid");
+const mechanismGrid = q(".mechanism-grid");
+const mechanismGas = q("#mechanismGas");
+const mechanismRadiation = q("#mechanismRadiation");
+const mechanismDegeneracy = q("#mechanismDegeneracy");
 
 const deepDiveGas = q<HTMLElement>("#deepDiveGas");
 const deepDiveRadiation = q<HTMLElement>("#deepDiveRadiation");
@@ -835,7 +839,7 @@ function openDeepDive(channel: DeepDiveChannel): void {
   closeDeepDive();
   activeDeepDive = channel;
 
-  pressureGrid.setAttribute("hidden", "");
+  mechanismGrid.setAttribute("hidden", "");
   deepDivePanels[channel].removeAttribute("hidden");
 
   syncDeepDiveSliders(channel);
@@ -864,17 +868,17 @@ function closeDeepDive(): void {
   }
 
   deepDivePanels[activeDeepDive].setAttribute("hidden", "");
-  pressureGrid.removeAttribute("hidden");
+  mechanismGrid.removeAttribute("hidden");
   activeDeepDive = null;
 }
 
-// Card click handlers
-cardGas.addEventListener("click", () => openDeepDive("gas"));
-cardRadiation.addEventListener("click", () => openDeepDive("radiation"));
-cardDegeneracy.addEventListener("click", () => openDeepDive("degeneracy"));
+// Mechanism card click handlers (Tab 2)
+mechanismGas.addEventListener("click", () => openDeepDive("gas"));
+mechanismRadiation.addEventListener("click", () => openDeepDive("radiation"));
+mechanismDegeneracy.addEventListener("click", () => openDeepDive("degeneracy"));
 
-// Keyboard activation for card buttons
-for (const card of [cardGas, cardRadiation, cardDegeneracy]) {
+// Keyboard activation for mechanism card buttons
+for (const card of [mechanismGas, mechanismRadiation, mechanismDegeneracy]) {
   card.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -1102,7 +1106,41 @@ render();
 initMath(document);
 
 const demoRoot = document.getElementById("cp-demo");
-if (demoRoot) initPopovers(demoRoot);
+if (demoRoot) {
+  initPopovers(demoRoot);
+  initTabs(demoRoot);
+}
+
+// Resize charts when switching to the Explore tab (uPlot needs layout reflow)
+const tabExplore = document.getElementById("tab-explore");
+tabExplore?.addEventListener("click", () => {
+  requestAnimationFrame(() => {
+    if (pressureCurvePlotEl.clientWidth > 0) {
+      pressurePlotHandle.plot.setSize({
+        width: pressureCurvePlotEl.clientWidth,
+        height: pressureCurvePlotEl.clientHeight,
+      });
+    }
+  });
+});
+
+// Resize deep-dive chart when switching to Understand tab (if a deep-dive is open)
+const tabUnderstand = document.getElementById("tab-understand");
+tabUnderstand?.addEventListener("click", () => {
+  if (deepDivePlotHandle && activeDeepDive) {
+    const chartEl = activeDeepDive === "gas" ? gasDeepChartEl
+      : activeDeepDive === "radiation" ? radDeepChartEl
+      : degDeepChartEl;
+    requestAnimationFrame(() => {
+      if (chartEl.clientWidth > 0 && deepDivePlotHandle) {
+        deepDivePlotHandle.plot.setSize({
+          width: chartEl.clientWidth,
+          height: chartEl.clientHeight,
+        });
+      }
+    });
+  }
+});
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
 if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
