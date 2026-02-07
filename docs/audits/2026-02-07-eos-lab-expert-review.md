@@ -238,6 +238,10 @@ Physics model reconfirmed correct (18/18 tests, all constants CODATA 2018 exact,
 | P3-9 | Preset buttons lack :focus-visible styles | Accessibility | **DONE** |
 | P3-10 | Deep-dive accordions lack actionable "Try this" suggestions | Active learning | **DONE** |
 | P3-11 | Composition slider constraint not visually explained | Error prevention | Deferred |
+| P3-12 | P_rad card not dimmed when LTE closure fails | Misconception prevention | **DONE** |
+| P3-13 | Model notes too technical for beginners | Progressive disclosure | **DONE** |
+| P3-14 | Preset buttons lack descriptive aria-labels | Accessibility | **DONE** |
+| P3-15 | White dwarf tooltip doesn't explain mu_e significance | Scientific clarity | **DONE** |
 
 ---
 

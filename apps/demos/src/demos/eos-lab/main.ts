@@ -469,6 +469,8 @@ function renderRadiationClosure(model: StellarEosStateCgs): void {
   radiationClosureChip.setAttribute("data-kind", kind);
   radiationClosureLabel.textContent = closure.label;
   radiationClosureNote.textContent = closure.note;
+  // Dim P_rad card when LTE closure is questionable
+  cardRadiation.dataset.lte = closure.tag === "lte-like" ? "ok" : "caution";
 }
 
 function dominantPressureValue(model: StellarEosStateCgs): number {
@@ -1155,11 +1157,20 @@ demoModes.bindButtons({ helpButton, stationButton: stationModeButton });
  * ================================================================ */
 
 for (const button of presetButtons) {
+  // Add descriptive aria-labels with physical state values
+  const pid = button.dataset.presetId as Preset["id"] | undefined;
+  if (pid && pid in PRESET_BY_ID) {
+    const p = PRESET_BY_ID[pid];
+    button.setAttribute("aria-label", `${p.label} preset: T = ${p.temperatureK.toExponential(2)} K, rho = ${p.densityGPerCm3.toExponential(1)} g/cm3`);
+  }
   button.addEventListener("click", () => {
     const presetId = button.dataset.presetId as Preset["id"] | undefined;
     if (!presetId || !(presetId in PRESET_BY_ID)) return;
     applyPreset(presetId);
     render();
+    // Announce preset selection for screen readers
+    const preset = PRESET_BY_ID[presetId];
+    setLiveRegionText(status, `Preset applied: ${preset.label}.`);
   });
 }
 

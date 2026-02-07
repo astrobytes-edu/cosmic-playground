@@ -147,7 +147,7 @@
               <button class="cp-button cp-button--outline preset" type="button" data-preset-id="solar-envelope">Solar envelope</button>
               <button class="cp-button cp-button--outline preset" type="button" data-preset-id="massive-core">Massive-star core</button>
               <button class="cp-button cp-button--outline preset" type="button" data-preset-id="red-giant-envelope">Red giant envelope</button>
-              <button class="cp-button cp-button--outline preset" type="button" data-preset-id="white-dwarf-core" title="Uses Y=0.98 (He-like). Real WDs are C/O, but both give mu_e &approx; 2.">White dwarf core</button>
+              <button class="cp-button cp-button--outline preset" type="button" data-preset-id="white-dwarf-core" title="He-like composition (Y=0.98) mimics C/O white dwarfs because mu_e &approx; 2 in both cases. Since n_e = rho/(mu_e m_u), the same mu_e gives the same electron density and degeneracy pressure.">White dwarf core</button>
               <button class="cp-button cp-button--outline preset" type="button" data-preset-id="brown-dwarf-interior">Brown dwarf interior</button>
             </div>
             <p id="presetNote" class="cp-muted"></p>
@@ -173,19 +173,30 @@
               <span class="cp-accordion__meta">cgs + assumptions</span>
             </summary>
             <div class="cp-accordion__body">
-              <ul>
-                <li>Gas pressure: $P_{\rm gas}=\rho k_B T/(\mu m_u)$.</li>
-                <li>Radiation pressure: $P_{\rm rad}=\eta_{\rm rad} aT^4/3$ (default $\eta_{\rm rad}=1$).</li>
-                <li>Finite-$T$ electron EOS uses Fermi-Dirac pressure $P_{e,\rm FD}(n_e,T)$ with nonrelativistic and relativistic branches.</li>
-                <li>Displayed degeneracy channel is $P_{\rm deg,e}=\max\!\left(P_{e,\rm FD}-n_e k_B T,0\right)$.</li>
-                <li>
-                  Finite-$T$ proxy uses $1+\frac{5\pi^2}{12}\left(T/T_F\right)^2$ only when $x_F\ll1$ and $T/T_F\ll1$.
-                </li>
-                <li>$\mu$ and $\mu_e$ for fully ionized mixtures: $\mu^{-1}\approx2X+\frac{3}{4}Y+\frac{1}{2}Z$, $\mu_e^{-1}\approx X+\frac{Y}{2}+\frac{Z}{2}$.</li>
-                <li>
-                  Future hook: the kernel accepts additional pressure terms and alternate degeneracy providers for pair-rich and neutron extensions.
-                </li>
+              <p class="cp-muted"><strong>Quick summary:</strong> Three pressure channels compete inside every star.</p>
+              <ul class="model-notes__simple">
+                <li><strong>Gas pressure</strong> ($P_{\rm gas}\propto\rho T$): hotter or denser gas pushes harder.</li>
+                <li><strong>Radiation pressure</strong> ($P_{\rm rad}\propto T^4$): photon momentum; grows steeply with temperature, independent of density.</li>
+                <li><strong>Degeneracy pressure</strong> ($P_{\rm deg}\propto\rho^{5/3}$ at low $T$): Pauli exclusion forces electrons into high-energy states even at zero temperature.</li>
               </ul>
+              <details class="cp-accordion cp-accordion--nested">
+                <summary><span class="cp-accordion__title">Technical details</span></summary>
+                <div class="cp-accordion__body">
+                  <ul>
+                    <li>Gas pressure: $P_{\rm gas}=\rho k_B T/(\mu m_u)$.</li>
+                    <li>Radiation pressure: $P_{\rm rad}=\eta_{\rm rad} aT^4/3$ (default $\eta_{\rm rad}=1$).</li>
+                    <li>Finite-$T$ electron EOS uses Fermi-Dirac pressure $P_{e,\rm FD}(n_e,T)$ with nonrelativistic and relativistic branches.</li>
+                    <li>Displayed degeneracy channel is $P_{\rm deg,e}=\max\!\left(P_{e,\rm FD}-n_e k_B T,0\right)$.</li>
+                    <li>
+                      Finite-$T$ proxy uses $1+\frac{5\pi^2}{12}\left(T/T_F\right)^2$ only when $x_F\ll1$ and $T/T_F\ll1$.
+                    </li>
+                    <li>$\mu$ and $\mu_e$ for fully ionized mixtures: $\mu^{-1}\approx2X+\frac{3}{4}Y+\frac{1}{2}Z$, $\mu_e^{-1}\approx X+\frac{Y}{2}+\frac{Z}{2}$.</li>
+                    <li>
+                      Future hook: the kernel accepts additional pressure terms and alternate degeneracy providers for pair-rich and neutron extensions.
+                    </li>
+                  </ul>
+                </div>
+              </details>
             </div>
           </details>
 

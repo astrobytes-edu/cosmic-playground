@@ -27,6 +27,16 @@
   font-variant-numeric: tabular-nums;
 }
 
+.model-notes__simple {
+  margin: var(--cp-space-2) 0;
+  padding-left: 1.2em;
+}
+
+.model-notes__simple li {
+  margin-bottom: var(--cp-space-1);
+  font-size: 0.9rem;
+}
+
 .presets {
   display: grid;
   gap: var(--cp-space-2);
@@ -194,6 +204,17 @@
 
 .pressure-card[data-tone="minor"] {
   opacity: 0.88;
+}
+
+/* Dim P_rad card when LTE closure is questionable — misconception prevention */
+#cardRadiation[data-lte="caution"] {
+  opacity: 0.55;
+  border-left-style: dashed;
+}
+
+#cardRadiation[data-lte="caution"] .pressure-card__hint::after {
+  content: " (LTE closure questionable)";
+  color: var(--cp-accent-rose);
 }
 
 .stage-summary {

@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 
 test.describe("EOS Lab -- E2E", () => {
   test.beforeEach(async ({ page }) => {
+    // Skip the first-use tour so it doesn't intercept pointer events
+    await page.addInitScript(() => localStorage.setItem("eos-lab-toured", "1"));
     await page.goto("play/eos-lab/", { waitUntil: "domcontentloaded" });
     await expect(page.locator("#cp-demo")).toBeVisible();
   });
@@ -107,7 +109,8 @@ test.describe("EOS Lab -- E2E", () => {
     const accordion = page.locator(".cp-demo__controls .cp-accordion").filter({
       hasText: "Model notes",
     });
-    await accordion.locator("summary").evaluate((el) => (el as HTMLElement).click());
+    // Use .first() since the nested "Technical details" accordion adds a second summary
+    await accordion.locator("summary").first().evaluate((el) => (el as HTMLElement).click());
     await expect(accordion).toHaveAttribute("open", "");
     await expect(accordion).toContainText("Gas pressure");
   });
