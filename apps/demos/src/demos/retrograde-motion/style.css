@@ -50,3 +50,15 @@
   align-items: center;
 }
 
+.cp-demo__controls {
+  animation: cp-slide-up 0.5s ease-out both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in 0.6s ease-out 0.1s both;
+}
+
+.cp-demo__readouts {
+  animation: cp-slide-up 0.5s ease-out 0.2s both;
+}
+

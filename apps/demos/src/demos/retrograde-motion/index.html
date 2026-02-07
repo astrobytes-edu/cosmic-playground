@@ -12,6 +12,8 @@
       data-shell="triad"
       aria-label="Retrograde motion instrument"
     >
+      <canvas class="cp-starfield" aria-hidden="true"></canvas>
+
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-body">
           <div class="cp-field">
@@ -140,41 +142,41 @@
         <div class="cp-panel-body">
           <div class="cp-readout">
             <div class="cp-readout__label">Model day $t$</div>
-            <div class="cp-readout__value"><span id="readoutDay">0.00</span></div>
+            <div class="cp-readout__value"><span id="readoutDay">0.00</span> <span class="cp-readout__unit">days</span></div>
           </div>
 
           <div class="cp-readout">
             <div class="cp-readout__label">
-              Apparent (sky) longitude $\lambda_{\mathrm{app}}$ (deg)
+              Apparent longitude $\lambda_{\mathrm{app}}$
             </div>
-            <div class="cp-readout__value"><span id="readoutLambda">—</span></div>
+            <div class="cp-readout__value"><span id="readoutLambda">\u2014</span> <span class="cp-readout__unit">deg</span></div>
           </div>
 
           <div class="cp-readout">
-            <div class="cp-readout__label">$d\tilde{\lambda}/dt$ (deg/day)</div>
-            <div class="cp-readout__value"><span id="readoutSlope">—</span></div>
+            <div class="cp-readout__label">$d\tilde{\lambda}/dt$</div>
+            <div class="cp-readout__value"><span id="readoutSlope">\u2014</span> <span class="cp-readout__unit">deg/day</span></div>
           </div>
 
           <div class="cp-readout">
             <div class="cp-readout__label">State</div>
-            <div class="cp-readout__value"><span id="readoutState">—</span></div>
-            <div class="cp-muted" id="geometryHint">—</div>
+            <div class="cp-readout__value"><span id="readoutState">\u2014</span></div>
+            <div class="cp-muted" id="geometryHint">\u2014</div>
           </div>
 
           <div class="cp-readout">
             <div class="cp-readout__label">Nearest stationary days</div>
             <div class="cp-readout__value">
-              <span class="cp-muted">prev:</span> <span id="readoutPrevStationary">—</span>
-              <span class="cp-muted">next:</span> <span id="readoutNextStationary">—</span>
+              <span class="cp-muted">prev:</span> <span id="readoutPrevStationary">\u2014</span> <span class="cp-readout__unit">days</span>
+              <span class="cp-muted">next:</span> <span id="readoutNextStationary">\u2014</span> <span class="cp-readout__unit">days</span>
             </div>
           </div>
 
           <div class="cp-readout">
             <div class="cp-readout__label">Nearest retrograde interval</div>
             <div class="cp-readout__value">
-              <span id="readoutRetroBounds">—</span>
+              <span id="readoutRetroBounds">\u2014</span> <span class="cp-readout__unit">days</span>
             </div>
-            <div class="cp-muted"><span id="readoutRetroDuration">—</span></div>
+            <div class="cp-muted"><span id="readoutRetroDuration">\u2014</span> <span class="cp-readout__unit">days</span></div>
           </div>
         </div>
       </aside>
