@@ -480,6 +480,66 @@ export function evaluateRegimeGrid(args: {
 }
 
 /* ──────────────────────────────────────────────────
+ * Scaling Law Detective — multiple-choice validation
+ * ────────────────────────────────────────────────── */
+
+export type ScalingChallengeDef = {
+  id: string;
+  channel: "gas" | "radiation" | "degeneracy";
+  question: string;
+  options: { label: string; factor: number }[];
+  correctFactor: number;
+  insight: string;
+};
+
+export const SCALING_CHALLENGES: ScalingChallengeDef[] = [
+  {
+    id: "gas-T",
+    channel: "gas",
+    question: "Double $T$. By what factor does $P_{\\rm gas}$ change?",
+    options: [
+      { label: "\\times 1", factor: 1 },
+      { label: "\\times 2", factor: 2 },
+      { label: "\\times 4", factor: 4 },
+      { label: "\\times 8", factor: 8 },
+    ],
+    correctFactor: 2,
+    insight: "$P_{\\rm gas} \\propto T^1$ \\u2014 linear scaling. Double $T$ \\u21D2 double $P$.",
+  },
+  {
+    id: "rad-T",
+    channel: "radiation",
+    question: "Double $T$. By what factor does $P_{\\rm rad}$ change?",
+    options: [
+      { label: "\\times 2", factor: 2 },
+      { label: "\\times 4", factor: 4 },
+      { label: "\\times 8", factor: 8 },
+      { label: "\\times 16", factor: 16 },
+    ],
+    correctFactor: 16,
+    insight: "$P_{\\rm rad} \\propto T^4$ \\u2014 explosive! Double $T$ \\u21D2 $2^4 = 16\\times P$.",
+  },
+  {
+    id: "deg-rho",
+    channel: "degeneracy",
+    question: "Double $\\rho$. By what factor does $P_{\\rm deg}$ change?",
+    options: [
+      { label: "\\times 2", factor: 2 },
+      { label: "\\times 3.2", factor: 3.17 },
+      { label: "\\times 4", factor: 4 },
+      { label: "\\times 8", factor: 8 },
+    ],
+    correctFactor: 3.17,
+    insight: "$P_{\\rm deg} \\propto \\rho^{5/3}$ \\u2014 steeper than linear. $2^{5/3} \\approx 3.17$.",
+  },
+];
+
+/** Check if a selected scaling-law factor matches the correct answer. */
+export function checkScalingAnswer(selectedFactor: number, correctFactor: number): boolean {
+  return Math.abs(selectedFactor - correctFactor) < 0.1;
+}
+
+/* ──────────────────────────────────────────────────
  * Deep-dive data generation functions
  * ────────────────────────────────────────────────── */
 

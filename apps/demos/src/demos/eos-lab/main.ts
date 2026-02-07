@@ -28,7 +28,9 @@ import {
   radEquationLatex,
   degEquationLatex,
   superscript,
-  valueToLogSlider
+  valueToLogSlider,
+  checkScalingAnswer,
+  SCALING_CHALLENGES
 } from "./logic";
 import { createEosPlot, destroyPlot } from "./uplotHelpers";
 import type { uPlot } from "./uplotHelpers";
@@ -857,6 +859,80 @@ const tab2Observer = new MutationObserver(() => {
   }
 });
 tab2Observer.observe(tab2Panel, { attributes: true, attributeFilter: ["hidden"] });
+
+/* ================================================================
+ * Scaling Law Detective — lightweight multiple-choice quiz
+ * ================================================================ */
+
+const scalingContainer = document.getElementById("scalingChallenge");
+if (scalingContainer) {
+  let currentIdx = 0;
+  const answered = new Set<number>();
+
+  function renderChallenge(): void {
+    if (!scalingContainer) return;
+    const ch = SCALING_CHALLENGES[currentIdx];
+
+    const progress = `<p class="cp-challenge-progress">${currentIdx + 1} / ${SCALING_CHALLENGES.length}</p>`;
+    const question = `<p class="scaling-detective__question">${ch.question}</p>`;
+
+    const optionsHtml = ch.options
+      .map(
+        (opt, i) =>
+          `<button class="cp-action scaling-detective__option" data-idx="${i}" data-factor="${opt.factor}" type="button">$${opt.label}$</button>`
+      )
+      .join("");
+
+    const feedbackId = `scalingFeedback-${ch.id}`;
+    scalingContainer.innerHTML =
+      progress + question +
+      `<div class="scaling-detective__options">${optionsHtml}</div>` +
+      `<div id="${feedbackId}" class="scaling-detective__feedback" aria-live="polite"></div>`;
+
+    renderMath(scalingContainer);
+
+    // Wire option clicks
+    for (const btn of scalingContainer.querySelectorAll<HTMLButtonElement>(".scaling-detective__option")) {
+      btn.addEventListener("click", () => {
+        const factor = Number(btn.dataset.factor);
+        const correct = checkScalingAnswer(factor, ch.correctFactor);
+        const feedbackEl = document.getElementById(feedbackId);
+        if (!feedbackEl) return;
+
+        if (correct) {
+          btn.classList.add("is-correct");
+          feedbackEl.innerHTML = `<span class="scaling-detective__correct">${ch.insight}</span>`;
+          renderMath(feedbackEl);
+          answered.add(currentIdx);
+
+          // Auto-advance after 2.5s if more challenges remain
+          if (currentIdx < SCALING_CHALLENGES.length - 1) {
+            setTimeout(() => {
+              currentIdx++;
+              renderChallenge();
+            }, 2500);
+          } else if (answered.size === SCALING_CHALLENGES.length) {
+            feedbackEl.innerHTML += `<p class="scaling-detective__complete">All scaling laws discovered!</p>`;
+          }
+        } else {
+          btn.classList.add("is-wrong");
+          btn.disabled = true;
+          feedbackEl.textContent = "Try again \u2014 watch the numbers carefully.";
+        }
+      });
+    }
+  }
+
+  // Start challenge when accordion opens
+  const scalingAccordion = scalingContainer.closest("details");
+  if (scalingAccordion) {
+    scalingAccordion.addEventListener("toggle", () => {
+      if (scalingAccordion.open && scalingContainer.children.length === 0) {
+        renderChallenge();
+      }
+    });
+  }
+}
 
 /* ================================================================
  * Demo modes (help + station)
