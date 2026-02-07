@@ -15,6 +15,8 @@ EOS Lab is **the most sophisticated interactive browser-based stellar EOS teachi
 
 **Post-enhancement status**: All 7 enhancement tasks completed (`85cea98`..`d86e5ff`). Demo now includes adiabatic index readout, symbolic/substituted equation toggle, solar profile overlay, guided tour, and WD composition tooltip. Test count: 75 demo tests (24 contract + 51 logic) + 24 E2E tests.
 
+**Phase 2 hardening**: All 25 UI/UX issues resolved (`6bed33c`..`d5b6fe0`). Fixes cover density readout format, tour robustness, stability indicator, keyboard accessibility, animation performance, quiz UX, and dead code cleanup.
+
 ---
 
 ## 1. Competitive Landscape
@@ -147,45 +149,47 @@ The Chandrasekhar zero-T formula mixed the Shapiro & Teukolsky prefactor (8pi^2)
 
 ## 5. Remaining UI/UX Issues (Phase 2 Hardening)
 
+**All 25 issues resolved.** See Section 6 for commit SHAs.
+
 ### P0 -- Broken / Incorrect
 
-| # | Issue | File | Detail |
+| # | Issue | Status | Commit |
 |---|---|---|---|
-| 1 | Density readout uses raw ASCII `g cm^-3` | `main.ts:602` | Should use KaTeX or `cp-readout__unit` span; Compare tab uses yet another format (`g/cm` + unicode superscript) |
-| 2 | Tour highlights hidden elements on Tab 2 | `main.ts:1250` | If auto-tour fires while on Tab 2, `#regimeMapCanvas` has zero rect. Tour tooltip appears at (0,0) |
-| 3 | Tour tooltip horizontal overflow on narrow viewports | `main.ts:1220` | No right-edge clamping. max-width 320px can overflow past viewport |
+| 1 | Density readout uses raw ASCII `g cm^-3` | **DONE** | `6bed33c` |
+| 2 | Tour highlights hidden elements on Tab 2 | **DONE** | `6bed33c` |
+| 3 | Tour tooltip horizontal overflow on narrow viewports | **DONE** | `6bed33c` |
 
 ### P1 -- Should Fix
 
-| # | Issue | File | Detail |
+| # | Issue | Status | Commit |
 |---|---|---|---|
-| 4 | Gamma_eff has no visual indicator at 4/3 threshold | `main.ts:689` | Title mentions instability but no color/icon change when crossing threshold. Major pedagogical gap |
-| 5 | Inconsistent sig figs across pressure displays | `main.ts` various | Pressure cards: 4, total: 5, ratios: 5, uPlot: 3. Should standardize |
-| 6 | Equation toggle has no keyboard access | `main.ts:886` | Click-only on divs, no tabindex/role/keydown handler |
-| 7 | Regime map axis labels use plain ASCII | `regimeMap.ts:305,311` | `log rho (g/cm3)` should use Unicode: `log \u03C1 (g cm\u207B\u00B3)` |
-| 8 | `resolveCss()` called every animation frame | `mechanismViz.ts:168` | `getComputedStyle` on every rAF; should cache |
-| 9 | Three animations run continuously when Tab 2 idle | `mechanismViz.ts` | No throttle after idle period; GPU waste |
-| 10 | `renderMath()` called on regime detail every render | `main.ts:654-657` | KaTeX re-render on every slider move; should debounce |
-| 11 | Tour cleanup doesn't restore focus | `main.ts:1233` | Screen reader users lose focus position after tour |
-| 12 | Pressure cards not keyboard-focusable | `index.html:294` | `.pressure-card--clickable` class exists but no tabindex |
-| 13 | Compare Y slider max not updated by presets | `main.ts:864` | WD preset (X=0) leaves compareY without constraint |
-| 14 | Composition finalization fires twice | `main.ts:1120-1123` | Both `change` and `pointerup` call same handler; double grid rebuild |
-| 15 | `formatScientific` returns `1.234e+15` ASCII | `logic.ts:66` | Should use Unicode x and superscript like uPlot ticks |
-| 16 | `wallFlashes` array unbounded in gas animation | `mechanismViz.ts:172` | Hundreds of flash objects at high T/rho; needs cap |
-| 17 | `PressureCurveData.densities` jsdoc says "log10(rho)" but values are linear | `logic.ts:206` | Comment is wrong |
+| 4 | Gamma_eff has no visual indicator at 4/3 threshold | **DONE** | `293f4d2` |
+| 5 | Inconsistent sig figs across pressure displays | **DONE** | `cfd1f9e` |
+| 6 | Equation toggle has no keyboard access | **DONE** | `293f4d2` |
+| 7 | Regime map axis labels use plain ASCII | **DONE** | `293f4d2` |
+| 8 | `resolveCss()` called every animation frame | **DONE** | `293f4d2` |
+| 9 | Three animations run continuously when Tab 2 idle | **DONE** | `cfd1f9e` |
+| 10 | `renderMath()` called on regime detail every render | **DONE** | `293f4d2` |
+| 11 | Tour cleanup doesn't restore focus | **DONE** | `6bed33c` |
+| 12 | Pressure cards not keyboard-focusable | N/A | Dead CSS class |
+| 13 | Compare Y slider max not updated by presets | **DONE** | `cfd1f9e` |
+| 14 | Composition finalization fires twice | **DONE** | `293f4d2` |
+| 15 | `formatScientific` returns `1.234e+15` ASCII | **DONE** | `293f4d2` |
+| 16 | `wallFlashes` array unbounded in gas animation | **DONE** | `cfd1f9e` |
+| 17 | `PressureCurveData.densities` jsdoc wrong | **DONE** | `cfd1f9e` |
 
 ### P2 -- Nice to Have
 
-| # | Issue | File | Detail |
+| # | Issue | Status | Commit |
 |---|---|---|---|
-| 18 | Compare tab doesn't show mu_e (only mu) | `index.html:356` | Degeneracy equation references mu_e but value not visible |
-| 19 | Preset note text is a wall of text | `main.ts:423` | Should structure with separate spans for note/expected/composition |
-| 20 | Performance badge always visible on regime map | `regimeMap.ts:545` | Developer diagnostic; should be hidden or gated |
-| 21 | Scaling quiz auto-advance (2.5s) not cancelable | `main.ts:941` | Slow readers can't pause to re-read insight text |
-| 22 | No "Reset quiz" button for Scaling Detective | `index.html:412` | Can't redo without page reload |
-| 23 | Dead exports: `gasDeepDiveData`, `radDeepDiveData`, `degDeepDiveData` | `logic.ts:550-639` | Never imported; remove or document |
-| 24 | Dead export: `invalidateRegimeMapColors()` | `regimeMap.ts:570` | No theme toggle calls it |
-| 25 | Magic numbers in mechanismViz speed calculations | `mechanismViz.ts` | Undocumented physics-motivated constants |
+| 18 | Compare tab doesn't show mu_e (only mu) | **DONE** | `d5b6fe0` |
+| 19 | Preset note text is a wall of text | **DONE** | `d5b6fe0` |
+| 20 | Performance badge always visible on regime map | **DONE** | `d5b6fe0` |
+| 21 | Scaling quiz auto-advance not cancelable | **DONE** | `d5b6fe0` |
+| 22 | No "Reset quiz" button for Scaling Detective | **DONE** | `d5b6fe0` |
+| 23 | Dead exports: deep-dive data functions | **DONE** | `d5b6fe0` (documented) |
+| 24 | Dead export: `invalidateRegimeMapColors()` | **DONE** | `d5b6fe0` (removed) |
+| 25 | Magic numbers in mechanismViz speed calculations | **DONE** | `d5b6fe0` |
 
 ---
 
@@ -205,6 +209,11 @@ The Chandrasekhar zero-T formula mixed the Shapiro & Teukolsky prefactor (8pi^2)
 | P3 | White dwarf composition tooltip | **DONE** | `978d893` |
 | P3 | First-use guided tour | **DONE** | `1d74761` |
 | P1 | Update E2E tests for symbolic default | **DONE** | `d86e5ff` |
+| P0 | Fix density readout format + tour bugs (#1-3, #11) | **DONE** | `6bed33c` |
+| P1 | Stability indicator, a11y, perf, formatting (#4,6-8,10,14,15) | **DONE** | `293f4d2` |
+| P1 | Idle throttle, wallFlash cap, sig figs, jsdoc (#5,9,13,16,17) | **DONE** | `cfd1f9e` |
+| P2 | Quiz UX, dead code cleanup, named constants (#18-25) | **DONE** | `d5b6fe0` |
+| -- | Fix pre-existing E2E KaTeX visibility flake | **DONE** | `d5b6fe0` |
 
 ---
 
