@@ -6,6 +6,22 @@
 - Refactor additional demos into `apps/demos/src/demos/<slug>/` once the pilot demo quality bar is met.
 - Harden the Authoring Kit templates + docs.
 
+## Demo Migration
+
+### Remaining migrations (design-system contract-driven)
+
+- `retrograde-motion` — multi-body, next in migration order
+- `conservation-laws` — physics viz
+- `binary-orbits` — orbital mechanics
+- `planetary-conjunctions` — multi-body
+
+### EOS Lab enhancements
+
+- GPU-computed EOS regime map via WebGL/GLSL fragment shaders — encode the equation of state (ideal gas + radiation + Fermi-Dirac degeneracy) directly into a fragment shader to compute the dominant pressure channel per pixel in parallel. Would make the regime map truly real-time at arbitrary resolution. Requires porting the iterative Fermi-Dirac integral solver (bisection + Simpson quadrature) to GLSL, which is non-trivial but physically well-defined.
+- Promote `superscript()` helper to `@cosmic/runtime` if a second demo needs Unicode superscript axis labels (YAGNI until then).
+- `validate-plot-contract.mjs` cleanup — references deleted Plotly architecture, update or remove.
+- Add `requestAnimationFrame` throttle guard on `render()` for slider `input` events (currently fires 200 EOS evaluations per slider tick).
+
 ## Later
 
 - Optional `noindex` and nav omission rules for instructor routes (if not already).
