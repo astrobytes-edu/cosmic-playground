@@ -599,7 +599,7 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   rhoSlider.value = Number.isFinite(densitySliderValue) ? String(Math.round(densitySliderValue)) : "0";
 
   tempValue.textContent = `${formatScientific(state.temperatureK, 4)} K`;
-  rhoValue.textContent = `${formatScientific(state.densityGPerCm3, 4)} g cm^-3`;
+  rhoValue.textContent = `${formatScientific(state.densityGPerCm3, 4)} g cm\u207B\u00B3`;
 
   // --- Composition sliders ---
   const x = state.composition.hydrogenMassFractionX;
@@ -769,7 +769,7 @@ function showDeltaFlash(el: HTMLElement, oldP: number, newP: number): void {
 function renderCompareView(model: StellarEosStateCgs): void {
   // Slider readouts
   compareTVal.textContent = formatScientific(model.input.temperatureK, 4) + " K";
-  compareRhoVal.textContent = formatScientific(model.input.densityGPerCm3, 4) + " g/cm\u00B3";
+  compareRhoVal.textContent = formatScientific(model.input.densityGPerCm3, 4) + " g cm\u207B\u00B3";
   compareXVal.textContent = formatFraction(model.input.composition.hydrogenMassFractionX, 3);
   compareYVal.textContent = formatFraction(model.input.composition.heliumMassFractionY, 3);
   compareMuVal.textContent = formatFraction(model.meanMolecularWeightMu, 3);
@@ -1183,6 +1183,13 @@ const TOUR_STEPS = [
 ];
 
 function runTour(): void {
+  // Ensure Tab 1 (Explore) is active — tour targets are only visible there
+  const tabExploreBtn = document.getElementById("tab-explore") as HTMLElement | null;
+  if (tabExploreBtn && tabExploreBtn.getAttribute("aria-selected") !== "true") {
+    tabExploreBtn.click();
+  }
+
+  const preTourFocus = document.activeElement as HTMLElement | null;
   let step = 0;
 
   const overlay = document.createElement("div");
@@ -1201,13 +1208,15 @@ function runTour(): void {
     if (step >= TOUR_STEPS.length) { cleanup(); return; }
     const s = TOUR_STEPS[step];
     const el = document.querySelector(s.target);
+    // Skip elements that are missing or have zero-size rect (hidden by tab)
     if (!el) { step++; show(); return; }
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) { step++; show(); return; }
 
     if (prevHighlight) prevHighlight.classList.remove("tour-highlight");
     el.classList.add("tour-highlight");
     prevHighlight = el;
 
-    const rect = el.getBoundingClientRect();
     tooltip.innerHTML =
       `<p>${s.text}</p>` +
       `<div class="tour-tooltip__actions">` +
@@ -1217,7 +1226,9 @@ function runTour(): void {
 
     // Position tooltip below or above the target
     const above = rect.bottom > window.innerHeight * 0.6;
-    tooltip.style.left = `${Math.max(8, rect.left)}px`;
+    // Clamp left so tooltip doesn't overflow the right edge of the viewport
+    const maxLeft = window.innerWidth - Math.min(320, window.innerWidth - 16) - 8;
+    tooltip.style.left = `${Math.max(8, Math.min(rect.left, maxLeft))}px`;
     if (above) {
       tooltip.style.top = "";
       tooltip.style.bottom = `${window.innerHeight - rect.top + 8}px`;
@@ -1228,6 +1239,8 @@ function runTour(): void {
 
     tooltip.querySelector(".tour-next")!.addEventListener("click", () => { step++; show(); });
     tooltip.querySelector(".tour-skip")!.addEventListener("click", cleanup);
+    // Focus the Next button for keyboard users
+    (tooltip.querySelector(".tour-next") as HTMLElement)?.focus();
   }
 
   function cleanup(): void {
@@ -1235,6 +1248,10 @@ function runTour(): void {
     overlay.remove();
     tooltip.remove();
     localStorage.setItem("eos-lab-toured", "1");
+    // Restore focus to where it was before the tour
+    if (preTourFocus && typeof preTourFocus.focus === "function") {
+      preTourFocus.focus();
+    }
   }
 
   overlay.addEventListener("click", cleanup);
