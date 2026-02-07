@@ -71,7 +71,15 @@ test.describe("EOS Lab -- E2E", () => {
     await expect(page.locator("#dominantChannel")).toContainText("Electron degeneracy pressure");
   });
 
-  test("advanced diagnostics panel exposes fermi and extension readouts", async ({ page }) => {
+  test("advanced diagnostics accordion reveals fermi and extension readouts", async ({ page }) => {
+    // Advanced diagnostics is inside a closed <details> accordion near the bottom
+    // of the sidebar scroll container — force click to bypass pointer interception
+    // from adjacent grid areas at narrow viewport widths
+    const accordion = page.locator(".cp-demo__controls .cp-accordion").filter({
+      hasText: "Advanced diagnostics",
+    });
+    await accordion.locator("summary").evaluate((el) => (el as HTMLElement).click());
+    await expect(accordion).toHaveAttribute("open", "");
     await expect(page.locator("#xFValue")).toBeVisible();
     await expect(page.locator("#fermiRegimeValue")).toBeVisible();
     await expect(page.locator("#neutronExtensionValue")).toBeVisible();
@@ -83,17 +91,24 @@ test.describe("EOS Lab -- E2E", () => {
     expect(count).toBeGreaterThanOrEqual(3);
   });
 
-  test("What to notice accordion is open by default", async ({ page }) => {
-    const firstAccordion = page.locator(".cp-accordion").first();
-    await expect(firstAccordion).toHaveAttribute("open", "");
-    await expect(firstAccordion).toContainText("What to notice");
+  test("What to notice accordion can be opened", async ({ page }) => {
+    const accordion = page.locator(".cp-demo__controls .cp-accordion").filter({
+      hasText: "What to notice",
+    });
+    // Accordions start closed by default
+    await expect(accordion).not.toHaveAttribute("open", "");
+    await accordion.locator("summary").evaluate((el) => (el as HTMLElement).click());
+    await expect(accordion).toHaveAttribute("open", "");
+    await expect(accordion).toContainText("radiation pressure climbs");
   });
 
   test("Model notes accordion can be opened", async ({ page }) => {
-    const modelNotes = page.locator(".cp-accordion").nth(1);
-    await modelNotes.locator("summary").click();
-    await expect(modelNotes).toHaveAttribute("open", "");
-    await expect(modelNotes).toContainText("Model notes");
+    const accordion = page.locator(".cp-demo__controls .cp-accordion").filter({
+      hasText: "Model notes",
+    });
+    await accordion.locator("summary").evaluate((el) => (el as HTMLElement).click());
+    await expect(accordion).toHaveAttribute("open", "");
+    await expect(accordion).toContainText("Gas pressure");
   });
 
   test("station mode button opens station dialog", async ({ page }) => {
@@ -115,29 +130,34 @@ test.describe("EOS Lab -- E2E", () => {
     await expect(status).toHaveAttribute("aria-live", "polite");
   });
 
-  test("pressure cards are clickable", async ({ page }) => {
+  test("pressure cards are clickable on Understand tab", async ({ page }) => {
+    await page.locator("#tab-understand").click();
     await expect(page.locator(".pressure-card--clickable")).toHaveCount(3);
   });
 
-  test("clicking gas card opens gas deep-dive panel", async ({ page }) => {
-    await page.locator("#cardGas").click();
+  test("clicking gas mechanism card opens gas deep-dive panel", async ({ page }) => {
+    // Deep-dives are on the Understand tab behind mechanism cards
+    await page.locator("#tab-understand").click();
+    await page.locator("#mechanismGas").click();
     await expect(page.locator("#deepDiveGas")).toBeVisible();
-    await expect(page.locator(".pressure-grid")).toBeHidden();
+    await expect(page.locator(".mechanism-grid")).toBeHidden();
     await expect(page.locator("#gasAnimCanvas")).toBeVisible();
     await expect(page.locator("#gasEquation")).toBeVisible();
     await expect(page.locator("#gasDeepChart")).toBeVisible();
   });
 
-  test("gas deep-dive back button returns to overview", async ({ page }) => {
-    await page.locator("#cardGas").click();
+  test("gas deep-dive back button returns to mechanism overview", async ({ page }) => {
+    await page.locator("#tab-understand").click();
+    await page.locator("#mechanismGas").click();
     await expect(page.locator("#deepDiveGas")).toBeVisible();
     await page.locator("#deepDiveGas .deep-dive__back").click();
     await expect(page.locator("#deepDiveGas")).toBeHidden();
-    await expect(page.locator(".pressure-grid")).toBeVisible();
+    await expect(page.locator(".mechanism-grid")).toBeVisible();
   });
 
   test("radiation deep-dive has only temperature slider", async ({ page }) => {
-    await page.locator("#cardRadiation").click();
+    await page.locator("#tab-understand").click();
+    await page.locator("#mechanismRadiation").click();
     await expect(page.locator("#deepDiveRadiation")).toBeVisible();
     await expect(page.locator("#radDeepT")).toBeVisible();
     // Radiation pressure is density-independent, so no rho slider
@@ -146,13 +166,15 @@ test.describe("EOS Lab -- E2E", () => {
   });
 
   test("degeneracy deep-dive has density slider", async ({ page }) => {
-    await page.locator("#cardDegeneracy").click();
+    await page.locator("#tab-understand").click();
+    await page.locator("#mechanismDegeneracy").click();
     await expect(page.locator("#deepDiveDegeneracy")).toBeVisible();
     await expect(page.locator("#degDeepRho")).toBeVisible();
   });
 
   test("deep-dive slider updates equation content", async ({ page }) => {
-    await page.locator("#cardGas").click();
+    await page.locator("#tab-understand").click();
+    await page.locator("#mechanismGas").click();
     await expect(page.locator("#deepDiveGas")).toBeVisible();
     const before = await page.locator("#gasEquation").textContent();
     await page.locator("#gasDeepT").fill("200");
@@ -163,11 +185,12 @@ test.describe("EOS Lab -- E2E", () => {
   });
 
   test("switching between deep-dives closes previous", async ({ page }) => {
-    await page.locator("#cardGas").click();
+    await page.locator("#tab-understand").click();
+    await page.locator("#mechanismGas").click();
     await expect(page.locator("#deepDiveGas")).toBeVisible();
     // Go back then open another
     await page.locator("#deepDiveGas .deep-dive__back").click();
-    await page.locator("#cardRadiation").click();
+    await page.locator("#mechanismRadiation").click();
     await expect(page.locator("#deepDiveRadiation")).toBeVisible();
     await expect(page.locator("#deepDiveGas")).toBeHidden();
   });
