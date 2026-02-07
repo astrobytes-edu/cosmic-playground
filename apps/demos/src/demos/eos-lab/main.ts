@@ -19,16 +19,13 @@ import {
   compositionFromXY,
   formatFraction,
   formatScientific,
-  gasDeepDiveData,
   gasEquationLatex,
   logSliderToValue,
   percent,
   pressureBarPercent,
   pressureCurveData,
   pressureTone,
-  radDeepDiveData,
   radEquationLatex,
-  degDeepDiveData,
   degEquationLatex,
   superscript,
   valueToLogSlider
@@ -41,7 +38,6 @@ import {
   RadiationPressureAnimation,
   DegeneracyPressureAnimation
 } from "./mechanismViz";
-import type { MechanismAnimation } from "./mechanismViz";
 
 /* ================================================================
  * Formatting helpers
@@ -222,39 +218,36 @@ const presetButtons = Array.from(
 );
 
 /* ================================================================
- * Deep-dive panel DOM queries
+ * Compare view (Tab 2) DOM queries
  * ================================================================ */
 
-const mechanismGrid = q(".mechanism-grid");
-const mechanismGas = q("#mechanismGas");
-const mechanismRadiation = q("#mechanismRadiation");
-const mechanismDegeneracy = q("#mechanismDegeneracy");
+const compareT = q<HTMLInputElement>("#compareT");
+const compareTVal = q("#compareTVal");
+const compareRho = q<HTMLInputElement>("#compareRho");
+const compareRhoVal = q("#compareRhoVal");
+const compareX = q<HTMLInputElement>("#compareX");
+const compareXVal = q("#compareXVal");
+const compareY = q<HTMLInputElement>("#compareY");
+const compareYVal = q("#compareYVal");
+const compareMuVal = q("#compareMuVal");
 
-const deepDiveGas = q<HTMLElement>("#deepDiveGas");
-const deepDiveRadiation = q<HTMLElement>("#deepDiveRadiation");
-const deepDiveDegeneracy = q<HTMLElement>("#deepDiveDegeneracy");
+const compareGasCanvas = q<HTMLCanvasElement>("#compareGasCanvas");
+const compareRadCanvas = q<HTMLCanvasElement>("#compareRadCanvas");
+const compareDegCanvas = q<HTMLCanvasElement>("#compareDegCanvas");
 
-const gasAnimCanvas = q<HTMLCanvasElement>("#gasAnimCanvas");
-const radAnimCanvas = q<HTMLCanvasElement>("#radAnimCanvas");
-const degAnimCanvas = q<HTMLCanvasElement>("#degAnimCanvas");
+const compareGasEq = q("#compareGasEq");
+const compareRadEq = q("#compareRadEq");
+const compareDegEq = q("#compareDegEq");
 
-const gasEquationEl = q("#gasEquation");
-const radEquationEl = q("#radEquation");
-const degEquationEl = q("#degEquation");
+const compareGasFlash = q("#compareGasFlash");
+const compareRadFlash = q("#compareRadFlash");
+const compareDegFlash = q("#compareDegFlash");
 
-const gasDeepT = q<HTMLInputElement>("#gasDeepT");
-const gasDeepTVal = q("#gasDeepTVal");
-const gasDeepRho = q<HTMLInputElement>("#gasDeepRho");
-const gasDeepRhoVal = q("#gasDeepRhoVal");
-const gasDeepChartEl = q("#gasDeepChart");
+const comparePresetButtons = Array.from(
+  document.querySelectorAll<HTMLButtonElement>("button.compare-preset[data-preset-id]")
+);
 
-const radDeepT = q<HTMLInputElement>("#radDeepT");
-const radDeepTVal = q("#radDeepTVal");
-const radDeepChartEl = q("#radDeepChart");
-
-const degDeepRho = q<HTMLInputElement>("#degDeepRho");
-const degDeepRhoVal = q("#degDeepRhoVal");
-const degDeepChartEl = q("#degDeepChart");
+const tab2Panel = q("#panel-understand");
 
 /* ================================================================
  * Runtime + state
@@ -686,280 +679,184 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
     mode: runtime.mode,
     exportResults: () => exportResults(model)
   };
+
+  // Compare view (Tab 2) — sync sliders and render if visible
+  syncCompareSliders();
+  if (!tab2Panel.hidden) {
+    renderCompareView(model);
+  }
 }
 
 /* ================================================================
- * Deep-dive panel system
+ * Comparison view (Tab 2) — side-by-side channel animations
  * ================================================================ */
 
-type DeepDiveChannel = "gas" | "radiation" | "degeneracy";
-let activeDeepDive: DeepDiveChannel | null = null;
-let activeAnimation: MechanismAnimation | null = null;
-let deepDivePlotHandle: ReturnType<typeof createEosPlot> | null = null;
-
-const deepDivePanels: Record<DeepDiveChannel, HTMLElement> = {
-  gas: deepDiveGas,
-  radiation: deepDiveRadiation,
-  degeneracy: deepDiveDegeneracy,
+const compareAnimations = {
+  gas: new GasPressureAnimation(),
+  radiation: new RadiationPressureAnimation(),
+  degeneracy: new DegeneracyPressureAnimation(),
 };
 
-const deepDiveCanvases: Record<DeepDiveChannel, HTMLCanvasElement> = {
-  gas: gasAnimCanvas,
-  radiation: radAnimCanvas,
-  degeneracy: degAnimCanvas,
-};
+let compareAnimsStarted = false;
+let prevCompareModel: StellarEosStateCgs | null = null;
 
-/** Deep-dive local state (independent of global sliders). */
-const deepDiveState = {
-  gasT: state.temperatureK,
-  gasRho: state.densityGPerCm3,
-  radT: state.temperatureK,
-  degRho: state.densityGPerCm3,
-};
+function startCompareAnimations(): void {
+  if (compareAnimsStarted) return;
+  compareAnimations.gas.start(compareGasCanvas);
+  compareAnimations.radiation.start(compareRadCanvas);
+  compareAnimations.degeneracy.start(compareDegCanvas);
+  compareAnimsStarted = true;
+}
 
-function syncDeepDiveSliders(channel: DeepDiveChannel): void {
-  if (channel === "gas") {
-    deepDiveState.gasT = state.temperatureK;
-    deepDiveState.gasRho = state.densityGPerCm3;
-    gasDeepT.value = String(Math.round(valueToLogSlider({
-      value: deepDiveState.gasT, sliderMin: 0, sliderMax: 1000,
-      valueMin: TEMPERATURE_MIN_K, valueMax: TEMPERATURE_MAX_K,
-    })));
-    gasDeepRho.value = String(Math.round(valueToLogSlider({
-      value: deepDiveState.gasRho, sliderMin: 0, sliderMax: 1000,
-      valueMin: DENSITY_MIN_G_PER_CM3, valueMax: DENSITY_MAX_G_PER_CM3,
-    })));
-  } else if (channel === "radiation") {
-    deepDiveState.radT = state.temperatureK;
-    radDeepT.value = String(Math.round(valueToLogSlider({
-      value: deepDiveState.radT, sliderMin: 0, sliderMax: 1000,
-      valueMin: TEMPERATURE_MIN_K, valueMax: TEMPERATURE_MAX_K,
-    })));
+function stopCompareAnimations(): void {
+  if (!compareAnimsStarted) return;
+  compareAnimations.gas.stop();
+  compareAnimations.radiation.stop();
+  compareAnimations.degeneracy.stop();
+  compareAnimsStarted = false;
+}
+
+function syncCompareSliders(): void {
+  compareT.value = tempSlider.value;
+  compareRho.value = rhoSlider.value;
+  compareX.value = xSlider.value;
+  compareY.value = ySlider.value;
+}
+
+let flashTimeout = 0;
+
+function showDeltaFlash(el: HTMLElement, oldP: number, newP: number): void {
+  const ratio = newP / oldP;
+  if (!Number.isFinite(ratio) || Math.abs(ratio - 1) < 0.001) {
+    el.dataset.direction = "none";
+    el.textContent = "\u2014";
+  } else if (ratio > 1) {
+    el.dataset.direction = "up";
+    el.textContent = "\u2191 \u00D7" + ratio.toFixed(ratio > 10 ? 0 : 1);
   } else {
-    deepDiveState.degRho = state.densityGPerCm3;
-    degDeepRho.value = String(Math.round(valueToLogSlider({
-      value: deepDiveState.degRho, sliderMin: 0, sliderMax: 1000,
-      valueMin: DENSITY_MIN_G_PER_CM3, valueMax: DENSITY_MAX_G_PER_CM3,
-    })));
+    el.dataset.direction = "down";
+    el.textContent = "\u2193 \u00D7" + (1 / ratio).toFixed(ratio < 0.1 ? 0 : 1);
+  }
+  el.classList.add("is-visible");
+  clearTimeout(flashTimeout);
+  flashTimeout = window.setTimeout(() => {
+    compareGasFlash.classList.remove("is-visible");
+    compareRadFlash.classList.remove("is-visible");
+    compareDegFlash.classList.remove("is-visible");
+  }, 2000);
+}
+
+function renderCompareView(model: StellarEosStateCgs): void {
+  // Slider readouts
+  compareTVal.textContent = formatScientific(model.input.temperatureK, 4) + " K";
+  compareRhoVal.textContent = formatScientific(model.input.densityGPerCm3, 4) + " g/cm\u00B3";
+  compareXVal.textContent = formatFraction(model.input.composition.hydrogenMassFractionX, 3);
+  compareYVal.textContent = formatFraction(model.input.composition.heliumMassFractionY, 3);
+  compareMuVal.textContent = formatFraction(model.meanMolecularWeightMu, 3);
+
+  // Live equations (KaTeX)
+  compareGasEq.textContent = "$$" + gasEquationLatex({
+    rho: model.input.densityGPerCm3,
+    T: model.input.temperatureK,
+    mu: model.meanMolecularWeightMu,
+    pGas: model.gasPressureDynePerCm2,
+  }) + "$$";
+  renderMath(compareGasEq);
+
+  compareRadEq.textContent = "$$" + radEquationLatex({
+    T: model.input.temperatureK,
+    pRad: model.radiationPressureDynePerCm2,
+  }) + "$$";
+  renderMath(compareRadEq);
+
+  compareDegEq.textContent = "$$" + degEquationLatex({
+    rho: model.input.densityGPerCm3,
+    muE: model.meanMolecularWeightMuE,
+    xF: model.fermiRelativityX,
+    pDeg: model.electronDegeneracyPressureDynePerCm2,
+  }) + "$$";
+  renderMath(compareDegEq);
+
+  // Update animations
+  const logT = Math.log10(model.input.temperatureK);
+  const logRho = Math.log10(model.input.densityGPerCm3);
+  compareAnimations.gas.updateParams({ logT, logRho });
+  compareAnimations.radiation.updateParams({ logT });
+  compareAnimations.degeneracy.updateParams({ logRho });
+
+  // Delta-P flash
+  if (prevCompareModel) {
+    showDeltaFlash(compareGasFlash,
+      prevCompareModel.gasPressureDynePerCm2,
+      model.gasPressureDynePerCm2);
+    showDeltaFlash(compareRadFlash,
+      prevCompareModel.radiationPressureDynePerCm2,
+      model.radiationPressureDynePerCm2);
+    showDeltaFlash(compareDegFlash,
+      prevCompareModel.electronDegeneracyPressureDynePerCm2,
+      model.electronDegeneracyPressureDynePerCm2);
+  }
+  prevCompareModel = model;
+
+  // Preset highlight on compare buttons
+  for (const btn of comparePresetButtons) {
+    const isActive = btn.dataset.presetId === state.selectedPresetId;
+    btn.classList.toggle("is-active", isActive);
   }
 }
 
-function renderDeepDiveContent(channel: DeepDiveChannel): void {
-  if (channel === "gas") {
-    const T = deepDiveState.gasT;
-    const rho = deepDiveState.gasRho;
-    const gasEos = StellarEosModel.evaluateStateCgs({
-      input: {
-        temperatureK: T,
-        densityGPerCm3: rho,
-        composition: state.composition,
-        radiationDepartureEta: state.radiationDepartureEta,
-      },
-    });
-    const mu = gasEos.meanMolecularWeightMu;
-    const pGas = gasEos.gasPressureDynePerCm2;
-    gasDeepTVal.textContent = `${formatScientific(T, 4)} K`;
-    gasDeepRhoVal.textContent = `${formatScientific(rho, 4)} g cm^-3`;
-    gasEquationEl.textContent = `$$${gasEquationLatex({ rho, T, mu, pGas })}$$`;
-    renderMath(gasEquationEl);
-
-    const data = gasDeepDiveData({ temperatureK: T, composition: state.composition });
-    if (deepDivePlotHandle) {
-      deepDivePlotHandle.plot.setData([data.densities, data.pGas]);
-    }
-    activeAnimation?.updateParams({ logT: Math.log10(T), logRho: Math.log10(rho) });
-
-  } else if (channel === "radiation") {
-    const T = deepDiveState.radT;
-    const radEos = StellarEosModel.evaluateStateCgs({
-      input: {
-        temperatureK: T,
-        densityGPerCm3: state.densityGPerCm3,
-        composition: state.composition,
-        radiationDepartureEta: state.radiationDepartureEta,
-      },
-    });
-    const pRad = radEos.radiationPressureDynePerCm2;
-    radDeepTVal.textContent = `${formatScientific(T, 4)} K`;
-    radEquationEl.textContent = `$$${radEquationLatex({ T, pRad })}$$`;
-    renderMath(radEquationEl);
-
-    const data = radDeepDiveData({ rhoForComparison: state.densityGPerCm3, composition: state.composition });
-    if (deepDivePlotHandle) {
-      deepDivePlotHandle.plot.setData([data.temperatures, data.pRad, data.pGas]);
-    }
-    activeAnimation?.updateParams({ logT: Math.log10(T) });
-
-  } else {
-    const rho = deepDiveState.degRho;
-    const eosResult = StellarEosModel.evaluateStateCgs({
-      input: {
-        temperatureK: state.temperatureK,
-        densityGPerCm3: rho,
-        composition: state.composition,
-        radiationDepartureEta: state.radiationDepartureEta,
-      },
-    });
-    const pDeg = eosResult.electronDegeneracyPressureDynePerCm2;
-    const muE = eosResult.meanMolecularWeightMuE;
-    degDeepRhoVal.textContent = `${formatScientific(rho, 4)} g cm^-3`;
-    degEquationEl.textContent = `$$${degEquationLatex({ rho, muE, xF: eosResult.fermiRelativityX, pDeg })}$$`;
-    renderMath(degEquationEl);
-
-    const data = degDeepDiveData({ temperatureK: state.temperatureK, composition: state.composition });
-    if (deepDivePlotHandle) {
-      deepDivePlotHandle.plot.setData([data.densities, data.pDeg, data.pGas]);
-    }
-    activeAnimation?.updateParams({ logRho: Math.log10(rho) });
-  }
-}
-
-function createDeepDivePlot(channel: DeepDiveChannel): void {
-  if (deepDivePlotHandle) {
-    destroyPlot(deepDivePlotHandle);
-    deepDivePlotHandle = null;
-  }
-
-  if (channel === "gas") {
-    const data = gasDeepDiveData({ temperatureK: deepDiveState.gasT, composition: state.composition });
-    deepDivePlotHandle = createEosPlot(gasDeepChartEl, {
-      scales: { x: { distr: 3 }, y: { distr: 3, range: logPressureRange } },
-      series: [
-        {},
-        { label: "P_gas", stroke: gasColor, width: 2, value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
-      ],
-      axes: [
-        { label: "\u03C1 (g cm\u207B\u00B3)", values: logTickValues },
-        { label: "P (dyne cm\u207B\u00B2)", values: logTickValues },
-      ],
-    }, [data.densities, data.pGas]);
-
-  } else if (channel === "radiation") {
-    const data = radDeepDiveData({ rhoForComparison: state.densityGPerCm3, composition: state.composition });
-    deepDivePlotHandle = createEosPlot(radDeepChartEl, {
-      scales: { x: { distr: 3 }, y: { distr: 3, range: logPressureRange } },
-      series: [
-        {},
-        { label: "P_rad", stroke: radColor, width: 2, value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
-        { label: "P_gas (comparison)", stroke: gasColor, width: 1.5, dash: [4, 2], value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
-      ],
-      axes: [
-        { label: "T (K)", values: logTickValues },
-        { label: "P (dyne cm\u207B\u00B2)", values: logTickValues },
-      ],
-    }, [data.temperatures, data.pRad, data.pGas]);
-
-  } else {
-    const data = degDeepDiveData({ temperatureK: state.temperatureK, composition: state.composition });
-    deepDivePlotHandle = createEosPlot(degDeepChartEl, {
-      scales: { x: { distr: 3 }, y: { distr: 3, range: logPressureRange } },
-      series: [
-        {},
-        { label: "P_deg,e", stroke: degColor, width: 2, value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
-        { label: "P_gas (comparison)", stroke: gasColor, width: 1.5, dash: [4, 2], value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
-      ],
-      axes: [
-        { label: "\u03C1 (g cm\u207B\u00B3)", values: logTickValues },
-        { label: "P (dyne cm\u207B\u00B2)", values: logTickValues },
-      ],
-    }, [data.densities, data.pDeg, data.pGas]);
-  }
-}
-
-function openDeepDive(channel: DeepDiveChannel): void {
-  closeDeepDive();
-  activeDeepDive = channel;
-
-  mechanismGrid.setAttribute("hidden", "");
-  deepDivePanels[channel].removeAttribute("hidden");
-
-  syncDeepDiveSliders(channel);
-  createDeepDivePlot(channel);
-
-  const AnimClass = channel === "gas" ? GasPressureAnimation
-    : channel === "radiation" ? RadiationPressureAnimation
-    : DegeneracyPressureAnimation;
-  activeAnimation = new AnimClass();
-  activeAnimation.start(deepDiveCanvases[channel]);
-  const animT = channel === "degeneracy" ? state.temperatureK : (channel === "gas" ? deepDiveState.gasT : deepDiveState.radT);
-  const animRho = channel === "radiation" ? 1 : (channel === "gas" ? deepDiveState.gasRho : deepDiveState.degRho);
-  activeAnimation.updateParams({ logT: Math.log10(animT), logRho: Math.log10(animRho) });
-
-  renderDeepDiveContent(channel);
-}
-
-function closeDeepDive(): void {
-  if (!activeDeepDive) return;
-
-  activeAnimation?.stop();
-  activeAnimation = null;
-  if (deepDivePlotHandle) {
-    destroyPlot(deepDivePlotHandle);
-    deepDivePlotHandle = null;
-  }
-
-  deepDivePanels[activeDeepDive].setAttribute("hidden", "");
-  mechanismGrid.removeAttribute("hidden");
-  activeDeepDive = null;
-}
-
-// Mechanism card click handlers (Tab 2)
-mechanismGas.addEventListener("click", () => openDeepDive("gas"));
-mechanismRadiation.addEventListener("click", () => openDeepDive("radiation"));
-mechanismDegeneracy.addEventListener("click", () => openDeepDive("degeneracy"));
-
-// Keyboard activation for mechanism card buttons
-for (const card of [mechanismGas, mechanismRadiation, mechanismDegeneracy]) {
-  card.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      card.click();
-    }
-  });
-}
-
-// Back buttons
-for (const panel of Object.values(deepDivePanels)) {
-  const backBtn = panel.querySelector(".deep-dive__back");
-  backBtn?.addEventListener("click", closeDeepDive);
-}
-
-// Deep-dive slider handlers
-gasDeepT.addEventListener("input", () => {
-  deepDiveState.gasT = logSliderToValue({
-    sliderValue: clamp(Number(gasDeepT.value), 0, 1000),
+// Compare slider events — sync Tab 2 -> Tab 1 state
+compareT.addEventListener("input", () => {
+  tempSlider.value = compareT.value;
+  state.temperatureK = logSliderToValue({
+    sliderValue: clamp(Number(compareT.value), 0, 1000),
     sliderMin: 0, sliderMax: 1000,
     valueMin: TEMPERATURE_MIN_K, valueMax: TEMPERATURE_MAX_K,
   });
-  renderDeepDiveContent("gas");
+  render();
 });
 
-gasDeepRho.addEventListener("input", () => {
-  deepDiveState.gasRho = logSliderToValue({
-    sliderValue: clamp(Number(gasDeepRho.value), 0, 1000),
+compareRho.addEventListener("input", () => {
+  rhoSlider.value = compareRho.value;
+  state.densityGPerCm3 = logSliderToValue({
+    sliderValue: clamp(Number(compareRho.value), 0, 1000),
     sliderMin: 0, sliderMax: 1000,
     valueMin: DENSITY_MIN_G_PER_CM3, valueMax: DENSITY_MAX_G_PER_CM3,
   });
-  renderDeepDiveContent("gas");
+  render();
 });
 
-radDeepT.addEventListener("input", () => {
-  deepDiveState.radT = logSliderToValue({
-    sliderValue: clamp(Number(radDeepT.value), 0, 1000),
-    sliderMin: 0, sliderMax: 1000,
-    valueMin: TEMPERATURE_MIN_K, valueMax: TEMPERATURE_MAX_K,
-  });
-  renderDeepDiveContent("radiation");
+compareX.addEventListener("input", () => {
+  xSlider.value = compareX.value;
+  xSlider.dispatchEvent(new Event("input"));
 });
 
-degDeepRho.addEventListener("input", () => {
-  deepDiveState.degRho = logSliderToValue({
-    sliderValue: clamp(Number(degDeepRho.value), 0, 1000),
-    sliderMin: 0, sliderMax: 1000,
-    valueMin: DENSITY_MIN_G_PER_CM3, valueMax: DENSITY_MAX_G_PER_CM3,
-  });
-  renderDeepDiveContent("degeneracy");
+compareY.addEventListener("input", () => {
+  ySlider.value = compareY.value;
+  ySlider.dispatchEvent(new Event("input"));
 });
+
+// Compare preset clicks
+for (const btn of comparePresetButtons) {
+  btn.addEventListener("click", () => {
+    const presetId = btn.dataset.presetId as Preset["id"];
+    applyPreset(presetId);
+    render();
+  });
+}
+
+// Start/stop compare animations on Tab 2 visibility
+const tab2Observer = new MutationObserver(() => {
+  if (!tab2Panel.hidden) {
+    syncCompareSliders();
+    startCompareAnimations();
+    // Force initial render of compare view
+    if (lastModel) renderCompareView(lastModel);
+  } else {
+    stopCompareAnimations();
+  }
+});
+tab2Observer.observe(tab2Panel, { attributes: true, attributeFilter: ["hidden"] });
 
 /* ================================================================
  * Demo modes (help + station)
@@ -1155,28 +1052,12 @@ tabExplore?.addEventListener("click", () => {
   });
 });
 
-// Resize deep-dive chart when switching to Understand tab (if a deep-dive is open)
-const tabUnderstand = document.getElementById("tab-understand");
-tabUnderstand?.addEventListener("click", () => {
-  if (deepDivePlotHandle && activeDeepDive) {
-    const chartEl = activeDeepDive === "gas" ? gasDeepChartEl
-      : activeDeepDive === "radiation" ? radDeepChartEl
-      : degDeepChartEl;
-    requestAnimationFrame(() => {
-      if (chartEl.clientWidth > 0 && deepDivePlotHandle) {
-        deepDivePlotHandle.plot.setSize({
-          width: chartEl.clientWidth,
-          height: chartEl.clientHeight,
-        });
-      }
-    });
-  }
-});
+// Comparison view (Tab 2) doesn't use uPlot charts, so no resize needed here.
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
 if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 
 window.addEventListener("beforeunload", () => {
-  closeDeepDive();
+  stopCompareAnimations();
   destroyPlot(pressurePlotHandle);
 }, { once: true });

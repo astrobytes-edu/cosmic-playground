@@ -310,97 +310,103 @@
           </div>
         </div>
 
-        <!-- Tab 2: Understand (mechanism deep-dives) -->
+        <!-- Tab 2: Understand (side-by-side comparison) -->
         <div class="cp-tab-panel" role="tabpanel" id="panel-understand"
              aria-labelledby="tab-understand" hidden>
 
-          <div class="mechanism-grid">
-            <article class="pressure-card pressure-card--clickable" id="mechanismGas" role="button" tabindex="0" aria-label="Explore gas pressure deep dive">
-              <h2>$P_{\rm gas}$</h2>
-              <p class="pressure-card__hint">Thermal particle collisions; scales as $\rho T$. <em>Click to explore.</em></p>
+          <!-- Shared controls bar -->
+          <div class="compare-controls">
+            <div class="compare-controls__sliders">
+              <label class="cp-field control">
+                <span class="cp-label">Temperature $T$ (K)</span>
+                <input id="compareT" class="cp-range" type="range"
+                       min="0" max="1000" value="500" step="1" />
+                <span class="control__value"><span id="compareTVal"></span></span>
+              </label>
+              <label class="cp-field control">
+                <span class="cp-label">Density $\rho$ (g cm$^{-3}$)</span>
+                <input id="compareRho" class="cp-range" type="range"
+                       min="0" max="1000" value="500" step="1" />
+                <span class="control__value"><span id="compareRhoVal"></span></span>
+              </label>
+            </div>
+            <div class="compare-controls__composition">
+              <label class="cp-field control">
+                <span class="cp-label">$X$ (hydrogen)</span>
+                <input id="compareX" class="cp-range" type="range"
+                       min="0" max="1000" value="340" step="1" />
+                <span class="control__value"><span id="compareXVal"></span></span>
+              </label>
+              <label class="cp-field control">
+                <span class="cp-label">$Y$ (helium)</span>
+                <input id="compareY" class="cp-range" type="range"
+                       min="0" max="1000" value="640" step="1" />
+                <span class="control__value"><span id="compareYVal"></span></span>
+              </label>
+              <div class="compare-controls__mu">
+                $\mu$ = <span id="compareMuVal">0.617</span>
+              </div>
+            </div>
+            <div class="compare-controls__presets">
+              <button class="preset cp-action compare-preset" data-preset-id="solar-core" type="button">Solar core</button>
+              <button class="preset cp-action compare-preset" data-preset-id="white-dwarf-core" type="button">White dwarf</button>
+              <button class="preset cp-action compare-preset" data-preset-id="massive-core" type="button">Massive star</button>
+              <button class="preset cp-action compare-preset" data-preset-id="red-giant-envelope" type="button">Red giant</button>
+              <button class="preset cp-action compare-preset" data-preset-id="solar-envelope" type="button">Solar envelope</button>
+              <button class="preset cp-action compare-preset" data-preset-id="brown-dwarf-interior" type="button">Brown dwarf</button>
+            </div>
+          </div>
+
+          <!-- Three-column comparison grid -->
+          <div class="compare-grid">
+            <!-- Gas column -->
+            <article class="compare-column" id="colGas">
+              <header class="compare-column__header">
+                <h2>$P_{\rm gas}$</h2>
+                <p class="compare-column__subtitle">Thermal particle collisions</p>
+              </header>
+              <canvas id="compareGasCanvas" class="compare-column__canvas"
+                      role="img" aria-label="Gas particles bouncing in a box"></canvas>
+              <p class="compare-column__badge">Dominates in: Sun core, main-sequence stars</p>
+              <div id="compareGasEq" class="compare-column__equation"></div>
+              <div id="compareGasFlash" class="compare-column__flash" aria-live="polite"></div>
             </article>
 
-            <article class="pressure-card pressure-card--clickable" id="mechanismRadiation" role="button" tabindex="0" aria-label="Explore radiation pressure deep dive">
-              <h2>$P_{\rm rad}$</h2>
-              <p class="pressure-card__hint">Photon momentum flux; scales as $T^4$ under LTE closure. <em>Click to explore.</em></p>
+            <!-- Radiation column -->
+            <article class="compare-column" id="colRadiation">
+              <header class="compare-column__header">
+                <h2>$P_{\rm rad}$</h2>
+                <p class="compare-column__subtitle">Photon momentum flux</p>
+              </header>
+              <canvas id="compareRadCanvas" class="compare-column__canvas"
+                      role="img" aria-label="Photons bouncing in a box"></canvas>
+              <p class="compare-column__badge">Dominates in: O/B-star envelopes, supernovae</p>
+              <div id="compareRadEq" class="compare-column__equation"></div>
+              <div id="compareRadFlash" class="compare-column__flash" aria-live="polite"></div>
             </article>
 
-            <article class="pressure-card pressure-card--clickable" id="mechanismDegeneracy" role="button" tabindex="0" aria-label="Explore degeneracy pressure deep dive">
-              <h2>$P_{\rm deg,e}$</h2>
-              <p class="pressure-card__hint">Quantum correction beyond classical electrons; driven by Pauli exclusion. <em>Click to explore.</em></p>
+            <!-- Degeneracy column -->
+            <article class="compare-column" id="colDegeneracy">
+              <header class="compare-column__header">
+                <h2>$P_{\rm deg}$</h2>
+                <p class="compare-column__subtitle">Pauli exclusion pressure</p>
+              </header>
+              <canvas id="compareDegCanvas" class="compare-column__canvas"
+                      role="img" aria-label="Electron energy level filling"></canvas>
+              <p class="compare-column__badge">Dominates in: White dwarfs, neutron star crusts</p>
+              <div id="compareDegEq" class="compare-column__equation"></div>
+              <div id="compareDegFlash" class="compare-column__flash" aria-live="polite"></div>
             </article>
           </div>
 
-          <section id="deepDiveGas" class="deep-dive" hidden>
-            <button class="deep-dive__back cp-button cp-button--outline" type="button">Back to overview</button>
-            <h3 class="deep-dive__title">Gas Pressure: Thermal Particle Collisions</h3>
-            <div class="deep-dive__layout">
-              <div class="deep-dive__animation">
-                <canvas id="gasAnimCanvas" class="deep-dive__canvas" role="img" aria-label="Gas particles bouncing in a box"></canvas>
-                <p class="deep-dive__caption">Particles hit walls &rarr; momentum transfer &rarr; pressure</p>
-              </div>
-              <div class="deep-dive__sandbox">
-                <div id="gasEquation" class="deep-dive__equation"></div>
-                <div class="deep-dive__controls">
-                  <label class="cp-field control">
-                    <span class="cp-label">Temperature $T$ (K)</span>
-                    <input id="gasDeepT" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
-                    <span class="control__value"><span id="gasDeepTVal"></span></span>
-                  </label>
-                  <label class="cp-field control">
-                    <span class="cp-label">Density $\rho$ (g cm$^{-3}$)</span>
-                    <input id="gasDeepRho" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
-                    <span class="control__value"><span id="gasDeepRhoVal"></span></span>
-                  </label>
-                </div>
-                <div id="gasDeepChart" class="deep-dive__chart"></div>
-              </div>
+          <!-- Scaling Law Detective (optional challenge) -->
+          <details class="cp-accordion scaling-detective">
+            <summary>Scaling Law Detective</summary>
+            <div class="scaling-detective__content">
+              <p class="scaling-detective__intro">Can you figure out how each pressure scales? Use the sliders above to test your predictions.</p>
+              <div id="scalingChallenge" class="scaling-detective__challenge"></div>
             </div>
-          </section>
-
-          <section id="deepDiveRadiation" class="deep-dive" hidden>
-            <button class="deep-dive__back cp-button cp-button--outline" type="button">Back to overview</button>
-            <h3 class="deep-dive__title">Radiation Pressure: Photon Momentum</h3>
-            <div class="deep-dive__layout">
-              <div class="deep-dive__animation">
-                <canvas id="radAnimCanvas" class="deep-dive__canvas" role="img" aria-label="Photons bouncing in a box"></canvas>
-                <p class="deep-dive__caption">Photon flux &rarr; momentum deposited on walls &rarr; $T^4$ scaling</p>
-              </div>
-              <div class="deep-dive__sandbox">
-                <div id="radEquation" class="deep-dive__equation"></div>
-                <div class="deep-dive__controls">
-                  <label class="cp-field control">
-                    <span class="cp-label">Temperature $T$ (K)</span>
-                    <input id="radDeepT" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
-                    <span class="control__value"><span id="radDeepTVal"></span></span>
-                  </label>
-                </div>
-                <div id="radDeepChart" class="deep-dive__chart"></div>
-              </div>
-            </div>
-          </section>
-
-          <section id="deepDiveDegeneracy" class="deep-dive" hidden>
-            <button class="deep-dive__back cp-button cp-button--outline" type="button">Back to overview</button>
-            <h3 class="deep-dive__title">Degeneracy Pressure: Pauli Exclusion</h3>
-            <div class="deep-dive__layout">
-              <div class="deep-dive__animation">
-                <canvas id="degAnimCanvas" class="deep-dive__canvas" role="img" aria-label="Electron energy level filling"></canvas>
-                <p class="deep-dive__caption">Fermions fill energy levels &rarr; exclusion forces higher momenta &rarr; pressure</p>
-              </div>
-              <div class="deep-dive__sandbox">
-                <div id="degEquation" class="deep-dive__equation"></div>
-                <div class="deep-dive__controls">
-                  <label class="cp-field control">
-                    <span class="cp-label">Density $\rho$ (g cm$^{-3}$)</span>
-                    <input id="degDeepRho" class="cp-range" type="range" min="0" max="1000" value="500" step="1" />
-                    <span class="control__value"><span id="degDeepRhoVal"></span></span>
-                  </label>
-                </div>
-                <div id="degDeepChart" class="deep-dive__chart"></div>
-              </div>
-            </div>
-          </section>
+          </details>
         </div>
 
       </section>

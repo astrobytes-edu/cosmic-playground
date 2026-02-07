@@ -57,7 +57,7 @@ type Particle = {
  * Gas Pressure Animation
  *
  * Particles bouncing in a box.
- *   - Count proportional to density (log-mapped 5 to 80 particles)
+ *   - Count proportional to density (log-mapped 10 to 150 particles)
  *   - Speed proportional to sqrt(T) (thermal speed)
  *   - Wall flash on collision = momentum transfer = pressure
  * ================================================================ */
@@ -103,8 +103,11 @@ export class GasPressureAnimation implements MechanismAnimation {
   }
 
   private rebuild(): void {
-    const count = Math.round(mapRange(this.logRho, -10, 10, 5, 80));
-    const speed = mapRange(this.logT, 3, 9, 0.5, 4);
+    const count = Math.round(mapRange(this.logRho, -10, 10, 10, 150));
+    // Physical sqrt(T) scaling — thermal speed ~ sqrt(kT/m)
+    const T = Math.pow(10, this.logT);
+    const Tref = 1e6;
+    const speed = Math.max(0.2, Math.min(7, 0.5 + 4.5 * Math.sqrt(Math.min(T, 1e9) / Tref)));
     const color = "#34d399";
     this.particles = [];
     for (let i = 0; i < count; i++) {
@@ -121,7 +124,10 @@ export class GasPressureAnimation implements MechanismAnimation {
   }
 
   private rescale(): void {
-    const speed = mapRange(this.logT, 3, 9, 0.5, 4);
+    // Physical sqrt(T) scaling — matches rebuild()
+    const T = Math.pow(10, this.logT);
+    const Tref = 1e6;
+    const speed = Math.max(0.2, Math.min(7, 0.5 + 4.5 * Math.sqrt(Math.min(T, 1e9) / Tref)));
     for (const p of this.particles) {
       const cur = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
       if (cur > 0) {
@@ -176,10 +182,14 @@ export class GasPressureAnimation implements MechanismAnimation {
       ctx.fill();
     }
 
-    // Wall flashes (amber pulse = momentum transfer)
+    // Wall flashes (amber pulse = momentum transfer, intensity scales with speed)
     const amber = "#fbbf24";
+    const avgSpeed = this.particles.length > 0
+      ? this.particles.reduce((s, p) => s + Math.sqrt(p.vx * p.vx + p.vy * p.vy), 0) / this.particles.length
+      : 1;
+    const baseAlpha = Math.min(200, 80 + avgSpeed * 25);
     for (const f of this.wallFlashes) {
-      const a = Math.round((f.timer / 4) * 128);
+      const a = Math.round((f.timer / 4) * baseAlpha);
       const hex = a.toString(16).padStart(2, "0");
       ctx.fillStyle = amber + hex;
       switch (f.side) {
@@ -204,7 +214,7 @@ export class GasPressureAnimation implements MechanismAnimation {
  *
  * Photons bouncing in a box.
  *   - All at same speed (c — speed of light)
- *   - Count ~ T^4 (Stefan-Boltzmann, mapped 3 to 100)
+ *   - Count increases with T (photon number density ~ T^3, mapped 3 to 150)
  *   - Color from Wien's law (red to white to blue)
  *   - No density dependence — that's the key insight
  * ================================================================ */
@@ -252,7 +262,7 @@ export class RadiationPressureAnimation implements MechanismAnimation {
   }
 
   private rebuild(): void {
-    const count = Math.round(mapRange(this.logT, 3, 9, 3, 100));
+    const count = Math.round(mapRange(this.logT, 3, 9, 3, 150));
     const speed = 3; // All photons at same speed (c)
     const color = this.wienColor();
     this.particles = [];
@@ -286,9 +296,10 @@ export class RadiationPressureAnimation implements MechanismAnimation {
       if (p.y <= r) { p.y = r; p.vy = Math.abs(p.vy); }
       if (p.y >= h - r) { p.y = h - r; p.vy = -Math.abs(p.vy); }
 
-      // Glow halo
+      // Glow halo — radius grows with temperature
+      const haloR = r * (2 + mapRange(this.logT, 3, 9, 0, 3));
       ctx.beginPath();
-      ctx.arc(p.x, p.y, r * 3, 0, 2 * Math.PI);
+      ctx.arc(p.x, p.y, haloR, 0, 2 * Math.PI);
       ctx.fillStyle = p.color + "22";
       ctx.fill();
 
@@ -356,16 +367,37 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
     ctx.fillRect(0, 0, w, h);
 
     const filled = Math.round(mapRange(this.logRho, -4, 10, 2, maxLevels));
-    const spacing = (h - 40) / maxLevels;
+    // Non-uniform spacing — levels closer together toward bottom (mimics sqrt(E) density of states)
+    const weights: number[] = [];
+    for (let i = 0; i < maxLevels; i++) weights.push(1 + 0.4 * (i / maxLevels));
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+    const baseSpacing = (h - 40) / totalWeight;
+
     const levelW = w * 0.55;
     const xStart = (w - levelW) / 2;
+    const violetBright = "#c4b5fd"; // brighter violet for spin-up
+    const violetDim = "#7c3aed";   // dimmer violet for spin-down
     const violet = "#a78bfa";
     const grid = "rgba(255,255,255,0.15)";
     const eR = 4;
 
+    // Precompute cumulative y positions
+    const levelY: number[] = [];
+    let cumY = h - 20;
     for (let i = 0; i < maxLevels; i++) {
-      const y = h - 20 - i * spacing;
+      levelY.push(cumY);
+      cumY -= weights[i] * baseSpacing;
+    }
+
+    let fermiY = 0;
+    for (let i = 0; i < maxLevels; i++) {
+      const y = levelY[i];
       const on = i < filled;
+
+      // Vibration for top 3 filled levels (Fermi surface excitation)
+      const vibration = (on && i >= filled - 3)
+        ? Math.sin(Date.now() / 150 + i * 2) * 1.2
+        : 0;
 
       // Level line
       ctx.strokeStyle = on ? violet : grid;
@@ -376,39 +408,64 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
       ctx.stroke();
 
       if (on) {
+        fermiY = y;
+        const xUp = xStart + levelW * 0.35 + vibration;
+        const xDown = xStart + levelW * 0.65 + vibration;
+        const yE = y - eR - 2;
+
         // Glow halo behind electrons
         ctx.beginPath();
-        ctx.arc(xStart + levelW * 0.35, y - eR - 2, eR * 2.5, 0, 2 * Math.PI);
-        ctx.fillStyle = violet + "33";
+        ctx.arc(xUp, yE, eR * 2.5, 0, 2 * Math.PI);
+        ctx.fillStyle = violetBright + "33";
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(xStart + levelW * 0.65, y - eR - 2, eR * 2.5, 0, 2 * Math.PI);
-        ctx.fillStyle = violet + "33";
+        ctx.arc(xDown, yE, eR * 2.5, 0, 2 * Math.PI);
+        ctx.fillStyle = violetDim + "33";
         ctx.fill();
-        // Spin-up electron
+
+        // Spin-up electron (brighter)
         ctx.beginPath();
-        ctx.arc(xStart + levelW * 0.35, y - eR - 2, eR, 0, 2 * Math.PI);
-        ctx.fillStyle = violet;
+        ctx.arc(xUp, yE, eR, 0, 2 * Math.PI);
+        ctx.fillStyle = violetBright;
         ctx.fill();
-        // Spin-down electron
+
+        // Spin-down electron (dimmer)
         ctx.beginPath();
-        ctx.arc(xStart + levelW * 0.65, y - eR - 2, eR, 0, 2 * Math.PI);
-        ctx.fillStyle = violet + "aa";
+        ctx.arc(xDown, yE, eR, 0, 2 * Math.PI);
+        ctx.fillStyle = violetDim;
         ctx.fill();
-        // Arrows (white on violet circles)
+
+        // Arrows (white on violet circles) — larger font for visibility
         ctx.fillStyle = "#fff";
-        ctx.font = "bold 8px sans-serif";
+        ctx.font = "bold 12px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText("\u2191", xStart + levelW * 0.35, y - eR - 2);
-        ctx.fillText("\u2193", xStart + levelW * 0.65, y - eR - 2);
+        ctx.fillText("\u2191", xUp, yE);
+        ctx.fillText("\u2193", xDown, yE);
       }
+    }
+
+    // Fermi energy line (dashed amber)
+    if (filled > 0) {
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(xStart - 8, fermiY);
+      ctx.lineTo(xStart + levelW + 8, fermiY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Label
+      ctx.fillStyle = "#fbbf24";
+      ctx.font = "bold 9px monospace";
+      ctx.textAlign = "left";
+      ctx.fillText("E_F", xStart + levelW + 12, fermiY + 3);
     }
 
     // Pressure arrow
     if (filled > 3) {
       const ax = w - 28;
-      const aTop = h - 20 - (filled - 1) * spacing;
+      const aTop = levelY[filled - 1];
       const aBot = h - 20;
 
       ctx.strokeStyle = violet;
