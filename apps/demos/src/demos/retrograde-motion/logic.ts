@@ -162,6 +162,137 @@ export function buildOrbitPath(pts: { x: number; y: number }[]): string {
   return parts.join("");
 }
 
+// ── Animation ───────────────────────────────────────────────
+
+/**
+ * Advance cursor by dt * speed, clamping to [0, windowEnd].
+ * Returns the new cursor day.
+ */
+export function advanceCursor(
+  currentDay: number,
+  dt: number,
+  speed: number,
+  windowEnd: number,
+): number {
+  const next = currentDay + dt * speed;
+  if (next > windowEnd) return windowEnd;
+  if (next < 0) return 0;
+  return next;
+}
+
+// ── Trail ───────────────────────────────────────────────────
+
+export type TrailPoint = {
+  x: number;
+  y: number;
+  opacity: number;
+};
+
+/**
+ * Build a fading trail of recent positions for the target planet.
+ * Returns points from oldest (lowest opacity) to newest (highest).
+ */
+export function buildTrailPoints(
+  xAuArray: number[],
+  yAuArray: number[],
+  cursorIndex: number,
+  trailLength: number,
+): TrailPoint[] {
+  const startIdx = Math.max(0, cursorIndex - trailLength);
+  const count = cursorIndex - startIdx;
+  if (count <= 0) return [];
+
+  const pts: TrailPoint[] = [];
+  for (let i = startIdx; i <= cursorIndex; i++) {
+    const frac = (i - startIdx) / count; // 0 = oldest, 1 = newest
+    pts.push({
+      x: xAuArray[i],
+      y: yAuArray[i],
+      opacity: 0.05 + frac * 0.7,
+    });
+  }
+  return pts;
+}
+
+// ── Sky view ────────────────────────────────────────────────
+
+/**
+ * Project wrapped longitude [0,360) to an x position in the sky-view strip.
+ * 0 deg maps to center, wraps around.
+ */
+export function projectToSkyView(
+  lambdaDeg: number,
+  viewWidth: number,
+): number {
+  // Map [0, 360) to [0, viewWidth)
+  return (lambdaDeg / 360) * viewWidth;
+}
+
+// ── Zodiac ──────────────────────────────────────────────────
+
+/**
+ * The 12 zodiac constellations with their approximate ecliptic longitudes.
+ * These are sidereal positions (not tropical).
+ */
+const ZODIAC = [
+  { label: "Ari", deg: 15 },
+  { label: "Tau", deg: 45 },
+  { label: "Gem", deg: 75 },
+  { label: "Cnc", deg: 105 },
+  { label: "Leo", deg: 135 },
+  { label: "Vir", deg: 165 },
+  { label: "Lib", deg: 195 },
+  { label: "Sco", deg: 225 },
+  { label: "Sgr", deg: 255 },
+  { label: "Cap", deg: 285 },
+  { label: "Aqr", deg: 315 },
+  { label: "Psc", deg: 345 },
+];
+
+export type ZodiacLabel = {
+  label: string;
+  x: number;
+  y: number;
+  angleDeg: number;
+};
+
+/**
+ * Compute screen positions for zodiac labels around the orbit view.
+ * Labels sit on a circle of given radius centered at (cx, cy).
+ */
+export function zodiacLabelPositions(
+  radius: number,
+  cx: number,
+  cy: number,
+): ZodiacLabel[] {
+  return ZODIAC.map((z) => {
+    const rad = z.deg * DEG_TO_RAD;
+    return {
+      label: z.label,
+      x: cx + radius * Math.cos(rad),
+      y: cy - radius * Math.sin(rad), // SVG y-down
+      angleDeg: z.deg,
+    };
+  });
+}
+
+// ── Preset mapping ──────────────────────────────────────────
+
+export type PresetConfig = {
+  observer: string;
+  target: string;
+};
+
+export function presetToConfig(value: string): PresetConfig | null {
+  const map: Record<string, PresetConfig> = {
+    "earth-mars": { observer: "Earth", target: "Mars" },
+    "earth-venus": { observer: "Earth", target: "Venus" },
+    "earth-jupiter": { observer: "Earth", target: "Jupiter" },
+    "earth-saturn": { observer: "Earth", target: "Saturn" },
+  };
+  return map[value] ?? null;
+}
+
 // ── Display state (DI pattern) ──────────────────────────────
 
 export type RetroModelCallbacks = {
@@ -225,4 +356,3 @@ export function computeDisplayState(
       : EM_DASH,
   };
 }
-
