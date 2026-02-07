@@ -174,7 +174,7 @@
       <!-- ═══════════════════════════════════════════
            PLAYBAR — animation transport + scrub
            ═══════════════════════════════════════════ -->
-      <div class="cp-playbar" aria-label="Animation and timeline">
+      <div class="cp-playbar" role="region" aria-label="Animation and timeline">
         <div class="playbar-transport">
           <button class="cp-playbar__btn" id="btn-play" type="button" aria-label="Play">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6z"/></svg>
@@ -296,7 +296,7 @@
 
       <!-- First-retrograde annotation (hidden by default) -->
       <div class="retro__annotation" id="retroAnnotation" hidden>
-        <span>The planet appears to reverse! This is <strong>retrograde motion</strong> — caused by Earth overtaking the target in its orbit.</span>
+        <span>The planet appears to reverse! This is <strong>retrograde motion</strong> \u2014 an illusion caused by the difference in orbital speeds between observer and target.</span>
         <button class="retro__annotation-close" id="retroAnnotationClose" type="button" aria-label="Dismiss">&times;</button>
       </div>
     </div>

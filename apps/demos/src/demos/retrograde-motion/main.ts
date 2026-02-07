@@ -106,6 +106,14 @@ const challengeContainer = requireEl(document.querySelector<HTMLDivElement>("#ch
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
 if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 
+// ── Plot geometry constants ───────────────────────────────────
+
+const PLOT_W = 1000;
+const PLOT_H = 400;
+const PLOT_MARGIN = { left: 70, right: 24, top: 22, bottom: 60 };
+const PLOT_X0 = PLOT_MARGIN.left;
+const PLOT_X1 = PLOT_W - PLOT_MARGIN.right;
+
 // ── Planet token map (dynamic color resolution) ──────────────
 
 const PLANET_TOKEN: Record<string, string> = {
@@ -225,7 +233,7 @@ function startAnimation() {
   const step = (now: number) => {
     if (!state.playing || !series) return;
     if (lastTimestamp === 0) lastTimestamp = now;
-    const dt = (now - lastTimestamp) / 1000;
+    const dt = Math.min((now - lastTimestamp) / 1000, 0.1);
     lastTimestamp = now;
 
     const next = advanceCursor(state.cursorDay, dt, state.speed, series.windowEndDay);
@@ -312,14 +320,14 @@ function renderPlot() {
   if (!series) return;
   clear(plotSvgEl);
 
-  const W = 1000;
-  const H = 400;
-  const margin = { left: 70, right: 24, top: 22, bottom: 60 };
+  const W = PLOT_W;
+  const H = PLOT_H;
+  const margin = PLOT_MARGIN;
   const mainTop = margin.top;
   const mainH = H - margin.top - margin.bottom;
   const mainBottom = mainTop + mainH;
-  const x0 = margin.left;
-  const x1 = W - margin.right;
+  const x0 = PLOT_X0;
+  const x1 = PLOT_X1;
 
   const t0 = series.windowStartDay;
   const t1 = series.windowEndDay;
@@ -578,6 +586,11 @@ function renderOrbit() {
     y: cy - yAu * scale,
   });
 
+  // Cache resolved planet colors for this frame
+  const colorCache: Record<string, string> = {};
+  const cachedColor = (key: string) =>
+    (colorCache[key] ??= resolvePlanetColor(key));
+
   // ── Zodiac ring ──
   if (state.showZodiac) {
     const zodiacRadius = Math.min(W, H) / 2 - 6;
@@ -602,7 +615,7 @@ function renderOrbit() {
   sun.setAttribute("cy", String(cy));
   sun.setAttribute("r", "7");
   sun.setAttribute("fill", "var(--cp-celestial-sun-core)");
-  sun.setAttribute("filter", "drop-shadow(0 0 6px var(--cp-celestial-sun-core))");
+  sun.setAttribute("filter", "drop-shadow(var(--cp-glow-sun))");
   orbitSvgEl.appendChild(sun);
 
   // ── Orbit ellipses ──
@@ -668,7 +681,7 @@ function renderOrbit() {
         seg.setAttribute("y1", String(p1.y));
         seg.setAttribute("x2", String(p2.x));
         seg.setAttribute("y2", String(p2.y));
-        seg.setAttribute("stroke", resolvePlanetColor(state.target));
+        seg.setAttribute("stroke", cachedColor(state.target));
         seg.setAttribute("stroke-opacity", String(opacity));
         seg.setAttribute("stroke-width", String(1 + opacity * 2));
         seg.setAttribute("stroke-linecap", "round");
@@ -700,7 +713,7 @@ function renderOrbit() {
   obs.setAttribute("cx", String(oPx.x));
   obs.setAttribute("cy", String(oPx.y));
   obs.setAttribute("r", "6");
-  obs.setAttribute("fill", resolvePlanetColor(state.observer));
+  obs.setAttribute("fill", cachedColor(state.observer));
   obs.setAttribute("filter", "drop-shadow(var(--cp-glow-planet))");
   orbitSvgEl.appendChild(obs);
 
@@ -709,7 +722,7 @@ function renderOrbit() {
   tgt.setAttribute("cx", String(tPx.x));
   tgt.setAttribute("cy", String(tPx.y));
   tgt.setAttribute("r", "6");
-  tgt.setAttribute("fill", resolvePlanetColor(state.target));
+  tgt.setAttribute("fill", cachedColor(state.target));
   tgt.setAttribute("filter", "drop-shadow(var(--cp-glow-planet))");
   orbitSvgEl.appendChild(tgt);
 
@@ -871,8 +884,8 @@ function handlePointerToDay(clientX: number) {
   if (!series) return;
   const rect = plotSvgEl.getBoundingClientRect();
   const xFrac = clamp((clientX - rect.left) / rect.width, 0, 1);
-  const svgX = xFrac * 1000;
-  const t = dayFromPlotX(svgX, series.windowStartDay, series.windowEndDay, 70, 976);
+  const svgX = xFrac * PLOT_W;
+  const t = dayFromPlotX(svgX, series.windowStartDay, series.windowEndDay, PLOT_X0, PLOT_X1);
   setCursorDay(t);
 }
 
@@ -1046,7 +1059,7 @@ function setupChallenges() {
       check(s: any) {
         const tgt = String(s?.target ?? "");
         if (tgt === "Venus")
-          return { correct: true, close: false, message: "Venus retrograde is shorter (~40 days vs Mars ~70 days) because Venus is closer." };
+          return { correct: true, close: false, message: "Venus retrograde is shorter (~40 days vs Mars ~70 days). The higher angular velocity difference at inferior conjunction makes the reversal quicker." };
         return { correct: false, close: false, message: "Switch to the Venus preset to compare." };
       },
     },
@@ -1182,7 +1195,7 @@ function setupModes() {
       },
       synthesisPrompt: `
         <p><strong>Key idea:</strong> No planet reverses its orbit. Retrograde motion is an apparent effect caused by the difference in orbital speeds.</p>
-        <p><strong>Use your table:</strong> Compare retrograde durations for different targets. Inner-planet retrogrades are shorter because the synodic period is shorter.</p>
+        <p><strong>Use your table:</strong> Compare retrograde durations for different targets. Inner-planet retrogrades are shorter because the relative angular velocity at conjunction is larger.</p>
       `,
     },
     keys: { help: "?", station: "g" },

@@ -180,40 +180,6 @@ export function advanceCursor(
   return next;
 }
 
-// ── Trail ───────────────────────────────────────────────────
-
-export type TrailPoint = {
-  x: number;
-  y: number;
-  opacity: number;
-};
-
-/**
- * Build a fading trail of recent positions for the target planet.
- * Returns points from oldest (lowest opacity) to newest (highest).
- */
-export function buildTrailPoints(
-  xAuArray: number[],
-  yAuArray: number[],
-  cursorIndex: number,
-  trailLength: number,
-): TrailPoint[] {
-  const startIdx = Math.max(0, cursorIndex - trailLength);
-  const count = cursorIndex - startIdx;
-  if (count <= 0) return [];
-
-  const pts: TrailPoint[] = [];
-  for (let i = startIdx; i <= cursorIndex; i++) {
-    const frac = (i - startIdx) / count; // 0 = oldest, 1 = newest
-    pts.push({
-      x: xAuArray[i],
-      y: yAuArray[i],
-      opacity: 0.05 + frac * 0.7,
-    });
-  }
-  return pts;
-}
-
 // ── Sky view ────────────────────────────────────────────────
 
 /**
