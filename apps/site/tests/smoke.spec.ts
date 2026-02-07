@@ -316,7 +316,7 @@ test.describe("Cosmic Playground smoke", () => {
     },
     {
       slug: "retrograde-motion",
-      expects: ["Observer", "Target", "Apparent (sky) longitude lambda_app (deg)"]
+      expects: ["Observer", "Target", "Apparent longitude (deg)"]
     },
     {
       slug: "parallax-distance",

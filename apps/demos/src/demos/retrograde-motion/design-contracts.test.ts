@@ -127,9 +127,9 @@ describe("Retrograde Motion — Design System Contracts", () => {
       expect(html).toContain("cp-layer-instrument");
     });
 
-    it("readouts panel exists as aside with aria-label", () => {
-      expect(html).toMatch(/<aside[^>]*class="cp-demo__readouts/);
-      expect(html).toMatch(/<aside[^>]*aria-label="Readouts panel"/);
+    it("readouts strip exists with aria-label", () => {
+      expect(html).toMatch(/class="[^"]*cp-demo__readouts/);
+      expect(html).toMatch(/aria-label="Readouts"/);
     });
   });
 
