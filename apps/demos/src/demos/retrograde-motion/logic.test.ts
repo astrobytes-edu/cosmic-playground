@@ -13,6 +13,10 @@ import {
   dayFromPlotX,
   orbitEllipsePoints,
   buildOrbitPath,
+  advanceCursor,
+  projectToSkyView,
+  zodiacLabelPositions,
+  presetToConfig,
   computeDisplayState,
   type RetroModelCallbacks,
 } from "./logic";
@@ -273,5 +277,210 @@ describe("computeDisplayState", () => {
   it("provides geometry hint for Earth-Mars", () => {
     const state = computeDisplayState(mockSeries, 0.5, stubCallbacks);
     expect(state.geometryHint).toBe("Superior-planet geometry");
+  });
+
+  it("provides inferior-planet hint for Earth-Venus", () => {
+    const venusSeries = { ...mockSeries, target: "Venus" as const };
+    const state = computeDisplayState(venusSeries, 0.5, stubCallbacks);
+    expect(state.geometryHint).toBe("Inferior-planet geometry");
+  });
+
+  it("returns retrograde duration for cursor inside retrograde interval", () => {
+    const state = computeDisplayState(mockSeries, 240, stubCallbacks);
+    expect(state.retroDuration).toBe("80.0");
+  });
+
+  it("returns em dash for duration when no intervals exist", () => {
+    const noRetro = { ...mockSeries, retrogradeIntervals: [] };
+    const state = computeDisplayState(noRetro, 0, stubCallbacks);
+    expect(state.retroDuration).toBe("\u2014");
+  });
+});
+
+// ── advanceCursor ──────────────────────────────────────────────
+
+describe("advanceCursor", () => {
+  it("advances by dt * speed", () => {
+    expect(advanceCursor(100, 0.5, 5, 720)).toBeCloseTo(102.5);
+  });
+
+  it("clamps to windowEnd when overshooting", () => {
+    expect(advanceCursor(718, 1.0, 5, 720)).toBe(720);
+  });
+
+  it("clamps to 0 when undershooting", () => {
+    expect(advanceCursor(2, 1.0, -5, 720)).toBe(0);
+  });
+
+  it("returns current day when dt is 0", () => {
+    expect(advanceCursor(100, 0, 10, 720)).toBe(100);
+  });
+
+  it("handles speed = 0 (paused)", () => {
+    expect(advanceCursor(100, 0.5, 0, 720)).toBe(100);
+  });
+
+  it("handles negative speed (reverse playback)", () => {
+    expect(advanceCursor(100, 0.5, -5, 720)).toBeCloseTo(97.5);
+  });
+
+  it("does not exceed windowEnd at boundary", () => {
+    expect(advanceCursor(720, 0.016, 5, 720)).toBe(720);
+  });
+
+  it("reaches exactly windowEnd", () => {
+    expect(advanceCursor(719, 0.2, 5, 720)).toBe(720);
+  });
+
+  it("handles very small dt (high frame rate)", () => {
+    const result = advanceCursor(100, 0.001, 5, 720);
+    expect(result).toBeCloseTo(100.005);
+  });
+});
+
+// ── projectToSkyView ──────────────────────────────────────────
+
+describe("projectToSkyView", () => {
+  const W = 600;
+
+  it("maps 0 deg to x = 0", () => {
+    expect(projectToSkyView(0, W)).toBe(0);
+  });
+
+  it("maps 360 deg to x = viewWidth", () => {
+    expect(projectToSkyView(360, W)).toBe(W);
+  });
+
+  it("maps 180 deg to x = viewWidth / 2", () => {
+    expect(projectToSkyView(180, W)).toBe(W / 2);
+  });
+
+  it("maps 90 deg to x = viewWidth / 4", () => {
+    expect(projectToSkyView(90, W)).toBe(W / 4);
+  });
+
+  it("maps 270 deg to x = 3/4 viewWidth", () => {
+    expect(projectToSkyView(270, W)).toBe(W * 3 / 4);
+  });
+
+  it("is linear across the full range", () => {
+    const x1 = projectToSkyView(100, W);
+    const x2 = projectToSkyView(200, W);
+    const x3 = projectToSkyView(300, W);
+    expect(x2 - x1).toBeCloseTo(x3 - x2);
+  });
+
+  it("handles different view widths", () => {
+    expect(projectToSkyView(180, 1000)).toBe(500);
+    expect(projectToSkyView(180, 200)).toBe(100);
+  });
+});
+
+// ── zodiacLabelPositions ──────────────────────────────────────
+
+describe("zodiacLabelPositions", () => {
+  const R = 200;
+  const CX = 300;
+  const CY = 250;
+
+  it("returns exactly 12 labels", () => {
+    const labels = zodiacLabelPositions(R, CX, CY);
+    expect(labels.length).toBe(12);
+  });
+
+  it("includes all standard zodiac abbreviations", () => {
+    const labels = zodiacLabelPositions(R, CX, CY);
+    const names = labels.map((l) => l.label);
+    expect(names).toEqual(["Ari", "Tau", "Gem", "Cnc", "Leo", "Vir",
+      "Lib", "Sco", "Sgr", "Cap", "Aqr", "Psc"]);
+  });
+
+  it("places Aries near 15 deg (upper right in SVG)", () => {
+    const labels = zodiacLabelPositions(R, CX, CY);
+    const ari = labels.find((l) => l.label === "Ari")!;
+    expect(ari.angleDeg).toBe(15);
+    // At 15 deg: x = cx + R*cos(15) > cx, y = cy - R*sin(15) < cy
+    expect(ari.x).toBeGreaterThan(CX);
+    expect(ari.y).toBeLessThan(CY);
+  });
+
+  it("places Libra near 195 deg (lower left in SVG)", () => {
+    const labels = zodiacLabelPositions(R, CX, CY);
+    const lib = labels.find((l) => l.label === "Lib")!;
+    expect(lib.angleDeg).toBe(195);
+    // At 195 deg: x = cx + R*cos(195) < cx, y = cy - R*sin(195) > cy
+    expect(lib.x).toBeLessThan(CX);
+    expect(lib.y).toBeGreaterThan(CY);
+  });
+
+  it("all labels sit at the specified radius from center", () => {
+    const labels = zodiacLabelPositions(R, CX, CY);
+    for (const l of labels) {
+      const dx = l.x - CX;
+      const dy = l.y - CY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      expect(dist).toBeCloseTo(R, 5);
+    }
+  });
+
+  it("labels are evenly spaced at 30-degree intervals", () => {
+    const labels = zodiacLabelPositions(R, CX, CY);
+    for (let i = 1; i < labels.length; i++) {
+      expect(labels[i].angleDeg - labels[i - 1].angleDeg).toBe(30);
+    }
+  });
+
+  it("correctly inverts y for SVG (y-down)", () => {
+    const labels = zodiacLabelPositions(R, CX, CY);
+    // Cancer at 105 deg: sin(105) > 0, so y should be ABOVE center (< cy)
+    const cnc = labels.find((l) => l.label === "Cnc")!;
+    expect(cnc.y).toBeLessThan(CY);
+    // Capricorn at 285 deg: sin(285) < 0, so y should be BELOW center (> cy)
+    const cap = labels.find((l) => l.label === "Cap")!;
+    expect(cap.y).toBeGreaterThan(CY);
+  });
+
+  it("respects different center and radius values", () => {
+    const labels = zodiacLabelPositions(100, 500, 400);
+    const ari = labels.find((l) => l.label === "Ari")!;
+    const dx = ari.x - 500;
+    const dy = ari.y - 400;
+    expect(Math.sqrt(dx * dx + dy * dy)).toBeCloseTo(100, 5);
+  });
+});
+
+// ── presetToConfig ────────────────────────────────────────────
+
+describe("presetToConfig", () => {
+  it("maps earth-mars to Earth/Mars", () => {
+    const config = presetToConfig("earth-mars");
+    expect(config).toEqual({ observer: "Earth", target: "Mars" });
+  });
+
+  it("maps earth-venus to Earth/Venus", () => {
+    const config = presetToConfig("earth-venus");
+    expect(config).toEqual({ observer: "Earth", target: "Venus" });
+  });
+
+  it("maps earth-jupiter to Earth/Jupiter", () => {
+    const config = presetToConfig("earth-jupiter");
+    expect(config).toEqual({ observer: "Earth", target: "Jupiter" });
+  });
+
+  it("maps earth-saturn to Earth/Saturn", () => {
+    const config = presetToConfig("earth-saturn");
+    expect(config).toEqual({ observer: "Earth", target: "Saturn" });
+  });
+
+  it("returns null for unknown preset", () => {
+    expect(presetToConfig("earth-pluto")).toBeNull();
+  });
+
+  it("returns null for empty string", () => {
+    expect(presetToConfig("")).toBeNull();
+  });
+
+  it("returns null for custom (no match)", () => {
+    expect(presetToConfig("custom")).toBeNull();
   });
 });
