@@ -54,6 +54,9 @@ export const CSS_VARS = {
   celestialMoonDark: "--cp-celestial-moon-dark",
   celestialEarth: "--cp-celestial-earth",
   celestialMars: "--cp-celestial-mars",
+  celestialJupiter: "--cp-celestial-jupiter",
+  celestialVenus: "--cp-celestial-venus",
+  celestialSaturn: "--cp-celestial-saturn",
   celestialStar: "--cp-celestial-star",
   celestialOrbit: "--cp-celestial-orbit",
 
