@@ -79,6 +79,7 @@ export class GasPressureAnimation implements MechanismAnimation {
   private logT = 7;
   private w = 0;
   private h = 0;
+  private resizeObserver: ResizeObserver | null = null;
 
   start(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
@@ -90,6 +91,18 @@ export class GasPressureAnimation implements MechanismAnimation {
     this.rebuild();
     this.drawFrame();
     if (!reducedMotion.matches) this.tick();
+    this.resizeObserver = new ResizeObserver(() => {
+      this.ctx = setupCanvas(canvas);
+      const r = canvas.getBoundingClientRect();
+      this.w = r.width;
+      this.h = r.height;
+      for (const p of this.particles) {
+        p.x = Math.min(p.x, this.w - p.radius);
+        p.y = Math.min(p.y, this.h - p.radius);
+      }
+      if (reducedMotion.matches) this.drawFrame();
+    });
+    this.resizeObserver.observe(canvas);
   }
 
   updateParams(params: Record<string, number>): void {
@@ -105,6 +118,8 @@ export class GasPressureAnimation implements MechanismAnimation {
   stop(): void {
     cancelAnimationFrame(this.rafId);
     this.rafId = 0;
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
     this.canvas = null;
     this.ctx = null;
   }
@@ -237,6 +252,7 @@ export class RadiationPressureAnimation implements MechanismAnimation {
   private logT = 7;
   private w = 0;
   private h = 0;
+  private resizeObserver: ResizeObserver | null = null;
 
   start(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
@@ -248,6 +264,18 @@ export class RadiationPressureAnimation implements MechanismAnimation {
     this.rebuild();
     this.drawFrame();
     if (!reducedMotion.matches) this.tick();
+    this.resizeObserver = new ResizeObserver(() => {
+      this.ctx = setupCanvas(canvas);
+      const r = canvas.getBoundingClientRect();
+      this.w = r.width;
+      this.h = r.height;
+      for (const p of this.particles) {
+        p.x = Math.min(p.x, this.w - p.radius);
+        p.y = Math.min(p.y, this.h - p.radius);
+      }
+      if (reducedMotion.matches) this.drawFrame();
+    });
+    this.resizeObserver.observe(canvas);
   }
 
   updateParams(params: Record<string, number>): void {
@@ -259,6 +287,8 @@ export class RadiationPressureAnimation implements MechanismAnimation {
 
   stop(): void {
     cancelAnimationFrame(this.rafId);
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
     this.canvas = null;
     this.ctx = null;
   }
@@ -352,6 +382,7 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
   private w = 0;
   private h = 0;
   private readonly maxLevels = 16;
+  private resizeObserver: ResizeObserver | null = null;
 
   start(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
@@ -362,6 +393,14 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
     this.h = rect.height;
     this.drawFrame();
     if (!reducedMotion.matches) this.tick();
+    this.resizeObserver = new ResizeObserver(() => {
+      this.ctx = setupCanvas(canvas);
+      const r = canvas.getBoundingClientRect();
+      this.w = r.width;
+      this.h = r.height;
+      if (reducedMotion.matches) this.drawFrame();
+    });
+    this.resizeObserver.observe(canvas);
   }
 
   updateParams(params: Record<string, number>): void {
@@ -371,6 +410,8 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
 
   stop(): void {
     cancelAnimationFrame(this.rafId);
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
     this.canvas = null;
     this.ctx = null;
   }
