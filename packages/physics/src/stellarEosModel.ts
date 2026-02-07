@@ -235,7 +235,7 @@ function electronDegeneracyPressureZeroTDynePerCm2(args: {
   const prefactor =
     (Math.pow(CGS_CONSTANTS.electronMassG, 4) *
       Math.pow(CGS_CONSTANTS.speedOfLightCmPerS, 5)) /
-    (8 * Math.PI * Math.PI * Math.pow(CGS_CONSTANTS.hbarErgS, 3));
+    (24 * Math.PI * Math.PI * Math.pow(CGS_CONSTANTS.hbarErgS, 3));
   const bracket =
     x * (2 * x * x - 3) * Math.sqrt(1 + x * x) + 3 * Math.asinh(x);
   return prefactor * bracket;
