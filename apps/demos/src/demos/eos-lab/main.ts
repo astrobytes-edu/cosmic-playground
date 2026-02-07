@@ -55,6 +55,15 @@ const logTickValues = (_self: unknown, splits: number[]) =>
     return `10${superscript(exp)}`;
   });
 
+/**
+ * uPlot log-scale range clamp for pressure axes.
+ * uPlot's logAxisSplits overflows (RangeError) when the data range spans
+ * more than ~40 decades.  Clamp Y-min to 1e-10 (far below any physically
+ * meaningful pressure) to keep the splits count manageable.
+ */
+const logPressureRange = (_u: unknown, mn: number, mx: number): [number, number] =>
+  [Math.max(mn, 1e-10), mx];
+
 /* ================================================================
  * Presets
  * ================================================================ */
@@ -335,7 +344,10 @@ const initialCurveData = pressureCurveData({
 });
 
 const pressurePlotHandle = createEosPlot(pressureCurvePlotEl, {
-  scales: { x: { distr: 3 }, y: { distr: 3 } },
+  scales: {
+    x: { distr: 3 },
+    y: { distr: 3, range: logPressureRange },
+  },
   series: [
     {},
     { label: "P_gas", stroke: gasColor, width: 2 },
@@ -776,7 +788,7 @@ function createDeepDivePlot(channel: DeepDiveChannel): void {
   if (channel === "gas") {
     const data = gasDeepDiveData({ temperatureK: deepDiveState.gasT, composition: state.composition });
     deepDivePlotHandle = createEosPlot(gasDeepChartEl, {
-      scales: { x: { distr: 3 }, y: { distr: 3 } },
+      scales: { x: { distr: 3 }, y: { distr: 3, range: logPressureRange } },
       series: [
         {},
         { label: "P_gas", stroke: gasColor, width: 2 },
@@ -790,7 +802,7 @@ function createDeepDivePlot(channel: DeepDiveChannel): void {
   } else if (channel === "radiation") {
     const data = radDeepDiveData({ rhoForComparison: state.densityGPerCm3, composition: state.composition });
     deepDivePlotHandle = createEosPlot(radDeepChartEl, {
-      scales: { x: { distr: 3 }, y: { distr: 3 } },
+      scales: { x: { distr: 3 }, y: { distr: 3, range: logPressureRange } },
       series: [
         {},
         { label: "P_rad", stroke: radColor, width: 2 },
@@ -805,7 +817,7 @@ function createDeepDivePlot(channel: DeepDiveChannel): void {
   } else {
     const data = degDeepDiveData({ temperatureK: state.temperatureK, composition: state.composition });
     deepDivePlotHandle = createEosPlot(degDeepChartEl, {
-      scales: { x: { distr: 3 }, y: { distr: 3 } },
+      scales: { x: { distr: 3 }, y: { distr: 3, range: logPressureRange } },
       series: [
         {},
         { label: "P_deg,e", stroke: degColor, width: 2 },

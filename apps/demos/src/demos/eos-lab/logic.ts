@@ -259,11 +259,13 @@ export function pressureCurveData(args: {
       },
     });
 
-    // Floor at 1e-99 to stay log-safe (uPlot log scale can't handle 0)
-    pGas[i] = Math.max(1e-99, state.gasPressureDynePerCm2);
-    pRad[i] = Math.max(1e-99, state.radiationPressureDynePerCm2);
-    pDeg[i] = Math.max(1e-99, state.electronDegeneracyPressureDynePerCm2);
-    pTotal[i] = Math.max(1e-99, state.totalPressureDynePerCm2);
+    // Floor at 1e-30 to stay log-safe (uPlot log scale internal lookup
+    // table covers 1e-32..1e+32; values outside this range trigger
+    // RangeError in the axis-splits algorithm).
+    pGas[i] = Math.max(1e-30, state.gasPressureDynePerCm2);
+    pRad[i] = Math.max(1e-30, state.radiationPressureDynePerCm2);
+    pDeg[i] = Math.max(1e-30, state.electronDegeneracyPressureDynePerCm2);
+    pTotal[i] = Math.max(1e-30, state.totalPressureDynePerCm2);
   }
 
   return { densities, pGas, pRad, pDeg, pTotal };
@@ -503,7 +505,7 @@ export function gasDeepDiveData(args: {
     const rho = rhoValues[i];
     densities[i] = rho;
     // P_gas = rho * k_B * T / (mu * m_u)
-    pGas[i] = Math.max(1e-99, rho * C.K_BOLTZMANN_ERG_PER_K * temperatureK / (mu * C.ATOMIC_MASS_UNIT_G));
+    pGas[i] = Math.max(1e-30, rho * C.K_BOLTZMANN_ERG_PER_K * temperatureK / (mu * C.ATOMIC_MASS_UNIT_G));
   }
 
   return { densities, pGas };
@@ -532,9 +534,9 @@ export function radDeepDiveData(args: {
     const T = tValues[i];
     temperatures[i] = T;
     // P_rad = a * T^4 / 3
-    pRad[i] = Math.max(1e-99, C.RADIATION_CONSTANT_A_ERG_CM3_K4 * Math.pow(T, 4) / 3);
+    pRad[i] = Math.max(1e-30, C.RADIATION_CONSTANT_A_ERG_CM3_K4 * Math.pow(T, 4) / 3);
     // P_gas at fixed rho for comparison
-    pGas[i] = Math.max(1e-99, rhoForComparison * C.K_BOLTZMANN_ERG_PER_K * T / (mu * C.ATOMIC_MASS_UNIT_G));
+    pGas[i] = Math.max(1e-30, rhoForComparison * C.K_BOLTZMANN_ERG_PER_K * T / (mu * C.ATOMIC_MASS_UNIT_G));
   }
 
   return { temperatures, pRad, pGas };
@@ -569,8 +571,8 @@ export function degDeepDiveData(args: {
         radiationDepartureEta: 1,
       },
     });
-    pDeg[i] = Math.max(1e-99, state.electronDegeneracyPressureDynePerCm2);
-    pGas[i] = Math.max(1e-99, state.gasPressureDynePerCm2);
+    pDeg[i] = Math.max(1e-30, state.electronDegeneracyPressureDynePerCm2);
+    pGas[i] = Math.max(1e-30, state.gasPressureDynePerCm2);
   }
 
   return { densities, pDeg, pGas };

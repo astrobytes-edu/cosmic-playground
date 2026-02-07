@@ -233,7 +233,7 @@ describe("EOS Lab -- Pressure curve data", () => {
       samples: 20,
     });
     for (let i = 0; i < data.densities.length; i++) {
-      // Allow for 1e-99 floor effects; total should be >= sum of gas+rad
+      // Allow for 1e-30 floor effects; total should be >= sum of gas+rad
       expect(data.pTotal[i]).toBeGreaterThanOrEqual(
         Math.max(data.pGas[i], data.pRad[i]) * 0.99
       );
