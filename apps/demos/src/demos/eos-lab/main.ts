@@ -725,7 +725,7 @@ function syncCompareSliders(): void {
   compareY.value = ySlider.value;
 }
 
-let flashTimeout = 0;
+const flashTimeouts = new WeakMap<HTMLElement, number>();
 
 function showDeltaFlash(el: HTMLElement, oldP: number, newP: number): void {
   const ratio = newP / oldP;
@@ -740,12 +740,12 @@ function showDeltaFlash(el: HTMLElement, oldP: number, newP: number): void {
     el.textContent = "\u2193 \u00D7" + (1 / ratio).toFixed(ratio < 0.1 ? 0 : 1);
   }
   el.classList.add("is-visible");
-  clearTimeout(flashTimeout);
-  flashTimeout = window.setTimeout(() => {
-    compareGasFlash.classList.remove("is-visible");
-    compareRadFlash.classList.remove("is-visible");
-    compareDegFlash.classList.remove("is-visible");
-  }, 2000);
+  const prev = flashTimeouts.get(el);
+  if (prev) clearTimeout(prev);
+  flashTimeouts.set(el, window.setTimeout(() => {
+    el.classList.remove("is-visible");
+    flashTimeouts.delete(el);
+  }, 2000));
 }
 
 function renderCompareView(model: StellarEosStateCgs): void {

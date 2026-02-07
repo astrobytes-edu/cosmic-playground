@@ -14,6 +14,11 @@ export interface MechanismAnimation {
   stop(): void;
 }
 
+/* ---------- Motion preference ---------- */
+
+const reducedMotion =
+  window.matchMedia("(prefers-reduced-motion: reduce)");
+
 /* ---------- Helpers ---------- */
 
 function mapRange(
@@ -83,7 +88,8 @@ export class GasPressureAnimation implements MechanismAnimation {
     this.w = rect.width;
     this.h = rect.height;
     this.rebuild();
-    this.tick();
+    this.drawFrame();
+    if (!reducedMotion.matches) this.tick();
   }
 
   updateParams(params: Record<string, number>): void {
@@ -93,6 +99,7 @@ export class GasPressureAnimation implements MechanismAnimation {
     this.logT = params["logT"] ?? this.logT;
     if (this.logRho !== prevLogRho) this.rebuild();
     else if (this.logT !== prevLogT) this.rescale();
+    if (reducedMotion.matches) this.drawFrame();
   }
 
   stop(): void {
@@ -138,7 +145,7 @@ export class GasPressureAnimation implements MechanismAnimation {
     }
   }
 
-  private tick = (): void => {
+  private drawFrame = (): void => {
     const ctx = this.ctx;
     if (!ctx) return;
     const { w, h } = this;
@@ -204,7 +211,10 @@ export class GasPressureAnimation implements MechanismAnimation {
     ctx.strokeStyle = "rgba(255,255,255,0.15)";
     ctx.lineWidth = 1.5;
     ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
+  };
 
+  private tick = (): void => {
+    this.drawFrame();
     this.rafId = requestAnimationFrame(this.tick);
   };
 }
@@ -236,13 +246,15 @@ export class RadiationPressureAnimation implements MechanismAnimation {
     this.w = rect.width;
     this.h = rect.height;
     this.rebuild();
-    this.tick();
+    this.drawFrame();
+    if (!reducedMotion.matches) this.tick();
   }
 
   updateParams(params: Record<string, number>): void {
     const prev = this.logT;
     this.logT = params["logT"] ?? this.logT;
     if (this.logT !== prev) this.rebuild();
+    if (reducedMotion.matches) this.drawFrame();
   }
 
   stop(): void {
@@ -279,7 +291,7 @@ export class RadiationPressureAnimation implements MechanismAnimation {
     }
   }
 
-  private tick = (): void => {
+  private drawFrame = (): void => {
     const ctx = this.ctx;
     if (!ctx) return;
     const { w, h } = this;
@@ -313,7 +325,10 @@ export class RadiationPressureAnimation implements MechanismAnimation {
     ctx.strokeStyle = "rgba(255,255,255,0.15)";
     ctx.lineWidth = 1.5;
     ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
+  };
 
+  private tick = (): void => {
+    this.drawFrame();
     this.rafId = requestAnimationFrame(this.tick);
   };
 }
@@ -345,11 +360,13 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
     const rect = canvas.getBoundingClientRect();
     this.w = rect.width;
     this.h = rect.height;
-    this.tick();
+    this.drawFrame();
+    if (!reducedMotion.matches) this.tick();
   }
 
   updateParams(params: Record<string, number>): void {
     this.logRho = params["logRho"] ?? this.logRho;
+    if (reducedMotion.matches) this.drawFrame();
   }
 
   stop(): void {
@@ -358,7 +375,7 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
     this.ctx = null;
   }
 
-  private tick = (): void => {
+  private drawFrame = (): void => {
     const ctx = this.ctx;
     if (!ctx) return;
     const { w, h, maxLevels } = this;
@@ -367,9 +384,9 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
     ctx.fillRect(0, 0, w, h);
 
     const filled = Math.round(mapRange(this.logRho, -4, 10, 2, maxLevels));
-    // Non-uniform spacing — levels closer together toward bottom (mimics sqrt(E) density of states)
+    // Non-uniform spacing — levels closer together at top (3D fermion DOS: g(E) ~ sqrt(E))
     const weights: number[] = [];
-    for (let i = 0; i < maxLevels; i++) weights.push(1 + 0.4 * (i / maxLevels));
+    for (let i = 0; i < maxLevels; i++) weights.push(1.4 - 0.4 * (i / maxLevels));
     const totalWeight = weights.reduce((a, b) => a + b, 0);
     const baseSpacing = (h - 40) / totalWeight;
 
@@ -503,7 +520,10 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
     ctx.strokeStyle = grid;
     ctx.lineWidth = 1.5;
     ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
+  };
 
+  private tick = (): void => {
+    this.drawFrame();
     this.rafId = requestAnimationFrame(this.tick);
   };
 }
