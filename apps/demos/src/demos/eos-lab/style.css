@@ -47,24 +47,6 @@
   font-size: 0.9rem;
 }
 
-.presets__grid {
-  display: grid;
-  gap: var(--cp-space-1);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.preset.cp-action {
-  padding: var(--cp-space-1) var(--cp-space-2);
-  font-size: 0.82rem;
-}
-
-.preset {
-  transition:
-    border-color var(--cp-transition-fast) ease,
-    background var(--cp-transition-fast) ease,
-    box-shadow var(--cp-transition-fast) ease;
-}
-
 .preset.is-active {
   border-color: color-mix(in srgb, var(--cp-border) 30%, var(--cp-accent));
   background: color-mix(in srgb, var(--cp-accent) 10%, var(--cp-bg2));
@@ -362,16 +344,6 @@
   background: color-mix(in srgb, var(--eos-mixed) 50%, transparent);
 }
 
-.regime-map__overlay-toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--cp-space-1);
-  font-size: 0.8rem;
-  color: var(--cp-muted);
-  margin-top: var(--cp-space-1);
-  cursor: pointer;
-}
-
 #regimeDetail {
   font-size: 0.95rem;
   line-height: 1.4;
@@ -426,8 +398,8 @@
 
 .compare-controls {
   display: grid;
-  gap: var(--cp-space-3);
-  padding: var(--cp-space-3);
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-2);
   border-radius: var(--cp-r-3);
   border: 1px solid var(--cp-border);
   background: color-mix(in srgb, var(--cp-bg1) 90%, transparent);
@@ -436,13 +408,13 @@
 .compare-controls__sliders {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--cp-space-3);
+  gap: var(--cp-space-2);
 }
 
 .compare-controls__composition {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
-  gap: var(--cp-space-3);
+  gap: var(--cp-space-2);
   align-items: end;
 }
 
@@ -458,17 +430,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.compare-controls__presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--cp-space-1);
-}
-
-.compare-preset {
-  font-size: 0.8rem;
-  padding: var(--cp-space-1) var(--cp-space-2);
-}
-
 .compare-preset.is-active {
   border-color: color-mix(in srgb, var(--cp-border) 30%, var(--eos-dominant, var(--cp-accent)));
   background: color-mix(in srgb, var(--eos-dominant, var(--cp-accent)) 10%, var(--cp-bg2));
@@ -479,13 +440,13 @@
 .compare-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--cp-space-3);
+  gap: var(--cp-space-2);
 }
 
 .compare-column {
   display: grid;
-  gap: var(--cp-space-2);
-  padding: var(--cp-space-3);
+  gap: var(--cp-space-1);
+  padding: var(--cp-space-2);
   border-radius: var(--cp-r-3);
   border: 1px solid var(--cp-border);
   background: color-mix(in srgb, var(--cp-bg1) 92%, transparent);
@@ -507,7 +468,7 @@
 
 .compare-column__header h2 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1rem;
 }
 
 .compare-column__subtitle {
@@ -518,14 +479,15 @@
 
 .compare-column__caption {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: var(--cp-text2);
   line-height: 1.4;
 }
 
 .compare-column__canvas {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
+  max-height: 160px;
   border-radius: var(--cp-r-2);
   border: 1px solid color-mix(in srgb, var(--cp-border) 70%, transparent);
   background: color-mix(in srgb, var(--cp-bg0) 95%, transparent);
@@ -545,7 +507,7 @@
 
 .compare-column__badge {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--cp-text2);
   font-style: italic;
   line-height: 1.35;
@@ -553,30 +515,14 @@
 
 .compare-column__equation {
   font-size: 0.9rem;
-  padding: var(--cp-space-2);
+  padding: var(--cp-space-1) var(--cp-space-2);
   background: color-mix(in srgb, var(--cp-bg0) 80%, transparent);
   border-radius: var(--cp-r-2);
   border: 1px solid var(--cp-border);
   overflow-x: auto;
-  min-height: 2.8em;
+  min-height: 2.2em;
   cursor: pointer;
   position: relative;
-}
-
-.compare-column__equation::after {
-  content: "\21C4  symbolic \2194 numerical";
-  position: absolute;
-  right: var(--cp-space-1);
-  bottom: 2px;
-  font-size: 0.6rem;
-  color: var(--cp-muted);
-  opacity: 0.45;
-  transition: opacity 0.2s;
-}
-
-.compare-column__equation:hover::after,
-.compare-column__equation:focus-visible::after {
-  opacity: 1;
 }
 
 #colGas .compare-column__equation {

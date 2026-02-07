@@ -991,7 +991,7 @@ if (scalingContainer) {
     const optionsHtml = ch.options
       .map(
         (opt, i) =>
-          `<button class="cp-action scaling-detective__option" data-idx="${i}" data-factor="${opt.factor}" type="button">$${opt.label}$</button>`
+          `<button class="cp-chip scaling-detective__option" data-idx="${i}" data-factor="${opt.factor}" type="button">$${opt.label}$</button>`
       )
       .join("");
 
@@ -1019,14 +1019,14 @@ if (scalingContainer) {
 
           if (currentIdx < SCALING_CHALLENGES.length - 1) {
             // User-controlled advance instead of auto-timeout
-            feedbackEl.innerHTML += `<button class="cp-action scaling-detective__next" type="button">Next \u2192</button>`;
+            feedbackEl.innerHTML += `<button class="cp-button cp-button--ghost scaling-detective__next" type="button">Next \u2192</button>`;
             feedbackEl.querySelector(".scaling-detective__next")!.addEventListener("click", () => {
               currentIdx++;
               renderChallenge();
             });
           } else if (answered.size === SCALING_CHALLENGES.length) {
             feedbackEl.innerHTML += `<p class="scaling-detective__complete">All scaling laws discovered!</p>` +
-              `<button class="cp-action scaling-detective__reset" type="button">Start over</button>`;
+              `<button class="cp-button cp-button--ghost scaling-detective__reset" type="button">Start over</button>`;
             feedbackEl.querySelector(".scaling-detective__reset")!.addEventListener("click", () => {
               currentIdx = 0;
               answered.clear();

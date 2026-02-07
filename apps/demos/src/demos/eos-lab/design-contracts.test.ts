@@ -259,4 +259,37 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(mainTs).toContain("getContextualSuggestion");
     expect(mainTs).toContain("trySuggestion");
   });
+
+  /* ──────────────────────────────────────────────────
+   * Component system contracts (cp-chip, cp-toggle)
+   * ────────────────────────────────────────────────── */
+
+  it("uses cp-chip for sidebar preset buttons (not cp-button)", () => {
+    // Sidebar presets should be chips, not rectangular buttons
+    const sidebarPresets = html.match(/class="cp-chip preset"/g) || [];
+    expect(sidebarPresets.length).toBeGreaterThanOrEqual(6);
+    // Must NOT use cp-button--outline for presets
+    expect(html).not.toMatch(/preset[^"]*cp-button--outline/);
+  });
+
+  it("uses cp-chip for Tab 2 compare-preset buttons", () => {
+    const comparePresets = html.match(/class="cp-chip preset compare-preset"/g) || [];
+    expect(comparePresets.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("uses cp-chip-group containers for preset grids", () => {
+    expect(html).toContain("cp-chip-group--grid");
+    expect(html).toContain("cp-chip-group");
+  });
+
+  it("uses cp-toggle for solar profile checkbox", () => {
+    expect(html).toMatch(/class="cp-toggle"[\s\S]*?id="showSolarProfile"/);
+    // Must NOT use demo-specific overlay-toggle class
+    expect(html).not.toContain("regime-map__overlay-toggle");
+  });
+
+  it("has zero cp-action references in HTML and main.ts", () => {
+    expect(html).not.toContain("cp-action");
+    expect(mainTs).not.toContain("cp-action");
+  });
 });

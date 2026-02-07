@@ -142,13 +142,13 @@
 
           <div class="presets">
             <div class="presets__label">Preset states (ASTR 201)</div>
-            <div id="presetButtons" class="presets__grid" role="group" aria-label="Preset states">
-              <button class="cp-button cp-button--outline preset" type="button" data-preset-id="solar-core">Solar core</button>
-              <button class="cp-button cp-button--outline preset" type="button" data-preset-id="solar-envelope">Solar envelope</button>
-              <button class="cp-button cp-button--outline preset" type="button" data-preset-id="massive-core">Massive-star core</button>
-              <button class="cp-button cp-button--outline preset" type="button" data-preset-id="red-giant-envelope">Red giant envelope</button>
-              <button class="cp-button cp-button--outline preset" type="button" data-preset-id="white-dwarf-core" title="He-like composition (Y=0.98) mimics C/O white dwarfs because mu_e &approx; 2 in both cases. Since n_e = rho/(mu_e m_u), the same mu_e gives the same electron density and degeneracy pressure.">White dwarf core</button>
-              <button class="cp-button cp-button--outline preset" type="button" data-preset-id="brown-dwarf-interior">Brown dwarf interior</button>
+            <div id="presetButtons" class="cp-chip-group--grid" role="group" aria-label="Preset states">
+              <button class="cp-chip preset" type="button" data-preset-id="solar-core">Solar core</button>
+              <button class="cp-chip preset" type="button" data-preset-id="solar-envelope">Solar envelope</button>
+              <button class="cp-chip preset" type="button" data-preset-id="massive-core">Massive-star core</button>
+              <button class="cp-chip preset" type="button" data-preset-id="red-giant-envelope">Red giant envelope</button>
+              <button class="cp-chip preset" type="button" data-preset-id="white-dwarf-core" title="He-like composition (Y=0.98) mimics C/O white dwarfs because mu_e &approx; 2 in both cases. Since n_e = rho/(mu_e m_u), the same mu_e gives the same electron density and degeneracy pressure.">White dwarf core</button>
+              <button class="cp-chip preset" type="button" data-preset-id="brown-dwarf-interior">Brown dwarf interior</button>
             </div>
             <p id="presetNote" class="cp-muted"></p>
           </div>
@@ -293,7 +293,7 @@
                 <li><span data-channel="degeneracy"></span>$P_{\rm deg,e}$ dominant</li>
                 <li><span data-channel="mixed"></span>Mixed dominance</li>
               </ul>
-              <label class="regime-map__overlay-toggle">
+              <label class="cp-toggle">
                 <input type="checkbox" id="showSolarProfile"> Show solar model profile
               </label>
               <p id="regimeDetail" class="cp-muted"></p>
@@ -369,13 +369,13 @@
                 $\mu_e$ = <span id="compareMuEVal">1.176</span>
               </div>
             </div>
-            <div class="compare-controls__presets">
-              <button class="preset cp-action compare-preset" data-preset-id="solar-core" type="button">Solar core</button>
-              <button class="preset cp-action compare-preset" data-preset-id="white-dwarf-core" type="button">White dwarf</button>
-              <button class="preset cp-action compare-preset" data-preset-id="massive-core" type="button">Massive star</button>
-              <button class="preset cp-action compare-preset" data-preset-id="red-giant-envelope" type="button">Red giant</button>
-              <button class="preset cp-action compare-preset" data-preset-id="solar-envelope" type="button">Solar envelope</button>
-              <button class="preset cp-action compare-preset" data-preset-id="brown-dwarf-interior" type="button">Brown dwarf</button>
+            <div class="compare-controls__presets cp-chip-group">
+              <button class="cp-chip preset compare-preset" data-preset-id="solar-core" type="button">Solar core</button>
+              <button class="cp-chip preset compare-preset" data-preset-id="white-dwarf-core" type="button">White dwarf</button>
+              <button class="cp-chip preset compare-preset" data-preset-id="massive-core" type="button">Massive star</button>
+              <button class="cp-chip preset compare-preset" data-preset-id="red-giant-envelope" type="button">Red giant</button>
+              <button class="cp-chip preset compare-preset" data-preset-id="solar-envelope" type="button">Solar envelope</button>
+              <button class="cp-chip preset compare-preset" data-preset-id="brown-dwarf-interior" type="button">Brown dwarf</button>
             </div>
           </div>
 

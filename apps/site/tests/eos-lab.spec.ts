@@ -69,8 +69,8 @@ test.describe("EOS Lab -- E2E", () => {
   });
 
   test("white dwarf preset selects degeneracy-dominated state", async ({ page }) => {
-    // Use cp-button class to target Tab 1 presets (Tab 2 uses compare-preset class)
-    await page.locator('button.cp-button[data-preset-id="white-dwarf-core"]').click();
+    // Use cp-chip class to target Tab 1 sidebar presets (Tab 2 also uses cp-chip + compare-preset)
+    await page.locator('button.cp-chip[data-preset-id="white-dwarf-core"]').first().click();
     await expect(page.locator("#dominantChannel")).toContainText("Electron degeneracy pressure");
   });
 
@@ -261,7 +261,7 @@ test.describe("EOS Lab -- E2E", () => {
     const before = await suggestion.textContent();
     expect(before!.length).toBeGreaterThan(10);
     // Switch to white dwarf preset — dominant channel changes, suggestion should too
-    await page.locator('button.cp-button[data-preset-id="white-dwarf-core"]').click();
+    await page.locator('button.cp-chip[data-preset-id="white-dwarf-core"]').first().click();
     const after = await suggestion.textContent();
     expect(after!.length).toBeGreaterThan(10);
     // White dwarf is degeneracy-dominated, so suggestion should differ from default gas
