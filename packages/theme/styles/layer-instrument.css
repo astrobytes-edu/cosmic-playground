@@ -155,3 +155,9 @@
 .cp-layer-instrument .cp-button--accent:focus-visible {
   box-shadow: var(--cp-glow-pink);
 }
+
+/* --- Chip glow in instrument context --- */
+.cp-layer-instrument .cp-chip:hover,
+.cp-layer-instrument .cp-chip:focus-visible {
+  box-shadow: var(--cp-glow-teal);
+}

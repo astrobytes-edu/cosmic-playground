@@ -1,0 +1,72 @@
+/* ============================================
+   Chip — Compact pill-shaped selector
+   ============================================
+   Use for preset pickers, band selectors, filter
+   chips. Pill radius distinguishes "select" from
+   "action" (rectangular .cp-button).
+   ============================================ */
+
+.cp-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cp-space-1) var(--cp-space-2);
+  font-size: var(--cp-text-sm, 0.82rem);
+  font-weight: var(--cp-font-medium);
+  line-height: 1;
+  border: 1px solid var(--cp-border);
+  border-radius: 9999px;
+  background: var(--cp-bg1);
+  color: var(--cp-text);
+  cursor: pointer;
+  transition:
+    border-color var(--cp-transition-fast) ease,
+    background var(--cp-transition-fast) ease,
+    box-shadow var(--cp-transition-fast) ease;
+}
+
+.cp-chip:hover {
+  border-color: color-mix(in srgb, var(--cp-border) 50%, var(--cp-accent));
+  background: color-mix(in srgb, var(--cp-accent) 6%, var(--cp-bg1));
+}
+
+.cp-chip:active {
+  background: color-mix(in srgb, var(--cp-accent) 12%, var(--cp-bg1));
+}
+
+.cp-chip:focus-visible {
+  outline: 2px solid var(--cp-accent-amber);
+  outline-offset: 2px;
+}
+
+/* Active state — dual selectors for JS class + ARIA attribute */
+.cp-chip.is-active,
+.cp-chip[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--cp-border) 30%, var(--cp-accent));
+  background: color-mix(in srgb, var(--cp-accent) 10%, var(--cp-bg2));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cp-accent) 18%, transparent);
+}
+
+.cp-chip:disabled,
+.cp-chip[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ============================================
+   Chip Group — Layout container for chips
+   ============================================ */
+
+.cp-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-1);
+}
+
+/* Grid variant: equal-width columns (e.g. sidebar preset grids) */
+.cp-chip-group--grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--cp-space-2);
+}

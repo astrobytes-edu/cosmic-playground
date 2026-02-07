@@ -255,3 +255,63 @@ describe("Design tokens", () => {
     });
   });
 });
+
+describe("Chip component", () => {
+  const chipPath = path.resolve(__dirname, "../styles/components/chip.css");
+  const chipCss = fs.readFileSync(chipPath, "utf-8");
+
+  it("defines .cp-chip base class", () => {
+    expect(chipCss).toContain(".cp-chip {");
+  });
+
+  it("uses pill border-radius", () => {
+    expect(chipCss).toMatch(/\.cp-chip\s*\{[^}]*border-radius:\s*9999px/s);
+  });
+
+  it("defines active state for both class and ARIA", () => {
+    expect(chipCss).toContain(".cp-chip.is-active");
+    expect(chipCss).toContain('.cp-chip[aria-pressed="true"]');
+  });
+
+  it("defines .cp-chip-group flex container", () => {
+    expect(chipCss).toContain(".cp-chip-group {");
+    expect(chipCss).toContain("flex-wrap: wrap");
+  });
+
+  it("defines .cp-chip-group--grid variant", () => {
+    expect(chipCss).toContain(".cp-chip-group--grid {");
+    expect(chipCss).toContain("grid-template-columns");
+  });
+
+  it("defines disabled state", () => {
+    expect(chipCss).toContain(".cp-chip:disabled");
+  });
+});
+
+describe("Toggle component", () => {
+  const togglePath = path.resolve(__dirname, "../styles/components/toggle.css");
+  const toggleCss = fs.readFileSync(togglePath, "utf-8");
+
+  it("defines .cp-toggle base class", () => {
+    expect(toggleCss).toContain(".cp-toggle {");
+  });
+
+  it("hides native checkbox appearance", () => {
+    expect(toggleCss).toContain("appearance: none");
+  });
+
+  it("defines checked state with accent color", () => {
+    expect(toggleCss).toContain(":checked");
+    expect(toggleCss).toContain("--cp-accent");
+  });
+
+  it("defines thumb pseudo-element", () => {
+    expect(toggleCss).toContain("::after");
+    expect(toggleCss).toContain("border-radius: 50%");
+  });
+
+  it("defines focus-visible outline", () => {
+    expect(toggleCss).toContain(":focus-visible");
+    expect(toggleCss).toContain("--cp-accent-amber");
+  });
+});

@@ -11,6 +11,8 @@
 @import "@cosmic/theme/styles/components/utility-toolbar.css";
 @import "@cosmic/theme/styles/components/readout-strip.css";
 @import "@cosmic/theme/styles/components/scroll-shadow.css";
+@import "@cosmic/theme/styles/components/chip.css";
+@import "@cosmic/theme/styles/components/toggle.css";
 
 .cp-panel-body {
   display: grid;
