@@ -88,10 +88,11 @@ export class GasPressureAnimation implements MechanismAnimation {
 
   updateParams(params: Record<string, number>): void {
     const prevLogRho = this.logRho;
+    const prevLogT = this.logT;
     this.logRho = params["logRho"] ?? this.logRho;
     this.logT = params["logT"] ?? this.logT;
-    if (Math.abs(this.logRho - prevLogRho) > 0.5) this.rebuild();
-    else this.rescale();
+    if (this.logRho !== prevLogRho) this.rebuild();
+    else if (this.logT !== prevLogT) this.rescale();
   }
 
   stop(): void {
@@ -104,7 +105,7 @@ export class GasPressureAnimation implements MechanismAnimation {
   private rebuild(): void {
     const count = Math.round(mapRange(this.logRho, -10, 10, 5, 80));
     const speed = mapRange(this.logT, 3, 9, 0.5, 4);
-    const color = resolveCss("--cp-success") || "#4ade80";
+    const color = "#34d399";
     this.particles = [];
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * 2 * Math.PI;
@@ -176,7 +177,7 @@ export class GasPressureAnimation implements MechanismAnimation {
     }
 
     // Wall flashes (amber pulse = momentum transfer)
-    const amber = resolveCss("--cp-accent-amber") || "#f5a623";
+    const amber = "#fbbf24";
     for (const f of this.wallFlashes) {
       const a = Math.round((f.timer / 4) * 128);
       const hex = a.toString(16).padStart(2, "0");
@@ -190,7 +191,7 @@ export class GasPressureAnimation implements MechanismAnimation {
     }
 
     // Border
-    ctx.strokeStyle = resolveCss("--cp-border") || "#333";
+    ctx.strokeStyle = "rgba(255,255,255,0.15)";
     ctx.lineWidth = 1.5;
     ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
 
@@ -231,7 +232,7 @@ export class RadiationPressureAnimation implements MechanismAnimation {
   updateParams(params: Record<string, number>): void {
     const prev = this.logT;
     this.logT = params["logT"] ?? this.logT;
-    if (Math.abs(this.logT - prev) > 0.3) this.rebuild();
+    if (this.logT !== prev) this.rebuild();
   }
 
   stop(): void {
@@ -298,7 +299,7 @@ export class RadiationPressureAnimation implements MechanismAnimation {
       ctx.fill();
     }
 
-    ctx.strokeStyle = resolveCss("--cp-border") || "#333";
+    ctx.strokeStyle = "rgba(255,255,255,0.15)";
     ctx.lineWidth = 1.5;
     ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
 
@@ -358,8 +359,8 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
     const spacing = (h - 40) / maxLevels;
     const levelW = w * 0.55;
     const xStart = (w - levelW) / 2;
-    const teal = resolveCss("--cp-glow-teal") || "#54cddc";
-    const grid = resolveCss("--cp-border") || "#333";
+    const violet = "#a78bfa";
+    const grid = "rgba(255,255,255,0.15)";
     const eR = 4;
 
     for (let i = 0; i < maxLevels; i++) {
@@ -367,7 +368,7 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
       const on = i < filled;
 
       // Level line
-      ctx.strokeStyle = on ? teal : grid;
+      ctx.strokeStyle = on ? violet : grid;
       ctx.lineWidth = on ? 1.5 : 0.5;
       ctx.beginPath();
       ctx.moveTo(xStart, y);
@@ -375,18 +376,27 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
       ctx.stroke();
 
       if (on) {
+        // Glow halo behind electrons
+        ctx.beginPath();
+        ctx.arc(xStart + levelW * 0.35, y - eR - 2, eR * 2.5, 0, 2 * Math.PI);
+        ctx.fillStyle = violet + "33";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(xStart + levelW * 0.65, y - eR - 2, eR * 2.5, 0, 2 * Math.PI);
+        ctx.fillStyle = violet + "33";
+        ctx.fill();
         // Spin-up electron
         ctx.beginPath();
         ctx.arc(xStart + levelW * 0.35, y - eR - 2, eR, 0, 2 * Math.PI);
-        ctx.fillStyle = teal;
+        ctx.fillStyle = violet;
         ctx.fill();
         // Spin-down electron
         ctx.beginPath();
         ctx.arc(xStart + levelW * 0.65, y - eR - 2, eR, 0, 2 * Math.PI);
-        ctx.fillStyle = teal + "aa";
+        ctx.fillStyle = violet + "aa";
         ctx.fill();
-        // Arrows
-        ctx.fillStyle = "#000";
+        // Arrows (white on violet circles)
+        ctx.fillStyle = "#fff";
         ctx.font = "bold 8px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -401,14 +411,14 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
       const aTop = h - 20 - (filled - 1) * spacing;
       const aBot = h - 20;
 
-      ctx.strokeStyle = teal;
+      ctx.strokeStyle = violet;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(ax, aBot);
       ctx.lineTo(ax, aTop);
       ctx.stroke();
 
-      ctx.fillStyle = teal;
+      ctx.fillStyle = violet;
       ctx.beginPath();
       ctx.moveTo(ax, aTop - 4);
       ctx.lineTo(ax - 5, aTop + 4);
@@ -416,7 +426,7 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
       ctx.closePath();
       ctx.fill();
 
-      ctx.font = "9px var(--cp-font-mono, monospace)";
+      ctx.font = "9px monospace";
       ctx.textAlign = "center";
       ctx.fillText("P_deg", ax, aBot + 14);
     }
@@ -425,8 +435,8 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
     ctx.save();
     ctx.translate(14, h / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.font = "10px var(--cp-font-mono, monospace)";
-    ctx.fillStyle = resolveCss("--cp-text2") || "#aaa";
+    ctx.font = "10px monospace";
+    ctx.fillStyle = "#aaa";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("Energy", 0, 0);

@@ -76,12 +76,12 @@
 
 .pressure-card h2 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
 }
 
 .pressure-card__value {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.12rem;
   color: var(--cp-text);
   font-variant-numeric: tabular-nums;
 }
@@ -120,7 +120,7 @@
 .pressure-card__hint {
   margin: 0;
   color: var(--cp-muted);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   line-height: 1.35;
 }
 
@@ -164,7 +164,7 @@
 
 .stage-summary p {
   margin: 0;
-  font-size: 0.98rem;
+  font-size: 1.05rem;
 }
 
 .stage-summary p + p {
@@ -180,7 +180,7 @@
 
 .pressure-plot h3 {
   margin: 0 0 var(--cp-space-1);
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   letter-spacing: -0.01em;
 }
 
@@ -203,16 +203,18 @@
   border-radius: var(--cp-r-3);
   border: 1px solid var(--cp-border);
   background: color-mix(in srgb, var(--cp-bg1) 90%, transparent);
+  display: grid;
+  gap: var(--cp-space-2);
 }
 
 .regime-map h3 {
-  margin: 0 0 var(--cp-space-1);
-  font-size: 1.35rem;
+  margin: 0;
+  font-size: 1.45rem;
   letter-spacing: -0.01em;
 }
 
 .regime-map__help {
-  margin: 0 0 var(--cp-space-3);
+  margin: 0;
   font-size: 0.98rem;
   line-height: 1.45;
   max-width: 48ch;
@@ -225,13 +227,13 @@
 }
 
 .regime-map__legend {
-  margin: var(--cp-space-2) 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
   gap: var(--cp-space-2);
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .regime-map__legend li {
@@ -268,22 +270,18 @@
 }
 
 #regimeDetail {
-  margin-top: var(--cp-space-2);
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   line-height: 1.4;
-  max-height: 4.5em;
-  overflow-y: auto;
 }
 
 #regimeSummary {
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   line-height: 1.4;
-  margin-top: var(--cp-space-1);
 }
 
 /* uPlot legend styling — match observatory console theme */
 .pressure-plot__surface .u-legend {
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   padding: var(--cp-space-1) 0;
 }
 

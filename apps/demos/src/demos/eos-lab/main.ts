@@ -367,10 +367,10 @@ const pressurePlotHandle = createEosPlot(pressureCurvePlotEl, {
   },
   series: [
     {},
-    { label: "P_gas", stroke: gasColor, width: 2.5 },
-    { label: "P_rad", stroke: radColor, width: 2.5 },
-    { label: "P_deg,e", stroke: degColor, width: 2.5 },
-    { label: "P_total", stroke: totalColor, width: 3, dash: [6, 3] },
+    { label: "P_gas", stroke: gasColor, width: 2.5, value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
+    { label: "P_rad", stroke: radColor, width: 2.5, value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
+    { label: "P_deg,e", stroke: degColor, width: 2.5, value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
+    { label: "P_total", stroke: totalColor, width: 3, dash: [6, 3], value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
   ],
   axes: [
     { label: "\u03C1 (g cm\u207B\u00B3)", values: logTickValues },
@@ -812,7 +812,7 @@ function createDeepDivePlot(channel: DeepDiveChannel): void {
       scales: { x: { distr: 3 }, y: { distr: 3, range: logPressureRange } },
       series: [
         {},
-        { label: "P_gas", stroke: gasColor, width: 2 },
+        { label: "P_gas", stroke: gasColor, width: 2, value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
       ],
       axes: [
         { label: "\u03C1 (g cm\u207B\u00B3)", values: logTickValues },
@@ -826,8 +826,8 @@ function createDeepDivePlot(channel: DeepDiveChannel): void {
       scales: { x: { distr: 3 }, y: { distr: 3, range: logPressureRange } },
       series: [
         {},
-        { label: "P_rad", stroke: radColor, width: 2 },
-        { label: "P_gas (comparison)", stroke: gasColor, width: 1.5, dash: [4, 2] },
+        { label: "P_rad", stroke: radColor, width: 2, value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
+        { label: "P_gas (comparison)", stroke: gasColor, width: 1.5, dash: [4, 2], value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
       ],
       axes: [
         { label: "T (K)", values: logTickValues },
@@ -841,8 +841,8 @@ function createDeepDivePlot(channel: DeepDiveChannel): void {
       scales: { x: { distr: 3 }, y: { distr: 3, range: logPressureRange } },
       series: [
         {},
-        { label: "P_deg,e", stroke: degColor, width: 2 },
-        { label: "P_gas (comparison)", stroke: gasColor, width: 1.5, dash: [4, 2] },
+        { label: "P_deg,e", stroke: degColor, width: 2, value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
+        { label: "P_gas (comparison)", stroke: gasColor, width: 1.5, dash: [4, 2], value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
       ],
       axes: [
         { label: "\u03C1 (g cm\u207B\u00B3)", values: logTickValues },
