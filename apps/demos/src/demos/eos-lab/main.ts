@@ -128,7 +128,7 @@ const PRESETS: readonly Preset[] = [
   {
     id: "white-dwarf-core",
     label: "White dwarf core",
-    note: "Extreme density drives electron degeneracy pressure dominance.",
+    note: "Extreme density drives electron degeneracy pressure dominance. Uses Y=0.98 (He-like composition); real WDs are C/O, but both give \\(\\mu_e \\approx 2\\).",
     expectedDominance: "Electron degeneracy",
     temperatureK: 1e7,
     densityGPerCm3: 1e6,
