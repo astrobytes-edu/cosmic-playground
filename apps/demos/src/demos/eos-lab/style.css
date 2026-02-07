@@ -239,6 +239,18 @@
   margin-top: 0;
 }
 
+.stage-summary__suggestion {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: var(--cp-space-2) 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--cp-border) 50%, transparent);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--cp-text2);
+  font-style: italic;
+  transition: color var(--cp-transition-slow) ease;
+}
+
 .stage-summary #pTotalValue {
   color: var(--cp-accent-amber);
   font-family: var(--cp-readout-value-font, var(--cp-font-mono));

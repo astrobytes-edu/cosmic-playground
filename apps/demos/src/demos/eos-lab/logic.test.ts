@@ -31,6 +31,8 @@ import {
   radEquationSymbolic,
   degEquationSymbolic,
   solarProfileData,
+  getContextualSuggestion,
+  type ContextualSuggestionInput,
 } from "./logic";
 
 const SOLAR_COMPOSITION = {
@@ -591,5 +593,82 @@ describe("solarProfileData", () => {
     const labels = profile.filter(p => p.label).map(p => p.label);
     expect(labels).toContain("Core");
     expect(labels).toContain("Photosphere");
+  });
+});
+
+/* ──────────────────────────────────────────────────
+ * Contextual suggestions
+ * ────────────────────────────────────────────────── */
+
+describe("getContextualSuggestion", () => {
+  const base: ContextualSuggestionInput = {
+    dominantChannel: "gas",
+    radiationToGas: 0.001,
+    degeneracyToTotal: 0.001,
+    chiDegeneracy: 100,
+    gammaEff: 5 / 3,
+    lteTag: "lte-like",
+  };
+
+  it("warns about instability when gamma_eff < 4/3 + 0.05", () => {
+    const s = getContextualSuggestion({ ...base, gammaEff: 1.3 });
+    expect(s).toContain("4/3");
+    expect(s).toContain("unstable");
+  });
+
+  it("warns about LTE closure when tag is not lte-like", () => {
+    const s = getContextualSuggestion({ ...base, lteTag: "optically-thin", gammaEff: 1.7 });
+    expect(s).toContain("LTE");
+    expect(s).toContain("warning");
+  });
+
+  it("does not warn LTE when degeneracy dominates (LTE irrelevant)", () => {
+    const s = getContextualSuggestion({
+      ...base, dominantChannel: "degeneracy", lteTag: "optically-thin",
+      gammaEff: 5 / 3, chiDegeneracy: 0.01,
+    });
+    expect(s).not.toContain("LTE");
+    expect(s).toContain("degeneracy");
+  });
+
+  it("suggests raising T when gas dominates and radiation is negligible", () => {
+    const s = getContextualSuggestion({ ...base, radiationToGas: 0.001 });
+    expect(s).toContain("raising T");
+  });
+
+  it("mentions Eddington regime when gas dominates but radiation is noticeable", () => {
+    const s = getContextualSuggestion({ ...base, radiationToGas: 0.1 });
+    expect(s).toContain("Eddington");
+  });
+
+  it("suggests increasing density when radiation dominates", () => {
+    const s = getContextualSuggestion({ ...base, dominantChannel: "radiation" });
+    expect(s).toContain("density");
+    expect(s).toContain("degeneracy");
+  });
+
+  it("mentions T/T_F for strongly degenerate conditions", () => {
+    const s = getContextualSuggestion({
+      ...base, dominantChannel: "degeneracy", chiDegeneracy: 0.01,
+    });
+    expect(s).toContain("T/T_F");
+  });
+
+  it("suggests composition change for moderately degenerate", () => {
+    const s = getContextualSuggestion({
+      ...base, dominantChannel: "degeneracy", chiDegeneracy: 0.5,
+    });
+    expect(s).toContain("composition");
+  });
+
+  it("highlights transition at mixed dominance", () => {
+    const s = getContextualSuggestion({ ...base, dominantChannel: "mixed" });
+    expect(s).toContain("transition");
+    expect(s).toContain("crossover");
+  });
+
+  it("returns a non-empty string for any valid input", () => {
+    const s = getContextualSuggestion({ ...base, dominantChannel: "extension" });
+    expect(s.length).toBeGreaterThan(10);
   });
 });

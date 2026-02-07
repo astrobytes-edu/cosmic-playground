@@ -252,4 +252,11 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(mainTs).toContain("eos-lab-toured");
     expect(mainTs).toContain("localStorage");
   });
+
+  it("includes contextual suggestion in stage summary wired from logic", () => {
+    expect(html).toContain('id="trySuggestion"');
+    expect(html).toContain("stage-summary__suggestion");
+    expect(mainTs).toContain("getContextualSuggestion");
+    expect(mainTs).toContain("trySuggestion");
+  });
 });

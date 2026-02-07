@@ -255,6 +255,19 @@ test.describe("EOS Lab -- E2E", () => {
     await expect(checkbox).toBeChecked();
   });
 
+  test("contextual suggestion updates when state changes", async ({ page }) => {
+    const suggestion = page.locator("#trySuggestion");
+    await expect(suggestion).toBeVisible();
+    const before = await suggestion.textContent();
+    expect(before!.length).toBeGreaterThan(10);
+    // Switch to white dwarf preset — dominant channel changes, suggestion should too
+    await page.locator('button.cp-button[data-preset-id="white-dwarf-core"]').click();
+    const after = await suggestion.textContent();
+    expect(after!.length).toBeGreaterThan(10);
+    // White dwarf is degeneracy-dominated, so suggestion should differ from default gas
+    expect(after).not.toBe(before);
+  });
+
   test("model notes has beginner summary with nested technical details", async ({ page }) => {
     const accordion = page.locator(".cp-demo__controls .cp-accordion").filter({
       hasText: "Model notes",

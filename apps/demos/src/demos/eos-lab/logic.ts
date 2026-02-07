@@ -753,6 +753,70 @@ export function degEquationSymbolic(): string {
 }
 
 /* ──────────────────────────────────────────────────
+ * Contextual "What to try next" suggestions
+ *
+ * Returns a pedagogically targeted prompt based on
+ * the current state, guiding students toward the
+ * most insightful next exploration step.
+ * ────────────────────────────────────────────────── */
+
+export type ContextualSuggestionInput = {
+  dominantChannel: "gas" | "radiation" | "degeneracy" | "mixed" | "extension";
+  radiationToGas: number;
+  degeneracyToTotal: number;
+  chiDegeneracy: number;
+  gammaEff: number;
+  lteTag: string;
+};
+
+export function getContextualSuggestion(input: ContextualSuggestionInput): string {
+  const { dominantChannel, radiationToGas, chiDegeneracy, gammaEff, lteTag } = input;
+
+  // 1. Near instability threshold — most dramatic and urgent
+  if (Number.isFinite(gammaEff) && gammaEff < 4 / 3 + 0.05) {
+    return "The effective adiabatic index is near or below 4/3 \u2014 in a real star this state would be dynamically unstable. Try increasing density to push into stronger degeneracy and restore stability.";
+  }
+
+  // 2. LTE closure warning — physics caveat takes priority
+  if (lteTag !== "lte-like" && dominantChannel !== "degeneracy") {
+    return "The LTE closure chip shows a warning \u2014 radiation pressure may be unreliable here. Try increasing density or lowering temperature to move into a regime where LTE holds.";
+  }
+
+  // 3. Mixed dominance — the most interesting regime for discovery
+  if (dominantChannel === "mixed") {
+    return "No single channel dominates \u2014 you\u2019re at a transition boundary! Small changes in T or \u03C1 can flip the winner. Explore to find the exact crossover point.";
+  }
+
+  // 4. Gas dominated, radiation negligible
+  if (dominantChannel === "gas" && radiationToGas < 0.01) {
+    return "Gas pressure dominates strongly. Try raising T by 10\u00D7 \u2014 radiation pressure scales as T\u2074, so it gains ground much faster than the linear T scaling of gas pressure.";
+  }
+
+  // 5. Gas dominated, radiation noticeable
+  if (dominantChannel === "gas") {
+    return "Radiation is starting to compete with gas pressure. Keep increasing T or lowering \u03C1 to find where P_rad overtakes P_gas \u2014 this transition defines the Eddington luminosity regime.";
+  }
+
+  // 6. Radiation dominated
+  if (dominantChannel === "radiation") {
+    return "Radiation dominates \u2014 you\u2019re in the regime of massive-star envelopes. Try increasing density to see degeneracy pressure compete, or switch to Tab 2 to watch the T\u2074 scaling in action.";
+  }
+
+  // 7. Degeneracy dominated, strongly degenerate
+  if (dominantChannel === "degeneracy" && chiDegeneracy < 0.1) {
+    return "Strong degeneracy \u2014 T/T_F is small, so temperature barely matters. Raise T slowly and watch T/T_F in the readout strip to see when thermal pressure reasserts itself.";
+  }
+
+  // 8. Degeneracy dominated, moderate
+  if (dominantChannel === "degeneracy") {
+    return "Degeneracy pressure dominates. Try changing composition \u2014 switching from He-rich to H-rich changes \u03BC_e, which shifts electron density and thus degeneracy pressure.";
+  }
+
+  // Fallback
+  return "Try a different preset to explore how stellar conditions change the pressure balance.";
+}
+
+/* ──────────────────────────────────────────────────
  * Solar model profile for regime map overlay
  * ────────────────────────────────────────────────── */
 

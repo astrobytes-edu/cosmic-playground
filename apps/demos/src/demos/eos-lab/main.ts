@@ -35,7 +35,8 @@ import {
   adiabaticIndex,
   solarProfileData,
   checkScalingAnswer,
-  SCALING_CHALLENGES
+  SCALING_CHALLENGES,
+  getContextualSuggestion
 } from "./logic";
 import { createEosPlot, destroyPlot } from "./uplotHelpers";
 import type { uPlot } from "./uplotHelpers";
@@ -227,6 +228,7 @@ const finiteTValidityValue = q("#finiteTValidityValue");
 const neutronExtensionValue = q("#neutronExtensionValue");
 
 const stageSummary = q(".stage-summary");
+const trySuggestion = q("#trySuggestion");
 const stationModeButton = q<HTMLButtonElement>("#stationMode");
 const helpButton = q<HTMLButtonElement>("#help");
 const copyResults = q<HTMLButtonElement>("#copyResults");
@@ -752,6 +754,16 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   renderRadiationClosure(model);
   renderAdvancedDiagnostics(model);
   renderPresetState();
+
+  // Contextual "what to try next" suggestion
+  trySuggestion.textContent = getContextualSuggestion({
+    dominantChannel: model.dominantPressureChannel,
+    radiationToGas: model.pressureRatios.radiationToGas,
+    degeneracyToTotal: model.pressureRatios.degeneracyToTotal,
+    chiDegeneracy: model.chiDegeneracy,
+    gammaEff: gammaEff,
+    lteTag: model.radiationClosureAssessment.tag,
+  });
 
   // --- Debug / E2E interface ---
   (window as Window & { __cp?: unknown }).__cp = {
