@@ -48,9 +48,17 @@
   font-size: 0.82rem;
 }
 
+.preset {
+  transition:
+    border-color var(--cp-transition-fast) ease,
+    background var(--cp-transition-fast) ease,
+    box-shadow var(--cp-transition-fast) ease;
+}
+
 .preset.is-active {
-  border-color: color-mix(in srgb, var(--cp-border) 52%, var(--cp-accent));
-  background: color-mix(in srgb, var(--cp-bg2) 78%, transparent);
+  border-color: color-mix(in srgb, var(--cp-border) 30%, var(--cp-accent));
+  background: color-mix(in srgb, var(--cp-accent) 10%, var(--cp-bg2));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cp-accent) 18%, transparent);
 }
 
 .pressure-grid {
@@ -72,6 +80,10 @@
   display: grid;
   gap: var(--cp-space-2);
   min-height: 10.75rem;
+  transition:
+    border-color var(--cp-transition-slow) ease,
+    box-shadow var(--cp-transition-slow) ease,
+    opacity var(--cp-transition-slow) ease;
 }
 
 .pressure-card h2 {
@@ -81,14 +93,15 @@
 
 .pressure-card__value {
   margin: 0;
-  font-size: 1.12rem;
+  font-size: 1.05rem;
   color: var(--cp-text);
+  font-family: var(--cp-readout-value-font, var(--cp-font-mono));
   font-variant-numeric: tabular-nums;
 }
 
 .pressure-card__unit {
-  color: var(--cp-muted);
-  font-size: 0.85rem;
+  color: var(--cp-readout-unit-color, var(--cp-muted));
+  font-size: 0.82rem;
 }
 
 .pressure-card__bar {
@@ -103,6 +116,8 @@
   display: block;
   height: 100%;
   width: 0;
+  border-radius: inherit;
+  transition: width var(--cp-transition-slow) ease-out;
 }
 
 #cardGas .pressure-card__bar > span {
@@ -125,23 +140,37 @@
 }
 
 #cardGas[data-tone="dominant"] {
-  border-color: color-mix(in srgb, var(--cp-border) 40%, var(--eos-gas));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--eos-gas) 20%, transparent);
+  border-color: color-mix(in srgb, var(--cp-border) 30%, var(--eos-gas));
+  border-left-color: var(--eos-gas);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--eos-gas) 25%, transparent),
+    0 0 16px color-mix(in srgb, var(--eos-gas) 12%, transparent);
 }
 
 #cardRadiation[data-tone="dominant"] {
-  border-color: color-mix(in srgb, var(--cp-border) 40%, var(--eos-rad));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--eos-rad) 20%, transparent);
+  border-color: color-mix(in srgb, var(--cp-border) 30%, var(--eos-rad));
+  border-left-color: var(--eos-rad);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--eos-rad) 25%, transparent),
+    0 0 16px color-mix(in srgb, var(--eos-rad) 12%, transparent);
 }
 
 #cardDegeneracy[data-tone="dominant"] {
-  border-color: color-mix(in srgb, var(--cp-border) 40%, var(--eos-deg));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--eos-deg) 20%, transparent);
+  border-color: color-mix(in srgb, var(--cp-border) 30%, var(--eos-deg));
+  border-left-color: var(--eos-deg);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--eos-deg) 25%, transparent),
+    0 0 16px color-mix(in srgb, var(--eos-deg) 12%, transparent);
 }
 
 #cardGas h2 { color: var(--eos-gas); }
 #cardRadiation h2 { color: var(--eos-rad); }
 #cardDegeneracy h2 { color: var(--eos-deg); }
+
+/* Channel accent stripe (left border) */
+#cardGas { border-left: 3px solid color-mix(in srgb, var(--eos-gas) 50%, transparent); }
+#cardRadiation { border-left: 3px solid color-mix(in srgb, var(--eos-rad) 50%, transparent); }
+#cardDegeneracy { border-left: 3px solid color-mix(in srgb, var(--eos-deg) 50%, transparent); }
 
 .pressure-card[data-tone="secondary"] {
   border-color: color-mix(in srgb, var(--cp-border) 58%, var(--cp-accent));
@@ -152,14 +181,16 @@
 }
 
 .stage-summary {
-  padding: var(--cp-space-3);
+  padding: var(--cp-space-3) var(--cp-space-3) var(--cp-space-3) var(--cp-space-4);
   border-radius: var(--cp-r-3);
   border: 1px solid var(--cp-border);
+  border-left: 3px solid var(--eos-dominant, var(--eos-total));
   background: color-mix(in srgb, var(--cp-bg1) 88%, transparent);
   color: var(--cp-text);
   display: grid;
   gap: var(--cp-space-2);
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  transition: border-left-color var(--cp-transition-slow) ease;
 }
 
 .stage-summary p {
@@ -169,6 +200,18 @@
 
 .stage-summary p + p {
   margin-top: 0;
+}
+
+.stage-summary #pTotalValue {
+  color: var(--cp-accent-amber);
+  font-family: var(--cp-readout-value-font, var(--cp-font-mono));
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-summary #dominantChannel {
+  font-weight: var(--cp-font-semibold);
+  color: var(--eos-dominant, var(--cp-text));
+  transition: color var(--cp-transition-slow) ease;
 }
 
 .pressure-plot {
@@ -196,6 +239,7 @@
   min-height: 280px;
   background: color-mix(in srgb, var(--cp-text) 2%, transparent);
   border-radius: var(--cp-r-2);
+  border: 1px solid color-mix(in srgb, var(--cp-border) 60%, transparent);
 }
 
 .regime-map {
@@ -317,6 +361,35 @@
   font-size: 0.82rem;
 }
 
+/* Channel-code the mechanism cards (Tab 2) */
+#mechanismGas { border-left: 3px solid color-mix(in srgb, var(--eos-gas) 50%, transparent); }
+#mechanismGas h2 { color: var(--eos-gas); }
+#mechanismRadiation { border-left: 3px solid color-mix(in srgb, var(--eos-rad) 50%, transparent); }
+#mechanismRadiation h2 { color: var(--eos-rad); }
+#mechanismDegeneracy { border-left: 3px solid color-mix(in srgb, var(--eos-deg) 50%, transparent); }
+#mechanismDegeneracy h2 { color: var(--eos-deg); }
+
+#mechanismGas:hover,
+#mechanismGas:focus-visible {
+  border-color: color-mix(in srgb, var(--cp-border) 40%, var(--eos-gas));
+  border-left-color: var(--eos-gas);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--eos-gas) 20%, transparent);
+}
+
+#mechanismRadiation:hover,
+#mechanismRadiation:focus-visible {
+  border-color: color-mix(in srgb, var(--cp-border) 40%, var(--eos-rad));
+  border-left-color: var(--eos-rad);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--eos-rad) 20%, transparent);
+}
+
+#mechanismDegeneracy:hover,
+#mechanismDegeneracy:focus-visible {
+  border-color: color-mix(in srgb, var(--cp-border) 40%, var(--eos-deg));
+  border-left-color: var(--eos-deg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--eos-deg) 20%, transparent);
+}
+
 .deep-dive {
   grid-column: 1 / -1;
   animation: cp-slide-up 0.3s ease-out;
@@ -333,6 +406,7 @@
 .deep-dive__title {
   margin: 0 0 var(--cp-space-3);
   font-size: 1.2rem;
+  color: color-mix(in srgb, var(--deep-dive-accent, var(--cp-text)) 55%, var(--cp-text));
 }
 
 .deep-dive__layout {
@@ -351,16 +425,24 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   border-radius: var(--cp-r-2);
-  border: 1px solid var(--cp-border);
+  border: 1px solid color-mix(in srgb, var(--deep-dive-accent, var(--cp-border)) 40%, var(--cp-border));
   background: color-mix(in srgb, var(--cp-bg0) 95%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--deep-dive-accent, transparent) 8%, transparent);
 }
 
 .deep-dive__caption {
   margin: 0;
-  font-size: 0.88rem;
-  color: var(--cp-muted);
-  line-height: 1.35;
+  padding: var(--cp-space-1) var(--cp-space-2);
+  font-size: 0.85rem;
+  color: var(--cp-text2);
+  line-height: 1.4;
+  border-left: 2px solid color-mix(in srgb, var(--deep-dive-accent, var(--cp-muted)) 40%, transparent);
 }
+
+/* Per-channel deep-dive accent colors */
+#deepDiveGas { --deep-dive-accent: var(--eos-gas); }
+#deepDiveRadiation { --deep-dive-accent: var(--eos-rad); }
+#deepDiveDegeneracy { --deep-dive-accent: var(--eos-deg); }
 
 .deep-dive__sandbox {
   display: grid;
@@ -373,6 +455,7 @@
   background: color-mix(in srgb, var(--cp-bg1) 90%, transparent);
   border-radius: var(--cp-r-2);
   border: 1px solid var(--cp-border);
+  border-left: 3px solid var(--deep-dive-accent, var(--cp-border));
   overflow-x: auto;
 }
 
@@ -384,6 +467,9 @@
 .deep-dive__chart {
   aspect-ratio: 5 / 3;
   min-height: 200px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 60%, transparent);
+  border-radius: var(--cp-r-2);
+  background: color-mix(in srgb, var(--cp-text) 2%, transparent);
 }
 
 .cp-readout--stack {
@@ -403,12 +489,22 @@
   padding: 0;
 }
 
+/* Fade in tab panel content on switch */
+.cp-demo__stage > .cp-tab-panel:not([hidden]) {
+  animation: cp-fade-in 0.2s ease-out;
+}
+
 /* Mechanism grid (Tab 2) */
 .mechanism-grid {
   display: grid;
   gap: var(--cp-space-2);
   grid-template-columns: repeat(3, minmax(0, 1fr));
   width: 100%;
+  animation: cp-fade-in 0.25s ease-out;
+}
+
+.mechanism-grid[hidden] {
+  display: none;
 }
 
 /* Entry animations (staggered reveal) */

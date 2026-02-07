@@ -211,6 +211,7 @@ const finiteTCorrectionValue = q("#finiteTCorrectionValue");
 const finiteTValidityValue = q("#finiteTValidityValue");
 const neutronExtensionValue = q("#neutronExtensionValue");
 
+const stageSummary = q(".stage-summary");
 const stationModeButton = q<HTMLButtonElement>("#stationMode");
 const helpButton = q<HTMLButtonElement>("#help");
 const copyResults = q<HTMLButtonElement>("#copyResults");
@@ -464,6 +465,15 @@ function dominantChannelLabel(model: StellarEosStateCgs): string {
   }
 }
 
+function dominantChannelColor(model: StellarEosStateCgs): string {
+  switch (model.dominantPressureChannel) {
+    case "gas": return gasColor;
+    case "radiation": return radColor;
+    case "degeneracy": return degColor;
+    default: return totalColor;
+  }
+}
+
 function electronDegeneracyMethodLabel(
   method: StellarEosStateCgs["electronDegeneracyMethod"]
 ): string {
@@ -651,6 +661,10 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
 
   pTotalValue.textContent = formatScientific(model.totalPressureDynePerCm2, 5);
   dominantChannel.textContent = dominantChannelLabel(model);
+
+  // Set dominant channel color for CSS theming (summary bar + label)
+  const domColor = dominantChannelColor(model);
+  stageSummary.style.setProperty("--eos-dominant", domColor);
 
   // --- Readouts ---
   muValue.textContent = formatFraction(model.meanMolecularWeightMu, 5);
