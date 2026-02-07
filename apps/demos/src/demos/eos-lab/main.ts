@@ -20,13 +20,16 @@ import {
   formatFraction,
   formatScientific,
   gasEquationLatex,
+  gasEquationSymbolic,
   logSliderToValue,
   percent,
   pressureBarPercent,
   pressureCurveData,
   pressureTone,
   radEquationLatex,
+  radEquationSymbolic,
   degEquationLatex,
+  degEquationSymbolic,
   superscript,
   valueToLogSlider,
   adiabaticIndex,
@@ -712,6 +715,7 @@ const compareAnimations = {
 
 let compareAnimsStarted = false;
 let prevCompareModel: StellarEosStateCgs | null = null;
+let showSubstitutedEqs = false;
 
 function startCompareAnimations(): void {
   if (compareAnimsStarted) return;
@@ -767,27 +771,31 @@ function renderCompareView(model: StellarEosStateCgs): void {
   compareYVal.textContent = formatFraction(model.input.composition.heliumMassFractionY, 3);
   compareMuVal.textContent = formatFraction(model.meanMolecularWeightMu, 3);
 
-  // Live equations (KaTeX)
-  compareGasEq.textContent = "$$" + gasEquationLatex({
-    rho: model.input.densityGPerCm3,
-    T: model.input.temperatureK,
-    mu: model.meanMolecularWeightMu,
-    pGas: model.gasPressureDynePerCm2,
-  }) + "$$";
+  // Live equations (KaTeX) — toggle between symbolic and substituted
+  if (showSubstitutedEqs) {
+    compareGasEq.textContent = "$$" + gasEquationLatex({
+      rho: model.input.densityGPerCm3,
+      T: model.input.temperatureK,
+      mu: model.meanMolecularWeightMu,
+      pGas: model.gasPressureDynePerCm2,
+    }) + "$$";
+    compareRadEq.textContent = "$$" + radEquationLatex({
+      T: model.input.temperatureK,
+      pRad: model.radiationPressureDynePerCm2,
+    }) + "$$";
+    compareDegEq.textContent = "$$" + degEquationLatex({
+      rho: model.input.densityGPerCm3,
+      muE: model.meanMolecularWeightMuE,
+      xF: model.fermiRelativityX,
+      pDeg: model.electronDegeneracyPressureDynePerCm2,
+    }) + "$$";
+  } else {
+    compareGasEq.textContent = "$$" + gasEquationSymbolic() + "$$";
+    compareRadEq.textContent = "$$" + radEquationSymbolic() + "$$";
+    compareDegEq.textContent = "$$" + degEquationSymbolic() + "$$";
+  }
   renderMath(compareGasEq);
-
-  compareRadEq.textContent = "$$" + radEquationLatex({
-    T: model.input.temperatureK,
-    pRad: model.radiationPressureDynePerCm2,
-  }) + "$$";
   renderMath(compareRadEq);
-
-  compareDegEq.textContent = "$$" + degEquationLatex({
-    rho: model.input.densityGPerCm3,
-    muE: model.meanMolecularWeightMuE,
-    xF: model.fermiRelativityX,
-    pDeg: model.electronDegeneracyPressureDynePerCm2,
-  }) + "$$";
   renderMath(compareDegEq);
 
   // Update animations
@@ -870,6 +878,16 @@ const tab2Observer = new MutationObserver(() => {
   }
 });
 tab2Observer.observe(tab2Panel, { attributes: true, attributeFilter: ["hidden"] });
+
+// Equation toggle — click to switch symbolic/substituted
+for (const eq of [compareGasEq, compareRadEq, compareDegEq]) {
+  eq.style.cursor = "pointer";
+  eq.title = "Click to toggle symbolic / numerical";
+  eq.addEventListener("click", () => {
+    showSubstitutedEqs = !showSubstitutedEqs;
+    if (lastModel) renderCompareView(lastModel);
+  });
+}
 
 /* ================================================================
  * Scaling Law Detective — lightweight multiple-choice quiz

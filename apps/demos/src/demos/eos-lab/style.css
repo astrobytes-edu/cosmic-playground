@@ -493,6 +493,23 @@
   border: 1px solid var(--cp-border);
   overflow-x: auto;
   min-height: 2.8em;
+  cursor: pointer;
+  position: relative;
+}
+
+.compare-column__equation::after {
+  content: "click to toggle";
+  position: absolute;
+  right: var(--cp-space-1);
+  bottom: 2px;
+  font-size: 0.6rem;
+  color: var(--cp-muted);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.compare-column__equation:hover::after {
+  opacity: 1;
 }
 
 #colGas .compare-column__equation {

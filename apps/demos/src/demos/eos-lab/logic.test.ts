@@ -27,6 +27,9 @@ import {
   radEquationLatex,
   degEquationLatex,
   adiabaticIndex,
+  gasEquationSymbolic,
+  radEquationSymbolic,
+  degEquationSymbolic,
 } from "./logic";
 
 const SOLAR_COMPOSITION = {
@@ -524,5 +527,32 @@ describe("adiabaticIndex", () => {
     // Solar envelope is gas-dominated -> gamma near 5/3
     expect(gamma).toBeGreaterThan(1.5);
     expect(gamma).toBeLessThanOrEqual(5 / 3 + 0.01);
+  });
+});
+
+/* ──────────────────────────────────────────────────
+ * Symbolic equation formatters
+ * ────────────────────────────────────────────────── */
+
+describe("symbolic equation formatters", () => {
+  it("gasEquationSymbolic returns symbolic LaTeX without values", () => {
+    const latex = gasEquationSymbolic();
+    expect(latex).toContain("P_{\\rm gas}");
+    expect(latex).toContain("\\rho");
+    expect(latex).toContain("\\mu");
+    expect(latex).not.toMatch(/\d\.\d+/);
+  });
+
+  it("radEquationSymbolic returns symbolic LaTeX without values", () => {
+    const latex = radEquationSymbolic();
+    expect(latex).toContain("P_{\\rm rad}");
+    expect(latex).toContain("T^4");
+    expect(latex).not.toMatch(/\d\.\d+/);
+  });
+
+  it("degEquationSymbolic returns symbolic LaTeX without values", () => {
+    const latex = degEquationSymbolic();
+    expect(latex).toContain("P_{\\rm deg}");
+    expect(latex).not.toMatch(/\d\.\d+/);
   });
 });

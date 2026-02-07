@@ -722,3 +722,19 @@ export function degEquationLatex(args: {
   return `P_{\\rm deg}^{${regime}} (\\textcolor{#f5a623}{\\rho}, \\mu_e = ${muE.toFixed(3)}, x_F = ${xF.toFixed(3)})`
     + ` = ${latexScientific(pDeg)} \\;\\text{dyne cm}^{-2}`;
 }
+
+/* ──────────────────────────────────────────────────
+ * Symbolic equation forms (no numerical substitution)
+ * ────────────────────────────────────────────────── */
+
+export function gasEquationSymbolic(): string {
+  return `P_{\\rm gas} = \\frac{\\rho \\, k_B \\, T}{\\mu \\, m_u}`;
+}
+
+export function radEquationSymbolic(): string {
+  return `P_{\\rm rad} = \\frac{a \\, T^4}{3}`;
+}
+
+export function degEquationSymbolic(): string {
+  return `P_{\\rm deg} = K \\!\\left(\\frac{\\rho}{\\mu_e \\, m_u}\\right)^{\\!5/3} \\;\\text{(NR limit)}`;
+}
