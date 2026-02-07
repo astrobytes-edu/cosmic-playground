@@ -139,8 +139,11 @@ test.describe("EOS Lab -- E2E", () => {
 
   test("Tab 2 shared T slider updates all three equations", async ({ page }) => {
     await page.locator("#tab-understand").click();
-    // Wait for initial KaTeX render
+    // Wait for initial KaTeX render (symbolic form)
     await page.waitForSelector("#compareGasEq .katex", { timeout: 5000 });
+    // Toggle to substituted form so slider changes are visible
+    await page.locator("#compareGasEq").click();
+    await page.waitForTimeout(200);
     const gasBefore = await page.locator("#compareGasEq").textContent();
     await page.locator("#compareT").fill("800");
     await page.locator("#compareT").dispatchEvent("input");
@@ -154,8 +157,10 @@ test.describe("EOS Lab -- E2E", () => {
 
   test("Tab 2 preset chips set slider values", async ({ page }) => {
     await page.locator("#tab-understand").click();
+    // Toggle to substituted form so numerical values are visible
+    await page.locator("#compareDegEq").click();
     await page.locator('button.compare-preset[data-preset-id="white-dwarf-core"]').click();
-    // White dwarf should update equations
+    // White dwarf should update equations with numerical values
     await page.waitForSelector("#compareDegEq .katex", { timeout: 5000 });
     await expect(page.locator("#compareDegEq")).toContainText("10");
   });
