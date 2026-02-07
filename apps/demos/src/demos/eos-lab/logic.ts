@@ -206,7 +206,7 @@ export function meanMolecularWeightPerElectron(comp: StellarCompositionFractions
  * ────────────────────────────────────────────────── */
 
 export type PressureCurveData = {
-  /** log10(rho) values */
+  /** Linear rho values (g cm^-3), log-spaced from logRhoMin to logRhoMax */
   densities: Float64Array;
   /** P_gas(rho) at fixed T and composition */
   pGas: Float64Array;

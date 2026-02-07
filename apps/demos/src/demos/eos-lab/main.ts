@@ -672,7 +672,7 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   setPressureCard(cardRadiation, pRadBar, pRadValue, model.radiationPressureDynePerCm2, dominantP);
   setPressureCard(cardDegeneracy, pDegBar, pDegValue, model.electronDegeneracyPressureDynePerCm2, dominantP);
 
-  pTotalValue.textContent = formatScientific(model.totalPressureDynePerCm2, 5);
+  pTotalValue.textContent = formatScientific(model.totalPressureDynePerCm2, 4);
   dominantChannel.textContent = dominantChannelLabel(model);
 
   // Set dominant channel color for CSS theming (summary bar + label)
@@ -769,6 +769,7 @@ function syncCompareSliders(): void {
   compareT.value = tempSlider.value;
   compareRho.value = rhoSlider.value;
   compareX.value = xSlider.value;
+  compareY.max = ySlider.max;
   compareY.value = ySlider.value;
 }
 

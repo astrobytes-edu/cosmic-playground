@@ -14,6 +14,14 @@ export interface MechanismAnimation {
   stop(): void;
 }
 
+/* ---------- Constants ---------- */
+
+/** Maximum wall-flash objects per frame to prevent unbounded memory growth. */
+const MAX_WALL_FLASHES = 64;
+
+/** Milliseconds of idle (no updateParams) before pausing rAF loop. */
+const IDLE_TIMEOUT_MS = 10_000;
+
 /* ---------- Motion preference ---------- */
 
 const reducedMotion =
@@ -87,6 +95,7 @@ export class GasPressureAnimation implements MechanismAnimation {
   private w = 0;
   private h = 0;
   private resizeObserver: ResizeObserver | null = null;
+  private lastUpdateTime = Date.now();
 
   start(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
@@ -113,6 +122,7 @@ export class GasPressureAnimation implements MechanismAnimation {
   }
 
   updateParams(params: Record<string, number>): void {
+    this.lastUpdateTime = Date.now();
     const prevLogRho = this.logRho;
     const prevLogT = this.logT;
     this.logRho = params["logRho"] ?? this.logRho;
@@ -120,6 +130,8 @@ export class GasPressureAnimation implements MechanismAnimation {
     if (this.logRho !== prevLogRho) this.rebuild();
     else if (this.logT !== prevLogT) this.rescale();
     if (reducedMotion.matches) this.drawFrame();
+    // Resume animation loop if it was paused for idle
+    if (!reducedMotion.matches && this.canvas && this.rafId === 0) this.tick();
   }
 
   stop(): void {
@@ -187,22 +199,22 @@ export class GasPressureAnimation implements MechanismAnimation {
       if (p.x <= r) {
         p.x = r;
         p.vx = Math.abs(p.vx);
-        this.wallFlashes.push({ side: "left", timer: 4 });
+        if (this.wallFlashes.length < MAX_WALL_FLASHES) this.wallFlashes.push({ side: "left", timer: 4 });
       }
       if (p.x >= w - r) {
         p.x = w - r;
         p.vx = -Math.abs(p.vx);
-        this.wallFlashes.push({ side: "right", timer: 4 });
+        if (this.wallFlashes.length < MAX_WALL_FLASHES) this.wallFlashes.push({ side: "right", timer: 4 });
       }
       if (p.y <= r) {
         p.y = r;
         p.vy = Math.abs(p.vy);
-        this.wallFlashes.push({ side: "top", timer: 4 });
+        if (this.wallFlashes.length < MAX_WALL_FLASHES) this.wallFlashes.push({ side: "top", timer: 4 });
       }
       if (p.y >= h - r) {
         p.y = h - r;
         p.vy = -Math.abs(p.vy);
-        this.wallFlashes.push({ side: "bottom", timer: 4 });
+        if (this.wallFlashes.length < MAX_WALL_FLASHES) this.wallFlashes.push({ side: "bottom", timer: 4 });
       }
 
       ctx.beginPath();
@@ -236,6 +248,10 @@ export class GasPressureAnimation implements MechanismAnimation {
   };
 
   private tick = (): void => {
+    if (Date.now() - this.lastUpdateTime > IDLE_TIMEOUT_MS) {
+      this.rafId = 0;  // Pause — will resume on next updateParams()
+      return;
+    }
     this.drawFrame();
     this.rafId = requestAnimationFrame(this.tick);
   };
@@ -260,6 +276,7 @@ export class RadiationPressureAnimation implements MechanismAnimation {
   private w = 0;
   private h = 0;
   private resizeObserver: ResizeObserver | null = null;
+  private lastUpdateTime = Date.now();
 
   start(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
@@ -286,14 +303,17 @@ export class RadiationPressureAnimation implements MechanismAnimation {
   }
 
   updateParams(params: Record<string, number>): void {
+    this.lastUpdateTime = Date.now();
     const prev = this.logT;
     this.logT = params["logT"] ?? this.logT;
     if (this.logT !== prev) this.rebuild();
     if (reducedMotion.matches) this.drawFrame();
+    if (!reducedMotion.matches && this.canvas && this.rafId === 0) this.tick();
   }
 
   stop(): void {
     cancelAnimationFrame(this.rafId);
+    this.rafId = 0;
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     this.canvas = null;
@@ -365,6 +385,10 @@ export class RadiationPressureAnimation implements MechanismAnimation {
   };
 
   private tick = (): void => {
+    if (Date.now() - this.lastUpdateTime > IDLE_TIMEOUT_MS) {
+      this.rafId = 0;
+      return;
+    }
     this.drawFrame();
     this.rafId = requestAnimationFrame(this.tick);
   };
@@ -390,6 +414,7 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
   private h = 0;
   private readonly maxLevels = 16;
   private resizeObserver: ResizeObserver | null = null;
+  private lastUpdateTime = Date.now();
 
   start(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
@@ -411,12 +436,15 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
   }
 
   updateParams(params: Record<string, number>): void {
+    this.lastUpdateTime = Date.now();
     this.logRho = params["logRho"] ?? this.logRho;
     if (reducedMotion.matches) this.drawFrame();
+    if (!reducedMotion.matches && this.canvas && this.rafId === 0) this.tick();
   }
 
   stop(): void {
     cancelAnimationFrame(this.rafId);
+    this.rafId = 0;
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     this.canvas = null;
@@ -571,6 +599,10 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
   };
 
   private tick = (): void => {
+    if (Date.now() - this.lastUpdateTime > IDLE_TIMEOUT_MS) {
+      this.rafId = 0;
+      return;
+    }
     this.drawFrame();
     this.rafId = requestAnimationFrame(this.tick);
   };
