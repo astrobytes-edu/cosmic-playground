@@ -639,6 +639,34 @@ export function degDeepDiveData(args: {
 }
 
 /* ──────────────────────────────────────────────────
+ * Adiabatic index (numerical derivative)
+ * ────────────────────────────────────────────────── */
+
+/**
+ * Effective adiabatic index Gamma_1 (pressure-weighted average).
+ *
+ * Uses the standard stellar structure approximation:
+ *   Gamma_eff = (P_gas * 5/3 + P_rad * 4/3 + P_deg * gamma_deg) / P_total
+ *
+ * where gamma_deg transitions from 5/3 (NR, x_F << 1) to 4/3 (UR, x_F >> 1).
+ * Gamma_eff < 4/3 indicates dynamical instability.
+ */
+export function adiabaticIndex(args: {
+  pGas: number;
+  pRad: number;
+  pDeg: number;
+  pTotal: number;
+  xF: number;
+}): number {
+  const { pGas, pRad, pDeg, pTotal, xF } = args;
+  if (!(pTotal > 0)) return NaN;
+  // Degeneracy exponent: 5/3 (NR) -> 4/3 (UR), smooth sigmoid on x_F
+  const t = Math.min(1, Math.max(0, (xF - 0.3) / 0.7));
+  const gammaDeg = 5 / 3 - t * (5 / 3 - 4 / 3);
+  return (pGas * (5 / 3) + pRad * (4 / 3) + pDeg * gammaDeg) / pTotal;
+}
+
+/* ──────────────────────────────────────────────────
  * Deep-dive live equation formatters
  * ────────────────────────────────────────────────── */
 

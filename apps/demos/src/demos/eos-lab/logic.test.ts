@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { StellarEosModel } from "@cosmic/physics";
 
 import {
   clamp,
@@ -25,6 +26,7 @@ import {
   gasEquationLatex,
   radEquationLatex,
   degEquationLatex,
+  adiabaticIndex,
 } from "./logic";
 
 const SOLAR_COMPOSITION = {
@@ -450,5 +452,77 @@ describe("EOS Lab -- LaTeX formatters", () => {
   it("degEquationLatex shows trans-rel for intermediate x_F", () => {
     const latex = degEquationLatex({ rho: 1e8, muE: 2, xF: 0.7, pDeg: 1e24 });
     expect(latex).toContain("\\text{trans-rel}");
+  });
+});
+
+/* ──────────────────────────────────────────────────
+ * Adiabatic index tests
+ * ────────────────────────────────────────────────── */
+
+describe("adiabaticIndex", () => {
+  it("returns ~5/3 for gas-dominated conditions", () => {
+    const gamma = adiabaticIndex({
+      pGas: 1e15, pRad: 1e5, pDeg: 1e5, pTotal: 1e15 + 2e5, xF: 0.01,
+    });
+    expect(gamma).toBeCloseTo(5 / 3, 2);
+  });
+
+  it("returns ~4/3 for radiation-dominated conditions", () => {
+    const gamma = adiabaticIndex({
+      pGas: 1e5, pRad: 1e20, pDeg: 1e5, pTotal: 1e20 + 2e5, xF: 0.01,
+    });
+    expect(gamma).toBeCloseTo(4 / 3, 2);
+  });
+
+  it("returns ~5/3 for NR-degenerate conditions (xF << 1)", () => {
+    const gamma = adiabaticIndex({
+      pGas: 1e5, pRad: 1e5, pDeg: 1e22, pTotal: 1e22 + 2e5, xF: 0.1,
+    });
+    expect(gamma).toBeCloseTo(5 / 3, 2);
+  });
+
+  it("returns ~4/3 for UR-degenerate conditions (xF >> 1)", () => {
+    const gamma = adiabaticIndex({
+      pGas: 1e5, pRad: 1e5, pDeg: 1e22, pTotal: 1e22 + 2e5, xF: 1.5,
+    });
+    expect(gamma).toBeCloseTo(4 / 3, 2);
+  });
+
+  it("blends between channels proportionally", () => {
+    // Equal gas and radiation -> midpoint of 5/3 and 4/3 = 3/2
+    const gamma = adiabaticIndex({
+      pGas: 1e15, pRad: 1e15, pDeg: 0, pTotal: 2e15, xF: 0.01,
+    });
+    expect(gamma).toBeCloseTo((5 / 3 + 4 / 3) / 2, 2);
+  });
+
+  it("returns NaN for zero total pressure", () => {
+    const gamma = adiabaticIndex({
+      pGas: 0, pRad: 0, pDeg: 0, pTotal: 0, xF: 0,
+    });
+    expect(gamma).toBeNaN();
+  });
+
+  it("integrates with real physics model", () => {
+    // Use StellarEosModel to compute pressures, then verify gamma makes sense
+    const comp = compositionFromXY({ hydrogenMassFractionX: 0.7, heliumMassFractionY: 0.28 });
+    const state = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: 5800,
+        densityGPerCm3: 1e-7,
+        composition: comp,
+        radiationDepartureEta: 1.0,
+      },
+    });
+    const gamma = adiabaticIndex({
+      pGas: state.gasPressureDynePerCm2,
+      pRad: state.radiationPressureDynePerCm2,
+      pDeg: state.electronDegeneracyPressureDynePerCm2,
+      pTotal: state.totalPressureDynePerCm2,
+      xF: state.fermiRelativityX,
+    });
+    // Solar envelope is gas-dominated -> gamma near 5/3
+    expect(gamma).toBeGreaterThan(1.5);
+    expect(gamma).toBeLessThanOrEqual(5 / 3 + 0.01);
   });
 });

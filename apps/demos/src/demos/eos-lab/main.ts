@@ -29,6 +29,7 @@ import {
   degEquationLatex,
   superscript,
   valueToLogSlider,
+  adiabaticIndex,
   checkScalingAnswer,
   SCALING_CHALLENGES
 } from "./logic";
@@ -203,6 +204,7 @@ const radGasValue = q("#radGasValue");
 const degTotalValue = q("#degTotalValue");
 const chiDegValue = q("#chiDegValue");
 const degRegimeValue = q("#degRegimeValue");
+const gammaEffValue = q("#gammaEffValue");
 const xFValue = q("#xFValue");
 const fermiRegimeValue = q("#fermiRegimeValue");
 const finiteTCorrectionValue = q("#finiteTCorrectionValue");
@@ -670,6 +672,15 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   chiDegValue.textContent = formatScientific(model.chiDegeneracy, 5);
   degRegimeValue.textContent = degeneracyRegimeLabelLatex(model.degeneracyRegime);
   renderMath(degRegimeValue);
+
+  const gammaEff = adiabaticIndex({
+    pGas: model.gasPressureDynePerCm2,
+    pRad: model.radiationPressureDynePerCm2,
+    pDeg: model.electronDegeneracyPressureDynePerCm2,
+    pTotal: model.totalPressureDynePerCm2,
+    xF: model.fermiRelativityX,
+  });
+  gammaEffValue.textContent = Number.isFinite(gammaEff) ? gammaEff.toFixed(3) : "\u2014";
 
   renderRadiationClosure(model);
   renderAdvancedDiagnostics(model);
