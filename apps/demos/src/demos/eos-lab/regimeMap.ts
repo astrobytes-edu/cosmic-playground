@@ -541,18 +541,6 @@ export function renderRegimeMap(
     drawSolarProfile(ctx, pa, cfg, state.solarProfile);
   }
 
-  // --- Performance badge ---
-  if (gridCache) {
-    ctx.font = "9px var(--cp-font-mono, monospace)";
-    ctx.fillStyle = colors.text + "88";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "top";
-    ctx.fillText(
-      `${xCells}\u00D7${yCells} grid: ${gridCache.result.elapsedMs.toFixed(0)} ms`,
-      width - 4,
-      2
-    );
-  }
 
   return { gridElapsedMs: gridCache?.result.elapsedMs ?? 0 };
 }
@@ -564,9 +552,4 @@ export function invalidateRegimeGrid(): void {
   gridCache = null;
 }
 
-/**
- * Invalidate cached token colors (call on theme change).
- */
-export function invalidateRegimeMapColors(): void {
-  cachedColors = null;
-}
+// invalidateRegimeMapColors removed (dead export — no theme toggle calls it)

@@ -550,6 +550,9 @@ export function checkScalingAnswer(selectedFactor: number, correctFactor: number
 /**
  * Gas deep-dive: P_gas vs rho at fixed T and composition.
  * Returns [densities, pGas] for a mini uPlot chart.
+ *
+ * @remarks Not currently imported by main.ts — used in unit tests and
+ * reserved for a future deep-dive chart expansion on Tab 2.
  */
 export function gasDeepDiveData(args: {
   temperatureK: number;
@@ -578,6 +581,9 @@ export function gasDeepDiveData(args: {
 /**
  * Radiation deep-dive: P_rad vs T, plus P_gas at a fixed rho for comparison.
  * Returns [temperatures, pRad, pGasComparison].
+ *
+ * @remarks Not currently imported by main.ts — used in unit tests and
+ * reserved for a future deep-dive chart expansion on Tab 2.
  */
 export function radDeepDiveData(args: {
   rhoForComparison: number;
@@ -608,7 +614,10 @@ export function radDeepDiveData(args: {
 
 /**
  * Degeneracy deep-dive: P_deg vs rho at fixed T, plus P_gas comparison.
- * Uses the full physics model for P_deg to capture NR→UR transition.
+ * Uses the full physics model for P_deg to capture NR->UR transition.
+ *
+ * @remarks Not currently imported by main.ts — used in unit tests and
+ * reserved for a future deep-dive chart expansion on Tab 2.
  */
 export function degDeepDiveData(args: {
   temperatureK: number;

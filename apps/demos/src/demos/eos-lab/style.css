@@ -618,6 +618,12 @@
   font-weight: 600;
 }
 
+.scaling-detective__next,
+.scaling-detective__reset {
+  margin-top: var(--cp-space-2);
+  font-size: 0.85rem;
+}
+
 .cp-readout--stack {
   display: grid;
   gap: var(--cp-space-1);

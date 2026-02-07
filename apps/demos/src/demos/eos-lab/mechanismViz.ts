@@ -22,6 +22,34 @@ const MAX_WALL_FLASHES = 64;
 /** Milliseconds of idle (no updateParams) before pausing rAF loop. */
 const IDLE_TIMEOUT_MS = 10_000;
 
+/* ---------- Gas animation tuning ---------- */
+
+/** Log-density range mapped to particle count (10 at logRho=-10, 150 at logRho=10). */
+const GAS_COUNT_MIN = 10;
+const GAS_COUNT_MAX = 150;
+/** Reference temperature for thermal speed scaling: v ~ sqrt(T / T_ref). */
+const GAS_T_REF = 1e6;
+/** Cap temperature contribution to prevent overflow: T values above this are clamped. */
+const GAS_T_CAP = 1e9;
+/** Pixel-space speed range (px/frame) — maps sqrt(T/T_ref) to visual speed. */
+const GAS_SPEED_BASE = 0.5;
+const GAS_SPEED_SCALE = 4.5;
+const GAS_SPEED_MIN = 0.2;
+const GAS_SPEED_MAX = 7;
+
+/* ---------- Radiation animation tuning ---------- */
+
+/** Photon count mapped from logT (3 at logT=3, 150 at logT=9). */
+const RAD_COUNT_MIN = 3;
+const RAD_COUNT_MAX = 150;
+/** All photons move at the same speed (representing c). */
+const RAD_SPEED = 3;
+
+/* ---------- Degeneracy animation tuning ---------- */
+
+/** Maximum quantum levels displayed. */
+const DEG_MAX_LEVELS = 16;
+
 /* ---------- Motion preference ---------- */
 
 const reducedMotion =
@@ -144,11 +172,8 @@ export class GasPressureAnimation implements MechanismAnimation {
   }
 
   private rebuild(): void {
-    const count = Math.round(mapRange(this.logRho, -10, 10, 10, 150));
-    // Physical sqrt(T) scaling — thermal speed ~ sqrt(kT/m)
-    const T = Math.pow(10, this.logT);
-    const Tref = 1e6;
-    const speed = Math.max(0.2, Math.min(7, 0.5 + 4.5 * Math.sqrt(Math.min(T, 1e9) / Tref)));
+    const count = Math.round(mapRange(this.logRho, -10, 10, GAS_COUNT_MIN, GAS_COUNT_MAX));
+    const speed = this.thermalSpeed();
     const color = "#34d399";
     this.particles = [];
     for (let i = 0; i < count; i++) {
@@ -164,11 +189,15 @@ export class GasPressureAnimation implements MechanismAnimation {
     }
   }
 
-  private rescale(): void {
-    // Physical sqrt(T) scaling — matches rebuild()
+  /** Thermal speed in px/frame: v ~ sqrt(T / T_ref), clamped to visual range. */
+  private thermalSpeed(): number {
     const T = Math.pow(10, this.logT);
-    const Tref = 1e6;
-    const speed = Math.max(0.2, Math.min(7, 0.5 + 4.5 * Math.sqrt(Math.min(T, 1e9) / Tref)));
+    return Math.max(GAS_SPEED_MIN, Math.min(GAS_SPEED_MAX,
+      GAS_SPEED_BASE + GAS_SPEED_SCALE * Math.sqrt(Math.min(T, GAS_T_CAP) / GAS_T_REF)));
+  }
+
+  private rescale(): void {
+    const speed = this.thermalSpeed();
     for (const p of this.particles) {
       const cur = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
       if (cur > 0) {
@@ -331,8 +360,8 @@ export class RadiationPressureAnimation implements MechanismAnimation {
   }
 
   private rebuild(): void {
-    const count = Math.round(mapRange(this.logT, 3, 9, 3, 150));
-    const speed = 3; // All photons at same speed (c)
+    const count = Math.round(mapRange(this.logT, 3, 9, RAD_COUNT_MIN, RAD_COUNT_MAX));
+    const speed = RAD_SPEED;
     const color = this.wienColor();
     this.particles = [];
     for (let i = 0; i < count; i++) {
@@ -412,7 +441,7 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
   private logRho = 4;
   private w = 0;
   private h = 0;
-  private readonly maxLevels = 16;
+  private readonly maxLevels = DEG_MAX_LEVELS;
   private resizeObserver: ResizeObserver | null = null;
   private lastUpdateTime = Date.now();
 

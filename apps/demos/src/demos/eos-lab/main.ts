@@ -249,6 +249,7 @@ const compareXVal = q("#compareXVal");
 const compareY = q<HTMLInputElement>("#compareY");
 const compareYVal = q("#compareYVal");
 const compareMuVal = q("#compareMuVal");
+const compareMuEVal = q("#compareMuEVal");
 
 const compareGasCanvas = q<HTMLCanvasElement>("#compareGasCanvas");
 const compareRadCanvas = q<HTMLCanvasElement>("#compareRadCanvas");
@@ -430,7 +431,18 @@ function renderPresetState(): void {
   }
   const preset = PRESET_BY_ID[state.selectedPresetId];
   const c = state.composition;
-  presetNote.textContent = `${preset.note} Expected: ${preset.expectedDominance}. X=${formatFraction(c.hydrogenMassFractionX, 2)}, Y=${formatFraction(c.heliumMassFractionY, 2)}, Z=${formatFraction(c.metalMassFractionZ, 2)}.`;
+  presetNote.innerHTML = "";
+  const noteText = document.createElement("span");
+  noteText.textContent = preset.note;
+  const expectedText = document.createElement("span");
+  expectedText.className = "cp-muted";
+  expectedText.textContent = ` Expected: ${preset.expectedDominance}.`;
+  const compText = document.createElement("span");
+  compText.className = "cp-muted";
+  compText.style.fontFamily = "var(--cp-font-mono)";
+  compText.textContent = ` X=${formatFraction(c.hydrogenMassFractionX, 2)}, Y=${formatFraction(c.heliumMassFractionY, 2)}, Z=${formatFraction(c.metalMassFractionZ, 2)}`;
+  presetNote.append(noteText, expectedText, compText);
+  renderMath(presetNote);
 }
 
 function setPressureCard(
@@ -803,6 +815,7 @@ function renderCompareView(model: StellarEosStateCgs): void {
   compareXVal.textContent = formatFraction(model.input.composition.hydrogenMassFractionX, 3);
   compareYVal.textContent = formatFraction(model.input.composition.heliumMassFractionY, 3);
   compareMuVal.textContent = formatFraction(model.meanMolecularWeightMu, 3);
+  compareMuEVal.textContent = formatFraction(model.meanMolecularWeightMuE, 3);
 
   // Live equations (KaTeX) — toggle between symbolic and substituted
   if (showSubstitutedEqs) {
@@ -975,14 +988,21 @@ if (scalingContainer) {
           renderMath(feedbackEl);
           answered.add(currentIdx);
 
-          // Auto-advance after 2.5s if more challenges remain
           if (currentIdx < SCALING_CHALLENGES.length - 1) {
-            setTimeout(() => {
+            // User-controlled advance instead of auto-timeout
+            feedbackEl.innerHTML += `<button class="cp-action scaling-detective__next" type="button">Next \u2192</button>`;
+            feedbackEl.querySelector(".scaling-detective__next")!.addEventListener("click", () => {
               currentIdx++;
               renderChallenge();
-            }, 2500);
+            });
           } else if (answered.size === SCALING_CHALLENGES.length) {
-            feedbackEl.innerHTML += `<p class="scaling-detective__complete">All scaling laws discovered!</p>`;
+            feedbackEl.innerHTML += `<p class="scaling-detective__complete">All scaling laws discovered!</p>` +
+              `<button class="cp-action scaling-detective__reset" type="button">Start over</button>`;
+            feedbackEl.querySelector(".scaling-detective__reset")!.addEventListener("click", () => {
+              currentIdx = 0;
+              answered.clear();
+              renderChallenge();
+            });
           }
         } else {
           btn.classList.add("is-wrong");
