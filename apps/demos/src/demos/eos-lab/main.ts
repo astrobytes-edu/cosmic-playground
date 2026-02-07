@@ -33,7 +33,7 @@ import {
   superscript,
   valueToLogSlider
 } from "./logic";
-import { createEosPlot, destroyPlot, resolveCssColor } from "./uplotHelpers";
+import { createEosPlot, destroyPlot } from "./uplotHelpers";
 import type { uPlot } from "./uplotHelpers";
 import { renderRegimeMap, invalidateRegimeGrid } from "./regimeMap";
 import {
@@ -299,11 +299,24 @@ function evaluateModel(): StellarEosStateCgs {
  * Pressure curve plot (uPlot, log-log axes)
  * ================================================================ */
 
-const gasColor = resolveCssColor("--cp-success") || "#4ade80";
-const radColor = resolveCssColor("--cp-accent") || "#38bdf8";
-const degColor = resolveCssColor("--cp-glow-teal") || "#54cddc";
-const totalColor = resolveCssColor("--cp-text1") || "#e0e0e0";
-const markerColor = resolveCssColor("--cp-accent-amber") || "#f5a623";
+// Vibrant, distinguishable channel colors — observatory console palette
+const gasColor = "#34d399";     // emerald — thermal gas
+const radColor = "#f472b6";     // pink — radiation heat
+const degColor = "#a78bfa";     // violet — quantum degeneracy
+const totalColor = "#fbbf24";   // amber — total
+const markerColor = "#fbbf24";  // amber — state marker
+
+// Expose channel colors as CSS custom properties for style.css (keeps hex out of CSS)
+{
+  const stage = document.querySelector<HTMLElement>(".cp-demo__stage");
+  if (stage) {
+    stage.style.setProperty("--eos-gas", gasColor);
+    stage.style.setProperty("--eos-rad", radColor);
+    stage.style.setProperty("--eos-deg", degColor);
+    stage.style.setProperty("--eos-total", totalColor);
+    stage.style.setProperty("--eos-mixed", totalColor);
+  }
+}
 
 /** uPlot plugin: draw a diamond marker at the current (rho, P_total) state. */
 function currentStatePlugin(): { hooks: { draw: Array<(u: uPlot) => void> } } {
@@ -354,16 +367,20 @@ const pressurePlotHandle = createEosPlot(pressureCurvePlotEl, {
   },
   series: [
     {},
-    { label: "P_gas", stroke: gasColor, width: 2 },
-    { label: "P_rad", stroke: radColor, width: 2 },
-    { label: "P_deg,e", stroke: degColor, width: 2 },
-    { label: "P_total", stroke: totalColor, width: 2.5, dash: [6, 3] },
+    { label: "P_gas", stroke: gasColor, width: 2.5 },
+    { label: "P_rad", stroke: radColor, width: 2.5 },
+    { label: "P_deg,e", stroke: degColor, width: 2.5 },
+    { label: "P_total", stroke: totalColor, width: 3, dash: [6, 3] },
   ],
   axes: [
     { label: "\u03C1 (g cm\u207B\u00B3)", values: logTickValues },
     { label: "P (dyne cm\u207B\u00B2)", values: logTickValues },
   ],
-  legend: { show: true },
+  legend: { show: true, live: true },
+  cursor: {
+    drag: { x: false, y: false },
+    points: { show: true, size: 8, fill: "#fbbf24" },
+  },
   plugins: [currentStatePlugin()],
 }, [
   initialCurveData.densities,

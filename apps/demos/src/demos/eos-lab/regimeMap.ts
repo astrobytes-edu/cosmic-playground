@@ -135,15 +135,15 @@ let cachedColors: {
 function resolveColors() {
   if (cachedColors) return cachedColors;
   cachedColors = {
-    gas: resolveCssColor("--cp-success") || "#4ade80",
-    radiation: resolveCssColor("--cp-accent") || "#38bdf8",
-    degeneracy: resolveCssColor("--cp-warning") || "#facc15",
-    mixed: resolveCssColor("--cp-muted") || "#888",
+    gas: "#34d399",        // emerald (matches pressure plot)
+    radiation: "#f472b6",  // pink (matches pressure plot)
+    degeneracy: "#a78bfa", // violet (matches pressure plot)
+    mixed: "#fbbf24",      // amber
     boundary: resolveCssColor("--cp-text1") || "#e0e0e0",
-    text: resolveCssColor("--cp-text2") || "#aaa",
-    grid: resolveCssColor("--cp-border") || "#333",
+    text: "rgba(255,255,255,0.6)",
+    grid: "rgba(255,255,255,0.15)",
     bg: resolveCssColor("--cp-bg0") || "#0e1117",
-    marker: resolveCssColor("--cp-accent-ice") || "#6dd5ed",
+    marker: "#fbbf24",     // amber — matches total pressure
     preset: "#ffffff",
   };
   return cachedColors;
@@ -197,7 +197,7 @@ function drawExactGrid(
     const y = pa.y + (grid.yCells - 1 - j) * cellH;
     for (let i = 0; i < grid.xCells; i++) {
       const x = pa.x + i * cellW;
-      ctx.fillStyle = channelColor(grid.grid[j][i]) + "44";
+      ctx.fillStyle = channelColor(grid.grid[j][i]) + "66";
       ctx.fillRect(x, y, cellW + 0.5, cellH + 0.5);
     }
   }
@@ -243,13 +243,13 @@ function drawAnalyticalOverlay(
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  ctx.fillStyle = colors.gas + "bb";
+  ctx.fillStyle = colors.gas + "dd";
   ctx.fillText("GAS", logTToX(5.5, pa, cfg), logRhoToY(6, pa, cfg));
 
-  ctx.fillStyle = colors.radiation + "bb";
+  ctx.fillStyle = colors.radiation + "dd";
   ctx.fillText("RAD", logTToX(8, pa, cfg), logRhoToY(-6, pa, cfg));
 
-  ctx.fillStyle = colors.degeneracy + "bb";
+  ctx.fillStyle = colors.degeneracy + "dd";
   ctx.fillText("DEG", logTToX(4.5, pa, cfg), logRhoToY(4, pa, cfg));
 }
 

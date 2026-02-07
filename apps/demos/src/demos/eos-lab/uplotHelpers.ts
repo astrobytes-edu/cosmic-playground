@@ -21,8 +21,8 @@ export function resolveCssColor(varName: string): string {
 
 function darkThemeDefaults(): Partial<uPlot.Options> {
   const bg = resolveCssColor("--cp-bg0") || "#0e1117";
-  const grid = resolveCssColor("--cp-border") || "#333";
-  const text = resolveCssColor("--cp-text2") || "#aaa";
+  const grid = "rgba(255,255,255,0.12)";   // subtle but visible grid
+  const text = "rgba(255,255,255,0.6)";    // legible axis labels
 
   return {
     axes: [

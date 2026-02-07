@@ -1,5 +1,7 @@
 @import "../../shared/stub-demo.css";
 
+/* EOS channel color tokens (--eos-gas, --eos-rad, --eos-deg, --eos-total, --eos-mixed)
+   are set by main.ts at runtime to keep hex literals out of CSS. */
 .cp-demo__stage {
   padding: var(--cp-space-4);
   display: grid;
@@ -101,7 +103,18 @@
   display: block;
   height: 100%;
   width: 0;
-  background: color-mix(in srgb, var(--cp-accent) 65%, var(--cp-success));
+}
+
+#cardGas .pressure-card__bar > span {
+  background: var(--eos-gas);
+}
+
+#cardRadiation .pressure-card__bar > span {
+  background: var(--eos-rad);
+}
+
+#cardDegeneracy .pressure-card__bar > span {
+  background: var(--eos-deg);
 }
 
 .pressure-card__hint {
@@ -111,10 +124,24 @@
   line-height: 1.35;
 }
 
-.pressure-card[data-tone="dominant"] {
-  border-color: color-mix(in srgb, var(--cp-border) 50%, var(--cp-success));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cp-success) 24%, transparent);
+#cardGas[data-tone="dominant"] {
+  border-color: color-mix(in srgb, var(--cp-border) 40%, var(--eos-gas));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--eos-gas) 20%, transparent);
 }
+
+#cardRadiation[data-tone="dominant"] {
+  border-color: color-mix(in srgb, var(--cp-border) 40%, var(--eos-rad));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--eos-rad) 20%, transparent);
+}
+
+#cardDegeneracy[data-tone="dominant"] {
+  border-color: color-mix(in srgb, var(--cp-border) 40%, var(--eos-deg));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--eos-deg) 20%, transparent);
+}
+
+#cardGas h2 { color: var(--eos-gas); }
+#cardRadiation h2 { color: var(--eos-rad); }
+#cardDegeneracy h2 { color: var(--eos-deg); }
 
 .pressure-card[data-tone="secondary"] {
   border-color: color-mix(in srgb, var(--cp-border) 58%, var(--cp-accent));
@@ -165,8 +192,10 @@
 }
 
 .pressure-plot__surface {
-  aspect-ratio: 5 / 3;
+  aspect-ratio: 4 / 3;
   min-height: 280px;
+  background: color-mix(in srgb, var(--cp-text) 2%, transparent);
+  border-radius: var(--cp-r-2);
 }
 
 .regime-map {
@@ -191,7 +220,7 @@
 
 .regime-map__surface {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
   min-height: 280px;
 }
 
@@ -223,30 +252,54 @@
 }
 
 .regime-map__legend span[data-channel="gas"] {
-  background: color-mix(in srgb, var(--cp-success) 42%, transparent);
+  background: color-mix(in srgb, var(--eos-gas) 50%, transparent);
 }
 
 .regime-map__legend span[data-channel="radiation"] {
-  background: color-mix(in srgb, var(--cp-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--eos-rad) 50%, transparent);
 }
 
 .regime-map__legend span[data-channel="degeneracy"] {
-  background: color-mix(in srgb, var(--cp-accent) 40%, var(--cp-success) 30%);
+  background: color-mix(in srgb, var(--eos-deg) 50%, transparent);
 }
 
 .regime-map__legend span[data-channel="mixed"] {
-  background: color-mix(in srgb, var(--cp-warning) 44%, transparent);
+  background: color-mix(in srgb, var(--eos-mixed) 50%, transparent);
 }
 
 #regimeDetail {
-  margin-top: var(--cp-space-3);
-  font-size: 0.96rem;
-  line-height: 1.45;
+  margin-top: var(--cp-space-2);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  max-height: 4.5em;
+  overflow-y: auto;
 }
 
 #regimeSummary {
-  font-size: 0.96rem;
-  line-height: 1.45;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  margin-top: var(--cp-space-1);
+}
+
+/* uPlot legend styling — match observatory console theme */
+.pressure-plot__surface .u-legend {
+  font-size: 0.82rem;
+  padding: var(--cp-space-1) 0;
+}
+
+.pressure-plot__surface .u-legend .u-series {
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pressure-plot__surface .u-legend .u-series:hover {
+  background: color-mix(in srgb, var(--cp-text) 6%, transparent);
+}
+
+/* Dim hidden series in legend */
+.pressure-plot__surface .u-legend .u-off .u-label {
+  opacity: 0.35;
 }
 
 .pressure-card--clickable {
