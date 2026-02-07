@@ -67,7 +67,8 @@ test.describe("EOS Lab -- E2E", () => {
   });
 
   test("white dwarf preset selects degeneracy-dominated state", async ({ page }) => {
-    await page.locator('button.preset[data-preset-id="white-dwarf-core"]').click();
+    // Use cp-button class to target Tab 1 presets (Tab 2 uses compare-preset class)
+    await page.locator('button.cp-button[data-preset-id="white-dwarf-core"]').click();
     await expect(page.locator("#dominantChannel")).toContainText("Electron degeneracy pressure");
   });
 

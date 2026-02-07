@@ -110,13 +110,13 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(html).toContain("finite-$T$ Fermi-Dirac electrons are included");
   });
 
-  it("includes deep-dive panels for all three pressure mechanisms", () => {
-    expect(html).toContain('id="deepDiveGas"');
-    expect(html).toContain('id="deepDiveRadiation"');
-    expect(html).toContain('id="deepDiveDegeneracy"');
-    expect(html).toContain("deep-dive__canvas");
-    expect(html).toContain("deep-dive__equation");
-    expect(html).toContain("deep-dive__chart");
+  it("includes three-column comparison view on Tab 2", () => {
+    expect(html).toContain('id="colGas"');
+    expect(html).toContain('id="colRadiation"');
+    expect(html).toContain('id="colDegeneracy"');
+    expect(html).toContain("compare-column__canvas");
+    expect(html).toContain("compare-column__equation");
+    expect(html).toContain("compare-grid");
   });
 
   it("imports mechanism animation classes", () => {
@@ -125,20 +125,21 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(mainTs).toContain("DegeneracyPressureAnimation");
   });
 
-  it("uses deep-dive data and equation formatters from logic module", () => {
-    expect(mainTs).toContain("gasDeepDiveData");
-    expect(mainTs).toContain("radDeepDiveData");
-    expect(mainTs).toContain("degDeepDiveData");
+  it("uses equation formatters and scaling challenges from logic module", () => {
     expect(mainTs).toContain("gasEquationLatex");
     expect(mainTs).toContain("radEquationLatex");
     expect(mainTs).toContain("degEquationLatex");
+    expect(mainTs).toContain("SCALING_CHALLENGES");
+    expect(mainTs).toContain("checkScalingAnswer");
   });
 
-  it("pressure cards are clickable to open deep dives", () => {
-    expect(html).toContain("pressure-card--clickable");
-    expect(html).toContain("Click to explore");
-    expect(mainTs).toContain("openDeepDive");
-    expect(mainTs).toContain("closeDeepDive");
+  it("includes shared controls and presets on Tab 2", () => {
+    expect(html).toContain('id="compareT"');
+    expect(html).toContain('id="compareRho"');
+    expect(html).toContain('id="compareX"');
+    expect(html).toContain('id="compareY"');
+    expect(html).toContain("compare-preset");
+    expect(mainTs).toContain("syncCompareSliders");
   });
 
   it("does not import Plotly anywhere", () => {
@@ -174,20 +175,17 @@ describe("EOS Lab -- Design System Contracts", () => {
   it("constrains chart containers with aspect-ratio instead of unbounded min-height", () => {
     expect(css).toMatch(/\.pressure-plot__surface\s*\{[^}]*aspect-ratio/);
     expect(css).toMatch(/\.regime-map__surface\s*\{[^}]*aspect-ratio/);
-    expect(css).toMatch(/\.deep-dive__chart\s*\{[^}]*aspect-ratio/);
+    expect(css).toMatch(/\.compare-column__canvas\s*\{[^}]*aspect-ratio/);
     // Verify no unbounded 24rem min-height remains
     expect(css).not.toMatch(/min-height:\s*24rem/);
   });
 
-  it("separates display-only cards (Tab 1) from mechanism cards (Tab 2)", () => {
-    // Tab 2 has mechanism cards with click-to-explore
-    expect(html).toContain('id="mechanismGas"');
-    expect(html).toContain('id="mechanismRadiation"');
-    expect(html).toContain('id="mechanismDegeneracy"');
-    expect(html).toContain("mechanism-grid");
-    // main.ts wires mechanism cards, not display cards
-    expect(mainTs).toContain("mechanismGas");
-    expect(mainTs).toContain("mechanismRadiation");
-    expect(mainTs).toContain("mechanismDegeneracy");
+  it("includes Scaling Law Detective challenge on Tab 2", () => {
+    expect(html).toContain('id="scalingChallenge"');
+    expect(html).toContain("scaling-detective");
+    expect(html).toContain("Scaling Law Detective");
+    // main.ts wires the challenge UI
+    expect(mainTs).toContain("renderChallenge");
+    expect(mainTs).toContain("SCALING_CHALLENGES");
   });
 });
