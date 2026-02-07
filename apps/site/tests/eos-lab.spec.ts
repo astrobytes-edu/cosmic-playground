@@ -130,69 +130,55 @@ test.describe("EOS Lab -- E2E", () => {
     await expect(status).toHaveAttribute("aria-live", "polite");
   });
 
-  test("pressure cards are clickable on Understand tab", async ({ page }) => {
+  test("Tab 2 comparison grid shows three channel columns", async ({ page }) => {
     await page.locator("#tab-understand").click();
-    await expect(page.locator(".pressure-card--clickable")).toHaveCount(3);
+    await expect(page.locator(".compare-grid")).toBeVisible();
+    await expect(page.locator(".compare-column")).toHaveCount(3);
   });
 
-  test("clicking gas mechanism card opens gas deep-dive panel", async ({ page }) => {
-    // Deep-dives are on the Understand tab behind mechanism cards
+  test("Tab 2 shared T slider updates all three equations", async ({ page }) => {
     await page.locator("#tab-understand").click();
-    await page.locator("#mechanismGas").click();
-    await expect(page.locator("#deepDiveGas")).toBeVisible();
-    await expect(page.locator(".mechanism-grid")).toBeHidden();
-    await expect(page.locator("#gasAnimCanvas")).toBeVisible();
-    await expect(page.locator("#gasEquation")).toBeVisible();
-    await expect(page.locator("#gasDeepChart")).toBeVisible();
+    // Wait for initial KaTeX render
+    await page.waitForSelector("#compareGasEq .katex", { timeout: 5000 });
+    const gasBefore = await page.locator("#compareGasEq").textContent();
+    await page.locator("#compareT").fill("800");
+    await page.locator("#compareT").dispatchEvent("input");
+    await page.waitForTimeout(200);
+    const gasAfter = await page.locator("#compareGasEq").textContent();
+    expect(gasAfter).not.toBe(gasBefore);
+    // Radiation and degeneracy equations also rendered
+    await expect(page.locator("#compareRadEq .katex")).toBeVisible();
+    await expect(page.locator("#compareDegEq .katex")).toBeVisible();
   });
 
-  test("gas deep-dive back button returns to mechanism overview", async ({ page }) => {
+  test("Tab 2 preset chips set slider values", async ({ page }) => {
     await page.locator("#tab-understand").click();
-    await page.locator("#mechanismGas").click();
-    await expect(page.locator("#deepDiveGas")).toBeVisible();
-    await page.locator("#deepDiveGas .deep-dive__back").click();
-    await expect(page.locator("#deepDiveGas")).toBeHidden();
-    await expect(page.locator(".mechanism-grid")).toBeVisible();
+    await page.locator('button.compare-preset[data-preset-id="white-dwarf-core"]').click();
+    // White dwarf should update equations
+    await page.waitForSelector("#compareDegEq .katex", { timeout: 5000 });
+    await expect(page.locator("#compareDegEq")).toContainText("10");
   });
 
-  test("radiation deep-dive has only temperature slider", async ({ page }) => {
+  test("Tab 2 canvas animations are visible", async ({ page }) => {
     await page.locator("#tab-understand").click();
-    await page.locator("#mechanismRadiation").click();
-    await expect(page.locator("#deepDiveRadiation")).toBeVisible();
-    await expect(page.locator("#radDeepT")).toBeVisible();
-    // Radiation pressure is density-independent, so no rho slider
-    const rhoSliders = page.locator("#deepDiveRadiation input[id*='Rho']");
-    await expect(rhoSliders).toHaveCount(0);
+    await expect(page.locator("#compareGasCanvas")).toBeVisible();
+    await expect(page.locator("#compareRadCanvas")).toBeVisible();
+    await expect(page.locator("#compareDegCanvas")).toBeVisible();
   });
 
-  test("degeneracy deep-dive has density slider", async ({ page }) => {
+  test("Tab 2 composition sliders show mu readout", async ({ page }) => {
     await page.locator("#tab-understand").click();
-    await page.locator("#mechanismDegeneracy").click();
-    await expect(page.locator("#deepDiveDegeneracy")).toBeVisible();
-    await expect(page.locator("#degDeepRho")).toBeVisible();
+    await expect(page.locator("#compareMuVal")).toBeVisible();
+    const mu = await page.locator("#compareMuVal").textContent();
+    expect(Number(mu)).toBeGreaterThan(0);
   });
 
-  test("deep-dive slider updates equation content", async ({ page }) => {
+  test("Scaling Law Detective accordion can be opened", async ({ page }) => {
     await page.locator("#tab-understand").click();
-    await page.locator("#mechanismGas").click();
-    await expect(page.locator("#deepDiveGas")).toBeVisible();
-    const before = await page.locator("#gasEquation").textContent();
-    await page.locator("#gasDeepT").fill("200");
-    await page.locator("#gasDeepT").dispatchEvent("input");
-    await page.waitForTimeout(100);
-    const after = await page.locator("#gasEquation").textContent();
-    expect(after).not.toBe(before);
-  });
-
-  test("switching between deep-dives closes previous", async ({ page }) => {
-    await page.locator("#tab-understand").click();
-    await page.locator("#mechanismGas").click();
-    await expect(page.locator("#deepDiveGas")).toBeVisible();
-    // Go back then open another
-    await page.locator("#deepDiveGas .deep-dive__back").click();
-    await page.locator("#mechanismRadiation").click();
-    await expect(page.locator("#deepDiveRadiation")).toBeVisible();
-    await expect(page.locator("#deepDiveGas")).toBeHidden();
+    const accordion = page.locator(".scaling-detective");
+    await accordion.locator("summary").evaluate((el) => (el as HTMLElement).click());
+    await expect(accordion).toHaveAttribute("open", "");
+    await expect(page.locator("#scalingChallenge")).toBeVisible();
   });
 
   test("pressure curve plot is visible with pressure curves", async ({ page }) => {
