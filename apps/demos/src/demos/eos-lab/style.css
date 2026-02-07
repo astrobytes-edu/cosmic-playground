@@ -233,7 +233,7 @@
 }
 
 .regime-map__legend span[data-channel="mixed"] {
-  background: color-mix(in srgb, var(--cp-warn) 44%, transparent);
+  background: color-mix(in srgb, var(--cp-warning) 44%, transparent);
 }
 
 #regimeDetail {

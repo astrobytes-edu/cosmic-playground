@@ -1096,5 +1096,6 @@ const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield
 if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 
 window.addEventListener("beforeunload", () => {
+  closeDeepDive();
   destroyPlot(pressurePlotHandle);
 }, { once: true });

@@ -137,7 +137,7 @@ function resolveColors() {
   cachedColors = {
     gas: resolveCssColor("--cp-success") || "#4ade80",
     radiation: resolveCssColor("--cp-accent") || "#38bdf8",
-    degeneracy: resolveCssColor("--cp-warn") || "#facc15",
+    degeneracy: resolveCssColor("--cp-warning") || "#facc15",
     mixed: resolveCssColor("--cp-muted") || "#888",
     boundary: resolveCssColor("--cp-text1") || "#e0e0e0",
     text: resolveCssColor("--cp-text2") || "#aaa",
