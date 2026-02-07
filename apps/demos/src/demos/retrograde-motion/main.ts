@@ -1,6 +1,18 @@
-import { createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
+import { createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { RetrogradeMotionModel } from "@cosmic/physics";
+import {
+  formatNumber,
+  clamp,
+  computeDisplayState,
+  findPrevNextStationary,
+  nearestRetrogradeInterval,
+  orbitEllipsePoints,
+  buildOrbitPath,
+  type RetroModelCallbacks,
+} from "./logic";
+
+// ── DOM queries ──────────────────────────────────────────────
 
 const presetEl = document.querySelector<HTMLSelectElement>("#preset");
 const observerEl = document.querySelector<HTMLSelectElement>("#observer");
@@ -90,6 +102,29 @@ const readoutNextStationary = readoutNextStationaryEl;
 const readoutRetroBounds = readoutRetroBoundsEl;
 const readoutRetroDuration = readoutRetroDurationEl;
 
+// ── Starfield ────────────────────────────────────────────────
+
+const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
+if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
+
+// ── Planet token map (dynamic color resolution) ──────────────
+
+const PLANET_TOKEN: Record<string, string> = {
+  Venus: "--cp-celestial-venus",
+  Earth: "--cp-celestial-earth",
+  Mars: "--cp-celestial-mars",
+  Jupiter: "--cp-celestial-jupiter",
+  Saturn: "--cp-celestial-saturn",
+};
+
+function resolvePlanetColor(key: string): string {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(PLANET_TOKEN[key] ?? "--cp-text")
+    .trim();
+}
+
+// ── Types & state ────────────────────────────────────────────
+
 type PlanetKey = Parameters<typeof RetrogradeMotionModel.planetElements>[0];
 type Series = ReturnType<typeof RetrogradeMotionModel.computeSeries>;
 
@@ -121,14 +156,11 @@ const state: State = {
 
 let series: Series | null = null;
 
-function formatNumber(value: number, digits = 2): string {
-  if (!Number.isFinite(value)) return "—";
-  return value.toFixed(digits);
-}
+const modelCallbacks: RetroModelCallbacks = {
+  planetElements: (key: string) => RetrogradeMotionModel.planetElements(key as PlanetKey),
+};
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
+// ── Helpers ──────────────────────────────────────────────────
 
 function setPreset(value: string) {
   if (value === "earth-mars") {
@@ -147,40 +179,6 @@ function snapToInternalGrid(tDay: number): number {
   return series.windowStartDay + idx * dt;
 }
 
-function findPrevNext(times: number[], t: number): { prev: number | null; next: number | null } {
-  let prev: number | null = null;
-  let next: number | null = null;
-  for (const ti of times) {
-    if (ti <= t) prev = ti;
-    if (ti > t) {
-      next = ti;
-      break;
-    }
-  }
-  return { prev, next };
-}
-
-function nearestRetrogradeInterval(
-  intervals: { startDay: number; endDay: number }[],
-  t: number
-): { startDay: number; endDay: number } | null {
-  if (intervals.length === 0) return null;
-  for (const it of intervals) {
-    if (t >= it.startDay && t <= it.endDay) return it;
-  }
-  let best: { startDay: number; endDay: number } | null = null;
-  let bestDist = Number.POSITIVE_INFINITY;
-  for (const it of intervals) {
-    const mid = 0.5 * (it.startDay + it.endDay);
-    const d = Math.abs(t - mid);
-    if (d < bestDist) {
-      bestDist = d;
-      best = it;
-    }
-  }
-  return best;
-}
-
 function setCursorDay(next: number) {
   if (!series) return;
   const clamped = clamp(next, series.windowStartDay, series.windowEndDay);
@@ -189,6 +187,8 @@ function setCursorDay(next: number) {
   cursorDayValue.textContent = formatNumber(state.cursorDay, 2);
   render();
 }
+
+// ── Compute ──────────────────────────────────────────────────
 
 function recomputeSeries() {
   series = RetrogradeMotionModel.computeSeries({
@@ -204,46 +204,42 @@ function recomputeSeries() {
   setCursorDay(state.cursorDay);
 }
 
+// ── Readouts ─────────────────────────────────────────────────
+
 function renderReadouts() {
   if (!series) return;
-  const dt = series.dtInternalDay;
-  const idx = Math.round((state.cursorDay - series.windowStartDay) / dt);
-  const i = clamp(idx, 0, series.timesDay.length - 1);
 
-  const t = series.timesDay[i];
-  const lambdaWrapped = series.lambdaWrappedDeg[i];
-  const slope = series.dLambdaDtDegPerDay[i];
-  const isRetro = Number.isFinite(slope) && slope < 0;
+  const ds = computeDisplayState(series, state.cursorDay, modelCallbacks);
 
-  readoutDay.textContent = formatNumber(t, 2);
-  readoutLambda.textContent = formatNumber(lambdaWrapped, 2);
-  readoutSlope.textContent = formatNumber(slope, 3);
-  readoutState.textContent = isRetro ? "Retrograde" : "Direct";
+  readoutDay.textContent = formatNumber(ds.cursorDay, 2);
+  readoutLambda.textContent = formatNumber(ds.lambdaDeg, 2);
+  readoutSlope.textContent = formatNumber(ds.dLambdaDt, 3);
+  readoutState.textContent = ds.stateLabel;
+  geometryHint.textContent = ds.geometryHint;
 
-  const oA = RetrogradeMotionModel.planetElements(state.observer).aAu;
-  const tA = RetrogradeMotionModel.planetElements(state.target).aAu;
-  geometryHint.textContent =
-    tA < oA ? "Inferior-planet geometry" : "Superior-planet geometry";
+  readoutPrevStationary.textContent = Number.isNaN(ds.prevStationary)
+    ? "\u2014"
+    : formatNumber(ds.prevStationary, 3);
+  readoutNextStationary.textContent = Number.isNaN(ds.nextStationary)
+    ? "\u2014"
+    : formatNumber(ds.nextStationary, 3);
 
-  const { prev, next } = findPrevNext(series.stationaryDays, t);
-  readoutPrevStationary.textContent = prev == null ? "—" : formatNumber(prev, 3);
-  readoutNextStationary.textContent = next == null ? "—" : formatNumber(next, 3);
-
-  const nearest = nearestRetrogradeInterval(series.retrogradeIntervals, t);
-  if (!nearest) {
-    readoutRetroBounds.textContent = "—";
-    readoutRetroDuration.textContent = "—";
+  if (!ds.retroInterval) {
+    readoutRetroBounds.textContent = "\u2014";
+    readoutRetroDuration.textContent = "\u2014";
   } else {
-    readoutRetroBounds.textContent = `${formatNumber(nearest.startDay, 3)} to ${formatNumber(
-      nearest.endDay,
+    readoutRetroBounds.textContent = `${formatNumber(ds.retroInterval.startDay, 3)} to ${formatNumber(
+      ds.retroInterval.endDay,
       3
     )} day`;
     readoutRetroDuration.textContent = `Duration: ${formatNumber(
-      nearest.endDay - nearest.startDay,
+      ds.retroInterval.endDay - ds.retroInterval.startDay,
       2
     )} day`;
   }
 }
+
+// ── SVG helpers ──────────────────────────────────────────────
 
 function svgEl(tag: string): SVGElement {
   return document.createElementNS("http://www.w3.org/2000/svg", tag);
@@ -252,6 +248,13 @@ function svgEl(tag: string): SVGElement {
 function clear(el: Element) {
   while (el.firstChild) el.removeChild(el.firstChild);
 }
+
+function wrap360(deg: number): number {
+  const w = ((deg % 360) + 360) % 360;
+  return w === 360 ? 0 : w;
+}
+
+// ── Plot ─────────────────────────────────────────────────────
 
 function renderPlot() {
   if (!series) return;
@@ -371,7 +374,6 @@ function renderPlot() {
   // Stationary markers.
   for (const tStat of series.stationaryDays) {
     const x = xScale(tStat);
-    // Put marker at the unwrapped curve by locating nearest internal sample.
     const idx = Math.round((tStat - series.windowStartDay) / series.dtInternalDay);
     const yi = clamp(idx, 0, series.lambdaUnwrappedDeg.length - 1);
     const y = yScale(series.lambdaUnwrappedDeg[yi]);
@@ -424,7 +426,7 @@ function renderPlot() {
   const stripPath = svgEl("path");
   stripPath.setAttribute("d", dStrip.trim());
   stripPath.setAttribute("fill", "none");
-  stripPath.setAttribute("stroke", "var(--cp-accent3)");
+  stripPath.setAttribute("stroke", "var(--cp-accent)");
   stripPath.setAttribute("stroke-width", "2");
   plotSvgEl.appendChild(stripPath);
 
@@ -439,10 +441,7 @@ function renderPlot() {
   plotSvgEl.appendChild(stripCursor);
 }
 
-function wrap360(deg: number): number {
-  const w = ((deg % 360) + 360) % 360;
-  return w === 360 ? 0 : w;
-}
+// ── Orbit view ───────────────────────────────────────────────
 
 function renderOrbit() {
   if (!series) return;
@@ -492,39 +491,31 @@ function renderOrbit() {
   axisLabel.setAttribute("text-anchor", "end");
   orbitSvgEl.appendChild(axisLabel);
 
+  // Sun (celestial token).
   const sun = svgEl("circle");
   sun.setAttribute("cx", String(cx));
   sun.setAttribute("cy", String(cy));
   sun.setAttribute("r", "7");
-  sun.setAttribute("fill", "var(--cp-warning)");
+  sun.setAttribute("fill", "var(--cp-celestial-sun-core)");
   orbitSvgEl.appendChild(sun);
 
-  function orbitPathD(key: PlanetKey): string {
-    const el = RetrogradeMotionModel.planetElements(key);
-    const varpiRad = (Math.PI / 180) * el.varpiDeg;
-    const steps = 240;
-    let d = "";
-    for (let i = 0; i <= steps; i++) {
-      const nu = (2 * Math.PI * i) / steps;
-      const r = (el.aAu * (1 - el.e * el.e)) / (1 + el.e * Math.cos(nu));
-      const xAu = r * Math.cos(nu + varpiRad);
-      const yAu = r * Math.sin(nu + varpiRad);
-      const p = toPx(xAu, yAu);
-      d += `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)} `;
-    }
-    return d.trim();
-  }
-
+  // Orbit ellipses using logic.ts helpers.
   for (const key of keys) {
+    const el = RetrogradeMotionModel.planetElements(key);
+    const pts = orbitEllipsePoints(el.aAu, el.e, el.varpiDeg, 240);
+    const pxPts = pts.map((pt) => toPx(pt.x, pt.y));
+    const pathD = buildOrbitPath(pxPts);
+
     const p = svgEl("path");
-    p.setAttribute("d", orbitPathD(key));
+    p.setAttribute("d", pathD);
     p.setAttribute("fill", "none");
-    p.setAttribute("stroke", "var(--cp-border)");
+    p.setAttribute("stroke", "var(--cp-celestial-orbit)");
     p.setAttribute("stroke-opacity", key === state.observer || key === state.target ? "0.9" : "0.4");
     p.setAttribute("stroke-width", key === state.observer || key === state.target ? "2.5" : "2");
     orbitSvgEl.appendChild(p);
   }
 
+  // Observer & target positions at cursor day.
   const o = RetrogradeMotionModel.orbitStateAtModelDay({
     elements: RetrogradeMotionModel.planetElements(state.observer),
     tDay: state.cursorDay,
@@ -539,6 +530,7 @@ function renderOrbit() {
   const oPx = toPx(o.xAu, o.yAu);
   const tPx = toPx(t.xAu, t.yAu);
 
+  // Line of sight.
   const los = svgEl("line");
   los.setAttribute("x1", String(oPx.x));
   los.setAttribute("y1", String(oPx.y));
@@ -549,26 +541,32 @@ function renderOrbit() {
   los.setAttribute("stroke-opacity", "0.75");
   orbitSvgEl.appendChild(los);
 
+  // Observer dot (uses dynamic planet color).
   const obs = svgEl("circle");
   obs.setAttribute("cx", String(oPx.x));
   obs.setAttribute("cy", String(oPx.y));
   obs.setAttribute("r", "6");
-  obs.setAttribute("fill", "var(--cp-text)");
+  obs.setAttribute("fill", resolvePlanetColor(state.observer));
   orbitSvgEl.appendChild(obs);
 
+  // Target dot (uses dynamic planet color).
   const tgt = svgEl("circle");
   tgt.setAttribute("cx", String(tPx.x));
   tgt.setAttribute("cy", String(tPx.y));
   tgt.setAttribute("r", "6");
-  tgt.setAttribute("fill", "var(--cp-pink)");
+  tgt.setAttribute("fill", resolvePlanetColor(state.target));
   orbitSvgEl.appendChild(tgt);
 }
+
+// ── Render ───────────────────────────────────────────────────
 
 function render() {
   renderReadouts();
   renderPlot();
   renderOrbit();
 }
+
+// ── Export ────────────────────────────────────────────────────
 
 function exportResults(): ExportPayloadV1 {
   if (!series) {
@@ -581,22 +579,15 @@ function exportResults(): ExportPayloadV1 {
     };
   }
 
-  const dt = series.dtInternalDay;
-  const idx = Math.round((state.cursorDay - series.windowStartDay) / dt);
-  const i = clamp(idx, 0, series.timesDay.length - 1);
-  const slope = series.dLambdaDtDegPerDay[i];
-  const isRetro = Number.isFinite(slope) && slope < 0;
-  const lambdaWrapped = series.lambdaWrappedDeg[i];
+  const ds = computeDisplayState(series, state.cursorDay, modelCallbacks);
 
-  const { prev, next } = findPrevNext(series.stationaryDays, series.timesDay[i]);
-  const nearest = nearestRetrogradeInterval(series.retrogradeIntervals, series.timesDay[i]);
-
+  const nearest = ds.retroInterval;
   const retroBounds =
     nearest == null
-      ? "—"
+      ? "\u2014"
       : `${formatNumber(nearest.startDay, 3)} to ${formatNumber(nearest.endDay, 3)}`;
   const retroDuration =
-    nearest == null ? "—" : formatNumber(nearest.endDay - nearest.startDay, 2);
+    nearest == null ? "\u2014" : formatNumber(nearest.endDay - nearest.startDay, 2);
 
   return {
     version: 1,
@@ -611,17 +602,17 @@ function exportResults(): ExportPayloadV1 {
       { name: "Model type", value: "Keplerian 2D (coplanar)" }
     ],
     readouts: [
-      { name: "Current day (day)", value: formatNumber(series.timesDay[i], 2) },
-      { name: "Apparent (sky) longitude lambda_app (deg)", value: formatNumber(lambdaWrapped, 2) },
-      { name: "d(lambda_tilde)/dt (deg/day)", value: formatNumber(slope, 3) },
-      { name: "State", value: isRetro ? "Retrograde" : "Direct" },
+      { name: "Current day (day)", value: formatNumber(ds.cursorDay, 2) },
+      { name: "Apparent (sky) longitude lambda_app (deg)", value: formatNumber(ds.lambdaDeg, 2) },
+      { name: "d(lambda_tilde)/dt (deg/day)", value: formatNumber(ds.dLambdaDt, 3) },
+      { name: "State", value: ds.stateLabel },
       {
         name: "Previous stationary day (day)",
-        value: prev == null ? "—" : formatNumber(prev, 3)
+        value: Number.isNaN(ds.prevStationary) ? "\u2014" : formatNumber(ds.prevStationary, 3)
       },
       {
         name: "Next stationary day (day)",
-        value: next == null ? "—" : formatNumber(next, 3)
+        value: Number.isNaN(ds.nextStationary) ? "\u2014" : formatNumber(ds.nextStationary, 3)
       },
       { name: "Nearest retrograde bounds (day)", value: retroBounds },
       { name: "Nearest retrograde duration (day)", value: retroDuration }
@@ -634,8 +625,10 @@ function exportResults(): ExportPayloadV1 {
   };
 }
 
+// ── Event handlers ───────────────────────────────────────────
+
 copyResults.addEventListener("click", () => {
-  setLiveRegionText(status, "Copying…");
+  setLiveRegionText(status, "Copying\u2026");
   void runtime
     .copyResults(exportResults())
     .then(() => setLiveRegionText(status, "Copied results to clipboard."))
@@ -684,14 +677,14 @@ showOtherPlanets.addEventListener("change", () => {
 
 prevStationary.addEventListener("click", () => {
   if (!series) return;
-  const { prev } = findPrevNext(series.stationaryDays, state.cursorDay);
-  if (prev != null) setCursorDay(prev);
+  const { prev } = findPrevNextStationary(series.stationaryDays, state.cursorDay);
+  if (!Number.isNaN(prev)) setCursorDay(prev);
 });
 
 nextStationary.addEventListener("click", () => {
   if (!series) return;
-  const { next } = findPrevNext(series.stationaryDays, state.cursorDay);
-  if (next != null) setCursorDay(next);
+  const { next } = findPrevNextStationary(series.stationaryDays, state.cursorDay);
+  if (!Number.isNaN(next)) setCursorDay(next);
 });
 
 centerRetrograde.addEventListener("click", () => {
@@ -740,6 +733,8 @@ plotSvgEl.addEventListener("pointerup", () => {
 plotSvgEl.addEventListener("pointercancel", () => {
   isDragging = false;
 });
+
+// ── Boot ─────────────────────────────────────────────────────
 
 initMath(document);
 recomputeSeries();
