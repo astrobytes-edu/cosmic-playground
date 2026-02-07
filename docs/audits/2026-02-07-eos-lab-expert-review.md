@@ -1,6 +1,6 @@
 # EOS Lab — Expert Review: Pedagogy, Science, and Design
 
-**Date**: 2026-02-07 (updated 2026-02-07 Phase 3 pedagogy audit)
+**Date**: 2026-02-07 (updated 2026-02-07 Phase 4 regression + features)
 **Reviewer**: Claude Opus 4.6 (three parallel review agents: full-state reader, scientific correctness, competitive landscape)
 **Demo**: `apps/demos/src/demos/eos-lab/`
 **Physics model**: `packages/physics/src/stellarEosModel.ts`
@@ -18,6 +18,8 @@ EOS Lab is **the most sophisticated interactive browser-based stellar EOS teachi
 **Phase 2 hardening**: All 25 UI/UX issues resolved (`6bed33c`..`d5b6fe0`). Fixes cover density readout format, tour robustness, stability indicator, keyboard accessibility, animation performance, quiz UX, and dead code cleanup.
 
 **Phase 3 pedagogy audit**: Comprehensive re-audit identified 11 pedagogical/UX improvements. Physics model reconfirmed correct (18/18 tests, CODATA 2018 constants, solar core checkpoint to 9 sig figs). Focus: bridging Tab 1 -> Tab 2 cognitive gap, improving discoverability, strengthening active learning scaffolding.
+
+**Phase 4 regression + features**: 9 contract tests + 10 logic tests + 7 E2E tests added for Phase 3 regression protection, plus contextual "What to try next" suggestion engine. Test count: 94 demo tests (33 contract + 61 logic) + 31 E2E tests.
 
 ---
 
@@ -245,27 +247,73 @@ Physics model reconfirmed correct (18/18 tests, all constants CODATA 2018 exact,
 
 ---
 
-## 8. Architecture Summary
+## 8. Phase 4: Regression Protection + Contextual Suggestions
+
+### Phase 4a: Contract tests for Phase 3 regression (8 tests)
+
+| # | Contract | Commit |
+|---|---|---|
+| P4a-1 | Tab 2 pedagogical captions with physics content | `79c1736` |
+| P4a-2 | Equation toggle keyboard/ARIA accessibility | `79c1736` |
+| P4a-3 | Dominance-switch pulse CSS + JS wiring | `79c1736` |
+| P4a-4 | Preset :focus-visible styles | `79c1736` |
+| P4a-5 | LTE card dimming (data-lte="caution") | `79c1736` |
+| P4a-6 | Progressive model notes with nested accordion | `79c1736` |
+| P4a-7 | Tour Tab 2 support with tab-switching | `79c1736` |
+| P4a-8 | Tour replay + localStorage persistence | `79c1736` |
+
+### Phase 4b: E2E tests for Phase 3 interactions (6 tests)
+
+| # | E2E Test | Commit |
+|---|---|---|
+| P4b-1 | Tab 2 captions visible with physics keywords | `79c1736` |
+| P4b-2 | Equation toggle cycles symbolic <-> numerical | `79c1736` |
+| P4b-3 | Equation toggle keyboard attributes | `79c1736` |
+| P4b-4 | Tour replay button activates overlay | `79c1736` |
+| P4b-5 | Solar profile checkbox toggle | `79c1736` |
+| P4b-6 | Model notes progressive disclosure expand/collapse | `79c1736` |
+
+### Phase 4c: Contextual "What to try next" suggestions
+
+Dynamic exploration prompts that adapt to the current stellar state, providing tailored guidance for the next investigation step. Each suggestion describes the physics, suggests a specific action, and connects to a learning concept.
+
+| Priority | Trigger | Suggestion focus |
+|---|---|---|
+| 1 (highest) | Gamma_eff near/below 4/3 | Dynamical instability, restore via degeneracy |
+| 2 | LTE closure warning | Physics caveat, move to LTE-valid regime |
+| 3 | Mixed dominance | Discovery opportunity at transition boundary |
+| 4 | Gas dominant, P_rad negligible | T^4 scaling discovery via temperature increase |
+| 5 | Gas dominant, P_rad noticeable | Eddington luminosity regime transition |
+| 6 | Radiation dominant | Density increase to compete with degeneracy |
+| 7 | Strong degeneracy (chi < 0.1) | T/T_F watching, thermal reassertion |
+| 8 | Moderate degeneracy | Composition effects on mu_e |
+| 9 | Fallback | Preset exploration |
+
+Implementation: Pure function `getContextualSuggestion()` in logic.ts, 10 unit tests, 1 contract test, 1 E2E test. Commit `d80e32f`.
+
+---
+
+## 9. Architecture Summary
 
 ### File structure (post-enhancement)
 
 ```
 apps/demos/src/demos/eos-lab/
-  index.html          (490 lines -- WAI-ARIA tabs, 6 presets, 4 accordions, tour button)
-  main.ts             (1240 lines -- state, render, events, tour, equation toggle)
-  logic.ts            (770 lines -- pure functions, scaling challenges, equation formatters, solar profile, adiabatic index)
+  index.html          (515 lines -- WAI-ARIA tabs, 6 presets, 4 accordions, tour button, contextual suggestion)
+  main.ts             (1385 lines -- state, render, events, tour, equation toggle, suggestions)
+  logic.ts            (840 lines -- pure functions, scaling challenges, equation formatters, solar profile, adiabatic index, contextual suggestions)
   mechanismViz.ts     (540 lines -- 3 Canvas 2D animation classes + ResizeObserver)
   regimeMap.ts        (580 lines -- regime map renderer + solar profile overlay)
   uplotHelpers.ts     (140 lines -- uPlot adapter for design system)
-  style.css           (790 lines -- responsive, no color literals, tour styles)
-  design-contracts.test.ts  (24 tests)
-  logic.test.ts       (51 tests)
+  style.css           (880 lines -- responsive, no color literals, tour styles, suggestion)
+  design-contracts.test.ts  (33 tests)
+  logic.test.ts       (61 tests)
 
 packages/physics/src/
   stellarEosModel.ts  (877 lines -- ideal gas + radiation + Fermi-Dirac EOS)
 
 apps/site/tests/
-  eos-lab.spec.ts     (24 E2E tests)
+  eos-lab.spec.ts     (31 E2E tests)
 ```
 
 ### Key patterns
