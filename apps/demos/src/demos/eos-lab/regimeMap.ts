@@ -132,13 +132,18 @@ let cachedColors: {
   preset: string;
 } | null = null;
 
-function resolveColors() {
+function resolveColors(canvas?: HTMLCanvasElement) {
   if (cachedColors) return cachedColors;
+  // Resolve channel colors from CSS custom properties set by main.ts on .cp-demo__stage.
+  // The canvas is a descendant, so getComputedStyle inherits the properties.
+  const style = canvas ? getComputedStyle(canvas) : null;
+  const fromCss = (prop: string, fallback: string): string =>
+    style?.getPropertyValue(prop).trim() || fallback;
   cachedColors = {
-    gas: "#34d399",        // emerald (matches pressure plot)
-    radiation: "#f472b6",  // pink (matches pressure plot)
-    degeneracy: "#a78bfa", // violet (matches pressure plot)
-    mixed: "#fbbf24",      // amber
+    gas: fromCss("--eos-gas", "#34d399"),
+    radiation: fromCss("--eos-rad", "#f472b6"),
+    degeneracy: fromCss("--eos-deg", "#a78bfa"),
+    mixed: fromCss("--eos-mixed", "#fbbf24"),
     boundary: resolveCssColor("--cp-text1") || "#e0e0e0",
     text: "rgba(255,255,255,0.6)",
     grid: "rgba(255,255,255,0.15)",
@@ -418,7 +423,7 @@ export function renderRegimeMap(
   const cfg = { ...DEFAULT_CONFIG, ...config };
   const { width, height } = resizeCanvasToCssPixels(canvas, ctx);
   const pa = plotArea(width, height);
-  const colors = resolveColors();
+  const colors = resolveColors(canvas);
   const mu = meanMolecularWeight(state.composition);
   const muE = meanMolecularWeightPerElectron(state.composition);
 
