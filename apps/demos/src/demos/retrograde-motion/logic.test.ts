@@ -14,9 +14,7 @@ import {
   orbitEllipsePoints,
   buildOrbitPath,
   computeDisplayState,
-  buildExportPayload,
   type RetroModelCallbacks,
-  type DisplayState,
 } from "./logic";
 
 describe("formatNumber", () => {
@@ -150,31 +148,47 @@ describe("nearestRetrogradeInterval", () => {
 });
 
 describe("plotXFromDay", () => {
-  it("maps window start to left margin", () => {
-    expect(plotXFromDay(0, 0, 720, 1000, 60)).toBeCloseTo(60);
+  it("maps window start to xLeft", () => {
+    expect(plotXFromDay(0, 0, 720, 60, 940)).toBeCloseTo(60);
   });
-  it("maps window end to right edge minus margin", () => {
-    expect(plotXFromDay(720, 0, 720, 1000, 60)).toBeCloseTo(940);
+  it("maps window end to xRight", () => {
+    expect(plotXFromDay(720, 0, 720, 60, 940)).toBeCloseTo(940);
   });
   it("maps midpoint to center", () => {
-    expect(plotXFromDay(360, 0, 720, 1000, 60)).toBeCloseTo(500);
+    expect(plotXFromDay(360, 0, 720, 60, 940)).toBeCloseTo(500);
+  });
+  it("supports asymmetric margins", () => {
+    // left=64, right=980 (like main.ts: margin.left=64, W-margin.right=980)
+    expect(plotXFromDay(0, 0, 720, 64, 980)).toBeCloseTo(64);
+    expect(plotXFromDay(720, 0, 720, 64, 980)).toBeCloseTo(980);
   });
 });
 
 describe("plotYFromDeg", () => {
-  it("maps yMax to top margin", () => {
-    expect(plotYFromDeg(400, 0, 400, 300, 30)).toBeCloseTo(30);
+  it("maps yMax to yTop", () => {
+    expect(plotYFromDeg(400, 0, 400, 30, 270)).toBeCloseTo(30);
   });
-  it("maps yMin to bottom edge minus margin", () => {
-    expect(plotYFromDeg(0, 0, 400, 300, 30)).toBeCloseTo(270);
+  it("maps yMin to yBottom", () => {
+    expect(plotYFromDeg(0, 0, 400, 30, 270)).toBeCloseTo(270);
+  });
+  it("supports asymmetric margins", () => {
+    // top=18, bottom=18+222=240 (like main.ts: mainTop=18, mainBottom=mainTop+mainH)
+    expect(plotYFromDeg(400, 0, 400, 18, 240)).toBeCloseTo(18);
+    expect(plotYFromDeg(0, 0, 400, 18, 240)).toBeCloseTo(240);
   });
 });
 
 describe("dayFromPlotX", () => {
-  it("is the inverse of plotXFromDay", () => {
+  it("is the inverse of plotXFromDay (symmetric)", () => {
     const day = 250;
-    const x = plotXFromDay(day, 0, 720, 1000, 60);
-    const recovered = dayFromPlotX(x, 0, 720, 1000, 60);
+    const x = plotXFromDay(day, 0, 720, 60, 940);
+    const recovered = dayFromPlotX(x, 0, 720, 60, 940);
+    expect(recovered).toBeCloseTo(day, 1);
+  });
+  it("is the inverse of plotXFromDay (asymmetric)", () => {
+    const day = 400;
+    const x = plotXFromDay(day, 0, 720, 64, 980);
+    const recovered = dayFromPlotX(x, 0, 720, 64, 980);
     expect(recovered).toBeCloseTo(day, 1);
   });
 });

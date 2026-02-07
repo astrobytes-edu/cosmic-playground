@@ -7,6 +7,10 @@ import {
   computeDisplayState,
   findPrevNextStationary,
   nearestRetrogradeInterval,
+  plotXFromDay,
+  plotYFromDeg,
+  dayFromPlotX,
+  seriesIndexAtDay,
   orbitEllipsePoints,
   buildOrbitPath,
   type RetroModelCallbacks,
@@ -274,7 +278,7 @@ function renderPlot() {
 
   const t0 = series.windowStartDay;
   const t1 = series.windowEndDay;
-  const xScale = (t: number) => x0 + ((t - t0) / (t1 - t0)) * (x1 - x0);
+  const xScale = (t: number) => plotXFromDay(t, t0, t1, x0, x1);
 
   const stride = Math.max(1, Math.round(state.plotStepDay / series.dtInternalDay));
   const unwrapped = series.lambdaUnwrappedDeg;
@@ -294,7 +298,7 @@ function renderPlot() {
   yMin -= pad;
   yMax += pad;
 
-  const yScale = (y: number) => mainTop + (1 - (y - yMin) / (yMax - yMin)) * mainH;
+  const yScale = (y: number) => plotYFromDeg(y, yMin, yMax, mainTop, mainBottom);
 
   const defs = svgEl("defs");
   const pattern = svgEl("pattern");
@@ -374,7 +378,7 @@ function renderPlot() {
   // Stationary markers.
   for (const tStat of series.stationaryDays) {
     const x = xScale(tStat);
-    const idx = Math.round((tStat - series.windowStartDay) / series.dtInternalDay);
+    const idx = seriesIndexAtDay(tStat, series.windowStartDay, series.dtInternalDay);
     const yi = clamp(idx, 0, series.lambdaUnwrappedDeg.length - 1);
     const y = yScale(series.lambdaUnwrappedDeg[yi]);
 
@@ -712,8 +716,9 @@ plotFocus.addEventListener("keydown", (e) => {
 function handlePointerToDay(clientX: number) {
   if (!series) return;
   const rect = plotSvgEl.getBoundingClientRect();
-  const x = clamp(clientX - rect.left, 0, rect.width);
-  const t = series.windowStartDay + (x / rect.width) * (series.windowEndDay - series.windowStartDay);
+  const xFrac = clamp((clientX - rect.left) / rect.width, 0, 1);
+  const svgX = xFrac * 1000; // SVG viewBox is 1000 wide
+  const t = dayFromPlotX(svgX, series.windowStartDay, series.windowEndDay, 64, 980);
   setCursorDay(t);
 }
 

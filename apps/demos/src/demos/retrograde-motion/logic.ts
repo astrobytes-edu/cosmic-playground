@@ -101,35 +101,32 @@ export function plotXFromDay(
   tDay: number,
   windowStart: number,
   windowEnd: number,
-  plotWidth: number,
-  marginX: number,
+  xLeft: number,
+  xRight: number,
 ): number {
-  const usable = plotWidth - 2 * marginX;
   const frac = (tDay - windowStart) / (windowEnd - windowStart);
-  return marginX + frac * usable;
+  return xLeft + frac * (xRight - xLeft);
 }
 
 export function plotYFromDeg(
   deg: number,
   yMin: number,
   yMax: number,
-  plotHeight: number,
-  marginY: number,
+  yTop: number,
+  yBottom: number,
 ): number {
-  const usable = plotHeight - 2 * marginY;
   const frac = (deg - yMin) / (yMax - yMin);
-  return plotHeight - marginY - frac * usable;
+  return yTop + (1 - frac) * (yBottom - yTop);
 }
 
 export function dayFromPlotX(
   x: number,
   windowStart: number,
   windowEnd: number,
-  plotWidth: number,
-  marginX: number,
+  xLeft: number,
+  xRight: number,
 ): number {
-  const usable = plotWidth - 2 * marginX;
-  const frac = (x - marginX) / usable;
+  const frac = (x - xLeft) / (xRight - xLeft);
   return windowStart + frac * (windowEnd - windowStart);
 }
 
@@ -229,56 +226,3 @@ export function computeDisplayState(
   };
 }
 
-// ── Export builder ───────────────────────────────────────────
-
-export function buildExportPayload(
-  state: DisplayState,
-  params: {
-    observer: string;
-    target: string;
-    windowStartDay: number;
-    windowEndDay: number;
-    plotStepDay: number;
-  },
-): {
-  version: 1;
-  demo: string;
-  parameters: Record<string, string>;
-  readouts: { label: string; value: string; unit: string }[];
-  notes: string[];
-} {
-  return {
-    version: 1,
-    demo: "retrograde-motion",
-    parameters: {
-      observer: params.observer,
-      target: params.target,
-      windowStart: `${params.windowStartDay} days`,
-      windowEnd: `${params.windowEndDay} days`,
-      plotStep: `${params.plotStepDay} days`,
-      model: "Keplerian 2D coplanar",
-    },
-    readouts: [
-      { label: "Model day", value: formatNumber(state.cursorDay, 2), unit: "days" },
-      { label: "Apparent longitude", value: formatNumber(state.lambdaDeg, 2), unit: "deg" },
-      { label: "d lambda/dt", value: formatNumber(state.dLambdaDt, 4), unit: "deg/day" },
-      { label: "State", value: state.stateLabel, unit: "" },
-      { label: "Geometry", value: state.geometryHint, unit: "" },
-      { label: "Prev stationary", value: formatNumber(state.prevStationary, 2), unit: "days" },
-      { label: "Next stationary", value: formatNumber(state.nextStationary, 2), unit: "days" },
-      {
-        label: "Retrograde interval",
-        value: state.retroInterval
-          ? `${formatNumber(state.retroInterval.startDay, 2)} - ${formatNumber(state.retroInterval.endDay, 2)}`
-          : EM_DASH,
-        unit: "days",
-      },
-      { label: "Retrograde duration", value: state.retroDuration, unit: "days" },
-    ],
-    notes: [
-      "Keplerian, coplanar orbits; no N-body perturbations.",
-      "Model time only; no calendar-date predictions.",
-      "Elements: JPL J2000 approximate (Standish, Table 1).",
-    ],
-  };
-}
