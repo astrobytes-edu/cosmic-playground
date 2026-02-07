@@ -59,6 +59,10 @@
   width: 100%;
 }
 
+.pressure-grid[hidden] {
+  display: none;
+}
+
 .pressure-card {
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-r-3);
@@ -98,7 +102,7 @@
   display: block;
   height: 100%;
   width: 0;
-  background: color-mix(in srgb, var(--cp-accent) 65%, var(--cp-glow-teal));
+  background: color-mix(in srgb, var(--cp-accent) 65%, var(--cp-success));
 }
 
 .pressure-card__hint {
@@ -225,7 +229,7 @@
 }
 
 .regime-map__legend span[data-channel="degeneracy"] {
-  background: color-mix(in srgb, var(--cp-glow-teal) 50%, transparent);
+  background: color-mix(in srgb, var(--cp-accent) 40%, var(--cp-success) 30%);
 }
 
 .regime-map__legend span[data-channel="mixed"] {
@@ -243,9 +247,89 @@
   line-height: 1.45;
 }
 
-.pressure-plot__surface .cp-runtime-plot__surface,
-.regime-map__surface .cp-runtime-plot__surface {
-  min-height: inherit;
+.pressure-card--clickable {
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pressure-card--clickable:hover,
+.pressure-card--clickable:focus-visible {
+  border-color: color-mix(in srgb, var(--cp-border) 40%, var(--cp-accent));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cp-accent) 20%, transparent);
+}
+
+.pressure-card--clickable em {
+  color: var(--cp-accent);
+  font-style: normal;
+  font-size: 0.82rem;
+}
+
+.deep-dive {
+  grid-column: 1 / -1;
+  animation: cp-slide-up 0.3s ease-out;
+}
+
+.deep-dive[hidden] {
+  display: none;
+}
+
+.deep-dive__back {
+  margin-bottom: var(--cp-space-3);
+}
+
+.deep-dive__title {
+  margin: 0 0 var(--cp-space-3);
+  font-size: 1.2rem;
+}
+
+.deep-dive__layout {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: var(--cp-space-4);
+  align-items: start;
+}
+
+.deep-dive__animation {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.deep-dive__canvas {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--cp-r-2);
+  border: 1px solid var(--cp-border);
+  background: color-mix(in srgb, var(--cp-bg0) 95%, transparent);
+}
+
+.deep-dive__caption {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--cp-muted);
+  line-height: 1.35;
+}
+
+.deep-dive__sandbox {
+  display: grid;
+  gap: var(--cp-space-3);
+}
+
+.deep-dive__equation {
+  font-size: 0.95rem;
+  padding: var(--cp-space-3);
+  background: color-mix(in srgb, var(--cp-bg1) 90%, transparent);
+  border-radius: var(--cp-r-2);
+  border: 1px solid var(--cp-border);
+  overflow-x: auto;
+}
+
+.deep-dive__controls {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.deep-dive__chart {
+  min-height: 14rem;
 }
 
 .cp-readout--stack {
@@ -281,6 +365,10 @@
   }
 
   .stage-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .deep-dive__layout {
     grid-template-columns: 1fr;
   }
 }

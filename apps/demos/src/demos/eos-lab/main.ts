@@ -3,18 +3,11 @@ import {
   createInstrumentRuntime,
   initMath,
   initPopovers,
-  mountPlot,
   initStarfield,
   renderMath,
   setLiveRegionText
 } from "@cosmic/runtime";
-import { logspace } from "@cosmic/math";
-import type {
-  ExportPayloadV1,
-  PlotLayoutOverrides,
-  PlotSpec,
-  PlotTrace
-} from "@cosmic/runtime";
+import type { ExportPayloadV1 } from "@cosmic/runtime";
 import {
   StellarEosModel,
   type StellarCompositionFractions,
@@ -25,12 +18,46 @@ import {
   compositionFromXY,
   formatFraction,
   formatScientific,
+  gasDeepDiveData,
+  gasEquationLatex,
   logSliderToValue,
   percent,
   pressureBarPercent,
+  pressureCurveData,
   pressureTone,
+  radDeepDiveData,
+  radEquationLatex,
+  degDeepDiveData,
+  degEquationLatex,
+  superscript,
   valueToLogSlider
 } from "./logic";
+import { createEosPlot, destroyPlot, resolveCssColor } from "./uplotHelpers";
+import type { uPlot } from "./uplotHelpers";
+import { renderRegimeMap, invalidateRegimeGrid } from "./regimeMap";
+import {
+  GasPressureAnimation,
+  RadiationPressureAnimation,
+  DegeneracyPressureAnimation
+} from "./mechanismViz";
+import type { MechanismAnimation } from "./mechanismViz";
+
+/* ================================================================
+ * Formatting helpers
+ * ================================================================ */
+
+/** Format log-scale tick values as 10^n using Unicode superscripts. */
+const logTickValues = (_self: unknown, splits: number[]) =>
+  splits.map(v => {
+    if (v <= 0) return "";
+    const exp = Math.round(Math.log10(v));
+    if (Math.abs(v - Math.pow(10, exp)) / v > 0.01) return "";
+    return `10${superscript(exp)}`;
+  });
+
+/* ================================================================
+ * Presets
+ * ================================================================ */
 
 type Preset = {
   id:
@@ -56,11 +83,7 @@ const PRESETS: readonly Preset[] = [
     expectedDominance: "Gas with meaningful radiation fraction",
     temperatureK: 1.57e7,
     densityGPerCm3: 150,
-    composition: {
-      hydrogenMassFractionX: 0.34,
-      heliumMassFractionY: 0.64,
-      metalMassFractionZ: 0.02
-    }
+    composition: { hydrogenMassFractionX: 0.34, heliumMassFractionY: 0.64, metalMassFractionZ: 0.02 }
   },
   {
     id: "solar-envelope",
@@ -69,11 +92,7 @@ const PRESETS: readonly Preset[] = [
     expectedDominance: "Gas",
     temperatureK: 5800,
     densityGPerCm3: 1e-7,
-    composition: {
-      hydrogenMassFractionX: 0.74,
-      heliumMassFractionY: 0.24,
-      metalMassFractionZ: 0.02
-    }
+    composition: { hydrogenMassFractionX: 0.74, heliumMassFractionY: 0.24, metalMassFractionZ: 0.02 }
   },
   {
     id: "massive-core",
@@ -82,11 +101,7 @@ const PRESETS: readonly Preset[] = [
     expectedDominance: "Radiation can become competitive",
     temperatureK: 4e7,
     densityGPerCm3: 10,
-    composition: {
-      hydrogenMassFractionX: 0.35,
-      heliumMassFractionY: 0.63,
-      metalMassFractionZ: 0.02
-    }
+    composition: { hydrogenMassFractionX: 0.35, heliumMassFractionY: 0.63, metalMassFractionZ: 0.02 }
   },
   {
     id: "red-giant-envelope",
@@ -95,11 +110,7 @@ const PRESETS: readonly Preset[] = [
     expectedDominance: "Gas",
     temperatureK: 4000,
     densityGPerCm3: 1e-9,
-    composition: {
-      hydrogenMassFractionX: 0.7,
-      heliumMassFractionY: 0.28,
-      metalMassFractionZ: 0.02
-    }
+    composition: { hydrogenMassFractionX: 0.7, heliumMassFractionY: 0.28, metalMassFractionZ: 0.02 }
   },
   {
     id: "white-dwarf-core",
@@ -108,11 +119,7 @@ const PRESETS: readonly Preset[] = [
     expectedDominance: "Electron degeneracy",
     temperatureK: 1e7,
     densityGPerCm3: 1e6,
-    composition: {
-      hydrogenMassFractionX: 0,
-      heliumMassFractionY: 0.98,
-      metalMassFractionZ: 0.02
-    }
+    composition: { hydrogenMassFractionX: 0, heliumMassFractionY: 0.98, metalMassFractionZ: 0.02 }
   },
   {
     id: "brown-dwarf-interior",
@@ -121,187 +128,123 @@ const PRESETS: readonly Preset[] = [
     expectedDominance: "Gas/degeneracy transition",
     temperatureK: 1e6,
     densityGPerCm3: 100,
-    composition: {
-      hydrogenMassFractionX: 0.7,
-      heliumMassFractionY: 0.28,
-      metalMassFractionZ: 0.02
-    }
+    composition: { hydrogenMassFractionX: 0.7, heliumMassFractionY: 0.28, metalMassFractionZ: 0.02 }
   }
 ] as const;
 
 const PRESET_BY_ID: Record<Preset["id"], Preset> = PRESETS.reduce(
-  (acc, preset) => {
-    acc[preset.id] = preset;
-    return acc;
-  },
+  (acc, preset) => { acc[preset.id] = preset; return acc; },
   {} as Record<Preset["id"], Preset>
 );
+
+/* ================================================================
+ * Constants
+ * ================================================================ */
 
 const TEMPERATURE_MIN_K = 1e3;
 const TEMPERATURE_MAX_K = 1e9;
 const DENSITY_MIN_G_PER_CM3 = 1e-10;
 const DENSITY_MAX_G_PER_CM3 = 1e10;
-const REGIME_MAP_REBUILD_DEBOUNCE_MS = 80;
-const REGIME_MAP_MIN_X = 120;
-const REGIME_MAP_MAX_X = 280;
-const REGIME_MAP_MIN_Y = 90;
-const REGIME_MAP_MAX_Y = 210;
-const REGIME_MAP_CELL_SIZE_DESKTOP_PX = 3.2;
-const REGIME_MAP_CELL_SIZE_COARSE_PX = 4.8;
-const PRESSURE_CURVE_SAMPLES = 180;
 
-const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
-const tempValueEl = document.querySelector<HTMLSpanElement>("#tempValue");
-const rhoSliderEl = document.querySelector<HTMLInputElement>("#rhoSlider");
-const rhoValueEl = document.querySelector<HTMLSpanElement>("#rhoValue");
-const xSliderEl = document.querySelector<HTMLInputElement>("#xSlider");
-const xValueEl = document.querySelector<HTMLSpanElement>("#xValue");
-const ySliderEl = document.querySelector<HTMLInputElement>("#ySlider");
-const yValueEl = document.querySelector<HTMLSpanElement>("#yValue");
-const zValueEl = document.querySelector<HTMLSpanElement>("#zValue");
+/* ================================================================
+ * DOM queries
+ * ================================================================ */
 
-const presetButtons = Array.from(
-  document.querySelectorAll<HTMLButtonElement>('button.preset[data-preset-id]')
-);
-const presetNoteEl = document.querySelector<HTMLParagraphElement>("#presetNote");
-
-const radiationClosureChipEl = document.querySelector<HTMLElement>("#radiationClosureChip");
-const radiationClosureLabelEl = document.querySelector<HTMLElement>("#radiationClosureLabel");
-const radiationClosureNoteEl = document.querySelector<HTMLElement>("#radiationClosureNote");
-
-const cardGasEl = document.querySelector<HTMLElement>("#cardGas");
-const cardRadiationEl = document.querySelector<HTMLElement>("#cardRadiation");
-const cardDegeneracyEl = document.querySelector<HTMLElement>("#cardDegeneracy");
-
-const pGasValueEl = document.querySelector<HTMLElement>("#pGasValue");
-const pGasBarEl = document.querySelector<HTMLElement>("#pGasBar");
-const pRadValueEl = document.querySelector<HTMLElement>("#pRadValue");
-const pRadBarEl = document.querySelector<HTMLElement>("#pRadBar");
-const pDegValueEl = document.querySelector<HTMLElement>("#pDegValue");
-const pDegBarEl = document.querySelector<HTMLElement>("#pDegBar");
-const pTotalValueEl = document.querySelector<HTMLElement>("#pTotalValue");
-const dominantChannelEl = document.querySelector<HTMLElement>("#dominantChannel");
-const pressureCurvePlotEl = document.querySelector<HTMLElement>("#pressureCurvePlot");
-const regimeMapEl = document.querySelector<HTMLElement>("#regimeMap");
-const regimeDetailEl = document.querySelector<HTMLElement>("#regimeDetail");
-const regimeSummaryEl = document.querySelector<HTMLElement>("#regimeSummary");
-
-const muValueEl = document.querySelector<HTMLElement>("#muValue");
-const muEValueEl = document.querySelector<HTMLElement>("#muEValue");
-const betaValueEl = document.querySelector<HTMLElement>("#betaValue");
-const radGasValueEl = document.querySelector<HTMLElement>("#radGasValue");
-const degTotalValueEl = document.querySelector<HTMLElement>("#degTotalValue");
-const chiDegValueEl = document.querySelector<HTMLElement>("#chiDegValue");
-const degRegimeValueEl = document.querySelector<HTMLElement>("#degRegimeValue");
-const xFValueEl = document.querySelector<HTMLElement>("#xFValue");
-const fermiRegimeValueEl = document.querySelector<HTMLElement>("#fermiRegimeValue");
-const finiteTCorrectionValueEl = document.querySelector<HTMLElement>("#finiteTCorrectionValue");
-const finiteTValidityValueEl = document.querySelector<HTMLElement>("#finiteTValidityValue");
-const neutronExtensionValueEl = document.querySelector<HTMLElement>("#neutronExtensionValue");
-
-const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
-const helpEl = document.querySelector<HTMLButtonElement>("#help");
-const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
-const statusEl = document.querySelector<HTMLParagraphElement>("#status");
-
-if (
-  !tempSliderEl ||
-  !tempValueEl ||
-  !rhoSliderEl ||
-  !rhoValueEl ||
-  !xSliderEl ||
-  !xValueEl ||
-  !ySliderEl ||
-  !yValueEl ||
-  !zValueEl ||
-  !presetNoteEl ||
-  !radiationClosureChipEl ||
-  !radiationClosureLabelEl ||
-  !radiationClosureNoteEl ||
-  !cardGasEl ||
-  !cardRadiationEl ||
-  !cardDegeneracyEl ||
-  !pGasValueEl ||
-  !pGasBarEl ||
-  !pRadValueEl ||
-  !pRadBarEl ||
-  !pDegValueEl ||
-  !pDegBarEl ||
-  !pTotalValueEl ||
-  !dominantChannelEl ||
-  !pressureCurvePlotEl ||
-  !regimeMapEl ||
-  !regimeDetailEl ||
-  !regimeSummaryEl ||
-  !muValueEl ||
-  !muEValueEl ||
-  !betaValueEl ||
-  !radGasValueEl ||
-  !degTotalValueEl ||
-  !chiDegValueEl ||
-  !degRegimeValueEl ||
-  !xFValueEl ||
-  !fermiRegimeValueEl ||
-  !finiteTCorrectionValueEl ||
-  !finiteTValidityValueEl ||
-  !neutronExtensionValueEl ||
-  !stationModeEl ||
-  !helpEl ||
-  !copyResultsEl ||
-  !statusEl
-) {
-  throw new Error("Missing required DOM elements for eos-lab demo.");
+function q<T extends HTMLElement>(sel: string): T {
+  const el = document.querySelector<T>(sel);
+  if (!el) throw new Error(`Missing DOM element: ${sel}`);
+  return el;
 }
 
-const tempSlider = tempSliderEl;
-const tempValue = tempValueEl;
-const rhoSlider = rhoSliderEl;
-const rhoValue = rhoValueEl;
-const xSlider = xSliderEl;
-const xValue = xValueEl;
-const ySlider = ySliderEl;
-const yValue = yValueEl;
-const zValue = zValueEl;
-const presetNote = presetNoteEl;
+const tempSlider = q<HTMLInputElement>("#tempSlider");
+const tempValue = q<HTMLSpanElement>("#tempValue");
+const rhoSlider = q<HTMLInputElement>("#rhoSlider");
+const rhoValue = q<HTMLSpanElement>("#rhoValue");
+const xSlider = q<HTMLInputElement>("#xSlider");
+const xValue = q<HTMLSpanElement>("#xValue");
+const ySlider = q<HTMLInputElement>("#ySlider");
+const yValue = q<HTMLSpanElement>("#yValue");
+const zValue = q<HTMLSpanElement>("#zValue");
+const presetNote = q<HTMLParagraphElement>("#presetNote");
 
-const radiationClosureChip = radiationClosureChipEl;
-const radiationClosureLabel = radiationClosureLabelEl;
-const radiationClosureNote = radiationClosureNoteEl;
+const radiationClosureChip = q("#radiationClosureChip");
+const radiationClosureLabel = q("#radiationClosureLabel");
+const radiationClosureNote = q("#radiationClosureNote");
 
-const cardGas = cardGasEl;
-const cardRadiation = cardRadiationEl;
-const cardDegeneracy = cardDegeneracyEl;
+const cardGas = q("#cardGas");
+const cardRadiation = q("#cardRadiation");
+const cardDegeneracy = q("#cardDegeneracy");
 
-const pGasValue = pGasValueEl;
-const pGasBar = pGasBarEl;
-const pRadValue = pRadValueEl;
-const pRadBar = pRadBarEl;
-const pDegValue = pDegValueEl;
-const pDegBar = pDegBarEl;
-const pTotalValue = pTotalValueEl;
-const dominantChannel = dominantChannelEl;
-const pressureCurvePlot = pressureCurvePlotEl;
-const regimeMap = regimeMapEl;
-const regimeDetail = regimeDetailEl;
-const regimeSummary = regimeSummaryEl;
+const pGasValue = q("#pGasValue");
+const pGasBar = q("#pGasBar");
+const pRadValue = q("#pRadValue");
+const pRadBar = q("#pRadBar");
+const pDegValue = q("#pDegValue");
+const pDegBar = q("#pDegBar");
+const pTotalValue = q("#pTotalValue");
+const dominantChannel = q("#dominantChannel");
+const pressureCurvePlotEl = q("#pressureCurvePlot");
+const regimeMapCanvas = q<HTMLCanvasElement>("#regimeMapCanvas");
+const regimeDetail = q("#regimeDetail");
+const regimeSummary = q("#regimeSummary");
 
-const muValue = muValueEl;
-const muEValue = muEValueEl;
-const betaValue = betaValueEl;
-const radGasValue = radGasValueEl;
-const degTotalValue = degTotalValueEl;
-const chiDegValue = chiDegValueEl;
-const degRegimeValue = degRegimeValueEl;
-const xFValue = xFValueEl;
-const fermiRegimeValue = fermiRegimeValueEl;
-const finiteTCorrectionValue = finiteTCorrectionValueEl;
-const finiteTValidityValue = finiteTValidityValueEl;
-const neutronExtensionValue = neutronExtensionValueEl;
+const muValue = q("#muValue");
+const muEValue = q("#muEValue");
+const betaValue = q("#betaValue");
+const radGasValue = q("#radGasValue");
+const degTotalValue = q("#degTotalValue");
+const chiDegValue = q("#chiDegValue");
+const degRegimeValue = q("#degRegimeValue");
+const xFValue = q("#xFValue");
+const fermiRegimeValue = q("#fermiRegimeValue");
+const finiteTCorrectionValue = q("#finiteTCorrectionValue");
+const finiteTValidityValue = q("#finiteTValidityValue");
+const neutronExtensionValue = q("#neutronExtensionValue");
 
-const stationModeButton = stationModeEl;
-const helpButton = helpEl;
-const copyResults = copyResultsEl;
-const status = statusEl;
+const stationModeButton = q<HTMLButtonElement>("#stationMode");
+const helpButton = q<HTMLButtonElement>("#help");
+const copyResults = q<HTMLButtonElement>("#copyResults");
+const status = q<HTMLParagraphElement>("#status");
+
+const presetButtons = Array.from(
+  document.querySelectorAll<HTMLButtonElement>("button.preset[data-preset-id]")
+);
+
+/* ================================================================
+ * Deep-dive panel DOM queries
+ * ================================================================ */
+
+const pressureGrid = q(".pressure-grid");
+
+const deepDiveGas = q<HTMLElement>("#deepDiveGas");
+const deepDiveRadiation = q<HTMLElement>("#deepDiveRadiation");
+const deepDiveDegeneracy = q<HTMLElement>("#deepDiveDegeneracy");
+
+const gasAnimCanvas = q<HTMLCanvasElement>("#gasAnimCanvas");
+const radAnimCanvas = q<HTMLCanvasElement>("#radAnimCanvas");
+const degAnimCanvas = q<HTMLCanvasElement>("#degAnimCanvas");
+
+const gasEquationEl = q("#gasEquation");
+const radEquationEl = q("#radEquation");
+const degEquationEl = q("#degEquation");
+
+const gasDeepT = q<HTMLInputElement>("#gasDeepT");
+const gasDeepTVal = q("#gasDeepTVal");
+const gasDeepRho = q<HTMLInputElement>("#gasDeepRho");
+const gasDeepRhoVal = q("#gasDeepRhoVal");
+const gasDeepChartEl = q("#gasDeepChart");
+
+const radDeepT = q<HTMLInputElement>("#radDeepT");
+const radDeepTVal = q("#radDeepTVal");
+const radDeepChartEl = q("#radDeepChart");
+
+const degDeepRho = q<HTMLInputElement>("#degDeepRho");
+const degDeepRhoVal = q("#degDeepRhoVal");
+const degDeepChartEl = q("#degDeepChart");
+
+/* ================================================================
+ * Runtime + state
+ * ================================================================ */
 
 const runtime = createInstrumentRuntime({
   hasMathMode: false,
@@ -325,239 +268,8 @@ const state: DemoState = {
   radiationDepartureEta: 1
 };
 
-type EosPressurePlotState = {
-  temperatureK: number;
-  densityGPerCm3: number;
-  composition: StellarCompositionFractions;
-  radiationDepartureEta: number;
-  currentModel: StellarEosStateCgs;
-};
-
-function pressurePlotStateFromModel(model: StellarEosStateCgs): EosPressurePlotState {
-  return {
-    temperatureK: model.input.temperatureK,
-    densityGPerCm3: model.input.densityGPerCm3,
-    composition: {
-      hydrogenMassFractionX: model.normalizedComposition.hydrogenMassFractionX,
-      heliumMassFractionY: model.normalizedComposition.heliumMassFractionY,
-      metalMassFractionZ: model.normalizedComposition.metalMassFractionZ
-    },
-    radiationDepartureEta: model.input.radiationDepartureEta,
-    currentModel: model
-  };
-}
-
-function pressureCurveTraces(plotState: EosPressurePlotState): PlotTrace[] {
-  const gasPoints: Array<{ x: number; y: number }> = [];
-  const radiationPoints: Array<{ x: number; y: number }> = [];
-  const degeneracyPoints: Array<{ x: number; y: number }> = [];
-  const totalPoints: Array<{ x: number; y: number }> = [];
-
-  const logDensityMin = Math.log10(DENSITY_MIN_G_PER_CM3);
-  const logDensityMax = Math.log10(DENSITY_MAX_G_PER_CM3);
-  const densityGrid = logspace(logDensityMin, logDensityMax, PRESSURE_CURVE_SAMPLES);
-
-  for (const densityGPerCm3 of densityGrid) {
-    const sample = StellarEosModel.evaluateStateCgs({
-      input: {
-        temperatureK: plotState.temperatureK,
-        densityGPerCm3,
-        composition: plotState.composition,
-        radiationDepartureEta: plotState.radiationDepartureEta
-      }
-    });
-
-    gasPoints.push({ x: densityGPerCm3, y: sample.gasPressureDynePerCm2 });
-    radiationPoints.push({ x: densityGPerCm3, y: sample.radiationPressureDynePerCm2 });
-    degeneracyPoints.push({ x: densityGPerCm3, y: sample.electronDegeneracyPressureDynePerCm2 });
-    totalPoints.push({ x: densityGPerCm3, y: sample.totalPressureDynePerCm2 });
-  }
-
-  return [
-    {
-      id: "p-gas",
-      label: "P_gas",
-      points: gasPoints,
-      colorVar: "#2c7fb8",
-      lineWidth: 3.2
-    },
-    {
-      id: "p-rad",
-      label: "P_rad",
-      points: radiationPoints,
-      colorVar: "#f28e2b",
-      lineWidth: 3.2
-    },
-    {
-      id: "p-deg-e",
-      label: "P_deg,e",
-      points: degeneracyPoints,
-      colorVar: "#59a14f",
-      lineWidth: 3.2
-    },
-    {
-      id: "p-total",
-      label: "P_tot",
-      points: totalPoints,
-      colorVar: "#e15759",
-      lineWidth: 3.6
-    },
-    {
-      id: "current-state",
-      label: "Current state",
-      mode: "points",
-      pointRadius: 5.8,
-      colorVar: "#f4d35e",
-      showLegend: false,
-      points: [
-        {
-          x: plotState.densityGPerCm3,
-          y: plotState.currentModel.totalPressureDynePerCm2
-        }
-      ]
-    }
-  ];
-}
-
-function pressureCurveYDomain(traces: PlotTrace[]): [number, number] | undefined {
-  let minY = Number.POSITIVE_INFINITY;
-  let maxY = Number.NEGATIVE_INFINITY;
-  for (const trace of traces) {
-    if (trace.kind === "heatmap") continue;
-    for (const point of trace.points) {
-      if (!Number.isFinite(point.y) || !(point.y > 0)) continue;
-      minY = Math.min(minY, point.y);
-      maxY = Math.max(maxY, point.y);
-    }
-  }
-
-  if (!(Number.isFinite(minY) && Number.isFinite(maxY) && maxY > 0)) {
-    return undefined;
-  }
-  if (!(maxY > minY)) {
-    return [minY * 0.8, maxY * 1.2];
-  }
-
-  const minLog = Math.log10(minY);
-  const maxLog = Math.log10(maxY);
-  const paddingDex = Math.max(0.18, 0.06 * (maxLog - minLog));
-  return [Math.pow(10, minLog - paddingDex), Math.pow(10, maxLog + paddingDex)];
-}
-
-function pressureCurveLayoutOverrides(args: {
-  yDomain: [number, number] | undefined;
-}): PlotLayoutOverrides {
-  const yAxisOverride: Record<string, unknown> = {
-    exponentformat: "power",
-    showexponent: "all",
-    tickformat: ".1e"
-  };
-  if (args.yDomain) {
-    yAxisOverride.range = [Math.log10(args.yDomain[0]), Math.log10(args.yDomain[1])];
-  }
-
-  return {
-    hovermode: "x unified",
-    margin: { l: 84, r: 20, t: 28, b: 92 },
-    showlegend: true,
-    legend: {
-      orientation: "h",
-      x: 0,
-      xanchor: "left",
-      y: -0.28,
-      yanchor: "bottom",
-      traceorder: "normal",
-      itemwidth: 58,
-      font: { size: 12, color: "#e8efff" }
-    },
-    hoverlabel: {
-      bgcolor: "rgba(8, 16, 24, 0.94)",
-      bordercolor: "rgba(132, 156, 188, 0.6)",
-      font: { size: 12, color: "#e8efff" }
-    },
-    xaxis: {
-      title: { text: "Density rho (g cm<sup>-3</sup>)", standoff: 8 },
-      tickvals: [-9, -6, -3, 0, 3, 6, 9].map((value) => Math.pow(10, value)),
-      ticktext: [
-        "10<sup>-9</sup>",
-        "10<sup>-6</sup>",
-        "10<sup>-3</sup>",
-        "10<sup>0</sup>",
-        "10<sup>3</sup>",
-        "10<sup>6</sup>",
-        "10<sup>9</sup>"
-      ],
-      exponentformat: "power",
-      showexponent: "all",
-      tickformat: ".1e",
-      automargin: true
-    },
-    yaxis: {
-      title: { text: "Pressure P (dyne cm<sup>-2</sup>)", standoff: 8 },
-      tickvals: [-4, 0, 4, 8, 12, 16, 20, 24].map((value) => Math.pow(10, value)),
-      ticktext: [
-        "10<sup>-4</sup>",
-        "10<sup>0</sup>",
-        "10<sup>4</sup>",
-        "10<sup>8</sup>",
-        "10<sup>12</sup>",
-        "10<sup>16</sup>",
-        "10<sup>20</sup>",
-        "10<sup>24</sup>"
-      ],
-      automargin: true,
-      ...yAxisOverride
-    }
-  };
-}
-
-function pressureCurvePatch(plotState: EosPressurePlotState): {
-  traces: PlotTrace[];
-  yDomain?: [number, number];
-  layoutOverrides: PlotLayoutOverrides;
-} {
-  const traces = pressureCurveTraces(plotState);
-  const yDomain = pressureCurveYDomain(traces);
-  return {
-    traces,
-    ...(yDomain ? { yDomain } : {}),
-    layoutOverrides: pressureCurveLayoutOverrides({ yDomain })
-  };
-}
-
-const eosPressurePlotSpec: PlotSpec<EosPressurePlotState> = {
-  id: "eos-pressure-curves",
-  axes: {
-    x: {
-      label: "Density rho",
-      unit: "g cm^-3",
-      scale: "log",
-      min: DENSITY_MIN_G_PER_CM3,
-      max: DENSITY_MAX_G_PER_CM3,
-      tickCount: 7,
-      tickCountMobile: 5
-    },
-    y: {
-      label: "Pressure P",
-      unit: "dyne cm^-2",
-      scale: "log",
-      tickCount: 7,
-      tickCountMobile: 5
-    }
-  },
-  interaction: {
-    hover: true,
-    zoom: false,
-    pan: false,
-    crosshair: true
-  },
-  init(plotState) {
-    return pressureCurvePatch(plotState);
-  },
-  update(plotState) {
-    return pressureCurvePatch(plotState);
-  }
-};
+/** Most recent model evaluation — used by the marker plugin. */
+let lastModel: StellarEosStateCgs | null = null;
 
 function evaluateModel(): StellarEosStateCgs {
   return StellarEosModel.evaluateStateCgs({
@@ -570,11 +282,84 @@ function evaluateModel(): StellarEosStateCgs {
   });
 }
 
-const pressureCurvePlotController = mountPlot(
-  pressureCurvePlot,
-  eosPressurePlotSpec,
-  pressurePlotStateFromModel(evaluateModel())
-);
+/* ================================================================
+ * Pressure curve plot (uPlot, log-log axes)
+ * ================================================================ */
+
+const gasColor = resolveCssColor("--cp-success") || "#4ade80";
+const radColor = resolveCssColor("--cp-accent") || "#38bdf8";
+const degColor = resolveCssColor("--cp-glow-teal") || "#54cddc";
+const totalColor = resolveCssColor("--cp-text1") || "#e0e0e0";
+const markerColor = resolveCssColor("--cp-accent-amber") || "#f5a623";
+
+/** uPlot plugin: draw a diamond marker at the current (rho, P_total) state. */
+function currentStatePlugin(): { hooks: { draw: Array<(u: uPlot) => void> } } {
+  return {
+    hooks: {
+      draw: [(u: uPlot) => {
+        if (!lastModel) return;
+        const rho = state.densityGPerCm3;
+        const pTotal = lastModel.totalPressureDynePerCm2;
+        if (!Number.isFinite(pTotal) || pTotal <= 0) return;
+
+        const cx = u.valToPos(rho, "x", true);
+        const cy = u.valToPos(pTotal, "y", true);
+        if (!Number.isFinite(cx) || !Number.isFinite(cy)) return;
+
+        const ctx = u.ctx;
+        const dpr = window.devicePixelRatio ?? 1;
+        const s = 6 * dpr;
+
+        ctx.save();
+        ctx.fillStyle = markerColor;
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 1.5 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - s);
+        ctx.lineTo(cx + s, cy);
+        ctx.lineTo(cx, cy + s);
+        ctx.lineTo(cx - s, cy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }]
+    }
+  };
+}
+
+const initialCurveData = pressureCurveData({
+  temperatureK: state.temperatureK,
+  composition: state.composition,
+  radiationDepartureEta: state.radiationDepartureEta,
+});
+
+const pressurePlotHandle = createEosPlot(pressureCurvePlotEl, {
+  scales: { x: { distr: 3 }, y: { distr: 3 } },
+  series: [
+    {},
+    { label: "P_gas", stroke: gasColor, width: 2 },
+    { label: "P_rad", stroke: radColor, width: 2 },
+    { label: "P_deg,e", stroke: degColor, width: 2 },
+    { label: "P_total", stroke: totalColor, width: 2.5, dash: [6, 3] },
+  ],
+  axes: [
+    { label: "\u03C1 (g cm\u207B\u00B3)", values: logTickValues },
+    { label: "P (dyne cm\u207B\u00B2)", values: logTickValues },
+  ],
+  legend: { show: true },
+  plugins: [currentStatePlugin()],
+}, [
+  initialCurveData.densities,
+  initialCurveData.pGas,
+  initialCurveData.pRad,
+  initialCurveData.pDeg,
+  initialCurveData.pTotal,
+]);
+
+/* ================================================================
+ * Helper functions
+ * ================================================================ */
 
 function applyPreset(presetId: Preset["id"]): void {
   const preset = PRESET_BY_ID[presetId];
@@ -588,10 +373,7 @@ function setCompositionFromXY(args: {
   hydrogenMassFractionX: number;
   heliumMassFractionY: number;
 }): void {
-  state.composition = compositionFromXY({
-    hydrogenMassFractionX: args.hydrogenMassFractionX,
-    heliumMassFractionY: args.heliumMassFractionY
-  });
+  state.composition = compositionFromXY(args);
 }
 
 function renderPresetState(): void {
@@ -600,10 +382,9 @@ function renderPresetState(): void {
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-pressed", String(isActive));
   }
-
   const preset = PRESET_BY_ID[state.selectedPresetId];
-  const composition = state.composition;
-  presetNote.textContent = `${preset.note} Expected: ${preset.expectedDominance}. X=${formatFraction(composition.hydrogenMassFractionX, 2)}, Y=${formatFraction(composition.heliumMassFractionY, 2)}, Z=${formatFraction(composition.metalMassFractionZ, 2)}.`;
+  const c = state.composition;
+  presetNote.textContent = `${preset.note} Expected: ${preset.expectedDominance}. X=${formatFraction(c.hydrogenMassFractionX, 2)}, Y=${formatFraction(c.heliumMassFractionY, 2)}, Z=${formatFraction(c.metalMassFractionZ, 2)}.`;
 }
 
 function setPressureCard(
@@ -624,14 +405,7 @@ function setPressureCard(
 
 function renderRadiationClosure(model: StellarEosStateCgs): void {
   const closure = model.radiationClosureAssessment;
-  const kind =
-    closure.tag === "lte-like"
-      ? "tip"
-      : closure.tag === "proxy"
-        ? "warn"
-        : closure.tag === "caution"
-          ? "warn"
-          : "warn";
+  const kind = closure.tag === "lte-like" ? "tip" : "warn";
   radiationClosureChip.setAttribute("data-kind", kind);
   radiationClosureLabel.textContent = closure.label;
   radiationClosureNote.textContent = closure.note;
@@ -648,18 +422,12 @@ function dominantPressureValue(model: StellarEosStateCgs): number {
 
 function dominantChannelLabel(model: StellarEosStateCgs): string {
   switch (model.dominantPressureChannel) {
-    case "gas":
-      return "Gas pressure";
-    case "radiation":
-      return "Radiation pressure";
-    case "degeneracy":
-      return "Electron degeneracy pressure";
-    case "extension":
-      return "Extension pressure term(s)";
-    case "mixed":
-      return "Mixed (no single dominant channel)";
-    default:
-      return "Unavailable";
+    case "gas": return "Gas pressure";
+    case "radiation": return "Radiation pressure";
+    case "degeneracy": return "Electron degeneracy pressure";
+    case "extension": return "Extension pressure term(s)";
+    case "mixed": return "Mixed (no single dominant channel)";
+    default: return "Unavailable";
   }
 }
 
@@ -667,413 +435,36 @@ function electronDegeneracyMethodLabel(
   method: StellarEosStateCgs["electronDegeneracyMethod"]
 ): string {
   switch (method) {
-    case "nonrel-fd":
-      return "Finite-T nonrelativistic Fermi-Dirac";
-    case "relativistic-fd":
-      return "Finite-T relativistic Fermi-Dirac";
-    case "zero-t-limit":
-      return "Zero-temperature limit";
-    case "classical-limit":
-      return "Classical electron limit";
-    case "override":
-      return "Custom override";
-    default:
-      return "Unavailable";
+    case "nonrel-fd": return "Finite-T nonrelativistic Fermi-Dirac";
+    case "relativistic-fd": return "Finite-T relativistic Fermi-Dirac";
+    case "zero-t-limit": return "Zero-temperature limit";
+    case "classical-limit": return "Classical electron limit";
+    case "override": return "Custom override";
+    default: return "Unavailable";
   }
 }
 
 function degeneracyRegimeLabelLatex(regime: StellarEosStateCgs["degeneracyRegime"]): string {
   switch (regime.tag) {
-    case "strong":
-      return `Strongly degenerate ($T/T_F \\ll 1$)`;
-    case "transition":
-      return `Transition regime ($T/T_F \\sim 1$)`;
-    case "weak":
-      return `Weakly/non-degenerate ($T/T_F \\gg 1$)`;
-    default:
-      return "Degeneracy diagnostic unavailable";
+    case "strong": return `Strongly degenerate ($T/T_F \\ll 1$)`;
+    case "transition": return `Transition regime ($T/T_F \\sim 1$)`;
+    case "weak": return `Weakly/non-degenerate ($T/T_F \\gg 1$)`;
+    default: return "Degeneracy diagnostic unavailable";
   }
 }
 
 function fermiRelativityRegimeLabelLatex(regime: StellarEosStateCgs["fermiRelativityRegime"]): string {
   switch (regime.tag) {
-    case "non-relativistic":
-      return `Non-relativistic electron momenta ($x_F \\ll 1$)`;
-    case "trans-relativistic":
-      return `Trans-relativistic electron momenta ($x_F \\sim 1$)`;
-    case "relativistic":
-      return `Relativistic electron momenta ($x_F > 1$)`;
-    default:
-      return "Fermi relativity diagnostic unavailable";
+    case "non-relativistic": return `Non-relativistic electron momenta ($x_F \\ll 1$)`;
+    case "trans-relativistic": return `Trans-relativistic electron momenta ($x_F \\sim 1$)`;
+    case "relativistic": return `Relativistic electron momenta ($x_F > 1$)`;
+    default: return "Fermi relativity diagnostic unavailable";
   }
 }
 
-function compositionRegimeKey(composition: StellarCompositionFractions, radiationDepartureEta: number): string {
-  return [
-    composition.hydrogenMassFractionX.toFixed(6),
-    composition.heliumMassFractionY.toFixed(6),
-    composition.metalMassFractionZ.toFixed(6),
-    radiationDepartureEta.toFixed(6)
-  ].join("|");
-}
-
-type RegimeChannelCode = 0 | 1 | 2 | 3;
-
-type RegimeMapGridResolution = {
-  xCells: number;
-  yCells: number;
-  signature: string;
-};
-
-type RegimeMapGridData = {
-  xLog: number[];
-  yLog: number[];
-  z: RegimeChannelCode[][];
-  labels: string[][];
-};
-
-function channelCode(channel: StellarEosStateCgs["dominantPressureChannel"]): RegimeChannelCode {
-  switch (channel) {
-    case "gas":
-      return 0;
-    case "radiation":
-      return 1;
-    case "degeneracy":
-      return 2;
-    case "mixed":
-    case "extension":
-    default:
-      return 3;
-  }
-}
-
-function channelLabelFromCode(code: RegimeChannelCode): string {
-  switch (code) {
-    case 0:
-      return "P_gas dominant";
-    case 1:
-      return "P_rad dominant";
-    case 2:
-      return "P_deg,e dominant";
-    case 3:
-    default:
-      return "Mixed dominance";
-  }
-}
-
-const EOS_REGIME_COLOR_SCALE: Array<[number, string]> = [
-  [0, "rgba(61, 186, 138, 0.82)"],
-  [0.249, "rgba(61, 186, 138, 0.82)"],
-  [0.25, "rgba(91, 153, 222, 0.82)"],
-  [0.499, "rgba(91, 153, 222, 0.82)"],
-  [0.5, "rgba(84, 205, 220, 0.82)"],
-  [0.749, "rgba(84, 205, 220, 0.82)"],
-  [0.75, "rgba(239, 187, 86, 0.84)"],
-  [1, "rgba(239, 187, 86, 0.84)"]
-];
-
-let regimeMapCacheKey: string | null = null;
-let pendingRegimeMapKey: string | null = null;
-let pendingRegimeMapResolution: RegimeMapGridResolution | null = null;
-let regimeMapRebuildTimer: number | null = null;
-let regimeMapBuildCount = 0;
-let regimeMapLastResolution = "0x0";
-let regimeMapGridData: RegimeMapGridData | null = null;
-let regimeMapCurrentLogPoint = { log10Temperature: Number.NaN, log10Density: Number.NaN };
-
-function regimeMapGridResolution(): RegimeMapGridResolution {
-  const rect = regimeMap.getBoundingClientRect();
-  const widthPx = rect.width > 0 ? rect.width : 540;
-  const heightPx = rect.height > 0 ? rect.height : 360;
-
-  const cellSizePx =
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(pointer: coarse)").matches
-      ? REGIME_MAP_CELL_SIZE_COARSE_PX
-      : REGIME_MAP_CELL_SIZE_DESKTOP_PX;
-
-  const xCells = Math.round(
-    clamp(widthPx / cellSizePx, REGIME_MAP_MIN_X, REGIME_MAP_MAX_X)
-  );
-  const yCells = Math.round(
-    clamp(heightPx / cellSizePx, REGIME_MAP_MIN_Y, REGIME_MAP_MAX_Y)
-  );
-
-  return {
-    xCells,
-    yCells,
-    signature: `${xCells}x${yCells}`
-  };
-}
-
-function cancelRegimeMapRebuildTimer(): void {
-  if (regimeMapRebuildTimer === null) return;
-  window.clearTimeout(regimeMapRebuildTimer);
-  regimeMapRebuildTimer = null;
-}
-
-function flushRegimeMapRebuild(): void {
-  cancelRegimeMapRebuildTimer();
-  if (!pendingRegimeMapKey || pendingRegimeMapKey === regimeMapCacheKey) {
-    pendingRegimeMapKey = null;
-    pendingRegimeMapResolution = null;
-    return;
-  }
-  buildRegimeMapField(pendingRegimeMapResolution ?? regimeMapGridResolution());
-  regimeMapCacheKey = pendingRegimeMapKey;
-  pendingRegimeMapKey = null;
-  pendingRegimeMapResolution = null;
-}
-
-function scheduleRegimeMapRebuild(
-  nextKey: string,
-  resolution: RegimeMapGridResolution
-): void {
-  pendingRegimeMapKey = nextKey;
-  pendingRegimeMapResolution = resolution;
-  cancelRegimeMapRebuildTimer();
-  regimeMapRebuildTimer = window.setTimeout(() => {
-    regimeMapRebuildTimer = null;
-    flushRegimeMapRebuild();
-  }, REGIME_MAP_REBUILD_DEBOUNCE_MS);
-}
-
-function buildRegimeMapField(resolution: RegimeMapGridResolution): void {
-  regimeMapBuildCount += 1;
-  regimeMapLastResolution = resolution.signature;
-  const xLog = logspace(
-    Math.log10(TEMPERATURE_MIN_K),
-    Math.log10(TEMPERATURE_MAX_K),
-    resolution.xCells
-  ).map((value) => Math.log10(value));
-  const yLog = logspace(
-    Math.log10(DENSITY_MIN_G_PER_CM3),
-    Math.log10(DENSITY_MAX_G_PER_CM3),
-    resolution.yCells
-  ).map((value) => Math.log10(value));
-
-  const z: RegimeChannelCode[][] = [];
-  const labels: string[][] = [];
-
-  for (const logDensity of yLog) {
-    const zRow: RegimeChannelCode[] = [];
-    const labelRow: string[] = [];
-    for (const logTemperature of xLog) {
-      const sample = StellarEosModel.evaluateStateCgs({
-        input: {
-          temperatureK: Math.pow(10, logTemperature),
-          densityGPerCm3: Math.pow(10, logDensity),
-          composition: state.composition,
-          radiationDepartureEta: state.radiationDepartureEta
-        }
-      });
-      const code = channelCode(sample.dominantPressureChannel);
-      zRow.push(code);
-      labelRow.push(channelLabelFromCode(code));
-    }
-    z.push(zRow);
-    labels.push(labelRow);
-  }
-  regimeMapGridData = { xLog, yLog, z, labels };
-}
-
-type RegimeMapPlotState = {
-  model: StellarEosStateCgs;
-  deferRegimeMapFieldRebuild?: boolean;
-};
-
-function regimeMapPlotStateFromModel(
-  model: StellarEosStateCgs,
-  args: { deferRegimeMapFieldRebuild?: boolean } = {}
-): RegimeMapPlotState {
-  return {
-    model,
-    deferRegimeMapFieldRebuild: args.deferRegimeMapFieldRebuild
-  };
-}
-
-function regimeMapPatch(plotState: RegimeMapPlotState): {
-  traces: PlotTrace[];
-  xDomain: [number, number];
-  yDomain: [number, number];
-  layoutOverrides: PlotLayoutOverrides;
-} {
-  const model = plotState.model;
-  const resolution = regimeMapGridResolution();
-  const nextKey = `${compositionRegimeKey(state.composition, state.radiationDepartureEta)}|${resolution.signature}`;
-  if (nextKey !== regimeMapCacheKey) {
-    if (plotState.deferRegimeMapFieldRebuild) {
-      scheduleRegimeMapRebuild(nextKey, resolution);
-    } else {
-      pendingRegimeMapKey = nextKey;
-      pendingRegimeMapResolution = resolution;
-      flushRegimeMapRebuild();
-    }
-  }
-
-  if (!regimeMapGridData) {
-    buildRegimeMapField(resolution);
-  }
-  if (!regimeMapGridData) {
-    return {
-      traces: [],
-      xDomain: [Math.log10(TEMPERATURE_MIN_K), Math.log10(TEMPERATURE_MAX_K)],
-      yDomain: [Math.log10(DENSITY_MIN_G_PER_CM3), Math.log10(DENSITY_MAX_G_PER_CM3)],
-      layoutOverrides: {}
-    };
-  }
-
-  const currentLogT = Math.log10(model.input.temperatureK);
-  const currentLogRho = Math.log10(model.input.densityGPerCm3);
-  regimeMapCurrentLogPoint = {
-    log10Temperature: currentLogT,
-    log10Density: currentLogRho
-  };
-
-  const presetLogT = PRESETS.map((preset) => Math.log10(preset.temperatureK));
-  const presetLogRho = PRESETS.map((preset) => Math.log10(preset.densityGPerCm3));
-
-  const traces: PlotTrace[] = [
-    {
-      kind: "heatmap",
-      id: "dominance-field",
-      label: "Dominant channel field",
-      x: regimeMapGridData.xLog,
-      y: regimeMapGridData.yLog,
-      z: regimeMapGridData.z,
-      customData: regimeMapGridData.labels,
-      hoverTemplate:
-        "log10(T/K)=%{x:.2f}<br>log10(rho/(g cm^-3))=%{y:.2f}<br>%{customdata}<extra></extra>",
-      zMin: 0,
-      zMax: 3,
-      showScale: false,
-      colorScale: EOS_REGIME_COLOR_SCALE,
-      smooth: "best",
-      showLegend: false
-    },
-    {
-      id: "preset-anchors",
-      label: "Preset anchors",
-      mode: "points",
-      pointRadius: 3.8,
-      colorVar: "rgba(244, 249, 255, 0.76)",
-      markerLineColor: "rgba(8, 14, 22, 0.92)",
-      markerLineWidth: 1.1,
-      hoverTemplate: "Preset anchors<extra></extra>",
-      showLegend: false,
-      points: presetLogT.map((logT, index) => ({ x: logT, y: presetLogRho[index] }))
-    },
-    {
-      id: "current-state",
-      label: "Current state",
-      mode: "points",
-      pointRadius: 5.6,
-      colorVar: "#4ce0ea",
-      markerSymbol: "diamond",
-      markerLineColor: "rgba(8, 12, 20, 0.96)",
-      markerLineWidth: 1.6,
-      hoverTemplate: "Current state<extra></extra>",
-      showLegend: false,
-      points: [{ x: currentLogT, y: currentLogRho }]
-    }
-  ];
-
-  const log10Temperature = Math.log10(model.input.temperatureK);
-  const log10Density = Math.log10(model.input.densityGPerCm3);
-  regimeDetail.textContent = `Point details: $\\log_{10}(T/\\mathrm{K})=${formatFraction(log10Temperature, 2)}$, $\\log_{10}(\\rho/(\\mathrm{g\\ cm^{-3}}))=${formatFraction(log10Density, 2)}$, $P_{\\rm rad}/P_{\\rm gas}=${formatScientific(model.pressureRatios.radiationToGas, 3)}$, $P_{\\rm deg,e}/P_{\\rm tot}=${formatScientific(model.pressureRatios.degeneracyToTotal, 3)}$.`;
-  regimeSummary.textContent = `Interpretation: ${dominantChannelLabel(model)} dominates at the highlighted state; white markers show preset anchors.`;
-  renderMath(regimeDetail);
-  renderMath(regimeSummary);
-  regimeMap.setAttribute(
-    "aria-label",
-    "EOS dominance heatmap over log density and log temperature with current-state marker"
-  );
-
-  return {
-    traces,
-    xDomain: [Math.log10(TEMPERATURE_MIN_K), Math.log10(TEMPERATURE_MAX_K)],
-    yDomain: [Math.log10(DENSITY_MIN_G_PER_CM3), Math.log10(DENSITY_MAX_G_PER_CM3)],
-    layoutOverrides: {
-      showlegend: false,
-      margin: { l: 84, r: 20, t: 16, b: 62 },
-      plot_bgcolor: "rgba(5, 12, 21, 0.98)",
-      hoverlabel: {
-        bgcolor: "rgba(8, 16, 24, 0.96)",
-        bordercolor: "rgba(132, 156, 188, 0.66)",
-        font: { size: 12, color: "#e8efff" }
-      },
-      xaxis: {
-        title: { text: "log<sub>10</sub>(T/K)", standoff: 8 },
-        tickvals: [3, 4, 5, 6, 7, 8, 9],
-        ticktext: [
-          "10<sup>3</sup>",
-          "10<sup>4</sup>",
-          "10<sup>5</sup>",
-          "10<sup>6</sup>",
-          "10<sup>7</sup>",
-          "10<sup>8</sup>",
-          "10<sup>9</sup>"
-        ],
-        automargin: true
-      },
-      yaxis: {
-        title: { text: "log<sub>10</sub>(rho/(g cm<sup>-3</sup>))", standoff: 8 },
-        tickvals: [-10, -5, 0, 5, 10],
-        ticktext: [
-          "10<sup>-10</sup>",
-          "10<sup>-5</sup>",
-          "10<sup>0</sup>",
-          "10<sup>5</sup>",
-          "10<sup>10</sup>"
-        ],
-        automargin: true
-      },
-      uirevision: "cp-eos-regime-map"
-    }
-  };
-}
-
-const eosRegimeMapPlotSpec: PlotSpec<RegimeMapPlotState> = {
-  id: "eos-regime-map",
-  axes: {
-    x: {
-      label: "log10(T/K)",
-      scale: "linear",
-      min: Math.log10(TEMPERATURE_MIN_K),
-      max: Math.log10(TEMPERATURE_MAX_K),
-      tickCount: 7,
-      tickCountMobile: 6
-    },
-    y: {
-      label: "log10(rho/(g cm^-3))",
-      scale: "linear",
-      min: Math.log10(DENSITY_MIN_G_PER_CM3),
-      max: Math.log10(DENSITY_MAX_G_PER_CM3),
-      tickCount: 6,
-      tickCountMobile: 5
-    }
-  },
-  interaction: {
-    hover: true,
-    zoom: false,
-    pan: false,
-    crosshair: false
-  },
-  ariaLabel: "EOS dominance heatmap over log density and log temperature",
-  init(plotState) {
-    return regimeMapPatch(plotState);
-  },
-  update(plotState) {
-    return regimeMapPatch(plotState);
-  }
-};
-
-const regimeMapPlotController = mountPlot(
-  regimeMap,
-  eosRegimeMapPlotSpec,
-  regimeMapPlotStateFromModel(evaluateModel())
-);
+/* ================================================================
+ * Advanced diagnostics
+ * ================================================================ */
 
 function renderAdvancedDiagnostics(model: StellarEosStateCgs): void {
   xFValue.textContent = formatScientific(model.fermiRelativityX, 5);
@@ -1081,109 +472,55 @@ function renderAdvancedDiagnostics(model: StellarEosStateCgs): void {
   renderMath(fermiRegimeValue);
   finiteTCorrectionValue.textContent = Number.isFinite(model.finiteTemperatureDegeneracyCorrectionFactor)
     ? formatScientific(model.finiteTemperatureDegeneracyCorrectionFactor, 5)
-    : "—";
+    : "\u2014";
   finiteTValidityValue.textContent = `${model.finiteTemperatureDegeneracyAssessment.label} (${electronDegeneracyMethodLabel(model.electronDegeneracyMethod)})`;
   renderMath(finiteTValidityValue);
-  neutronExtensionValue.textContent = formatScientific(
-    model.neutronExtensionPressureDynePerCm2,
-    5
-  );
+  neutronExtensionValue.textContent = formatScientific(model.neutronExtensionPressureDynePerCm2, 5);
 }
 
-function exportResults(model: StellarEosStateCgs): ExportPayloadV1 {
-  const composition = model.normalizedComposition;
+/* ================================================================
+ * Export results
+ * ================================================================ */
 
+function exportResults(model: StellarEosStateCgs): ExportPayloadV1 {
+  const c = model.normalizedComposition;
   return {
     version: 1,
     timestamp: new Date().toISOString(),
     parameters: [
       { name: "Preset", value: PRESET_BY_ID[state.selectedPresetId].label },
       { name: "Temperature T (K)", value: formatScientific(model.input.temperatureK, 4) },
-      {
-        name: "Density rho (g cm^-3)",
-        value: formatScientific(model.input.densityGPerCm3, 4)
-      },
-      {
-        name: "Composition mass fractions (X,Y,Z)",
-        value: `(${formatFraction(composition.hydrogenMassFractionX, 3)}, ${formatFraction(composition.heliumMassFractionY, 3)}, ${formatFraction(composition.metalMassFractionZ, 3)})`
-      }
+      { name: "Density rho (g cm^-3)", value: formatScientific(model.input.densityGPerCm3, 4) },
+      { name: "Composition mass fractions (X,Y,Z)", value: `(${formatFraction(c.hydrogenMassFractionX, 3)}, ${formatFraction(c.heliumMassFractionY, 3)}, ${formatFraction(c.metalMassFractionZ, 3)})` }
     ],
     readouts: [
       { name: "mu (mean mass per particle in m_u)", value: formatFraction(model.meanMolecularWeightMu, 5) },
-      {
-        name: "mu_e (mean mass per electron in m_u)",
-        value: formatFraction(model.meanMolecularWeightMuE, 5)
-      },
-      {
-        name: "P_gas (dyne cm^-2)",
-        value: formatScientific(model.gasPressureDynePerCm2, 5)
-      },
-      {
-        name: "P_rad (dyne cm^-2)",
-        value: formatScientific(model.radiationPressureDynePerCm2, 5)
-      },
-      {
-        name: "P_deg,e (dyne cm^-2)",
-        value: formatScientific(model.electronDegeneracyPressureDynePerCm2, 5)
-      },
-      {
-        name: "P_tot (dyne cm^-2)",
-        value: formatScientific(model.totalPressureDynePerCm2, 5)
-      },
-      {
-        name: "P_rad/P_gas",
-        value: formatScientific(model.pressureRatios.radiationToGas, 5)
-      },
-      {
-        name: "P_deg,e/P_tot",
-        value: formatScientific(model.pressureRatios.degeneracyToTotal, 5)
-      },
-      {
-        name: "beta=P_gas/P_tot",
-        value: formatScientific(model.pressureRatios.betaGasToTotal, 5)
-      },
-      {
-        name: "chi_deg=T/T_F",
-        value: formatScientific(model.chiDegeneracy, 5)
-      },
-      {
-        name: "x_F=p_F/(m_e c)",
-        value: formatScientific(model.fermiRelativityX, 5)
-      },
-      {
-        name: "Fermi relativity regime",
-        value: model.fermiRelativityRegime.label
-      },
+      { name: "mu_e (mean mass per electron in m_u)", value: formatFraction(model.meanMolecularWeightMuE, 5) },
+      { name: "P_gas (dyne cm^-2)", value: formatScientific(model.gasPressureDynePerCm2, 5) },
+      { name: "P_rad (dyne cm^-2)", value: formatScientific(model.radiationPressureDynePerCm2, 5) },
+      { name: "P_deg,e (dyne cm^-2)", value: formatScientific(model.electronDegeneracyPressureDynePerCm2, 5) },
+      { name: "P_tot (dyne cm^-2)", value: formatScientific(model.totalPressureDynePerCm2, 5) },
+      { name: "P_rad/P_gas", value: formatScientific(model.pressureRatios.radiationToGas, 5) },
+      { name: "P_deg,e/P_tot", value: formatScientific(model.pressureRatios.degeneracyToTotal, 5) },
+      { name: "beta=P_gas/P_tot", value: formatScientific(model.pressureRatios.betaGasToTotal, 5) },
+      { name: "chi_deg=T/T_F", value: formatScientific(model.chiDegeneracy, 5) },
+      { name: "x_F=p_F/(m_e c)", value: formatScientific(model.fermiRelativityX, 5) },
+      { name: "Fermi relativity regime", value: model.fermiRelativityRegime.label },
       {
         name: "Sommerfeld factor 1 + (5*pi^2/12)(T/T_F)^2",
         value: Number.isFinite(model.finiteTemperatureDegeneracyCorrectionFactor)
           ? formatScientific(model.finiteTemperatureDegeneracyCorrectionFactor, 5)
-          : "—"
+          : "\u2014"
       },
       {
         name: "Finite-T validity",
         value: `${model.finiteTemperatureDegeneracyAssessment.label} (${electronDegeneracyMethodLabel(model.electronDegeneracyMethod)})`
       },
-      {
-        name: "P_e,FD (dyne cm^-2)",
-        value: formatScientific(model.electronPressureFiniteTDynePerCm2, 5)
-      },
-      {
-        name: "P_e,classical (dyne cm^-2)",
-        value: formatScientific(model.electronPressureClassicalDynePerCm2, 5)
-      },
-      {
-        name: "Extension pressure P_ext (dyne cm^-2)",
-        value: formatScientific(model.extensionPressureDynePerCm2, 5)
-      },
-      {
-        name: "Neutron extension pressure (dyne cm^-2)",
-        value: formatScientific(model.neutronExtensionPressureDynePerCm2, 5)
-      },
-      {
-        name: "Dominant pressure channel",
-        value: dominantChannelLabel(model)
-      }
+      { name: "P_e,FD (dyne cm^-2)", value: formatScientific(model.electronPressureFiniteTDynePerCm2, 5) },
+      { name: "P_e,classical (dyne cm^-2)", value: formatScientific(model.electronPressureClassicalDynePerCm2, 5) },
+      { name: "Extension pressure P_ext (dyne cm^-2)", value: formatScientific(model.extensionPressureDynePerCm2, 5) },
+      { name: "Neutron extension pressure (dyne cm^-2)", value: formatScientific(model.neutronExtensionPressureDynePerCm2, 5) },
+      { name: "Dominant pressure channel", value: dominantChannelLabel(model) }
     ],
     notes: [
       "Gas pressure uses P_gas = rho k_B T / (mu m_u).",
@@ -1196,32 +533,30 @@ function exportResults(model: StellarEosStateCgs): ExportPayloadV1 {
   };
 }
 
-function render(args: { deferRegimeMapFieldRebuild?: boolean } = {}): void {
+/* ================================================================
+ * Render (main update loop)
+ * ================================================================ */
+
+function render(args: { deferGridRebuild?: boolean } = {}): void {
+  // --- Sync slider positions ---
   const temperatureSliderValue = valueToLogSlider({
     value: state.temperatureK,
-    sliderMin: 0,
-    sliderMax: 1000,
-    valueMin: TEMPERATURE_MIN_K,
-    valueMax: TEMPERATURE_MAX_K
+    sliderMin: 0, sliderMax: 1000,
+    valueMin: TEMPERATURE_MIN_K, valueMax: TEMPERATURE_MAX_K
   });
   const densitySliderValue = valueToLogSlider({
     value: state.densityGPerCm3,
-    sliderMin: 0,
-    sliderMax: 1000,
-    valueMin: DENSITY_MIN_G_PER_CM3,
-    valueMax: DENSITY_MAX_G_PER_CM3
+    sliderMin: 0, sliderMax: 1000,
+    valueMin: DENSITY_MIN_G_PER_CM3, valueMax: DENSITY_MAX_G_PER_CM3
   });
 
-  tempSlider.value = Number.isFinite(temperatureSliderValue)
-    ? String(Math.round(temperatureSliderValue))
-    : "0";
-  rhoSlider.value = Number.isFinite(densitySliderValue)
-    ? String(Math.round(densitySliderValue))
-    : "0";
+  tempSlider.value = Number.isFinite(temperatureSliderValue) ? String(Math.round(temperatureSliderValue)) : "0";
+  rhoSlider.value = Number.isFinite(densitySliderValue) ? String(Math.round(densitySliderValue)) : "0";
 
   tempValue.textContent = `${formatScientific(state.temperatureK, 4)} K`;
   rhoValue.textContent = `${formatScientific(state.densityGPerCm3, 4)} g cm^-3`;
 
+  // --- Composition sliders ---
   const x = state.composition.hydrogenMassFractionX;
   const y = state.composition.heliumMassFractionY;
   const z = state.composition.metalMassFractionZ;
@@ -1235,35 +570,56 @@ function render(args: { deferRegimeMapFieldRebuild?: boolean } = {}): void {
   yValue.textContent = formatFraction(y, 3);
   zValue.textContent = formatFraction(z, 3);
 
+  // --- Evaluate physics model ---
   const model = evaluateModel();
-  pressureCurvePlotController.update(pressurePlotStateFromModel(model));
-  const dominantPressureDynePerCm2 = dominantPressureValue(model);
+  lastModel = model;
 
-  setPressureCard(
-    cardGas,
-    pGasBar,
-    pGasValue,
-    model.gasPressureDynePerCm2,
-    dominantPressureDynePerCm2
-  );
-  setPressureCard(
-    cardRadiation,
-    pRadBar,
-    pRadValue,
-    model.radiationPressureDynePerCm2,
-    dominantPressureDynePerCm2
-  );
-  setPressureCard(
-    cardDegeneracy,
-    pDegBar,
-    pDegValue,
-    model.electronDegeneracyPressureDynePerCm2,
-    dominantPressureDynePerCm2
-  );
+  // --- Pressure curves (uPlot) ---
+  const curveData = pressureCurveData({
+    temperatureK: state.temperatureK,
+    composition: state.composition,
+    radiationDepartureEta: state.radiationDepartureEta,
+  });
+  pressurePlotHandle.plot.setData([
+    curveData.densities,
+    curveData.pGas,
+    curveData.pRad,
+    curveData.pDeg,
+    curveData.pTotal,
+  ]);
+
+  // --- Regime map (Canvas 2D) ---
+  renderRegimeMap(regimeMapCanvas, {
+    composition: state.composition,
+    radiationDepartureEta: state.radiationDepartureEta,
+    currentLogT: Math.log10(state.temperatureK),
+    currentLogRho: Math.log10(state.densityGPerCm3),
+    presets: PRESETS.map(p => ({
+      id: p.id,
+      logT: Math.log10(p.temperatureK),
+      logRho: Math.log10(p.densityGPerCm3),
+    })),
+    deferGridRebuild: args.deferGridRebuild,
+  });
+
+  // --- Regime map detail text ---
+  const logT = Math.log10(model.input.temperatureK);
+  const logRho = Math.log10(model.input.densityGPerCm3);
+  regimeDetail.textContent = `Point details: $\\log_{10}(T/\\mathrm{K})=${formatFraction(logT, 2)}$, $\\log_{10}(\\rho/(\\mathrm{g\\ cm^{-3}}))=${formatFraction(logRho, 2)}$, $P_{\\rm rad}/P_{\\rm gas}=${formatScientific(model.pressureRatios.radiationToGas, 3)}$, $P_{\\rm deg,e}/P_{\\rm tot}=${formatScientific(model.pressureRatios.degeneracyToTotal, 3)}$.`;
+  regimeSummary.textContent = `Interpretation: ${dominantChannelLabel(model)} dominates at the highlighted state; white markers show preset anchors.`;
+  renderMath(regimeDetail);
+  renderMath(regimeSummary);
+
+  // --- Pressure cards ---
+  const dominantP = dominantPressureValue(model);
+  setPressureCard(cardGas, pGasBar, pGasValue, model.gasPressureDynePerCm2, dominantP);
+  setPressureCard(cardRadiation, pRadBar, pRadValue, model.radiationPressureDynePerCm2, dominantP);
+  setPressureCard(cardDegeneracy, pDegBar, pDegValue, model.electronDegeneracyPressureDynePerCm2, dominantP);
 
   pTotalValue.textContent = formatScientific(model.totalPressureDynePerCm2, 5);
   dominantChannel.textContent = dominantChannelLabel(model);
 
+  // --- Readouts ---
   muValue.textContent = formatFraction(model.meanMolecularWeightMu, 5);
   muEValue.textContent = formatFraction(model.meanMolecularWeightMuE, 5);
   betaValue.textContent = percent(model.pressureRatios.betaGasToTotal, 2);
@@ -1275,22 +631,292 @@ function render(args: { deferRegimeMapFieldRebuild?: boolean } = {}): void {
 
   renderRadiationClosure(model);
   renderAdvancedDiagnostics(model);
-  regimeMapPlotController.update(
-    regimeMapPlotStateFromModel(model, {
-      deferRegimeMapFieldRebuild: args.deferRegimeMapFieldRebuild
-    })
-  );
   renderPresetState();
 
+  // --- Debug / E2E interface ---
   (window as Window & { __cp?: unknown }).__cp = {
     slug: "eos-lab",
     mode: runtime.mode,
-    regimeMapBuildCount,
-    regimeMapGridResolution: regimeMapLastResolution,
-    regimeMapCurrentLogPoint,
     exportResults: () => exportResults(model)
   };
 }
+
+/* ================================================================
+ * Deep-dive panel system
+ * ================================================================ */
+
+type DeepDiveChannel = "gas" | "radiation" | "degeneracy";
+let activeDeepDive: DeepDiveChannel | null = null;
+let activeAnimation: MechanismAnimation | null = null;
+let deepDivePlotHandle: ReturnType<typeof createEosPlot> | null = null;
+
+const deepDivePanels: Record<DeepDiveChannel, HTMLElement> = {
+  gas: deepDiveGas,
+  radiation: deepDiveRadiation,
+  degeneracy: deepDiveDegeneracy,
+};
+
+const deepDiveCanvases: Record<DeepDiveChannel, HTMLCanvasElement> = {
+  gas: gasAnimCanvas,
+  radiation: radAnimCanvas,
+  degeneracy: degAnimCanvas,
+};
+
+/** Deep-dive local state (independent of global sliders). */
+const deepDiveState = {
+  gasT: state.temperatureK,
+  gasRho: state.densityGPerCm3,
+  radT: state.temperatureK,
+  degRho: state.densityGPerCm3,
+};
+
+function syncDeepDiveSliders(channel: DeepDiveChannel): void {
+  if (channel === "gas") {
+    deepDiveState.gasT = state.temperatureK;
+    deepDiveState.gasRho = state.densityGPerCm3;
+    gasDeepT.value = String(Math.round(valueToLogSlider({
+      value: deepDiveState.gasT, sliderMin: 0, sliderMax: 1000,
+      valueMin: TEMPERATURE_MIN_K, valueMax: TEMPERATURE_MAX_K,
+    })));
+    gasDeepRho.value = String(Math.round(valueToLogSlider({
+      value: deepDiveState.gasRho, sliderMin: 0, sliderMax: 1000,
+      valueMin: DENSITY_MIN_G_PER_CM3, valueMax: DENSITY_MAX_G_PER_CM3,
+    })));
+  } else if (channel === "radiation") {
+    deepDiveState.radT = state.temperatureK;
+    radDeepT.value = String(Math.round(valueToLogSlider({
+      value: deepDiveState.radT, sliderMin: 0, sliderMax: 1000,
+      valueMin: TEMPERATURE_MIN_K, valueMax: TEMPERATURE_MAX_K,
+    })));
+  } else {
+    deepDiveState.degRho = state.densityGPerCm3;
+    degDeepRho.value = String(Math.round(valueToLogSlider({
+      value: deepDiveState.degRho, sliderMin: 0, sliderMax: 1000,
+      valueMin: DENSITY_MIN_G_PER_CM3, valueMax: DENSITY_MAX_G_PER_CM3,
+    })));
+  }
+}
+
+function renderDeepDiveContent(channel: DeepDiveChannel): void {
+  if (channel === "gas") {
+    const T = deepDiveState.gasT;
+    const rho = deepDiveState.gasRho;
+    const gasEos = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: T,
+        densityGPerCm3: rho,
+        composition: state.composition,
+        radiationDepartureEta: state.radiationDepartureEta,
+      },
+    });
+    const mu = gasEos.meanMolecularWeightMu;
+    const pGas = gasEos.gasPressureDynePerCm2;
+    gasDeepTVal.textContent = `${formatScientific(T, 4)} K`;
+    gasDeepRhoVal.textContent = `${formatScientific(rho, 4)} g cm^-3`;
+    gasEquationEl.textContent = `$$${gasEquationLatex({ rho, T, mu, pGas })}$$`;
+    renderMath(gasEquationEl);
+
+    const data = gasDeepDiveData({ temperatureK: T, composition: state.composition });
+    if (deepDivePlotHandle) {
+      deepDivePlotHandle.plot.setData([data.densities, data.pGas]);
+    }
+    activeAnimation?.updateParams({ logT: Math.log10(T), logRho: Math.log10(rho) });
+
+  } else if (channel === "radiation") {
+    const T = deepDiveState.radT;
+    const radEos = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: T,
+        densityGPerCm3: state.densityGPerCm3,
+        composition: state.composition,
+        radiationDepartureEta: state.radiationDepartureEta,
+      },
+    });
+    const pRad = radEos.radiationPressureDynePerCm2;
+    radDeepTVal.textContent = `${formatScientific(T, 4)} K`;
+    radEquationEl.textContent = `$$${radEquationLatex({ T, pRad })}$$`;
+    renderMath(radEquationEl);
+
+    const data = radDeepDiveData({ rhoForComparison: state.densityGPerCm3, composition: state.composition });
+    if (deepDivePlotHandle) {
+      deepDivePlotHandle.plot.setData([data.temperatures, data.pRad, data.pGas]);
+    }
+    activeAnimation?.updateParams({ logT: Math.log10(T) });
+
+  } else {
+    const rho = deepDiveState.degRho;
+    const eosResult = StellarEosModel.evaluateStateCgs({
+      input: {
+        temperatureK: state.temperatureK,
+        densityGPerCm3: rho,
+        composition: state.composition,
+        radiationDepartureEta: state.radiationDepartureEta,
+      },
+    });
+    const pDeg = eosResult.electronDegeneracyPressureDynePerCm2;
+    const muE = eosResult.meanMolecularWeightMuE;
+    degDeepRhoVal.textContent = `${formatScientific(rho, 4)} g cm^-3`;
+    degEquationEl.textContent = `$$${degEquationLatex({ rho, muE, xF: eosResult.fermiRelativityX, pDeg })}$$`;
+    renderMath(degEquationEl);
+
+    const data = degDeepDiveData({ temperatureK: state.temperatureK, composition: state.composition });
+    if (deepDivePlotHandle) {
+      deepDivePlotHandle.plot.setData([data.densities, data.pDeg, data.pGas]);
+    }
+    activeAnimation?.updateParams({ logRho: Math.log10(rho) });
+  }
+}
+
+function createDeepDivePlot(channel: DeepDiveChannel): void {
+  if (deepDivePlotHandle) {
+    destroyPlot(deepDivePlotHandle);
+    deepDivePlotHandle = null;
+  }
+
+  if (channel === "gas") {
+    const data = gasDeepDiveData({ temperatureK: deepDiveState.gasT, composition: state.composition });
+    deepDivePlotHandle = createEosPlot(gasDeepChartEl, {
+      scales: { x: { distr: 3 }, y: { distr: 3 } },
+      series: [
+        {},
+        { label: "P_gas", stroke: gasColor, width: 2 },
+      ],
+      axes: [
+        { label: "\u03C1 (g cm\u207B\u00B3)", values: logTickValues },
+        { label: "P (dyne cm\u207B\u00B2)", values: logTickValues },
+      ],
+    }, [data.densities, data.pGas]);
+
+  } else if (channel === "radiation") {
+    const data = radDeepDiveData({ rhoForComparison: state.densityGPerCm3, composition: state.composition });
+    deepDivePlotHandle = createEosPlot(radDeepChartEl, {
+      scales: { x: { distr: 3 }, y: { distr: 3 } },
+      series: [
+        {},
+        { label: "P_rad", stroke: radColor, width: 2 },
+        { label: "P_gas (comparison)", stroke: gasColor, width: 1.5, dash: [4, 2] },
+      ],
+      axes: [
+        { label: "T (K)", values: logTickValues },
+        { label: "P (dyne cm\u207B\u00B2)", values: logTickValues },
+      ],
+    }, [data.temperatures, data.pRad, data.pGas]);
+
+  } else {
+    const data = degDeepDiveData({ temperatureK: state.temperatureK, composition: state.composition });
+    deepDivePlotHandle = createEosPlot(degDeepChartEl, {
+      scales: { x: { distr: 3 }, y: { distr: 3 } },
+      series: [
+        {},
+        { label: "P_deg,e", stroke: degColor, width: 2 },
+        { label: "P_gas (comparison)", stroke: gasColor, width: 1.5, dash: [4, 2] },
+      ],
+      axes: [
+        { label: "\u03C1 (g cm\u207B\u00B3)", values: logTickValues },
+        { label: "P (dyne cm\u207B\u00B2)", values: logTickValues },
+      ],
+    }, [data.densities, data.pDeg, data.pGas]);
+  }
+}
+
+function openDeepDive(channel: DeepDiveChannel): void {
+  closeDeepDive();
+  activeDeepDive = channel;
+
+  pressureGrid.setAttribute("hidden", "");
+  deepDivePanels[channel].removeAttribute("hidden");
+
+  syncDeepDiveSliders(channel);
+  createDeepDivePlot(channel);
+
+  const AnimClass = channel === "gas" ? GasPressureAnimation
+    : channel === "radiation" ? RadiationPressureAnimation
+    : DegeneracyPressureAnimation;
+  activeAnimation = new AnimClass();
+  activeAnimation.start(deepDiveCanvases[channel]);
+  const animT = channel === "degeneracy" ? state.temperatureK : (channel === "gas" ? deepDiveState.gasT : deepDiveState.radT);
+  const animRho = channel === "radiation" ? 1 : (channel === "gas" ? deepDiveState.gasRho : deepDiveState.degRho);
+  activeAnimation.updateParams({ logT: Math.log10(animT), logRho: Math.log10(animRho) });
+
+  renderDeepDiveContent(channel);
+}
+
+function closeDeepDive(): void {
+  if (!activeDeepDive) return;
+
+  activeAnimation?.stop();
+  activeAnimation = null;
+  if (deepDivePlotHandle) {
+    destroyPlot(deepDivePlotHandle);
+    deepDivePlotHandle = null;
+  }
+
+  deepDivePanels[activeDeepDive].setAttribute("hidden", "");
+  pressureGrid.removeAttribute("hidden");
+  activeDeepDive = null;
+}
+
+// Card click handlers
+cardGas.addEventListener("click", () => openDeepDive("gas"));
+cardRadiation.addEventListener("click", () => openDeepDive("radiation"));
+cardDegeneracy.addEventListener("click", () => openDeepDive("degeneracy"));
+
+// Keyboard activation for card buttons
+for (const card of [cardGas, cardRadiation, cardDegeneracy]) {
+  card.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      card.click();
+    }
+  });
+}
+
+// Back buttons
+for (const panel of Object.values(deepDivePanels)) {
+  const backBtn = panel.querySelector(".deep-dive__back");
+  backBtn?.addEventListener("click", closeDeepDive);
+}
+
+// Deep-dive slider handlers
+gasDeepT.addEventListener("input", () => {
+  deepDiveState.gasT = logSliderToValue({
+    sliderValue: clamp(Number(gasDeepT.value), 0, 1000),
+    sliderMin: 0, sliderMax: 1000,
+    valueMin: TEMPERATURE_MIN_K, valueMax: TEMPERATURE_MAX_K,
+  });
+  renderDeepDiveContent("gas");
+});
+
+gasDeepRho.addEventListener("input", () => {
+  deepDiveState.gasRho = logSliderToValue({
+    sliderValue: clamp(Number(gasDeepRho.value), 0, 1000),
+    sliderMin: 0, sliderMax: 1000,
+    valueMin: DENSITY_MIN_G_PER_CM3, valueMax: DENSITY_MAX_G_PER_CM3,
+  });
+  renderDeepDiveContent("gas");
+});
+
+radDeepT.addEventListener("input", () => {
+  deepDiveState.radT = logSliderToValue({
+    sliderValue: clamp(Number(radDeepT.value), 0, 1000),
+    sliderMin: 0, sliderMax: 1000,
+    valueMin: TEMPERATURE_MIN_K, valueMax: TEMPERATURE_MAX_K,
+  });
+  renderDeepDiveContent("radiation");
+});
+
+degDeepRho.addEventListener("input", () => {
+  deepDiveState.degRho = logSliderToValue({
+    sliderValue: clamp(Number(degDeepRho.value), 0, 1000),
+    sliderMin: 0, sliderMax: 1000,
+    valueMin: DENSITY_MIN_G_PER_CM3, valueMax: DENSITY_MAX_G_PER_CM3,
+  });
+  renderDeepDiveContent("degeneracy");
+});
+
+/* ================================================================
+ * Demo modes (help + station)
+ * ================================================================ */
 
 const demoModes = createDemoModes({
   help: {
@@ -1352,12 +978,7 @@ const demoModes = createDemoModes({
       {
         label: "Add EOS anchors",
         getRows() {
-          const anchorIds: Preset["id"][] = [
-            "solar-core",
-            "massive-core",
-            "white-dwarf-core"
-          ];
-          return anchorIds.map((presetId) => {
+          return (["solar-core", "massive-core", "white-dwarf-core"] as Preset["id"][]).map(presetId => {
             const preset = PRESET_BY_ID[presetId];
             const model = StellarEosModel.evaluateStateCgs({
               input: {
@@ -1388,10 +1009,11 @@ const demoModes = createDemoModes({
   }
 });
 
-demoModes.bindButtons({
-  helpButton,
-  stationButton: stationModeButton
-});
+demoModes.bindButtons({ helpButton, stationButton: stationModeButton });
+
+/* ================================================================
+ * Event handlers
+ * ================================================================ */
 
 for (const button of presetButtons) {
   button.addEventListener("click", () => {
@@ -1403,55 +1025,43 @@ for (const button of presetButtons) {
 }
 
 tempSlider.addEventListener("input", () => {
-  const sliderValue = clamp(Number(tempSlider.value), 0, 1000);
-  const nextTemperatureK = logSliderToValue({
-    sliderValue,
-    sliderMin: 0,
-    sliderMax: 1000,
-    valueMin: TEMPERATURE_MIN_K,
-    valueMax: TEMPERATURE_MAX_K
+  const nextT = logSliderToValue({
+    sliderValue: clamp(Number(tempSlider.value), 0, 1000),
+    sliderMin: 0, sliderMax: 1000,
+    valueMin: TEMPERATURE_MIN_K, valueMax: TEMPERATURE_MAX_K
   });
-  if (Number.isFinite(nextTemperatureK)) {
-    state.temperatureK = nextTemperatureK;
-  }
+  if (Number.isFinite(nextT)) state.temperatureK = nextT;
   render();
 });
 
 rhoSlider.addEventListener("input", () => {
-  const sliderValue = clamp(Number(rhoSlider.value), 0, 1000);
-  const nextDensity = logSliderToValue({
-    sliderValue,
-    sliderMin: 0,
-    sliderMax: 1000,
-    valueMin: DENSITY_MIN_G_PER_CM3,
-    valueMax: DENSITY_MAX_G_PER_CM3
+  const nextRho = logSliderToValue({
+    sliderValue: clamp(Number(rhoSlider.value), 0, 1000),
+    sliderMin: 0, sliderMax: 1000,
+    valueMin: DENSITY_MIN_G_PER_CM3, valueMax: DENSITY_MAX_G_PER_CM3
   });
-  if (Number.isFinite(nextDensity)) {
-    state.densityGPerCm3 = nextDensity;
-  }
+  if (Number.isFinite(nextRho)) state.densityGPerCm3 = nextRho;
   render();
 });
 
 xSlider.addEventListener("input", () => {
-  const nextX = clamp(Number(xSlider.value) / 1000, 0, 1);
   setCompositionFromXY({
-    hydrogenMassFractionX: nextX,
+    hydrogenMassFractionX: clamp(Number(xSlider.value) / 1000, 0, 1),
     heliumMassFractionY: state.composition.heliumMassFractionY
   });
-  render({ deferRegimeMapFieldRebuild: true });
+  render({ deferGridRebuild: true });
 });
 
 ySlider.addEventListener("input", () => {
-  const nextY = clamp(Number(ySlider.value) / 1000, 0, 1);
   setCompositionFromXY({
     hydrogenMassFractionX: state.composition.hydrogenMassFractionX,
-    heliumMassFractionY: nextY
+    heliumMassFractionY: clamp(Number(ySlider.value) / 1000, 0, 1)
   });
-  render({ deferRegimeMapFieldRebuild: true });
+  render({ deferGridRebuild: true });
 });
 
 function finalizeCompositionInteraction(): void {
-  flushRegimeMapRebuild();
+  invalidateRegimeGrid();
   render();
 }
 
@@ -1462,51 +1072,29 @@ ySlider.addEventListener("pointerup", finalizeCompositionInteraction);
 
 copyResults.addEventListener("click", () => {
   const model = evaluateModel();
-  setLiveRegionText(status, "Copying…");
+  setLiveRegionText(status, "Copying\u2026");
   void runtime
     .copyResults(exportResults(model))
-    .then(() => {
-      setLiveRegionText(status, "Copied results to clipboard.");
-    })
+    .then(() => setLiveRegionText(status, "Copied results to clipboard."))
     .catch((err) => {
-      setLiveRegionText(
-        status,
-        err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed."
-      );
+      setLiveRegionText(status, err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.");
     });
 });
+
+/* ================================================================
+ * Initialization
+ * ================================================================ */
 
 applyPreset("solar-core");
 render();
 initMath(document);
 
 const demoRoot = document.getElementById("cp-demo");
-if (demoRoot) {
-  initPopovers(demoRoot);
-}
+if (demoRoot) initPopovers(demoRoot);
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
-if (starfieldCanvas) {
-  initStarfield({ canvas: starfieldCanvas });
-}
+if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 
-let resizeFrame: number | null = null;
-window.addEventListener("resize", () => {
-  if (resizeFrame !== null) return;
-  resizeFrame = window.requestAnimationFrame(() => {
-    resizeFrame = null;
-    regimeMapPlotController.update(
-      regimeMapPlotStateFromModel(evaluateModel(), { deferRegimeMapFieldRebuild: true })
-    );
-  });
-});
-
-window.addEventListener(
-  "beforeunload",
-  () => {
-    cancelRegimeMapRebuildTimer();
-    pressureCurvePlotController.destroy();
-    regimeMapPlotController.destroy();
-  },
-  { once: true }
-);
+window.addEventListener("beforeunload", () => {
+  destroyPlot(pressurePlotHandle);
+}, { once: true });

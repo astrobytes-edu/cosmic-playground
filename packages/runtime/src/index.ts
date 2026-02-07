@@ -51,21 +51,6 @@ export { initPopovers } from "./popover";
 export { initStarfield } from "./starfield";
 export { initTabs } from "./tabs";
 export type { StarfieldConfig } from "./starfield";
-export { mountPlot } from "./plots/plotEngine";
-export type {
-  AxisSpec,
-  PlotController,
-  PlotDomain,
-  PlotInit,
-  PlotLayoutOverrides,
-  PlotLineDash,
-  PlotPoint,
-  PlotRenderMode,
-  PlotScale,
-  PlotSpec,
-  PlotTrace,
-  PlotUpdate
-} from "./plots/plotTypes";
 
 function isExportPayloadV1(value: unknown): value is ExportPayloadV1 {
   if (!value || typeof value !== "object") return false;

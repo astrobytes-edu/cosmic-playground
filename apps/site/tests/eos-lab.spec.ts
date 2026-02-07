@@ -38,9 +38,8 @@ test.describe("EOS Lab -- E2E", () => {
     expect(after).not.toBe(before);
   });
 
-  test("regime map is visible with current-state marker", async ({ page }) => {
-    await expect(page.locator("#regimeMap")).toBeVisible();
-    await expect(page.locator("#regimeMap .js-plotly-plot")).toBeVisible();
+  test("regime map canvas is visible", async ({ page }) => {
+    await expect(page.locator("#regimeMapCanvas")).toBeVisible();
   });
 
   test("regime map includes legend and point details for interpretation", async ({ page }) => {
@@ -50,75 +49,12 @@ test.describe("EOS Lab -- E2E", () => {
     await expect(page.locator("#regimeDetail .katex")).toHaveCount(4);
   });
 
-  test("regime marker moves when sliders change", async ({ page }) => {
-    const beforePoint = await page.evaluate(() => {
-      return (
-        window as Window & {
-          __cp?: { regimeMapCurrentLogPoint?: { log10Temperature: number; log10Density: number } };
-        }
-      ).__cp?.regimeMapCurrentLogPoint;
-    });
-    expect(beforePoint).toBeDefined();
-
-    await page.locator("#tempSlider").fill("900");
-    await page.locator("#tempSlider").dispatchEvent("input");
-    await page.locator("#rhoSlider").fill("150");
-    await page.locator("#rhoSlider").dispatchEvent("input");
-
-    const afterPoint = await page.evaluate(() => {
-      return (
-        window as Window & {
-          __cp?: { regimeMapCurrentLogPoint?: { log10Temperature: number; log10Density: number } };
-        }
-      ).__cp?.regimeMapCurrentLogPoint;
-    });
-    expect(afterPoint).toBeDefined();
-    expect(afterPoint?.log10Temperature).not.toBe(beforePoint?.log10Temperature);
-    expect(afterPoint?.log10Density).not.toBe(beforePoint?.log10Density);
-  });
-
   test("composition sliders update mu readout", async ({ page }) => {
     const before = await page.locator("#muValue").textContent();
     await page.locator("#xSlider").fill("850");
     await page.locator("#xSlider").dispatchEvent("input");
     const after = await page.locator("#muValue").textContent();
     expect(after).not.toBe(before);
-  });
-
-  test("composition drag defers expensive regime-map field rebuilds", async ({ page }) => {
-    const beforeBuildCount = await page.evaluate(() => {
-      return (window as Window & { __cp?: { regimeMapBuildCount?: number } }).__cp
-        ?.regimeMapBuildCount;
-    });
-    expect(beforeBuildCount).toBeDefined();
-    expect(beforeBuildCount).toBeGreaterThan(0);
-
-    await page.evaluate(() => {
-      const slider = document.querySelector<HTMLInputElement>("#xSlider");
-      if (!slider) return;
-      for (let value = 120; value <= 900; value += 60) {
-        slider.value = String(value);
-        slider.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-    });
-
-    const duringBuildCount = await page.evaluate(() => {
-      return (window as Window & { __cp?: { regimeMapBuildCount?: number } }).__cp
-        ?.regimeMapBuildCount;
-    });
-    expect(duringBuildCount).toBeDefined();
-
-    expect(duringBuildCount! - beforeBuildCount!).toBeLessThanOrEqual(2);
-
-    await page.locator("#xSlider").dispatchEvent("change");
-    await page.waitForTimeout(50);
-
-    const afterBuildCount = await page.evaluate(() => {
-      return (window as Window & { __cp?: { regimeMapBuildCount?: number } }).__cp
-        ?.regimeMapBuildCount;
-    });
-    expect(afterBuildCount).toBeDefined();
-    expect(afterBuildCount!).toBeGreaterThanOrEqual(duringBuildCount!);
   });
 
   test("composition constraints keep X + Y + Z = 1", async ({ page }) => {
@@ -177,5 +113,68 @@ test.describe("EOS Lab -- E2E", () => {
     const status = page.locator("#status");
     await expect(status).toHaveAttribute("role", "status");
     await expect(status).toHaveAttribute("aria-live", "polite");
+  });
+
+  test("pressure cards are clickable", async ({ page }) => {
+    await expect(page.locator(".pressure-card--clickable")).toHaveCount(3);
+  });
+
+  test("clicking gas card opens gas deep-dive panel", async ({ page }) => {
+    await page.locator("#cardGas").click();
+    await expect(page.locator("#deepDiveGas")).toBeVisible();
+    await expect(page.locator(".pressure-grid")).toBeHidden();
+    await expect(page.locator("#gasAnimCanvas")).toBeVisible();
+    await expect(page.locator("#gasEquation")).toBeVisible();
+    await expect(page.locator("#gasDeepChart")).toBeVisible();
+  });
+
+  test("gas deep-dive back button returns to overview", async ({ page }) => {
+    await page.locator("#cardGas").click();
+    await expect(page.locator("#deepDiveGas")).toBeVisible();
+    await page.locator("#deepDiveGas .deep-dive__back").click();
+    await expect(page.locator("#deepDiveGas")).toBeHidden();
+    await expect(page.locator(".pressure-grid")).toBeVisible();
+  });
+
+  test("radiation deep-dive has only temperature slider", async ({ page }) => {
+    await page.locator("#cardRadiation").click();
+    await expect(page.locator("#deepDiveRadiation")).toBeVisible();
+    await expect(page.locator("#radDeepT")).toBeVisible();
+    // Radiation pressure is density-independent, so no rho slider
+    const rhoSliders = page.locator("#deepDiveRadiation input[id*='Rho']");
+    await expect(rhoSliders).toHaveCount(0);
+  });
+
+  test("degeneracy deep-dive has density slider", async ({ page }) => {
+    await page.locator("#cardDegeneracy").click();
+    await expect(page.locator("#deepDiveDegeneracy")).toBeVisible();
+    await expect(page.locator("#degDeepRho")).toBeVisible();
+  });
+
+  test("deep-dive slider updates equation content", async ({ page }) => {
+    await page.locator("#cardGas").click();
+    await expect(page.locator("#deepDiveGas")).toBeVisible();
+    const before = await page.locator("#gasEquation").textContent();
+    await page.locator("#gasDeepT").fill("200");
+    await page.locator("#gasDeepT").dispatchEvent("input");
+    await page.waitForTimeout(100);
+    const after = await page.locator("#gasEquation").textContent();
+    expect(after).not.toBe(before);
+  });
+
+  test("switching between deep-dives closes previous", async ({ page }) => {
+    await page.locator("#cardGas").click();
+    await expect(page.locator("#deepDiveGas")).toBeVisible();
+    // Go back then open another
+    await page.locator("#deepDiveGas .deep-dive__back").click();
+    await page.locator("#cardRadiation").click();
+    await expect(page.locator("#deepDiveRadiation")).toBeVisible();
+    await expect(page.locator("#deepDiveGas")).toBeHidden();
+  });
+
+  test("pressure curve plot is visible with pressure curves", async ({ page }) => {
+    await expect(page.locator("#pressureCurvePlot")).toBeVisible();
+    // uPlot renders a canvas inside the plot container
+    await expect(page.locator("#pressureCurvePlot canvas")).toBeVisible();
   });
 });

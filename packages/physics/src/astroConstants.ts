@@ -83,6 +83,17 @@ export const AstroConstants = {
     G_AU3_YR2_PER_SOLAR_MASS: 4 * Math.PI * Math.PI
   },
 
+  EOS: {
+    // CGS micro-physics constants for equation-of-state calculations.
+    // Exact SI values converted to CGS; same values used in stellarEosModel.ts.
+    K_BOLTZMANN_ERG_PER_K: 1.380649e-16,         // Boltzmann constant (erg/K)
+    ATOMIC_MASS_UNIT_G: 1.6605390666e-24,         // atomic mass unit (g)
+    RADIATION_CONSTANT_A_ERG_CM3_K4: 7.5657e-15,  // radiation constant a (erg cm^-3 K^-4)
+    HBAR_ERG_S: 1.054571817e-27,                  // reduced Planck constant (erg s)
+    ELECTRON_MASS_G: 9.1093837015e-28,            // electron mass (g)
+    C_CM_PER_S: 2.99792458e10,                    // speed of light (cm/s)
+  },
+
   MOON: {
     // Present-day mean lunar recession rate.
     // Source: laser ranging, Williams & Boggs (2016).

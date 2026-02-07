@@ -10,7 +10,8 @@
     "@cosmic/math": "workspace:*",
     "@cosmic/physics": "workspace:*",
     "@cosmic/runtime": "workspace:*",
-    "@cosmic/theme": "workspace:*"
+    "@cosmic/theme": "workspace:*",
+    "uplot": "^1.6.31"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

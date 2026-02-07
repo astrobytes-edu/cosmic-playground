@@ -65,25 +65,29 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(mainTs).toContain("compositionFromXY");
   });
 
-  it("includes regime-map scaffold and rendering hook", () => {
+  it("includes pressure curve plot with uPlot on log-log axes", () => {
     expect(html).toContain('id="pressureCurvePlot"');
-    expect(html).toContain('id="regimeMap"');
+    expect(mainTs).toContain("createEosPlot");
+    expect(mainTs).toContain("distr: 3"); // log scale
+    expect(mainTs).toContain("pressureCurveData");
+  });
+
+  it("includes regime-map as Canvas 2D with legend and detail text", () => {
+    expect(html).toContain('id="regimeMapCanvas"');
+    expect(html).toMatch(/<canvas[^>]*id="regimeMapCanvas"/);
     expect(html).toContain('id="regimeDetail"');
     expect(html).toContain('id="regimeSummary"');
     expect(html).toContain("regime-map__legend");
     expect(html).toContain("$P_{\\rm gas}$ dominant");
-    expect(html).toContain("$\\log_{10}\\rho$");
-    expect(mainTs).toContain("regimeMapPatch");
-    expect(mainTs).toContain('kind: "heatmap"');
-    expect(mainTs).toContain("eosRegimeMapPlotSpec");
+    expect(mainTs).toContain("renderRegimeMap");
+    expect(mainTs).toContain("invalidateRegimeGrid");
   });
 
-  it("mounts runtime plot contract with explicit axis labels", () => {
-    expect(mainTs).toContain("mountPlot");
-    expect(mainTs).toContain('id: "eos-pressure-curves"');
-    expect(mainTs).toContain('label: "Density rho"');
-    expect(mainTs).toContain('label: "Pressure P"');
-    expect(mainTs).toContain("pressureCurvePlotController.update");
+  it("uses Canvas 2D regime map with grid caching", () => {
+    const regimeMapTs = fs.readFileSync(path.resolve(__dirname, "regimeMap.ts"), "utf-8");
+    expect(regimeMapTs).toContain("renderRegimeMap");
+    expect(regimeMapTs).toContain("invalidateRegimeGrid");
+    expect(regimeMapTs).toContain("evaluateRegimeGrid");
   });
 
   it("renders diagnostic inequalities with LaTeX formatting", () => {
@@ -106,8 +110,40 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(html).toContain("finite-$T$ Fermi-Dirac electrons are included");
   });
 
-  it("caches regime-map field rendering between composition changes", () => {
-    expect(mainTs).toContain("regimeMapCacheKey");
-    expect(mainTs).toContain("buildRegimeMapField");
+  it("includes deep-dive panels for all three pressure mechanisms", () => {
+    expect(html).toContain('id="deepDiveGas"');
+    expect(html).toContain('id="deepDiveRadiation"');
+    expect(html).toContain('id="deepDiveDegeneracy"');
+    expect(html).toContain("deep-dive__canvas");
+    expect(html).toContain("deep-dive__equation");
+    expect(html).toContain("deep-dive__chart");
+  });
+
+  it("imports mechanism animation classes", () => {
+    expect(mainTs).toContain("GasPressureAnimation");
+    expect(mainTs).toContain("RadiationPressureAnimation");
+    expect(mainTs).toContain("DegeneracyPressureAnimation");
+  });
+
+  it("uses deep-dive data and equation formatters from logic module", () => {
+    expect(mainTs).toContain("gasDeepDiveData");
+    expect(mainTs).toContain("radDeepDiveData");
+    expect(mainTs).toContain("degDeepDiveData");
+    expect(mainTs).toContain("gasEquationLatex");
+    expect(mainTs).toContain("radEquationLatex");
+    expect(mainTs).toContain("degEquationLatex");
+  });
+
+  it("pressure cards are clickable to open deep dives", () => {
+    expect(html).toContain("pressure-card--clickable");
+    expect(html).toContain("Click to explore");
+    expect(mainTs).toContain("openDeepDive");
+    expect(mainTs).toContain("closeDeepDive");
+  });
+
+  it("does not import Plotly anywhere", () => {
+    expect(mainTs).not.toContain("plotly");
+    expect(mainTs).not.toContain("mountPlot");
+    expect(mainTs).not.toContain("PlotSpec");
   });
 });
