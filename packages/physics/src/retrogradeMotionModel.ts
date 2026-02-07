@@ -31,13 +31,14 @@ const MODEL_MONTH_DAYS = 30;
 const STATIONARY_TOL_DAY = 1e-3;
 
 const PLANET_ELEMENTS = {
-  // "Toy J2000-ish" heliocentric elements for a coplanar Keplerian teaching model.
-  // These are not used for real-world date prediction; they just set a deterministic phase reference.
-  Venus: { aAu: 0.72333199, e: 0.00677323, varpiDeg: 131.602467, L0Deg: 181.97973 },
-  Earth: { aAu: 1.00000011, e: 0.01671022, varpiDeg: 102.937682, L0Deg: 100.464572 },
-  Mars: { aAu: 1.52366231, e: 0.09341233, varpiDeg: 336.04084, L0Deg: 355.45332 },
-  Jupiter: { aAu: 5.20336301, e: 0.04839266, varpiDeg: 14.75385, L0Deg: 34.40438 },
-  Saturn: { aAu: 9.53707032, e: 0.0541506, varpiDeg: 92.43194, L0Deg: 49.94432 }
+  // JPL J2000 approximate elements (Standish, Table 1: 1800-2050 AD).
+  // Source: https://ssd.jpl.nasa.gov/planets/approx_pos.html
+  // Coplanar model (inclination omitted). No calendar-date prediction claims.
+  Venus:   { aAu: 0.72333566, e: 0.00677672, varpiDeg: 131.60246718, L0Deg: 181.97909950 },
+  Earth:   { aAu: 1.00000261, e: 0.01671123, varpiDeg: 102.93768193, L0Deg: 100.46457166 },
+  Mars:    { aAu: 1.52371034, e: 0.09339410, varpiDeg: 336.05637041, L0Deg: 355.44656795 },
+  Jupiter: { aAu: 5.20288700, e: 0.04838624, varpiDeg:  14.72847983, L0Deg:  34.39644051 },
+  Saturn:  { aAu: 9.53667594, e: 0.05386179, varpiDeg:  92.59887831, L0Deg:  49.95424423 },
 } as const;
 
 export type RetrogradePlanetKey = keyof typeof PLANET_ELEMENTS;
