@@ -1171,3 +1171,82 @@ window.addEventListener("beforeunload", () => {
   stopCompareAnimations();
   destroyPlot(pressurePlotHandle);
 }, { once: true });
+
+/* ================================================================
+ * First-use guided tour — lightweight 3-step walkthrough
+ * ================================================================ */
+
+const TOUR_STEPS = [
+  { target: "#tempSlider", text: "Drag temperature to see how each pressure channel responds." },
+  { target: "#regimeMapCanvas", text: "This map shows which pressure dominates at every (T, \u03C1) combination." },
+  { target: "#tab-understand", text: "Switch here to see physical mechanism animations for each channel." },
+];
+
+function runTour(): void {
+  let step = 0;
+
+  const overlay = document.createElement("div");
+  overlay.className = "tour-overlay";
+  document.body.appendChild(overlay);
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "tour-tooltip";
+  tooltip.setAttribute("role", "dialog");
+  tooltip.setAttribute("aria-label", "Guided tour");
+  document.body.appendChild(tooltip);
+
+  let prevHighlight: Element | null = null;
+
+  function show(): void {
+    if (step >= TOUR_STEPS.length) { cleanup(); return; }
+    const s = TOUR_STEPS[step];
+    const el = document.querySelector(s.target);
+    if (!el) { step++; show(); return; }
+
+    if (prevHighlight) prevHighlight.classList.remove("tour-highlight");
+    el.classList.add("tour-highlight");
+    prevHighlight = el;
+
+    const rect = el.getBoundingClientRect();
+    tooltip.innerHTML =
+      `<p>${s.text}</p>` +
+      `<div class="tour-tooltip__actions">` +
+      `<button class="tour-skip">Skip</button>` +
+      `<button class="tour-next">${step < TOUR_STEPS.length - 1 ? "Next" : "Done"}</button>` +
+      `</div>`;
+
+    // Position tooltip below or above the target
+    const above = rect.bottom > window.innerHeight * 0.6;
+    tooltip.style.left = `${Math.max(8, rect.left)}px`;
+    if (above) {
+      tooltip.style.top = "";
+      tooltip.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+    } else {
+      tooltip.style.bottom = "";
+      tooltip.style.top = `${rect.bottom + 8}px`;
+    }
+
+    tooltip.querySelector(".tour-next")!.addEventListener("click", () => { step++; show(); });
+    tooltip.querySelector(".tour-skip")!.addEventListener("click", cleanup);
+  }
+
+  function cleanup(): void {
+    if (prevHighlight) prevHighlight.classList.remove("tour-highlight");
+    overlay.remove();
+    tooltip.remove();
+    localStorage.setItem("eos-lab-toured", "1");
+  }
+
+  overlay.addEventListener("click", cleanup);
+  show();
+}
+
+const startTourBtn = document.getElementById("startTour");
+if (startTourBtn) {
+  startTourBtn.addEventListener("click", runTour);
+}
+
+// Auto-show on first visit
+if (!localStorage.getItem("eos-lab-toured")) {
+  requestAnimationFrame(() => setTimeout(runTour, 600));
+}

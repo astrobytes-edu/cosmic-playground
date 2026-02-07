@@ -725,3 +725,62 @@
     max-height: 120px;
   }
 }
+
+/* ──────────────────────────────────────────────────
+ * Guided tour
+ * ────────────────────────────────────────────────── */
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--cp-bg0) 60%, transparent);
+  z-index: 900;
+}
+
+.tour-highlight {
+  position: relative;
+  z-index: 901;
+  box-shadow: 0 0 0 4px var(--cp-accent-amber);
+  border-radius: var(--cp-r-2);
+}
+
+.tour-tooltip {
+  position: fixed;
+  z-index: 902;
+  max-width: 320px;
+  padding: var(--cp-space-3);
+  background: var(--cp-bg1);
+  border: 1px solid var(--cp-accent-amber);
+  border-radius: var(--cp-r-2);
+  color: var(--cp-text1);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--cp-bg0) 70%, transparent);
+}
+
+.tour-tooltip p {
+  margin: 0 0 var(--cp-space-2) 0;
+}
+
+.tour-tooltip__actions {
+  display: flex;
+  gap: var(--cp-space-2);
+  justify-content: flex-end;
+}
+
+.tour-tooltip__actions button {
+  padding: var(--cp-space-1) var(--cp-space-3);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-r-1);
+  background: var(--cp-bg0);
+  color: var(--cp-text1);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.tour-tooltip__actions .tour-next {
+  background: var(--cp-accent-amber);
+  color: var(--cp-bg0);
+  border-color: var(--cp-accent-amber);
+  font-weight: 600;
+}
