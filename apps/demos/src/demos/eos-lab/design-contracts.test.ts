@@ -94,8 +94,8 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(html).toContain("$m_u$");
     expect(mainTs).toContain("x_F \\\\ll 1");
     expect(mainTs).toContain("T/T_F \\\\ll 1");
-    expect(mainTs).toContain("renderMath(degRegimeValue)");
-    expect(mainTs).toContain("renderMath(fermiRegimeValue)");
+    expect(mainTs).toContain("renderMathIfChanged(degRegimeValue)");
+    expect(mainTs).toContain("renderMathIfChanged(fermiRegimeValue)");
   });
 
   it("exports advanced diagnostics in copy-results payload", () => {

@@ -63,7 +63,11 @@ export function formatScientific(value: number, digits = 3): string {
   if (!Number.isFinite(value)) return "\u2014";
   if (value === 0) return "0";
   const abs = Math.abs(value);
-  if (abs >= 1e5 || abs < 1e-3) return value.toExponential(digits - 1);
+  if (abs >= 1e5 || abs < 1e-3) {
+    const exp = Math.floor(Math.log10(abs));
+    const mantissa = value / Math.pow(10, exp);
+    return `${mantissa.toFixed(digits - 1)}\u00D710${superscript(exp)}`;
+  }
   return value.toFixed(digits);
 }
 

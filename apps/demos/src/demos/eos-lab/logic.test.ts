@@ -73,7 +73,11 @@ describe("EOS Lab -- UI Logic", () => {
   it("formats scientific readouts safely", () => {
     expect(formatScientific(Number.NaN)).toBe("\u2014");
     expect(formatScientific(0)).toBe("0");
-    expect(formatScientific(1.2e7)).toContain("e+");
+    // Unicode format: 1.20x10^7 (with multiplication sign and superscript)
+    const result = formatScientific(1.2e7);
+    expect(result).toContain("\u00D7"); // multiplication sign
+    expect(result).toContain("10");
+    expect(result).toMatch(/1\.20/);
   });
 
   it("formats percentages", () => {

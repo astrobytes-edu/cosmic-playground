@@ -32,10 +32,17 @@ function mapRange(
   return outMin + t * (outMax - outMin);
 }
 
+/** Cache of resolved CSS custom property values (resolved once, reused). */
+const cssCache = new Map<string, string>();
+
 function resolveCss(varName: string): string {
-  return getComputedStyle(document.documentElement)
+  let cached = cssCache.get(varName);
+  if (cached !== undefined) return cached;
+  cached = getComputedStyle(document.documentElement)
     .getPropertyValue(varName)
     .trim();
+  cssCache.set(varName, cached);
+  return cached;
 }
 
 function setupCanvas(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {

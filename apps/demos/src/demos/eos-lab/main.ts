@@ -50,6 +50,15 @@ import {
  * Formatting helpers
  * ================================================================ */
 
+/** Cached renderMath — only re-renders KaTeX when text content changes. */
+const lastMathText = new WeakMap<HTMLElement, string>();
+function renderMathIfChanged(el: HTMLElement): void {
+  const text = el.textContent ?? "";
+  if (lastMathText.get(el) === text) return;
+  lastMathText.set(el, text);
+  renderMath(el);
+}
+
 /** Format log-scale tick values as 10^n using Unicode superscripts. */
 const logTickValues = (_self: unknown, splits: number[]) =>
   splits.map(v => {
@@ -210,6 +219,7 @@ const degTotalValue = q("#degTotalValue");
 const chiDegValue = q("#chiDegValue");
 const degRegimeValue = q("#degRegimeValue");
 const gammaEffValue = q("#gammaEffValue");
+const gammaEffNote = q("#gammaEffNote");
 const xFValue = q("#xFValue");
 const fermiRegimeValue = q("#fermiRegimeValue");
 const finiteTCorrectionValue = q("#finiteTCorrectionValue");
@@ -514,12 +524,12 @@ function fermiRelativityRegimeLabelLatex(regime: StellarEosStateCgs["fermiRelati
 function renderAdvancedDiagnostics(model: StellarEosStateCgs): void {
   xFValue.textContent = formatScientific(model.fermiRelativityX, 5);
   fermiRegimeValue.textContent = fermiRelativityRegimeLabelLatex(model.fermiRelativityRegime);
-  renderMath(fermiRegimeValue);
+  renderMathIfChanged(fermiRegimeValue);
   finiteTCorrectionValue.textContent = Number.isFinite(model.finiteTemperatureDegeneracyCorrectionFactor)
     ? formatScientific(model.finiteTemperatureDegeneracyCorrectionFactor, 5)
     : "\u2014";
   finiteTValidityValue.textContent = `${model.finiteTemperatureDegeneracyAssessment.label} (${electronDegeneracyMethodLabel(model.electronDegeneracyMethod)})`;
-  renderMath(finiteTValidityValue);
+  renderMathIfChanged(finiteTValidityValue);
   neutronExtensionValue.textContent = formatScientific(model.neutronExtensionPressureDynePerCm2, 5);
 }
 
@@ -653,8 +663,8 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   const logRho = Math.log10(model.input.densityGPerCm3);
   regimeDetail.textContent = `Point details: $\\log_{10}(T/\\mathrm{K})=${formatFraction(logT, 2)}$, $\\log_{10}(\\rho/(\\mathrm{g\\ cm^{-3}}))=${formatFraction(logRho, 2)}$, $P_{\\rm rad}/P_{\\rm gas}=${formatScientific(model.pressureRatios.radiationToGas, 3)}$, $P_{\\rm deg,e}/P_{\\rm tot}=${formatScientific(model.pressureRatios.degeneracyToTotal, 3)}$.`;
   regimeSummary.textContent = `Interpretation: ${dominantChannelLabel(model)} dominates at the highlighted state; white markers show preset anchors.`;
-  renderMath(regimeDetail);
-  renderMath(regimeSummary);
+  renderMathIfChanged(regimeDetail);
+  renderMathIfChanged(regimeSummary);
 
   // --- Pressure cards ---
   const dominantP = dominantPressureValue(model);
@@ -677,7 +687,7 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   degTotalValue.textContent = percent(model.pressureRatios.degeneracyToTotal, 2);
   chiDegValue.textContent = formatScientific(model.chiDegeneracy, 5);
   degRegimeValue.textContent = degeneracyRegimeLabelLatex(model.degeneracyRegime);
-  renderMath(degRegimeValue);
+  renderMathIfChanged(degRegimeValue);
 
   const gammaEff = adiabaticIndex({
     pGas: model.gasPressureDynePerCm2,
@@ -687,6 +697,25 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
     xF: model.fermiRelativityX,
   });
   gammaEffValue.textContent = Number.isFinite(gammaEff) ? gammaEff.toFixed(3) : "\u2014";
+
+  // Visual stability indicator at 4/3 threshold
+  const GAMMA_CRIT = 4 / 3;
+  const gammaReadout = gammaEffValue.closest(".cp-readout");
+  if (Number.isFinite(gammaEff)) {
+    if (gammaEff < GAMMA_CRIT - 0.01) {
+      gammaReadout?.setAttribute("data-stability", "unstable");
+      gammaEffNote.textContent = "\u26A0 Below 4/3 \u2014 dynamically unstable";
+    } else if (gammaEff < GAMMA_CRIT + 0.05) {
+      gammaReadout?.setAttribute("data-stability", "marginal");
+      gammaEffNote.textContent = "\u2248 4/3 \u2014 marginal stability";
+    } else {
+      gammaReadout?.setAttribute("data-stability", "stable");
+      gammaEffNote.textContent = "> 4/3 \u2014 stable";
+    }
+  } else {
+    gammaReadout?.removeAttribute("data-stability");
+    gammaEffNote.textContent = "";
+  }
 
   renderRadiationClosure(model);
   renderAdvancedDiagnostics(model);
@@ -882,13 +911,21 @@ const tab2Observer = new MutationObserver(() => {
 });
 tab2Observer.observe(tab2Panel, { attributes: true, attributeFilter: ["hidden"] });
 
-// Equation toggle — click to switch symbolic/substituted
+// Equation toggle — click or keyboard to switch symbolic/substituted
 for (const eq of [compareGasEq, compareRadEq, compareDegEq]) {
-  eq.style.cursor = "pointer";
+  eq.setAttribute("role", "button");
+  eq.setAttribute("tabindex", "0");
   eq.title = "Click to toggle symbolic / numerical";
-  eq.addEventListener("click", () => {
+  const toggleEqs = () => {
     showSubstitutedEqs = !showSubstitutedEqs;
     if (lastModel) renderCompareView(lastModel);
+  };
+  eq.addEventListener("click", toggleEqs);
+  eq.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleEqs();
+    }
   });
 }
 
@@ -1112,9 +1149,17 @@ ySlider.addEventListener("input", () => {
   render({ deferGridRebuild: true });
 });
 
+let compositionFinalizePending = false;
 function finalizeCompositionInteraction(): void {
-  invalidateRegimeGrid();
-  render();
+  // Deduplicate: both 'change' and 'pointerup' fire on slider release.
+  // Use a microtask guard so the grid rebuild only happens once.
+  if (compositionFinalizePending) return;
+  compositionFinalizePending = true;
+  queueMicrotask(() => {
+    compositionFinalizePending = false;
+    invalidateRegimeGrid();
+    render();
+  });
 }
 
 xSlider.addEventListener("change", finalizeCompositionInteraction);

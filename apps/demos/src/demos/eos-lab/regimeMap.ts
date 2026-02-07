@@ -308,7 +308,7 @@ function drawGrid(
   ctx.translate(14, pa.y + pa.h / 2);
   ctx.rotate(-Math.PI / 2);
   ctx.textBaseline = "middle";
-  ctx.fillText("log rho (g/cm3)", 0, 0);
+  ctx.fillText("log \u03C1 (g cm\u207B\u00B3)", 0, 0);
   ctx.restore();
 }
 
