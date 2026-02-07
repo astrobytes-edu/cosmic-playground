@@ -188,4 +188,68 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(mainTs).toContain("renderChallenge");
     expect(mainTs).toContain("SCALING_CHALLENGES");
   });
+
+  /* ──────────────────────────────────────────────────
+   * Phase 3 feature contracts (regression protection)
+   * ────────────────────────────────────────────────── */
+
+  it("includes pedagogical bridge captions on Tab 2 animation columns", () => {
+    expect(html).toContain("compare-column__caption");
+    // Each of the 3 columns should have a caption
+    const captions = html.match(/compare-column__caption/g) || [];
+    expect(captions.length).toBeGreaterThanOrEqual(3);
+    // Captions contain actual pedagogical content (not empty)
+    expect(html).toMatch(/compare-column__caption[^<]*>[^<]+momentum/);
+    expect(html).toMatch(/compare-column__caption[^<]*>[^<]+T\^4/);
+    expect(html).toMatch(/compare-column__caption[^<]*>[^<]+Pauli/);
+  });
+
+  it("makes equation toggle accessible with keyboard and ARIA", () => {
+    // All three equation divs need tabindex, role, and aria-label
+    const eqIds = ["compareGasEq", "compareRadEq", "compareDegEq"];
+    for (const id of eqIds) {
+      const pattern = new RegExp(`id="${id}"[^>]*tabindex="0"[^>]*role="button"[^>]*aria-label=`);
+      expect(html).toMatch(pattern);
+    }
+  });
+
+  it("includes dominance-switch pulse animation in CSS and JS wiring", () => {
+    expect(css).toContain("@keyframes dominance-pulse");
+    expect(css).toContain(".pressure-card.is-newly-dominant");
+    expect(mainTs).toContain("is-newly-dominant");
+    expect(mainTs).toContain("prevDominantChannel");
+  });
+
+  it("styles preset buttons with :focus-visible for keyboard navigation", () => {
+    expect(css).toMatch(/\.preset:focus-visible/);
+  });
+
+  it("dims radiation card when LTE closure is questionable", () => {
+    expect(css).toMatch(/\[data-lte="caution"\]/);
+    expect(css).toMatch(/opacity:\s*0\.55/);
+    expect(mainTs).toContain('dataset.lte');
+  });
+
+  it("uses progressive disclosure with nested model notes accordion", () => {
+    expect(html).toContain("cp-accordion--nested");
+    expect(html).toContain("Technical details");
+    expect(html).toContain("model-notes__simple");
+    // Beginner summary should mention all three channels
+    expect(html).toMatch(/model-notes__simple[\s\S]*Gas pressure/);
+    expect(html).toMatch(/model-notes__simple[\s\S]*Radiation pressure/);
+    expect(html).toMatch(/model-notes__simple[\s\S]*Degeneracy pressure/);
+  });
+
+  it("guided tour covers Tab 2 with tab-switching support", () => {
+    // Tour should have 4 steps (including one that switches to Tab 2)
+    expect(mainTs).toContain("switchTab");
+    expect(mainTs).toContain('switchTab: "understand"');
+    expect(mainTs).toContain("scaling-detective");
+  });
+
+  it("includes tour replay button and localStorage persistence", () => {
+    expect(html).toContain('id="startTour"');
+    expect(mainTs).toContain("eos-lab-toured");
+    expect(mainTs).toContain("localStorage");
+  });
 });

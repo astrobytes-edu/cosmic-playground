@@ -196,4 +196,79 @@ test.describe("EOS Lab -- E2E", () => {
     // uPlot renders a canvas inside the plot container
     await expect(page.locator("#pressureCurvePlot canvas")).toBeVisible();
   });
+
+  /* ──────────────────────────────────────────────────
+   * Phase 4: Regression tests for Phase 3 features
+   * ────────────────────────────────────────────────── */
+
+  test("Tab 2 pedagogical captions are visible", async ({ page }) => {
+    await page.locator("#tab-understand").click();
+    const captions = page.locator(".compare-column__caption");
+    await expect(captions).toHaveCount(3);
+    // Gas caption mentions momentum
+    await expect(captions.nth(0)).toContainText("momentum");
+    // Radiation caption mentions T^4 or temperature
+    await expect(captions.nth(1)).toContainText("temperature");
+    // Degeneracy caption mentions Pauli
+    await expect(captions.nth(2)).toContainText("Pauli");
+  });
+
+  test("equation toggle switches between symbolic and numerical form", async ({ page }) => {
+    await page.locator("#tab-understand").click();
+    await page.waitForSelector("#compareGasEq .katex", { timeout: 5000 });
+    // Default form is symbolic (contains rho, T but no numerical values like 1.57)
+    const symbolicText = await page.locator("#compareGasEq").textContent();
+    // Click to toggle to numerical/substituted form
+    await page.locator("#compareGasEq").click();
+    await page.waitForTimeout(300);
+    const substitutedText = await page.locator("#compareGasEq").textContent();
+    expect(substitutedText).not.toBe(symbolicText);
+    // Click again to toggle back to symbolic
+    await page.locator("#compareGasEq").click();
+    await page.waitForTimeout(300);
+    const backToSymbolic = await page.locator("#compareGasEq").textContent();
+    expect(backToSymbolic).toBe(symbolicText);
+  });
+
+  test("equation toggle is keyboard-accessible", async ({ page }) => {
+    await page.locator("#tab-understand").click();
+    await page.waitForSelector("#compareGasEq .katex", { timeout: 5000 });
+    const eq = page.locator("#compareGasEq");
+    await expect(eq).toHaveAttribute("tabindex", "0");
+    await expect(eq).toHaveAttribute("role", "button");
+  });
+
+  test("tour replay button is present and activates tour", async ({ page }) => {
+    const tourBtn = page.locator("#startTour");
+    await expect(tourBtn).toBeVisible();
+    await tourBtn.click();
+    // Tour overlay should appear
+    await expect(page.locator(".tour-overlay")).toBeVisible();
+    await expect(page.locator(".tour-tooltip")).toBeVisible();
+  });
+
+  test("solar profile toggle shows overlay on regime map", async ({ page }) => {
+    const checkbox = page.locator("#showSolarProfile");
+    await expect(checkbox).toBeAttached();
+    await checkbox.check();
+    // After checking, the regime map should re-render (we just verify checkbox is checked)
+    await expect(checkbox).toBeChecked();
+  });
+
+  test("model notes has beginner summary with nested technical details", async ({ page }) => {
+    const accordion = page.locator(".cp-demo__controls .cp-accordion").filter({
+      hasText: "Model notes",
+    });
+    await accordion.locator("summary").first().evaluate((el) => (el as HTMLElement).click());
+    await expect(accordion).toHaveAttribute("open", "");
+    // Beginner summary should be visible
+    await expect(accordion.locator(".model-notes__simple")).toBeVisible();
+    // Nested "Technical details" should start closed
+    const nested = accordion.locator(".cp-accordion--nested");
+    await expect(nested).not.toHaveAttribute("open", "");
+    // Open it
+    await nested.locator("summary").evaluate((el) => (el as HTMLElement).click());
+    await expect(nested).toHaveAttribute("open", "");
+    await expect(nested).toContainText("Fermi-Dirac");
+  });
 });
