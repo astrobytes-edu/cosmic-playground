@@ -173,4 +173,97 @@ describe("Kepler's Laws -- Design System Contracts", () => {
       expect(html).toMatch(/cp-demo__readouts[^>]*aria-label="Readouts panel"/);
     });
   });
+
+  describe("Component migration: cp-chip presets", () => {
+    it("all 9 preset buttons use cp-chip class, not cp-button--outline", () => {
+      const chips = html.match(/class="cp-chip preset[^"]*"/g) || [];
+      expect(chips.length).toBe(9);
+    });
+
+    it("no cp-button--outline remains on preset buttons", () => {
+      const presetButtons = html.match(/class="[^"]*preset[^"]*"/g) || [];
+      const outlinePresets = presetButtons.filter((c) => c.includes("cp-button--outline"));
+      expect(outlinePresets).toEqual([]);
+    });
+
+    it("active preset uses is-active class, not preset--active", () => {
+      expect(html).not.toContain("preset--active");
+      const activeChips = html.match(/cp-chip[^"]*is-active/g) || [];
+      expect(activeChips.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("preset containers use cp-chip-group--grid, not cp-button-grid", () => {
+      expect(html).not.toContain("cp-button-grid");
+      const chipGroups = html.match(/cp-chip-group--grid/g) || [];
+      expect(chipGroups.length).toBe(2);
+    });
+
+    it("main.ts uses is-active for preset toggling, not preset--active", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).not.toContain("preset--active");
+      expect(mainTs).toContain("is-active");
+    });
+
+    it("CSS has no .preset--active rule (replaced by theme .cp-chip.is-active)", () => {
+      expect(css).not.toMatch(/\.preset--active\s*\{/);
+    });
+
+    it("CSS has no .cp-button-grid rule (replaced by theme .cp-chip-group--grid)", () => {
+      expect(css).not.toMatch(/\.cp-button-grid\s*\{/);
+    });
+  });
+
+  describe("Component migration: cp-utility-toolbar", () => {
+    it("HTML contains a cp-utility-toolbar", () => {
+      expect(html).toContain("cp-utility-toolbar");
+      expect(html).toMatch(/<div[^>]*class="cp-utility-toolbar"/);
+    });
+
+    it("toolbar has role=toolbar and aria-label", () => {
+      expect(html).toMatch(/cp-utility-toolbar[^>]*role="toolbar"/);
+      expect(html).toMatch(/cp-utility-toolbar[^>]*aria-label/);
+    });
+
+    it("station mode button is cp-utility-btn with aria-label", () => {
+      expect(html).toMatch(/id="stationMode"[^>]*class="cp-utility-btn"/);
+      expect(html).toMatch(/id="stationMode"[^>]*aria-label/);
+    });
+
+    it("help button is cp-utility-btn with aria-label", () => {
+      expect(html).toMatch(/id="help"[^>]*class="cp-utility-btn"/);
+      expect(html).toMatch(/id="help"[^>]*aria-label/);
+    });
+
+    it("copy results button is cp-utility-btn with aria-label", () => {
+      expect(html).toMatch(/id="copyResults"[^>]*class="cp-utility-btn"/);
+      expect(html).toMatch(/id="copyResults"[^>]*aria-label/);
+    });
+
+    it("no cp-action or cp-actions wrappers remain", () => {
+      expect(html).not.toContain("cp-action");
+      expect(html).not.toContain("cp-actions");
+    });
+  });
+
+  describe("Component migration: popover nav", () => {
+    it("HTML contains a cp-popover-anchor with nav links", () => {
+      expect(html).toContain("cp-popover-anchor");
+      expect(html).toContain("cp-popover-trigger");
+      expect(html).toContain("cp-popover");
+    });
+
+    it("popover contains links to exhibit, station, and instructor pages", () => {
+      expect(html).toContain('href="../../exhibits/keplers-laws/"');
+      expect(html).toContain('href="../../stations/keplers-laws/"');
+      expect(html).toContain('href="../../instructor/keplers-laws/"');
+    });
+
+    it("main.ts imports and calls initPopovers", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("initPopovers");
+      expect(mainTs).toMatch(/initPopovers\s*\(/);
+    });
+  });
 });

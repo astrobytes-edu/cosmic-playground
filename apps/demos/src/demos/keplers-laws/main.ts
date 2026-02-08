@@ -1,4 +1,4 @@
-import { createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AstroUnits, KeplersLawsModel, TwoBodyAnalytic } from "@cosmic/physics";
 import {
@@ -480,7 +480,7 @@ function setUnits(units: "101" | "201") {
 }
 
 function clearPresetHighlight() {
-  elements.presets.forEach((btn) => btn.classList.remove("preset--active"));
+  elements.presets.forEach((btn) => btn.classList.remove("is-active"));
 }
 
 function applyPreset(btn: HTMLButtonElement) {
@@ -496,7 +496,7 @@ function applyPreset(btn: HTMLButtonElement) {
   elements.eSlider!.value = String(Math.round(state.e * 1000));
 
   clearPresetHighlight();
-  btn.classList.add("preset--active");
+  btn.classList.add("is-active");
   update();
 }
 
@@ -937,3 +937,6 @@ elements.copyResults!.addEventListener("click", () => {
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
 if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 initMath(document);
+
+const demoRoot = document.querySelector<HTMLElement>("#cp-demo");
+if (demoRoot) initPopovers(demoRoot);

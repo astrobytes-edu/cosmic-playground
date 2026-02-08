@@ -91,11 +91,7 @@
   border-color: var(--cp-accent);
 }
 
-.cp-button-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: var(--cp-space-2);
-}
+/* preset grid layout uses theme's .cp-chip-group--grid */
 
 .kepler-presets {
   display: grid;
@@ -115,10 +111,7 @@
   margin-bottom: var(--cp-space-3);
 }
 
-.preset--active {
-  border-color: var(--cp-accent);
-  color: var(--cp-accent);
-}
+/* preset active state uses theme's .cp-chip.is-active */
 
 .cp-check {
   display: flex;
