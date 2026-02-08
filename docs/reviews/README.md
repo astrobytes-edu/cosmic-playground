@@ -35,6 +35,7 @@ Each review documents:
 | [telescope-resolution](telescope-resolution.md) | Physics review | 2026-02-07 |
 | [**Grade A+ (100/100)**](2026-02-07-grade-100.md) | Final audit | 2026-02-07 |
 | [comprehensive-review](2026-02-07-comprehensive-review.md) | Independent verification | 2026-02-07 |
+| [post-hardening-audit](2026-02-07-post-hardening-audit.md) | Follow-up gap analysis | 2026-02-07 |
 
 ## Template
 
