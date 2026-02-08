@@ -18,7 +18,7 @@
           <p class="cp-muted">Investigate alignment, shadow cones, and why eclipses aren't monthly.</p>
 
           <div class="cp-callout" data-kind="model">
-            Eclipses require two things at once: (1) the right phase (New/Full), and (2) the Moon near a node (small $|\beta|$).
+            Eclipses need two things at once: (1) the right phase (New or Full Moon), and (2) the Moon near a <strong>node</strong> — where its tilted orbit crosses the Sun–Earth plane.
           </div>
 
           <div class="cp-chip-group button-row" role="group" aria-label="Phase buttons">
@@ -42,7 +42,7 @@
           </div>
 
           <label class="control">
-            <span>Moon angle (deg)</span>
+            <span>Moon position (deg)</span>
             <input
               id="moonLon"
               type="range"
@@ -56,7 +56,7 @@
           </label>
 
           <label class="control">
-            <span>Orbital tilt $i$ ($^\circ$)</span>
+            <span>Moon&rsquo;s orbital tilt (deg)</span>
             <input
               id="tilt"
               type="range"
@@ -75,14 +75,11 @@
             <span class="control__value"><span id="distanceValue"></span></span>
           </label>
 
-          <div class="cp-callout" data-kind="activity">
-            <strong>Time controls</strong>
-            <div class="button-row" role="group" aria-label="Time controls">
-              <button id="animateMonth" class="cp-button cp-button--ghost" type="button">Animate month</button>
-              <button id="animateYear" class="cp-button cp-button--ghost" type="button">Animate 1 year</button>
-            </div>
-            <p id="motionNote" class="cp-muted" hidden></p>
+          <div class="button-row" role="group" aria-label="Time controls">
+            <button id="animateMonth" class="cp-button cp-button--ghost" type="button">Animate month</button>
+            <button id="animateYear" class="cp-button cp-button--ghost" type="button">Animate 1 year</button>
           </div>
+          <p id="motionNote" class="cp-muted" hidden></p>
 
           <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
             <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
@@ -156,7 +153,7 @@
           </defs>
 
           <g id="orbitPanel" transform="translate(40, 40)">
-            <text class="stage__title" x="0" y="0">Top view (ecliptic plane)</text>
+            <text class="stage__title" x="0" y="0">Top view (looking down on Moon&apos;s orbit)</text>
 
             <g transform="translate(220, 180)">
               <line class="stage__sunDir" x1="-180" y1="0" x2="180" y2="0" />
@@ -189,7 +186,7 @@
           </g>
 
           <g id="betaPanel" transform="translate(520, 40)">
-            <text class="stage__title" x="0" y="0">Ecliptic latitude vs. orbital position</text>
+            <text class="stage__title" x="0" y="0">Moon&apos;s height above/below the ecliptic</text>
 
             <g transform="translate(30, 180)">
               <!-- Horizontal axis: orbital position 0-360 deg -->
@@ -204,15 +201,15 @@
               <text class="stage__label" x="150" y="172" text-anchor="middle">orbital position (deg)</text>
               <text class="stage__label" x="-10" y="-130" text-anchor="end">+</text>
               <text class="stage__label" x="-10" y="134" text-anchor="end">-</text>
-              <text class="stage__label" x="-14" y="4" text-anchor="end" style="font-style: italic;">beta</text>
+              <text class="stage__label" x="-14" y="4" text-anchor="end">height</text>
 
               <!-- Threshold shading bands (updated by JS) -->
               <rect id="band-solar-partial" class="stage__band stage__band--solar" />
               <rect id="band-solar-central" class="stage__band stage__band--solar stage__band--central" />
               <rect id="band-lunar-penumbral" class="stage__band stage__band--lunar" />
               <!-- Threshold labels -->
-              <text id="label-solar" class="stage__band-label stage__band-label--solar" text-anchor="end">solar</text>
-              <text id="label-lunar" class="stage__band-label stage__band-label--lunar" text-anchor="end">lunar</text>
+              <text id="label-solar" class="stage__band-label stage__band-label--solar" text-anchor="end">solar zone</text>
+              <text id="label-lunar" class="stage__band-label stage__band-label--lunar" text-anchor="end">lunar zone</text>
 
               <!-- Sinusoidal curve (updated by JS) -->
               <path id="betaCurve" class="stage__betaCurve" d="" />
@@ -224,45 +221,44 @@
           </g>
 
           <text class="stage__note" x="40" y="392">
-            Note: The stage is schematic; the readouts use the model and are the authoritative values.
+            Schematic — readouts show precise values.
           </text>
         </svg>
+        <p class="stage__drag-hint">Drag the Moon or the teal nodes to explore eclipse geometry.</p>
       </section>
 
       <!-- ═══════════════════════════════════════════
-           READOUT STRIP — horizontal readouts
+           READOUT STRIP — horizontal readouts + context
            ═══════════════════════════════════════════ -->
-      <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
-        <div class="cp-readout">
-          <span class="cp-readout__label">Phase</span>
-          <span class="cp-readout__value" id="phaseLabel"></span>
+      <div class="cp-demo__readouts" aria-label="Readouts">
+        <div class="cp-readout-strip">
+          <div class="cp-readout">
+            <span class="cp-readout__label">Phase</span>
+            <span class="cp-readout__value" id="phaseLabel"></span>
+          </div>
+          <div class="cp-readout">
+            <span class="cp-readout__label">$\Delta$</span>
+            <span class="cp-readout__value"><span id="phaseAngle"></span> <span class="cp-readout__unit">deg</span></span>
+          </div>
+          <div class="cp-readout">
+            <span class="cp-readout__label">$\beta$</span>
+            <span class="cp-readout__value"><span id="absBeta"></span> <span class="cp-readout__unit">deg</span></span>
+          </div>
+          <div class="cp-readout cp-readout--solar" id="solarReadout">
+            <span class="cp-readout__label">Solar</span>
+            <span class="cp-readout__value"><span class="cp-readout__dot"></span><span id="solarOutcome"></span></span>
+          </div>
+          <div class="cp-readout cp-readout--lunar" id="lunarReadout">
+            <span class="cp-readout__label">Lunar</span>
+            <span class="cp-readout__value"><span class="cp-readout__dot"></span><span id="lunarOutcome"></span></span>
+          </div>
+          <div class="cp-readout">
+            <span class="cp-readout__label">Node</span>
+            <span class="cp-readout__value"><span id="nearestNode"></span> <span class="cp-readout__unit">deg</span></span>
+          </div>
         </div>
-        <div class="cp-readout">
-          <span class="cp-readout__label">$\Delta$</span>
-          <span class="cp-readout__value"><span id="phaseAngle"></span> <span class="cp-readout__unit">deg</span></span>
-        </div>
-        <div class="cp-readout">
-          <span class="cp-readout__label">$\beta$</span>
-          <span class="cp-readout__value"><span id="absBeta"></span> <span class="cp-readout__unit">deg</span></span>
-        </div>
-        <div class="cp-readout cp-readout--solar" id="solarReadout">
-          <span class="cp-readout__label">Solar</span>
-          <span class="cp-readout__value"><span class="cp-readout__dot"></span><span id="solarOutcome"></span></span>
-        </div>
-        <div class="cp-readout cp-readout--lunar" id="lunarReadout">
-          <span class="cp-readout__label">Lunar</span>
-          <span class="cp-readout__value"><span class="cp-readout__dot"></span><span id="lunarOutcome"></span></span>
-        </div>
-        <div class="cp-readout">
-          <span class="cp-readout__label">Node</span>
-          <span class="cp-readout__value"><span id="nearestNode"></span> <span class="cp-readout__unit">deg</span></span>
-        </div>
+        <p id="contextMessage" class="cp-status cp-context-message" aria-live="polite"></p>
       </div>
-
-      <!-- ═══════════════════════════════════════════
-           CONTEXTUAL MESSAGE
-           ═══════════════════════════════════════════ -->
-      <p id="contextMessage" class="cp-status cp-context-message" aria-live="polite"></p>
 
       <!-- ═══════════════════════════════════════════
            SHELF — tabbed pedagogical + simulation content
@@ -279,8 +275,9 @@
           </div>
           <div class="cp-tab-panel" role="tabpanel" id="tab-notice" aria-labelledby="tab-btn-notice">
             <ul>
-              <li>Orbital tilt breaks "monthly eclipse" intuition.</li>
-              <li>Small geometric differences determine eclipse visibility.</li>
+              <li><strong>Observable:</strong> eclipses only happen when the Moon is near a node <em>and</em> at New or Full phase.</li>
+              <li><strong>Model:</strong> the Moon&rsquo;s orbit is tilted ~5&deg; from the ecliptic, so it usually passes above or below the Sun/Earth&rsquo;s shadow.</li>
+              <li><strong>Inference:</strong> eclipses are rare because two conditions must align &mdash; most New/Full Moons miss. Try setting tilt to 0&deg; to see what would happen without tilt.</li>
             </ul>
           </div>
           <div class="cp-tab-panel" role="tabpanel" id="tab-model" aria-labelledby="tab-btn-model" hidden>

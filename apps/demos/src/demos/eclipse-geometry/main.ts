@@ -342,8 +342,8 @@ function renderStage(args: {
   descNodeDot.setAttribute("cx", formatNumber(ex, 2));
   descNodeDot.setAttribute("cy", formatNumber(ey, 2));
 
-  ascNodeLabel.textContent = `node ~ ${Math.round(nodeDisplayLonDeg)} deg`;
-  descNodeLabel.textContent = `node+180 ~ ${Math.round(EclipseGeometryModel.normalizeAngleDeg(nodeDisplayLonDeg + 180))} deg`;
+  ascNodeLabel.textContent = `asc. node ${Math.round(nodeDisplayLonDeg)}\u00B0`;
+  descNodeLabel.textContent = `desc. node ${Math.round(EclipseGeometryModel.normalizeAngleDeg(nodeDisplayLonDeg + 180))}\u00B0`;
 
   // beta indicator: draw a short line "out of plane" near the Moon point.
   const betaScalePxPerDeg = 10;
@@ -960,8 +960,8 @@ const MOON_RATE_DEG_PER_DAY = 360 / SIDEREAL_MONTH_DAYS;
 const NODE_RATE_DEG_PER_DAY = -360 / (NODE_REGRESSION_YEARS * JULIAN_YEAR_DAYS);
 const PHASE_RATE_DEG_PER_DAY = 360 / SYNODIC_MONTH_DAYS;
 
-const ANIMATE_MONTH_DAYS_PER_SECOND = 25;
-const ANIMATE_YEAR_DAYS_PER_SECOND = 220;
+const ANIMATE_MONTH_DAYS_PER_SECOND = 10;
+const ANIMATE_YEAR_DAYS_PER_SECOND = 36;
 
 const SIM_SPEED_DAYS_PER_SECOND: Record<SimSpeedKey, number> = {
   slow: 200,

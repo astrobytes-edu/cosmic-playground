@@ -138,13 +138,14 @@ describe("Eclipse Geometry -- Design System Contracts", () => {
     });
 
     it("readout strip exists as horizontal strip div", () => {
-      expect(html).toMatch(/class="cp-readout-strip[^"]*cp-demo__readouts"/);
+      expect(html).toContain('class="cp-readout-strip"');
+      expect(html).toContain('class="cp-demo__readouts"');
     });
   });
 
   describe("Readouts strip", () => {
-    it("readout strip has accessible label", () => {
-      expect(html).toMatch(/cp-readout-strip[^>]*aria-label="Readouts"/);
+    it("readout strip wrapper has accessible label", () => {
+      expect(html).toMatch(/cp-demo__readouts[^>]*aria-label="Readouts"/);
     });
 
     it("model callout lives in sidebar, not readout strip", () => {

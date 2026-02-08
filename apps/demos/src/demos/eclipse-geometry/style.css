@@ -16,10 +16,11 @@
 }
 
 .cp-context-message {
-  grid-area: context;
   text-align: center;
-  padding: 0 var(--cp-space-4);
+  padding: var(--cp-space-2) var(--cp-space-4);
   min-height: 1.5em;
+  color: var(--cp-muted);
+  font-size: var(--cp-text-sm);
   animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 2);
 }
@@ -63,12 +64,12 @@
 .stage {
   display: grid;
   place-items: center;
-  padding: var(--cp-space-4);
+  padding: var(--cp-space-3);
 }
 
 .stage__svg {
   width: 100%;
-  max-width: none;
+  max-width: 960px;
   height: auto;
   border-radius: 18px;
   border: 1px solid var(--cp-border);
@@ -79,20 +80,27 @@
   );
 }
 
+.stage__drag-hint {
+  text-align: center;
+  color: var(--cp-muted);
+  font-size: var(--cp-text-sm);
+  margin-top: var(--cp-space-2);
+}
+
 .stage__title {
   fill: var(--cp-text);
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .stage__label {
   fill: var(--cp-muted);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .stage__note {
   fill: var(--cp-muted);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .stage__orbit {
@@ -172,8 +180,8 @@
 /* --- Eclipse window arcs --- */
 .stage__arc {
   fill: none;
-  stroke-width: 6;
-  opacity: 0.2;
+  stroke-width: 8;
+  opacity: 0.3;
   pointer-events: none;
 }
 .stage__arc--solar {
@@ -183,8 +191,8 @@
   stroke: var(--cp-accent);
 }
 .stage__arc--central {
-  stroke-width: 10;
-  opacity: 0.3;
+  stroke-width: 12;
+  opacity: 0.4;
 }
 
 /* --- Eclipse discovery floating label --- */
@@ -206,13 +214,13 @@
 
 /* --- Beta curve threshold bands --- */
 .stage__band {
-  opacity: 0.1;
+  opacity: 0.15;
   pointer-events: none;
 }
 .stage__band--solar { fill: var(--cp-accent-rose); }
-.stage__band--central { opacity: 0.18; }
+.stage__band--central { opacity: 0.25; }
 .stage__band--lunar { fill: var(--cp-accent); }
-.stage__band-label { font-size: 9px; }
+.stage__band-label { font-size: 11px; font-weight: 600; }
 .stage__band-label--solar { fill: var(--cp-accent-rose); opacity: 0.6; }
 .stage__band-label--lunar { fill: var(--cp-accent); opacity: 0.6; }
 
