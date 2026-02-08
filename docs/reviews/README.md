@@ -19,6 +19,7 @@ Each review documents:
 | [eos-lab](eos-lab.md) | Complete | 2026-02-07 |
 | [component-consolidation](2026-02-07-component-consolidation.md) | Complete | 2026-02-07 |
 | [eos-lab-qa-and-new-demos](2026-02-07-eos-lab-qa-and-new-demos.md) | Complete | 2026-02-07 |
+| [cp-action-migration-and-full-suite](2026-02-07-cp-action-migration-and-full-suite.md) | Complete | 2026-02-07 |
 
 ## Template
 
