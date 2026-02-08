@@ -552,4 +552,32 @@ export function invalidateRegimeGrid(): void {
   gridCache = null;
 }
 
-// invalidateRegimeMapColors removed (dead export — no theme toggle calls it)
+/**
+ * Convert canvas CSS-pixel coordinates to (logT, logRho).
+ * Returns null if the click is outside the plot area.
+ */
+export function canvasToLogCoords(
+  canvas: HTMLCanvasElement,
+  cssX: number,
+  cssY: number,
+  config: RegimeMapConfig = DEFAULT_CONFIG
+): { logT: number; logRho: number } | null {
+  const cfg = { ...DEFAULT_CONFIG, ...config };
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width;
+  const height = rect.height;
+  const pa = plotArea(width, height);
+
+  // Check bounds
+  if (cssX < pa.x || cssX > pa.x + pa.w || cssY < pa.y || cssY > pa.y + pa.h) {
+    return null;
+  }
+
+  const fracX = (cssX - pa.x) / pa.w;
+  const fracY = (cssY - pa.y) / pa.h;
+
+  const logT = cfg.logTMin + fracX * (cfg.logTMax - cfg.logTMin);
+  const logRho = cfg.logRhoMax - fracY * (cfg.logRhoMax - cfg.logRhoMin); // y inverted
+
+  return { logT, logRho };
+}

@@ -27,6 +27,7 @@ export default defineConfig(() => {
   return {
     base: "./",
     root: demosRoot,
+    publicDir: path.join(projectRoot, "public"),
     build: {
       outDir: path.join(projectRoot, "dist"),
       emptyOutDir: true,

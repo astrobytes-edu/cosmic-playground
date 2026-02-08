@@ -285,7 +285,15 @@
   border: 1px solid color-mix(in srgb, var(--cp-border) 60%, transparent);
 }
 
+/* uPlot canvas needs an explicit dark background — otherwise transparent canvas
+   creates a checkered-pattern artifact against the translucent container. */
+.pressure-plot__surface canvas {
+  background: var(--cp-bg0);
+  border-radius: var(--cp-r-2);
+}
+
 .regime-map {
+  position: relative;
   padding: var(--cp-space-3);
   border-radius: var(--cp-r-3);
   border: 1px solid var(--cp-border);
@@ -320,17 +328,22 @@
   padding: 0;
   list-style: none;
   display: grid;
-  gap: var(--cp-space-2);
+  gap: var(--cp-space-2) var(--cp-space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  font-size: 0.95rem;
+  font-size: 0.92rem;
 }
 
 .regime-map__legend li {
   display: flex;
-  align-items: flex-start;
-  gap: var(--cp-space-2);
+  align-items: center;
+  gap: var(--cp-space-1);
   color: var(--cp-text);
-  line-height: 1.3;
+  line-height: 1.2;
+  min-height: 1.6rem;
+}
+
+.regime-map__legend sub {
+  font-size: 0.8em;
 }
 
 .regime-map__legend span {
@@ -356,6 +369,24 @@
 
 .regime-map__legend span[data-channel="mixed"] {
   background: color-mix(in srgb, var(--eos-mixed) 50%, transparent);
+}
+
+/* Hover tooltip for regime map — shows T/rho under cursor */
+.regime-map__tooltip {
+  position: absolute;
+  z-index: 10;
+  pointer-events: none;
+  padding: 0.3rem 0.55rem;
+  border-radius: var(--cp-r-1);
+  background: color-mix(in srgb, var(--cp-bg0) 92%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--cp-border);
+  font-family: var(--cp-readout-value-font, var(--cp-font-mono));
+  font-size: 0.82rem;
+  color: var(--cp-readout-value-color, var(--cp-accent-amber));
+  white-space: nowrap;
+  line-height: 1.3;
 }
 
 #regimeDetail {

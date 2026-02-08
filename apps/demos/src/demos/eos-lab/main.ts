@@ -40,7 +40,7 @@ import {
 } from "./logic";
 import { createEosPlot, destroyPlot } from "./uplotHelpers";
 import type { uPlot } from "./uplotHelpers";
-import { renderRegimeMap, invalidateRegimeGrid } from "./regimeMap";
+import { renderRegimeMap, invalidateRegimeGrid, canvasToLogCoords } from "./regimeMap";
 import {
   GasPressureAnimation,
   RadiationPressureAnimation,
@@ -60,14 +60,26 @@ function renderMathIfChanged(el: HTMLElement): void {
   renderMath(el);
 }
 
-/** Format log-scale tick values as 10^n using Unicode superscripts. */
-const logTickValues = (_self: unknown, splits: number[]) =>
-  splits.map(v => {
+/**
+ * Format log-scale tick values as 10^n using Unicode superscripts.
+ * Auto-thins labels when the range spans many decades to prevent overlap.
+ */
+const logTickValues = (_self: unknown, splits: number[]) => {
+  // Count how many integer-power-of-10 ticks we have
+  const exponents = splits
+    .filter(v => v > 0)
+    .map(v => Math.round(Math.log10(v)))
+    .filter(exp => Math.abs(splits.find(v => v > 0 && Math.round(Math.log10(v)) === exp)! - Math.pow(10, exp)) / Math.pow(10, exp) < 0.01);
+  const step = exponents.length > 12 ? 3 : exponents.length > 7 ? 2 : 1;
+
+  return splits.map(v => {
     if (v <= 0) return "";
     const exp = Math.round(Math.log10(v));
     if (Math.abs(v - Math.pow(10, exp)) / v > 0.01) return "";
+    if (step > 1 && exp % step !== 0) return "";
     return `10${superscript(exp)}`;
   });
+};
 
 /**
  * uPlot log-scale range clamp for pressure axes.
@@ -283,7 +295,7 @@ const runtime = createInstrumentRuntime({
 });
 
 type DemoState = {
-  selectedPresetId: Preset["id"];
+  selectedPresetId: Preset["id"] | null;
   temperatureK: number;
   densityGPerCm3: number;
   composition: StellarCompositionFractions;
@@ -397,7 +409,7 @@ const pressurePlotHandle = createEosPlot(pressureCurvePlotEl, {
   ],
   legend: { show: true, live: true },
   cursor: {
-    drag: { x: false, y: false },
+    drag: { x: true, y: true },
     points: { show: true, size: 8, fill: "#fbbf24" },
   },
   plugins: [currentStatePlugin()],
@@ -408,6 +420,12 @@ const pressurePlotHandle = createEosPlot(pressureCurvePlotEl, {
   initialCurveData.pDeg,
   initialCurveData.pTotal,
 ]);
+
+// Double-click on pressure curve resets zoom to full range
+pressureCurvePlotEl.addEventListener("dblclick", () => {
+  pressurePlotHandle.plot.setScale("x", { min: DENSITY_MIN_G_PER_CM3, max: DENSITY_MAX_G_PER_CM3 });
+  pressurePlotHandle.plot.setScale("y", { min: 1e5, max: 1e25 });
+});
 
 /* ================================================================
  * Helper functions
@@ -434,9 +452,12 @@ function renderPresetState(): void {
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-pressed", String(isActive));
   }
-  const preset = PRESET_BY_ID[state.selectedPresetId];
-  const c = state.composition;
+  const preset = state.selectedPresetId != null
+    ? PRESET_BY_ID[state.selectedPresetId]
+    : undefined;
   presetNote.innerHTML = "";
+  if (!preset) return;
+  const c = state.composition;
   const noteText = document.createElement("span");
   noteText.textContent = preset.note;
   const expectedText = document.createElement("span");
@@ -562,7 +583,7 @@ function exportResults(model: StellarEosStateCgs): ExportPayloadV1 {
     version: 1,
     timestamp: new Date().toISOString(),
     parameters: [
-      { name: "Preset", value: PRESET_BY_ID[state.selectedPresetId].label },
+      { name: "Preset", value: state.selectedPresetId ? PRESET_BY_ID[state.selectedPresetId].label : "Custom" },
       { name: "Temperature T (K)", value: formatScientific(model.input.temperatureK, 4) },
       { name: "Density rho (g cm^-3)", value: formatScientific(model.input.densityGPerCm3, 4) },
       { name: "Composition mass fractions (X,Y,Z)", value: `(${formatFraction(c.hydrogenMassFractionX, 3)}, ${formatFraction(c.heliumMassFractionY, 3)}, ${formatFraction(c.metalMassFractionZ, 3)})` }
@@ -1113,7 +1134,7 @@ const demoModes = createDemoModes({
     getSnapshotRow() {
       const model = evaluateModel();
       return {
-        case: PRESET_BY_ID[state.selectedPresetId].label,
+        case: state.selectedPresetId ? PRESET_BY_ID[state.selectedPresetId].label : "Custom",
         temperatureK: formatScientific(model.input.temperatureK, 4),
         densityGPerCm3: formatScientific(model.input.densityGPerCm3, 4),
         pGas: formatScientific(model.gasPressureDynePerCm2, 4),
@@ -1242,6 +1263,57 @@ xSlider.addEventListener("pointerup", finalizeCompositionInteraction);
 ySlider.addEventListener("pointerup", finalizeCompositionInteraction);
 
 showSolarProfileCb.addEventListener("change", () => render());
+
+/* ----------------------------------------------------------------
+ * Regime map interactivity: click to set (T, rho) + hover tooltip
+ * ---------------------------------------------------------------- */
+
+// Create tooltip element for regime map hover
+const regimeTooltip = document.createElement("div");
+regimeTooltip.className = "regime-map__tooltip";
+regimeTooltip.hidden = true;
+regimeMapCanvas.parentElement?.appendChild(regimeTooltip);
+
+regimeMapCanvas.style.cursor = "crosshair";
+
+regimeMapCanvas.addEventListener("click", (e) => {
+  const rect = regimeMapCanvas.getBoundingClientRect();
+  const coords = canvasToLogCoords(regimeMapCanvas, e.clientX - rect.left, e.clientY - rect.top);
+  if (!coords) return;
+  // Clamp to slider bounds
+  const T = Math.pow(10, clamp(coords.logT, Math.log10(TEMPERATURE_MIN_K), Math.log10(TEMPERATURE_MAX_K)));
+  const rho = Math.pow(10, clamp(coords.logRho, Math.log10(DENSITY_MIN_G_PER_CM3), Math.log10(DENSITY_MAX_G_PER_CM3)));
+  state.temperatureK = T;
+  state.densityGPerCm3 = rho;
+  state.selectedPresetId = null;
+  render({ deferGridRebuild: true });
+  setLiveRegionText(status, `Set T = ${formatScientific(T, 3)} K, rho = ${formatScientific(rho, 3)} g/cm3`);
+});
+
+regimeMapCanvas.addEventListener("mousemove", (e) => {
+  const rect = regimeMapCanvas.getBoundingClientRect();
+  const coords = canvasToLogCoords(regimeMapCanvas, e.clientX - rect.left, e.clientY - rect.top);
+  if (!coords) {
+    regimeTooltip.hidden = true;
+    return;
+  }
+  const T = Math.pow(10, coords.logT);
+  const rho = Math.pow(10, coords.logRho);
+  regimeTooltip.hidden = false;
+  regimeTooltip.textContent = `T = ${formatScientific(T, 2)} K, \u03C1 = ${formatScientific(rho, 2)} g/cm\u00B3`;
+  // Position tooltip near cursor, flip left when near right edge
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+  const parentW = regimeMapCanvas.parentElement?.offsetWidth ?? rect.width;
+  const tipW = regimeTooltip.offsetWidth || 200;
+  const flipped = cx + tipW + 16 > parentW;
+  regimeTooltip.style.left = flipped ? `${cx - tipW - 8}px` : `${cx + 12}px`;
+  regimeTooltip.style.top = `${cy - 8}px`;
+});
+
+regimeMapCanvas.addEventListener("mouseleave", () => {
+  regimeTooltip.hidden = true;
+});
 
 copyResults.addEventListener("click", () => {
   const model = evaluateModel();
