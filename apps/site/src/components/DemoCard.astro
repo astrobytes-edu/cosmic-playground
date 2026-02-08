@@ -1,8 +1,8 @@
 ---
 import TagPill from "./TagPill.astro";
 import TopicIcon from "./TopicIcon.astro";
-import DemoGlyph from "./DemoGlyph.astro";
-import { pickDemoGlyph } from "../lib/demoGlyphs";
+import DemoIllustration from "./DemoIllustration.astro";
+import { topicColor, primaryTopic } from "../lib/topicColors";
 
 export type DemoCardProps = {
   title: string;
@@ -28,23 +28,22 @@ const {
   hasMathMode
 } = Astro.props as DemoCardProps;
 
-const glyph = pickDemoGlyph(topics, slug, title);
+const topic = primaryTopic(topics);
+const color = topicColor(topic);
 const statusTone =
   status === "stable" ? "teal" : status === "beta" ? "status-beta" : "status-draft";
 const timeLabel =
-  timeMinutes <= 10 ? "≤10 min" : timeMinutes <= 20 ? "10–20 min" : "20+ min";
+  timeMinutes <= 10 ? "\u226410 min" : timeMinutes <= 20 ? "10\u201320 min" : "20+ min";
 ---
 
-<article class="demo-card cp-card">
+<article class="demo-card cp-card" style={`--topic-color: ${color}`}>
   <a class="demo-card__link" href={href}>
-    <header class="demo-card__header">
-      <DemoGlyph name={glyph} class="demo-card__glyph" />
+    <div class="demo-card__illustration">
+      <DemoIllustration slug={slug} />
+    </div>
+    <div class="demo-card__body">
       <h3 class="demo-card__title">{title}</h3>
-    </header>
-
-    <p class="demo-card__desc">{description}</p>
-
-    <footer class="demo-card__footer">
+      <p class="demo-card__desc">{description}</p>
       <div class="demo-card__badges" aria-label="Tags">
         <TagPill label={status} tone={statusTone} />
         {topics.map((t) => (
@@ -56,7 +55,7 @@ const timeLabel =
         {levels.map((l) => <TagPill label={l} tone="default" />)}
         {hasMathMode ? <TagPill label="math mode" tone="violet" /> : null}
       </div>
-    </footer>
+    </div>
   </a>
 </article>
 
@@ -64,51 +63,70 @@ const timeLabel =
   .demo-card {
     border-radius: var(--cp-r-3);
     overflow: clip;
+    transition:
+      transform 200ms var(--cp-ease-out),
+      box-shadow 200ms var(--cp-ease-out),
+      border-color 200ms var(--cp-ease-out);
+  }
+
+  .demo-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      var(--cp-card-shadow-hover),
+      0 0 24px color-mix(in srgb, var(--topic-color) 12%, transparent);
+    border-color: color-mix(in srgb, var(--topic-color) 35%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .demo-card {
+      transition: none;
+    }
+    .demo-card:hover {
+      transform: none;
+    }
   }
 
   .demo-card__link {
     display: block;
-    padding: 14px;
     text-decoration: none;
   }
 
-  .demo-card__link:hover {
-    background: color-mix(in srgb, var(--cp-text) 3%, transparent);
+  .demo-card__illustration {
+    padding: var(--cp-space-3);
+    background:
+      radial-gradient(
+        ellipse 80% 70% at 50% 50%,
+        color-mix(in srgb, var(--topic-color) 8%, transparent) 0%,
+        transparent 70%
+      );
+    border-bottom: 1px solid var(--cp-border-subtle);
+    opacity: 0.85;
+    transition: opacity 200ms var(--cp-ease-out);
   }
 
-  .demo-card__header {
+  .demo-card:hover .demo-card__illustration {
+    opacity: 1;
+  }
+
+  .demo-card__body {
+    padding: var(--cp-space-4);
     display: grid;
-    gap: 10px;
-  }
-
-  .demo-card__glyph {
-    width: clamp(28px, 4vw, 36px);
-    height: clamp(28px, 4vw, 36px);
-    color: var(--cp-text-3);
-    transition: color var(--cp-transition-fast) var(--cp-ease-out),
-      transform var(--cp-transition-fast) var(--cp-ease-out);
-  }
-
-  .demo-card:hover .demo-card__glyph,
-  .demo-card:focus-within .demo-card__glyph {
-    color: var(--cp-accent);
-    transform: translateY(-1px);
+    gap: var(--cp-space-2);
   }
 
   .demo-card__title {
     margin: 0;
     font-size: var(--cp-text-xl);
     color: var(--cp-title);
-    transition: color var(--cp-transition-fast) var(--cp-ease-out);
+    transition: color 200ms var(--cp-ease-out);
   }
 
-  .demo-card__link:hover .demo-card__title,
-  .demo-card__link:focus-visible .demo-card__title {
+  .demo-card:hover .demo-card__title {
     color: var(--cp-title-strong);
   }
 
   .demo-card__desc {
-    margin: 10px 0 0;
+    margin: 0;
     color: var(--cp-text2);
     max-width: 72ch;
     display: -webkit-box;
@@ -117,14 +135,11 @@ const timeLabel =
     overflow: hidden;
   }
 
-  .demo-card__footer {
-    margin-top: 12px;
-  }
-
   .demo-card__badges {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     opacity: 0.9;
+    margin-top: var(--cp-space-1);
   }
 </style>
