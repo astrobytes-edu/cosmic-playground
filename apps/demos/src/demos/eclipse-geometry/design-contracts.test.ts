@@ -95,7 +95,7 @@ describe("Eclipse Geometry -- Design System Contracts", () => {
 
   describe("Entry animations", () => {
     it("demo shell sections have entry animations", () => {
-      expect(css).toMatch(/\.cp-demo__controls[\s\S]*?animation.*cp-slide-up/);
+      expect(css).toMatch(/\.cp-demo__sidebar[\s\S]*?animation.*cp-slide-up/);
       expect(css).toMatch(/\.cp-demo__stage[\s\S]*?animation.*cp-fade-in/);
     });
   });
@@ -137,24 +137,40 @@ describe("Eclipse Geometry -- Design System Contracts", () => {
       expect(html).toContain("cp-layer-instrument");
     });
 
-    it("readouts panel exists as separate aside", () => {
-      expect(html).toMatch(/<aside[^>]*cp-demo__readouts/);
+    it("readout strip exists as horizontal strip div", () => {
+      expect(html).toMatch(/class="cp-readout-strip[^"]*cp-demo__readouts"/);
     });
   });
 
-  describe("Readouts panel", () => {
-    it("readouts panel has accessible label", () => {
-      expect(html).toMatch(/cp-demo__readouts[^>]*aria-label="Readouts panel"/);
+  describe("Readouts strip", () => {
+    it("readout strip has accessible label", () => {
+      expect(html).toMatch(/cp-readout-strip[^>]*aria-label="Readouts"/);
     });
 
-    it("model callout lives in controls or drawer, not readouts", () => {
+    it("model callout lives in sidebar, not readout strip", () => {
+      // Extract readout strip section (it's a div, not aside)
       const readoutsSection = html.match(
-        /cp-demo__readouts[\s\S]*?<\/aside>/
+        /cp-readout-strip[\s\S]*?<\/div>\s*\n\s*\n/
       );
       expect(readoutsSection).not.toBeNull();
       expect(readoutsSection![0]).not.toContain("cp-callout");
-      // But the model callout should exist somewhere
+      // But the model callout should exist somewhere (in the sidebar)
       expect(html).toContain('data-kind="model"');
+    });
+
+    it("readout strip has 6 readout items", () => {
+      // Count .cp-readout divs inside the strip
+      const strip = html.match(
+        /class="cp-readout-strip[^"]*"[\s\S]*?<\/div>\s*\n\s*\n/
+      );
+      expect(strip).not.toBeNull();
+      const readouts = strip![0].match(/class="cp-readout[\s" ]/g) || [];
+      expect(readouts.length).toBe(6);
+    });
+
+    it("solar and lunar readouts have dot indicators", () => {
+      expect(html).toMatch(/cp-readout--solar[\s\S]*?cp-readout__dot/);
+      expect(html).toMatch(/cp-readout--lunar[\s\S]*?cp-readout__dot/);
     });
   });
 
@@ -217,6 +233,104 @@ describe("Eclipse Geometry -- Design System Contracts", () => {
       expect(chipButtons.length).toBeGreaterThan(0);
       const missing = chipButtons.filter((tag) => !tag.includes("aria-pressed"));
       expect(missing, "cp-chip buttons missing aria-pressed").toEqual([]);
+    });
+  });
+
+  describe("Shelf tabs", () => {
+    it("shelf has 3 tab buttons with correct roles", () => {
+      const tabs = html.match(/<button[^>]*role="tab"[^>]*>/g) || [];
+      expect(tabs.length).toBe(3);
+    });
+
+    it("shelf has 3 tab panels with correct roles", () => {
+      const panels = html.match(/<div[^>]*role="tabpanel"[^>]*>/g) || [];
+      expect(panels.length).toBe(3);
+    });
+
+    it("tab buttons have aria-controls linking to panels", () => {
+      expect(html).toMatch(/aria-controls="tab-notice"/);
+      expect(html).toMatch(/aria-controls="tab-model"/);
+      expect(html).toMatch(/aria-controls="tab-sim"/);
+    });
+  });
+
+  describe("Eclipse window arcs", () => {
+    it("8 arc path elements exist with correct classes", () => {
+      const arcs = html.match(/<path[^>]*class="stage__arc[^"]*"/g) || [];
+      expect(arcs.length).toBe(8);
+    });
+
+    it("arcs include solar and lunar types", () => {
+      const solarArcs = html.match(/class="stage__arc stage__arc--solar"/g) || [];
+      const lunarArcs = html.match(/class="stage__arc stage__arc--lunar"/g) || [];
+      // 2 solar outer + 2 solar central + 2 lunar outer + 2 lunar central
+      expect(solarArcs.length).toBe(2); // outer solar (non-central)
+      expect(lunarArcs.length).toBe(2); // outer lunar (non-central)
+    });
+
+    it("eclipse arcs use design tokens in CSS", () => {
+      expect(css).toMatch(/\.stage__arc--solar[\s\S]*?--cp-accent-rose/);
+      expect(css).toMatch(/\.stage__arc--lunar[\s\S]*?--cp-accent\b/);
+    });
+  });
+
+  describe("Contextual message element", () => {
+    it("contextMessage element exists with aria-live", () => {
+      expect(html).toMatch(/id="contextMessage"[^>]*aria-live="polite"/);
+    });
+
+    it("contextMessage has cp-context-message class", () => {
+      expect(html).toMatch(/id="contextMessage"[^>]*class="[^"]*cp-context-message/);
+    });
+  });
+
+  describe("Threshold bands", () => {
+    it("3 band rect elements exist in beta panel", () => {
+      const bands = html.match(/<rect[^>]*class="stage__band[^"]*"/g) || [];
+      expect(bands.length).toBe(3);
+    });
+
+    it("2 band label elements exist", () => {
+      const labels = html.match(/<text[^>]*class="stage__band-label[^"]*"/g) || [];
+      expect(labels.length).toBe(2);
+    });
+
+    it("threshold bands use design tokens in CSS", () => {
+      expect(css).toMatch(/\.stage__band--solar[\s\S]*?--cp-accent-rose/);
+      expect(css).toMatch(/\.stage__band--lunar[\s\S]*?--cp-accent\b/);
+    });
+  });
+
+  describe("Presets popover", () => {
+    it("presetsPopover element exists with hidden attribute", () => {
+      expect(html).toMatch(/id="presetsPopover"[^>]*hidden/);
+    });
+
+    it("presets popover contains preset buttons", () => {
+      const popover = html.match(/id="presetsPopover"[\s\S]*?<\/div>\s*<\/div>/);
+      expect(popover).not.toBeNull();
+      expect(popover![0]).toContain("presetTotalSolar");
+      expect(popover![0]).toContain("presetLunar");
+      expect(popover![0]).toContain("presetNoEclipse");
+      expect(popover![0]).toContain("presetSeason");
+    });
+
+    it("presets trigger button has aria-controls linking to popover", () => {
+      expect(html).toMatch(/id="presetsBtn"[^>]*aria-controls="presetsPopover"/);
+    });
+  });
+
+  describe("Sidebar layout (moon-phases shell)", () => {
+    it("sidebar exists as aside with cp-demo__sidebar class", () => {
+      expect(html).toMatch(/<aside[^>]*class="cp-demo__sidebar/);
+    });
+
+    it("no data-shell attribute remains", () => {
+      expect(html).not.toContain("data-shell");
+    });
+
+    it("shelf section exists with cp-demo__shelf class", () => {
+      expect(html).toMatch(/<section[^>]*class="cp-demo__shelf"/);
     });
   });
 });
