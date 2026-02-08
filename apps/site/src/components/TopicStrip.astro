@@ -1,0 +1,89 @@
+---
+import TopicIcon from "./TopicIcon.astro";
+import { topicColor } from "../lib/topicColors";
+
+interface Props {
+  baseUrl: string;
+}
+
+const { baseUrl } = Astro.props;
+
+const topics = [
+  { key: "EarthSky", label: "Earth & Sky" },
+  { key: "Orbits", label: "Orbits" },
+  { key: "LightSpectra", label: "Light & Spectra" },
+  { key: "Telescopes", label: "Telescopes" },
+  { key: "DataInference", label: "Data & Inference" },
+  { key: "Stars", label: "Stars" },
+];
+---
+
+<nav class="topic-strip" aria-label="Browse by topic">
+  <div class="topic-strip__inner">
+    {topics.map((t) => (
+      <a
+        class="topic-strip__chip"
+        href={`${baseUrl}explore/?topic=${t.key}`}
+        style={`--chip-color: ${topicColor(t.key)}`}
+      >
+        <TopicIcon topic={t.key} size={16} />
+        <span>{t.label}</span>
+      </a>
+    ))}
+  </div>
+</nav>
+
+<style>
+  .topic-strip {
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    padding: var(--cp-space-4) var(--cp-space-5);
+    border-top: 1px solid var(--cp-border-subtle);
+    border-bottom: 1px solid var(--cp-border-subtle);
+    background: color-mix(in srgb, var(--cp-bg1) 30%, transparent);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .topic-strip__inner {
+    display: flex;
+    gap: var(--cp-space-3);
+    justify-content: center;
+    max-width: var(--cp-site-max);
+    margin: 0 auto;
+  }
+
+  .topic-strip__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--cp-space-2);
+    padding: var(--cp-space-2) var(--cp-space-4);
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--chip-color) 25%, var(--cp-border));
+    background: color-mix(in srgb, var(--chip-color) 6%, transparent);
+    color: var(--cp-text2);
+    text-decoration: none;
+    font-size: var(--cp-text-sm);
+    font-weight: var(--cp-font-medium);
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition:
+      background 200ms var(--cp-ease-out),
+      border-color 200ms var(--cp-ease-out),
+      color 200ms var(--cp-ease-out),
+      box-shadow 200ms var(--cp-ease-out);
+  }
+
+  .topic-strip__chip:hover {
+    background: color-mix(in srgb, var(--chip-color) 15%, transparent);
+    border-color: color-mix(in srgb, var(--chip-color) 45%, transparent);
+    color: var(--cp-text);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--chip-color) 10%, transparent);
+  }
+
+  @media (max-width: 767px) {
+    .topic-strip__inner {
+      justify-content: flex-start;
+    }
+  }
+</style>

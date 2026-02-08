@@ -1,0 +1,100 @@
+---
+/**
+ * CSS nebula glow for the home hero zone.
+ * Layered radial gradients creating an emission nebula effect
+ * in pinks, teals, and ambers. Sits over the existing Canvas
+ * starfield from MuseumStarfield. Decorative only.
+ */
+---
+
+<div class="nebula-hero" aria-hidden="true"></div>
+
+<style>
+  .nebula-hero {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .nebula-hero::before,
+  .nebula-hero::after {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    border-radius: 50%;
+  }
+
+  /* Primary nebula cloud — pink/rose emission */
+  .nebula-hero::before {
+    background:
+      radial-gradient(
+        ellipse 70% 50% at 60% 40%,
+        color-mix(in srgb, var(--cp-pink) 14%, transparent) 0%,
+        color-mix(in srgb, var(--cp-pink) 6%, transparent) 40%,
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 40% 60% at 35% 65%,
+        color-mix(in srgb, var(--cp-celestial-sun-corona) 10%, transparent) 0%,
+        color-mix(in srgb, var(--cp-celestial-sun) 4%, transparent) 35%,
+        transparent 60%
+      );
+    animation: nebula-drift 20s ease-in-out infinite alternate;
+  }
+
+  /* Secondary nebula wisp — teal/cyan accent */
+  .nebula-hero::after {
+    background:
+      radial-gradient(
+        ellipse 50% 40% at 70% 55%,
+        color-mix(in srgb, var(--cp-accent) 10%, transparent) 0%,
+        color-mix(in srgb, var(--cp-accent) 4%, transparent) 40%,
+        transparent 65%
+      ),
+      radial-gradient(
+        ellipse 55% 45% at 25% 35%,
+        color-mix(in srgb, var(--cp-violet) 8%, transparent) 0%,
+        transparent 55%
+      );
+    animation: nebula-breathe 15s ease-in-out infinite alternate;
+  }
+
+  @keyframes nebula-drift {
+    from {
+      transform: scale(1) translate(0, 0);
+      opacity: 0.8;
+    }
+    to {
+      transform: scale(1.05) translate(2%, -1%);
+      opacity: 1;
+    }
+  }
+
+  @keyframes nebula-breathe {
+    from {
+      transform: scale(1.02) translate(-1%, 1%);
+      opacity: 0.7;
+    }
+    to {
+      transform: scale(0.98) translate(1%, -1%);
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nebula-hero::before,
+    .nebula-hero::after {
+      animation: none;
+      opacity: 0.9;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .nebula-hero::before,
+    .nebula-hero::after {
+      opacity: 0.7;
+    }
+  }
+</style>
