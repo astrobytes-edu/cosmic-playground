@@ -126,4 +126,23 @@ describe("Seasons -- Design System Contracts", () => {
       expect(mainTs).not.toMatch(/function\s+sunDeclination/);
     });
   });
+
+  describe("Component contracts", () => {
+    it("uses cp-chip for anchor date buttons", () => {
+      const chips = html.match(/class="cp-chip"/g) || [];
+      expect(chips.length).toBeGreaterThanOrEqual(4);
+    });
+
+    it("uses cp-chip-group for anchor row", () => {
+      expect(html).toContain("cp-chip-group");
+    });
+
+    it("uses cp-utility-toolbar for actions", () => {
+      expect(html).toContain("cp-utility-toolbar");
+    });
+
+    it("has zero cp-action references", () => {
+      expect(html).not.toContain("cp-action");
+    });
+  });
 });

@@ -35,11 +35,11 @@
             </span>
           </label>
 
-          <div class="anchor-row" role="group" aria-label="Anchor dates">
-            <button id="anchorMarEqx" class="cp-action cp-action--ghost" type="button">Mar equinox</button>
-            <button id="anchorJunSol" class="cp-action cp-action--ghost" type="button">Jun solstice</button>
-            <button id="anchorSepEqx" class="cp-action cp-action--ghost" type="button">Sep equinox</button>
-            <button id="anchorDecSol" class="cp-action cp-action--ghost" type="button">Dec solstice</button>
+          <div class="cp-chip-group anchor-row" role="group" aria-label="Anchor dates">
+            <button id="anchorMarEqx" class="cp-chip" type="button">Mar equinox</button>
+            <button id="anchorJunSol" class="cp-chip" type="button">Jun solstice</button>
+            <button id="anchorSepEqx" class="cp-chip" type="button">Sep equinox</button>
+            <button id="anchorDecSol" class="cp-chip" type="button">Dec solstice</button>
           </div>
 
           <label class="control">
@@ -71,24 +71,57 @@
           </label>
 
           <div class="animate-row">
-            <button id="animateYear" class="cp-action cp-action--ghost" type="button">
+            <button id="animateYear" class="cp-button cp-button--ghost" type="button">
               Animate year
             </button>
             <div id="motionNote" class="cp-muted" hidden></div>
           </div>
 
-          <button id="stationMode" class="cp-action" type="button">Station mode</button>
-          <button id="challengeMode" class="cp-action" type="button">Challenge mode</button>
-          <button id="help" class="cp-action" type="button">Help / shortcuts</button>
-
-          <button id="copyResults" class="cp-action" type="button">Copy results</button>
-          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
-
-          <div class="cp-actions">
-            <a class="cp-button" href="../../exhibits/seasons/">Open exhibit</a>
-            <a class="cp-button cp-button--outline" href="../../stations/seasons/">Station card</a>
-            <a class="cp-button cp-button--outline" href="../../instructor/seasons/">Instructor notes</a>
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"></rect>
+                <line x1="7" y1="7" x2="13" y2="7"></line>
+                <line x1="7" y1="10" x2="13" y2="10"></line>
+                <line x1="7" y1="13" x2="10" y2="13"></line>
+              </svg>
+            </button>
+            <button id="challengeMode" class="cp-utility-btn" type="button" aria-label="Challenges" title="Challenges">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 2l2.2 4.5 5 .7-3.6 3.5.8 5L10 13.4 5.6 15.7l.8-5L2.8 7.2l5-.7z"/>
+              </svg>
+            </button>
+            <button id="help" class="cp-utility-btn" type="button" aria-label="Help and shortcuts" title="Help / keys">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"></circle>
+                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"></path>
+                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"></circle>
+              </svg>
+            </button>
+            <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"></circle>
+                  <circle cx="10" cy="10" r="1.5"></circle>
+                  <circle cx="16" cy="10" r="1.5"></circle>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/seasons/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/seasons/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/seasons/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
           </div>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
       </aside>
 

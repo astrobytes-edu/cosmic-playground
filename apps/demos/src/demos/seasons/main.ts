@@ -1,4 +1,4 @@
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
 import { clamp, formatNumber, formatDateFromDayOfYear, seasonFromPhaseNorth, oppositeSeason, orbitPosition, axisEndpoint, diskMarkerY } from "./logic";
@@ -706,3 +706,8 @@ if (starfieldCanvas) {
 }
 
 initMath(document);
+
+const demoRoot = document.getElementById("cp-demo");
+if (demoRoot) {
+  initPopovers(demoRoot);
+}
