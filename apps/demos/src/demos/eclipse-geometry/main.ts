@@ -22,11 +22,21 @@ import {
   checkEclipseStatistics,
   eclipseArcExtentDeg,
   buildArcPath,
+  totalSolarPreset,
+  lunarEclipsePreset,
+  noEclipsePreset,
 } from "./logic";
 import type { EclipseModelCallbacks, EclipseDemoState, DistancePresetKey, SimulationCounts } from "./logic";
 
 const setNewMoonEl = document.querySelector<HTMLButtonElement>("#setNewMoon");
 const setFullMoonEl = document.querySelector<HTMLButtonElement>("#setFullMoon");
+
+const presetsBtnEl = document.querySelector<HTMLButtonElement>("#presetsBtn");
+const presetsPopoverEl = document.querySelector<HTMLDivElement>("#presetsPopover");
+const presetTotalSolarEl = document.querySelector<HTMLButtonElement>("#presetTotalSolar");
+const presetLunarEl = document.querySelector<HTMLButtonElement>("#presetLunar");
+const presetNoEclipseEl = document.querySelector<HTMLButtonElement>("#presetNoEclipse");
+const presetSeasonEl = document.querySelector<HTMLButtonElement>("#presetSeason");
 
 const animateMonthEl =
   document.querySelector<HTMLButtonElement>("#animateMonth");
@@ -124,10 +134,23 @@ if (
   !descNodeLabelEl ||
   !betaCurveEl ||
   !betaMarkerEl ||
-  !betaLabelEl
+  !betaLabelEl ||
+  !presetsBtnEl ||
+  !presetsPopoverEl ||
+  !presetTotalSolarEl ||
+  !presetLunarEl ||
+  !presetNoEclipseEl ||
+  !presetSeasonEl
 ) {
   throw new Error("Missing required DOM elements for eclipse-geometry demo.");
 }
+
+const presetsBtn = presetsBtnEl;
+const presetsPopover = presetsPopoverEl;
+const presetTotalSolar = presetTotalSolarEl;
+const presetLunar = presetLunarEl;
+const presetNoEclipse = presetNoEclipseEl;
+const presetSeason = presetSeasonEl;
 
 const setNewMoon = setNewMoonEl;
 const setFullMoon = setFullMoonEl;
@@ -1177,6 +1200,64 @@ setFullMoon.addEventListener("click", () => {
   moonLon.value = String(EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + 180));
   setPhasePressed(setFullMoon);
   render();
+});
+
+/* ------------------------------------------------------------------ */
+/*  Eclipse preset handlers                                            */
+/* ------------------------------------------------------------------ */
+
+function closePresetsPopover() {
+  presetsPopover.hidden = true;
+  presetsBtn.setAttribute("aria-expanded", "false");
+}
+
+presetTotalSolar.addEventListener("click", () => {
+  stopTimeActions();
+  if (challengeEngine.isActive()) challengeEngine.stop();
+  const p = totalSolarPreset({ sunLonDeg: state.sunLonDeg });
+  moonLon.value = String(Math.round(p.moonLonDeg));
+  state.nodeLonDeg = p.nodeLonDeg;
+  setPhasePressed(null);
+  closePresetsPopover();
+  render();
+});
+
+presetLunar.addEventListener("click", () => {
+  stopTimeActions();
+  if (challengeEngine.isActive()) challengeEngine.stop();
+  const p = lunarEclipsePreset({ sunLonDeg: state.sunLonDeg });
+  moonLon.value = String(Math.round(p.moonLonDeg));
+  state.nodeLonDeg = p.nodeLonDeg;
+  setPhasePressed(null);
+  closePresetsPopover();
+  render();
+});
+
+presetNoEclipse.addEventListener("click", () => {
+  stopTimeActions();
+  if (challengeEngine.isActive()) challengeEngine.stop();
+  const p = noEclipsePreset({ sunLonDeg: state.sunLonDeg, nodeLonDeg: state.nodeLonDeg });
+  moonLon.value = String(Math.round(p.moonLonDeg));
+  setPhasePressed(null);
+  closePresetsPopover();
+  render();
+});
+
+presetSeason.addEventListener("click", () => {
+  if (prefersReducedMotion) return;
+  stopTimeActions();
+  if (challengeEngine.isActive()) challengeEngine.stop();
+  // Place moon 30 deg before ascending node so it sweeps through the eclipse window
+  state.moonLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.nodeLonDeg - 30);
+  moonLon.value = String(Math.round(state.moonLonDeg));
+  setPhasePressed(null);
+  closePresetsPopover();
+  render();
+  // Trigger animate-month
+  stopLoop();
+  runMode = "animate-month";
+  updateTimeButtonLabels();
+  rafId = requestAnimationFrame(tick);
 });
 
 simYears.addEventListener("input", () => {

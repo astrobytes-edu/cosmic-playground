@@ -21,6 +21,9 @@ import {
   contextualMessage,
   eclipseArcExtentDeg,
   buildArcPath,
+  totalSolarPreset,
+  lunarEclipsePreset,
+  noEclipsePreset,
 } from "./logic";
 import type { EclipseModelCallbacks, EclipseDemoState, SimulationSummaryInput } from "./logic";
 
@@ -1095,5 +1098,51 @@ describe("buildArcPath", () => {
     // Distance from center should equal r
     const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
     expect(dist).toBeCloseTo(r, 1);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  eclipsePresets                                                      */
+/* ------------------------------------------------------------------ */
+
+describe("eclipsePresets", () => {
+  it("totalSolarPreset sets moon to New and node to sun direction", () => {
+    const p = totalSolarPreset({ sunLonDeg: 0 });
+    expect(p.moonLonDeg).toBe(0); // New Moon = same as Sun
+    expect(p.nodeLonDeg).toBe(0); // Node at Sun direction
+  });
+
+  it("totalSolarPreset works with non-zero sun longitude", () => {
+    const p = totalSolarPreset({ sunLonDeg: 90 });
+    expect(p.moonLonDeg).toBe(90);
+    expect(p.nodeLonDeg).toBe(90);
+  });
+
+  it("totalSolarPreset wraps around 360", () => {
+    const p = totalSolarPreset({ sunLonDeg: 350 });
+    expect(p.moonLonDeg).toBe(350);
+    expect(p.nodeLonDeg).toBe(350);
+  });
+
+  it("lunarEclipsePreset sets moon to Full and node aligned", () => {
+    const p = lunarEclipsePreset({ sunLonDeg: 0 });
+    expect(p.moonLonDeg).toBe(180); // Full Moon = opposite Sun
+    expect(p.nodeLonDeg).toBe(0);   // Node at Sun direction
+  });
+
+  it("lunarEclipsePreset works with non-zero sun longitude", () => {
+    const p = lunarEclipsePreset({ sunLonDeg: 200 });
+    expect(p.moonLonDeg).toBe(20); // (200 + 180) % 360 = 20
+    expect(p.nodeLonDeg).toBe(200);
+  });
+
+  it("noEclipsePreset sets moon far from nodes", () => {
+    const p = noEclipsePreset({ sunLonDeg: 0, nodeLonDeg: 0 });
+    expect(p.moonLonDeg).toBe(90); // 90 deg from both nodes
+  });
+
+  it("noEclipsePreset wraps around 360", () => {
+    const p = noEclipsePreset({ sunLonDeg: 0, nodeLonDeg: 300 });
+    expect(p.moonLonDeg).toBe(30); // (300 + 90) % 360 = 30
   });
 });

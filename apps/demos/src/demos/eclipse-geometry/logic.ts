@@ -405,6 +405,25 @@ export function formatSimSummary(
 }
 
 /* ------------------------------------------------------------------ */
+/*  Eclipse presets (snap moon + node to produce target outcomes)      */
+/* ------------------------------------------------------------------ */
+
+/** Preset: total solar eclipse. Moon at New (same lon as Sun), node aligned. */
+export function totalSolarPreset(args: { sunLonDeg: number }) {
+  return { moonLonDeg: args.sunLonDeg, nodeLonDeg: args.sunLonDeg };
+}
+
+/** Preset: lunar eclipse. Moon at Full (opposite Sun), node aligned with Sun. */
+export function lunarEclipsePreset(args: { sunLonDeg: number }) {
+  return { moonLonDeg: (args.sunLonDeg + 180) % 360, nodeLonDeg: args.sunLonDeg };
+}
+
+/** Preset: no eclipse. Moon placed 90 deg from nearest node (max |beta|). */
+export function noEclipsePreset(args: { sunLonDeg: number; nodeLonDeg: number }) {
+  return { moonLonDeg: (args.nodeLonDeg + 90) % 360 };
+}
+
+/* ------------------------------------------------------------------ */
 /*  Distance presets                                                  */
 /* ------------------------------------------------------------------ */
 

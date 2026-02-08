@@ -26,6 +26,21 @@
             <button id="setFullMoon" class="cp-chip" type="button" aria-pressed="false">Full Moon</button>
           </div>
 
+          <div class="cp-popover-anchor">
+            <button id="presetsBtn" class="cp-button cp-button--ghost cp-popover-trigger"
+              type="button" aria-expanded="false" aria-controls="presetsPopover">
+              Show me an eclipse...
+            </button>
+            <div class="cp-popover" id="presetsPopover" hidden>
+              <div class="cp-popover__body">
+                <button class="cp-popover-link" id="presetTotalSolar" type="button">Total solar eclipse</button>
+                <button class="cp-popover-link" id="presetLunar" type="button">Lunar eclipse</button>
+                <button class="cp-popover-link" id="presetNoEclipse" type="button">No eclipse (for comparison)</button>
+                <button class="cp-popover-link" id="presetSeason" type="button">Eclipse season (animate)</button>
+              </div>
+            </div>
+          </div>
+
           <label class="control">
             <span>Moon angle (deg)</span>
             <input

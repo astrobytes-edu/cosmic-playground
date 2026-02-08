@@ -192,7 +192,7 @@ describe("Eclipse Geometry -- Design System Contracts", () => {
     });
 
     it("popover nav contains links for exhibit, station card, and instructor notes", () => {
-      const popover = html.match(/class="cp-popover"[\s\S]*?<\/div>/);
+      const popover = html.match(/id="navPopover"[\s\S]*?<\/nav>/);
       expect(popover).not.toBeNull();
       expect(popover![0]).toContain("exhibits/eclipse-geometry/");
       expect(popover![0]).toContain("stations/eclipse-geometry/");
