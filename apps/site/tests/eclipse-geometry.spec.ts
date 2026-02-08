@@ -49,7 +49,7 @@ test.describe("Eclipse Geometry -- E2E", () => {
     // Use total solar preset to position near node
     await page.locator("#presetsBtn").click();
     await page.locator("#presetTotalSolar").click();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(500); // 400ms tween + margin
     await expect(page).toHaveScreenshot("eclipse-geometry-solar-eclipse.png", {
       maxDiffPixelRatio: 0.05,
     });
@@ -58,7 +58,7 @@ test.describe("Eclipse Geometry -- E2E", () => {
   test.skip("screenshot: full moon near node", async ({ page }) => {
     await page.locator("#presetsBtn").click();
     await page.locator("#presetLunar").click();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(500); // 400ms tween + margin
     await expect(page).toHaveScreenshot("eclipse-geometry-lunar-eclipse.png", {
       maxDiffPixelRatio: 0.05,
     });
@@ -68,17 +68,18 @@ test.describe("Eclipse Geometry -- E2E", () => {
 
   test("New Moon button sets phase angle near 0", async ({ page }) => {
     await page.locator("#setNewMoon").click();
-    const text = await page.locator("#phaseAngle").textContent();
-    const angle = parseFloat(text || "999");
-    expect(angle).toBeLessThanOrEqual(5);
+    // Wait for 300ms tween to complete
+    await expect
+      .poll(async () => parseFloat(await page.locator("#phaseAngle").textContent() || "999"), { timeout: 2000 })
+      .toBeLessThanOrEqual(5);
   });
 
   test("Full Moon button sets phase angle near 180", async ({ page }) => {
     await page.locator("#setFullMoon").click();
-    const text = await page.locator("#phaseAngle").textContent();
-    const angle = parseFloat(text || "0");
-    expect(angle).toBeGreaterThanOrEqual(175);
-    expect(angle).toBeLessThanOrEqual(185);
+    // Wait for 300ms tween to complete
+    await expect
+      .poll(async () => parseFloat(await page.locator("#phaseAngle").textContent() || "0"), { timeout: 2000 })
+      .toBeGreaterThanOrEqual(175);
   });
 
   // --- Sliders ---
@@ -126,13 +127,10 @@ test.describe("Eclipse Geometry -- E2E", () => {
     await page.locator("#presetsBtn").click();
     await page.locator("#presetTotalSolar").click();
 
-    // Wait for render
-    await page.waitForTimeout(100);
-
-    const outcome = await page.locator("#solarOutcome").textContent();
-    expect(outcome).toBeTruthy();
-    expect(outcome).not.toBe("None");
-    expect(outcome!.toLowerCase()).toContain("solar");
+    // Wait for 400ms tween to complete and readout to update
+    await expect
+      .poll(async () => (await page.locator("#solarOutcome").textContent() || "").toLowerCase(), { timeout: 2000 })
+      .toContain("solar");
   });
 
   // --- Distance Preset ---
@@ -192,33 +190,31 @@ test.describe("Eclipse Geometry -- E2E", () => {
     // Use the preset button to guarantee a solar eclipse configuration
     await page.locator("#presetsBtn").click();
     await page.locator("#presetTotalSolar").click();
-    await page.waitForTimeout(100);
-
-    const outcome = await page.locator("#solarOutcome").textContent();
-    expect(outcome).not.toBe("None");
-    expect(outcome!.toLowerCase()).toContain("solar");
+    // Wait for 400ms tween to complete
+    await expect
+      .poll(async () => (await page.locator("#solarOutcome").textContent() || "").toLowerCase(), { timeout: 2000 })
+      .toContain("solar");
   });
 
   test("lunar eclipse detected via lunar preset", async ({ page }) => {
     // Use the preset button to guarantee a lunar eclipse configuration
     await page.locator("#presetsBtn").click();
     await page.locator("#presetLunar").click();
-    await page.waitForTimeout(100);
-
-    const outcome = await page.locator("#lunarOutcome").textContent();
-    expect(outcome).not.toBe("None");
-    expect(outcome!.toLowerCase()).toContain("lunar");
+    // Wait for 400ms tween to complete
+    await expect
+      .poll(async () => (await page.locator("#lunarOutcome").textContent() || "").toLowerCase(), { timeout: 2000 })
+      .toContain("lunar");
   });
 
   test("no eclipse via no-eclipse preset", async ({ page }) => {
     // Use the no-eclipse preset to guarantee no eclipses
     await page.locator("#presetsBtn").click();
     await page.locator("#presetNoEclipse").click();
-    await page.waitForTimeout(100);
-
-    const solarOutcome = await page.locator("#solarOutcome").textContent();
+    // Wait for 400ms tween to complete
+    await expect
+      .poll(async () => await page.locator("#solarOutcome").textContent(), { timeout: 2000 })
+      .toBe("None");
     const lunarOutcome = await page.locator("#lunarOutcome").textContent();
-    expect(solarOutcome).toBe("None");
     expect(lunarOutcome).toBe("None");
   });
 
@@ -227,15 +223,17 @@ test.describe("Eclipse Geometry -- E2E", () => {
     await page.locator("#tilt").fill("0");
     await page.locator("#tilt").dispatchEvent("input");
 
-    // New Moon
+    // New Moon — wait for 300ms tween
     await page.locator("#setNewMoon").click();
-    const solarOutcome = await page.locator("#solarOutcome").textContent();
-    expect(solarOutcome).not.toBe("None");
+    await expect
+      .poll(async () => await page.locator("#solarOutcome").textContent(), { timeout: 2000 })
+      .not.toBe("None");
 
-    // Full Moon
+    // Full Moon — wait for 300ms tween
     await page.locator("#setFullMoon").click();
-    const lunarOutcome = await page.locator("#lunarOutcome").textContent();
-    expect(lunarOutcome).not.toBe("None");
+    await expect
+      .poll(async () => await page.locator("#lunarOutcome").textContent(), { timeout: 2000 })
+      .not.toBe("None");
   });
 
   // --- Shelf Tabs ---
@@ -366,9 +364,9 @@ test.describe("Eclipse Geometry -- E2E", () => {
       }, { timeout: 5000 })
       .not.toBe(initialMoonSlider);
 
-    // Let animation run a bit more to accumulate enough node drift
-    // (Node regression is slow: ~0.053 deg/day, at 10 days/sec that's ~0.53 deg/sec)
-    await page.waitForTimeout(3000);
+    // Let animation run to accumulate enough node drift
+    // (Node regression: ~0.053 deg/day, at default 5 days/sec = ~0.27 deg/sec)
+    await page.waitForTimeout(4000);
 
     // Stop the animation by clicking again (it toggles)
     await page.locator("#animateMonth").click();
