@@ -44,6 +44,22 @@ describe("ZamsTout1996Model", () => {
     }
   });
 
+  it("produces monotonic Teff over ZAMS mass domain at metallicity boundaries", () => {
+    const masses = [0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60, 100];
+    const boundaryMetallicities = [
+      ZamsTout1996Model.CONSTANTS.metallicityMin,
+      ZamsTout1996Model.CONSTANTS.metallicityMax
+    ];
+    for (const metallicityZ of boundaryMetallicities) {
+      const temps = masses.map((massMsun) =>
+        ZamsTout1996Model.effectiveTemperatureKFromMassMetallicity({ massMsun, metallicityZ })
+      );
+      for (let i = 1; i < temps.length; i += 1) {
+        expect(temps[i]).toBeGreaterThan(temps[i - 1]);
+      }
+    }
+  });
+
   it("inverts Teff to mass with small relative error", () => {
     const masses = [0.2, 0.5, 1, 2, 5, 10, 30, 60, 100];
     for (const massMsun of masses) {
@@ -51,6 +67,28 @@ describe("ZamsTout1996Model", () => {
       const recoveredMassMsun = ZamsTout1996Model.massFromTemperatureMetallicity({ temperatureK, metallicityZ: 0.02 });
       const relativeError = Math.abs(recoveredMassMsun - massMsun) / massMsun;
       expect(relativeError).toBeLessThan(2e-3);
+    }
+  });
+
+  it("inverts Teff to mass with bounded error at metallicity boundaries", () => {
+    const masses = [0.2, 0.5, 1, 2, 5, 10, 30, 60, 100];
+    const boundaryMetallicities = [
+      ZamsTout1996Model.CONSTANTS.metallicityMin,
+      ZamsTout1996Model.CONSTANTS.metallicityMax
+    ];
+    for (const metallicityZ of boundaryMetallicities) {
+      for (const massMsun of masses) {
+        const temperatureK = ZamsTout1996Model.effectiveTemperatureKFromMassMetallicity({
+          massMsun,
+          metallicityZ
+        });
+        const recoveredMassMsun = ZamsTout1996Model.massFromTemperatureMetallicity({
+          temperatureK,
+          metallicityZ
+        });
+        const relativeError = Math.abs(recoveredMassMsun - massMsun) / massMsun;
+        expect(relativeError).toBeLessThan(4e-3);
+      }
     }
   });
 

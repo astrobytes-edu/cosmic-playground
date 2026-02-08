@@ -501,6 +501,7 @@ function exportResults(): ExportPayloadV1 {
     notes: [
       "Curve generated from Planck’s law and plotted in relative (normalized) intensity.",
       "Units: wavelength lambda is cm internally (displayed in nm); temperature T is K.",
+      "Stefan-Boltzmann law in this demo refers to surface emitted flux: F = sigma T^4; luminosity additionally depends on radius.",
       "Star color preview is a perceptual approximation (not full colorimetry)."
     ]
   };

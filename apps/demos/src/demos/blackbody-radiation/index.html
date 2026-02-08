@@ -64,6 +64,7 @@
               <button class="cp-chip preset" data-temp-k="25000" type="button" aria-pressed="false">White Dwarf</button>
               <button class="cp-chip preset" data-temp-k="1000000" type="button" aria-pressed="false">Neutron Star</button>
               <button class="cp-chip preset" data-temp-k="3500" type="button" aria-pressed="false">Red Giant</button>
+              <button class="cp-chip preset" data-temp-k="310" type="button" aria-pressed="false">Human</button>
               <button class="cp-chip preset" data-temp-k="288" type="button" aria-pressed="false">Earth</button>
               <button class="cp-chip preset" data-temp-k="250" type="button" aria-pressed="false">Brown Dwarf</button>
               <button class="cp-chip preset" data-temp-k="2.725" type="button" aria-pressed="false">CMB</button>
@@ -88,7 +89,6 @@
             <div class="cp-readout__label">Luminosity ratio $L/L_{\odot}$</div>
             <div class="cp-readout__value">
               <span id="lumRatio"></span>
-              <span class="cp-readout__unit">L<sub>&#x2609;</sub></span>
             </div>
           </div>
 
@@ -158,7 +158,7 @@
             <ul>
               <li>The Planck curve gives intensity versus wavelength for a thermal emitter.</li>
               <li>Wien’s law sets the peak trend: hotter objects peak at shorter wavelengths.</li>
-              <li>Stefan-Boltzmann scaling links total emitted flux to temperature as <code>T^4</code>.</li>
+              <li>Stefan-Boltzmann scaling gives surface emitted flux as <code>F = &sigma;T^4</code>; luminosity also depends on radius.</li>
               <li>Perceived color is an approximation from the visible-band contribution, not only <code>&lambda;<sub>peak</sub></code>.</li>
             </ul>
           </div>

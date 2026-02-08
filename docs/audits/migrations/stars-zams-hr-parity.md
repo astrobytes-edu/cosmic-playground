@@ -19,6 +19,8 @@
 ## 5) Intentional deltas
 - Introduces Tout et al. (1996) metallicity-dependent ZAMS modeling across 0.1-100 Msun.
 - Introduces direct H-R stage visualization tied to live model values.
+- Makes ratio readouts (`L/L_{\odot}`, `R/R_{\odot}`, `M/M_{\odot}`) explicitly dimensionless and corrects hotter-left H-R axis annotation cues.
+- Disables metallicity control in override mode and surfaces explicit non-applied assumption text.
 
 ## 6) Promotion recommendation
 - Current recommendation: `experimental` until e2e classroom parity checks and launch-gate QA are complete.

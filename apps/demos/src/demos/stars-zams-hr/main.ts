@@ -56,6 +56,7 @@ const teffValueEl = document.querySelector<HTMLSpanElement>("#teffValue");
 const luminosityValueEl = document.querySelector<HTMLSpanElement>("#luminosityValue");
 const radiusValueEl = document.querySelector<HTMLSpanElement>("#radiusValue");
 const validityBadgeEl = document.querySelector<HTMLParagraphElement>("#validityBadge");
+const overrideModeHintEl = document.querySelector<HTMLParagraphElement>("#overrideModeHint");
 const statusEl = document.querySelector<HTMLParagraphElement>("#status");
 const hrCanvasEl = document.querySelector<HTMLCanvasElement>("#hrCanvas");
 
@@ -77,6 +78,7 @@ if (
   !luminosityValueEl ||
   !radiusValueEl ||
   !validityBadgeEl ||
+  !overrideModeHintEl ||
   !statusEl ||
   !hrCanvasEl ||
   !copyResultsEl ||
@@ -96,6 +98,7 @@ const teffValue = teffValueEl;
 const luminosityValue = luminosityValueEl;
 const radiusValue = radiusValueEl;
 const validityBadge = validityBadgeEl;
+const overrideModeHint = overrideModeHintEl;
 const status = statusEl;
 const hrCanvas = hrCanvasEl;
 const copyResults = copyResultsEl;
@@ -212,7 +215,8 @@ function computeReadouts(): StarReadouts {
       teffK,
       radiusRsun,
       luminosityLsun,
-      validityText: "Override preset: this object is intentionally not constrained to a ZAMS state.",
+      validityText:
+        "Override preset: this object is intentionally not constrained to a ZAMS state. Metallicity is not applied in override mode.",
       presetState: "override"
     };
   }
@@ -357,11 +361,14 @@ function drawHrDiagram(readouts: StarReadouts): void {
   ctx.save();
   ctx.fillStyle = text;
   ctx.font = "12px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("Hotter ←", mL, h - 12);
   ctx.textAlign = "center";
-  ctx.fillText("Hotter  →", mL + 20, h - 12);
+  ctx.fillText("Teff", mL + plotW * 0.5, h - 12);
+  ctx.textAlign = "right";
+  ctx.fillText("Cooler →", mL + plotW, h - 12);
   ctx.textAlign = "left";
   ctx.fillText("log L/Lsun ↑", 8, mT + 10);
-  ctx.fillText("Teff (decreases to the right)", mL + plotW * 0.38, h - 12);
   ctx.restore();
 }
 
@@ -380,6 +387,14 @@ function renderReadouts(readouts: StarReadouts): void {
   luminosityValue.textContent = formatNumber(readouts.luminosityLsun, 4);
   radiusValue.textContent = formatNumber(readouts.radiusRsun, 4);
   validityBadge.textContent = readouts.validityText;
+
+  const isOverride = readouts.presetState === "override";
+  metallicitySlider.disabled = isOverride;
+  metallicitySlider.setAttribute("aria-disabled", isOverride ? "true" : "false");
+  metallicitySlider.title = isOverride
+    ? "Metallicity is not applied while an override preset is active."
+    : "";
+  overrideModeHint.hidden = !isOverride;
 }
 
 function render(): void {

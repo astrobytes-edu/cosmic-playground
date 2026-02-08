@@ -35,6 +35,7 @@ Derived quantity:
 - `Teff = Tsun * [(L/Lsun)/(R/Rsun)^2]^(1/4)`
 
 No natural units. All quantities and labels must stay unit-explicit.
+Use LaTeX math notation in teaching-facing copy and labels (`L/L_{\odot}`, `R/R_{\odot}`, `M/M_{\odot}`, `T_{\rm eff}`).
 
 ---
 
@@ -100,6 +101,7 @@ Override presets:
 
 - carry explicit `Teff` and `R` and are flagged as non-ZAMS
 - use assumption text in validity badge and export notes
+- metallicity control is presented as not-applied while override presets are active
 
 Override examples in v1:
 

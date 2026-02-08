@@ -18,6 +18,7 @@
 ## 5) Intentional deltas
 - Added `Explore`/`Understand` tabs as a UX affordance without changing blackbody core modeling assumptions.
 - Clarified product split: blackbody instrument stays thermal-first; advanced stellar inference is moved to a dedicated Stars instrument.
+- Added `Human` thermal preset and tightened wording to state Stefan-Boltzmann as surface flux (`F = \sigma T^4`) with explicit luminosity-vs-radius caveat.
 
 ## 6) Promotion recommendation
 - Current recommendation: `experimental` pending full end-to-end QA on tabs accessibility and classroom pilot feedback.

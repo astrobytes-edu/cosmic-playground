@@ -50,17 +50,40 @@ describe("Blackbody Radiation -- Design System Contracts", () => {
     });
   });
 
+  describe("Preset coverage", () => {
+    it("includes required thermal anchor presets", () => {
+      expect(html).toContain("Brown Dwarf");
+      expect(html).toContain("CMB");
+      expect(html).toContain("Earth");
+      expect(html).toMatch(/data-temp-k="310"[^>]*>Human</);
+    });
+  });
+
   describe("Readout unit separation", () => {
     it("readout values with units use .cp-readout__unit spans", () => {
       const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      // peak wavelength (nm) + luminosity ratio (Lsun)
-      expect(unitSpans.length).toBeGreaterThanOrEqual(2);
+      // peak wavelength unit should remain explicit
+      expect(unitSpans.length).toBeGreaterThanOrEqual(1);
     });
 
     it("readout labels do not contain parenthesized units", () => {
       const labels = html.match(/class="cp-readout__label"[^>]*>([^<]*)</g) || [];
       const parenthesizedUnits = labels.filter((l) => /\((?:nm|K)\)/.test(l));
       expect(parenthesizedUnits.length).toBe(0);
+    });
+
+    it("keeps luminosity ratio readout dimensionless", () => {
+      expect(html).toMatch(
+        /<div class="cp-readout__value">\s*<span id="lumRatio"><\/span>\s*<\/div>/
+      );
+    });
+  });
+
+  describe("Understand tab pedagogy wording", () => {
+    it("frames stefan-boltzmann as surface flux with explicit caveat", () => {
+      expect(html).toContain("surface emitted flux");
+      expect(html).toContain("luminosity also depends on radius");
+      expect(html).not.toContain("total emitted flux to temperature");
     });
   });
 

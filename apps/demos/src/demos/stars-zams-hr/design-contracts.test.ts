@@ -56,12 +56,35 @@ describe("Stars ZAMS HR -- Design System Contracts", () => {
       expect(mainTs).not.toMatch(/function\s+tout/i);
       expect(mainTs).not.toMatch(/M\*\*11/);
     });
+
+    it("makes override-mode metallicity behavior explicit in main.ts", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("metallicitySlider.disabled");
+      expect(mainTs).toContain("Metallicity is not applied in override mode");
+    });
+
+    it("uses consistent hotter-left hr annotation text", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("Hotter ←");
+      expect(mainTs).toContain("Teff");
+      expect(mainTs).not.toContain("Hotter  →");
+    });
   });
 
   describe("Readout and controls contract", () => {
     it("readout values with units use cp-readout__unit spans", () => {
       const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(4);
+      expect(unitSpans.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("keeps ratio readouts dimensionless in the UI", () => {
+      expect(html).toContain(
+        '<div class="cp-readout__value"><span id="luminosityValue"></span></div>'
+      );
+      expect(html).toContain('<div class="cp-readout__value"><span id="radiusValue"></span></div>');
+      expect(html).toContain('<div class="cp-readout__value"><span id="massReadout"></span></div>');
     });
 
     it("preset buttons use cp-chip and aria-pressed", () => {

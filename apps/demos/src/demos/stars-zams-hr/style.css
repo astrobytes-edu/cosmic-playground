@@ -10,6 +10,11 @@
   font-size: 0.95rem;
 }
 
+.control input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .presets {
   display: grid;
   gap: var(--cp-space-2);

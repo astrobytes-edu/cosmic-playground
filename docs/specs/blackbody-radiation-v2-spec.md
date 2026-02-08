@@ -98,11 +98,13 @@ Units policy:
 - internal wavelength: cm
 - display wavelength: nm / um / mm (as appropriate)
 - temperature: K
+- ratio notation: use LaTeX-formatted solar ratios (for example `L/L_{\odot}`) as dimensionless quantities
 
 Model messaging requirements:
 
 - Explicitly separate surface flux (`T^4`) from total luminosity assumptions.
 - Avoid implying that `T` alone universally determines stellar luminosity.
+- Use LaTeX math for equation-facing instructional copy (`F = \sigma T^4`, `\lambda_{\rm peak}`).
 
 ---
 

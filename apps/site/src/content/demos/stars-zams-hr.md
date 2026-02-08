@@ -34,8 +34,8 @@ station_params:
 explain_prompt: "Use one ZAMS case and one override case to explain how assumptions change what the model is allowed to infer."
 model_notes:
   - "ZAMS luminosity and radius use analytic fits from Tout et al. (1996) over 0.1 <= M/Msun <= 100 and 1e-4 <= Z <= 0.03."
-  - "Effective temperature is derived via Stefan-Boltzmann closure: Teff = Tsun * [(L/Lsun)/(R/Rsun)^2]^(1/4)."
-  - "Override presets intentionally bypass ZAMS constraints so evolved/compact stars can be compared with explicit warning text."
+  - "Effective temperature is derived via Stefan-Boltzmann closure: $T_{\\rm eff} = T_{\\odot}\\left[(L/L_{\\odot})/(R/R_{\\odot})^2\\right]^{1/4}$."
+  - "Override presets intentionally bypass ZAMS constraints so evolved/compact stars can be compared with explicit warning text, and metallicity is shown as not-applied while override mode is active."
 demo_path: "/play/stars-zams-hr/"
 station_path: "/stations/stars-zams-hr/"
 instructor_path: "/instructor/stars-zams-hr/"
