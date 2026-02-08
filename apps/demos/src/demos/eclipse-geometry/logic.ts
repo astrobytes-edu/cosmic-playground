@@ -19,6 +19,18 @@ export function formatNumber(value: number, digits: number): string {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Signed beta formatting                                            */
+/* ------------------------------------------------------------------ */
+
+/** Format ecliptic latitude with explicit sign: "+" for above, Unicode
+ *  minus "\u2212" for below the ecliptic, no sign for exactly zero. */
+export function formatSignedBeta(betaDeg: number, decimals: number): string {
+  if (betaDeg === 0) return betaDeg.toFixed(decimals);
+  const sign = betaDeg > 0 ? "+" : "\u2212";
+  return `${sign}${Math.abs(betaDeg).toFixed(decimals)}`;
+}
+
+/* ------------------------------------------------------------------ */
 /*  SVG coordinate angle (for drag interaction)                       */
 /* ------------------------------------------------------------------ */
 

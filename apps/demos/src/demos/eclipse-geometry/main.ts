@@ -4,6 +4,7 @@ import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import {
   clamp,
   formatNumber,
+  formatSignedBeta,
   phaseInfo,
   outcomeLabel,
   computeDerived,
@@ -367,7 +368,7 @@ function render() {
 
   phaseLabel.textContent = phase.label;
   phaseAngle.textContent = formatNumber(derived.phaseAngleDeg, 1);
-  absBeta.textContent = formatNumber(derived.absBetaDeg, 3);
+  absBeta.textContent = formatSignedBeta(derived.betaDeg, 3);
   nearestNode.textContent = formatNumber(derived.nearestNodeDeg, 2);
 
   solarOutcome.textContent = outcomeLabel(derived.solarType);

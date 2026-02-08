@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   clamp,
   formatNumber,
+  formatSignedBeta,
   phaseInfo,
   outcomeLabel,
   computeDerived,
@@ -129,6 +130,33 @@ describe("formatNumber", () => {
 
   it("handles 0 digits", () => {
     expect(formatNumber(2.725, 0)).toBe("3");
+  });
+});
+
+describe("formatSignedBeta", () => {
+  it("positive beta shows + prefix", () => {
+    expect(formatSignedBeta(2.5, 3)).toBe("+2.500");
+  });
+
+  it("negative beta shows Unicode minus prefix", () => {
+    expect(formatSignedBeta(-1.23, 3)).toBe("\u22121.230");
+  });
+
+  it("zero beta shows no sign", () => {
+    expect(formatSignedBeta(0, 3)).toBe("0.000");
+  });
+
+  it("respects decimal precision", () => {
+    expect(formatSignedBeta(5.145, 2)).toBe("+5.14");
+    expect(formatSignedBeta(-3.7, 1)).toBe("\u22123.7");
+  });
+
+  it("handles very small positive values", () => {
+    expect(formatSignedBeta(0.001, 3)).toBe("+0.001");
+  });
+
+  it("handles very small negative values", () => {
+    expect(formatSignedBeta(-0.001, 3)).toBe("\u22120.001");
   });
 });
 
