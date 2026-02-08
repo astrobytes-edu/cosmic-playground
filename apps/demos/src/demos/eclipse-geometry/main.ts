@@ -336,6 +336,9 @@ function renderStage(args: {
 
   // Eclipse window arcs
   renderArcs(cx, cy, r, nodeDisplayLonDeg);
+
+  // Threshold shading bands on beta panel
+  renderBands(BETA_PANEL_WIDTH, BETA_Y_SCALE);
 }
 
 function renderArcs(cx: number, cy: number, r: number, nodeDisplayLonDeg: number) {
@@ -368,6 +371,36 @@ function renderArcs(cx: number, cy: number, r: number, nodeDisplayLonDeg: number
       el.setAttribute("d", buildArcPath({ cx, cy, r, centerAngleDeg: arc.center, halfExtentDeg: halfExtent }));
     }
   }
+}
+
+function renderBands(panelWidth: number, yScale: number) {
+  const thresholds = EclipseGeometryModel.eclipseThresholdsDeg({
+    earthMoonDistanceKm: state.earthMoonDistanceKm,
+  });
+
+  const setBand = (id: string, betaDeg: number) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const h = betaDeg * yScale * 2;
+    el.setAttribute("x", "0");
+    el.setAttribute("y", String(-betaDeg * yScale));
+    el.setAttribute("width", String(panelWidth));
+    el.setAttribute("height", String(h));
+  };
+
+  setBand("band-solar-partial", thresholds.solarPartialDeg);
+  setBand("band-solar-central", thresholds.solarCentralDeg);
+  setBand("band-lunar-penumbral", thresholds.lunarPenumbralDeg);
+
+  // Position labels at right edge of each band
+  const setLabel = (id: string, betaDeg: number) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.setAttribute("x", String(panelWidth - 4));
+    el.setAttribute("y", String(-betaDeg * yScale + 3));
+  };
+  setLabel("label-solar", thresholds.solarPartialDeg);
+  setLabel("label-lunar", thresholds.lunarPenumbralDeg);
 }
 
 function render() {

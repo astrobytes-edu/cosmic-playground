@@ -187,6 +187,18 @@
   opacity: 0.3;
 }
 
+/* --- Beta curve threshold bands --- */
+.stage__band {
+  opacity: 0.1;
+  pointer-events: none;
+}
+.stage__band--solar { fill: var(--cp-accent-rose); }
+.stage__band--central { opacity: 0.18; }
+.stage__band--lunar { fill: var(--cp-accent); }
+.stage__band-label { font-size: 9px; }
+.stage__band-label--solar { fill: var(--cp-accent-rose); opacity: 0.6; }
+.stage__band-label--lunar { fill: var(--cp-accent); opacity: 0.6; }
+
 /* --- Readout dot indicator (for solar/lunar outcomes) --- */
 .cp-readout__dot {
   display: inline-block;

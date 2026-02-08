@@ -190,6 +190,14 @@
               <text class="stage__label" x="-10" y="134" text-anchor="end">-</text>
               <text class="stage__label" x="-14" y="4" text-anchor="end" style="font-style: italic;">beta</text>
 
+              <!-- Threshold shading bands (updated by JS) -->
+              <rect id="band-solar-partial" class="stage__band stage__band--solar" />
+              <rect id="band-solar-central" class="stage__band stage__band--solar stage__band--central" />
+              <rect id="band-lunar-penumbral" class="stage__band stage__band--lunar" />
+              <!-- Threshold labels -->
+              <text id="label-solar" class="stage__band-label stage__band-label--solar" text-anchor="end">solar</text>
+              <text id="label-lunar" class="stage__band-label stage__band-label--lunar" text-anchor="end">lunar</text>
+
               <!-- Sinusoidal curve (updated by JS) -->
               <path id="betaCurve" class="stage__betaCurve" d="" />
 
