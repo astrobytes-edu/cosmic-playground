@@ -1,0 +1,86 @@
+---
+/**
+ * Styled block with PPE phase indicator.
+ * Shows a colored left border + icon to indicate which phase
+ * (Predict, Play, Explain) a content block belongs to.
+ */
+import { Eye, SlidersHorizontal, Lightbulb } from "@lucide/astro";
+
+interface Props {
+  phase: "predict" | "play" | "explain" | "info";
+}
+
+const { phase } = Astro.props;
+
+const config = {
+  predict: { icon: Eye, color: "var(--cp-phase-predict)", label: "Predict" },
+  play: { icon: SlidersHorizontal, color: "var(--cp-phase-play)", label: "Play" },
+  explain: { icon: Lightbulb, color: "var(--cp-phase-explain)", label: "Explain" },
+  info: { icon: null, color: "var(--cp-muted)", label: "" },
+};
+
+const { icon: IconComponent, color, label } = config[phase];
+---
+
+<section class="ppe-block" style={`--ppe-color: ${color}`}>
+  {IconComponent && (
+    <div class="ppe-block__indicator">
+      <IconComponent size={16} aria-hidden="true" />
+      <span class="ppe-block__label">{label}</span>
+    </div>
+  )}
+  <div class="ppe-block__content">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .ppe-block {
+    margin-top: var(--cp-space-4);
+    padding: var(--cp-space-4);
+    padding-left: var(--cp-space-5);
+    border-radius: var(--cp-r-2);
+    border: 1px solid var(--cp-border);
+    border-left: 3px solid var(--ppe-color);
+    background: var(--cp-bg1);
+  }
+
+  .ppe-block__indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-2);
+    margin-bottom: var(--cp-space-3);
+    color: var(--ppe-color);
+  }
+
+  .ppe-block__label {
+    font-size: 0.7rem;
+    font-weight: var(--cp-font-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .ppe-block__content :global(h2) {
+    margin: 0 0 var(--cp-space-2);
+  }
+
+  .ppe-block__content :global(p) {
+    margin: 0;
+  }
+
+  .ppe-block__content :global(ul),
+  .ppe-block__content :global(ol) {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--cp-muted);
+  }
+
+  .ppe-block__content :global(li) {
+    margin: 6px 0;
+  }
+
+  .ppe-block__content :global(.prompt) {
+    color: var(--cp-text);
+    font-weight: 600;
+  }
+</style>

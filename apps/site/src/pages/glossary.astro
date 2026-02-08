@@ -1,0 +1,237 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import Breadcrumb from "../components/Breadcrumb.astro";
+import { glossary as glossaryData, type GlossaryEntry } from "../data/glossary";
+
+const base = import.meta.env.BASE_URL;
+const withBase = (path: string) => {
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedBase}${normalizedPath}`;
+};
+
+const glossary = [...glossaryData].sort((a, b) =>
+  a.term.localeCompare(b.term)
+);
+
+const demos = await getCollection("demos");
+const demoTitleBySlug = new Map<string, string>(demos.map((d) => [d.slug, d.data.title]));
+
+// Group by first letter
+const grouped = new Map<string, GlossaryEntry[]>();
+for (const entry of glossary) {
+  const letter = entry.term[0].toUpperCase();
+  if (!grouped.has(letter)) grouped.set(letter, []);
+  grouped.get(letter)!.push(entry);
+}
+const letters = Array.from(grouped.keys()).sort();
+---
+
+<Layout title="Glossary — Cosmic Playground">
+  <Breadcrumb
+    crumbs={[{ label: "Glossary" }]}
+    withBase={withBase}
+  />
+
+  <section class="glossary-hero cp-hero">
+    <h1>Glossary</h1>
+    <p class="glossary-hero__lede">
+      Key astronomy terms used across the exhibits, with definitions and links.
+    </p>
+  </section>
+
+  <nav class="glossary-index" aria-label="Jump to letter">
+    {letters.map((letter) => (
+      <a class="cp-chip glossary-index__letter" href={`#letter-${letter}`}>
+        {letter}
+      </a>
+    ))}
+  </nav>
+
+  <div class="glossary-search">
+    <input
+      class="cp-input"
+      type="search"
+      placeholder="Filter terms..."
+      autocomplete="off"
+      data-glossary-search
+    />
+  </div>
+
+  <div class="glossary-list" data-glossary-list>
+    {letters.map((letter) => (
+      <section class="glossary-group" id={`letter-${letter}`}>
+        <h2 class="glossary-group__letter">{letter}</h2>
+        {grouped.get(letter)!.map((entry) => (
+          <div class="glossary-entry" data-term={entry.term.toLowerCase()}>
+            <h3 class="glossary-entry__term">{entry.term}</h3>
+            <p class="glossary-entry__def">{entry.definition}</p>
+            <div class="glossary-entry__demos">
+              {entry.demos.map((slug: string) => (
+                <a
+                  class="glossary-entry__demo-link"
+                  href={withBase(`exhibits/${slug}/`)}
+                >
+                  {demoTitleBySlug.get(slug) ?? slug}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
+    ))}
+  </div>
+</Layout>
+
+<script>
+  const search = document.querySelector("[data-glossary-search]") as HTMLInputElement | null;
+  const entries = document.querySelectorAll("[data-term]");
+  const groups = document.querySelectorAll(".glossary-group");
+
+  if (search) {
+    search.addEventListener("input", () => {
+      const q = search.value.toLowerCase().trim();
+
+      entries.forEach((entry) => {
+        const term = (entry as HTMLElement).dataset.term ?? "";
+        const match = q.length === 0 || term.includes(q);
+        (entry as HTMLElement).style.display = match ? "" : "none";
+      });
+
+      // Hide group headers with no visible entries
+      groups.forEach((group) => {
+        const visible = group.querySelectorAll("[data-term]:not([style*='display: none'])");
+        (group as HTMLElement).style.display = visible.length > 0 ? "" : "none";
+      });
+    });
+  }
+</script>
+
+<style>
+  .glossary-hero {
+    margin-bottom: var(--cp-space-4);
+  }
+
+  .glossary-hero__lede {
+    margin: 6px 0 0;
+    color: var(--cp-muted);
+    max-width: 72ch;
+  }
+
+  .glossary-index {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: var(--cp-space-4);
+  }
+
+  .glossary-index__letter {
+    min-width: 32px;
+    text-align: center;
+    font-weight: var(--cp-font-semibold);
+  }
+
+  .glossary-search {
+    margin-bottom: var(--cp-space-5);
+    max-width: 400px;
+    position: relative;
+  }
+
+  /* Magnifying glass icon via CSS */
+  .glossary-search::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--cp-muted);
+    border-radius: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .glossary-search::after {
+    content: "";
+    position: absolute;
+    top: calc(50% + 5px);
+    left: 24px;
+    width: 6px;
+    height: 2px;
+    background: var(--cp-muted);
+    transform: rotate(45deg);
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .glossary-search .cp-input {
+    padding-left: 36px;
+  }
+
+  .glossary-group {
+    margin-bottom: var(--cp-space-5);
+    scroll-margin-top: calc(var(--cp-space-7) + 48px);
+  }
+
+  .glossary-group__letter {
+    margin: 0 0 var(--cp-space-3);
+    font-size: var(--cp-text-2xl);
+    color: var(--cp-accent);
+    border-bottom: 1px solid var(--cp-border-subtle);
+    padding-bottom: var(--cp-space-2);
+  }
+
+  .glossary-entry {
+    margin-bottom: var(--cp-space-4);
+    padding: var(--cp-space-2) var(--cp-space-3);
+    border-left: 2px solid var(--cp-border-subtle);
+    border-radius: 0 var(--cp-r-1) var(--cp-r-1) 0;
+    transition:
+      border-color var(--cp-transition-fast) var(--cp-ease-out),
+      background var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .glossary-entry:hover {
+    border-left-color: var(--cp-accent);
+    background: color-mix(in srgb, var(--cp-accent) 3%, transparent);
+  }
+
+  .glossary-entry__term {
+    margin: 0;
+    font-size: var(--cp-text-lg);
+    color: var(--cp-title);
+  }
+
+  .glossary-entry__def {
+    margin: var(--cp-space-1) 0 0;
+    color: var(--cp-text2);
+    line-height: 1.5;
+    max-width: 72ch;
+  }
+
+  .glossary-entry__demos {
+    margin-top: var(--cp-space-2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-2);
+  }
+
+  .glossary-entry__demo-link {
+    font-size: var(--cp-text-sm);
+    color: var(--cp-muted);
+    text-decoration: none;
+    padding: 2px 8px;
+    border-radius: var(--cp-r-1);
+    border: 1px solid var(--cp-border);
+    transition:
+      border-color var(--cp-transition-fast) var(--cp-ease-out),
+      color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .glossary-entry__demo-link:hover {
+    border-color: var(--cp-accent);
+    color: var(--cp-text);
+  }
+</style>

@@ -3,6 +3,8 @@ import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import IframeStage from "../../components/IframeStage.astro";
 import TagPill from "../../components/TagPill.astro";
+import PPEBlock from "../../components/PPEBlock.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
 
 export async function getStaticPaths() {
   const demos = await getCollection("demos");
@@ -13,15 +15,29 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const withBase = (path: string) => {
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedBase}${normalizedPath}`;
+};
 
-const demoHref = `${import.meta.env.BASE_URL}play/${entry.slug}/`;
-const stationHref = `${import.meta.env.BASE_URL}stations/${entry.slug}/`;
-const instructorHref = `${import.meta.env.BASE_URL}instructor/${entry.slug}/`;
+const demoHref = withBase(`play/${entry.slug}/`);
+const stationHref = withBase(`stations/${entry.slug}/`);
+const instructorHref = withBase(`instructor/${entry.slug}/`);
 
 const { Content } = await entry.render();
 ---
 
 <Layout title={`${entry.data.title} — Exhibit`} hasMath={true}>
+  <Breadcrumb
+    crumbs={[
+      { label: "Explore", href: withBase("explore/") },
+      { label: entry.data.title }
+    ]}
+    withBase={withBase}
+  />
+
   <header class="exhibit-header cp-hero">
     <h1>{entry.data.title}</h1>
     <div class="badges" aria-label="Demo badges">
@@ -37,7 +53,7 @@ const { Content } = await entry.render();
   </header>
 
   <section class="launch" aria-label="Launch controls">
-    <a class="cp-button" href={demoHref}>Launch demo</a>
+    <a class="cp-button cp-button--primary" href={demoHref}>Launch demo</a>
     <a class="cp-button cp-button--ghost" href={demoHref} target="_blank" rel="noreferrer"
       >Open fullscreen</a
     >
@@ -45,68 +61,103 @@ const { Content } = await entry.render();
     <a class="cp-button cp-button--ghost" href={instructorHref}>Instructor notes</a>
   </section>
 
+  {/* Iframe embed — visible early, before scrolling through text */}
+  <IframeStage src={demoHref} title={entry.data.title} openHref={demoHref} />
+
   {!entry.data.content_verified ? (
     <section class="cp-callout" data-kind="warn" aria-label="Legacy content warning">
       <strong>Legacy content (unverified)</strong>
       <div>
-        This exhibit’s copy was imported from the legacy ASTR101 SP26 demos and has not yet been
+        This exhibit's copy was imported from the legacy ASTR101 SP26 demos and has not yet been
         fully reviewed against the current instrument UI, units, and exports.
       </div>
     </section>
   ) : null}
 
-  <section class="block">
+  {/* PPE Phase blocks with colored indicators */}
+  <PPEBlock phase="predict">
     <h2>Predict</h2>
     <p class="prompt">{entry.data.predict_prompt}</p>
-  </section>
+  </PPEBlock>
 
-  <section class="block">
-    <h2>Learning goals</h2>
-    <ul>
-      {entry.data.learning_goals.map((g) => (
-        <li>{g}</li>
-      ))}
-    </ul>
-  </section>
-
-  <section class="block">
-    <h2>Misconceptions targeted</h2>
-    <ul>
-      {entry.data.misconceptions.map((m) => (
-        <li>{m}</li>
-      ))}
-    </ul>
-  </section>
-
-  <section class="block">
+  <PPEBlock phase="play">
     <h2>Play</h2>
     <ol>
       {entry.data.play_steps.map((s) => (
         <li>{s}</li>
       ))}
     </ol>
-  </section>
+  </PPEBlock>
 
-  <section class="block">
+  <PPEBlock phase="explain">
     <h2>Explain</h2>
     <p class="prompt">{entry.data.explain_prompt}</p>
-  </section>
+  </PPEBlock>
 
-  <section class="block">
-    <h2>Model notes</h2>
-    <ul>
-      {entry.data.model_notes.map((n) => (
-        <li>{n}</li>
-      ))}
-    </ul>
-  </section>
+  {/* Collapsible detail sections */}
+  <details class="collapsible">
+    <summary class="collapsible__trigger">
+      <h2 class="collapsible__heading">Learning goals</h2>
+    </summary>
+    <div class="collapsible__body">
+      <ul>
+        {entry.data.learning_goals.map((g) => (
+          <li>{g}</li>
+        ))}
+      </ul>
+    </div>
+  </details>
 
-  <section class="block">
-    <h2>About this demo</h2>
-    <Content />
-  </section>
+  <details class="collapsible">
+    <summary class="collapsible__trigger">
+      <h2 class="collapsible__heading">Misconceptions targeted</h2>
+    </summary>
+    <div class="collapsible__body">
+      <ul>
+        {entry.data.misconceptions.map((m) => (
+          <li>{m}</li>
+        ))}
+      </ul>
+    </div>
+  </details>
 
-  <IframeStage src={demoHref} title={entry.data.title} openHref={demoHref} />
+  <details class="collapsible">
+    <summary class="collapsible__trigger">
+      <h2 class="collapsible__heading">Model notes</h2>
+    </summary>
+    <div class="collapsible__body">
+      <ul>
+        {entry.data.model_notes.map((n) => (
+          <li>{n}</li>
+        ))}
+      </ul>
+    </div>
+  </details>
+
+  <details class="collapsible">
+    <summary class="collapsible__trigger">
+      <h2 class="collapsible__heading">About this demo</h2>
+    </summary>
+    <div class="collapsible__body cp-prose">
+      <Content />
+    </div>
+  </details>
+
+  {/* Related resources footer */}
+  <footer class="exhibit-related">
+    <h2>Related</h2>
+    <div class="exhibit-related__links">
+      <a class="exhibit-related__link" href={stationHref}>
+        Station card (printable)
+      </a>
+      <a class="exhibit-related__link" href={instructorHref}>
+        Instructor notes
+      </a>
+      <a class="exhibit-related__link" href={withBase("explore/")}>
+        Explore all demos
+      </a>
+    </div>
+  </footer>
 </Layout>
 
 <style>
@@ -134,18 +185,6 @@ const { Content } = await entry.render();
     gap: 10px;
   }
 
-  .block {
-    margin-top: 18px;
-    padding: var(--cp-space-4);
-    border-radius: var(--cp-r-3);
-    border: 1px solid var(--cp-border);
-    background: var(--cp-bg1);
-  }
-
-  .block h2 {
-    margin: 0 0 8px;
-  }
-
   .prompt {
     color: var(--cp-text);
     font-weight: 600;
@@ -160,5 +199,88 @@ const { Content } = await entry.render();
 
   li {
     margin: 6px 0;
+  }
+
+  /* ── Collapsible sections ───────────────── */
+  .collapsible {
+    margin-top: var(--cp-space-4);
+    border: 1px solid var(--cp-border);
+    border-radius: var(--cp-r-2);
+    overflow: hidden;
+  }
+
+  .collapsible__trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-2);
+    padding: var(--cp-space-3) var(--cp-space-4);
+    cursor: pointer;
+    list-style: none;
+    transition: background var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .collapsible__trigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .collapsible__trigger::before {
+    content: "\25B6";
+    font-size: 0.65em;
+    color: var(--cp-muted);
+    transition: transform var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .collapsible[open] > .collapsible__trigger::before {
+    transform: rotate(90deg);
+  }
+
+  .collapsible__trigger:hover {
+    background: color-mix(in srgb, var(--cp-text) 4%, transparent);
+  }
+
+  .collapsible__heading {
+    margin: 0;
+    font-size: var(--cp-text-lg);
+  }
+
+  .collapsible__body {
+    padding: 0 var(--cp-space-4) var(--cp-space-4);
+  }
+
+  /* ── Related footer ─────────────────────── */
+  .exhibit-related {
+    margin-top: var(--cp-space-6);
+    padding-top: var(--cp-space-4);
+    border-top: 1px solid var(--cp-border-subtle);
+  }
+
+  .exhibit-related h2 {
+    margin: 0 0 var(--cp-space-3);
+    font-size: var(--cp-text-lg);
+    color: var(--cp-muted);
+  }
+
+  .exhibit-related__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-3);
+  }
+
+  .exhibit-related__link {
+    padding: var(--cp-space-2) var(--cp-space-3);
+    border-radius: var(--cp-r-1);
+    border: 1px solid var(--cp-border);
+    color: var(--cp-text2);
+    text-decoration: none;
+    font-size: var(--cp-text-sm);
+    font-weight: var(--cp-font-medium);
+    transition:
+      border-color var(--cp-transition-fast) var(--cp-ease-out),
+      color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .exhibit-related__link:hover {
+    border-color: var(--cp-accent);
+    color: var(--cp-text);
   }
 </style>

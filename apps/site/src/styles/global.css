@@ -1,5 +1,6 @@
 @import "@cosmic/theme/styles/tokens.css";
 @import "@cosmic/theme/styles/layer-museum.css";
+@import "@cosmic/theme/styles/starfield-museum.css";
 @import "@cosmic/theme/styles/print.css";
 @import "@cosmic/theme/styles/layer-paper.css";
 @import "@cosmic/theme/styles/components/form.css";
@@ -98,12 +99,12 @@ body {
   letter-spacing: 0.04em;
 }
 
-nav {
+.desktop-nav {
   display: flex;
   gap: var(--cp-space-3);
 }
 
-nav a {
+.desktop-nav a {
   text-decoration: none;
   padding: var(--cp-space-2) var(--cp-space-3);
   border-radius: var(--cp-r-1);
@@ -112,7 +113,7 @@ nav a {
   font-weight: var(--cp-font-medium);
 }
 
-nav a:hover {
+.desktop-nav a:hover {
   border-color: var(--cp-border);
   background: color-mix(in srgb, var(--cp-text) 6%, transparent);
   color: var(--cp-link-hover);

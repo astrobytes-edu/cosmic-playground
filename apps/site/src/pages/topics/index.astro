@@ -1,0 +1,186 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import TopicIcon from "../../components/TopicIcon.astro";
+
+const demos = await getCollection("demos");
+const base = import.meta.env.BASE_URL;
+const withBase = (path: string) => {
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedBase}${normalizedPath}`;
+};
+
+const topicOrder = [
+  "EarthSky",
+  "Orbits",
+  "LightSpectra",
+  "Telescopes",
+  "DataInference",
+  "Stars",
+  "Galaxies",
+  "Cosmology"
+];
+
+const topicLabel: Record<string, string> = {
+  EarthSky: "Earth & Sky",
+  Orbits: "Orbits",
+  LightSpectra: "Light & Spectra",
+  Telescopes: "Telescopes",
+  DataInference: "Data & Inference",
+  Stars: "Stars",
+  Galaxies: "Galaxies",
+  Cosmology: "Cosmology"
+};
+
+const topicDescription: Record<string, string> = {
+  EarthSky: "Moon phases, seasons, and the view from Earth.",
+  Orbits: "Kepler\u2019s laws, retrograde motion, and gravitational dynamics.",
+  LightSpectra: "Blackbody radiation, electromagnetic spectrum, and spectral analysis.",
+  Telescopes: "Resolution, diffraction, and optical design.",
+  DataInference: "Statistics, measurement, and scientific reasoning.",
+  Stars: "Stellar structure, evolution, and equations of state.",
+  Galaxies: "Galaxy types, rotation, and large-scale structure.",
+  Cosmology: "Expansion, dark energy, and the cosmic microwave background."
+};
+
+const topics = topicOrder
+  .map((key) => {
+    const topicDemos = demos.filter((d) => d.data.topics.includes(key as any));
+    return {
+      key,
+      label: topicLabel[key],
+      description: topicDescription[key],
+      demoCount: topicDemos.length
+    };
+  })
+  .filter((t) => t.demoCount > 0);
+---
+
+<Layout title="Topics — Cosmic Playground">
+  <Breadcrumb
+    crumbs={[{ label: "Topics" }]}
+    withBase={withBase}
+  />
+
+  <section class="topics-hero cp-hero">
+    <h1>Topics</h1>
+    <p class="topics-hero__lede">
+      Explore interactive exhibits organized by subject area.
+    </p>
+  </section>
+
+  <div class="topics-grid" aria-label="Topic areas">
+    {topics.map((topic) => (
+      <a
+        class="topic-card cp-card"
+        href={withBase(`topics/${topic.key.toLowerCase()}/`)}
+      >
+        <div class="topic-card__icon">
+          <TopicIcon topic={topic.key} size={32} />
+        </div>
+        <div class="topic-card__body">
+          <h2 class="topic-card__title">{topic.label}</h2>
+          <p class="topic-card__desc">{topic.description}</p>
+          <span class="topic-card__count">
+            <span class="topic-card__count-value">{topic.demoCount}</span>
+            <span class="topic-card__count-unit">
+              exhibit{topic.demoCount === 1 ? "" : "s"}
+            </span>
+          </span>
+        </div>
+      </a>
+    ))}
+  </div>
+</Layout>
+
+<style>
+  .topics-hero {
+    margin-bottom: var(--cp-space-5);
+  }
+
+  .topics-hero__lede {
+    margin: 6px 0 0;
+    color: var(--cp-muted);
+    max-width: 72ch;
+  }
+
+  .topics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--cp-space-4);
+  }
+
+  .topic-card {
+    display: flex;
+    gap: var(--cp-space-4);
+    padding: var(--cp-space-5);
+    text-decoration: none;
+    align-items: flex-start;
+    transition:
+      background var(--cp-transition-fast) var(--cp-ease-out),
+      border-color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .topic-card:hover {
+    background: color-mix(in srgb, var(--cp-text) 3%, transparent);
+    border-color: var(--cp-accent);
+  }
+
+  .topic-card__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--cp-r-2);
+    background: color-mix(in srgb, var(--cp-accent) 8%, transparent);
+    color: var(--cp-accent);
+    flex-shrink: 0;
+  }
+
+  .topic-card:hover .topic-card__icon {
+    background: color-mix(in srgb, var(--cp-accent) 15%, transparent);
+  }
+
+  .topic-card__body {
+    display: grid;
+    gap: var(--cp-space-1);
+  }
+
+  .topic-card__title {
+    margin: 0;
+    font-size: var(--cp-text-xl);
+    color: var(--cp-title);
+  }
+
+  .topic-card:hover .topic-card__title {
+    color: var(--cp-title-strong);
+  }
+
+  .topic-card__desc {
+    margin: 0;
+    font-size: var(--cp-text-sm);
+    color: var(--cp-text2);
+    line-height: 1.5;
+  }
+
+  .topic-card__count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: var(--cp-space-1);
+  }
+
+  .topic-card__count-value {
+    font-family: var(--cp-font-mono);
+    font-weight: var(--cp-font-semibold);
+    color: var(--cp-accent-amber);
+  }
+
+  .topic-card__count-unit {
+    font-size: var(--cp-text-sm);
+    color: var(--cp-accent-ice);
+  }
+</style>

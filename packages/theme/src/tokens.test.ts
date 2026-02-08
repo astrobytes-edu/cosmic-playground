@@ -44,6 +44,19 @@ describe("Design tokens", () => {
       expect(css).toContain("--cp-font-semibold");
       expect(css).toContain("--cp-font-bold");
     });
+
+    it("defines display font for headings (Lexend)", () => {
+      expect(css).toContain("--cp-font-display");
+      expect(css).toMatch(/--cp-font-display:.*Lexend/);
+    });
+
+    it("applies display font to heading elements", () => {
+      expect(css).toMatch(/h1,\s*h2,\s*h3,\s*h4,\s*h5,\s*h6\s*\{[^}]*font-family:\s*var\(--cp-font-display\)/s);
+    });
+
+    it("uses Source Sans 3 as primary body font", () => {
+      expect(css).toMatch(/--cp-font-sans:.*Source Sans 3/);
+    });
   });
 
   describe("Transition tokens", () => {
@@ -232,6 +245,31 @@ describe("Design tokens", () => {
 
     it("readout values use amber color", () => {
       expect(css).toMatch(/--cp-readout-value-color:.*amber/);
+    });
+  });
+
+  describe("PPE phase tokens", () => {
+    it("defines predict/play/explain phase colors", () => {
+      expect(css).toContain("--cp-phase-predict");
+      expect(css).toContain("--cp-phase-play");
+      expect(css).toContain("--cp-phase-explain");
+    });
+
+    it("maps phase colors to existing accent palette", () => {
+      expect(css).toMatch(/--cp-phase-predict:\s*var\(--cp-violet\)/);
+      expect(css).toMatch(/--cp-phase-play:\s*var\(--cp-accent\)/);
+      expect(css).toMatch(/--cp-phase-explain:\s*var\(--cp-pink\)/);
+    });
+  });
+
+  describe("Museum atmosphere tokens", () => {
+    it("defines museum nebula and star opacity tokens", () => {
+      expect(css).toContain("--cp-museum-nebula-opacity");
+      expect(css).toContain("--cp-museum-star-opacity");
+    });
+
+    it("hero min-height token exists", () => {
+      expect(css).toContain("--cp-hero-min-height");
     });
   });
 

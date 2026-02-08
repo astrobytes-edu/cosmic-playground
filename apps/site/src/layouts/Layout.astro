@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import KatexAutoRender from "../components/KatexAutoRender.astro";
+import MobileNav from "../components/MobileNav.astro";
 
 export type LayoutProps = {
   title?: string;
@@ -38,8 +39,31 @@ const isLightTheme =
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{title}</title>
     <link rel="stylesheet" href={withBase("assets/katex/katex.min.css")} />
+    <link rel="preload" href={withBase("fonts/Lexend.woff2")} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={withBase("fonts/SourceSans3.woff2")} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={withBase("fonts/Inter.woff2")} as="font" type="font/woff2" crossorigin />
     <style set:html={`
+      @font-face {
+        font-family: "Lexend";
+        font-style: normal;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url("${withBase("fonts/Lexend.woff2")}") format("woff2");
+      }
+      @font-face {
+        font-family: "Source Sans 3";
+        font-style: normal;
+        font-weight: 200 900;
+        font-display: swap;
+        src: url("${withBase("fonts/SourceSans3.woff2")}") format("woff2");
+      }
+      @font-face {
+        font-family: "Source Sans 3";
+        font-style: italic;
+        font-weight: 200 900;
+        font-display: swap;
+        src: url("${withBase("fonts/SourceSans3-Italic.woff2")}") format("woff2");
+      }
       @font-face {
         font-family: "Inter";
         font-style: normal;
@@ -61,7 +85,7 @@ const isLightTheme =
             <li>Explain</li>
           </ul>
         </div>
-        <nav aria-label="Primary">
+        <nav class="desktop-nav" aria-label="Primary">
           <a
             href={withBase("explore/")}
             aria-current={isActive("/explore/") ? "page" : undefined}
@@ -75,12 +99,19 @@ const isLightTheme =
             Playlists
           </a>
           <a
+            href={withBase("for-instructors/")}
+            aria-current={isActive("/for-instructors/") ? "page" : undefined}
+          >
+            For Instructors
+          </a>
+          <a
             href={withBase("about/")}
             aria-current={isActive("/about/") ? "page" : undefined}
           >
             About
           </a>
         </nav>
+        <MobileNav withBase={withBase} isActive={isActive} />
       </div>
     </header>
     <main id="content" class="site-main">
@@ -103,8 +134,14 @@ const isLightTheme =
 </html>
 
 <style>
-  nav a[aria-current="page"] {
+  .desktop-nav a[aria-current="page"] {
     color: var(--cp-accent);
     border-bottom: 2px solid currentColor;
+  }
+
+  @media (max-width: 767px) {
+    .desktop-nav {
+      display: none;
+    }
   }
 </style>

@@ -1,0 +1,349 @@
+---
+import Layout from "../layouts/Layout.astro";
+import TopicIcon from "../components/TopicIcon.astro";
+
+const base = import.meta.env.BASE_URL;
+const withBase = (path: string) => {
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedBase}${normalizedPath}`;
+};
+
+const topics = [
+  { key: "EarthSky", label: "Earth & Sky", start: "moon-phases" },
+  { key: "Orbits", label: "Orbits", start: "keplers-laws" },
+  { key: "LightSpectra", label: "Light & Spectra", start: "em-spectrum" },
+  { key: "Telescopes", label: "Telescopes", start: "telescope-resolution" },
+  { key: "DataInference", label: "Data & Inference", start: "conservation-laws" },
+  { key: "Stars", label: "Stars", start: "eos-lab" }
+];
+---
+
+<Layout title="Welcome — Cosmic Playground">
+  <section class="welcome cp-hero">
+    <h1>Welcome to Cosmic Playground</h1>
+    <p class="welcome__lede">
+      Interactive exhibits for seeing how astronomy actually works.
+      Pick your path below.
+    </p>
+  </section>
+
+  <section class="welcome-step" id="step-role" aria-label="Choose your role">
+    <h2 class="welcome-step__heading">
+      <span class="welcome-step__number">1</span>
+      Who are you?
+    </h2>
+    <div class="role-cards">
+      <button
+        class="role-card cp-card"
+        type="button"
+        data-role="student"
+        aria-pressed="false"
+      >
+        <span class="role-card__emoji" aria-hidden="true">&#x1F393;</span>
+        <h3>Student</h3>
+        <p>I want to explore demos and learn astronomy concepts.</p>
+      </button>
+      <button
+        class="role-card cp-card"
+        type="button"
+        data-role="instructor"
+        aria-pressed="false"
+      >
+        <span class="role-card__emoji" aria-hidden="true">&#x1F4DA;</span>
+        <h3>Instructor</h3>
+        <p>I want to set up demos for my class.</p>
+      </button>
+    </div>
+  </section>
+
+  <section class="welcome-step is-hidden" id="step-topic" aria-label="Choose a topic">
+    <h2 class="welcome-step__heading">
+      <span class="welcome-step__number">2</span>
+      What interests you?
+    </h2>
+    <div class="topic-chips">
+      {topics.map((t) => (
+        <button
+          class="topic-chip cp-chip"
+          type="button"
+          data-topic={t.key}
+          data-start={t.start}
+          aria-pressed="false"
+        >
+          <TopicIcon topic={t.key} size={16} />
+          {t.label}
+        </button>
+      ))}
+    </div>
+  </section>
+
+  <section class="welcome-result is-hidden" id="step-result" aria-label="Your recommendation">
+    <div class="result-card cp-card">
+      <h2>Your starting point</h2>
+      <p class="result-card__text" id="result-text">
+        Loading recommendation...
+      </p>
+      <a class="cp-button cp-button--primary" id="result-link" href="#">
+        Go to demo
+      </a>
+      <a class="cp-button cp-button--ghost" id="result-alt-link" href="#">
+        Browse all exhibits
+      </a>
+    </div>
+  </section>
+</Layout>
+
+<script define:vars={{ base }}>
+  const withBase = (path) => {
+    const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+    const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+    return `${normalizedBase}${normalizedPath}`;
+  };
+
+  const stepTopic = document.getElementById("step-topic");
+  const stepResult = document.getElementById("step-result");
+  const roleCards = document.querySelectorAll("[data-role]");
+  const topicChips = document.querySelectorAll("[data-topic]");
+  const resultText = document.getElementById("result-text");
+  const resultLink = document.getElementById("result-link");
+  const resultAltLink = document.getElementById("result-alt-link");
+
+  function revealStep(el) {
+    el.classList.remove("is-hidden");
+    el.classList.add("is-entering");
+  }
+
+  let selectedRole = "";
+
+  roleCards.forEach((card) => {
+    card.addEventListener("click", () => {
+      roleCards.forEach((c) => {
+        c.classList.remove("is-selected");
+        c.setAttribute("aria-pressed", "false");
+      });
+      card.classList.add("is-selected");
+      card.setAttribute("aria-pressed", "true");
+      selectedRole = card.dataset.role;
+
+      if (selectedRole === "instructor") {
+        stepTopic.classList.add("is-hidden");
+        stepTopic.classList.remove("is-entering");
+        revealStep(stepResult);
+        resultText.textContent =
+          "Head to the instructor hub for station cards, notes, and playlists.";
+        resultLink.textContent = "For Instructors";
+        resultLink.href = withBase("for-instructors/");
+        resultAltLink.textContent = "Browse all exhibits";
+        resultAltLink.href = withBase("explore/");
+      } else {
+        revealStep(stepTopic);
+        stepResult.classList.add("is-hidden");
+        stepResult.classList.remove("is-entering");
+      }
+    });
+  });
+
+  topicChips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      topicChips.forEach((c) => {
+        c.classList.remove("is-selected");
+        c.setAttribute("aria-pressed", "false");
+      });
+      chip.classList.add("is-selected");
+      chip.setAttribute("aria-pressed", "true");
+
+      const topicKey = chip.dataset.topic;
+      const startSlug = chip.dataset.start;
+
+      revealStep(stepResult);
+      resultText.textContent = `We recommend starting with this exhibit. Explore, then branch out.`;
+      resultLink.textContent = "Launch demo";
+      resultLink.href = withBase(`exhibits/${startSlug}/`);
+      resultAltLink.textContent = `See all ${chip.textContent.trim()} exhibits`;
+      resultAltLink.href = withBase(`topics/${topicKey.toLowerCase()}/`);
+    });
+  });
+</script>
+
+<style>
+  .welcome {
+    margin-bottom: var(--cp-space-6);
+    text-align: center;
+  }
+
+  .welcome h1 {
+    margin: 0;
+  }
+
+  .welcome__lede {
+    margin: 8px auto 0;
+    color: var(--cp-muted);
+    max-width: 50ch;
+  }
+
+  .welcome-step {
+    margin-top: var(--cp-space-6);
+  }
+
+  .welcome-step.is-hidden {
+    display: none;
+  }
+
+  .welcome-step.is-entering {
+    display: block;
+    animation: step-enter 0.4s var(--cp-ease-out) both;
+  }
+
+  @keyframes step-enter {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .welcome-step.is-entering {
+      animation: none;
+    }
+  }
+
+  .welcome-step__heading {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-3);
+    margin: 0 0 var(--cp-space-4);
+  }
+
+  .welcome-step__number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--cp-accent) 15%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--cp-accent) 40%, transparent);
+    color: var(--cp-accent);
+    font-family: var(--cp-font-display);
+    font-size: var(--cp-text-sm);
+    font-weight: var(--cp-font-semibold);
+    flex-shrink: 0;
+  }
+
+  .role-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--cp-space-4);
+  }
+
+  .role-card {
+    display: grid;
+    gap: var(--cp-space-2);
+    padding: var(--cp-space-5);
+    text-align: center;
+    cursor: pointer;
+    transition:
+      background var(--cp-transition-fast) var(--cp-ease-out),
+      border-color var(--cp-transition-fast) var(--cp-ease-out);
+    font: inherit;
+    color: inherit;
+  }
+
+  .role-card:hover {
+    background: color-mix(in srgb, var(--cp-text) 3%, transparent);
+    border-color: var(--cp-accent);
+  }
+
+  .role-card.is-selected {
+    border-color: var(--cp-accent);
+    background: color-mix(in srgb, var(--cp-accent) 8%, transparent);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--cp-accent) 10%, transparent);
+  }
+
+  .role-card__emoji {
+    font-size: 2rem;
+  }
+
+  .role-card h3 {
+    margin: 0;
+    font-size: var(--cp-text-xl);
+  }
+
+  .role-card p {
+    margin: 0;
+    color: var(--cp-text2);
+    font-size: var(--cp-text-sm);
+  }
+
+  .topic-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-2);
+  }
+
+  .topic-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--cp-space-2);
+    cursor: pointer;
+    transition:
+      background var(--cp-transition-fast) var(--cp-ease-out),
+      border-color var(--cp-transition-fast) var(--cp-ease-out);
+    font: inherit;
+    color: inherit;
+  }
+
+  .topic-chip.is-selected {
+    border-color: var(--cp-accent);
+    background: color-mix(in srgb, var(--cp-accent) 15%, transparent);
+    color: var(--cp-accent);
+  }
+
+  .welcome-result {
+    margin-top: var(--cp-space-5);
+  }
+
+  .welcome-result.is-hidden {
+    display: none;
+  }
+
+  .result-card {
+    display: grid;
+    gap: var(--cp-space-3);
+    padding: var(--cp-space-5);
+    text-align: center;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+    overflow: clip;
+  }
+
+  .result-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--cp-accent) 60%, transparent),
+      color-mix(in srgb, var(--cp-violet) 40%, transparent)
+    );
+  }
+
+  .result-card h2 {
+    margin: 0;
+    font-size: var(--cp-text-xl);
+  }
+
+  .result-card__text {
+    margin: 0;
+    color: var(--cp-text2);
+  }
+</style>

@@ -1,0 +1,125 @@
+---
+/**
+ * Predict / Play / Explain visual breakdown.
+ * Three columns (stacked on mobile) with Lucide icons and phase colors.
+ * Reusable on both home and about pages.
+ */
+import { Eye, SlidersHorizontal, Lightbulb } from "@lucide/astro";
+
+interface Props {
+  /** Compact mode omits the description text (for smaller placements) */
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+
+const phases = [
+  {
+    icon: Eye,
+    name: "Predict",
+    color: "var(--cp-phase-predict)",
+    description: "Before touching a slider, commit to a prediction. What do you think will happen?"
+  },
+  {
+    icon: SlidersHorizontal,
+    name: "Play",
+    color: "var(--cp-phase-play)",
+    description: "Explore the interactive model. Drag, tweak, break it. See what the physics does."
+  },
+  {
+    icon: Lightbulb,
+    name: "Explain",
+    color: "var(--cp-phase-explain)",
+    description: "Reconcile what happened with what you expected. That gap is where learning lives."
+  }
+];
+---
+
+<div class:list={["ppe-visual", { "ppe-visual--compact": compact }]}>
+  {phases.map((phase, i) => (
+    <div class="ppe-phase" style={`--phase-color: ${phase.color}; --phase-i: ${i}`}>
+      <div class="ppe-phase__icon">
+        <phase.icon size={compact ? 20 : 28} aria-hidden="true" />
+      </div>
+      <h3 class="ppe-phase__name">{phase.name}</h3>
+      {!compact && <p class="ppe-phase__desc">{phase.description}</p>}
+    </div>
+  ))}
+</div>
+
+<style>
+  .ppe-visual {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--cp-space-5);
+  }
+
+  @media (max-width: 767px) {
+    .ppe-visual {
+      grid-template-columns: 1fr;
+      gap: var(--cp-space-4);
+    }
+  }
+
+  .ppe-phase {
+    text-align: center;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: ppe-reveal 0.5s var(--cp-ease-out) forwards;
+    animation-delay: calc(0.2s + var(--phase-i) * 0.15s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ppe-phase {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+  }
+
+  @keyframes ppe-reveal {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .ppe-phase__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1.5px solid color-mix(in srgb, var(--phase-color) 40%, transparent);
+    background: color-mix(in srgb, var(--phase-color) 10%, transparent);
+    color: var(--phase-color);
+    margin-bottom: var(--cp-space-3);
+  }
+
+  .ppe-visual--compact .ppe-phase__icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .ppe-phase__name {
+    margin: 0;
+    font-size: var(--cp-text-lg);
+    font-weight: var(--cp-font-semibold);
+    color: var(--phase-color);
+    letter-spacing: 0.02em;
+  }
+
+  .ppe-visual--compact .ppe-phase__name {
+    font-size: var(--cp-text-md);
+  }
+
+  .ppe-phase__desc {
+    margin: var(--cp-space-2) 0 0;
+    color: var(--cp-text2);
+    font-size: var(--cp-text-sm);
+    line-height: var(--cp-leading-relaxed);
+    max-width: 30ch;
+    margin-inline: auto;
+  }
+</style>

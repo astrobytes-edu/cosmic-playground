@@ -4,6 +4,7 @@ import Layout from "../../layouts/Layout.astro";
 import DemoCard from "../../components/DemoCard.astro";
 import FilterBar from "../../components/FilterBar.astro";
 import EmptyState from "../../components/EmptyState.astro";
+import TopicIcon from "../../components/TopicIcon.astro";
 
 const demos = await getCollection("demos");
 const base = import.meta.env.BASE_URL;
@@ -131,6 +132,20 @@ if (status) addChip("status", `Status: ${status}`);
 if (math) addChip("math", `Math required: ${math === "yes" ? "Yes" : "No"}`);
 if (sort && sort !== "recommended") addChip("sort", `Sort: ${sortLabels[sort] ?? sort}`);
 
+const topicDescription: Record<string, string> = {
+  EarthSky: "Moon phases, seasons, and the view from Earth.",
+  Orbits: "Kepler's laws, retrograde motion, and gravitational dynamics.",
+  LightSpectra: "Blackbody radiation, electromagnetic spectrum, and spectral analysis.",
+  Telescopes: "Resolution, diffraction, and optical design.",
+  DataInference: "Statistics, measurement, and scientific reasoning.",
+  Stars: "Stellar structure, evolution, and equations of state.",
+  Galaxies: "Galaxy types, rotation, and large-scale structure.",
+  Cosmology: "Expansion, dark energy, and the cosmic microwave background."
+};
+
+const allSlugs = demos.map((d) => d.slug);
+const randomSlug = allSlugs[Math.floor(Math.random() * allSlugs.length)];
+
 const noFilters = chips.length === 0;
 const showFeatured = noFilters && featured.length > 0;
 const featuredSlugs = new Set(featured.map((d) => d.slug));
@@ -215,7 +230,15 @@ const topicSections = noFilters
   ) : null}
 
   <div class="results__count">
-    <strong>{sorted.length}</strong> interactive exhibit{sorted.length === 1 ? "" : "s"}
+    <span class="results__count-value">{sorted.length}</span>
+    <span class="results__count-unit">interactive exhibit{sorted.length === 1 ? "" : "s"}</span>
+    <a
+      class="cp-button cp-button--ghost results__surprise"
+      href={`${base}exhibits/${randomSlug}/`}
+      data-all-slugs={JSON.stringify(allSlugs)}
+    >
+      Surprise me
+    </a>
   </div>
 
   {noFilters ? (
@@ -239,7 +262,15 @@ const topicSections = noFilters
             class="topic-section"
             id={`topic-${section.key.toLowerCase()}`}
           >
-            <h2 class="topic-section__title">{section.label}</h2>
+            <div class="topic-section__header">
+              <TopicIcon topic={section.key} size={28} />
+              <div>
+                <h2 class="topic-section__title">{section.label}</h2>
+                {topicDescription[section.key] && (
+                  <p class="topic-section__desc">{topicDescription[section.key]}</p>
+                )}
+              </div>
+            </div>
             <div class="results__grid">
               {section.demos.map((d) => (
                 <DemoCard
@@ -302,6 +333,17 @@ const topicSections = noFilters
 
     selects.forEach((select) => {
       select.addEventListener("change", submit);
+    });
+  }
+
+  const surpriseBtn = document.querySelector("[data-all-slugs]");
+  if (surpriseBtn instanceof HTMLAnchorElement) {
+    const slugs = JSON.parse(surpriseBtn.dataset.allSlugs || "[]");
+    surpriseBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const slug = slugs[Math.floor(Math.random() * slugs.length)];
+      const base = document.querySelector("base")?.href || "/";
+      window.location.href = `${base}exhibits/${slug}/`;
     });
   }
 </script>
@@ -390,7 +432,28 @@ const topicSections = noFilters
 
   .results__count {
     margin-top: var(--cp-space-5);
-    color: var(--cp-muted);
+    display: flex;
+    align-items: baseline;
+    gap: var(--cp-space-2);
+    flex-wrap: wrap;
+  }
+
+  .results__count-value {
+    font-family: var(--cp-font-mono);
+    font-size: var(--cp-text-2xl);
+    font-weight: var(--cp-font-semibold);
+    color: var(--cp-accent-amber);
+    line-height: 1;
+  }
+
+  .results__count-unit {
+    color: var(--cp-accent-ice);
+    font-size: var(--cp-text-sm);
+  }
+
+  .results__surprise {
+    margin-left: auto;
+    font-size: var(--cp-text-sm);
   }
 
   .results__grid {
@@ -410,8 +473,23 @@ const topicSections = noFilters
     margin-top: var(--cp-space-6);
   }
 
-  .topic-section__title {
-    margin: 0 0 var(--cp-space-4);
+  .topic-section__header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--cp-space-3);
+    margin-bottom: var(--cp-space-4);
     scroll-margin-top: calc(var(--cp-space-7) + 48px);
+    color: var(--cp-muted);
+  }
+
+  .topic-section__title {
+    margin: 0;
+  }
+
+  .topic-section__desc {
+    margin: var(--cp-space-1) 0 0;
+    font-size: var(--cp-text-sm);
+    color: var(--cp-text2);
+    max-width: 60ch;
   }
 </style>

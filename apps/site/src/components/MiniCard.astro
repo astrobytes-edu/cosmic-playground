@@ -1,0 +1,80 @@
+---
+/**
+ * Compact demo card for horizontal scroll strips.
+ * Shows: DemoGlyph + title + primary topic + update date.
+ */
+import DemoGlyph from "./DemoGlyph.astro";
+import TopicIcon from "./TopicIcon.astro";
+import { pickDemoGlyph } from "../lib/demoGlyphs";
+
+interface Props {
+  title: string;
+  slug: string;
+  href: string;
+  topics: string[];
+  lastUpdated: string;
+}
+
+const { title, slug, href, topics, lastUpdated } = Astro.props;
+const glyph = pickDemoGlyph(topics, slug, title);
+---
+
+<a class="mini-card cp-card" href={href}>
+  <DemoGlyph name={glyph} size={28} class="mini-card__glyph" />
+  <span class="mini-card__title">{title}</span>
+  <span class="mini-card__meta">
+    {topics[0] && <TopicIcon topic={topics[0]} size={12} />}
+    <time class="mini-card__date">{lastUpdated}</time>
+  </span>
+</a>
+
+<style>
+  .mini-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-2);
+    padding: var(--cp-space-4);
+    min-width: 180px;
+    max-width: 220px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .mini-card__glyph {
+    color: var(--cp-muted);
+    transition: color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .mini-card:hover .mini-card__glyph {
+    color: var(--cp-accent);
+  }
+
+  .mini-card__title {
+    font-weight: var(--cp-font-semibold);
+    font-size: var(--cp-text-sm);
+    color: var(--cp-title);
+    line-height: var(--cp-leading-tight);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .mini-card:hover .mini-card__title {
+    color: var(--cp-title-strong);
+  }
+
+  .mini-card__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-1);
+    color: var(--cp-faint);
+    font-size: 0.75rem;
+    margin-top: auto;
+  }
+
+  .mini-card__date {
+    font-family: var(--cp-font-mono);
+    font-size: 0.7rem;
+  }
+</style>

@@ -1,0 +1,72 @@
+---
+/**
+ * Readout-styled statistics bar.
+ * Mimics instrument-layer readout typography in the museum context:
+ * amber values, ice-blue units, monospace numbers.
+ *
+ * Usage:
+ *   <StatBar stats={[
+ *     { value: "14", unit: "demos" },
+ *     { value: "3", unit: "modes per demo" },
+ *   ]} />
+ */
+
+interface Stat {
+  value: string;
+  unit: string;
+  label?: string;
+}
+
+interface Props {
+  stats: Stat[];
+}
+
+const { stats } = Astro.props;
+---
+
+<div class="stat-bar" role="list">
+  {stats.map((s) => (
+    <div class="stat-bar__item" role="listitem">
+      {s.label && <span class="stat-bar__label">{s.label}</span>}
+      <span class="stat-bar__value">{s.value}</span>
+      <span class="stat-bar__unit">{s.unit}</span>
+    </div>
+  ))}
+</div>
+
+<style>
+  .stat-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-5);
+    padding: var(--cp-space-4) 0;
+  }
+
+  .stat-bar__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-bar__label {
+    font-size: 0.7rem;
+    font-weight: var(--cp-font-semibold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--cp-muted);
+  }
+
+  .stat-bar__value {
+    font-family: var(--cp-font-mono);
+    font-size: var(--cp-text-2xl);
+    font-weight: var(--cp-font-semibold);
+    color: var(--cp-accent-amber);
+    line-height: 1;
+  }
+
+  .stat-bar__unit {
+    font-size: var(--cp-text-sm);
+    color: var(--cp-accent-ice);
+    font-weight: var(--cp-font-medium);
+  }
+</style>

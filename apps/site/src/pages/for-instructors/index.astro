@@ -1,0 +1,238 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import DemoGlyph from "../../components/DemoGlyph.astro";
+import { pickDemoGlyph } from "../../lib/demoGlyphs";
+import Icon from "../../components/Icon.astro";
+
+const demos = await getCollection("demos");
+const playlists = await getCollection("playlists");
+const base = import.meta.env.BASE_URL;
+const withBase = (path: string) => {
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedBase}${normalizedPath}`;
+};
+
+const sortedDemos = [...demos].sort((a, b) =>
+  a.data.title.localeCompare(b.data.title)
+);
+---
+
+<Layout title="For Instructors — Cosmic Playground">
+  <Breadcrumb
+    crumbs={[{ label: "For Instructors" }]}
+    withBase={withBase}
+  />
+
+  <section class="instr-hero cp-hero">
+    <h1>For Instructors</h1>
+    <p class="instr-hero__lede">
+      Everything you need to run Cosmic Playground in your classroom:
+      printable station cards, detailed instructor notes, and curated playlists.
+    </p>
+  </section>
+
+  <section class="instr-quickstart">
+    <h2>Quick start</h2>
+    <ol class="instr-quickstart__steps">
+      <li>Pick a playlist or browse individual exhibits below.</li>
+      <li>Print the station card for each demo you plan to use.</li>
+      <li>Read the instructor notes for timing, misconceptions, and assessment tips.</li>
+      <li>Have students follow the <strong>Predict → Play → Explain</strong> loop at each station.</li>
+    </ol>
+  </section>
+
+  <section class="instr-section" aria-label="Playlists">
+    <div class="instr-section__header">
+      <Icon name="BookOpen" size={24} class="instr-section__icon" />
+      <div>
+        <h2>Playlists</h2>
+        <p class="instr-section__desc">
+          Curated sequences with timing, required/optional markers, and instructions.
+        </p>
+      </div>
+    </div>
+    <div class="instr-grid instr-grid--wide">
+      {playlists.map((p) => (
+        <a class="instr-link-card cp-card" href={withBase(`playlists/${p.slug}/`)}>
+          <h3>{p.data.title}</h3>
+          <p class="instr-link-card__meta">
+            {p.data.audience} · ~{p.data.estimated_minutes} min · {p.data.demos.length} demos
+          </p>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="instr-section" aria-label="Station Cards">
+    <div class="instr-section__header">
+      <Icon name="Users" size={24} class="instr-section__icon" />
+      <div>
+        <h2>Station Cards</h2>
+        <p class="instr-section__desc">
+          One-page printable cards with controls, parameters, and the PPE flow for each demo.
+        </p>
+      </div>
+    </div>
+    <div class="instr-grid">
+      {sortedDemos.map((d) => {
+        const glyph = pickDemoGlyph(d.data.topics, d.slug, d.data.title);
+        return (
+          <a class="instr-link-card cp-card" href={withBase(`stations/${d.slug}/`)}>
+            <DemoGlyph name={glyph} size={20} class="instr-link-card__glyph" />
+            <div>
+              <h3>{d.data.title}</h3>
+              <span class="instr-link-card__time">{d.data.time_minutes} min</span>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="instr-section" aria-label="Instructor Notes">
+    <div class="instr-section__header">
+      <Icon name="BookOpen" size={24} class="instr-section__icon" />
+      <div>
+        <h2>Instructor Notes</h2>
+        <p class="instr-section__desc">
+          Deeper notes: activities, assessment rubrics, model details, and known limitations.
+        </p>
+      </div>
+    </div>
+    <div class="instr-grid">
+      {sortedDemos.map((d) => {
+        const glyph = pickDemoGlyph(d.data.topics, d.slug, d.data.title);
+        return (
+          <a class="instr-link-card cp-card" href={withBase(`instructor/${d.slug}/`)}>
+            <DemoGlyph name={glyph} size={20} class="instr-link-card__glyph" />
+            <div>
+              <h3>{d.data.title}</h3>
+              <span class="instr-link-card__time">{d.data.misconceptions.length} misconceptions targeted</span>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .instr-hero {
+    margin-bottom: var(--cp-space-5);
+  }
+
+  .instr-hero__lede {
+    margin: 8px 0 0;
+    color: var(--cp-muted);
+    max-width: 72ch;
+  }
+
+  .instr-quickstart {
+    margin-bottom: var(--cp-space-6);
+    padding: var(--cp-space-4);
+    border-radius: var(--cp-r-2);
+    border: 1px solid var(--cp-border);
+    background: var(--cp-bg1);
+  }
+
+  .instr-quickstart h2 {
+    margin: 0 0 var(--cp-space-3);
+    font-size: var(--cp-text-lg);
+  }
+
+  .instr-quickstart__steps {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--cp-text2);
+    line-height: 1.7;
+  }
+
+  .instr-quickstart__steps li {
+    margin: var(--cp-space-1) 0;
+  }
+
+  .instr-section {
+    margin-top: var(--cp-space-6);
+  }
+
+  .instr-section__header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--cp-space-3);
+    margin-bottom: var(--cp-space-4);
+  }
+
+  .instr-section__icon {
+    color: var(--cp-muted);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .instr-section__header h2 {
+    margin: 0;
+  }
+
+  .instr-section__desc {
+    margin: var(--cp-space-1) 0 0;
+    font-size: var(--cp-text-sm);
+    color: var(--cp-text2);
+    max-width: 60ch;
+  }
+
+  .instr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--cp-space-3);
+  }
+
+  .instr-grid--wide {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  .instr-link-card {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--cp-space-3);
+    padding: var(--cp-space-3) var(--cp-space-4);
+    text-decoration: none;
+    transition:
+      background var(--cp-transition-fast) var(--cp-ease-out),
+      border-color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .instr-link-card:hover {
+    background: color-mix(in srgb, var(--cp-text) 3%, transparent);
+    border-color: var(--cp-accent);
+  }
+
+  .instr-link-card h3 {
+    margin: 0;
+    font-size: var(--cp-text-base);
+    color: var(--cp-title);
+  }
+
+  .instr-link-card:hover h3 {
+    color: var(--cp-title-strong);
+  }
+
+  .instr-link-card__glyph {
+    color: var(--cp-muted);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .instr-link-card__meta {
+    margin: var(--cp-space-1) 0 0;
+    font-size: var(--cp-text-sm);
+    color: var(--cp-muted);
+  }
+
+  .instr-link-card__time {
+    font-family: var(--cp-font-mono);
+    font-size: 0.75rem;
+    color: var(--cp-muted);
+  }
+</style>

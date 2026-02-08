@@ -1,7 +1,9 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
-import DemoCard from "../../components/DemoCard.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import JourneyStep from "../../components/JourneyStep.astro";
+import TagPill from "../../components/TagPill.astro";
 
 export async function getStaticPaths() {
   const playlists = await getCollection("playlists");
@@ -12,117 +14,215 @@ export async function getStaticPaths() {
 }
 
 const { playlist } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const withBase = (path: string) => {
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedBase}${normalizedPath}`;
+};
 
 const demos = await getCollection("demos");
 const demoBySlug = new Map<string, (typeof demos)[number]>(
   demos.map((d) => [d.slug, d])
 );
 
-function excerptFromBody(body: string) {
-  const firstLine = body
-    .split("\n")
-    .map((l) => l.trim())
-    .find((l) => l.length > 0 && !l.startsWith("---"));
-  if (!firstLine) return "—";
-  return firstLine.replace(/^#+\s*/, "").slice(0, 140);
-}
-
 const resolved = playlist.data.demos
   .map((d) => ({ ...d, entry: demoBySlug.get(d.slug) }))
   .filter((d) => d.entry);
+
+const totalMinutes = resolved.reduce(
+  (sum, d) => sum + (d.entry?.data.time_minutes ?? 0),
+  0
+);
+const requiredCount = resolved.filter((d) => d.required).length;
 
 const { Content } = await playlist.render();
 ---
 
 <Layout title={`${playlist.data.title} — Playlist`}>
-  <header class="header">
+  <Breadcrumb
+    crumbs={[
+      { label: "Playlists", href: withBase("playlists/") },
+      { label: playlist.data.title }
+    ]}
+    withBase={withBase}
+  />
+
+  <header class="playlist-header cp-hero">
     <h1>{playlist.data.title}</h1>
-    <p class="meta">
-      {playlist.data.audience} • ~{playlist.data.estimated_minutes} min
-    </p>
-    <p class="overview">{playlist.data.overview}</p>
+    <div class="playlist-header__meta">
+      <TagPill label={playlist.data.audience} tone="blue" />
+      <span class="playlist-header__stat">
+        <span class="playlist-header__stat-value">{resolved.length}</span>
+        <span class="playlist-header__stat-unit">demos</span>
+      </span>
+      <span class="playlist-header__stat">
+        <span class="playlist-header__stat-value">~{playlist.data.estimated_minutes}</span>
+        <span class="playlist-header__stat-unit">min</span>
+      </span>
+      <span class="playlist-header__stat">
+        <span class="playlist-header__stat-value">{requiredCount}</span>
+        <span class="playlist-header__stat-unit">required</span>
+      </span>
+    </div>
+    <p class="playlist-header__overview">{playlist.data.overview}</p>
   </header>
 
-  <section class="block">
+  <section class="playlist-instructions" aria-label="Instructions">
     <h2>Instructions</h2>
-    <pre class="instructions">{playlist.data.instructions}</pre>
+    <pre class="playlist-instructions__text">{playlist.data.instructions}</pre>
   </section>
 
-  <section class="block">
-    <h2>Demos</h2>
-    <div class="grid">
-      {resolved.map(({ entry, required, note }) => (
-        <div class="item">
-          <DemoCard
-            title={entry!.data.title}
-            slug={entry!.slug}
-            href={`${import.meta.env.BASE_URL}exhibits/${entry!.slug}/`}
-            description={excerptFromBody(entry!.body)}
-            status={entry!.data.status}
-            topics={entry!.data.topics}
-            levels={entry!.data.levels}
-            timeMinutes={entry!.data.time_minutes}
-            hasMathMode={entry!.data.has_math_mode}
-          />
-          <p class="item-meta">
-            {required ? <strong>Required</strong> : <span>Optional</span>}
-            {note ? <span> — {note}</span> : null}
-          </p>
-        </div>
+  <section class="journey" aria-label="Journey steps">
+    <h2 class="journey__heading">Journey</h2>
+    <div class="journey__steps">
+      {resolved.map(({ entry, required, note }, i) => (
+        <JourneyStep
+          step={i + 1}
+          title={entry!.data.title}
+          slug={entry!.slug}
+          href={withBase(`exhibits/${entry!.slug}/`)}
+          topics={entry!.data.topics}
+          timeMinutes={entry!.data.time_minutes}
+          required={required}
+          note={note}
+          isLast={i === resolved.length - 1}
+        />
       ))}
     </div>
   </section>
 
-  <section class="block">
-    <h2>Notes</h2>
-    <Content />
-  </section>
+  <details class="collapsible">
+    <summary class="collapsible__trigger">
+      <h2 class="collapsible__heading">Notes</h2>
+    </summary>
+    <div class="collapsible__body cp-prose">
+      <Content />
+    </div>
+  </details>
 </Layout>
 
 <style>
-  .header h1 {
+  .playlist-header {
+    display: grid;
+    gap: var(--cp-space-2);
+  }
+
+  .playlist-header h1 {
     margin: 0;
     font-size: 1.9rem;
   }
 
-  .meta {
-    margin: 8px 0 0;
-    color: var(--cp-muted);
+  .playlist-header__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--cp-space-3);
+    margin-top: var(--cp-space-1);
   }
 
-  .overview {
-    margin: 10px 0 0;
+  .playlist-header__stat {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .playlist-header__stat-value {
+    font-family: var(--cp-font-mono);
+    font-size: var(--cp-text-lg);
+    font-weight: var(--cp-font-semibold);
+    color: var(--cp-accent-amber);
+  }
+
+  .playlist-header__stat-unit {
+    font-size: var(--cp-text-sm);
+    color: var(--cp-accent-ice);
+  }
+
+  .playlist-header__overview {
+    margin: 0;
+    color: var(--cp-text2);
     max-width: 72ch;
   }
 
-  .block {
-    margin-top: 16px;
-    padding: 14px;
-    border-radius: var(--cp-r-3);
-    border: 1px solid var(--cp-border);
-    background: var(--cp-bg1);
+  .playlist-instructions {
+    margin-top: var(--cp-space-5);
   }
 
-  .instructions {
+  .playlist-instructions h2 {
+    margin: 0 0 var(--cp-space-3);
+    font-size: var(--cp-text-lg);
+  }
+
+  .playlist-instructions__text {
     margin: 0;
-    padding: 12px;
-    border-radius: 12px;
-    background: var(--cp-bg0);
+    padding: var(--cp-space-4);
+    border-radius: var(--cp-r-2);
+    background: var(--cp-bg1);
     border: 1px solid var(--cp-border);
     color: var(--cp-text);
     white-space: pre-wrap;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-      "Liberation Mono", "Courier New", monospace;
+    font-family: var(--cp-font-mono);
+    font-size: var(--cp-text-sm);
+    line-height: 1.6;
   }
 
-  .grid {
+  .journey {
+    margin-top: var(--cp-space-5);
+  }
+
+  .journey__heading {
+    margin: 0 0 var(--cp-space-4);
+  }
+
+  .journey__steps {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 12px;
+    gap: 0;
   }
 
-  .item-meta {
-    margin: 8px 2px 0;
+  /* Collapsible section (same as exhibit page pattern) */
+  .collapsible {
+    margin-top: var(--cp-space-5);
+    border: 1px solid var(--cp-border);
+    border-radius: var(--cp-r-2);
+    overflow: hidden;
+  }
+
+  .collapsible__trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-2);
+    padding: var(--cp-space-3) var(--cp-space-4);
+    cursor: pointer;
+    list-style: none;
+    transition: background var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .collapsible__trigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .collapsible__trigger::before {
+    content: "\25B6";
+    font-size: 0.65em;
     color: var(--cp-muted);
+    transition: transform var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .collapsible[open] > .collapsible__trigger::before {
+    transform: rotate(90deg);
+  }
+
+  .collapsible__trigger:hover {
+    background: color-mix(in srgb, var(--cp-text) 4%, transparent);
+  }
+
+  .collapsible__heading {
+    margin: 0;
+    font-size: var(--cp-text-lg);
+  }
+
+  .collapsible__body {
+    padding: 0 var(--cp-space-4) var(--cp-space-4);
   }
 </style>

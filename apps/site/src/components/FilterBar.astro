@@ -126,6 +126,9 @@ const {
 
 <style>
   .filter-bar {
+    position: sticky;
+    top: 52px;
+    z-index: calc(var(--cp-z-sticky) - 1);
     padding: var(--cp-space-3);
     display: grid;
     gap: var(--cp-space-2);

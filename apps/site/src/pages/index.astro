@@ -1,7 +1,11 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
-import DemoCard from "../components/DemoCard.astro";
+import MiniCard from "../components/MiniCard.astro";
+import ConstellationHero from "../components/ConstellationHero.astro";
+import PPEVisual from "../components/PPEVisual.astro";
+import DemoGlyph from "../components/DemoGlyph.astro";
+import { pickDemoGlyph } from "../lib/demoGlyphs";
 
 const demos = await getCollection("demos");
 
@@ -10,6 +14,7 @@ function parseIsoDate(iso: string) {
   return Number.isNaN(t) ? 0 : t;
 }
 
+/* Featured demos — curated starter sequence */
 const featuredOrder = ["keplers-laws", "retrograde-motion", "binary-orbits"];
 const featured = demos
   .filter((d) => d.data.featured)
@@ -19,97 +24,415 @@ const featured = demos
       a.data.title.localeCompare(b.data.title)
   );
 
+/* Recent demos — by last update */
 const updated = [...demos]
   .sort((a, b) => parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated))
-  .slice(0, 6);
+  .slice(0, 8);
 
 function excerptFromBody(body: string) {
   const firstLine = body
     .split("\n")
     .map((l) => l.trim())
     .find((l) => l.length > 0 && !l.startsWith("---"));
-  if (!firstLine) return "—";
+  if (!firstLine) return "\u2014";
   return firstLine.replace(/^#+\s*/, "").slice(0, 140);
 }
+
+const base = import.meta.env.BASE_URL;
 ---
 
 <Layout title="Cosmic Playground" hasMath={false}>
-  <section class="hero cp-hero">
-    <h1>Cosmic Playground</h1>
-    <p class="hero__subtitle">Predict → Play → Explain</p>
-    <p>
-      <strong>Predict. Play. Explain.</strong> Play with the universe. Learn the
-      physics.
-    </p>
-    <div class="hero__actions">
-      <a class="cp-button" href={`${import.meta.env.BASE_URL}explore/`}>Explore demos</a>
-      <a class="cp-button cp-button--ghost" href={`${import.meta.env.BASE_URL}playlists/`}
-        >Browse playlists</a
-      >
+
+  {/* ───── Observatory Hero ───── */}
+  <section class="obs-hero cp-hero" aria-label="Welcome">
+    <ConstellationHero />
+    <div class="obs-hero__content">
+      <h1 class="obs-hero__title">Cosmic Playground</h1>
+      <p class="obs-hero__tagline">A playground for all things astro learning</p>
+      <div class="obs-hero__actions">
+        <a class="cp-button cp-button--primary" href={`${base}explore/`}>
+          Explore demos
+        </a>
+        <a class="cp-button cp-button--ghost" href={`${base}playlists/`}>
+          Browse playlists
+        </a>
+      </div>
     </div>
   </section>
 
-  <section class="home-section" aria-label="Start here: Gravity and Orbits">
-    <h2>Start here: Gravity &amp; Orbits</h2>
-    <div class="grid">
-      {featured.map((d) => (
-        <DemoCard
+  {/* ───── How It Works: PPE Cadence ───── */}
+  <section class="home-section" aria-label="How it works">
+    <h2 class="home-section__heading">How it works</h2>
+    <p class="home-section__lead">
+      Every demo follows the same three-phase cadence. Commit to a prediction,
+      explore the model, then reconcile what happened.
+    </p>
+    <PPEVisual />
+  </section>
+
+  {/* ───── Start Here: Featured Demos ───── */}
+  <section class="home-section" aria-label="Start here">
+    <h2 class="home-section__heading">Start here</h2>
+    <p class="home-section__lead">
+      These three demos introduce the core orbital mechanics concepts.
+      Work through them in order for the best experience.
+    </p>
+    <div class="featured-grid">
+      {featured.map((d, i) => (
+        <article class="featured-card cp-card" style={`--card-i: ${i}`}>
+          <a class="featured-card__link" href={`${base}exhibits/${d.slug}/`}>
+            <span class="featured-card__number">{i + 1}</span>
+            <DemoGlyph
+              name={pickDemoGlyph(d.data.topics, d.slug, d.data.title)}
+              size={48}
+              class="featured-card__glyph"
+            />
+            <h3 class="featured-card__title">{d.data.title}</h3>
+            <p class="featured-card__desc">{excerptFromBody(d.body)}</p>
+          </a>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  {/* ───── Recent Demos ───── */}
+  <section class="home-section" aria-label="Recently updated demos">
+    <h2 class="home-section__heading">Recently updated</h2>
+    <div class="recent-scroll">
+      {updated.map((d) => (
+        <MiniCard
           title={d.data.title}
           slug={d.slug}
-          href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
-          description={excerptFromBody(d.body)}
-          status={d.data.status}
+          href={`${base}exhibits/${d.slug}/`}
           topics={d.data.topics}
-          levels={d.data.levels}
-          timeMinutes={d.data.time_minutes}
-          hasMathMode={d.data.has_math_mode}
+          lastUpdated={d.data.last_updated}
         />
       ))}
     </div>
   </section>
 
-  <section class="home-section" aria-label="New and updated">
-    <h2>New / updated</h2>
-    <ul class="updated">
-      {updated.map((d) => (
-        <li>
-          <a href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}>{d.data.title}</a>
-          <span class="updated__date">{d.data.last_updated}</span>
-        </li>
-      ))}
-    </ul>
+  {/* ───── Scroll-triggered entrance animations ───── */}
+  <script>
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const sections = document.querySelectorAll(".home-section");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.15 }
+      );
+      sections.forEach((s) => observer.observe(s));
+    }
+  </script>
+
+  {/* ───── For Instructors ───── */}
+  <section class="home-section instructor-entry" aria-label="For instructors">
+    <h2 class="home-section__heading">For instructors</h2>
+    <p class="home-section__lead">
+      Station cards, instructor notes, and curated playlists for classroom use.
+    </p>
+    <div class="instructor-links">
+      <a class="instructor-link" href={`${base}stations/`}>
+        <DemoGlyph name="notes" size={24} />
+        <span>Station Cards</span>
+      </a>
+      <a class="instructor-link" href={`${base}instructor/`}>
+        <DemoGlyph name="instructor" size={24} />
+        <span>Instructor Notes</span>
+      </a>
+      <a class="instructor-link" href={`${base}playlists/`}>
+        <DemoGlyph name="featured" size={24} />
+        <span>Playlists</span>
+      </a>
+    </div>
   </section>
+
 </Layout>
 
 <style>
-  .home-section {
-    margin-top: 18px;
-  }
-
-  .grid {
-    margin-top: 10px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--cp-space-6);
-  }
-
-  .updated {
-    margin: 10px 0 0;
-    padding-left: 18px;
-    color: var(--cp-muted);
-  }
-
-  .updated li {
-    margin: 6px 0;
+  /* ── Observatory Hero ─────────────────────── */
+  .obs-hero {
+    position: relative;
+    min-height: var(--cp-hero-min-height);
     display: flex;
-    gap: 10px;
-    align-items: baseline;
-    flex-wrap: wrap;
+    align-items: center;
+    overflow: hidden;
   }
 
-  .updated__date {
-    opacity: 0.8;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-      "Liberation Mono", "Courier New", monospace;
+  /* Radial vignette — darker edges, teal/violet nebula glow at center */
+  .obs-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        ellipse 80% 60% at 50% 50%,
+        color-mix(in srgb, var(--cp-accent) 4%, transparent) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 60% 80% at 30% 70%,
+        color-mix(in srgb, var(--cp-violet) 3%, transparent) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 100% 100% at 50% 50%,
+        transparent 40%,
+        color-mix(in srgb, var(--cp-bg0) 40%, transparent) 100%
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .obs-hero__content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--cp-space-3);
+    max-width: 36rem;
+  }
+
+  .obs-hero__title {
+    margin: 0;
+    font-size: var(--cp-text-hero);
+    font-weight: var(--cp-font-bold);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--cp-title-strong);
+    text-shadow:
+      0 0 60px color-mix(in srgb, var(--cp-accent) 15%, transparent),
+      0 0 120px color-mix(in srgb, var(--cp-accent) 8%, transparent);
+  }
+
+  .obs-hero__tagline {
+    margin: 0;
+    font-size: var(--cp-text-lg);
+    color: var(--cp-text2);
+    letter-spacing: 0.01em;
+  }
+
+  .obs-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-3);
+    margin-top: var(--cp-space-2);
+  }
+
+  @media (max-width: 767px) {
+    .obs-hero {
+      min-height: 40vh;
+    }
+    .obs-hero__title {
+      font-size: var(--cp-text-3xl);
+    }
+  }
+
+  /* ── Sections ─────────────────────────────── */
+  .home-section {
+    margin-top: var(--cp-space-7);
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.5s var(--cp-ease-out),
+      transform 0.5s var(--cp-ease-out);
+  }
+
+  .home-section.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-section {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+
+  .home-section__heading {
+    margin: 0 0 var(--cp-space-2);
+  }
+
+  .home-section__lead {
+    margin: 0 0 var(--cp-space-5);
+    color: var(--cp-text2);
+    max-width: 60ch;
+  }
+
+  /* ── Featured Grid ────────────────────────── */
+  .featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--cp-space-5);
+  }
+
+  .featured-card {
+    position: relative;
+    overflow: clip;
+    animation: cp-slide-up 0.5s var(--cp-ease-out) both;
+    animation-delay: calc(var(--card-i, 0) * 0.1s + 0.2s);
+    transition:
+      border-color var(--cp-transition-fast) var(--cp-ease-out),
+      box-shadow var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  /* Accent stripe along top edge */
+  .featured-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--cp-accent) 60%, transparent),
+      color-mix(in srgb, var(--cp-violet) 40%, transparent)
+    );
+    opacity: 0.5;
+    transition: opacity var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .featured-card:hover::before {
+    opacity: 1;
+  }
+
+  .featured-card:hover {
+    border-color: color-mix(in srgb, var(--cp-accent) 40%, transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--cp-accent) 8%, transparent);
+  }
+
+  .featured-card__link {
+    display: block;
+    padding: var(--cp-space-5);
+    text-decoration: none;
+  }
+
+  .featured-card__link:hover {
+    background: color-mix(in srgb, var(--cp-text) 3%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .featured-card {
+      animation: none;
+    }
+  }
+
+  .featured-card__number {
+    position: absolute;
+    top: var(--cp-space-3);
+    right: var(--cp-space-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--cp-accent) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--cp-accent) 30%, transparent);
+    color: var(--cp-accent);
+    font-family: var(--cp-font-display);
+    font-size: var(--cp-text-sm);
+    font-weight: var(--cp-font-semibold);
+  }
+
+  .featured-card__glyph {
+    color: var(--cp-muted);
+    margin-bottom: var(--cp-space-3);
+    filter: drop-shadow(0 0 12px color-mix(in srgb, var(--cp-accent) 15%, transparent));
+    transition: color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .featured-card:hover .featured-card__glyph {
+    color: var(--cp-accent);
+  }
+
+  .featured-card__title {
+    margin: 0;
+    font-size: var(--cp-text-xl);
+    color: var(--cp-title);
+  }
+
+  .featured-card:hover .featured-card__title {
+    color: var(--cp-title-strong);
+  }
+
+  .featured-card__desc {
+    margin: var(--cp-space-2) 0 0;
+    color: var(--cp-text2);
+    font-size: var(--cp-text-sm);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ── Recent Scroll ────────────────────────── */
+  .recent-scroll {
+    display: flex;
+    gap: var(--cp-space-4);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--cp-space-2);
+  }
+
+  .recent-scroll > :global(*) {
+    scroll-snap-align: start;
+  }
+
+  /* Hide scrollbar on webkit / firefox */
+  .recent-scroll::-webkit-scrollbar {
+    height: 4px;
+  }
+  .recent-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .recent-scroll::-webkit-scrollbar-thumb {
+    background: var(--cp-border);
+    border-radius: 2px;
+  }
+
+  /* ── Instructor Entry ─────────────────────── */
+  .instructor-entry {
+    padding: var(--cp-space-5);
+    border: 1px solid var(--cp-border-subtle);
+    border-radius: var(--cp-r-3);
+    background: color-mix(in srgb, var(--cp-bg1) 50%, transparent);
+  }
+
+  .instructor-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-4);
+  }
+
+  .instructor-link {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-2);
+    padding: var(--cp-space-3) var(--cp-space-4);
+    border-radius: var(--cp-r-2);
+    border: 1px solid var(--cp-border);
+    background: color-mix(in srgb, var(--cp-bg2) 50%, transparent);
+    color: var(--cp-text2);
+    text-decoration: none;
+    font-weight: var(--cp-font-medium);
+    transition:
+      border-color var(--cp-transition-fast) var(--cp-ease-out),
+      color var(--cp-transition-fast) var(--cp-ease-out),
+      background var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .instructor-link:hover {
+    border-color: var(--cp-accent);
+    color: var(--cp-text);
+    background: color-mix(in srgb, var(--cp-accent) 6%, transparent);
   }
 </style>

@@ -1,0 +1,150 @@
+---
+/**
+ * Journey step for playlist visualization.
+ * Vertical layout: numbered circle + connector line + content.
+ * Required demos get solid connector, optional get dashed.
+ */
+import DemoGlyph from "./DemoGlyph.astro";
+import TagPill from "./TagPill.astro";
+import { pickDemoGlyph } from "../lib/demoGlyphs";
+
+interface Props {
+  step: number;
+  title: string;
+  slug: string;
+  href: string;
+  topics: string[];
+  timeMinutes: number;
+  required: boolean;
+  note?: string;
+  isLast: boolean;
+}
+
+const { step, title, slug, href, topics, timeMinutes, required, note, isLast } = Astro.props;
+const glyph = pickDemoGlyph(topics, slug, title);
+const timeLabel = timeMinutes <= 10 ? `${timeMinutes} min` : `${timeMinutes} min`;
+---
+
+<div class:list={["journey-step", { "journey-step--last": isLast }]}>
+  <div class="journey-step__rail">
+    <span class="journey-step__number">{step}</span>
+    {!isLast && (
+      <div class:list={[
+        "journey-step__connector",
+        { "journey-step__connector--dashed": !required }
+      ]} />
+    )}
+  </div>
+  <a class="journey-step__card cp-card" href={href}>
+    <DemoGlyph name={glyph} size={32} class="journey-step__glyph" />
+    <div class="journey-step__body">
+      <h3 class="journey-step__title">{title}</h3>
+      <div class="journey-step__meta">
+        <TagPill label={required ? "Required" : "Optional"} tone={required ? "teal" : "default"} />
+        <span class="journey-step__time">{timeLabel}</span>
+      </div>
+      {note && <p class="journey-step__note">{note}</p>}
+    </div>
+  </a>
+</div>
+
+<style>
+  .journey-step {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: var(--cp-space-3);
+    min-height: 80px;
+  }
+
+  .journey-step__rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .journey-step__number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--cp-accent) 15%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--cp-accent) 40%, transparent);
+    color: var(--cp-accent);
+    font-family: var(--cp-font-display);
+    font-size: var(--cp-text-sm);
+    font-weight: var(--cp-font-semibold);
+    flex-shrink: 0;
+  }
+
+  .journey-step__connector {
+    flex: 1;
+    width: 2px;
+    background: color-mix(in srgb, var(--cp-accent) 25%, transparent);
+    margin-top: var(--cp-space-2);
+    min-height: 20px;
+  }
+
+  .journey-step__connector--dashed {
+    background: none;
+    border-left: 2px dashed color-mix(in srgb, var(--cp-muted) 30%, transparent);
+  }
+
+  .journey-step__card {
+    display: flex;
+    gap: var(--cp-space-3);
+    padding: var(--cp-space-4);
+    text-decoration: none;
+    align-items: flex-start;
+    margin-bottom: var(--cp-space-3);
+  }
+
+  .journey-step__card:hover {
+    background: color-mix(in srgb, var(--cp-text) 3%, transparent);
+  }
+
+  .journey-step__glyph {
+    color: var(--cp-muted);
+    flex-shrink: 0;
+    transition: color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .journey-step__card:hover .journey-step__glyph {
+    color: var(--cp-accent);
+  }
+
+  .journey-step__body {
+    display: grid;
+    gap: var(--cp-space-1);
+  }
+
+  .journey-step__title {
+    margin: 0;
+    font-size: var(--cp-text-lg);
+    color: var(--cp-title);
+  }
+
+  .journey-step__card:hover .journey-step__title {
+    color: var(--cp-title-strong);
+  }
+
+  .journey-step__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-2);
+  }
+
+  .journey-step__time {
+    font-family: var(--cp-font-mono);
+    font-size: 0.75rem;
+    color: var(--cp-muted);
+  }
+
+  .journey-step__note {
+    margin: 0;
+    font-size: var(--cp-text-sm);
+    color: var(--cp-text2);
+    font-style: italic;
+  }
+</style>

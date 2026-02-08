@@ -1,63 +1,207 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import TagPill from "../../components/TagPill.astro";
 
 const playlists = await getCollection("playlists");
+const base = import.meta.env.BASE_URL;
+const withBase = (path: string) => {
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedBase}${normalizedPath}`;
+};
 ---
 
 <Layout title="Playlists — Cosmic Playground">
-  <h1>Playlists</h1>
-  <p class="lede">Curated sequences you can assign or work through in order.</p>
+  <Breadcrumb
+    crumbs={[{ label: "Playlists" }]}
+    withBase={withBase}
+  />
 
-  <div class="grid" aria-label="Playlists">
-    {playlists.map((p) => (
-      <a class="card" href={`${import.meta.env.BASE_URL}playlists/${p.slug}/`}>
-        <h2>{p.data.title}</h2>
-        <p class="meta">{p.data.audience} • ~{p.data.estimated_minutes} min</p>
-        <p class="desc">{p.data.overview}</p>
-      </a>
-    ))}
+  <section class="playlist-hero cp-hero">
+    <h1>Playlists</h1>
+    <p class="playlist-hero__lede">
+      Curated sequences you can assign or work through in order.
+    </p>
+  </section>
+
+  <div class="playlist-grid" aria-label="Playlists">
+    {playlists.map((p) => {
+      const requiredCount = p.data.demos.filter((d) => d.required).length;
+      const optionalCount = p.data.demos.length - requiredCount;
+      return (
+        <a class="playlist-card cp-card" href={withBase(`playlists/${p.slug}/`)}>
+          <div class="playlist-card__header">
+            <h2 class="playlist-card__title">{p.data.title}</h2>
+            <TagPill label={p.data.audience} tone="blue" />
+          </div>
+
+          <p class="playlist-card__desc">{p.data.overview}</p>
+
+          <div class="playlist-card__stats">
+            <span class="playlist-card__stat">
+              <span class="playlist-card__stat-value">{p.data.demos.length}</span>
+              <span class="playlist-card__stat-unit">demos</span>
+            </span>
+            <span class="playlist-card__stat">
+              <span class="playlist-card__stat-value">~{p.data.estimated_minutes}</span>
+              <span class="playlist-card__stat-unit">min</span>
+            </span>
+            <span class="playlist-card__stat">
+              <span class="playlist-card__stat-value">{requiredCount}</span>
+              <span class="playlist-card__stat-unit">required</span>
+            </span>
+            {optionalCount > 0 && (
+              <span class="playlist-card__stat">
+                <span class="playlist-card__stat-value">{optionalCount}</span>
+                <span class="playlist-card__stat-unit">optional</span>
+              </span>
+            )}
+          </div>
+
+          <div class="playlist-card__journey-preview" aria-hidden="true">
+            {p.data.demos.map((d, i) => (
+              <>
+                <span
+                  class:list={[
+                    "journey-dot",
+                    { "journey-dot--required": d.required }
+                  ]}
+                />
+                {i < p.data.demos.length - 1 && (
+                  <span
+                    class:list={[
+                      "journey-line",
+                      { "journey-line--dashed": !p.data.demos[i + 1]?.required }
+                    ]}
+                  />
+                )}
+              </>
+            ))}
+          </div>
+        </a>
+      );
+    })}
   </div>
 </Layout>
 
 <style>
-  .lede {
-    margin: 6px 0 14px;
+  .playlist-hero {
+    margin-bottom: var(--cp-space-5);
+  }
+
+  .playlist-hero__lede {
+    margin: 6px 0 0;
     color: var(--cp-muted);
     max-width: 72ch;
   }
 
-  .grid {
+  .playlist-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--cp-space-5);
   }
 
-  .card {
-    display: block;
-    padding: 14px;
-    border-radius: var(--cp-r-3);
-    border: 1px solid var(--cp-border);
-    background: var(--cp-bg1);
+  .playlist-card {
+    display: grid;
+    gap: var(--cp-space-3);
+    padding: var(--cp-space-5);
     text-decoration: none;
+    transition:
+      background var(--cp-transition-fast) var(--cp-ease-out),
+      border-color var(--cp-transition-fast) var(--cp-ease-out);
   }
 
-  .card:hover {
-    background: var(--cp-bg2);
+  .playlist-card:hover {
+    background: color-mix(in srgb, var(--cp-text) 3%, transparent);
+    border-color: var(--cp-accent);
   }
 
-  h2 {
+  .playlist-card__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--cp-space-2);
+  }
+
+  .playlist-card__title {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: var(--cp-text-xl);
+    color: var(--cp-title);
   }
 
-  .meta {
-    margin: 8px 0 0;
-    color: var(--cp-muted);
+  .playlist-card:hover .playlist-card__title {
+    color: var(--cp-title-strong);
   }
 
-  .desc {
-    margin: 10px 0 0;
-    color: var(--cp-text);
+  .playlist-card__desc {
+    margin: 0;
+    color: var(--cp-text2);
+    font-size: var(--cp-text-sm);
+    line-height: 1.5;
+  }
+
+  .playlist-card__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-3);
+  }
+
+  .playlist-card__stat {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+
+  .playlist-card__stat-value {
+    font-family: var(--cp-font-mono);
+    font-weight: var(--cp-font-semibold);
+    color: var(--cp-accent-amber);
+  }
+
+  .playlist-card__stat-unit {
+    font-size: var(--cp-text-sm);
+    color: var(--cp-accent-ice);
+  }
+
+  /* Mini journey preview — connected dots */
+  .playlist-card__journey-preview {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding-top: var(--cp-space-2);
+    border-top: 1px solid var(--cp-border-subtle);
+  }
+
+  .journey-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--cp-muted) 30%, transparent);
+    border: 1.5px solid var(--cp-muted);
+  }
+
+  .journey-dot--required {
+    background: color-mix(in srgb, var(--cp-accent) 25%, transparent);
+    border-color: var(--cp-accent);
+  }
+
+  .playlist-card:hover .journey-dot--required {
+    box-shadow: 0 0 6px color-mix(in srgb, var(--cp-accent) 40%, transparent);
+  }
+
+  .journey-line {
+    flex: 1;
+    height: 2px;
+    min-width: 12px;
+    background: color-mix(in srgb, var(--cp-accent) 30%, transparent);
+  }
+
+  .journey-line--dashed {
+    background: none;
+    border-top: 2px dashed color-mix(in srgb, var(--cp-muted) 30%, transparent);
+    height: 0;
   }
 </style>

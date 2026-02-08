@@ -1,0 +1,148 @@
+---
+/**
+ * Mobile hamburger navigation using <details> for zero-JS functionality.
+ * Enhanced with a small script for Escape key + ARIA handling.
+ *
+ * Visible only below 768px (--cp-bp-md). On desktop, the regular
+ * inline nav in Layout.astro is shown instead.
+ */
+import { Menu, X } from "@lucide/astro";
+
+interface Props {
+  withBase: (path: string) => string;
+  isActive: (href: string) => boolean;
+}
+
+const { withBase, isActive } = Astro.props;
+
+const links = [
+  { href: "explore/", label: "Explore" },
+  { href: "playlists/", label: "Playlists" },
+  { href: "for-instructors/", label: "For Instructors" },
+  { href: "about/", label: "About" },
+];
+---
+
+<details class="mobile-nav" id="mobile-nav">
+  <summary class="mobile-nav__toggle" aria-label="Open navigation menu">
+    <Menu size={24} aria-hidden="true" class="mobile-nav__icon-open" />
+    <X size={24} aria-hidden="true" class="mobile-nav__icon-close" />
+  </summary>
+  <nav class="mobile-nav__panel" aria-label="Mobile navigation">
+    {links.map(({ href, label }) => (
+      <a
+        href={withBase(href)}
+        class="mobile-nav__link"
+        aria-current={isActive(`/${href}`) ? "page" : undefined}
+      >
+        {label}
+      </a>
+    ))}
+  </nav>
+</details>
+
+<script>
+  const nav = document.getElementById("mobile-nav") as HTMLDetailsElement | null;
+  if (nav) {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && nav.open) {
+        nav.open = false;
+        const toggle = nav.querySelector("summary");
+        toggle?.focus();
+      }
+    });
+    nav.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest(".mobile-nav__link")) {
+        nav.open = false;
+      }
+    });
+  }
+</script>
+
+<style>
+  .mobile-nav {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .mobile-nav {
+      display: block;
+    }
+  }
+
+  .mobile-nav__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--cp-r-1);
+    border: 1px solid var(--cp-border);
+    background: color-mix(in srgb, var(--cp-bg1) 80%, transparent);
+    cursor: pointer;
+    list-style: none;
+    color: var(--cp-text2);
+    transition: border-color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .mobile-nav__toggle::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile-nav__toggle:hover {
+    border-color: var(--cp-accent);
+    color: var(--cp-text);
+  }
+
+  .mobile-nav__icon-close {
+    display: none;
+  }
+
+  .mobile-nav[open] .mobile-nav__icon-open {
+    display: none;
+  }
+
+  .mobile-nav[open] .mobile-nav__icon-close {
+    display: block;
+  }
+
+  .mobile-nav__panel {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    z-index: var(--cp-z-dropdown);
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-1);
+    padding: var(--cp-space-3);
+    background: color-mix(in srgb, var(--cp-bg0) 92%, transparent);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--cp-border);
+  }
+
+  .mobile-nav__link {
+    display: block;
+    padding: var(--cp-space-3) var(--cp-space-4);
+    border-radius: var(--cp-r-1);
+    color: var(--cp-text2);
+    text-decoration: none;
+    font-weight: var(--cp-font-medium);
+    font-size: var(--cp-text-md);
+    transition:
+      background var(--cp-transition-fast) var(--cp-ease-out),
+      color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .mobile-nav__link:hover {
+    background: color-mix(in srgb, var(--cp-text) 6%, transparent);
+    color: var(--cp-link-hover);
+  }
+
+  .mobile-nav__link[aria-current="page"] {
+    color: var(--cp-accent);
+    background: color-mix(in srgb, var(--cp-accent) 8%, transparent);
+  }
+</style>

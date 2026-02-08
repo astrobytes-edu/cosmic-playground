@@ -1,0 +1,67 @@
+---
+/**
+ * Styled reference card for the evidence base.
+ * Shows author/year as header, key finding as pull quote,
+ * and connection to Cosmic Playground.
+ */
+
+interface Props {
+  authors: string;
+  year: string;
+  finding: string;
+  connection: string;
+}
+
+const { authors, year, finding, connection } = Astro.props;
+---
+
+<div class="citation-card">
+  <div class="citation-card__header">
+    <span class="citation-card__authors">{authors}</span>
+    <span class="citation-card__year">{year}</span>
+  </div>
+  <blockquote class="citation-card__finding">{finding}</blockquote>
+  <p class="citation-card__connection">{connection}</p>
+</div>
+
+<style>
+  .citation-card {
+    padding: var(--cp-space-4);
+    border-radius: var(--cp-r-2);
+    border: 1px solid var(--cp-border-subtle);
+    background: color-mix(in srgb, var(--cp-bg1) 60%, transparent);
+  }
+
+  .citation-card__header {
+    display: flex;
+    align-items: baseline;
+    gap: var(--cp-space-2);
+    margin-bottom: var(--cp-space-3);
+  }
+
+  .citation-card__authors {
+    font-weight: var(--cp-font-semibold);
+    color: var(--cp-title);
+  }
+
+  .citation-card__year {
+    font-family: var(--cp-font-mono);
+    font-size: var(--cp-text-sm);
+    color: var(--cp-accent-amber);
+  }
+
+  .citation-card__finding {
+    margin: 0 0 var(--cp-space-3);
+    padding-left: var(--cp-space-4);
+    border-left: 2px solid color-mix(in srgb, var(--cp-accent) 40%, transparent);
+    color: var(--cp-text2);
+    font-style: italic;
+    line-height: var(--cp-leading-relaxed);
+  }
+
+  .citation-card__connection {
+    margin: 0;
+    font-size: var(--cp-text-sm);
+    color: var(--cp-muted);
+  }
+</style>

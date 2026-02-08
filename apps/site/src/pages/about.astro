@@ -1,5 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import StatBar from "../components/StatBar.astro";
+import CitationCard from "../components/CitationCard.astro";
+import PPEVisual from "../components/PPEVisual.astro";
 
 const withBase = (path: string) => {
   const base = import.meta.env.BASE_URL;
@@ -7,9 +10,59 @@ const withBase = (path: string) => {
   const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
   return `${normalizedBase}${normalizedPath}`;
 };
+
+const stats = [
+  { value: "14", unit: "interactive demos" },
+  { value: "3", unit: "modes per demo", label: "Station / Challenge / Export" },
+  { value: "0", unit: "logins required" },
+  { value: "8", unit: "topic areas" },
+];
+
+const citations = [
+  {
+    authors: "Freeman et al.",
+    year: "2014",
+    finding:
+      "Active learning reduces failure rates by 1.5\u00d7 and increases exam scores by 0.47 standard deviations compared to traditional lecturing.",
+    connection:
+      "Interactive simulations with structured inquiry are a core active learning strategy used throughout Cosmic Playground.",
+  },
+  {
+    authors: "Mazur",
+    year: "1997",
+    finding:
+      "Conceptual understanding improves when students commit to predictions before receiving feedback.",
+    connection:
+      "The foundation of our Predict phase \u2014 every demo begins with a written prediction prompt.",
+  },
+  {
+    authors: "Bardar et al.",
+    year: "2007",
+    finding:
+      "Targeted interactive instruction produces statistically significant gains in understanding of moon phases.",
+    connection:
+      "Moon Phases was our first demo, specifically targeting this persistent misconception.",
+  },
+  {
+    authors: "White & Gunstone",
+    year: "1992",
+    finding:
+      "The Predict\u2013Observe\u2013Explain framework structures conceptual change by surfacing and confronting misconceptions.",
+    connection:
+      "We adapt POE by replacing passive \u201cObserve\u201d with active \u201cPlay\u201d \u2014 students manipulate parameters and collect data.",
+  },
+  {
+    authors: "Zeilik et al.",
+    year: "1997",
+    finding:
+      "The Test of Astronomy Standards (TOAST) provides a validated instrument for measuring conceptual gains in introductory astronomy.",
+    connection:
+      "TOAST benchmarks will be used to validate Predict\u2013Play\u2013Explain effectiveness in future classroom studies.",
+  },
+];
 ---
 
-<Layout title="About — Cosmic Playground" hasMath={true}>
+<Layout title="About \u2014 Cosmic Playground" hasMath={true}>
   <section class="hero cp-hero">
     <h1>About Cosmic Playground</h1>
     <p class="hero__subtitle">Evidence-based interactive astronomy education</p>
@@ -19,13 +72,14 @@ const withBase = (path: string) => {
     </p>
   </section>
 
-  <section class="about-section tldr" aria-label="At a Glance">
+  {/* ───── At a Glance (stat bar) ───── */}
+  <section class="about-section" aria-label="At a Glance">
     <h2>At a Glance</h2>
+    <StatBar stats={stats} />
     <div class="cp-prose">
       <p>
-        14 browser-based astronomy demos. No login, no install. Each one ships
-        with <strong>Station Mode</strong> (structured data collection),
-        <strong>Challenge Mode</strong> (self-assessment), and
+        No login, no install. Each demo ships with <strong>Station Mode</strong> (structured
+        data collection), <strong>Challenge Mode</strong> (self-assessment), and
         <strong>Export</strong> (copy your table into a lab doc).
       </p>
       <table class="design-table">
@@ -67,40 +121,21 @@ const withBase = (path: string) => {
     </div>
   </section>
 
-  <section class="about-section" aria-label="What is Cosmic Playground?">
-    <h2>What is Cosmic Playground?</h2>
-    <div class="cp-prose">
-      <p>
-        Cosmic Playground is a suite of <strong>14 interactive astronomy demos</strong>
-        covering topics from moon phases and retrograde motion to equations of state and
-        Kepler's laws. Each demo is a self-contained browser instrument — no login, no
-        installation, no plugins. The entire site is a static "interactive museum" that
-        runs on any device with a modern browser.
-      </p>
-      <p>
-        Every demo ships with a <strong>Station Mode</strong> for structured data collection,
-        a <strong>Challenge Mode</strong> for formative self-assessment, and an
-        <strong>Export</strong> button for copying data tables into lab documents. The goal
-        is not just visualization but <em>scaffolded inquiry</em>: students collect data,
-        identify patterns, and make evidence-based claims.
-      </p>
-    </div>
-  </section>
-
+  {/* ───── Predict–Play–Explain (visual) ───── */}
   <section class="about-section" aria-label="The Predict-Play-Explain Framework">
-    <h2>The Predict–Play–Explain Framework</h2>
+    <h2>The Predict\u2013Play\u2013Explain Framework</h2>
     <div class="cp-prose">
       <p>
-        Our pedagogical scaffold adapts the classic <strong>Predict–Observe–Explain</strong>
+        Our pedagogical scaffold adapts the classic <strong>Predict\u2013Observe\u2013Explain</strong>
         (POE) framework of White &amp; Gunstone (1992), with one key modification: we replace
         passive "Observe" with active <strong>"Play."</strong> Students don't just watch a
         simulation — they manipulate parameters, collect data, and test their own predictions.
       </p>
-      <ul class="cadence-pills" aria-label="Three phases">
-        <li><strong>Predict</strong> — Before touching the demo, write a one-sentence prediction. Committing to a prediction activates prior knowledge and creates a "need to know."</li>
-        <li><strong>Play</strong> — Interact with the demo: drag sliders, change parameters, record data in Station Mode. Active manipulation replaces passive observation.</li>
-        <li><strong>Explain</strong> — After collecting evidence, write a claim supported by at least one number and one sanity check. The artifact is the student's own data table and reasoning.</li>
-      </ul>
+    </div>
+    <div class="ppe-container">
+      <PPEVisual />
+    </div>
+    <div class="cp-prose">
       <p>
         This three-phase cycle runs in 6–12 minutes per station, making it suitable for
         lecture warm-ups, lab activities, and multi-station rotations.
@@ -108,87 +143,76 @@ const withBase = (path: string) => {
     </div>
   </section>
 
+  {/* ───── Design Principles (collapsible) ───── */}
   <section class="about-section" aria-label="Design Principles">
-    <h2>Design Principles</h2>
-    <div class="cp-prose">
-      <dl class="principles">
-        <dt>Cognitive Load Theory</dt>
-        <dd>
-          Following Sweller (1988), each demo minimizes extraneous load by presenting
-          one governing relationship at a time. Controls are limited to the essential
-          parameters; advanced options are hidden behind progressive disclosure.
-        </dd>
-        <dt>Multimedia Learning</dt>
-        <dd>
-          Consistent with Mayer (2001), text and visuals are spatially and temporally
-          integrated. Readouts update in real time next to the visual they describe.
-          Decorative elements are minimized — every visual element encodes data.
-        </dd>
-        <dt>PhET-Inspired Interactivity</dt>
-        <dd>
-          Inspired by the PhET Interactive Simulations project (Wieman et al., 2008),
-          demos are designed for <em>productive exploration</em>: students can discover
-          relationships by dragging sliders, not by reading instructions. Immediate,
-          continuous feedback makes cause-and-effect relationships visible.
-        </dd>
-        <dt>Station Mode as Scaffolded Data Collection</dt>
-        <dd>
-          Every demo includes a Station Mode that converts free exploration into
-          structured data collection. Students add rows to a live table, then export the
-          data for use in lab reports. This bridges the gap between "playing with a toy"
-          and "doing science."
-        </dd>
-      </dl>
-    </div>
+    <details class="collapsible">
+      <summary class="collapsible__trigger">
+        <h2 class="collapsible__heading">Design Principles</h2>
+      </summary>
+      <div class="collapsible__body cp-prose">
+        <dl class="principles">
+          <dt>Cognitive Load Theory</dt>
+          <dd>
+            Following Sweller (1988), each demo minimizes extraneous load by presenting
+            one governing relationship at a time. Controls are limited to the essential
+            parameters; advanced options are hidden behind progressive disclosure.
+          </dd>
+          <dt>Multimedia Learning</dt>
+          <dd>
+            Consistent with Mayer (2001), text and visuals are spatially and temporally
+            integrated. Readouts update in real time next to the visual they describe.
+            Decorative elements are minimized — every visual element encodes data.
+          </dd>
+          <dt>PhET-Inspired Interactivity</dt>
+          <dd>
+            Inspired by the PhET Interactive Simulations project (Wieman et al., 2008),
+            demos are designed for <em>productive exploration</em>: students can discover
+            relationships by dragging sliders, not by reading instructions. Immediate,
+            continuous feedback makes cause-and-effect relationships visible.
+          </dd>
+          <dt>Station Mode as Scaffolded Data Collection</dt>
+          <dd>
+            Every demo includes a Station Mode that converts free exploration into
+            structured data collection. Students add rows to a live table, then export the
+            data for use in lab reports. This bridges the gap between "playing with a toy"
+            and "doing science."
+          </dd>
+        </dl>
+      </div>
+    </details>
   </section>
 
+  {/* ───── Evidence Base (citation cards) ───── */}
   <section class="about-section" id="evidence" aria-label="Evidence Base">
-    <h2>Evidence Base</h2>
-    <div class="cp-prose">
-      <p>
-        The design of Cosmic Playground is informed by decades of physics and
-        astronomy education research:
-      </p>
-      <ul>
-        <li>
-          <strong>Freeman et al. (2014)</strong> — A meta-analysis of 225 studies in
-          <em>PNAS</em> found that active learning reduces failure rates by 1.5&times; and
-          increases exam scores by 0.47 standard deviations compared to traditional
-          lecturing. Interactive simulations with structured inquiry are a core active
-          learning strategy.
-        </li>
-        <li>
-          <strong>Mazur (1997)</strong> — <em>Peer Instruction</em> demonstrated that
-          conceptual understanding improves when students commit to predictions before
-          receiving feedback — the foundation of our Predict phase.
-        </li>
-        <li>
-          <strong>Bardar et al. (2007)</strong> — The Lunar Phases Concept Inventory
-          (LPCI) showed that targeted interactive instruction produces statistically
-          significant gains in understanding of moon phases, one of the most persistent
-          misconceptions in astronomy.
-        </li>
-        <li>
-          <strong>Zeilik et al. (1997)</strong> — The Test of Astronomy Standards
-          (TOAST) provides a validated instrument for measuring conceptual gains in
-          introductory astronomy, against which Predict–Play–Explain activities can be
-          benchmarked.
-        </li>
-        <li>
-          <strong>White &amp; Gunstone (1992)</strong> — The original Predict–Observe–Explain
-          framework, which we adapt by replacing passive observation with active
-          parameter manipulation and data collection.
-        </li>
-      </ul>
-    </div>
+    <details class="collapsible" open>
+      <summary class="collapsible__trigger">
+        <h2 class="collapsible__heading">Evidence Base</h2>
+      </summary>
+      <div class="collapsible__body">
+        <p class="evidence-intro">
+          The design of Cosmic Playground is informed by decades of physics and
+          astronomy education research:
+        </p>
+        <div class="citation-grid">
+          {citations.map((c) => (
+            <CitationCard
+              authors={c.authors}
+              year={c.year}
+              finding={c.finding}
+              connection={c.connection}
+            />
+          ))}
+        </div>
+      </div>
+    </details>
   </section>
 
+  {/* ───── For Instructors ───── */}
   <section class="about-section" aria-label="For Instructors">
     <h2>For Instructors</h2>
     <div class="cp-prose">
       <p>
-        Cosmic Playground is designed to integrate into your existing course with
-        minimal friction:
+        Cosmic Playground integrates into your existing course with minimal friction:
       </p>
       <ul>
         <li>
@@ -224,28 +248,11 @@ const withBase = (path: string) => {
     font-size: var(--cp-text-xl);
   }
 
-  .cadence-pills {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--cp-space-4);
+  .ppe-container {
+    margin: var(--cp-space-5) 0;
   }
 
-  .cadence-pills li {
-    padding: var(--cp-space-3) var(--cp-space-4);
-    border-radius: var(--cp-r-2);
-    border: 1px solid var(--cp-border-subtle);
-    background: var(--cp-chip-bg);
-  }
-
-  .tldr {
-    padding: var(--cp-space-4);
-    border-radius: var(--cp-r-2);
-    border: 1px solid var(--cp-border-subtle);
-    background: var(--cp-chip-bg);
-  }
-
+  /* ── Design table ───────────────────────── */
   .design-table {
     width: 100%;
     border-collapse: collapse;
@@ -270,6 +277,52 @@ const withBase = (path: string) => {
     white-space: nowrap;
   }
 
+  /* ── Collapsible sections ───────────────── */
+  .collapsible {
+    border: 1px solid var(--cp-border-subtle);
+    border-radius: var(--cp-r-2);
+    overflow: hidden;
+  }
+
+  .collapsible__trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-2);
+    padding: var(--cp-space-4);
+    cursor: pointer;
+    list-style: none;
+    transition: background var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .collapsible__trigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .collapsible__trigger::before {
+    content: "\25B6";
+    font-size: 0.7em;
+    color: var(--cp-muted);
+    transition: transform var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .collapsible[open] > .collapsible__trigger::before {
+    transform: rotate(90deg);
+  }
+
+  .collapsible__trigger:hover {
+    background: color-mix(in srgb, var(--cp-text) 4%, transparent);
+  }
+
+  .collapsible__heading {
+    margin: 0;
+    font-size: var(--cp-text-xl);
+  }
+
+  .collapsible__body {
+    padding: 0 var(--cp-space-4) var(--cp-space-4);
+  }
+
+  /* ── Principles ─────────────────────────── */
   .principles {
     margin: 0;
   }
@@ -286,5 +339,17 @@ const withBase = (path: string) => {
   .principles dd {
     margin: var(--cp-space-1) 0 0;
     color: var(--cp-muted);
+  }
+
+  /* ── Evidence / Citations ───────────────── */
+  .evidence-intro {
+    margin: 0 0 var(--cp-space-4);
+    color: var(--cp-text2);
+  }
+
+  .citation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--cp-space-4);
   }
 </style>

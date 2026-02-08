@@ -1,0 +1,61 @@
+/*
+ * CSS-only museum starfield — cosmic atmosphere for site chrome pages.
+ *
+ * Technique: layered radial-gradient micro-dots (1px "stars") and a
+ * subtle nebula wash on a ::before pseudo-element. Scoped to
+ * .cp-layer-museum so it never appears in paper/print contexts.
+ *
+ * Print safety: the print.css rule `body { background: #fff !important }`
+ * and `::before { display: none }` in @media print handle this.
+ * Reduced-motion: no animation — static dots only.
+ */
+
+.cp-layer-museum {
+  position: relative;
+}
+
+.cp-layer-museum::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    /* --- Nebula wash: teal + violet blend at very low opacity --- */
+    radial-gradient(
+      ellipse 120% 80% at 25% 15%,
+      rgba(47, 140, 141, var(--cp-museum-nebula-opacity)) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 100% 60% at 80% 70%,
+      rgba(109, 119, 148, var(--cp-museum-nebula-opacity)) 0%,
+      transparent 65%
+    ),
+    /* --- Star dots: 18 micro-dots scattered across viewport --- */
+    radial-gradient(1px 1px at  8%  12%, rgba(255, 255, 255, var(--cp-museum-star-opacity)) 50%, transparent 100%),
+    radial-gradient(1px 1px at 15%  35%, rgba(255, 255, 255, 0.18) 50%, transparent 100%),
+    radial-gradient(1px 1px at 23%  67%, rgba(255, 255, 255, var(--cp-museum-star-opacity)) 50%, transparent 100%),
+    radial-gradient(1px 1px at 32%   8%, rgba(255, 255, 255, 0.15) 50%, transparent 100%),
+    radial-gradient(1px 1px at 41%  52%, rgba(255, 255, 255, 0.20) 50%, transparent 100%),
+    radial-gradient(1px 1px at 48%  88%, rgba(255, 255, 255, var(--cp-museum-star-opacity)) 50%, transparent 100%),
+    radial-gradient(1px 1px at 55%  28%, rgba(255, 255, 255, 0.22) 50%, transparent 100%),
+    radial-gradient(1px 1px at 62%  73%, rgba(255, 255, 255, 0.17) 50%, transparent 100%),
+    radial-gradient(1px 1px at 68%  15%, rgba(255, 255, 255, var(--cp-museum-star-opacity)) 50%, transparent 100%),
+    radial-gradient(1px 1px at 74%  45%, rgba(255, 255, 255, 0.20) 50%, transparent 100%),
+    radial-gradient(1px 1px at 81%  62%, rgba(255, 255, 255, 0.14) 50%, transparent 100%),
+    radial-gradient(1px 1px at 87%   5%, rgba(255, 255, 255, var(--cp-museum-star-opacity)) 50%, transparent 100%),
+    radial-gradient(1px 1px at 92%  38%, rgba(255, 255, 255, 0.19) 50%, transparent 100%),
+    radial-gradient(1px 1px at  5%  82%, rgba(255, 255, 255, 0.16) 50%, transparent 100%),
+    radial-gradient(1px 1px at 37%  92%, rgba(255, 255, 255, 0.21) 50%, transparent 100%),
+    radial-gradient(1px 1px at 95%  78%, rgba(255, 255, 255, var(--cp-museum-star-opacity)) 50%, transparent 100%),
+    radial-gradient(1px 1px at 19%  48%, rgba(255, 255, 255, 0.13) 50%, transparent 100%);
+  background-color: var(--cp-bg0);
+  background-attachment: fixed;
+}
+
+@media print {
+  .cp-layer-museum::before {
+    display: none;
+  }
+}

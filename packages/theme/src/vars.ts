@@ -71,6 +71,21 @@ export const CSS_VARS = {
   readoutValueColor: "--cp-readout-value-color",
   readoutValueFont: "--cp-readout-value-font",
   readoutUnitColor: "--cp-readout-unit-color",
+
+  // Display font
+  fontDisplay: "--cp-font-display",
+
+  // Museum atmosphere
+  museumNebulaOpacity: "--cp-museum-nebula-opacity",
+  museumStarOpacity: "--cp-museum-star-opacity",
+
+  // PPE phase colors
+  phasePredict: "--cp-phase-predict",
+  phasePlay: "--cp-phase-play",
+  phaseExplain: "--cp-phase-explain",
+
+  // Hero
+  heroMinHeight: "--cp-hero-min-height",
 } as const;
 
 export type CssVarKey = keyof typeof CSS_VARS;
