@@ -1440,7 +1440,15 @@ function runTour(): void {
     (tooltip.querySelector(".tour-next") as HTMLElement)?.focus();
   }
 
+  function onEscapeTour(e: KeyboardEvent): void {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      cleanup();
+    }
+  }
+
   function cleanup(): void {
+    document.removeEventListener("keydown", onEscapeTour);
     if (prevHighlight) prevHighlight.classList.remove("tour-highlight");
     overlay.remove();
     tooltip.remove();
@@ -1451,6 +1459,7 @@ function runTour(): void {
     }
   }
 
+  document.addEventListener("keydown", onEscapeTour);
   overlay.addEventListener("click", cleanup);
   show();
 }
