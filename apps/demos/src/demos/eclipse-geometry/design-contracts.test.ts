@@ -157,4 +157,57 @@ describe("Eclipse Geometry -- Design System Contracts", () => {
       expect(html).toContain('data-kind="model"');
     });
   });
+
+  describe("Component migration: cp-chip + cp-button + cp-utility-toolbar", () => {
+    it("no cp-action classes remain in HTML", () => {
+      expect(html).not.toContain("cp-action");
+    });
+
+    it("phase buttons use cp-chip inside cp-chip-group", () => {
+      expect(html).toMatch(/class="cp-chip-group[^"]*"/);
+      expect(html).toMatch(/id="setNewMoon"[^>]*class="cp-chip"/);
+      expect(html).toMatch(/id="setFullMoon"[^>]*class="cp-chip"/);
+    });
+
+    it("time control buttons use cp-button cp-button--ghost", () => {
+      expect(html).toMatch(/id="animateMonth"[^>]*class="cp-button cp-button--ghost"/);
+      expect(html).toMatch(/id="animateYear"[^>]*class="cp-button cp-button--ghost"/);
+    });
+
+    it("simulation control buttons use cp-button cp-button--ghost", () => {
+      expect(html).toMatch(/id="runSimulation"[^>]*class="cp-button cp-button--ghost"/);
+      expect(html).toMatch(/id="stopSimulation"[^>]*class="cp-button cp-button--ghost"/);
+    });
+
+    it("utility toolbar exists with correct role and aria-label", () => {
+      expect(html).toMatch(/class="cp-utility-toolbar"[^>]*role="toolbar"/);
+      expect(html).toMatch(/aria-label="Demo actions"/);
+    });
+
+    it("station, challenge, help, copy buttons use cp-utility-btn", () => {
+      expect(html).toMatch(/id="stationMode"[^>]*class="cp-utility-btn"/);
+      expect(html).toMatch(/id="challengeMode"[^>]*class="cp-utility-btn"/);
+      expect(html).toMatch(/id="help"[^>]*class="cp-utility-btn"/);
+      expect(html).toMatch(/id="copyResults"[^>]*class="cp-utility-btn"/);
+    });
+
+    it("popover nav contains links for exhibit, station card, and instructor notes", () => {
+      const popover = html.match(/class="cp-popover"[\s\S]*?<\/div>/);
+      expect(popover).not.toBeNull();
+      expect(popover![0]).toContain("exhibits/eclipse-geometry/");
+      expect(popover![0]).toContain("stations/eclipse-geometry/");
+      expect(popover![0]).toContain("instructor/eclipse-geometry/");
+    });
+
+    it("main.ts imports and calls initPopovers", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("initPopovers");
+      expect(mainTs).toMatch(/initPopovers\s*\(/);
+    });
+
+    it("no old cp-actions wrapper remains", () => {
+      expect(html).not.toContain('class="cp-actions"');
+    });
+  });
 });

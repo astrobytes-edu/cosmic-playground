@@ -1,5 +1,5 @@
 import { AstroConstants, EclipseGeometryModel } from "@cosmic/physics";
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import {
   clamp,
@@ -1263,3 +1263,6 @@ render();
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
 if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 initMath(document);
+
+const demoRoot = document.getElementById("cp-demo");
+if (demoRoot) initPopovers(demoRoot);

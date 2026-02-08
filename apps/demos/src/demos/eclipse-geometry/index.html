@@ -18,9 +18,9 @@
             Eclipses require two things at once: (1) the right phase (New/Full), and (2) the Moon near a node (small $|\beta|$).
           </div>
 
-          <div class="button-row" role="group" aria-label="Phase buttons">
-            <button id="setNewMoon" class="cp-action cp-action--ghost" type="button">New Moon</button>
-            <button id="setFullMoon" class="cp-action cp-action--ghost" type="button">Full Moon</button>
+          <div class="cp-chip-group button-row" role="group" aria-label="Phase buttons">
+            <button id="setNewMoon" class="cp-chip" type="button">New Moon</button>
+            <button id="setFullMoon" class="cp-chip" type="button">Full Moon</button>
           </div>
 
           <label class="control">
@@ -74,8 +74,8 @@
           <div class="cp-callout" data-kind="activity">
             <strong>Time controls</strong>
             <div class="button-row" role="group" aria-label="Time controls">
-              <button id="animateMonth" class="cp-action cp-action--ghost" type="button">Animate month</button>
-              <button id="animateYear" class="cp-action cp-action--ghost" type="button">Animate 1 year</button>
+              <button id="animateMonth" class="cp-button cp-button--ghost" type="button">Animate month</button>
+              <button id="animateYear" class="cp-button cp-button--ghost" type="button">Animate 1 year</button>
             </div>
             <p id="motionNote" class="cp-muted" hidden></p>
           </div>
@@ -109,25 +109,58 @@
             </label>
 
             <div class="button-row" role="group" aria-label="Simulation controls">
-              <button id="runSimulation" class="cp-action cp-action--ghost" type="button">Run simulation</button>
-              <button id="stopSimulation" class="cp-action cp-action--ghost" type="button">Stop</button>
+              <button id="runSimulation" class="cp-button cp-button--ghost" type="button">Run simulation</button>
+              <button id="stopSimulation" class="cp-button cp-button--ghost" type="button">Stop</button>
             </div>
 
             <pre id="simOutput" class="cp-muted" hidden></pre>
           </div>
 
-          <button id="stationMode" class="cp-action" type="button">Station mode</button>
-          <button id="challengeMode" class="cp-action" type="button">Challenge mode</button>
-          <button id="help" class="cp-action" type="button">Help / shortcuts</button>
-
-          <button id="copyResults" class="cp-action" type="button">Copy results</button>
-          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
-
-          <div class="cp-actions">
-            <a class="cp-button" href="../../exhibits/eclipse-geometry/">Open exhibit</a>
-            <a class="cp-button cp-button--outline" href="../../stations/eclipse-geometry/">Station card</a>
-            <a class="cp-button cp-button--outline" href="../../instructor/eclipse-geometry/">Instructor notes</a>
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"></rect>
+                <line x1="7" y1="7" x2="13" y2="7"></line>
+                <line x1="7" y1="10" x2="13" y2="10"></line>
+                <line x1="7" y1="13" x2="10" y2="13"></line>
+              </svg>
+            </button>
+            <button id="challengeMode" class="cp-utility-btn" type="button" aria-label="Challenges" title="Challenges">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 2l2.2 4.5 5 .7-3.6 3.5.8 5L10 13.4 5.6 15.7l.8-5L2.8 7.2l5-.7z"/>
+              </svg>
+            </button>
+            <button id="help" class="cp-utility-btn" type="button" aria-label="Help and shortcuts" title="Help / keys">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"></circle>
+                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"></path>
+                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"></circle>
+              </svg>
+            </button>
+            <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"></circle>
+                  <circle cx="10" cy="10" r="1.5"></circle>
+                  <circle cx="16" cy="10" r="1.5"></circle>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/eclipse-geometry/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/eclipse-geometry/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/eclipse-geometry/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
           </div>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
       </aside>
 
