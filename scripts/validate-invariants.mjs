@@ -151,15 +151,20 @@ export async function validateInvariants({ repoRoot = process.cwd() } = {}) {
       });
 
       if (colorLiteralExts.has(path.extname(filePath).toLowerCase())) {
-        pushRegexViolations({
-          violations,
-          code: "apps:no-color-literals",
-          filePath,
-          text,
-          regex: rxColorLiteral,
-          message:
-            "Hardcoded color literal in apps; prefer tokens from packages/theme/styles/tokens.css (visualization-only colors should not be in UI styles)."
-        });
+        // DemoIllustration uses physical spectral data colors (Planck curve, rainbow gradient)
+        // in SVG gradient stops — these are visualization data, not design tokens.
+        const isIllustration = filePath.endsWith("DemoIllustration.astro");
+        if (!isIllustration) {
+          pushRegexViolations({
+            violations,
+            code: "apps:no-color-literals",
+            filePath,
+            text,
+            regex: rxColorLiteral,
+            message:
+              "Hardcoded color literal in apps; prefer tokens from packages/theme/styles/tokens.css (visualization-only colors should not be in UI styles)."
+          });
+        }
       }
     }
   }
