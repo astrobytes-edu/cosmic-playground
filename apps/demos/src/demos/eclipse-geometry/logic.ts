@@ -201,7 +201,7 @@ export function contextualMessage(
 
   // Near syzygy but too far from node
   if (nearSyzygy && !nearNode) {
-    return `Moon is ${formatNumber(absBetaDeg, 1)}\u00b0 above the ecliptic \u2014 too far from a node for an eclipse.`;
+    return `Moon is ${formatNumber(absBetaDeg, 1)}\u00b0 from the ecliptic \u2014 too far from a node for an eclipse.`;
   }
 
   // Near node but wrong phase
