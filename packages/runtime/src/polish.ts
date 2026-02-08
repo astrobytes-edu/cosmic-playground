@@ -170,7 +170,7 @@ export function initRipples(root: Root = document): void {
 
   const candidates = Array.from(
     demoRoot.querySelectorAll<HTMLElement>(
-      'button, a.cp-button, button.cp-button, .cp-action, .cp-accordion > summary'
+      'button, a.cp-button, button.cp-button, .cp-accordion > summary'
     )
   );
 
