@@ -1,0 +1,211 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const withBase = (path: string) => {
+  const base = import.meta.env.BASE_URL;
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedBase}${normalizedPath}`;
+};
+---
+
+<Layout title="About — Cosmic Playground" hasMath={true}>
+  <section class="hero cp-hero">
+    <h1>About Cosmic Playground</h1>
+    <p class="hero__subtitle">Evidence-based interactive astronomy education</p>
+    <p>
+      An open-source collection of browser-based astronomy instruments designed
+      for active learning in introductory and upper-division courses.
+    </p>
+  </section>
+
+  <section class="about-section" aria-label="What is Cosmic Playground?">
+    <h2>What is Cosmic Playground?</h2>
+    <div class="cp-prose">
+      <p>
+        Cosmic Playground is a suite of <strong>14 interactive astronomy demos</strong>
+        covering topics from moon phases and retrograde motion to equations of state and
+        Kepler's laws. Each demo is a self-contained browser instrument — no login, no
+        installation, no plugins. The entire site is a static "interactive museum" that
+        runs on any device with a modern browser.
+      </p>
+      <p>
+        Every demo ships with a <strong>Station Mode</strong> for structured data collection,
+        a <strong>Challenge Mode</strong> for formative self-assessment, and an
+        <strong>Export</strong> button for copying data tables into lab documents. The goal
+        is not just visualization but <em>scaffolded inquiry</em>: students collect data,
+        identify patterns, and make evidence-based claims.
+      </p>
+    </div>
+  </section>
+
+  <section class="about-section" aria-label="The Predict-Play-Explain Framework">
+    <h2>The Predict–Play–Explain Framework</h2>
+    <div class="cp-prose">
+      <p>
+        Our pedagogical scaffold adapts the classic <strong>Predict–Observe–Explain</strong>
+        (POE) framework of White &amp; Gunstone (1992), with one key modification: we replace
+        passive "Observe" with active <strong>"Play."</strong> Students don't just watch a
+        simulation — they manipulate parameters, collect data, and test their own predictions.
+      </p>
+      <ul class="cadence-pills" aria-label="Three phases">
+        <li><strong>Predict</strong> — Before touching the demo, write a one-sentence prediction. Committing to a prediction activates prior knowledge and creates a "need to know."</li>
+        <li><strong>Play</strong> — Interact with the demo: drag sliders, change parameters, record data in Station Mode. Active manipulation replaces passive observation.</li>
+        <li><strong>Explain</strong> — After collecting evidence, write a claim supported by at least one number and one sanity check. The artifact is the student's own data table and reasoning.</li>
+      </ul>
+      <p>
+        This three-phase cycle runs in 6–12 minutes per station, making it suitable for
+        lecture warm-ups, lab activities, and multi-station rotations.
+      </p>
+    </div>
+  </section>
+
+  <section class="about-section" aria-label="Design Principles">
+    <h2>Design Principles</h2>
+    <div class="cp-prose">
+      <dl class="principles">
+        <dt>Cognitive Load Theory</dt>
+        <dd>
+          Following Sweller (1988), each demo minimizes extraneous load by presenting
+          one governing relationship at a time. Controls are limited to the essential
+          parameters; advanced options are hidden behind progressive disclosure.
+        </dd>
+        <dt>Multimedia Learning</dt>
+        <dd>
+          Consistent with Mayer (2001), text and visuals are spatially and temporally
+          integrated. Readouts update in real time next to the visual they describe.
+          Decorative elements are minimized — every visual element encodes data.
+        </dd>
+        <dt>PhET-Inspired Interactivity</dt>
+        <dd>
+          Inspired by the PhET Interactive Simulations project (Wieman et al., 2008),
+          demos are designed for <em>productive exploration</em>: students can discover
+          relationships by dragging sliders, not by reading instructions. Immediate,
+          continuous feedback makes cause-and-effect relationships visible.
+        </dd>
+        <dt>Station Mode as Scaffolded Data Collection</dt>
+        <dd>
+          Every demo includes a Station Mode that converts free exploration into
+          structured data collection. Students add rows to a live table, then export the
+          data for use in lab reports. This bridges the gap between "playing with a toy"
+          and "doing science."
+        </dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="about-section" aria-label="Evidence Base">
+    <h2>Evidence Base</h2>
+    <div class="cp-prose">
+      <p>
+        The design of Cosmic Playground is informed by decades of physics and
+        astronomy education research:
+      </p>
+      <ul>
+        <li>
+          <strong>Freeman et al. (2014)</strong> — A meta-analysis of 225 studies in
+          <em>PNAS</em> found that active learning reduces failure rates by 1.5&times; and
+          increases exam scores by 0.47 standard deviations compared to traditional
+          lecturing. Interactive simulations with structured inquiry are a core active
+          learning strategy.
+        </li>
+        <li>
+          <strong>Mazur (1997)</strong> — <em>Peer Instruction</em> demonstrated that
+          conceptual understanding improves when students commit to predictions before
+          receiving feedback — the foundation of our Predict phase.
+        </li>
+        <li>
+          <strong>Bardar et al. (2007)</strong> — The Lunar Phases Concept Inventory
+          (LPCI) showed that targeted interactive instruction produces statistically
+          significant gains in understanding of moon phases, one of the most persistent
+          misconceptions in astronomy.
+        </li>
+        <li>
+          <strong>Zeilik et al. (1997)</strong> — The Test of Astronomy Standards
+          (TOAST) provides a validated instrument for measuring conceptual gains in
+          introductory astronomy, against which Predict–Play–Explain activities can be
+          benchmarked.
+        </li>
+        <li>
+          <strong>White &amp; Gunstone (1992)</strong> — The original Predict–Observe–Explain
+          framework, which we adapt by replacing passive observation with active
+          parameter manipulation and data collection.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="about-section" aria-label="For Instructors">
+    <h2>For Instructors</h2>
+    <div class="cp-prose">
+      <p>
+        Cosmic Playground is designed to integrate into your existing course with
+        minimal friction:
+      </p>
+      <ul>
+        <li>
+          <strong>Station cards</strong> are printable worksheets
+          (<a href={withBase("stations/moon-phases/")}>example</a>). Open any station
+          card and press <kbd>Cmd</kbd>+<kbd>P</kbd> (or <kbd>Ctrl</kbd>+<kbd>P</kbd>)
+          for a clean PDF with answer blanks and data tables.
+        </li>
+        <li>
+          <strong>Playlists</strong> bundle 3–5 demos into themed sequences with
+          estimated times (<a href={withBase("playlists/")}>browse playlists</a>).
+        </li>
+        <li>
+          All demos are <strong>free, open-source, and static</strong> — no accounts,
+          no server, no IT requests. Host on your own domain or link directly to ours.
+        </li>
+      </ul>
+      <p>
+        Questions or suggestions?
+        <a href="mailto:alrosen@sdsu.edu">alrosen@sdsu.edu</a>
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .about-section {
+    margin-top: var(--cp-space-6);
+  }
+
+  .about-section h2 {
+    margin: 0 0 var(--cp-space-3);
+    font-size: var(--cp-text-xl);
+  }
+
+  .cadence-pills {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-4);
+  }
+
+  .cadence-pills li {
+    padding: var(--cp-space-3) var(--cp-space-4);
+    border-radius: var(--cp-r-2);
+    border: 1px solid var(--cp-border-subtle);
+    background: var(--cp-chip-bg);
+  }
+
+  .principles {
+    margin: 0;
+  }
+
+  .principles dt {
+    font-weight: var(--cp-font-semibold);
+    margin-top: var(--cp-space-4);
+  }
+
+  .principles dt:first-child {
+    margin-top: 0;
+  }
+
+  .principles dd {
+    margin: var(--cp-space-1) 0 0;
+    color: var(--cp-muted);
+  }
+</style>

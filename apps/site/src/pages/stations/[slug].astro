@@ -26,7 +26,16 @@ const StationOverride =
 <Layout title={`${entry.data.title} — Station Card`} hasMath={true}>
   <article class="station">
     <header class="station__header">
-      <h1>{entry.data.title}</h1>
+      <div class="station__header-row">
+        <h1>{entry.data.title}</h1>
+        <button
+          class="cp-button cp-button--ghost cp-no-print"
+          onclick="window.print()"
+          aria-label="Print this station card as a worksheet"
+        >
+          Print worksheet
+        </button>
+      </div>
       <p class="meta">
         {entry.data.topics.join(" • ")} • {entry.data.levels.join(" • ")} •{" "}
         {entry.data.time_minutes} min
@@ -142,6 +151,14 @@ const StationOverride =
     border-radius: var(--cp-r-3);
     border: 1px solid var(--cp-border);
     background: var(--cp-bg1);
+  }
+
+  .station__header-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--cp-space-3);
+    flex-wrap: wrap;
   }
 
   .station__header h1 {
