@@ -159,6 +159,25 @@
   filter: drop-shadow(0 0 4px var(--cp-accent-rose));
 }
 
+.stage__ecliptic {
+  stroke: color-mix(in srgb, var(--cp-accent-amber) 50%, transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 8 4;
+}
+
+.stage__cel-equator {
+  fill: none;
+  stroke: color-mix(in srgb, var(--cp-accent-ice) 50%, transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.overlay-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
 /* -- Entry animations -------------------------------- */
 .cp-demo__controls {
   animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;

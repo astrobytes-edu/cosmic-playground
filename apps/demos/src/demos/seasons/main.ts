@@ -53,6 +53,9 @@ const arcticNEl = document.querySelector<SVGEllipseElement>("#arctic-n");
 const arcticSEl = document.querySelector<SVGEllipseElement>("#arctic-s");
 const globeAxisEl = document.querySelector<SVGLineElement>("#globe-axis");
 const globeMarkerEl = document.querySelector<SVGCircleElement>("#globe-marker");
+const latBandsGroupEl = document.querySelector<SVGGElement>("#latitude-bands-group");
+const globeEclipticEl = document.querySelector<SVGLineElement>("#globe-ecliptic");
+const globeEquatorEl = document.querySelector<SVGEllipseElement>("#globe-equator");
 
 if (
   !dayOfYearEl ||
@@ -88,7 +91,10 @@ if (
   !arcticNEl ||
   !arcticSEl ||
   !globeAxisEl ||
-  !globeMarkerEl
+  !globeMarkerEl ||
+  !latBandsGroupEl ||
+  !globeEclipticEl ||
+  !globeEquatorEl
 ) {
   throw new Error("Missing required DOM elements for seasons demo.");
 }
@@ -134,6 +140,9 @@ const arcticN = arcticNEl;
 const arcticS = arcticSEl;
 const globeAxis = globeAxisEl;
 const globeMarker = globeMarkerEl;
+const latBandsGroup = latBandsGroupEl;
+const globeEcliptic = globeEclipticEl;
+const globeEquator = globeEquatorEl;
 
 stationMode.disabled = false;
 challengeMode.disabled = true;
@@ -394,6 +403,14 @@ function renderGlobe(args: {
 
   const asBand = latitudeBandEllipse(-arcticLat, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
   setEllipse(arcticS, GLOBE_CX, asBand.cy, asBand.rx, asBand.ry);
+
+  // --- Celestial equator ---
+  // The celestial equator is the equator of a non-tilted sphere.
+  // On our tilted globe it appears as a great circle crossing the actual
+  // equator at the equinox points. Its projected ellipse has the same
+  // geometry as latitudeBandEllipse(0, tilt) but it sits at the globe centre.
+  const ceq = latitudeBandEllipse(0, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  setEllipse(globeEquator, GLOBE_CX, ceq.cy, ceq.rx, ceq.ry);
 
   // --- Globe axis ---
   const axis = globeAxisEndpoints(tilt, GLOBE_CX, GLOBE_CY, GLOBE_AXIS_LEN);
@@ -774,6 +791,32 @@ copyResults.addEventListener("click", () => {
       );
     });
 });
+
+// --- Overlay toggles ---
+const overlayTargets: Record<string, SVGElement[]> = {
+  "latitude-bands": [latBandsGroup],
+  "terminator": [terminator],
+  "ecliptic": [globeEcliptic],
+  "equator": [globeEquator],
+};
+
+const overlayButtons = document.querySelectorAll<HTMLButtonElement>("[data-overlay]");
+
+for (const btn of overlayButtons) {
+  btn.addEventListener("click", () => {
+    const key = btn.dataset.overlay;
+    if (!key) return;
+    const pressed = btn.getAttribute("aria-pressed") === "true";
+    const next = !pressed;
+    btn.setAttribute("aria-pressed", String(next));
+    const targets = overlayTargets[key];
+    if (targets) {
+      for (const el of targets) {
+        el.style.display = next ? "" : "none";
+      }
+    }
+  });
+}
 
 render();
 

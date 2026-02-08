@@ -70,6 +70,14 @@
             <span class="control__value"><span id="latitudeValue"></span></span>
           </label>
 
+          <fieldset class="cp-chip-group overlay-row" role="group" aria-label="Overlays">
+            <legend class="cp-muted">Overlays</legend>
+            <button class="cp-chip" type="button" aria-pressed="true" data-overlay="latitude-bands">Lat. Bands</button>
+            <button class="cp-chip" type="button" aria-pressed="true" data-overlay="terminator">Terminator</button>
+            <button class="cp-chip" type="button" aria-pressed="false" data-overlay="ecliptic">Ecliptic</button>
+            <button class="cp-chip" type="button" aria-pressed="false" data-overlay="equator">Cel. Equator</button>
+          </fieldset>
+
           <div class="animate-row">
             <button id="animateYear" class="cp-button cp-button--ghost" type="button">
               Animate year
@@ -177,11 +185,17 @@
               <!-- Night-side terminator (drawn first so latitude bands show through) -->
               <ellipse id="terminator" class="stage__terminator"/>
               <!-- Latitude bands -->
-              <ellipse id="equator-band" class="stage__lat-band stage__lat-band--equator"/>
-              <ellipse id="tropic-n" class="stage__lat-band stage__lat-band--tropic"/>
-              <ellipse id="tropic-s" class="stage__lat-band stage__lat-band--tropic"/>
-              <ellipse id="arctic-n" class="stage__lat-band stage__lat-band--arctic"/>
-              <ellipse id="arctic-s" class="stage__lat-band stage__lat-band--arctic"/>
+              <g id="latitude-bands-group">
+                <ellipse id="equator-band" class="stage__lat-band stage__lat-band--equator"/>
+                <ellipse id="tropic-n" class="stage__lat-band stage__lat-band--tropic"/>
+                <ellipse id="tropic-s" class="stage__lat-band stage__lat-band--tropic"/>
+                <ellipse id="arctic-n" class="stage__lat-band stage__lat-band--arctic"/>
+                <ellipse id="arctic-s" class="stage__lat-band stage__lat-band--arctic"/>
+              </g>
+              <!-- Ecliptic plane (horizontal line through globe center) -->
+              <line id="globe-ecliptic" class="stage__ecliptic" x1="-160" y1="0" x2="160" y2="0" style="display:none"/>
+              <!-- Celestial equator (tilted with axis) -->
+              <ellipse id="globe-equator" class="stage__cel-equator" style="display:none"/>
             </g>
             <!-- Axis line (extends beyond globe) -->
             <line id="globe-axis" class="stage__globe-axis"/>
