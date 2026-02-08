@@ -16,6 +16,7 @@ Each review documents:
 | Demo | Status | Date |
 |------|--------|------|
 | [retrograde-motion](retrograde-motion.md) | Complete | 2026-02-07 |
+| [component-consolidation](2026-02-07-component-consolidation.md) | Complete | 2026-02-07 |
 
 ## Template
 
