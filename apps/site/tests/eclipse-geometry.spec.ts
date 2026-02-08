@@ -367,8 +367,8 @@ test.describe("Eclipse Geometry -- E2E", () => {
       .not.toBe(initialMoonSlider);
 
     // Let animation run a bit more to accumulate enough node drift
-    // (Node regression is slow: ~0.053 deg/day, at 25 days/sec that's ~1.3 deg/sec)
-    await page.waitForTimeout(2000);
+    // (Node regression is slow: ~0.053 deg/day, at 10 days/sec that's ~0.53 deg/sec)
+    await page.waitForTimeout(3000);
 
     // Stop the animation by clicking again (it toggles)
     await page.locator("#animateMonth").click();
@@ -411,7 +411,7 @@ test.describe("Eclipse Geometry -- E2E", () => {
   });
 
   test("readout strip has accessible label", async ({ page }) => {
-    const readouts = page.locator(".cp-readout-strip");
+    const readouts = page.locator(".cp-demo__readouts");
     await expect(readouts).toHaveAttribute("aria-label", "Readouts");
   });
 
