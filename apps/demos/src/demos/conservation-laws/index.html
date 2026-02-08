@@ -105,6 +105,7 @@
       </aside>
 
       <section class="cp-demo__stage cp-stage stage" aria-label="Orbit visualization stage">
+        <canvas class="cp-starfield" aria-hidden="true"></canvas>
         <svg id="orbitSvg" class="orbit" viewBox="0 0 600 600" role="img" aria-label="Orbit path and moving particle">
           <defs>
             <marker id="arrowVel" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -139,20 +140,20 @@
             <div class="cp-readout__value"><span id="ecc"></span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Specific energy $\varepsilon$ (AU$^2$/yr$^2$)</div>
-            <div class="cp-readout__value"><span id="eps"></span></div>
+            <div class="cp-readout__label">Specific energy $\varepsilon$</div>
+            <div class="cp-readout__value"><span id="eps"></span> <span class="cp-readout__unit">AU$^2$/yr$^2$</span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Specific angular momentum $|h|$ (AU$^2$/yr)</div>
-            <div class="cp-readout__value"><span id="h"></span></div>
+            <div class="cp-readout__label">Specific angular momentum $|h|$</div>
+            <div class="cp-readout__value"><span id="h"></span> <span class="cp-readout__unit">AU$^2$/yr</span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Speed $v$ (km/s)</div>
-            <div class="cp-readout__value"><span id="vKmS"></span></div>
+            <div class="cp-readout__label">Speed $v$</div>
+            <div class="cp-readout__value"><span id="vKmS"></span> <span class="cp-readout__unit">km/s</span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Periapsis $r_p$ (AU)</div>
-            <div class="cp-readout__value"><span id="rpAu"></span></div>
+            <div class="cp-readout__label">Periapsis $r_p$</div>
+            <div class="cp-readout__value"><span id="rpAu"></span> <span class="cp-readout__unit">AU</span></div>
           </div>
         </div>
       </aside>

@@ -71,7 +71,7 @@ const logTickValues = (_self: unknown, splits: number[]) =>
 
 /**
  * uPlot log-scale range clamp for pressure axes.
- * Clamp Y-axis to the physically interesting range (~1e5 to ~1e25 dyne cm⁻²).
+ * Clamp Y-axis to the physically interesting range (~1e5 to ~1e25 dyne/cm^2).
  * The floor of 1e5 prevents the plot from wasting vertical space on decades
  * that never appear in stellar interiors, while staying below the lowest
  * pressures encountered at brown-dwarf surfaces.

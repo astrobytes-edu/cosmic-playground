@@ -1,6 +1,22 @@
-import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { ConservationLawsModel, TwoBodyAnalytic } from "@cosmic/physics";
+import {
+  clamp,
+  logSliderToValue,
+  valueToLogSlider,
+  formatNumber,
+  formatOrbitType,
+  toSvg,
+  orbitalRadiusAu,
+  conicPositionAndTangentAu,
+  instantaneousSpeedAuPerYr,
+  buildPathD,
+  velocityArrowSvg,
+} from "./logic";
+
+const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
+if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 
 const massSliderEl = document.querySelector<HTMLInputElement>("#massSlider");
 const massValueEl = document.querySelector<HTMLSpanElement>("#massValue");
@@ -167,117 +183,6 @@ const anim: {
   lastTimeMs: 0
 };
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-function logSliderToValue(sliderValue: number): number {
-  return Math.pow(10, sliderValue);
-}
-
-function valueToLogSlider(value: number): number {
-  return Math.log10(value);
-}
-
-function formatNumber(value: number, digits = 3): string {
-  if (!Number.isFinite(value)) return "—";
-  if (value === 0) return "0";
-  const abs = Math.abs(value);
-  if (abs >= 1e6 || abs < 1e-3) return value.toExponential(Math.max(0, digits - 1));
-  return value.toFixed(digits);
-}
-
-function formatOrbitType(type: string): string {
-  switch (type) {
-    case "circular":
-      return "circular";
-    case "elliptical":
-      return "elliptical";
-    case "parabolic":
-      return "parabolic (escape)";
-    case "hyperbolic":
-      return "hyperbolic";
-    default:
-      return "invalid";
-  }
-}
-
-function toSvg(args: { xAu: number; yAu: number }, scalePxPerAu: number) {
-  return {
-    x: CENTER.x + args.xAu * scalePxPerAu,
-    y: CENTER.y - args.yAu * scalePxPerAu
-  };
-}
-
-function orbitalRadiusAu(args: { ecc: number; pAu: number; nuRad: number }): number {
-  const { ecc, pAu, nuRad } = args;
-  if (!Number.isFinite(ecc) || ecc < 0) return NaN;
-  if (!Number.isFinite(pAu) || !(pAu > 0)) return NaN;
-  if (!Number.isFinite(nuRad)) return NaN;
-  const denom = 1 + ecc * Math.cos(nuRad);
-  return denom > 0 ? pAu / denom : NaN;
-}
-
-function conicPositionAndTangentAu(args: {
-  ecc: number;
-  pAu: number;
-  omegaRad: number;
-  nuRad: number;
-}): { xAu: number; yAu: number; dxAu: number; dyAu: number } | null {
-  const { ecc, pAu, omegaRad, nuRad } = args;
-  if (!Number.isFinite(ecc) || ecc < 0) return null;
-  if (!Number.isFinite(pAu) || !(pAu > 0)) return null;
-  if (!Number.isFinite(omegaRad)) return null;
-  if (!Number.isFinite(nuRad)) return null;
-
-  const cosNu = Math.cos(nuRad);
-  const sinNu = Math.sin(nuRad);
-  const denom = 1 + ecc * cosNu;
-  if (!(denom > 0)) return null;
-
-  const r = pAu / denom;
-  const xOrb = r * cosNu;
-  const yOrb = r * sinNu;
-
-  // Derivative wrt nu for tangent direction.
-  const drDnu = (pAu * ecc * sinNu) / (denom * denom);
-  const dxOrb = drDnu * cosNu - r * sinNu;
-  const dyOrb = drDnu * sinNu + r * cosNu;
-
-  const cosO = Math.cos(omegaRad);
-  const sinO = Math.sin(omegaRad);
-
-  const xAu = xOrb * cosO - yOrb * sinO;
-  const yAu = xOrb * sinO + yOrb * cosO;
-  const dxAu = dxOrb * cosO - dyOrb * sinO;
-  const dyAu = dxOrb * sinO + dyOrb * cosO;
-  return { xAu, yAu, dxAu, dyAu };
-}
-
-function instantaneousSpeedAuPerYr(args: { muAu3Yr2: number; hAbsAu2Yr: number; ecc: number; nuRad: number }): number {
-  const { muAu3Yr2, hAbsAu2Yr, ecc, nuRad } = args;
-  if (!Number.isFinite(muAu3Yr2) || !(muAu3Yr2 > 0)) return NaN;
-  if (!Number.isFinite(hAbsAu2Yr) || !(hAbsAu2Yr > 0)) return NaN;
-  if (!Number.isFinite(ecc) || ecc < 0) return NaN;
-  if (!Number.isFinite(nuRad)) return NaN;
-
-  // v = (mu / h) * sqrt(1 + 2e cos(nu) + e^2)
-  const q = 1 + 2 * ecc * Math.cos(nuRad) + ecc * ecc;
-  if (!(q >= 0)) return NaN;
-  return (muAu3Yr2 / hAbsAu2Yr) * Math.sqrt(Math.max(0, q));
-}
-
-function buildPathD(points: { xAu: number; yAu: number }[], scalePxPerAu: number): string {
-  if (points.length === 0) return "";
-  const start = toSvg(points[0], scalePxPerAu);
-  let d = `M ${start.x.toFixed(2)} ${start.y.toFixed(2)}`;
-  for (let i = 1; i < points.length; i++) {
-    const p = toSvg(points[i], scalePxPerAu);
-    d += ` L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
-  }
-  return d;
-}
-
 function stopAnimation() {
   state.playing = false;
   if (state.animationId !== null) {
@@ -316,13 +221,13 @@ function startAnimation() {
     const dt = (nowMs - anim.lastTimeMs) / 1000;
     anim.lastTimeMs = nowMs;
 
-    // Advance using Kepler’s 2nd law (constant areal velocity):
+    // Advance using Kepler's 2nd law (constant areal velocity):
     // h = r^2 d(nu)/dt  =>  d(nu)/dt = h/r^2.
     let dtRemain = Math.min(dt, 0.1);
     let stopped = false;
     while (dtRemain > 1e-9 && !stopped) {
       const dtStep = Math.min(dtRemain, 0.02);
-      const rAu = orbitalRadiusAu({ ecc: anim.ecc, pAu: anim.pAu, nuRad: anim.nuRad });
+      const rAu = orbitalRadiusAu(anim.ecc, anim.pAu, anim.nuRad);
       const nuSpeedRadPerYr =
         Number.isFinite(anim.hAbsAu2Yr) && Number.isFinite(rAu) && rAu > 0 ? anim.hAbsAu2Yr / (rAu * rAu) : 0;
       const step = ConservationLawsModel.advanceTrueAnomalyRad({
@@ -419,11 +324,11 @@ function recomputeOrbit() {
     anim.hAbsAu2Yr = NaN;
     anim.rpAu = NaN;
     orbitTypeValue.textContent = "invalid";
-    eccValue.textContent = "—";
-    epsValue.textContent = "—";
-    hValue.textContent = "—";
-    vKmSValue.textContent = "—";
-    rpAuValue.textContent = "—";
+    eccValue.textContent = "\u2014";
+    epsValue.textContent = "\u2014";
+    hValue.textContent = "\u2014";
+    vKmSValue.textContent = "\u2014";
+    rpAuValue.textContent = "\u2014";
     orbitPath.setAttribute("d", "");
     return;
   }
@@ -453,12 +358,12 @@ function recomputeOrbit() {
   const rpAu = anim.pAu / (1 + anim.ecc);
   anim.rpAu = rpAu;
 
-  const vAuYr = instantaneousSpeedAuPerYr({
-    muAu3Yr2: anim.muAu3Yr2,
-    hAbsAu2Yr: anim.hAbsAu2Yr,
-    ecc: anim.ecc,
-    nuRad: anim.nuRad
-  });
+  const vAuYr = instantaneousSpeedAuPerYr(
+    anim.muAu3Yr2,
+    anim.hAbsAu2Yr,
+    anim.ecc,
+    anim.nuRad
+  );
   const vKmS = TwoBodyAnalytic.speedKmPerSFromAuPerYr(vAuYr);
 
   orbitTypeValue.textContent = formatOrbitType(elements.orbitType);
@@ -475,54 +380,48 @@ function recomputeOrbit() {
     numPoints: PATH_SAMPLES,
     rMaxAu: anim.rMaxAu
   });
-  orbitPath.setAttribute("d", buildPathD(points, anim.scalePxPerAu));
+  orbitPath.setAttribute("d", buildPathD(points, CENTER, anim.scalePxPerAu));
   renderParticleAndVelocity();
 }
 
 function renderParticleAndVelocity() {
-  const pos = conicPositionAndTangentAu({
-    ecc: anim.ecc,
-    pAu: anim.pAu,
-    omegaRad: anim.omegaRad,
-    nuRad: anim.nuRad
-  });
+  const pos = conicPositionAndTangentAu(
+    anim.ecc,
+    anim.pAu,
+    anim.omegaRad,
+    anim.nuRad
+  );
   if (!pos) return;
 
-  const pSvg = toSvg({ xAu: pos.xAu, yAu: pos.yAu }, anim.scalePxPerAu);
+  const pSvg = toSvg(pos.xAu, pos.yAu, CENTER, anim.scalePxPerAu);
   particle.setAttribute("cx", pSvg.x.toFixed(2));
   particle.setAttribute("cy", pSvg.y.toFixed(2));
 
-  const vAuYr = instantaneousSpeedAuPerYr({
-    muAu3Yr2: anim.muAu3Yr2,
-    hAbsAu2Yr: anim.hAbsAu2Yr,
-    ecc: anim.ecc,
-    nuRad: anim.nuRad
-  });
+  const vAuYr = instantaneousSpeedAuPerYr(
+    anim.muAu3Yr2,
+    anim.hAbsAu2Yr,
+    anim.ecc,
+    anim.nuRad
+  );
   const vKmS = TwoBodyAnalytic.speedKmPerSFromAuPerYr(vAuYr);
   vKmSValue.textContent = formatNumber(vKmS, 3);
   const vRatio = Number.isFinite(vAuYr) && Number.isFinite(anim.vCirc0AuYr) && anim.vCirc0AuYr > 0 ? vAuYr / anim.vCirc0AuYr : 1;
-  const vLenPx = Math.max(20, Math.min(120, 60 * vRatio));
 
-  // Tangent direction in SVG coordinates (note y flip).
-  const dxSvg = pos.dxAu * anim.scalePxPerAu;
-  const dySvg = -pos.dyAu * anim.scalePxPerAu;
-  const mag = Math.hypot(dxSvg, dySvg);
-  const ux = mag > 0 ? (dxSvg / mag) * anim.dir : 0;
-  const uy = mag > 0 ? (dySvg / mag) * anim.dir : 0;
+  const arrow = velocityArrowSvg(pos.dxAu, pos.dyAu, anim.scalePxPerAu, anim.dir, vRatio);
 
   velocityLine.setAttribute("x1", pSvg.x.toFixed(2));
   velocityLine.setAttribute("y1", pSvg.y.toFixed(2));
-  velocityLine.setAttribute("x2", (pSvg.x + ux * vLenPx).toFixed(2));
-  velocityLine.setAttribute("y2", (pSvg.y + uy * vLenPx).toFixed(2));
+  velocityLine.setAttribute("x2", (pSvg.x + arrow.ux * arrow.vLenPx).toFixed(2));
+  velocityLine.setAttribute("y2", (pSvg.y + arrow.uy * arrow.vLenPx).toFixed(2));
 }
 
 function exportResults(): ExportPayloadV1 {
-  const vAuYr = instantaneousSpeedAuPerYr({
-    muAu3Yr2: anim.muAu3Yr2,
-    hAbsAu2Yr: anim.hAbsAu2Yr,
-    ecc: anim.ecc,
-    nuRad: anim.nuRad
-  });
+  const vAuYr = instantaneousSpeedAuPerYr(
+    anim.muAu3Yr2,
+    anim.hAbsAu2Yr,
+    anim.ecc,
+    anim.nuRad
+  );
   const vKmS = TwoBodyAnalytic.speedKmPerSFromAuPerYr(vAuYr);
   return {
     version: 1,
@@ -603,8 +502,8 @@ const demoModes = createDemoModes({
         directionDeg: String(Math.round(state.directionDeg)),
         orbitType: formatOrbitType(anim.orbitType),
         e: formatNumber(anim.ecc, 3),
-        eps: epsValue.textContent ?? "—",
-        h: hValue.textContent ?? "—",
+        eps: epsValue.textContent ?? "\u2014",
+        h: hValue.textContent ?? "\u2014",
         rp: formatNumber(anim.rpAu, 3)
       };
     },
@@ -641,9 +540,9 @@ const demoModes = createDemoModes({
               speedFactor: formatNumber(c.speedFactor, 3),
               directionDeg: String(c.directionDeg),
               orbitType: formatOrbitType(el.orbitType),
-              e: el.orbitType === "invalid" ? "—" : formatNumber(el.ecc, 3),
-              eps: el.orbitType === "invalid" ? "—" : formatNumber(el.epsAu2Yr2, 4),
-              h: el.orbitType === "invalid" ? "—" : formatNumber(el.hAbsAu2Yr, 4),
+              e: el.orbitType === "invalid" ? "\u2014" : formatNumber(el.ecc, 3),
+              eps: el.orbitType === "invalid" ? "\u2014" : formatNumber(el.epsAu2Yr2, 4),
+              h: el.orbitType === "invalid" ? "\u2014" : formatNumber(el.hAbsAu2Yr, 4),
               rp: formatNumber(rpAu, 3)
             };
           });
@@ -688,7 +587,7 @@ pauseButton.addEventListener("click", () => stopAnimation());
 resetButton.addEventListener("click", () => resetAnimation());
 
 copyResults.addEventListener("click", () => {
-  setLiveRegionText(status, "Copying…");
+  setLiveRegionText(status, "Copying\u2026");
   void runtime
     .copyResults(exportResults())
     .then(() => {

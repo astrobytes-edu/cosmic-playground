@@ -49,30 +49,52 @@
 
 .orbit__path {
   fill: none;
-  stroke: var(--cp-chart-1);
+  stroke: var(--cp-celestial-orbit);
   stroke-width: 2;
   opacity: 0.9;
 }
 
 .orbit__mass {
-  fill: var(--cp-chart-4);
+  fill: var(--cp-celestial-sun-core);
+  filter: drop-shadow(var(--cp-glow-sun));
 }
 
 .orbit__particle {
-  fill: color-mix(in srgb, var(--cp-text) 70%, var(--cp-chart-1));
+  fill: var(--cp-celestial-earth);
+  filter: drop-shadow(var(--cp-glow-planet));
 }
 
 .orbit__velocity {
-  stroke: var(--cp-chart-2);
+  stroke: var(--cp-accent-green);
   stroke-width: 2;
 }
 
 .orbit__arrowhead {
-  fill: var(--cp-chart-2);
+  fill: var(--cp-accent-green);
 }
 
 @media (min-width: 900px) {
   .presets__row {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
+
+/* -- Entry animations -------------------------------- */
+.cp-demo__controls {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 1);
+}
+
+.cp-demo__readouts {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 2);
+}
+
+.cp-demo__drawer {
+  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 3);
 }
