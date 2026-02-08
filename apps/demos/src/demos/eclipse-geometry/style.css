@@ -187,6 +187,23 @@
   opacity: 0.3;
 }
 
+/* --- Eclipse discovery floating label --- */
+.stage__eclipse-label {
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.stage__eclipse-label--solar { fill: var(--cp-accent-rose); }
+.stage__eclipse-label--lunar { fill: var(--cp-accent); }
+.stage__eclipse-label--active {
+  animation: eclipseReveal 2s ease-out forwards;
+}
+@keyframes eclipseReveal {
+  0% { opacity: 1; transform: translateY(0); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+
 /* --- Beta curve threshold bands --- */
 .stage__band {
   opacity: 0.1;

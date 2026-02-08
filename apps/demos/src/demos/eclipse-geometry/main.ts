@@ -94,6 +94,7 @@ const descNodeLabelEl =
 const betaCurveEl = document.querySelector<SVGPathElement>("#betaCurve");
 const betaMarkerEl = document.querySelector<SVGCircleElement>("#betaMarker");
 const betaLabelEl = document.querySelector<SVGTextElement>("#betaLabel");
+const eclipseLabelEl = document.querySelector<SVGTextElement>("#eclipseLabel");
 
 if (
   !eclipseSvgEl ||
@@ -231,6 +232,9 @@ const state: State = {
   distancePresetKey: "mean"
 };
 
+let prevSolarType = "none";
+let prevLunarType = "none";
+
 simYearsValue.textContent = `${formatYearsLabel(sliderToYears(Number(simYears.value)))} yr`;
 
 const prefersReducedMotion =
@@ -284,6 +288,20 @@ function getPhaseInfo(phaseAngleDeg: number) {
 
 function getDerived(args: Parameters<typeof computeDerived>[0]) {
   return computeDerived(args, model);
+}
+
+function showEclipseLabel(text: string, category: "solar" | "lunar") {
+  if (!eclipseLabelEl) return;
+  // Position near moon dot (uses moon's current cx/cy set by renderStage)
+  const mx = Number(moonDot.getAttribute("cx") || 0);
+  const my = Number(moonDot.getAttribute("cy") || 0);
+  eclipseLabelEl.setAttribute("x", String(mx));
+  eclipseLabelEl.setAttribute("y", String(my - 22));
+  eclipseLabelEl.textContent = `${text}!`;
+  eclipseLabelEl.classList.remove("stage__eclipse-label--solar", "stage__eclipse-label--lunar", "stage__eclipse-label--active");
+  // Force reflow to restart animation
+  void eclipseLabelEl.getBoundingClientRect();
+  eclipseLabelEl.classList.add(`stage__eclipse-label--${category}`, "stage__eclipse-label--active");
 }
 
 function renderStage(args: {
@@ -478,6 +496,21 @@ function render() {
   lunarOutcome.textContent = outcomeLabel(derived.lunarType);
   solarReadoutEl!.dataset.active = String(derived.solarType !== "none");
   lunarReadoutEl!.dataset.active = String(derived.lunarType !== "none");
+
+  // Visual reward: floating label when eclipse state transitions none → active
+  if (eclipseLabelEl) {
+    const newSolar = derived.solarType !== "none";
+    const newLunar = derived.lunarType !== "none";
+    const wasSolar = prevSolarType !== "none";
+    const wasLunar = prevLunarType !== "none";
+    if (newSolar && !wasSolar) {
+      showEclipseLabel(outcomeLabel(derived.solarType), "solar");
+    } else if (newLunar && !wasLunar) {
+      showEclipseLabel(outcomeLabel(derived.lunarType), "lunar");
+    }
+    prevSolarType = derived.solarType;
+    prevLunarType = derived.lunarType;
+  }
 
   renderStage({ sunLonDeg: state.sunLonDeg, moonLonDeg, nodeLonDeg, betaDeg: derived.betaDeg });
 
