@@ -151,6 +151,9 @@ body {
 
 .site-footer__contact {
   color: var(--cp-text2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--cp-border);
 }
 
 .site-footer__contact:hover,

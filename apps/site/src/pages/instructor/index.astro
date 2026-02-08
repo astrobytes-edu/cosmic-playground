@@ -1,0 +1,164 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import DemoGlyph from "../../components/DemoGlyph.astro";
+import { pickDemoGlyph } from "../../lib/demoGlyphs";
+
+const demos = await getCollection("demos");
+const instructorEntries = await getCollection("instructor");
+
+const base = import.meta.env.BASE_URL;
+const withBase = (path: string) => {
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedBase}${normalizedPath}`;
+};
+
+// Count instructor sections per demo
+const sectionCountBySlug = new Map<string, number>();
+for (const entry of instructorEntries) {
+  const slug = entry.data.bundle;
+  sectionCountBySlug.set(slug, (sectionCountBySlug.get(slug) ?? 0) + 1);
+}
+
+const sortedDemos = [...demos].sort((a, b) =>
+  a.data.title.localeCompare(b.data.title)
+);
+---
+
+<Layout title="Instructor Notes — Cosmic Playground">
+  <Breadcrumb
+    crumbs={[{ label: "Instructor Notes" }]}
+    withBase={withBase}
+  />
+
+  <section class="instr-hero cp-hero">
+    <h1>Instructor Notes</h1>
+    <p class="instr-hero__lede">
+      Per-demo teaching notes with activities, assessment ideas, model details,
+      and common misconceptions. Each page corresponds to one exhibit.
+    </p>
+  </section>
+
+  <div class="instr-grid">
+    {sortedDemos.map((d) => {
+      const count = sectionCountBySlug.get(d.slug) ?? 0;
+      const glyph = pickDemoGlyph(d.data.topics, d.slug, d.data.title);
+      return (
+        <a class="instr-card cp-card" href={withBase(`instructor/${d.slug}/`)}>
+          <DemoGlyph name={glyph} size={28} class="instr-card__glyph" />
+          <div class="instr-card__body">
+            <h2 class="instr-card__title">{d.data.title}</h2>
+            <div class="instr-card__meta">
+              {count > 0 ? (
+                <span class="instr-card__stat">
+                  <span class="instr-card__stat-value">{count}</span>
+                  <span class="instr-card__stat-unit">
+                    section{count === 1 ? "" : "s"}
+                  </span>
+                </span>
+              ) : (
+                <span class="instr-card__fallback">scaffold template</span>
+              )}
+              {d.data.misconceptions.length > 0 && (
+                <span class="instr-card__stat">
+                  <span class="instr-card__stat-value">{d.data.misconceptions.length}</span>
+                  <span class="instr-card__stat-unit">misconception{d.data.misconceptions.length === 1 ? "" : "s"}</span>
+                </span>
+              )}
+            </div>
+          </div>
+        </a>
+      );
+    })}
+  </div>
+</Layout>
+
+<style>
+  .instr-hero {
+    margin-bottom: var(--cp-space-5);
+  }
+
+  .instr-hero__lede {
+    margin: 6px 0 0;
+    color: var(--cp-muted);
+    max-width: 72ch;
+  }
+
+  .instr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--cp-space-4);
+  }
+
+  .instr-card {
+    display: flex;
+    gap: var(--cp-space-3);
+    padding: var(--cp-space-4);
+    text-decoration: none;
+    align-items: flex-start;
+    transition:
+      background var(--cp-transition-fast) var(--cp-ease-out),
+      border-color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .instr-card:hover {
+    background: color-mix(in srgb, var(--cp-text) 3%, transparent);
+    border-color: var(--cp-accent);
+  }
+
+  .instr-card__glyph {
+    color: var(--cp-muted);
+    flex-shrink: 0;
+    transition: color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .instr-card:hover .instr-card__glyph {
+    color: var(--cp-accent);
+  }
+
+  .instr-card__body {
+    display: grid;
+    gap: var(--cp-space-1);
+  }
+
+  .instr-card__title {
+    margin: 0;
+    font-size: var(--cp-text-lg);
+    color: var(--cp-title);
+  }
+
+  .instr-card:hover .instr-card__title {
+    color: var(--cp-title-strong);
+  }
+
+  .instr-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-3);
+  }
+
+  .instr-card__stat {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+
+  .instr-card__stat-value {
+    font-family: var(--cp-font-mono);
+    font-weight: var(--cp-font-semibold);
+    color: var(--cp-accent-amber);
+  }
+
+  .instr-card__stat-unit {
+    font-size: var(--cp-text-sm);
+    color: var(--cp-accent-ice);
+  }
+
+  .instr-card__fallback {
+    font-size: var(--cp-text-sm);
+    color: var(--cp-muted);
+    font-style: italic;
+  }
+</style>
