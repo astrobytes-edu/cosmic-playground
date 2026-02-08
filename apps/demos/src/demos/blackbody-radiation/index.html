@@ -153,14 +153,81 @@
           </div>
         </div>
         <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
-          <div class="cp-notice">
-            <h3>Physics of a blackbody spectrum</h3>
-            <ul>
-              <li>The Planck curve gives intensity versus wavelength for a thermal emitter.</li>
-              <li>Wien’s law sets the peak trend: hotter objects peak at shorter wavelengths.</li>
-              <li>Stefan-Boltzmann scaling gives surface emitted flux as <code>F = &sigma;T^4</code>; luminosity also depends on radius.</li>
-              <li>Perceived color is an approximation from the visible-band contribution, not only <code>&lambda;<sub>peak</sub></code>.</li>
-            </ul>
+          <div class="cp-notice understand-intro">
+            <h3>What is a blackbody?</h3>
+            <p>
+              A blackbody is an idealized object that absorbs all incident light and re-emits thermally in equilibrium.
+              Its spectrum depends only on temperature $T$, not on composition or surface texture.
+            </p>
+            <p>
+              This tab is in <strong>display equation mode</strong>: read each law as a statement about what changes and why.
+            </p>
+          </div>
+
+          <div class="understand-grid">
+            <article class="cp-notice understand-card">
+              <h3>Planck Spectrum: shape of thermal emission</h3>
+              <p class="understand-equation">
+                $$
+                B_{\lambda}(T)=\frac{2hc^2}{\lambda^5}\frac{1}{e^{hc/(\lambda k_B T)}-1}
+                $$
+              </p>
+              <ul>
+                <li>$B_{\lambda}$ is spectral radiance at wavelength $\lambda$ and temperature $T$.</li>
+                <li>The $\lambda^{-5}$ prefactor boosts short wavelengths, but the exponential term suppresses them even more strongly.</li>
+                <li>Result: one peak plus two different tails, not a symmetric bell curve.</li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>Wien&apos;s Law: where the peak sits</h3>
+              <p class="understand-equation">
+                $$
+                \lambda_{\rm peak}T=b,\qquad b\approx 2.8978\times 10^6\ {\rm nm\,K}
+                $$
+              </p>
+              <ul>
+                <li>Hotter blackbodies have smaller $\lambda_{\rm peak}$ (peak shifts left on this plot).</li>
+                <li>Doubling $T$ halves $\lambda_{\rm peak}$.</li>
+                <li>Important misconception check: $\lambda_{\rm peak}$ is one point on the curve, not the full perceived color.</li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>Stefan-Boltzmann: flux versus luminosity</h3>
+              <p class="understand-equation">
+                $$
+                F=\sigma T^4,\qquad L=4\pi R^2\sigma T^4
+                $$
+              </p>
+              <ul>
+                <li>$F$ is surface emitted flux (power per area).</li>
+                <li>$L$ is total luminosity and depends on both $T$ and radius $R$; luminosity also depends on radius.</li>
+                <li>This demo&apos;s luminosity readout uses the same-radius comparison, so temperature effects are isolated.</li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>Why one side falls exponentially</h3>
+              <p class="understand-equation">
+                $$
+                \text{long }\lambda:\ B_{\lambda}\propto \frac{T}{\lambda^4},
+                \qquad
+                \text{short }\lambda:\ B_{\lambda}\propto \lambda^{-5}e^{-hc/(\lambda k_BT)}
+                $$
+              </p>
+              <ul>
+                <li>Long-wavelength side is the Rayleigh-Jeans power-law tail.</li>
+                <li>Short-wavelength side is the Wien exponential tail.</li>
+                <li>That asymmetry is exactly what you see when you move the temperature slider.</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="cp-notice understand-callout" role="note" aria-label="Color interpretation note">
+            <strong>Color interpretation:</strong>
+            perceived color comes from the visible-band contribution of the <em>whole</em> spectrum.
+            A peak near green does not imply a green star.
           </div>
         </div>
       </section>
