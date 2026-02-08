@@ -1,7 +1,7 @@
 import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
-import { clamp, formatNumber, formatDateFromDayOfYear, formatDayLength, seasonFromPhaseNorth, oppositeSeason, orbitPosition, terminatorShiftX, latitudeBandEllipse, globeAxisEndpoints } from "./logic";
+import { clamp, formatNumber, formatDateFromDayOfYear, formatDayLength, formatLatitude, seasonFromPhaseNorth, oppositeSeason, orbitPosition, terminatorShiftX, latitudeBandEllipse, globeAxisEndpoints, animationProgress, easeInOutCubic, shortestDayDelta } from "./logic";
 import type { Season } from "./logic";
 
 const dayOfYearEl = document.querySelector<HTMLInputElement>("#dayOfYear");
@@ -164,6 +164,11 @@ const demoModes = createDemoModes({
         heading: "Shortcuts",
         type: "shortcuts",
         items: [
+          { key: "\u2190 / \u2192", action: "Step \u00B11 day" },
+          { key: "\u2191 / \u2193", action: "Step \u00B130 days" },
+          { key: "Space", action: "Play / pause animation" },
+          { key: "E", action: "Jump to March equinox" },
+          { key: "S", action: "Jump to June solstice" },
           { key: "?", action: "Toggle help" },
           { key: "g", action: "Toggle station mode" }
         ]
@@ -302,45 +307,80 @@ const prefersReducedMotion =
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 if (prefersReducedMotion) {
-  animateYear.disabled = true;
   motionNote.hidden = false;
-  motionNote.textContent = "Animation disabled due to reduced-motion preference.";
+  motionNote.textContent = "Animation uses discrete steps due to reduced-motion preference.";
 }
 
 let isAnimating = false;
 let rafId: number | null = null;
-let lastT = 0;
+let reducedMotionIntervalId: ReturnType<typeof setInterval> | null = null;
+
+// Fixed 10-second year animation (frame-rate independent)
+const YEAR_ANIM_DURATION_MS = 10_000;
+let animStartT = 0;
+let animStartDay = 0;
+
+// Preset transition: 500ms eased animation to target day
+const PRESET_TRANSITION_MS = 500;
+let presetRafId: number | null = null;
+
+function cancelPresetTransition() {
+  if (presetRafId !== null) {
+    window.cancelAnimationFrame(presetRafId);
+    presetRafId = null;
+  }
+}
 
 function stopAnimation() {
   isAnimating = false;
   animateYear.textContent = "Animate year";
   if (rafId !== null) window.cancelAnimationFrame(rafId);
   rafId = null;
-  lastT = 0;
+  if (reducedMotionIntervalId !== null) {
+    clearInterval(reducedMotionIntervalId);
+    reducedMotionIntervalId = null;
+  }
+  cancelPresetTransition();
+  animStartT = 0;
 }
 
 function startAnimation() {
-  if (prefersReducedMotion) return;
   isAnimating = true;
   animateYear.textContent = "Stop animation";
   setAnchorPressed(null);
-  lastT = 0;
-  rafId = window.requestAnimationFrame(step);
+  animStartDay = state.dayOfYear;
+
+  if (prefersReducedMotion) {
+    // Reduced-motion fallback: 24 discrete steps over 10 seconds
+    let step = 0;
+    const totalSteps = 24;
+    const stepIntervalMs = YEAR_ANIM_DURATION_MS / totalSteps;
+    reducedMotionIntervalId = setInterval(() => {
+      step++;
+      state.dayOfYear = ((animStartDay - 1 + (step / totalSteps) * 365.25) % 365.25) + 1;
+      render();
+      if (step >= totalSteps) {
+        stopAnimation();
+      }
+    }, stepIntervalMs);
+  } else {
+    animStartT = 0;
+    rafId = window.requestAnimationFrame(tick);
+  }
 }
 
-function step(t: number) {
+function tick(t: number) {
   if (!isAnimating) return;
-  if (lastT === 0) lastT = t;
-  const dt = (t - lastT) / 1000;
-  lastT = t;
-
-  const daysPerSecond = 36;
-  state.dayOfYear += dt * daysPerSecond;
-  if (state.dayOfYear > 365) state.dayOfYear -= 365;
-  if (state.dayOfYear < 1) state.dayOfYear += 365;
-
+  if (animStartT === 0) { animStartT = t; }
+  const elapsed = t - animStartT;
+  const progress = animationProgress(elapsed, YEAR_ANIM_DURATION_MS);
+  state.dayOfYear = ((animStartDay - 1 + progress * 365.25) % 365.25) + 1;
   render();
-  rafId = window.requestAnimationFrame(step);
+  if (progress < 1) {
+    rafId = window.requestAnimationFrame(tick);
+  } else {
+    stopAnimation();
+  }
 }
 
 // Globe geometry constants (the globe is centred at (0,0) inside its translated SVG group)
@@ -490,7 +530,7 @@ function render() {
   dateValue.textContent = `(${formatDateFromDayOfYear(day)})`;
 
   tiltValue.textContent = `${formatNumber(axialTiltDeg, 1)} deg`;
-  latitudeValue.textContent = `${Math.round(latitudeDeg)} deg`;
+  latitudeValue.textContent = formatLatitude(Math.round(latitudeDeg));
 
   declinationValue.textContent = formatNumber(declinationDegValue, 1);
   dayLengthValue.textContent = formatDayLength(dayLengthHoursValue);
@@ -747,10 +787,56 @@ function setDay(day: number, activeButton: HTMLButtonElement | null = null) {
   render();
 }
 
-anchorMarEqx.addEventListener("click", () => setDay(80, anchorMarEqx));
-anchorJunSol.addEventListener("click", () => setDay(172, anchorJunSol));
-anchorSepEqx.addEventListener("click", () => setDay(266, anchorSepEqx));
-anchorDecSol.addEventListener("click", () => setDay(356, anchorDecSol));
+function animateToDay(targetDay: number, activeButton: HTMLButtonElement | null = null) {
+  stopAnimation();
+  cancelPresetTransition();
+  setAnchorPressed(activeButton);
+
+  const startDay = state.dayOfYear;
+  const delta = shortestDayDelta(startDay, targetDay);
+
+  // If already at target (or very close), just snap
+  if (Math.abs(delta) < 0.5) {
+    state.dayOfYear = clamp(targetDay, 1, 365);
+    render();
+    return;
+  }
+
+  if (prefersReducedMotion) {
+    // Snap immediately for reduced-motion users
+    state.dayOfYear = clamp(targetDay, 1, 365);
+    render();
+    return;
+  }
+
+  let startT = 0;
+
+  function presetStep(t: number) {
+    if (startT === 0) startT = t;
+    const elapsed = t - startT;
+    const rawProgress = animationProgress(elapsed, PRESET_TRANSITION_MS);
+    const easedProgress = easeInOutCubic(rawProgress);
+    const currentDay = startDay + delta * easedProgress;
+    // Wrap into [1, 365] range
+    state.dayOfYear = ((currentDay - 1 + 365.25) % 365.25) + 1;
+    render();
+    if (rawProgress < 1) {
+      presetRafId = window.requestAnimationFrame(presetStep);
+    } else {
+      presetRafId = null;
+      // Snap to exact target at end of animation
+      state.dayOfYear = clamp(targetDay, 1, 365);
+      render();
+    }
+  }
+
+  presetRafId = window.requestAnimationFrame(presetStep);
+}
+
+anchorMarEqx.addEventListener("click", () => animateToDay(80, anchorMarEqx));
+anchorJunSol.addEventListener("click", () => animateToDay(172, anchorJunSol));
+anchorSepEqx.addEventListener("click", () => animateToDay(266, anchorSepEqx));
+anchorDecSol.addEventListener("click", () => animateToDay(356, anchorDecSol));
 
 dayOfYear.addEventListener("input", () => {
   stopAnimation();
@@ -772,7 +858,7 @@ latitude.addEventListener("input", () => {
 });
 
 animateYear.addEventListener("click", () => {
-  if (prefersReducedMotion) return;
+  cancelPresetTransition();
   if (isAnimating) stopAnimation();
   else startAnimation();
 });
@@ -817,6 +903,68 @@ for (const btn of overlayButtons) {
     }
   });
 }
+
+// --- Keyboard shortcuts ---
+document.addEventListener("keydown", (e) => {
+  // Don't intercept when focus is on an input/textarea (e.g. slider keyboard usage)
+  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+  switch (e.key) {
+    case "ArrowRight": {
+      stopAnimation();
+      cancelPresetTransition();
+      setAnchorPressed(null);
+      state.dayOfYear = ((state.dayOfYear - 1 + 1) % 365.25) + 1;
+      render();
+      e.preventDefault();
+      break;
+    }
+    case "ArrowLeft": {
+      stopAnimation();
+      cancelPresetTransition();
+      setAnchorPressed(null);
+      state.dayOfYear = ((state.dayOfYear - 1 - 1 + 365.25) % 365.25) + 1;
+      render();
+      e.preventDefault();
+      break;
+    }
+    case "ArrowUp": {
+      stopAnimation();
+      cancelPresetTransition();
+      setAnchorPressed(null);
+      state.dayOfYear = ((state.dayOfYear - 1 + 30) % 365.25) + 1;
+      render();
+      e.preventDefault();
+      break;
+    }
+    case "ArrowDown": {
+      stopAnimation();
+      cancelPresetTransition();
+      setAnchorPressed(null);
+      state.dayOfYear = ((state.dayOfYear - 1 - 30 + 365.25) % 365.25) + 1;
+      render();
+      e.preventDefault();
+      break;
+    }
+    case " ": {
+      cancelPresetTransition();
+      if (isAnimating) stopAnimation();
+      else startAnimation();
+      e.preventDefault();
+      break;
+    }
+    case "e":
+    case "E": {
+      animateToDay(80, anchorMarEqx);
+      break;
+    }
+    case "s":
+    case "S": {
+      animateToDay(172, anchorJunSol);
+      break;
+    }
+  }
+});
 
 render();
 

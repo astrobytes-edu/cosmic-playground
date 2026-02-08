@@ -187,3 +187,49 @@ export function globeAxisEndpoints(
     x2: centerX + dx, y2: centerY - dy,  // north-pole end (top)
   };
 }
+
+// ---------------------------------------------------------------------------
+// Animation helpers (pure, no DOM)
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute animation progress as a fraction in [0, 1].
+ * `elapsedMs` is clamped so the result never exceeds 1 or goes below 0.
+ */
+export function animationProgress(elapsedMs: number, durationMs: number): number {
+  return clamp(elapsedMs / durationMs, 0, 1);
+}
+
+/**
+ * Cubic ease-in-out: slow start, fast middle, slow end.
+ * Standard CSS-style cubic easing for smooth transitions.
+ */
+export function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+/**
+ * Format a latitude value with hemisphere direction.
+ * E.g. 45 -> "45 deg N", -30 -> "30 deg S", 0 -> "0 deg (Equator)"
+ */
+export function formatLatitude(latDeg: number): string {
+  if (latDeg === 0) return "0\u00B0 (Equator)";
+  const abs = Math.abs(latDeg);
+  const dir = latDeg > 0 ? "N" : "S";
+  return `${abs}\u00B0${dir}`;
+}
+
+/**
+ * Compute the shortest signed delta to travel from `fromDay` to `toDay`,
+ * wrapping around the year boundary.
+ *
+ * E.g. day 350 -> day 10: returns +25 (forward 25 days), not -340.
+ * E.g. day 10 -> day 350: returns -25 (backward 25 days), not +340.
+ */
+export function shortestDayDelta(fromDay: number, toDay: number, yearLength = 365.25): number {
+  let delta = toDay - fromDay;
+  // Wrap into (-yearLength/2, +yearLength/2]
+  while (delta > yearLength / 2) delta -= yearLength;
+  while (delta < -yearLength / 2) delta += yearLength;
+  return delta;
+}

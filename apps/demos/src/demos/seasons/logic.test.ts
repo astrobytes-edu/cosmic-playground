@@ -9,10 +9,14 @@ import {
   axisEndpoint,
   diskMarkerY,
   formatDayLength,
+  formatLatitude,
   terminatorShiftX,
   latitudeToGlobeY,
   latitudeBandEllipse,
   globeAxisEndpoints,
+  animationProgress,
+  easeInOutCubic,
+  shortestDayDelta,
 } from "./logic";
 
 describe("Seasons -- UI Logic", () => {
@@ -198,6 +202,24 @@ describe("Seasons -- UI Logic", () => {
     });
   });
 
+  describe("formatLatitude", () => {
+    it("formats 0 as equator", () => {
+      expect(formatLatitude(0)).toBe("0\u00B0 (Equator)");
+    });
+    it("formats positive latitude as N", () => {
+      expect(formatLatitude(45)).toBe("45\u00B0N");
+    });
+    it("formats negative latitude as S", () => {
+      expect(formatLatitude(-30)).toBe("30\u00B0S");
+    });
+    it("formats 90 as 90N", () => {
+      expect(formatLatitude(90)).toBe("90\u00B0N");
+    });
+    it("formats -90 as 90S", () => {
+      expect(formatLatitude(-90)).toBe("90\u00B0S");
+    });
+  });
+
   // -----------------------------------------------------------------------
   // Globe projection helpers
   // -----------------------------------------------------------------------
@@ -336,6 +358,123 @@ describe("Seasons -- UI Logic", () => {
       const dy = axis.y1 - axis.y2; // y1 > y2 (south below north)
       const span = Math.sqrt(dx * dx + dy * dy);
       expect(span).toBeCloseTo(2 * len, 1);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Animation helpers
+  // -----------------------------------------------------------------------
+
+  describe("animationProgress", () => {
+    it("returns 0 at the start", () => {
+      expect(animationProgress(0, 10000)).toBe(0);
+    });
+
+    it("returns 0.5 at the midpoint", () => {
+      expect(animationProgress(5000, 10000)).toBeCloseTo(0.5);
+    });
+
+    it("returns 1 at the end", () => {
+      expect(animationProgress(10000, 10000)).toBe(1);
+    });
+
+    it("clamps to 1 when elapsed exceeds duration", () => {
+      expect(animationProgress(15000, 10000)).toBe(1);
+    });
+
+    it("clamps to 0 for negative elapsed", () => {
+      expect(animationProgress(-100, 10000)).toBe(0);
+    });
+
+    it("returns correct fraction for arbitrary values", () => {
+      expect(animationProgress(2500, 10000)).toBeCloseTo(0.25);
+      expect(animationProgress(7500, 10000)).toBeCloseTo(0.75);
+    });
+  });
+
+  describe("easeInOutCubic", () => {
+    it("starts at 0", () => {
+      expect(easeInOutCubic(0)).toBe(0);
+    });
+
+    it("ends at 1", () => {
+      expect(easeInOutCubic(1)).toBe(1);
+    });
+
+    it("midpoint is 0.5", () => {
+      expect(easeInOutCubic(0.5)).toBe(0.5);
+    });
+
+    it("first half is slow start (value < linear)", () => {
+      expect(easeInOutCubic(0.25)).toBeLessThan(0.25);
+    });
+
+    it("second half is slow end (value > linear)", () => {
+      expect(easeInOutCubic(0.75)).toBeGreaterThan(0.75);
+    });
+
+    it("is symmetric: f(t) + f(1-t) = 1", () => {
+      for (const t of [0.1, 0.2, 0.3, 0.4]) {
+        expect(easeInOutCubic(t) + easeInOutCubic(1 - t)).toBeCloseTo(1, 10);
+      }
+    });
+
+    it("is monotonically increasing", () => {
+      let prev = 0;
+      for (let t = 0.05; t <= 1.0; t += 0.05) {
+        const val = easeInOutCubic(t);
+        expect(val).toBeGreaterThanOrEqual(prev);
+        prev = val;
+      }
+    });
+  });
+
+  describe("shortestDayDelta", () => {
+    it("returns positive delta for forward motion within half year", () => {
+      // day 80 -> day 172 = +92
+      expect(shortestDayDelta(80, 172)).toBeCloseTo(92, 5);
+    });
+
+    it("returns negative delta for backward motion within half year", () => {
+      // day 172 -> day 80 = -92
+      expect(shortestDayDelta(172, 80)).toBeCloseTo(-92, 5);
+    });
+
+    it("wraps forward across year boundary (350 -> 10)", () => {
+      // day 350 -> day 10: forward 25.25 days (via year wrap)
+      const delta = shortestDayDelta(350, 10);
+      expect(delta).toBeGreaterThan(0);
+      expect(delta).toBeCloseTo(25.25, 1);
+    });
+
+    it("wraps backward across year boundary (10 -> 350)", () => {
+      // day 10 -> day 350: backward 25.25 days (via year wrap)
+      const delta = shortestDayDelta(10, 350);
+      expect(delta).toBeLessThan(0);
+      expect(delta).toBeCloseTo(-25.25, 1);
+    });
+
+    it("returns 0 for same day", () => {
+      expect(shortestDayDelta(100, 100)).toBe(0);
+    });
+
+    it("handles exactly half year (goes forward by convention)", () => {
+      // At exactly half year, delta = yearLength/2 which is at boundary
+      const delta = shortestDayDelta(0, 365.25 / 2);
+      expect(Math.abs(delta)).toBeCloseTo(365.25 / 2, 5);
+    });
+
+    it("uses custom yearLength", () => {
+      // With yearLength=360, day 350 -> day 10 = +20
+      const delta = shortestDayDelta(350, 10, 360);
+      expect(delta).toBeCloseTo(20, 5);
+    });
+
+    it("large forward jump wraps to short backward path", () => {
+      // day 10 -> day 300: raw delta = 290, but backward path = -75.25
+      const delta = shortestDayDelta(10, 300);
+      expect(delta).toBeLessThan(0);
+      expect(delta).toBeCloseTo(-75.25, 1);
     });
   });
 });
