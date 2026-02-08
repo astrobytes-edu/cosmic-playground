@@ -44,12 +44,15 @@
 
 /* --- Grid area mappings --- */
 
-/* Sidebar: physics controls (sticky, scrollable) */
+/* Sidebar: physics controls (sticky, scrollable)
+   z-index: 3 keeps the sidebar above .cp-demo__drawer (z-index:2)
+   so utility-toolbar buttons remain clickable when shelf overlaps. */
 .cp-demo__controls,
 .cp-demo__sidebar {
   grid-area: sidebar;
   position: sticky;
   top: var(--cp-space-4);
+  z-index: 3;
   align-self: start;
   max-height: calc(100svh - (2 * var(--cp-space-4)));
   overflow: hidden;
