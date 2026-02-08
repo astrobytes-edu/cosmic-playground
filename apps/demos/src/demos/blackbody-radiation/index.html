@@ -33,9 +33,9 @@
             <span class="control__value"><span id="tempValue"></span></span>
           </label>
 
-          <div class="segmented" role="group" aria-label="Intensity scale">
-            <button id="scaleLog" class="segmented__button" type="button">Log</button>
-            <button id="scaleLinear" class="segmented__button" type="button">Linear</button>
+          <div class="cp-chip-group" role="group" aria-label="Intensity scale">
+            <button id="scaleLog" class="cp-chip" type="button">Log</button>
+            <button id="scaleLinear" class="cp-chip" type="button">Linear</button>
           </div>
 
           <div class="check-row" role="group" aria-label="Overlays">
@@ -51,22 +51,22 @@
 
           <div class="presets">
             <div class="presets__label">Stars</div>
-            <div class="presets__row presets__row--3col" role="group" aria-label="Star presets">
-              <button class="cp-action cp-action--ghost preset" data-temp-k="34000" type="button">O star</button>
-              <button class="cp-action cp-action--ghost preset" data-temp-k="12000" type="button">B star</button>
-              <button class="cp-action cp-action--ghost preset" data-temp-k="9600" type="button">A star</button>
-              <button class="cp-action cp-action--ghost preset" data-temp-k="5772" type="button">Sun</button>
-              <button class="cp-action cp-action--ghost preset" data-temp-k="5200" type="button">K star</button>
-              <button class="cp-action cp-action--ghost preset" data-temp-k="3000" type="button">M dwarf</button>
+            <div class="cp-chip-group--grid presets__row presets__row--3col" role="group" aria-label="Star presets">
+              <button class="cp-chip preset" data-temp-k="34000" type="button">O star</button>
+              <button class="cp-chip preset" data-temp-k="12000" type="button">B star</button>
+              <button class="cp-chip preset" data-temp-k="9600" type="button">A star</button>
+              <button class="cp-chip preset" data-temp-k="5772" type="button">Sun</button>
+              <button class="cp-chip preset" data-temp-k="5200" type="button">K star</button>
+              <button class="cp-chip preset" data-temp-k="3000" type="button">M dwarf</button>
             </div>
             <div class="presets__label">Extreme &amp; Cold</div>
-            <div class="presets__row presets__row--3col" role="group" aria-label="Extreme and cold object presets">
-              <button class="cp-action cp-action--ghost preset" data-temp-k="25000" type="button">White Dwarf</button>
-              <button class="cp-action cp-action--ghost preset" data-temp-k="1000000" type="button">Neutron Star</button>
-              <button class="cp-action cp-action--ghost preset" data-temp-k="3500" type="button">Red Giant</button>
-              <button class="cp-action cp-action--ghost preset" data-temp-k="288" type="button">Earth</button>
-              <button class="cp-action cp-action--ghost preset" data-temp-k="250" type="button">Brown Dwarf</button>
-              <button class="cp-action cp-action--ghost preset" data-temp-k="2.725" type="button">CMB</button>
+            <div class="cp-chip-group--grid presets__row presets__row--3col" role="group" aria-label="Extreme and cold object presets">
+              <button class="cp-chip preset" data-temp-k="25000" type="button">White Dwarf</button>
+              <button class="cp-chip preset" data-temp-k="1000000" type="button">Neutron Star</button>
+              <button class="cp-chip preset" data-temp-k="3500" type="button">Red Giant</button>
+              <button class="cp-chip preset" data-temp-k="288" type="button">Earth</button>
+              <button class="cp-chip preset" data-temp-k="250" type="button">Brown Dwarf</button>
+              <button class="cp-chip preset" data-temp-k="2.725" type="button">CMB</button>
             </div>
           </div>
 
@@ -92,17 +92,46 @@
             </div>
           </div>
 
-          <button id="stationMode" class="cp-action" type="button">Station mode</button>
-          <button id="help" class="cp-action cp-action--ghost" type="button">Help / shortcuts</button>
-
-          <button id="copyResults" class="cp-action" type="button">Copy results</button>
-          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
-
-          <div class="cp-actions">
-            <a class="cp-button" href="../../exhibits/blackbody-radiation/">Open exhibit</a>
-            <a class="cp-button cp-button--outline" href="../../stations/blackbody-radiation/">Station card</a>
-            <a class="cp-button cp-button--outline" href="../../instructor/blackbody-radiation/">Instructor notes</a>
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"></rect>
+                <line x1="7" y1="7" x2="13" y2="7"></line>
+                <line x1="7" y1="10" x2="13" y2="10"></line>
+                <line x1="7" y1="13" x2="10" y2="13"></line>
+              </svg>
+            </button>
+            <button id="help" class="cp-utility-btn" type="button" aria-label="Help and shortcuts" title="Help / keys">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"></circle>
+                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"></path>
+                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"></circle>
+              </svg>
+            </button>
+            <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"></circle>
+                  <circle cx="10" cy="10" r="1.5"></circle>
+                  <circle cx="16" cy="10" r="1.5"></circle>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/blackbody-radiation/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/blackbody-radiation/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/blackbody-radiation/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
           </div>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
       </aside>
 

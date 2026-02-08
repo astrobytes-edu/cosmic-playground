@@ -131,4 +131,32 @@ describe("Blackbody Radiation -- Design System Contracts", () => {
       expect(controlsSection![0]).toContain('class="star-preview"');
     });
   });
+
+  describe("Component contracts", () => {
+    it("uses cp-chip for preset buttons (not cp-action)", () => {
+      const presetChips = html.match(/class="cp-chip preset"/g) || [];
+      expect(presetChips.length).toBeGreaterThanOrEqual(12);
+      expect(html).not.toContain("cp-action");
+    });
+
+    it("uses cp-chip for scale selector (not segmented__button)", () => {
+      expect(html).toContain('class="cp-chip"');
+      expect(html).not.toContain("segmented__button");
+    });
+
+    it("uses cp-chip-group containers for presets", () => {
+      expect(html).toContain("cp-chip-group--grid");
+      expect(html).toContain("cp-chip-group");
+    });
+
+    it("uses cp-utility-toolbar for actions (not cp-actions)", () => {
+      expect(html).toContain("cp-utility-toolbar");
+      expect(html).not.toContain('"cp-actions"');
+    });
+
+    it("has zero cp-action references in HTML and CSS", () => {
+      expect(html).not.toContain("cp-action");
+      expect(css).not.toContain("cp-action");
+    });
+  });
 });
