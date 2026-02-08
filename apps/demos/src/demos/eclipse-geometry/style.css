@@ -36,6 +36,12 @@
   gap: 8px;
 }
 
+.control--inline {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+}
+
 .control__value {
   color: var(--cp-muted);
   font-size: 0.95rem;

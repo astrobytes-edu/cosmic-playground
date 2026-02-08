@@ -42,6 +42,7 @@ const presetSeasonEl = document.querySelector<HTMLButtonElement>("#presetSeason"
 const animateMonthEl =
   document.querySelector<HTMLButtonElement>("#animateMonth");
 const animateYearEl = document.querySelector<HTMLButtonElement>("#animateYear");
+const animSpeedEl = document.querySelector<HTMLSelectElement>("#animSpeed");
 const motionNoteEl = document.querySelector<HTMLParagraphElement>("#motionNote");
 
 const simYearsEl = document.querySelector<HTMLInputElement>("#simYears");
@@ -142,7 +143,8 @@ if (
   !presetTotalSolarEl ||
   !presetLunarEl ||
   !presetNoEclipseEl ||
-  !presetSeasonEl
+  !presetSeasonEl ||
+  !animSpeedEl
 ) {
   throw new Error("Missing required DOM elements for eclipse-geometry demo.");
 }
@@ -158,6 +160,7 @@ const setNewMoon = setNewMoonEl;
 const setFullMoon = setFullMoonEl;
 const animateMonth = animateMonthEl;
 const animateYear = animateYearEl;
+const animSpeed = animSpeedEl;
 const motionNote = motionNoteEl;
 const simYears = simYearsEl;
 const simYearsValue = simYearsValueEl;
@@ -960,8 +963,14 @@ const MOON_RATE_DEG_PER_DAY = 360 / SIDEREAL_MONTH_DAYS;
 const NODE_RATE_DEG_PER_DAY = -360 / (NODE_REGRESSION_YEARS * JULIAN_YEAR_DAYS);
 const PHASE_RATE_DEG_PER_DAY = 360 / SYNODIC_MONTH_DAYS;
 
-const ANIMATE_MONTH_DAYS_PER_SECOND = 10;
-const ANIMATE_YEAR_DAYS_PER_SECOND = 36;
+// Base rate: 1 day/sec (one synodic month ≈ 30 seconds at 1x).
+// User selects a multiplier via the speed dropdown (1x / 3x / 5x / 10x).
+const BASE_DAYS_PER_SECOND = 1;
+let animSpeedMultiplier = Number(animSpeed.value) || 5;
+
+// Year animation uses 3x the current speed so a full year stays brisk
+// but still trackable (≈ 24 s at default 5x).
+const YEAR_SPEED_FACTOR = 3;
 
 const SIM_SPEED_DAYS_PER_SECOND: Record<SimSpeedKey, number> = {
   slow: 200,
@@ -1150,7 +1159,7 @@ function tick(t: number) {
   lastT = t;
 
   if (runMode === "animate-month") {
-    const dtDays = ANIMATE_MONTH_DAYS_PER_SECOND * dtSec;
+    const dtDays = BASE_DAYS_PER_SECOND * animSpeedMultiplier * dtSec;
     // Advance all three bodies in state (avoid slider step-snapping loss for slow rates)
     state.sunLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + SUN_RATE_DEG_PER_DAY * dtDays);
     state.moonLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.moonLonDeg + MOON_RATE_DEG_PER_DAY * dtDays);
@@ -1163,7 +1172,7 @@ function tick(t: number) {
   }
 
   if (runMode === "animate-year") {
-    const dtDays = Math.min(animateYearRemainingDays, ANIMATE_YEAR_DAYS_PER_SECOND * dtSec);
+    const dtDays = Math.min(animateYearRemainingDays, BASE_DAYS_PER_SECOND * animSpeedMultiplier * YEAR_SPEED_FACTOR * dtSec);
     animateYearRemainingDays = Math.max(0, animateYearRemainingDays - dtDays);
 
     // Advance all three bodies in state (avoid slider step-snapping loss for slow rates)
@@ -1238,6 +1247,7 @@ function tick(t: number) {
 }
 
 function stopTimeActions() {
+  cancelTween();
   const wasRunning = runMode !== "idle";
   if (!wasRunning) return;
   stopLoop();
@@ -1255,18 +1265,82 @@ function setPhasePressed(active: HTMLButtonElement | null) {
 setNewMoon.addEventListener("click", () => {
   stopTimeActions();
   if (challengeEngine.isActive()) challengeEngine.stop();
-  moonLon.value = String(state.sunLonDeg);
   setPhasePressed(setNewMoon);
-  render();
+  tweenMoonTo(state.sunLonDeg, null, 300);
 });
 
 setFullMoon.addEventListener("click", () => {
   stopTimeActions();
   if (challengeEngine.isActive()) challengeEngine.stop();
-  moonLon.value = String(EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + 180));
   setPhasePressed(setFullMoon);
-  render();
+  tweenMoonTo(EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + 180), null, 300);
 });
+
+/* ------------------------------------------------------------------ */
+/*  Animation speed selector                                           */
+/* ------------------------------------------------------------------ */
+
+animSpeed.addEventListener("change", () => {
+  animSpeedMultiplier = Number(animSpeed.value) || 5;
+});
+
+/* ------------------------------------------------------------------ */
+/*  Smooth tween for preset snaps (moon-phases pattern)                */
+/* ------------------------------------------------------------------ */
+
+let tweenRafId: number | null = null;
+
+function tweenMoonTo(
+  targetMoonLonDeg: number,
+  targetNodeLonDeg: number | null,
+  durationMs: number,
+  onComplete?: () => void
+) {
+  if (tweenRafId !== null) cancelAnimationFrame(tweenRafId);
+  if (prefersReducedMotion || durationMs <= 0) {
+    moonLon.value = String(Math.round(targetMoonLonDeg));
+    if (targetNodeLonDeg !== null) state.nodeLonDeg = targetNodeLonDeg;
+    render();
+    onComplete?.();
+    return;
+  }
+
+  const startMoon = Number(moonLon.value);
+  const startNode = state.nodeLonDeg;
+  // Compute shortest-path deltas
+  const deltaMoon = ((targetMoonLonDeg - startMoon + 540) % 360) - 180;
+  const deltaNode = targetNodeLonDeg !== null
+    ? ((targetNodeLonDeg - startNode + 540) % 360) - 180
+    : 0;
+  const t0 = performance.now();
+
+  const step = (now: number) => {
+    const t = Math.min(1, (now - t0) / durationMs);
+    // Ease-out cubic for smooth deceleration
+    const ease = 1 - Math.pow(1 - t, 3);
+    const moonNow = EclipseGeometryModel.normalizeAngleDeg(startMoon + deltaMoon * ease);
+    moonLon.value = String(Math.round(moonNow));
+    if (targetNodeLonDeg !== null) {
+      state.nodeLonDeg = EclipseGeometryModel.normalizeAngleDeg(startNode + deltaNode * ease);
+    }
+    render();
+    if (t < 1) {
+      tweenRafId = requestAnimationFrame(step);
+    } else {
+      tweenRafId = null;
+      onComplete?.();
+    }
+  };
+
+  tweenRafId = requestAnimationFrame(step);
+}
+
+function cancelTween() {
+  if (tweenRafId !== null) {
+    cancelAnimationFrame(tweenRafId);
+    tweenRafId = null;
+  }
+}
 
 /* ------------------------------------------------------------------ */
 /*  Eclipse preset handlers                                            */
@@ -1281,32 +1355,27 @@ presetTotalSolar.addEventListener("click", () => {
   stopTimeActions();
   if (challengeEngine.isActive()) challengeEngine.stop();
   const p = totalSolarPreset({ sunLonDeg: state.sunLonDeg });
-  moonLon.value = String(Math.round(p.moonLonDeg));
-  state.nodeLonDeg = p.nodeLonDeg;
   setPhasePressed(null);
   closePresetsPopover();
-  render();
+  tweenMoonTo(p.moonLonDeg, p.nodeLonDeg, 400);
 });
 
 presetLunar.addEventListener("click", () => {
   stopTimeActions();
   if (challengeEngine.isActive()) challengeEngine.stop();
   const p = lunarEclipsePreset({ sunLonDeg: state.sunLonDeg });
-  moonLon.value = String(Math.round(p.moonLonDeg));
-  state.nodeLonDeg = p.nodeLonDeg;
   setPhasePressed(null);
   closePresetsPopover();
-  render();
+  tweenMoonTo(p.moonLonDeg, p.nodeLonDeg, 400);
 });
 
 presetNoEclipse.addEventListener("click", () => {
   stopTimeActions();
   if (challengeEngine.isActive()) challengeEngine.stop();
   const p = noEclipsePreset({ sunLonDeg: state.sunLonDeg, nodeLonDeg: state.nodeLonDeg });
-  moonLon.value = String(Math.round(p.moonLonDeg));
   setPhasePressed(null);
   closePresetsPopover();
-  render();
+  tweenMoonTo(p.moonLonDeg, null, 400);
 });
 
 presetSeason.addEventListener("click", () => {
@@ -1314,16 +1383,16 @@ presetSeason.addEventListener("click", () => {
   stopTimeActions();
   if (challengeEngine.isActive()) challengeEngine.stop();
   // Place moon 30 deg before ascending node so it sweeps through the eclipse window
-  state.moonLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.nodeLonDeg - 30);
-  moonLon.value = String(Math.round(state.moonLonDeg));
+  const targetMoon = EclipseGeometryModel.normalizeAngleDeg(state.nodeLonDeg - 30);
   setPhasePressed(null);
   closePresetsPopover();
-  render();
-  // Trigger animate-month
-  stopLoop();
-  runMode = "animate-month";
-  updateTimeButtonLabels();
-  rafId = requestAnimationFrame(tick);
+  tweenMoonTo(targetMoon, null, 350, () => {
+    // Start animate-month after tween completes
+    stopLoop();
+    runMode = "animate-month";
+    updateTimeButtonLabels();
+    rafId = requestAnimationFrame(tick);
+  });
 });
 
 simYears.addEventListener("input", () => {
