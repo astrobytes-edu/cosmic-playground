@@ -144,6 +144,7 @@ function populateBands() {
     btn.className = "cp-chip band";
     btn.dataset.bandId = band.id;
     btn.textContent = band.shortLabel;
+    btn.setAttribute("aria-pressed", "false");
     btn.addEventListener("click", () => {
       state.bandId = band.id as BandId;
       render();

@@ -94,3 +94,24 @@ test.describe("Reduced motion respect", () => {
     });
   }
 });
+
+// ---------------------------------------------------------------------------
+// Challenge feedback accessibility
+// ---------------------------------------------------------------------------
+
+test.describe("Challenge feedback accessibility", () => {
+  test("challenge feedback div has aria-live=assertive", async ({ page }) => {
+    await page.goto("play/angular-size/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+
+    // Launch challenge mode
+    const challengeBtn = page.locator("#challengeMode");
+    if ((await challengeBtn.count()) > 0) {
+      await challengeBtn.click();
+      const feedback = page.locator(".cp-challenge-feedback");
+      await expect(feedback).toBeAttached();
+      await expect(feedback).toHaveAttribute("aria-live", "assertive");
+      await expect(feedback).toHaveAttribute("aria-atomic", "true");
+    }
+  });
+});

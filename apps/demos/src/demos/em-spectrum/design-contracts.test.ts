@@ -198,4 +198,13 @@ describe("EM Spectrum -- Design System Contracts", () => {
       expect(html).not.toContain("cp-actions");
     });
   });
+
+  describe("Chip button aria-pressed", () => {
+    it("all cp-chip buttons have initial aria-pressed attribute", () => {
+      const chipButtons = html.match(/<button[^>]*class="[^"]*cp-chip[^"]*"[^>]*>/g) || [];
+      expect(chipButtons.length).toBeGreaterThan(0);
+      const missing = chipButtons.filter((tag) => !tag.includes("aria-pressed"));
+      expect(missing, "cp-chip buttons missing aria-pressed").toEqual([]);
+    });
+  });
 });
