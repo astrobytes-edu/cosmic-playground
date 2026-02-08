@@ -480,7 +480,10 @@ function setUnits(units: "101" | "201") {
 }
 
 function clearPresetHighlight() {
-  elements.presets.forEach((btn) => btn.classList.remove("is-active"));
+  elements.presets.forEach((btn) => {
+    btn.classList.remove("is-active");
+    btn.setAttribute("aria-pressed", "false");
+  });
 }
 
 function applyPreset(btn: HTMLButtonElement) {
@@ -497,6 +500,7 @@ function applyPreset(btn: HTMLButtonElement) {
 
   clearPresetHighlight();
   btn.classList.add("is-active");
+  btn.setAttribute("aria-pressed", "true");
   update();
 }
 

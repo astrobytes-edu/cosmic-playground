@@ -1070,10 +1070,16 @@ function stopTimeActions() {
 
 populateDistancePresets();
 
+function setPhasePressed(active: HTMLButtonElement | null) {
+  setNewMoon.setAttribute("aria-pressed", active === setNewMoon ? "true" : "false");
+  setFullMoon.setAttribute("aria-pressed", active === setFullMoon ? "true" : "false");
+}
+
 setNewMoon.addEventListener("click", () => {
   stopTimeActions();
   if (challengeEngine.isActive()) challengeEngine.stop();
   moonLon.value = String(state.sunLonDeg);
+  setPhasePressed(setNewMoon);
   render();
 });
 
@@ -1081,6 +1087,7 @@ setFullMoon.addEventListener("click", () => {
   stopTimeActions();
   if (challengeEngine.isActive()) challengeEngine.stop();
   moonLon.value = String(EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + 180));
+  setPhasePressed(setFullMoon);
   render();
 });
 
@@ -1098,6 +1105,7 @@ animateMonth.addEventListener("click", () => {
   }
 
   stopLoop();
+  setPhasePressed(null);
   runMode = "animate-month";
   updateTimeButtonLabels();
   rafId = requestAnimationFrame(tick);
@@ -1113,6 +1121,7 @@ animateYear.addEventListener("click", () => {
   }
 
   stopLoop();
+  setPhasePressed(null);
   runMode = "animate-year";
   animateYearRemainingDays = TROPICAL_YEAR_DAYS;
   updateTimeButtonLabels();
@@ -1185,6 +1194,7 @@ copyResults.addEventListener("click", () => {
 
 moonLon.addEventListener("input", () => {
   stopTimeActions();
+  setPhasePressed(null);
   render();
 });
 nodeLon.addEventListener("input", () => {
@@ -1226,6 +1236,7 @@ function handleDragStart(e: MouseEvent | TouchEvent) {
   isDragging = true;
   moonDot.classList.add("stage__moon--dragging");
   stopTimeActions();
+  setPhasePressed(null);
 }
 
 function handleDragMove(e: MouseEvent | TouchEvent) {

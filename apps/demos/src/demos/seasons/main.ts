@@ -305,6 +305,7 @@ function startAnimation() {
   if (prefersReducedMotion) return;
   isAnimating = true;
   animateYear.textContent = "Stop animation";
+  setAnchorPressed(null);
   lastT = 0;
   rafId = window.requestAnimationFrame(step);
 }
@@ -648,19 +649,29 @@ challengeMode.addEventListener("click", () => {
   }
 });
 
-function setDay(day: number) {
+const anchorButtons: HTMLButtonElement[] = [anchorMarEqx, anchorJunSol, anchorSepEqx, anchorDecSol];
+
+function setAnchorPressed(active: HTMLButtonElement | null) {
+  for (const btn of anchorButtons) {
+    btn.setAttribute("aria-pressed", btn === active ? "true" : "false");
+  }
+}
+
+function setDay(day: number, activeButton: HTMLButtonElement | null = null) {
   stopAnimation();
   state.dayOfYear = clamp(day, 1, 365);
+  setAnchorPressed(activeButton);
   render();
 }
 
-anchorMarEqx.addEventListener("click", () => setDay(80));
-anchorJunSol.addEventListener("click", () => setDay(172));
-anchorSepEqx.addEventListener("click", () => setDay(266));
-anchorDecSol.addEventListener("click", () => setDay(356));
+anchorMarEqx.addEventListener("click", () => setDay(80, anchorMarEqx));
+anchorJunSol.addEventListener("click", () => setDay(172, anchorJunSol));
+anchorSepEqx.addEventListener("click", () => setDay(266, anchorSepEqx));
+anchorDecSol.addEventListener("click", () => setDay(356, anchorDecSol));
 
 dayOfYear.addEventListener("input", () => {
   stopAnimation();
+  setAnchorPressed(null);
   state.dayOfYear = Number(dayOfYear.value);
   render();
 });

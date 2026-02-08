@@ -282,6 +282,10 @@ function setPreset(name: string) {
   directionDeg.value = String(state.directionDeg);
   stopAnimation();
   recomputeOrbit();
+
+  for (const btn of presetButtons) {
+    btn.setAttribute("aria-pressed", btn.getAttribute("data-preset") === name ? "true" : "false");
+  }
 }
 
 function recomputeOrbit() {
@@ -557,20 +561,30 @@ demoModes.bindButtons({ helpButton, stationButton: stationModeButton });
 massSlider.value = String(valueToLogSlider(state.massSolar));
 r0Slider.value = String(valueToLogSlider(state.r0Au));
 
+function clearPresetPressed() {
+  for (const btn of presetButtons) {
+    btn.setAttribute("aria-pressed", "false");
+  }
+}
+
 massSlider.addEventListener("input", () => {
   stopAnimation();
+  clearPresetPressed();
   recomputeOrbit();
 });
 r0Slider.addEventListener("input", () => {
   stopAnimation();
+  clearPresetPressed();
   recomputeOrbit();
 });
 speedFactor.addEventListener("input", () => {
   stopAnimation();
+  clearPresetPressed();
   recomputeOrbit();
 });
 directionDeg.addEventListener("input", () => {
   stopAnimation();
+  clearPresetPressed();
   recomputeOrbit();
 });
 
