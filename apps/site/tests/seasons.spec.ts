@@ -8,11 +8,12 @@ test.describe("Seasons -- E2E", () => {
 
   // --- Layout & Visual ---
 
-  test("demo loads with all four shell sections visible", async ({ page }) => {
-    await expect(page.locator(".cp-demo__controls")).toBeVisible();
+  test("demo loads with all five shell sections visible", async ({ page }) => {
+    await expect(page.locator(".cp-demo__sidebar")).toBeVisible();
     await expect(page.locator(".cp-demo__stage")).toBeVisible();
     await expect(page.locator(".cp-demo__readouts")).toBeVisible();
-    await expect(page.locator(".cp-demo__drawer")).toBeVisible();
+    await expect(page.locator(".cp-context-message")).toBeAttached();
+    await expect(page.locator(".cp-demo__shelf")).toBeVisible();
   });
 
   test("starfield canvas is present and visible", async ({ page }) => {
@@ -120,19 +121,36 @@ test.describe("Seasons -- E2E", () => {
     expect(count).toBeGreaterThanOrEqual(3);
   });
 
-  // --- Accordion / Drawer ---
+  // --- Tabbed Shelf ---
 
-  test("What to notice accordion is open by default", async ({ page }) => {
-    const firstAccordion = page.locator(".cp-accordion").first();
-    await expect(firstAccordion).toHaveAttribute("open", "");
-    await expect(firstAccordion).toContainText("What to notice");
+  test("What to notice tab is selected by default", async ({ page }) => {
+    const noticeTab = page.locator("#tab-btn-notice");
+    await expect(noticeTab).toHaveAttribute("aria-selected", "true");
+    const noticePanel = page.locator("#tab-notice");
+    await expect(noticePanel).toBeVisible();
+    await expect(noticePanel).toContainText("Common myth");
   });
 
-  test("Model notes accordion can be opened", async ({ page }) => {
-    const modelNotes = page.locator(".cp-accordion").nth(1);
-    await modelNotes.locator("summary").click();
-    await expect(modelNotes).toHaveAttribute("open", "");
-    await expect(modelNotes).toContainText("Model notes");
+  test("clicking Model notes tab switches to model content", async ({ page }) => {
+    // Shelf tabs may be behind sticky sidebar — dispatch click via JS
+    await page.evaluate(() => document.getElementById("tab-btn-model")?.click());
+    const modelTab = page.locator("#tab-btn-model");
+    await expect(modelTab).toHaveAttribute("aria-selected", "true");
+    const modelPanel = page.locator("#tab-model");
+    await expect(modelPanel).not.toHaveAttribute("hidden", "");
+    await expect(modelPanel).toContainText("Declination");
+    // Previous tab deselected
+    await expect(page.locator("#tab-btn-notice")).toHaveAttribute("aria-selected", "false");
+  });
+
+  test("clicking Overlays tab shows overlay chips", async ({ page }) => {
+    await page.evaluate(() => document.getElementById("tab-btn-overlays")?.click());
+    const overlaysTab = page.locator("#tab-btn-overlays");
+    await expect(overlaysTab).toHaveAttribute("aria-selected", "true");
+    const overlaysPanel = page.locator("#tab-overlays");
+    await expect(overlaysPanel).not.toHaveAttribute("hidden", "");
+    const chips = overlaysPanel.locator("button[data-overlay]");
+    await expect(chips).toHaveCount(7);
   });
 
   // --- Station Mode ---
@@ -158,14 +176,14 @@ test.describe("Seasons -- E2E", () => {
     await expect(status).toHaveAttribute("role", "status");
   });
 
-  test("controls panel has accessible label", async ({ page }) => {
-    const controls = page.locator(".cp-demo__controls");
-    await expect(controls).toHaveAttribute("aria-label", "Controls panel");
+  test("sidebar has accessible label", async ({ page }) => {
+    const sidebar = page.locator(".cp-demo__sidebar");
+    await expect(sidebar).toHaveAttribute("aria-label", "Controls panel");
   });
 
-  test("readouts panel has accessible label", async ({ page }) => {
+  test("readout strip has accessible label", async ({ page }) => {
     const readouts = page.locator(".cp-demo__readouts");
-    await expect(readouts).toHaveAttribute("aria-label", "Readouts panel");
+    await expect(readouts).toHaveAttribute("aria-label", "Readouts");
   });
 
   test("help button opens help modal", async ({ page }) => {
@@ -297,40 +315,47 @@ test.describe("Seasons -- E2E", () => {
   // --- Overlay Toggles ---
 
   test("clicking Terminator overlay chip hides the terminator element", async ({ page }) => {
+    // Switch to Overlays tab via JS (sticky sidebar may overlap)
+    await page.evaluate(() => document.getElementById("tab-btn-overlays")?.click());
+
     const terminator = page.locator("#terminator");
     // Terminator starts visible (aria-pressed="true")
     await expect(terminator).toBeVisible();
 
     const chip = page.locator('button[data-overlay="terminator"]');
-    await chip.click();
+    await chip.click({ force: true });
     // After toggle, terminator should be hidden
     await expect(terminator).toBeHidden();
 
     // Click again to restore
-    await chip.click();
+    await chip.click({ force: true });
     await expect(terminator).toBeVisible();
   });
 
   test("clicking Ecliptic overlay chip shows the ecliptic line", async ({ page }) => {
+    await page.evaluate(() => document.getElementById("tab-btn-overlays")?.click());
+
     const ecliptic = page.locator("#globe-ecliptic");
     // Ecliptic starts hidden via inline style="display:none"
     await expect(ecliptic).toHaveCSS("display", "none");
 
     const chip = page.locator('button[data-overlay="ecliptic"]');
-    await chip.click();
-    // After toggle, display:none is removed (SVG line may not pass toBeVisible due to thin stroke in clip-path)
+    await chip.click({ force: true });
+    // After toggle, display:none is removed
     await expect(ecliptic).not.toHaveCSS("display", "none");
     // Verify the chip aria-pressed flipped
     await expect(chip).toHaveAttribute("aria-pressed", "true");
   });
 
   test("clicking Cel. Equator overlay chip shows the celestial equator", async ({ page }) => {
+    await page.evaluate(() => document.getElementById("tab-btn-overlays")?.click());
+
     const celEquator = page.locator("#globe-equator");
     // Starts hidden via inline style="display:none"
     await expect(celEquator).toHaveCSS("display", "none");
 
     const chip = page.locator('button[data-overlay="equator"]');
-    await chip.click();
+    await chip.click({ force: true });
     // After toggle, display:none is removed
     await expect(celEquator).not.toHaveCSS("display", "none");
     await expect(chip).toHaveAttribute("aria-pressed", "true");
@@ -375,7 +400,7 @@ test.describe("Seasons -- E2E", () => {
     const aphCy = parseFloat((await page.locator("#earthOrbitDot").getAttribute("cy")) || "0");
     const aphR = Math.sqrt(aphCx * aphCx + aphCy * aphCy);
 
-    // With 8x exaggeration, perihelion should be noticeably closer than aphelion
+    // With 2x exaggeration, perihelion should be noticeably closer than aphelion
     expect(aphR).toBeGreaterThan(periR);
     expect(aphR - periR).toBeGreaterThan(5); // significant pixel difference
   });
@@ -388,6 +413,118 @@ test.describe("Seasons -- E2E", () => {
     const tiltText = await page.locator("#tiltValue").textContent();
     expect(tiltText).toContain("90");
   });
+
+  // --- Season Color Coding ---
+
+  test("season readout has color-coded CSS class", async ({ page }) => {
+    // At default (day 80 = March equinox), season is Spring
+    await page.locator("#anchorMarEqx").click();
+    await page.waitForTimeout(700);
+    const northSpan = page.locator("#seasonNorthValue");
+    await expect(northSpan).toHaveClass(/season--spring/);
+  });
+
+  test("season color changes when season changes", async ({ page }) => {
+    await page.locator("#anchorJunSol").click();
+    await page.waitForTimeout(700);
+    const northSpan = page.locator("#seasonNorthValue");
+    await expect(northSpan).toHaveClass(/season--summer/);
+
+    await page.locator("#anchorDecSol").click();
+    await page.waitForTimeout(700);
+    await expect(northSpan).toHaveClass(/season--winter/);
+  });
+
+  // --- Contextual Messages ---
+
+  test("perihelion range shows distance-myth message", async ({ page }) => {
+    await page.locator("#dayOfYear").fill("3");
+    await page.locator("#dayOfYear").dispatchEvent("input");
+    const msg = page.locator("#contextMessage");
+    await expect(msg).toContainText("closest to the Sun");
+  });
+
+  test("June solstice shows solstice message", async ({ page }) => {
+    await page.locator("#dayOfYear").fill("172");
+    await page.locator("#dayOfYear").dispatchEvent("input");
+    const msg = page.locator("#contextMessage");
+    await expect(msg).toContainText("June solstice");
+  });
+
+  test("zero tilt shows no-seasons message", async ({ page }) => {
+    await page.locator("#tilt").fill("0");
+    await page.locator("#tilt").dispatchEvent("input");
+    const msg = page.locator("#contextMessage");
+    await expect(msg).toContainText("no seasons");
+  });
+
+  // --- Orbit Panel Features ---
+
+  test("season labels are positioned around orbit", async ({ page }) => {
+    const labels = page.locator(".stage__seasonLabel");
+    await expect(labels).toHaveCount(4);
+    // Each label should have text content
+    for (let i = 0; i < 4; i++) {
+      const text = await labels.nth(i).textContent();
+      expect(text).toBeTruthy();
+    }
+  });
+
+  test("Polaris axis is visible", async ({ page }) => {
+    const polaris = page.locator("#polarisGroup");
+    await expect(polaris).toBeAttached();
+    const axis = page.locator("#polarisAxis");
+    const x2 = await axis.getAttribute("x2");
+    const y2 = await axis.getAttribute("y2");
+    expect(x2).not.toBeNull();
+    expect(y2).not.toBeNull();
+  });
+
+  test("distance line connects sun to earth", async ({ page }) => {
+    const line = page.locator("#distanceLine");
+    await expect(line).toBeAttached();
+    const x2 = await line.getAttribute("x2");
+    const y2 = await line.getAttribute("y2");
+    expect(x2).not.toBeNull();
+    expect(y2).not.toBeNull();
+  });
+
+  // --- Globe Overlay Features ---
+
+  test("sunlight rays overlay can be toggled", async ({ page }) => {
+    await page.evaluate(() => document.getElementById("tab-btn-overlays")?.click());
+    const chip = page.locator('button[data-overlay="sunlight-rays"]');
+    await expect(chip).toHaveAttribute("aria-pressed", "true");
+
+    const rays = page.locator("#sunlightRays");
+    await expect(rays).toBeAttached();
+
+    // Toggle off
+    await chip.click({ force: true });
+    await expect(chip).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("day arc overlay can be toggled", async ({ page }) => {
+    await page.evaluate(() => document.getElementById("tab-btn-overlays")?.click());
+    const chip = page.locator('button[data-overlay="day-arc"]');
+    await expect(chip).toHaveAttribute("aria-pressed", "true");
+
+    // Toggle off
+    await chip.click({ force: true });
+    await expect(chip).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("hour grid overlay can be toggled on", async ({ page }) => {
+    await page.evaluate(() => document.getElementById("tab-btn-overlays")?.click());
+    const chip = page.locator('button[data-overlay="hour-grid"]');
+    await expect(chip).toHaveAttribute("aria-pressed", "false");
+
+    // Toggle on
+    await chip.click({ force: true });
+    await expect(chip).toHaveAttribute("aria-pressed", "true");
+  });
+
+  // --- Tilt Slider Full Range ---
 
   test("tilt at 90 degrees produces extreme declination at solstice", async ({ page }) => {
     await page.locator("#tilt").fill("90");

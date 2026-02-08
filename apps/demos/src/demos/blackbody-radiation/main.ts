@@ -1,4 +1,4 @@
-import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, initTabs, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { BlackbodyRadiationModel } from "@cosmic/physics";
 import { clamp, logSliderToValue, valueToLogSlider, formatNumber, wavelengthDomainNm, sampleLogSpace, wavelengthToApproxRgb, formatWavelengthLabel, wavelengthToLogFraction, formatWavelengthReadout } from "./logic";
@@ -26,6 +26,7 @@ const colorNameEl = document.querySelector<HTMLSpanElement>("#colorName");
 const peakNmEl = document.querySelector<HTMLSpanElement>("#peakNm");
 const peakUnitEl = peakNmEl?.parentElement?.querySelector<HTMLSpanElement>(".cp-readout__unit");
 const lumRatioEl = document.querySelector<HTMLSpanElement>("#lumRatio");
+const tabExploreEl = document.querySelector<HTMLButtonElement>("#tab-explore");
 
 if (
   !tempSliderEl ||
@@ -540,6 +541,9 @@ for (const button of presetButtons) {
 }
 
 window.addEventListener("resize", () => render());
+tabExploreEl?.addEventListener("click", () => {
+  window.requestAnimationFrame(() => render());
+});
 
 const demoModes = createDemoModes({
   help: {
@@ -651,4 +655,5 @@ if (starfieldCanvas) {
 const demoRoot = document.getElementById("cp-demo");
 if (demoRoot) {
   initPopovers(demoRoot);
+  initTabs(demoRoot);
 }

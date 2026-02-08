@@ -135,13 +135,34 @@
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage stage" aria-label="Spectrum visualization stage">
+      <section class="cp-demo__stage cp-stage" aria-label="Spectrum visualization stage">
         <canvas class="cp-starfield" aria-hidden="true"></canvas>
-        <canvas
-          id="spectrumCanvas"
-          role="img"
-          aria-label="Blackbody spectrum curve showing relative intensity versus wavelength"
-        ></canvas>
+        <div class="cp-tabs stage-tabs" role="tablist" aria-label="View mode">
+          <button class="cp-tab" role="tab" aria-selected="true"
+                  aria-controls="panel-explore" id="tab-explore">Explore</button>
+          <button class="cp-tab" role="tab" aria-selected="false"
+                  aria-controls="panel-understand" id="tab-understand">Understand</button>
+        </div>
+        <div class="cp-tab-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
+          <div class="stage">
+            <canvas
+              id="spectrumCanvas"
+              role="img"
+              aria-label="Blackbody spectrum curve showing relative intensity versus wavelength"
+            ></canvas>
+          </div>
+        </div>
+        <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
+          <div class="cp-notice">
+            <h3>Physics of a blackbody spectrum</h3>
+            <ul>
+              <li>The Planck curve gives intensity versus wavelength for a thermal emitter.</li>
+              <li>Wien’s law sets the peak trend: hotter objects peak at shorter wavelengths.</li>
+              <li>Stefan-Boltzmann scaling links total emitted flux to temperature as <code>T^4</code>.</li>
+              <li>Perceived color is an approximation from the visible-band contribution, not only <code>&lambda;<sub>peak</sub></code>.</li>
+            </ul>
+          </div>
+        </div>
       </section>
 
       <section class="cp-demo__drawer cp-drawer" aria-label="Panels">

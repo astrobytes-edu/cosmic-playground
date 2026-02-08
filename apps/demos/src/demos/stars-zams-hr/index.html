@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stars (ZAMS + HR) — Cosmic Playground</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
+  </head>
+  <body>
+    <canvas class="cp-starfield" aria-hidden="true"></canvas>
+    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Stars ZAMS and HR instrument">
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Stars: ZAMS (Tout 1996) to H-R Position</div>
+        <div class="cp-panel-body cp-scroll-shadow">
+          <p class="cp-muted">Explore how mass and metallicity shift ZAMS luminosity, radius, effective temperature, and H-R placement.</p>
+
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"></rect>
+                <line x1="7" y1="7" x2="13" y2="7"></line>
+                <line x1="7" y1="10" x2="13" y2="10"></line>
+                <line x1="7" y1="13" x2="10" y2="13"></line>
+              </svg>
+            </button>
+            <button id="help" class="cp-utility-btn" type="button" aria-label="Help and shortcuts" title="Help / keys">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"></circle>
+                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"></path>
+                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"></circle>
+              </svg>
+            </button>
+            <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"></circle>
+                  <circle cx="10" cy="10" r="1.5"></circle>
+                  <circle cx="16" cy="10" r="1.5"></circle>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/stars-zams-hr/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/stars-zams-hr/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/stars-zams-hr/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
+          </div>
+
+          <label class="control">
+            <span>Mass $M$ [M<sub>&#x2609;</sub>]</span>
+            <input id="massSlider" type="range" min="0" max="1000" step="1" value="333" data-tooltip-source="#massValue" aria-label="Mass slider" />
+            <span class="control__value"><span id="massValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Metallicity $Z$</span>
+            <input id="metallicitySlider" type="range" min="0" max="1000" step="1" value="767" data-tooltip-source="#metallicityValue" aria-label="Metallicity slider" />
+            <span class="control__value"><span id="metallicityValue"></span></span>
+          </label>
+
+          <div class="presets">
+            <div class="presets__label">ZAMS presets</div>
+            <div class="cp-chip-group--grid presets__row presets__row--2col" role="group" aria-label="ZAMS presets">
+              <button class="cp-chip preset" data-preset-id="sun" data-mode="zams" data-mass-msun="1" data-metallicity-z="0.02" type="button" aria-pressed="false">Sun</button>
+              <button class="cp-chip preset" data-preset-id="metal-poor-dwarf" data-mode="zams" data-mass-msun="0.6" data-metallicity-z="0.0005" type="button" aria-pressed="false">Metal-poor dwarf</button>
+              <button class="cp-chip preset" data-preset-id="a-star" data-mode="zams" data-mass-msun="2.2" data-metallicity-z="0.02" type="button" aria-pressed="false">A star</button>
+              <button class="cp-chip preset" data-preset-id="b-star" data-mode="zams" data-mass-msun="8" data-metallicity-z="0.02" type="button" aria-pressed="false">B star</button>
+              <button class="cp-chip preset" data-preset-id="o-star" data-mode="zams" data-mass-msun="30" data-metallicity-z="0.02" type="button" aria-pressed="false">O star</button>
+            </div>
+
+            <div class="presets__label">Override presets (non-ZAMS)</div>
+            <div class="cp-chip-group--grid presets__row presets__row--2col" role="group" aria-label="Override presets">
+              <button class="cp-chip preset" data-preset-id="red-supergiant" data-mode="override" data-mass-msun="18" data-metallicity-z="0.02" data-teff-k="3600" data-radius-rsun="700" type="button" aria-pressed="false">Red supergiant</button>
+              <button class="cp-chip preset" data-preset-id="blue-supergiant" data-mode="override" data-mass-msun="25" data-metallicity-z="0.02" data-teff-k="20000" data-radius-rsun="40" type="button" aria-pressed="false">Blue supergiant</button>
+              <button class="cp-chip preset" data-preset-id="white-dwarf" data-mode="override" data-mass-msun="0.8" data-metallicity-z="0.02" data-teff-k="25000" data-radius-rsun="0.013" type="button" aria-pressed="false">White dwarf</button>
+            </div>
+          </div>
+
+          <div class="cp-readout">
+            <div class="cp-readout__label">Effective temperature $T_{\rm eff}$</div>
+            <div class="cp-readout__value"><span id="teffValue"></span> <span class="cp-readout__unit">K</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Luminosity $L/L_{\odot}$</div>
+            <div class="cp-readout__value"><span id="luminosityValue"></span> <span class="cp-readout__unit">L<sub>&#x2609;</sub></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Radius $R/R_{\odot}$</div>
+            <div class="cp-readout__value"><span id="radiusValue"></span> <span class="cp-readout__unit">R<sub>&#x2609;</sub></span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Mass $M/M_{\odot}$</div>
+            <div class="cp-readout__value"><span id="massReadout"></span> <span class="cp-readout__unit">M<sub>&#x2609;</sub></span></div>
+          </div>
+
+          <p id="validityBadge" class="cp-muted" role="note"></p>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </aside>
+
+      <section class="cp-demo__stage cp-stage stage" aria-label="H-R diagram stage">
+        <canvas id="hrCanvas" role="img" aria-label="H-R diagram with current stellar point"></canvas>
+      </section>
+
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">3 prompts</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Increasing mass usually pushes stars toward hotter and more luminous parts of the ZAMS track.</li>
+                <li>Changing metallicity shifts $L$, $R$, and $T_{\rm eff}$ even at fixed mass.</li>
+                <li>Override presets are intentionally flagged because they are not ZAMS states.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">Tout 1996 + units</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>ZAMS relations use Tout et al. (1996) analytic fits for $L(M,Z)$ and $R(M,Z)$.</li>
+                <li>Validity range: $0.1\le M/M_{\odot}\le100$ and $10^{-4}\le Z\le0.03$.</li>
+                <li>Effective temperature closure: $T_{\rm eff}=T_{\odot}\left[(L/L_{\odot})/(R/R_{\odot})^2\right]^{1/4}$.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

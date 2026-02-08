@@ -25,5 +25,7 @@ export type {
 } from "./stellarEosModel";
 export { TelescopeResolutionModel } from "./telescopeResolutionModel";
 export { TwoBodyAnalytic } from "./twoBodyAnalytic";
+export { ZamsTout1996Model } from "./zamsTout1996Model";
+export type { ZamsValidity } from "./zamsTout1996Model";
 export { solarDeclinationDegFromDayOfYear } from "./riseSetModel";
 export { solarRiseSetLocalTimeHours, moonRiseSetLocalTimeHours } from "./riseSetModel";

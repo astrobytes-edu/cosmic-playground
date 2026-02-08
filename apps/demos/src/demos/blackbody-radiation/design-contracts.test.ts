@@ -30,6 +30,24 @@ describe("Blackbody Radiation -- Design System Contracts", () => {
       expect(mainTs).toContain("initStarfield");
       expect(mainTs).toMatch(/initStarfield\s*\(/);
     });
+
+    it("main.ts initializes tabs via initTabs", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("initTabs");
+      expect(mainTs).toMatch(/initTabs\s*\(/);
+    });
+  });
+
+  describe("Explore/Understand tabs", () => {
+    it("contains two top-level stage tabs with ARIA wiring", () => {
+      expect(html).toContain('id="tab-explore"');
+      expect(html).toContain('id="tab-understand"');
+      expect(html).toContain('id="panel-explore"');
+      expect(html).toContain('id="panel-understand"');
+      const tabButtons = html.match(/role="tab"/g) || [];
+      expect(tabButtons.length).toBeGreaterThanOrEqual(2);
+    });
   });
 
   describe("Readout unit separation", () => {

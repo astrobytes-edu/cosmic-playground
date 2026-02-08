@@ -53,6 +53,14 @@
   padding: var(--cp-space-4);
 }
 
+.stage-tabs {
+  padding: var(--cp-space-2) var(--cp-space-2) 0;
+}
+
+.understand-panel {
+  padding: var(--cp-space-2) var(--cp-space-2) var(--cp-space-3);
+}
+
 #spectrumCanvas {
   width: 100%;
   height: auto;
@@ -113,4 +121,3 @@
 .cp-demo__drawer {
   animation: cp-fade-in 0.8s var(--cp-ease-out) 0.3s backwards;
 }
-
