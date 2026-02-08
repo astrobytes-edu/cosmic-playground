@@ -122,4 +122,56 @@ describe("Telescope Resolution -- Design System Contracts", () => {
       expect(html).toMatch(/cp-demo__readouts[^>]*aria-label="Readouts panel"/);
     });
   });
+
+  describe("Component contracts", () => {
+    it("uses cp-utility-toolbar for actions (not cp-actions)", () => {
+      expect(html).toContain("cp-utility-toolbar");
+      expect(html).not.toContain('"cp-actions"');
+    });
+
+    it("has zero cp-action references in HTML and CSS", () => {
+      expect(html).not.toContain("cp-action");
+      expect(css).not.toContain("cp-action");
+    });
+
+    it("uses cp-chip-group for band picker buttons", () => {
+      expect(html).toContain("cp-chip-group");
+    });
+
+    it("main.ts creates band buttons with cp-chip class", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain('"cp-chip band"');
+      expect(mainTs).not.toContain('"band--active"');
+    });
+
+    it("has no band--active CSS rule (cp-chip handles active state)", () => {
+      expect(css).not.toContain("band--active");
+    });
+
+    it("toolbar has disabled challenge mode button", () => {
+      expect(html).toMatch(/id="challengeMode"[^>]*disabled/);
+    });
+
+    it("utility toolbar buttons have aria-labels", () => {
+      expect(html).toMatch(/id="stationMode"[^>]*aria-label/);
+      expect(html).toMatch(/id="help"[^>]*aria-label/);
+      expect(html).toMatch(/id="copyResults"[^>]*aria-label/);
+    });
+
+    it("has popover nav with exhibit/station/instructor links", () => {
+      expect(html).toContain("cp-popover");
+      expect(html).toContain("cp-popover-trigger");
+      expect(html).toContain('href="../../exhibits/telescope-resolution/"');
+      expect(html).toContain('href="../../stations/telescope-resolution/"');
+      expect(html).toContain('href="../../instructor/telescope-resolution/"');
+    });
+
+    it("main.ts imports and calls initPopovers", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("initPopovers");
+      expect(mainTs).toMatch(/initPopovers\s*\(/);
+    });
+  });
 });

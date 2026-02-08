@@ -1,6 +1,6 @@
 import { telescopePresets, wavelengthBands, seeingConditions } from "@cosmic/data-telescopes";
 import { AstroConstants, AstroUnits, TelescopeResolutionModel } from "@cosmic/physics";
-import { createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 
 import { requiredSelector } from "../../shared/dom";
@@ -141,7 +141,7 @@ function populateBands() {
   for (const band of wavelengthBands) {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "band";
+    btn.className = "cp-chip band";
     btn.dataset.bandId = band.id;
     btn.textContent = band.shortLabel;
     btn.addEventListener("click", () => {
@@ -167,7 +167,7 @@ function setBandButtonStates() {
   for (const b of buttons) {
     const id = b.dataset.bandId;
     const active = id === state.bandId;
-    b.classList.toggle("band--active", active);
+    b.classList.toggle("is-active", active);
     b.setAttribute("aria-pressed", active ? "true" : "false");
   }
 }
@@ -545,5 +545,8 @@ copyResultsEl.addEventListener("click", () => {
       setLiveRegionText(statusEl, err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.");
     });
 });
+
+const demoRoot = document.getElementById("cp-demo");
+if (demoRoot) initPopovers(demoRoot);
 
 initMath(document);

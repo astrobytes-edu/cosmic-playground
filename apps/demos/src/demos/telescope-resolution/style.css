@@ -26,28 +26,7 @@
 }
 
 .band-picker__buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
   margin-bottom: 8px;
-}
-
-.band {
-  border: 1px solid var(--cp-border);
-  background: color-mix(in srgb, var(--cp-bg2) 78%, transparent);
-  color: var(--cp-text);
-  border-radius: 9999px;
-  padding: 0.35rem 0.7rem;
-  cursor: pointer;
-}
-
-.band:hover {
-  border-color: var(--cp-accent);
-}
-
-.band--active {
-  border-color: var(--cp-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cp-accent) 22%, transparent);
 }
 
 .stage {
