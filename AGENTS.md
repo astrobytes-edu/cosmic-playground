@@ -143,4 +143,12 @@ If the user asks “what should I do?” / “is this normal?” / “what branc
   - **D** = physical **diameter**
   - **d** = **distance**
 - Do **not** reuse **D**/**d** for other distances (e.g., use `dEarthMoonKm`, `distanceToSunKm`, etc.).
+
+### Math formatting policy (important)
+- Teaching-facing math formatting defaults:
+  - Inline math uses `$...$`.
+  - Display equations use `$$...$$`.
+- Use proper solar notation in math and labels:
+  - `$L/L_{\odot}$`, `$R/R_{\odot}$`, `$T_{\rm eff}$`.
+- For powers-of-ten axes/readouts, use exponent notation (`$10^n$`) and avoid `e` notation in teaching-facing copy.
 </INSTRUCTIONS>

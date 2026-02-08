@@ -10,6 +10,18 @@
   font-size: 0.95rem;
 }
 
+.check {
+  display: flex;
+  gap: var(--cp-space-2);
+  align-items: center;
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.check input[type="checkbox"] {
+  accent-color: var(--cp-accent);
+}
+
 .control input:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -37,7 +49,24 @@
 .stage {
   display: grid;
   gap: var(--cp-space-3);
-  padding: var(--cp-space-4);
+  padding: var(--cp-space-2);
+}
+
+.stage-tabs {
+  padding: var(--cp-space-2) var(--cp-space-2) 0;
+}
+
+.cp-tab-panel {
+  padding: var(--cp-space-2);
+}
+
+.stage-note {
+  margin: 0;
+}
+
+.understand-panel {
+  display: grid;
+  gap: var(--cp-space-2);
 }
 
 #hrCanvas {

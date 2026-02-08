@@ -55,8 +55,13 @@
             </div>
           </div>
 
+          <div class="cp-chip-group" role="group" aria-label="Source mode">
+            <button id="modeZams" class="cp-chip" type="button" aria-pressed="true">ZAMS mode</button>
+            <button id="modeStefan" class="cp-chip" type="button" aria-pressed="false">Stefan mode</button>
+          </div>
+
           <label class="control">
-            <span>Mass $M$ [M<sub>&#x2609;</sub>]</span>
+            <span>Mass $M$ [$M_{\odot}$]</span>
             <input id="massSlider" type="range" min="0" max="1000" step="1" value="333" data-tooltip-source="#massValue" aria-label="Mass slider" />
             <span class="control__value"><span id="massValue"></span></span>
           </label>
@@ -65,6 +70,23 @@
             <span>Metallicity $Z$</span>
             <input id="metallicitySlider" type="range" min="0" max="1000" step="1" value="767" data-tooltip-source="#metallicityValue" aria-label="Metallicity slider" />
             <span class="control__value"><span id="metallicityValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Effective temperature $T_{\rm eff}$ [kK]</span>
+            <input id="teffSlider" type="range" min="0" max="1000" step="1" value="381" data-tooltip-source="#teffSliderValue" aria-label="Effective temperature slider" />
+            <span class="control__value"><span id="teffSliderValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Radius $R$ [$R_{\odot}$]</span>
+            <input id="radiusSlider" type="range" min="0" max="1000" step="1" value="500" data-tooltip-source="#radiusSliderValue" aria-label="Radius slider" />
+            <span class="control__value"><span id="radiusSliderValue"></span></span>
+          </label>
+
+          <label class="check">
+            <input id="showRadiusGuides" type="checkbox" />
+            Show constant-$R$ guide lines
           </label>
 
           <div class="presets">
@@ -87,7 +109,7 @@
 
           <div class="cp-readout">
             <div class="cp-readout__label">Effective temperature $T_{\rm eff}$</div>
-            <div class="cp-readout__value"><span id="teffValue"></span> <span class="cp-readout__unit">K</span></div>
+            <div class="cp-readout__value"><span id="teffValue"></span> <span class="cp-readout__unit">kK</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Luminosity $L/L_{\odot}$</div>
@@ -101,6 +123,11 @@
             <div class="cp-readout__label">Mass $M/M_{\odot}$</div>
             <div class="cp-readout__value"><span id="massReadout"></span></div>
           </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Surface flux ratio $F/F_{\odot}$</div>
+            <div class="cp-readout__value"><span id="fluxRatioValue"></span></div>
+          </div>
+          <p id="modeAssumptionText" class="cp-muted"></p>
 
           <p id="validityBadge" class="cp-muted" role="note"></p>
           <p id="overrideModeHint" class="cp-muted" role="note" hidden>
@@ -111,7 +138,51 @@
       </aside>
 
       <section class="cp-demo__stage cp-stage stage" aria-label="H-R diagram stage">
-        <canvas id="hrCanvas" role="img" aria-label="H-R diagram with current stellar point"></canvas>
+        <div class="cp-tabs stage-tabs" role="tablist" aria-label="View mode">
+          <button class="cp-tab" role="tab" aria-selected="true"
+                  aria-controls="panel-explore" id="tab-explore">Explore</button>
+          <button class="cp-tab" role="tab" aria-selected="false"
+                  aria-controls="panel-understand" id="tab-understand">Understand</button>
+        </div>
+
+        <div class="cp-tab-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
+          <canvas id="hrCanvas" role="img" aria-label="H-R diagram with current stellar point"></canvas>
+          <p class="cp-muted stage-note">Both axes use base-10 logarithmic scaling to show stellar orders-of-magnitude clearly.</p>
+        </div>
+
+        <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
+          <div class="cp-notice">
+            <h3>How the H-R diagram connects to blackbody radiation</h3>
+            <p>
+              The H-R diagram maps thermal state ($T_{\rm eff}$) against total luminosity ($L$).
+              This demo uses log-log axes because stars span many orders of magnitude in both quantities.
+            </p>
+          </div>
+          <div class="cp-notice">
+            <h3>Surface flux vs total luminosity</h3>
+            <p>Use these as linked, not interchangeable, statements:</p>
+            <p>
+              $$F=\sigma T^4$$
+            </p>
+            <p>
+              $$L=4\pi R^2\sigma T^4$$
+            </p>
+            <p>
+              $$\frac{L}{L_{\odot}}=\left(\frac{R}{R_{\odot}}\right)^2\left(\frac{T_{\rm eff}}{T_{\odot}}\right)^4$$
+            </p>
+            <ul>
+              <li>At fixed $T_{\rm eff}$, larger $R$ means larger $L$ (vertical offset in H-R space).</li>
+              <li>At fixed $R$, hotter $T_{\rm eff}$ means much larger $L$.</li>
+            </ul>
+          </div>
+          <div class="cp-notice">
+            <h3>Why constant-$R$ lines help</h3>
+            <p>
+              Turning on constant-$R$ guides shows families of stars with the same radius.
+              This makes the geometric factor in $L=4\pi R^2\sigma T^4$ visible directly on the plot.
+            </p>
+          </div>
+        </div>
       </section>
 
       <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
@@ -125,7 +196,7 @@
               <ul>
                 <li>Increasing mass usually pushes stars toward hotter and more luminous parts of the ZAMS track.</li>
                 <li>Changing metallicity shifts $L$, $R$, and $T_{\rm eff}$ even at fixed mass.</li>
-                <li>Override presets are intentionally flagged because they are not ZAMS states.</li>
+                <li>Stefan mode isolates radius and temperature effects; ZAMS mode constrains stars to Tout-1996 fits.</li>
               </ul>
             </div>
           </details>
@@ -139,7 +210,8 @@
               <ul>
                 <li>ZAMS relations use Tout et al. (1996) analytic fits for $L(M,Z)$ and $R(M,Z)$.</li>
                 <li>Validity range: $0.1\le M/M_{\odot}\le100$ and $10^{-4}\le Z\le0.03$.</li>
-                <li>Effective temperature closure: $T_{\rm eff}=T_{\odot}\left[(L/L_{\odot})/(R/R_{\odot})^2\right]^{1/4}$.</li>
+                <li>H-R axes are logarithmic: $T_{\rm eff}$ axis in kK and $L/L_{\odot}$ axis in powers of ten.</li>
+                <li>Effective temperature closure: $$T_{\rm eff}=T_{\odot}\left[(L/L_{\odot})/(R/R_{\odot})^2\right]^{1/4}$$</li>
               </ul>
             </div>
           </details>

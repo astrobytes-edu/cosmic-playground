@@ -37,8 +37,21 @@ describe("Stars ZAMS HR -- Design System Contracts", () => {
       expect(mainTs).toMatch(/initStarfield\s*\(/);
       expect(mainTs).toContain("initPopovers");
       expect(mainTs).toMatch(/initPopovers\s*\(/);
+      expect(mainTs).toContain("initTabs");
+      expect(mainTs).toMatch(/initTabs\s*\(/);
       expect(mainTs).toContain("createDemoModes");
       expect(mainTs).toContain("createInstrumentRuntime");
+    });
+  });
+
+  describe("Explore/Understand tabs", () => {
+    it("contains stage tabs with required ARIA wiring", () => {
+      expect(html).toContain('id="tab-explore"');
+      expect(html).toContain('id="tab-understand"');
+      expect(html).toContain('id="panel-explore"');
+      expect(html).toContain('id="panel-understand"');
+      const tabButtons = html.match(/role="tab"/g) || [];
+      expect(tabButtons.length).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -64,12 +77,19 @@ describe("Stars ZAMS HR -- Design System Contracts", () => {
       expect(mainTs).toContain("Metallicity is not applied in override mode");
     });
 
-    it("uses consistent hotter-left hr annotation text", () => {
+    it("uses explicit log-scale axis framing text", () => {
       const mainPath = path.resolve(__dirname, "main.ts");
       const mainTs = fs.readFileSync(mainPath, "utf-8");
-      expect(mainTs).toContain("Hotter ←");
-      expect(mainTs).toContain("Teff");
-      expect(mainTs).not.toContain("Hotter  →");
+      expect(mainTs).toContain("log10");
+      expect(mainTs).toContain("T_eff");
+      expect(mainTs).toContain("L/L_odot");
+    });
+
+    it("clears non-ZAMS presets by declared mode when switching back to ZAMS", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("presetModeById");
+      expect(mainTs).not.toContain('selectedPresetId.includes("supergiant")');
     });
   });
 
@@ -98,6 +118,17 @@ describe("Stars ZAMS HR -- Design System Contracts", () => {
     it("contains the H-R canvas stage element", () => {
       expect(html).toContain('id="hrCanvas"');
       expect(html).toMatch(/<canvas[^>]*id="hrCanvas"/);
+    });
+
+    it("includes ZAMS/Stefan source-mode controls and Stefan sliders", () => {
+      expect(html).toContain('id="modeZams"');
+      expect(html).toContain('id="modeStefan"');
+      expect(html).toContain('id="teffSlider"');
+      expect(html).toContain('id="radiusSlider"');
+    });
+
+    it("includes constant-radius guide toggle", () => {
+      expect(html).toContain('id="showRadiusGuides"');
     });
   });
 

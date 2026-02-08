@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  HR_AXIS_LIMITS,
   clamp,
+  decadeTicks,
   formatMetallicity,
   formatNumber,
   hrDiagramCoordinates,
+  luminosityLsunFromRadiusTemperature,
   logSliderToValue,
+  logTickPowersOfTenLabel,
   valueToLogSlider,
 } from "./logic";
 
@@ -34,7 +38,7 @@ describe("Stars ZAMS HR -- logic", () => {
 
   it("formats metallicity readouts", () => {
     expect(formatMetallicity(0.02)).toBe("0.0200");
-    expect(formatMetallicity(1e-4)).toBe("1.00e-4");
+    expect(formatMetallicity(1e-4)).toBe("10^-4");
     expect(formatMetallicity(NaN)).toBe("-");
   });
 
@@ -48,5 +52,36 @@ describe("Stars ZAMS HR -- logic", () => {
     const dim = hrDiagramCoordinates({ teffK: 6000, luminosityLsun: 1e-2 });
     const bright = hrDiagramCoordinates({ teffK: 6000, luminosityLsun: 1e4 });
     expect(bright.yNorm).toBeGreaterThan(dim.yNorm);
+  });
+
+  it("computes luminosity ratio from radius and temperature in solar units", () => {
+    const solarLike = luminosityLsunFromRadiusTemperature({
+      radiusRsun: 1,
+      teffK: 5772,
+      tSunK: 5772,
+    });
+    expect(solarLike).toBeCloseTo(1, 12);
+
+    const doubledRadius = luminosityLsunFromRadiusTemperature({
+      radiusRsun: 2,
+      teffK: 5772,
+      tSunK: 5772,
+    });
+    expect(doubledRadius).toBeCloseTo(4, 12);
+  });
+
+  it("exposes decade ticks for log-log HR axes", () => {
+    expect(decadeTicks(0, 2)).toEqual([1, 10, 100]);
+    expect(decadeTicks(-4, 2)).toEqual([1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100]);
+  });
+
+  it("formats decade labels using powers of ten", () => {
+    expect(logTickPowersOfTenLabel(1e-2)).toBe("10^-2");
+    expect(logTickPowersOfTenLabel(10)).toBe("10^1");
+  });
+
+  it("uses kK-based Teff axis domain limits", () => {
+    expect(HR_AXIS_LIMITS.teffMinKK).toBe(1);
+    expect(HR_AXIS_LIMITS.teffMaxKK).toBe(100);
   });
 });

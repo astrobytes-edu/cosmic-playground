@@ -10,10 +10,10 @@
 
 Define the ASTR 201 stellar-structure entry instrument that maps:
 
-- inputs: mass `M` and metallicity `Z`
+- inputs: mode-dependent controls (`M,Z` in ZAMS mode; `R,T_{\rm eff}` in Stefan mode)
 - model: Tout et al. (1996) ZAMS fits
-- outputs: `L/Lsun`, `R/Rsun`, `Teff`
-- visualization: H-R diagram marker + ZAMS track
+- outputs: `$L/L_{\odot}$`, `$R/R_{\odot}$`, `$T_{\rm eff}$`, and `$F/F_{\odot}$`
+- visualization: log-log H-R marker + ZAMS track + optional constant-$R$ guides
 
 This demo is the foundation for future HR extensions (for example simplified stellar evolution overlays).
 
@@ -63,26 +63,41 @@ Index export:
 
 Controls:
 
-- mass slider (log-scale mapped, `0.1-100 Msun`)
-- metallicity slider (log-scale mapped, `1e-4-0.03`)
+- source-mode chips:
+  - ZAMS mode (`M`, `Z`)
+  - Stefan mode (`R`, `T_{\rm eff}`)
+- mass slider (log-scale mapped, `0.1-100 Msun`) in ZAMS mode
+- metallicity slider (log-scale mapped, `1e-4-0.03`) in ZAMS mode
+- effective-temperature slider (log-scale mapped, `2-100 kK`) in Stefan mode
+- radius slider (log-scale mapped, `0.01-1000 Rsun`) in Stefan mode
+- constant-$R$ overlay toggle (default off)
 - preset chips split into:
   - ZAMS presets
   - override presets (non-ZAMS exemplars)
 
 Readouts:
 
-- `Teff` (K)
-- `L/Lsun`
-- `R/Rsun`
-- `M/Msun`
+- `$T_{\rm eff}$` (kK)
+- `$L/L_{\odot}$`
+- `$R/R_{\odot}$`
+- `$M/M_{\odot}$`
+- `$F/F_{\odot}$`
 - validity/assumption badge text
 
 Stage:
 
+- Explore/Understand tabs with:
+  - Explore: H-R log-log canvas
+  - Understand: blackbody/Stefan interpretation with display equations (`$$...$$`)
 - H-R canvas with:
   - current metallicity ZAMS reference track
   - live point marker
+  - constant-$R$ guide families (toggle)
   - hot-left and luminosity-up orientation cues
+  - labeled logarithmic axes:
+    - `log10(T_eff [kK])`
+    - `log10(L/L_sun)`
+  - major decade ticks plus minor logarithmic ticks
 
 Shell/components:
 
@@ -115,9 +130,9 @@ Override examples in v1:
 
 Use `ExportPayloadV1` with:
 
-- parameters: mode, mass, metallicity
-- readouts: `Teff`, `L/Lsun`, `R/Rsun`
-- notes: validity domain + Stefan-Boltzmann closure + override/ZAMS assumption
+- parameters: source mode, mass, metallicity, constant-$R$ toggle state
+- readouts: `Teff (kK)`, `L/Lsun`, `R/Rsun`, `F/Fsun`
+- notes: validity domain + Stefan-Boltzmann closure + override/ZAMS assumption + log-axis rationale
 
 ---
 
@@ -132,7 +147,7 @@ Must include:
 - readiness fields
 - parity audit path
 - Predict/Play/Explain prompts
-- misconceptions for ZAMS limits and temperature-vs-luminosity confusion
+- misconceptions for ZAMS limits, flux-vs-luminosity confusion, and log-axis interpretation
 
 Topic sequencing:
 

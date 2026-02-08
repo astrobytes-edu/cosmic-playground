@@ -4,40 +4,51 @@ import {
   initMath,
   initPopovers,
   initStarfield,
+  initTabs,
   setLiveRegionText
 } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { BlackbodyRadiationModel, ZamsTout1996Model } from "@cosmic/physics";
 import {
+  HR_AXIS_LIMITS,
   clamp,
+  decadeTicks,
   formatMetallicity,
   formatNumber,
   hrDiagramCoordinates,
   logSliderToValue,
+  logTickPowersOfTenLabel,
+  luminosityLsunFromRadiusTemperature,
+  minorLogTicks,
   valueToLogSlider
 } from "./logic";
 
 type PresetMode = "zams" | "override";
+type SourceMode = "zams" | "stefan";
 type PresetState = "inferred" | "override";
 
 type DemoState = {
+  sourceMode: SourceMode;
   massMsun: number;
   metallicityZ: number;
+  stefanTeffK: number;
+  stefanRadiusRsun: number;
+  showRadiusGuides: boolean;
   presetState: PresetState;
   selectedPresetId: string | null;
-  override: {
-    teffK: number;
-    radiusRsun: number;
-  } | null;
 };
 
 type StarReadouts = {
+  sourceMode: SourceMode;
   massMsun: number;
   metallicityZ: number;
   luminosityLsun: number;
   radiusRsun: number;
   teffK: number;
+  surfaceFluxCgs: number;
+  surfaceFluxRatio: number;
   validityText: string;
+  modeAssumptionText: string;
   presetState: PresetState;
 };
 
@@ -47,15 +58,38 @@ const METALLICITY_MIN = ZamsTout1996Model.CONSTANTS.metallicityMin;
 const METALLICITY_MAX = ZamsTout1996Model.CONSTANTS.metallicityMax;
 const TSUN_K = ZamsTout1996Model.CONSTANTS.tSunK;
 
+const TEFF_MIN_K = 2000;
+const TEFF_MAX_K = 100_000;
+const RADIUS_MIN_RSUN = 0.01;
+const RADIUS_MAX_RSUN = 1000;
+
+const FSUN_CGS = BlackbodyRadiationModel.stefanBoltzmannFluxCgs({ temperatureK: TSUN_K });
+const RADIUS_GUIDES_RSUN = [0.01, 0.1, 1, 10, 100, 1000] as const;
+
+const X_MAJOR_TICKS_KK = decadeTicks(Math.log10(HR_AXIS_LIMITS.teffMinKK), Math.log10(HR_AXIS_LIMITS.teffMaxKK));
+const X_MINOR_TICKS_KK = minorLogTicks(Math.log10(HR_AXIS_LIMITS.teffMinKK), Math.log10(HR_AXIS_LIMITS.teffMaxKK));
+const Y_MAJOR_TICKS_LSUN = decadeTicks(HR_AXIS_LIMITS.logLumMin, HR_AXIS_LIMITS.logLumMax);
+const Y_MINOR_TICKS_LSUN = minorLogTicks(HR_AXIS_LIMITS.logLumMin, HR_AXIS_LIMITS.logLumMax);
+
 const massSliderEl = document.querySelector<HTMLInputElement>("#massSlider");
 const massValueEl = document.querySelector<HTMLSpanElement>("#massValue");
 const metallicitySliderEl = document.querySelector<HTMLInputElement>("#metallicitySlider");
 const metallicityValueEl = document.querySelector<HTMLSpanElement>("#metallicityValue");
+const teffSliderEl = document.querySelector<HTMLInputElement>("#teffSlider");
+const teffSliderValueEl = document.querySelector<HTMLSpanElement>("#teffSliderValue");
+const radiusSliderEl = document.querySelector<HTMLInputElement>("#radiusSlider");
+const radiusSliderValueEl = document.querySelector<HTMLSpanElement>("#radiusSliderValue");
+const modeZamsEl = document.querySelector<HTMLButtonElement>("#modeZams");
+const modeStefanEl = document.querySelector<HTMLButtonElement>("#modeStefan");
+const showRadiusGuidesEl = document.querySelector<HTMLInputElement>("#showRadiusGuides");
+
 const massReadoutEl = document.querySelector<HTMLSpanElement>("#massReadout");
 const teffValueEl = document.querySelector<HTMLSpanElement>("#teffValue");
 const luminosityValueEl = document.querySelector<HTMLSpanElement>("#luminosityValue");
 const radiusValueEl = document.querySelector<HTMLSpanElement>("#radiusValue");
+const fluxRatioValueEl = document.querySelector<HTMLSpanElement>("#fluxRatioValue");
 const validityBadgeEl = document.querySelector<HTMLParagraphElement>("#validityBadge");
+const modeAssumptionTextEl = document.querySelector<HTMLParagraphElement>("#modeAssumptionText");
 const overrideModeHintEl = document.querySelector<HTMLParagraphElement>("#overrideModeHint");
 const statusEl = document.querySelector<HTMLParagraphElement>("#status");
 const hrCanvasEl = document.querySelector<HTMLCanvasElement>("#hrCanvas");
@@ -63,21 +97,38 @@ const hrCanvasEl = document.querySelector<HTMLCanvasElement>("#hrCanvas");
 const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
 const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
 const helpEl = document.querySelector<HTMLButtonElement>("#help");
+const tabExploreEl = document.querySelector<HTMLButtonElement>("#tab-explore");
 
 const presetButtons = Array.from(
   document.querySelectorAll<HTMLButtonElement>('button.preset[data-preset-id]')
 );
+const presetModeById = new Map<string, PresetMode>();
+for (const button of presetButtons) {
+  const presetId = button.dataset.presetId;
+  if (!presetId) continue;
+  const presetMode = (button.dataset.mode as PresetMode | undefined) ?? "zams";
+  presetModeById.set(presetId, presetMode);
+}
 
 if (
   !massSliderEl ||
   !massValueEl ||
   !metallicitySliderEl ||
   !metallicityValueEl ||
+  !teffSliderEl ||
+  !teffSliderValueEl ||
+  !radiusSliderEl ||
+  !radiusSliderValueEl ||
+  !modeZamsEl ||
+  !modeStefanEl ||
+  !showRadiusGuidesEl ||
   !massReadoutEl ||
   !teffValueEl ||
   !luminosityValueEl ||
   !radiusValueEl ||
+  !fluxRatioValueEl ||
   !validityBadgeEl ||
+  !modeAssumptionTextEl ||
   !overrideModeHintEl ||
   !statusEl ||
   !hrCanvasEl ||
@@ -93,11 +144,20 @@ const massSlider = massSliderEl;
 const massValue = massValueEl;
 const metallicitySlider = metallicitySliderEl;
 const metallicityValue = metallicityValueEl;
+const teffSlider = teffSliderEl;
+const teffSliderValue = teffSliderValueEl;
+const radiusSlider = radiusSliderEl;
+const radiusSliderValue = radiusSliderValueEl;
+const modeZams = modeZamsEl;
+const modeStefan = modeStefanEl;
+const showRadiusGuides = showRadiusGuidesEl;
 const massReadout = massReadoutEl;
 const teffValue = teffValueEl;
 const luminosityValue = luminosityValueEl;
 const radiusValue = radiusValueEl;
+const fluxRatioValue = fluxRatioValueEl;
 const validityBadge = validityBadgeEl;
+const modeAssumptionText = modeAssumptionTextEl;
 const overrideModeHint = overrideModeHintEl;
 const status = statusEl;
 const hrCanvas = hrCanvasEl;
@@ -112,11 +172,14 @@ const runtime = createInstrumentRuntime({
 });
 
 const state: DemoState = {
+  sourceMode: "zams",
   massMsun: 1,
   metallicityZ: 0.02,
+  stefanTeffK: TSUN_K,
+  stefanRadiusRsun: 1,
+  showRadiusGuides: false,
   presetState: "inferred",
-  selectedPresetId: "sun",
-  override: null
+  selectedPresetId: "sun"
 };
 
 function requireCanvas2dContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
@@ -145,9 +208,23 @@ function cssVar(name: string): string {
   return value;
 }
 
+function formatWithoutENotation(value: number, digits = 3): string {
+  if (!Number.isFinite(value)) return "-";
+  if (value === 0) return "0";
+  const abs = Math.abs(value);
+  if (abs >= 1e4 || abs < 1e-3) {
+    const exponent = Math.floor(Math.log10(abs));
+    const coefficient = value / 10 ** exponent;
+    if (Math.abs(Math.abs(coefficient) - 1) < 1e-10) {
+      return `${value < 0 ? "-" : ""}10^${exponent}`;
+    }
+    return `${coefficient.toFixed(2)}x10^${exponent}`;
+  }
+  return value.toFixed(digits);
+}
+
 function sliderStepValue(event: KeyboardEvent): number {
-  if (event.shiftKey) return 20;
-  return 1;
+  return event.shiftKey ? 20 : 1;
 }
 
 function updateSliderKeyboardNudge(event: KeyboardEvent, slider: HTMLInputElement) {
@@ -161,6 +238,11 @@ function updateSliderKeyboardNudge(event: KeyboardEvent, slider: HTMLInputElemen
   const next = clamp(Number(slider.value) + direction * step, 0, 1000);
   slider.value = String(Math.round(next));
   slider.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function setModeButtons(nextMode: SourceMode): void {
+  modeZams.setAttribute("aria-pressed", nextMode === "zams" ? "true" : "false");
+  modeStefan.setAttribute("aria-pressed", nextMode === "stefan" ? "true" : "false");
 }
 
 function setPresetButtons(activeId: string | null): void {
@@ -185,69 +267,82 @@ function setStateFromPreset(button: HTMLButtonElement): void {
     const teffK = Number(button.dataset.teffK ?? Number.NaN);
     const radiusRsun = Number(button.dataset.radiusRsun ?? Number.NaN);
     if (!Number.isFinite(teffK) || !Number.isFinite(radiusRsun) || radiusRsun <= 0) return;
-    state.override = { teffK, radiusRsun };
+    state.sourceMode = "stefan";
     state.presetState = "override";
-  } else {
-    state.override = null;
-    state.presetState = "inferred";
+    state.stefanTeffK = clamp(teffK, TEFF_MIN_K, TEFF_MAX_K);
+    state.stefanRadiusRsun = clamp(radiusRsun, RADIUS_MIN_RSUN, RADIUS_MAX_RSUN);
+    return;
   }
-}
 
-function luminosityFromRadiusAndTemperature(args: {
-  radiusRsun: number;
-  teffK: number;
-}): number {
-  const { radiusRsun, teffK } = args;
-  if (!Number.isFinite(radiusRsun) || radiusRsun <= 0) return Number.NaN;
-  if (!Number.isFinite(teffK) || teffK <= 0) return Number.NaN;
-  const tempRatio = teffK / TSUN_K;
-  return radiusRsun * radiusRsun * tempRatio ** 4;
+  state.sourceMode = "zams";
+  state.presetState = "inferred";
 }
 
 function computeReadouts(): StarReadouts {
-  if (state.presetState === "override" && state.override) {
-    const teffK = state.override.teffK;
-    const radiusRsun = state.override.radiusRsun;
-    const luminosityLsun = luminosityFromRadiusAndTemperature({ radiusRsun, teffK });
+  if (state.sourceMode === "zams") {
+    const zamsValidity = ZamsTout1996Model.validity({
+      massMsun: state.massMsun,
+      metallicityZ: state.metallicityZ
+    });
+    const luminosityLsun = ZamsTout1996Model.luminosityLsunFromMassMetallicity({
+      massMsun: state.massMsun,
+      metallicityZ: state.metallicityZ
+    });
+    const radiusRsun = ZamsTout1996Model.radiusRsunFromMassMetallicity({
+      massMsun: state.massMsun,
+      metallicityZ: state.metallicityZ
+    });
+    const teffK = ZamsTout1996Model.effectiveTemperatureKFromMassMetallicity({
+      massMsun: state.massMsun,
+      metallicityZ: state.metallicityZ
+    });
+    const surfaceFluxCgs = BlackbodyRadiationModel.stefanBoltzmannFluxCgs({ temperatureK: teffK });
+
     return {
+      sourceMode: "zams",
       massMsun: state.massMsun,
       metallicityZ: state.metallicityZ,
-      teffK,
-      radiusRsun,
       luminosityLsun,
-      validityText:
-        "Override preset: this object is intentionally not constrained to a ZAMS state. Metallicity is not applied in override mode.",
-      presetState: "override"
+      radiusRsun,
+      teffK,
+      surfaceFluxCgs,
+      surfaceFluxRatio: surfaceFluxCgs / FSUN_CGS,
+      validityText: zamsValidity.valid
+        ? "ZAMS inferred state from Tout et al. (1996)."
+        : zamsValidity.warnings.join(" "),
+      modeAssumptionText:
+        "ZAMS mode: luminosity and radius come from Tout et al. (1996), and effective temperature is derived by Stefan-Boltzmann closure.",
+      presetState: "inferred"
     };
   }
 
-  const zamsValidity = ZamsTout1996Model.validity({
-    massMsun: state.massMsun,
-    metallicityZ: state.metallicityZ
+  const teffK = clamp(state.stefanTeffK, TEFF_MIN_K, TEFF_MAX_K);
+  const radiusRsun = clamp(state.stefanRadiusRsun, RADIUS_MIN_RSUN, RADIUS_MAX_RSUN);
+  const luminosityLsun = luminosityLsunFromRadiusTemperature({
+    radiusRsun,
+    teffK,
+    tSunK: TSUN_K
   });
-  const luminosityLsun = ZamsTout1996Model.luminosityLsunFromMassMetallicity({
-    massMsun: state.massMsun,
-    metallicityZ: state.metallicityZ
-  });
-  const radiusRsun = ZamsTout1996Model.radiusRsunFromMassMetallicity({
-    massMsun: state.massMsun,
-    metallicityZ: state.metallicityZ
-  });
-  const teffK = ZamsTout1996Model.effectiveTemperatureKFromMassMetallicity({
-    massMsun: state.massMsun,
-    metallicityZ: state.metallicityZ
-  });
+  const surfaceFluxCgs = BlackbodyRadiationModel.stefanBoltzmannFluxCgs({ temperatureK: teffK });
 
   return {
+    sourceMode: "stefan",
     massMsun: state.massMsun,
     metallicityZ: state.metallicityZ,
-    teffK,
-    radiusRsun,
     luminosityLsun,
-    validityText: zamsValidity.valid
-      ? "ZAMS inferred state from Tout et al. (1996)."
-      : zamsValidity.warnings.join(" "),
-    presetState: "inferred"
+    radiusRsun,
+    teffK,
+    surfaceFluxCgs,
+    surfaceFluxRatio: surfaceFluxCgs / FSUN_CGS,
+    validityText:
+      state.presetState === "override"
+        ? "Override preset: non-ZAMS state. Metallicity is shown but not applied in Stefan mode."
+        : "Stefan mode: luminosity is computed directly from radius and effective temperature.",
+    modeAssumptionText:
+      state.presetState === "override"
+        ? "Override preset in Stefan mode: luminosity is set by radius and effective temperature, not by ZAMS fits."
+        : "Stefan mode: luminosity is set by radius and effective temperature.",
+    presetState: state.presetState
   };
 }
 
@@ -268,47 +363,153 @@ function resizeCanvasToCssPixels(canvas: HTMLCanvasElement, context: CanvasRende
 
 function drawHrDiagram(readouts: StarReadouts): void {
   const { width: w, height: h } = resizeCanvasToCssPixels(hrCanvas, ctx);
-  const mL = 58;
-  const mR = 16;
-  const mT = 16;
-  const mB = 44;
+
+  const mL = 78;
+  const mR = 18;
+  const mT = 24;
+  const mB = 64;
   const plotW = Math.max(1, w - mL - mR);
   const plotH = Math.max(1, h - mT - mB);
+
+  const teffMinKK = HR_AXIS_LIMITS.teffMinKK;
+  const teffMaxKK = HR_AXIS_LIMITS.teffMaxKK;
+  const logTeffMin = Math.log10(teffMinKK);
+  const logTeffMax = Math.log10(teffMaxKK);
+  const logLumMin = HR_AXIS_LIMITS.logLumMin;
+  const logLumMax = HR_AXIS_LIMITS.logLumMax;
 
   const bg = resolveCssColor(cssVar("--cp-bg0"));
   const border = resolveCssColor(cssVar("--cp-border-subtle"));
   const text = resolveCssColor(cssVar("--cp-text2"));
+  const minorGrid = resolveCssColor(cssVar("--cp-border-subtle"));
+  const majorGrid = resolveCssColor(cssVar("--cp-border"));
   const track = resolveCssColor(cssVar("--cp-chart-1"));
-  const markerFallback = resolveCssColor(cssVar("--cp-accent"));
+  const guideColor = resolveCssColor(cssVar("--cp-chart-3"));
   const overrideMarker = resolveCssColor(cssVar("--cp-chart-2"));
+
+  const xFromTeffKK = (teffKK: number) => {
+    const logTeff = Math.log10(teffKK);
+    const xNorm = (logTeffMax - logTeff) / (logTeffMax - logTeffMin);
+    return mL + clamp(xNorm, 0, 1) * plotW;
+  };
+
+  const yFromLum = (luminosityLsun: number) => {
+    const logLum = Math.log10(luminosityLsun);
+    const yNorm = (logLum - logLumMin) / (logLumMax - logLumMin);
+    return mT + (1 - clamp(yNorm, 0, 1)) * plotH;
+  };
 
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
 
   ctx.save();
-  ctx.strokeStyle = border;
+  ctx.strokeStyle = minorGrid;
+  ctx.globalAlpha = 0.35;
   ctx.lineWidth = 1;
-  ctx.globalAlpha = 0.6;
-  for (let i = 0; i <= 6; i += 1) {
-    const y = mT + (i / 6) * plotH;
-    ctx.beginPath();
-    ctx.moveTo(mL, y);
-    ctx.lineTo(mL + plotW, y);
-    ctx.stroke();
-  }
-  for (let i = 0; i <= 6; i += 1) {
-    const x = mL + (i / 6) * plotW;
+  for (const teffTickKK of X_MINOR_TICKS_KK) {
+    const x = xFromTeffKK(teffTickKK);
     ctx.beginPath();
     ctx.moveTo(x, mT);
     ctx.lineTo(x, mT + plotH);
     ctx.stroke();
   }
+  for (const lumTick of Y_MINOR_TICKS_LSUN) {
+    const y = yFromLum(lumTick);
+    ctx.beginPath();
+    ctx.moveTo(mL, y);
+    ctx.lineTo(mL + plotW, y);
+    ctx.stroke();
+  }
   ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = majorGrid;
+  ctx.globalAlpha = 0.8;
+  ctx.lineWidth = 1.1;
+  for (const teffTickKK of X_MAJOR_TICKS_KK) {
+    const x = xFromTeffKK(teffTickKK);
+    ctx.beginPath();
+    ctx.moveTo(x, mT);
+    ctx.lineTo(x, mT + plotH);
+    ctx.stroke();
+  }
+  for (const lumTick of Y_MAJOR_TICKS_LSUN) {
+    const y = yFromLum(lumTick);
+    ctx.beginPath();
+    ctx.moveTo(mL, y);
+    ctx.lineTo(mL + plotW, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  if (state.showRadiusGuides) {
+    ctx.save();
+    ctx.strokeStyle = guideColor;
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([6, 5]);
+    for (const radiusRsun of RADIUS_GUIDES_RSUN) {
+      ctx.beginPath();
+      let started = false;
+      for (let i = 0; i <= 140; i += 1) {
+        const frac = i / 140;
+        const teffKK = teffMinKK * (teffMaxKK / teffMinKK) ** frac;
+        const teffK = teffKK * 1000;
+        const luminosityLsun = luminosityLsunFromRadiusTemperature({
+          radiusRsun,
+          teffK,
+          tSunK: TSUN_K
+        });
+        if (!Number.isFinite(luminosityLsun) || luminosityLsun <= 0) continue;
+        const logLum = Math.log10(luminosityLsun);
+        if (logLum < logLumMin || logLum > logLumMax) {
+          if (started) {
+            ctx.stroke();
+            ctx.beginPath();
+            started = false;
+          }
+          continue;
+        }
+        const x = xFromTeffKK(teffKK);
+        const y = yFromLum(luminosityLsun);
+        if (!started) {
+          ctx.moveTo(x, y);
+          started = true;
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      ctx.stroke();
+
+      const labelTeffKK = 3;
+      const labelLum = luminosityLsunFromRadiusTemperature({
+        radiusRsun,
+        teffK: labelTeffKK * 1000,
+        tSunK: TSUN_K
+      });
+      if (Number.isFinite(labelLum) && labelLum > 0) {
+        const logLum = Math.log10(labelLum);
+        if (logLum >= logLumMin && logLum <= logLumMax) {
+          const labelX = xFromTeffKK(labelTeffKK) + 6;
+          const labelY = yFromLum(labelLum) - 4;
+          const exponent = Math.round(Math.log10(radiusRsun));
+          const radiusLabel = Math.abs(radiusRsun - 10 ** exponent) < 1e-12
+            ? `R=10^${exponent}`
+            : `R=${formatWithoutENotation(radiusRsun, 2)}`;
+          ctx.fillStyle = guideColor;
+          ctx.font = "11px system-ui, -apple-system, sans-serif";
+          ctx.fillText(radiusLabel, labelX, labelY);
+        }
+      }
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
 
   ctx.save();
   ctx.strokeStyle = track;
   ctx.lineWidth = 2;
+  ctx.beginPath();
   const samples = 180;
   for (let i = 0; i < samples; i += 1) {
     const frac = i / (samples - 1);
@@ -322,10 +523,7 @@ function drawHrDiagram(readouts: StarReadouts): void {
       metallicityZ: state.metallicityZ
     });
     if (!Number.isFinite(luminosityLsun) || !Number.isFinite(teffK)) continue;
-    const point = hrDiagramCoordinates({
-      teffK,
-      luminosityLsun
-    });
+    const point = hrDiagramCoordinates({ teffK, luminosityLsun });
     const x = mL + point.xNorm * plotW;
     const y = mT + (1 - point.yNorm) * plotH;
     if (i === 0) ctx.moveTo(x, y);
@@ -349,9 +547,9 @@ function drawHrDiagram(readouts: StarReadouts): void {
     : `rgb(${tempRgb.r}, ${tempRgb.g}, ${tempRgb.b})`;
 
   ctx.save();
-  ctx.fillStyle = markerColor || markerFallback;
+  ctx.fillStyle = markerColor;
   ctx.beginPath();
-  ctx.arc(markerX, markerY, 5.5, 0, Math.PI * 2);
+  ctx.arc(markerX, markerY, 6, 0, Math.PI * 2);
   ctx.fill();
   ctx.lineWidth = 1.2;
   ctx.strokeStyle = resolveCssColor(cssVar("--cp-bg0"));
@@ -359,48 +557,113 @@ function drawHrDiagram(readouts: StarReadouts): void {
   ctx.restore();
 
   ctx.save();
+  ctx.strokeStyle = border;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(mL, mT, plotW, plotH);
+  ctx.restore();
+
+  ctx.save();
   ctx.fillStyle = text;
-  ctx.font = "12px system-ui, -apple-system, sans-serif";
-  ctx.textAlign = "left";
-  ctx.fillText("Hotter ←", mL, h - 12);
+  ctx.font = "11px system-ui, -apple-system, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Teff", mL + plotW * 0.5, h - 12);
+  for (const teffTickKK of X_MAJOR_TICKS_KK) {
+    const x = xFromTeffKK(teffTickKK);
+    ctx.beginPath();
+    ctx.moveTo(x, mT + plotH);
+    ctx.lineTo(x, mT + plotH + 4);
+    ctx.strokeStyle = text;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillText(logTickPowersOfTenLabel(teffTickKK), x, mT + plotH + 16);
+    ctx.fillText(`(${Math.round(teffTickKK)})`, x, mT + plotH + 28);
+  }
+
   ctx.textAlign = "right";
-  ctx.fillText("Cooler →", mL + plotW, h - 12);
+  for (const lumTick of Y_MAJOR_TICKS_LSUN) {
+    const y = yFromLum(lumTick);
+    ctx.beginPath();
+    ctx.moveTo(mL - 4, y);
+    ctx.lineTo(mL, y);
+    ctx.strokeStyle = text;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillText(logTickPowersOfTenLabel(lumTick), mL - 8, y + 4);
+  }
+
+  ctx.textAlign = "center";
+  ctx.font = "bold 12px system-ui, -apple-system, sans-serif";
+  ctx.fillText("log10(T_eff [kK])", mL + plotW / 2, h - 8);
+
+  ctx.save();
+  ctx.translate(18, mT + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText("log10(L/L_odot)", 0, 0);
+  ctx.restore();
+
+  ctx.font = "11px system-ui, -apple-system, sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText("log L/Lsun ↑", 8, mT + 10);
+  ctx.fillText("hotter", mL, h - 24);
+  ctx.textAlign = "right";
+  ctx.fillText("cooler", mL + plotW, h - 24);
   ctx.restore();
 }
 
+function syncSlidersFromReadouts(readouts: StarReadouts): void {
+  if (state.sourceMode === "zams") {
+    state.stefanTeffK = readouts.teffK;
+    state.stefanRadiusRsun = readouts.radiusRsun;
+  }
+}
+
 function renderReadouts(readouts: StarReadouts): void {
-  massSlider.value = String(valueToLogSlider(readouts.massMsun, MASS_MIN_MSUN, MASS_MAX_MSUN));
-  metallicitySlider.value = String(
-    valueToLogSlider(readouts.metallicityZ, METALLICITY_MIN, METALLICITY_MAX)
-  );
-  massSlider.setAttribute("aria-valuetext", `${formatNumber(readouts.massMsun, 3)} solar masses`);
-  metallicitySlider.setAttribute("aria-valuetext", `metallicity ${formatMetallicity(readouts.metallicityZ)}`);
+  syncSlidersFromReadouts(readouts);
 
-  massValue.textContent = formatNumber(readouts.massMsun, 3);
-  metallicityValue.textContent = formatMetallicity(readouts.metallicityZ);
-  massReadout.textContent = formatNumber(readouts.massMsun, 3);
-  teffValue.textContent = formatNumber(readouts.teffK, 0);
-  luminosityValue.textContent = formatNumber(readouts.luminosityLsun, 4);
-  radiusValue.textContent = formatNumber(readouts.radiusRsun, 4);
+  massSlider.value = String(valueToLogSlider(state.massMsun, MASS_MIN_MSUN, MASS_MAX_MSUN));
+  metallicitySlider.value = String(valueToLogSlider(state.metallicityZ, METALLICITY_MIN, METALLICITY_MAX));
+  teffSlider.value = String(valueToLogSlider(state.stefanTeffK, TEFF_MIN_K, TEFF_MAX_K));
+  radiusSlider.value = String(valueToLogSlider(state.stefanRadiusRsun, RADIUS_MIN_RSUN, RADIUS_MAX_RSUN));
+  showRadiusGuides.checked = state.showRadiusGuides;
+
+  massSlider.setAttribute("aria-valuetext", `${formatNumber(state.massMsun, 3)} solar masses`);
+  metallicitySlider.setAttribute("aria-valuetext", `metallicity ${formatMetallicity(state.metallicityZ)}`);
+  teffSlider.setAttribute("aria-valuetext", `${formatWithoutENotation(state.stefanTeffK / 1000, 3)} kilokelvin`);
+  radiusSlider.setAttribute("aria-valuetext", `${formatWithoutENotation(state.stefanRadiusRsun, 3)} solar radii`);
+
+  massValue.textContent = formatWithoutENotation(state.massMsun, 3);
+  metallicityValue.textContent = formatMetallicity(state.metallicityZ);
+  teffSliderValue.textContent = formatWithoutENotation(state.stefanTeffK / 1000, 3);
+  radiusSliderValue.textContent = formatWithoutENotation(state.stefanRadiusRsun, 3);
+
+  massReadout.textContent = formatWithoutENotation(readouts.massMsun, 3);
+  teffValue.textContent = formatWithoutENotation(readouts.teffK / 1000, 3);
+  luminosityValue.textContent = formatWithoutENotation(readouts.luminosityLsun, 4);
+  radiusValue.textContent = formatWithoutENotation(readouts.radiusRsun, 4);
+  fluxRatioValue.textContent = formatWithoutENotation(readouts.surfaceFluxRatio, 4);
+
   validityBadge.textContent = readouts.validityText;
+  modeAssumptionText.textContent = readouts.modeAssumptionText;
 
-  const isOverride = readouts.presetState === "override";
-  metallicitySlider.disabled = isOverride;
-  metallicitySlider.setAttribute("aria-disabled", isOverride ? "true" : "false");
-  metallicitySlider.title = isOverride
-    ? "Metallicity is not applied while an override preset is active."
-    : "";
-  overrideModeHint.hidden = !isOverride;
+  const isZamsMode = readouts.sourceMode === "zams";
+  massSlider.disabled = !isZamsMode;
+  metallicitySlider.disabled = !isZamsMode;
+  teffSlider.disabled = isZamsMode;
+  radiusSlider.disabled = isZamsMode;
+  metallicitySlider.title = isZamsMode
+    ? ""
+    : "Metallicity is not applied in override mode.";
+
+  modeZams.setAttribute("aria-disabled", "false");
+  modeStefan.setAttribute("aria-disabled", "false");
+
+  setModeButtons(readouts.sourceMode);
+  setPresetButtons(state.selectedPresetId);
+
+  overrideModeHint.hidden = !(readouts.sourceMode === "stefan" && readouts.presetState === "override");
 }
 
 function render(): void {
   const readouts = computeReadouts();
   renderReadouts(readouts);
-  setPresetButtons(state.selectedPresetId);
   drawHrDiagram(readouts);
 }
 
@@ -409,29 +672,51 @@ function exportResults(readouts: StarReadouts): ExportPayloadV1 {
     version: 1,
     timestamp: new Date().toISOString(),
     parameters: [
-      { name: "Mode", value: readouts.presetState === "override" ? "Override preset" : "ZAMS inferred" },
-      { name: "Mass M (Msun)", value: formatNumber(readouts.massMsun, 6) },
-      { name: "Metallicity Z", value: formatMetallicity(readouts.metallicityZ) }
+      { name: "Source mode", value: readouts.sourceMode },
+      { name: "Mass M (M_odot)", value: formatWithoutENotation(readouts.massMsun, 6) },
+      { name: "Metallicity Z", value: formatMetallicity(readouts.metallicityZ) },
+      { name: "Show constant-R guides", value: state.showRadiusGuides ? "yes" : "no" }
     ],
     readouts: [
-      { name: "Effective temperature Teff (K)", value: formatNumber(readouts.teffK, 6) },
-      { name: "Luminosity L/Lsun", value: formatNumber(readouts.luminosityLsun, 6) },
-      { name: "Radius R/Rsun", value: formatNumber(readouts.radiusRsun, 6) }
+      { name: "Effective temperature Teff (kK)", value: formatWithoutENotation(readouts.teffK / 1000, 6) },
+      { name: "Luminosity L/L_odot", value: formatWithoutENotation(readouts.luminosityLsun, 6) },
+      { name: "Radius R/R_odot", value: formatWithoutENotation(readouts.radiusRsun, 6) },
+      { name: "Surface flux ratio F/F_odot", value: formatWithoutENotation(readouts.surfaceFluxRatio, 6) }
     ],
     notes: [
-      "ZAMS inference uses Tout et al. (1996) over 0.1 <= M/Msun <= 100 and 1e-4 <= Z <= 0.03.",
-      "Teff is derived from Stefan-Boltzmann closure: Teff = Tsun * [(L/Lsun)/(R/Rsun)^2]^(1/4).",
+      "H-R plot uses base-10 logarithmic axes: log10(T_eff [kK]) and log10(L/L_odot).",
+      "ZAMS mode uses Tout et al. (1996) over 0.1 <= M/M_odot <= 100 and 1e-4 <= Z <= 0.03.",
+      "Stefan mode computes luminosity from radius and effective temperature: L/L_odot = (R/R_odot)^2 (T/T_odot)^4.",
       readouts.presetState === "override"
-        ? "Override presets intentionally bypass ZAMS fit to represent evolved or compact stars."
-        : "Current state is on the ZAMS fit for the chosen mass and metallicity."
+        ? "Override presets intentionally bypass ZAMS constraints."
+        : "Current state follows the selected source-mode assumptions."
     ]
   };
 }
 
+modeZams.addEventListener("click", () => {
+  state.sourceMode = "zams";
+  state.presetState = "inferred";
+  if (state.selectedPresetId && presetModeById.get(state.selectedPresetId) === "override") {
+    state.selectedPresetId = null;
+  }
+  render();
+});
+
+modeStefan.addEventListener("click", () => {
+  const snapshot = computeReadouts();
+  state.stefanTeffK = snapshot.teffK;
+  state.stefanRadiusRsun = snapshot.radiusRsun;
+  state.sourceMode = "stefan";
+  state.presetState = "inferred";
+  state.selectedPresetId = null;
+  render();
+});
+
 massSlider.addEventListener("input", () => {
   state.massMsun = logSliderToValue(Number(massSlider.value), MASS_MIN_MSUN, MASS_MAX_MSUN);
+  state.sourceMode = "zams";
   state.presetState = "inferred";
-  state.override = null;
   state.selectedPresetId = null;
   render();
 });
@@ -442,16 +727,37 @@ metallicitySlider.addEventListener("input", () => {
     METALLICITY_MIN,
     METALLICITY_MAX
   );
-  if (state.presetState !== "override") {
-    state.selectedPresetId = null;
-  }
+  state.sourceMode = "zams";
+  state.presetState = "inferred";
+  state.selectedPresetId = null;
+  render();
+});
+
+teffSlider.addEventListener("input", () => {
+  state.stefanTeffK = logSliderToValue(Number(teffSlider.value), TEFF_MIN_K, TEFF_MAX_K);
+  state.sourceMode = "stefan";
+  state.presetState = "inferred";
+  state.selectedPresetId = null;
+  render();
+});
+
+radiusSlider.addEventListener("input", () => {
+  state.stefanRadiusRsun = logSliderToValue(Number(radiusSlider.value), RADIUS_MIN_RSUN, RADIUS_MAX_RSUN);
+  state.sourceMode = "stefan";
+  state.presetState = "inferred";
+  state.selectedPresetId = null;
+  render();
+});
+
+showRadiusGuides.addEventListener("change", () => {
+  state.showRadiusGuides = showRadiusGuides.checked;
   render();
 });
 
 massSlider.addEventListener("keydown", (event) => updateSliderKeyboardNudge(event, massSlider));
-metallicitySlider.addEventListener("keydown", (event) =>
-  updateSliderKeyboardNudge(event, metallicitySlider)
-);
+metallicitySlider.addEventListener("keydown", (event) => updateSliderKeyboardNudge(event, metallicitySlider));
+teffSlider.addEventListener("keydown", (event) => updateSliderKeyboardNudge(event, teffSlider));
+radiusSlider.addEventListener("keydown", (event) => updateSliderKeyboardNudge(event, radiusSlider));
 
 for (const button of presetButtons) {
   button.addEventListener("click", () => {
@@ -492,40 +798,42 @@ const demoModes = createDemoModes({
         heading: "How to use this instrument",
         type: "bullets",
         items: [
-          "Set mass and metallicity to move a star along the ZAMS track and read Teff, L/Lsun, and R/Rsun.",
-          "Use metallicity changes at fixed mass to see how composition alters ZAMS radius and luminosity.",
-          "Use override presets to compare evolved stars against the ZAMS reference curve."
+          "Use ZAMS mode to explore how mass and metallicity set Teff, radius, and luminosity on the Tout track.",
+          "Switch to Stefan mode to control radius and temperature directly and watch luminosity respond via L = 4piR^2sigmaT^4.",
+          "Toggle constant-R guides to see how stellar families align in log-log H-R space."
         ]
       }
     ]
   },
   station: {
     title: "Station Mode: Stars ZAMS and H-R",
-    subtitle: "Capture snapshots, compare models, then copy CSV or print.",
+    subtitle: "Capture snapshots, compare assumptions, then copy CSV or print.",
     steps: [
-      "Record Sun, a low-mass dwarf, and a high-mass star at the same metallicity.",
-      "At fixed mass, change metallicity and record Teff, L/Lsun, and R/Rsun.",
-      "Add one override preset and explain why it is flagged as non-ZAMS."
+      "Record one ZAMS state and one Stefan-mode state at the same Teff but different radius.",
+      "Turn on constant-R guides and identify which line each case lies nearest to.",
+      "Explain the difference between surface flux and luminosity using your two rows."
     ],
     columns: [
       { key: "case", label: "Case" },
-      { key: "mode", label: "Mode" },
-      { key: "mMsun", label: "M (Msun)" },
+      { key: "source", label: "Source" },
+          { key: "mMsun", label: "M (M_odot)" },
       { key: "z", label: "Z" },
-      { key: "teffK", label: "Teff (K)" },
-      { key: "lumLsun", label: "L/Lsun" },
-      { key: "radiusRsun", label: "R/Rsun" }
+      { key: "teffKK", label: "Teff (kK)" },
+          { key: "lumLsun", label: "L/L_odot" },
+          { key: "radiusRsun", label: "R/R_odot" },
+          { key: "fluxRatio", label: "F/F_odot" }
     ],
     getSnapshotRow() {
       const readouts = computeReadouts();
       return {
         case: state.selectedPresetId ? state.selectedPresetId : "Snapshot",
-        mode: readouts.presetState === "override" ? "Override" : "ZAMS",
-        mMsun: formatNumber(readouts.massMsun, 4),
+        source: readouts.sourceMode,
+        mMsun: formatWithoutENotation(readouts.massMsun, 4),
         z: formatMetallicity(readouts.metallicityZ),
-        teffK: formatNumber(readouts.teffK, 0),
-        lumLsun: formatNumber(readouts.luminosityLsun, 6),
-        radiusRsun: formatNumber(readouts.radiusRsun, 6)
+        teffKK: formatWithoutENotation(readouts.teffK / 1000, 4),
+        lumLsun: formatWithoutENotation(readouts.luminosityLsun, 6),
+        radiusRsun: formatWithoutENotation(readouts.radiusRsun, 6),
+        fluxRatio: formatWithoutENotation(readouts.surfaceFluxRatio, 6)
       };
     },
     snapshotLabel: "Add row (snapshot)"
@@ -538,6 +846,9 @@ demoModes.bindButtons({
 });
 
 window.addEventListener("resize", () => render());
+tabExploreEl?.addEventListener("click", () => {
+  window.requestAnimationFrame(() => render());
+});
 
 render();
 initMath(document);
@@ -550,4 +861,5 @@ if (starfieldCanvas) {
 const demoRoot = document.getElementById("cp-demo");
 if (demoRoot) {
   initPopovers(demoRoot);
+  initTabs(demoRoot);
 }
