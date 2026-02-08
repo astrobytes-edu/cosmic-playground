@@ -152,14 +152,14 @@ test.describe("Kepler's Laws -- E2E", () => {
   // --- Presets ---
 
   test("Earth preset is active by default", async ({ page }) => {
-    await expect(page.locator('.preset[data-a="1.0"][data-e="0.017"]')).toHaveClass(/preset--active/);
+    await expect(page.locator('.preset[data-a="1.0"][data-e="0.017"]')).toHaveClass(/is-active/);
   });
 
   test("clicking Mercury preset updates orbit parameters", async ({ page }) => {
     await page.locator('.preset[data-a="0.387"]').click();
-    await expect(page.locator('.preset[data-a="0.387"]')).toHaveClass(/preset--active/);
+    await expect(page.locator('.preset[data-a="0.387"]')).toHaveClass(/is-active/);
     // Earth preset should no longer be active
-    await expect(page.locator('.preset[data-a="1.0"][data-e="0.017"]')).not.toHaveClass(/preset--active/);
+    await expect(page.locator('.preset[data-a="1.0"][data-e="0.017"]')).not.toHaveClass(/is-active/);
 
     const aDisplay = await page.locator("#aDisplay").textContent();
     expect(aDisplay).toContain("0.387");

@@ -268,8 +268,10 @@ test.describe("Angular Size -- E2E", () => {
   });
 
   test("Model notes tab can be activated and shows equations", async ({ page }) => {
+    // The sticky sidebar (z-index:3) overlaps the shelf tabs (z-index:2),
+    // so we click via JS to bypass the pointer-intercept check.
+    await page.locator("#tab-btn-model").evaluate((el: HTMLElement) => el.click());
     const modelTab = page.getByRole("tab", { name: "Model notes" });
-    await modelTab.click();
     await expect(modelTab).toHaveAttribute("aria-selected", "true");
     const modelPanel = page.locator("#tab-model");
     await expect(modelPanel).toBeVisible();

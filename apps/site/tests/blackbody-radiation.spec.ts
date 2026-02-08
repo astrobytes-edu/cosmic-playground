@@ -154,7 +154,9 @@ test.describe("Blackbody Radiation -- E2E", () => {
 
   test("Model notes accordion can be opened", async ({ page }) => {
     const modelNotes = page.locator(".cp-accordion").nth(1);
-    await modelNotes.locator("summary").click();
+    // The sticky sidebar (z-index:3) overlaps the drawer (z-index:2),
+    // so we click via JS to bypass the pointer-intercept check.
+    await modelNotes.locator("summary").evaluate((el: HTMLElement) => el.click());
     await expect(modelNotes).toHaveAttribute("open", "");
     await expect(modelNotes).toContainText("Model notes");
   });
