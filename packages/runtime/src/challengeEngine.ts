@@ -685,7 +685,7 @@ export class ChallengeEngine {
         <div class="cp-challenge-number"></div>
         <div class="cp-challenge-question"></div>
         <div class="cp-challenge-hint" style="display: none;"></div>
-        <div class="cp-challenge-feedback" style="display: none;"></div>
+        <div class="cp-challenge-feedback" style="display: none;" aria-live="assertive" aria-atomic="true"></div>
       </div>
       <div class="cp-challenge-actions">
         <button class="cp-challenge-btn hint-btn" type="button">Show Hint</button>
