@@ -209,6 +209,20 @@
   margin-right: 4px;
   vertical-align: middle;
 }
+.cp-readout--solar[data-active="true"] {
+  background: color-mix(in srgb, var(--cp-accent-rose) 12%, transparent);
+  border-radius: var(--cp-radius-sm);
+}
+.cp-readout--solar[data-active="true"] .cp-readout__dot {
+  background: var(--cp-accent-rose);
+}
+.cp-readout--lunar[data-active="true"] {
+  background: color-mix(in srgb, var(--cp-accent) 12%, transparent);
+  border-radius: var(--cp-radius-sm);
+}
+.cp-readout--lunar[data-active="true"] .cp-readout__dot {
+  background: var(--cp-accent);
+}
 
 /* --- Responsive --- */
 @media (prefers-reduced-motion: reduce) {

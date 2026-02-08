@@ -69,6 +69,8 @@ const absBetaEl = document.querySelector<HTMLSpanElement>("#absBeta");
 const nearestNodeEl = document.querySelector<HTMLSpanElement>("#nearestNode");
 const solarOutcomeEl = document.querySelector<HTMLSpanElement>("#solarOutcome");
 const lunarOutcomeEl = document.querySelector<HTMLSpanElement>("#lunarOutcome");
+const solarReadoutEl = document.querySelector<HTMLDivElement>("#solarReadout");
+const lunarReadoutEl = document.querySelector<HTMLDivElement>("#lunarReadout");
 
 const eclipseSvgEl = document.querySelector<SVGSVGElement>("#eclipseStage");
 const moonDotEl = document.querySelector<SVGCircleElement>("#moonDot");
@@ -450,6 +452,8 @@ function render() {
 
   solarOutcome.textContent = outcomeLabel(derived.solarType);
   lunarOutcome.textContent = outcomeLabel(derived.lunarType);
+  solarReadoutEl!.dataset.active = String(derived.solarType !== "none");
+  lunarReadoutEl!.dataset.active = String(derived.lunarType !== "none");
 
   renderStage({ sunLonDeg: state.sunLonDeg, moonLonDeg, nodeLonDeg, betaDeg: derived.betaDeg });
 
