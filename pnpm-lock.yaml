@@ -51,6 +51,9 @@ importers:
 
   apps/site:
     dependencies:
+      '@cosmic/runtime':
+        specifier: workspace:*
+        version: link:../../packages/runtime
       '@cosmic/theme':
         specifier: workspace:*
         version: link:../../packages/theme

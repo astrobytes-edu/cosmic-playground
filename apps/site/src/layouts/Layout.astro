@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import KatexAutoRender from "../components/KatexAutoRender.astro";
 import MobileNav from "../components/MobileNav.astro";
+import MuseumStarfield from "../components/MuseumStarfield.astro";
 
 export type LayoutProps = {
   title?: string;
@@ -74,6 +75,7 @@ const isLightTheme =
     `} />
   </head>
   <body class={isLightTheme ? "cp-layer-paper" : "cp-layer-museum"}>
+    {!isLightTheme && <MuseumStarfield />}
     <a class="skip-link" href="#content">Skip to content</a>
     <header class="site-header cp-no-print">
       <div class="site-header__inner">

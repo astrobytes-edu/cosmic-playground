@@ -226,8 +226,8 @@
   --cp-status-beta-text: color-mix(in srgb, var(--cp-accent) 85%, #ffffff 15%);
 
   /* ---------- Museum Atmosphere ---------- */
-  --cp-museum-nebula-opacity: 0.04;
-  --cp-museum-star-opacity: 0.25;
+  --cp-museum-nebula-opacity: 0.08;
+  --cp-museum-star-opacity: 0.40;
 
   /* ---------- PPE Phase Semantic Colors ---------- */
   --cp-phase-predict: var(--cp-violet);

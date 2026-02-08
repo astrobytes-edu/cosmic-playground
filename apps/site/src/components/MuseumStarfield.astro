@@ -1,0 +1,47 @@
+---
+/**
+ * Canvas-based starfield for museum (dark-theme) pages.
+ * Uses the same initStarfield() as the demos but with lighter settings:
+ *   - Fewer stars (250 vs 500)
+ *   - Rarer shooting stars (30-60s vs 15-30s)
+ *   - Lower twinkle amplitude
+ * The canvas is fixed behind all content via z-index: -1.
+ */
+---
+
+<canvas class="museum-starfield" aria-hidden="true"></canvas>
+
+<script>
+  import { initStarfield } from "@cosmic/runtime";
+
+  const canvas = document.querySelector<HTMLCanvasElement>(".museum-starfield");
+  if (canvas) {
+    initStarfield({
+      canvas,
+      starCount: 250,
+      twinkleAmount: 0.2,
+      milkyWay: true,
+      milkyWayAngle: -25,
+      nebulae: true,
+      shootingStars: true,
+      shootingStarInterval: [30000, 60000],
+    });
+  }
+</script>
+
+<style>
+  .museum-starfield {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  @media print {
+    .museum-starfield {
+      display: none;
+    }
+  }
+</style>

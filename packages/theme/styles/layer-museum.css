@@ -1,6 +1,12 @@
-/* Apply to <body class="cp-layer-museum"> on museum pages */
-.cp-layer-museum {
+/* Apply to <body class="cp-layer-museum"> on museum pages.
+ * Background is on <html> so the Canvas starfield (z-index: -1 on <body>)
+ * shows through. The canvas paints over the html background. */
+html:has(.cp-layer-museum) {
   background: var(--cp-bg0);
+}
+
+.cp-layer-museum {
+  background: transparent;
 }
 
 .cp-layer-museum .cp-hero {
