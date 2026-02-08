@@ -51,6 +51,9 @@ importers:
 
   apps/site:
     dependencies:
+      '@cosmic/physics':
+        specifier: workspace:*
+        version: link:../../packages/physics
       '@cosmic/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
