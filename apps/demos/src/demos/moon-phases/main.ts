@@ -11,6 +11,24 @@ import {
 import { MoonPhasesModel, moonRiseSetLocalTimeHours } from "@cosmic/physics";
 import { nextAngleDeg } from "./animation";
 import { buildMoonPhasesExport } from "./exportPayload";
+import {
+  normalizeAngle,
+  shortestAngleDelta,
+  formatFraction,
+  formatDay,
+  formatApproxTime,
+  computeApproxRiseSet,
+  snapToCardinalPhase,
+  computeOrbitalPosition,
+  computePhaseViewPath,
+  computeReadoutData,
+  computeTimelineState,
+  PHASE_ANGLES,
+  ORBITAL_CENTER,
+  ORBITAL_RADIUS,
+  MOON_RADIUS,
+  PHASE_MOON_RADIUS,
+} from "./logic";
 import { applyPresetDayOfYear, getAdvancedVisibility, getRiseSetVisibility } from "./riseSetUiState";
 
 function requireEl<T extends Element>(element: T | null, name: string): T {
@@ -207,13 +225,6 @@ const PREFERS_REDUCED_MOTION =
     ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
     : false;
 
-const ORBITAL_CENTER = { x: 200, y: 200 };
-const ORBITAL_RADIUS = 120;
-const MOON_RADIUS = 15;
-const PHASE_MOON_RADIUS = 60;
-const SNAP_DEGREES = 5;
-const PHASE_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
-
 let moonAngleDeg = 0;
 let isAnimating = false;
 let animationId: number | null = null;
@@ -229,48 +240,6 @@ const runtime = createInstrumentRuntime({
   storageKey: "cp:moon-phases:mode",
   url: new URL(window.location.href)
 });
-
-function normalizeAngle(angleDeg: number): number {
-  const a = angleDeg % 360;
-  return a < 0 ? a + 360 : a;
-}
-
-function shortestAngleDelta(fromDeg: number, toDeg: number): number {
-  return ((toDeg - fromDeg + 540) % 360) - 180;
-}
-
-function formatFraction(value: number): string {
-  if (!Number.isFinite(value)) return "\u2014";
-  return value.toFixed(3);
-}
-
-function formatDay(value: number): string {
-  if (!Number.isFinite(value)) return "\u2014";
-  return value.toFixed(1);
-}
-
-/**
- * Format an hour (0-24) as approximate 12-hour time: "~6 PM", "~12 AM", etc.
- */
-function formatApproxTime(hours: number): string {
-  const h = Math.round(hours) % 24;
-  if (h === 0) return "~12 AM";
-  if (h === 12) return "~12 PM";
-  const ampm = h < 12 ? "AM" : "PM";
-  const h12 = h > 12 ? h - 12 : h;
-  return `~${h12} ${ampm}`;
-}
-
-/**
- * Approximate rise/set from phase angle alone (no latitude/season).
- * Full Moon (0 deg) rises ~6 PM, sets ~6 AM.
- * New Moon (180 deg) rises ~6 AM, sets ~6 PM.
- */
-function computeApproxRiseSet(phaseAngleDeg: number): { riseHour: number; setHour: number } {
-  const riseHour = (18 + phaseAngleDeg / 15) % 24;
-  const setHour = (riseHour + 12) % 24;
-  return { riseHour, setHour };
-}
 
 function updateAdvancedReadouts() {
   latitudeReadoutEl.textContent = String(Math.round(latitudeDeg));
@@ -359,9 +328,11 @@ function animateAngle(targetDeg: number, durationMs: number) {
 }
 
 function updateOrbitalView() {
-  const angleRad = (moonAngleDeg * Math.PI) / 180;
-  const moonX = ORBITAL_CENTER.x + ORBITAL_RADIUS * Math.cos(angleRad);
-  const moonY = ORBITAL_CENTER.y - ORBITAL_RADIUS * Math.sin(angleRad);
+  const { x: moonX, y: moonY } = computeOrbitalPosition(
+    moonAngleDeg,
+    ORBITAL_CENTER,
+    ORBITAL_RADIUS
+  );
 
   moonDarkEl.setAttribute("cx", moonX.toFixed(2));
   moonDarkEl.setAttribute("cy", moonY.toFixed(2));
@@ -379,71 +350,29 @@ function updateOrbitalView() {
 }
 
 function updatePhaseView() {
-  const normalized = normalizeAngle(moonAngleDeg);
-  const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(normalized);
-  const r = PHASE_MOON_RADIUS;
-  const phaseAngleRad = (normalized * Math.PI) / 180;
-  const squeeze = r * Math.cos(phaseAngleRad);
-  const isWaxing = normalized > 180;
-
-  let path = "";
-
-  if (illum < 0.01) {
-    path = "";
-  } else if (illum > 0.99) {
-    path = `M 0 ${-r} A ${r} ${r} 0 1 1 0 ${r} A ${r} ${r} 0 1 1 0 ${-r}`;
-  } else if (isWaxing) {
-    if (squeeze >= 0) {
-      path = `M 0 ${-r} A ${r} ${r} 0 0 1 0 ${r} A ${Math.abs(
-        squeeze
-      )} ${r} 0 0 1 0 ${-r}`;
-    } else {
-      path = `M 0 ${-r} A ${r} ${r} 0 0 1 0 ${r} A ${Math.abs(
-        squeeze
-      )} ${r} 0 0 0 0 ${-r}`;
-    }
-  } else if (squeeze >= 0) {
-    path = `M 0 ${-r} A ${r} ${r} 0 0 0 0 ${r} A ${Math.abs(
-      squeeze
-    )} ${r} 0 0 0 0 ${-r}`;
-  } else {
-    path = `M 0 ${-r} A ${r} ${r} 0 0 0 0 ${r} A ${Math.abs(
-      squeeze
-    )} ${r} 0 0 1 0 ${-r}`;
-  }
-
+  const path = computePhaseViewPath(moonAngleDeg, PHASE_MOON_RADIUS, MoonPhasesModel);
   litPortionEl.setAttribute("d", path);
 }
 
 function updateReadouts() {
-  const normalized = normalizeAngle(moonAngleDeg);
-  const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(normalized);
-  const phaseName = MoonPhasesModel.phaseNameFromPhaseAngleDeg(normalized);
-  const daysSinceNew = MoonPhasesModel.daysSinceNewFromPhaseAngleDeg(normalized);
-  const waxingWaning = MoonPhasesModel.waxingWaningFromPhaseAngleDeg(normalized);
+  const data = computeReadoutData(moonAngleDeg, MoonPhasesModel);
 
-  phaseNameEl.textContent = phaseName;
-  angleReadoutEl.textContent = String(Math.round(normalized));
-  illumPercentEl.textContent = String(Math.round(illum * 100));
-  daysSinceNewEl.textContent = formatDay(daysSinceNew);
-  waxingWaningLabelEl.textContent = waxingWaning;
+  phaseNameEl.textContent = data.phaseName;
+  angleReadoutEl.textContent = data.angleStr;
+  illumPercentEl.textContent = data.illumPercent;
+  daysSinceNewEl.textContent = data.daysSinceNew;
+  waxingWaningLabelEl.textContent = data.waxingWaning;
 
-  moonGroupEl.setAttribute("aria-valuenow", String(Math.round(normalized)));
-  moonGroupEl.setAttribute(
-    "aria-valuetext",
-    `${phaseName}, ${Math.round(illum * 100)}% illuminated, Day ${daysSinceNew.toFixed(
-      0
-    )} of lunar cycle (${waxingWaning})`
-  );
+  moonGroupEl.setAttribute("aria-valuenow", data.angleStr);
+  moonGroupEl.setAttribute("aria-valuetext", data.ariaValueText);
 }
 
 function updateTimeline() {
-  const daysSinceNew = MoonPhasesModel.daysSinceNewFromPhaseAngleDeg(moonAngleDeg);
-  const waxingWaning = MoonPhasesModel.waxingWaningFromPhaseAngleDeg(moonAngleDeg);
+  const state = computeTimelineState(moonAngleDeg, PHASE_ANGLES, MoonPhasesModel);
 
-  timelineDirectionEl.textContent = waxingWaning === "Waxing" ? "WAXING \u2192" : "\u2190 WANING";
-  timelineDirectionEl.classList.toggle("waning", waxingWaning === "Waning");
-  timelineDayEl.textContent = `Day ${formatDay(daysSinceNew)} of ${MoonPhasesModel.synodicMonthDays}`;
+  timelineDirectionEl.textContent = state.directionText;
+  timelineDirectionEl.classList.toggle("waning", state.directionClass === "waning");
+  timelineDayEl.textContent = state.dayText;
 
   const normalized = normalizeAngle(moonAngleDeg);
   timelinePhaseEls.forEach((button) => {
@@ -478,24 +407,6 @@ function applyShadowVisibility(showShadow: boolean, announce = false) {
         : "Earth's shadow cone hidden."
     );
   }
-}
-
-function snapToCardinalPhase(angleDeg: number): number {
-  const normalized = normalizeAngle(angleDeg);
-  const targets = [0, 90, 180, 270];
-
-  let bestTarget = normalized;
-  let bestAbsDelta = Infinity;
-
-  for (const target of targets) {
-    const delta = Math.abs(shortestAngleDelta(normalized, target));
-    if (delta < bestAbsDelta) {
-      bestAbsDelta = delta;
-      bestTarget = target;
-    }
-  }
-
-  return bestAbsDelta <= SNAP_DEGREES ? bestTarget : normalized;
 }
 
 function setupDrag() {

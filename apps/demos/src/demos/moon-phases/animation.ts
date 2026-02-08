@@ -1,7 +1,4 @@
-function normalizeAngle(angleDeg: number): number {
-  const a = angleDeg % 360;
-  return a < 0 ? a + 360 : a;
-}
+import { normalizeAngle } from "./logic";
 
 export function degreesPerSecondFromSpeed(
   speed: number,
