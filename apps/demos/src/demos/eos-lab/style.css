@@ -27,6 +27,18 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Constrain accordion bodies inside Tab 1 sidebar so they scroll
+   internally instead of pushing controls offscreen. */
+.cp-demo__sidebar .cp-accordion__body {
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+/* Nested "Technical details" is shorter — tighter cap */
+.cp-demo__sidebar .cp-accordion--nested .cp-accordion__body {
+  max-height: 9rem;
+}
+
 .model-notes__simple {
   margin: var(--cp-space-2) 0;
   padding-left: 1.2em;
