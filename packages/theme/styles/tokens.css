@@ -245,7 +245,7 @@
   --cp-topic-cosmology:      var(--cp-celestial-sun-corona);
 
   /* ---------- Hero ---------- */
-  --cp-hero-min-height: 50vh;
+  --cp-hero-min-height: 40vh;
 }
 
 html,
