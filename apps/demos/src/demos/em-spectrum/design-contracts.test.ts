@@ -152,4 +152,50 @@ describe("EM Spectrum -- Design System Contracts", () => {
       expect(html).toContain('data-kind="model"');
     });
   });
+
+  describe("Component migration contracts", () => {
+    it("uses cp-chip for band selector buttons", () => {
+      const chips = html.match(/class="cp-chip band"/g) || [];
+      expect(chips.length).toBe(7);
+    });
+
+    it("uses cp-chip-group container for band picker", () => {
+      expect(html).toContain("cp-chip-group--grid");
+    });
+
+    it("uses cp-utility-toolbar for actions", () => {
+      expect(html).toContain("cp-utility-toolbar");
+    });
+
+    it("uses cp-utility-btn for copy results", () => {
+      expect(html).toMatch(/id="copyResults"[^>]*class="cp-utility-btn"/);
+    });
+
+    it("has popover navigation with correct links", () => {
+      expect(html).toContain("cp-popover-trigger");
+      expect(html).toContain("cp-popover");
+      expect(html).toContain('href="../../exhibits/em-spectrum/"');
+      expect(html).toContain('href="../../stations/em-spectrum/"');
+      expect(html).toContain('href="../../instructor/em-spectrum/"');
+    });
+
+    it("main.ts imports and calls initPopovers", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("initPopovers");
+      expect(mainTs).toMatch(/initPopovers\s*\(/);
+    });
+
+    it("has zero cp-action references in HTML", () => {
+      expect(html).not.toContain("cp-action");
+    });
+
+    it("has zero cp-action references in CSS", () => {
+      expect(css).not.toContain("cp-action");
+    });
+
+    it("has zero cp-actions wrapper in HTML", () => {
+      expect(html).not.toContain("cp-actions");
+    });
+  });
 });

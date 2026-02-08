@@ -10,39 +10,12 @@
   font-size: 0.95rem;
 }
 
+/* Band picker: cp-chip-group--grid handles the 2-col grid layout;
+   fieldset reset is still needed for border/padding/margin. */
 .band-picker {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
   padding: 0;
   margin: 12px 0 0;
   border: 0;
-}
-
-.band {
-  appearance: none;
-  border: 1px solid var(--cp-border);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--cp-bg0) 70%, transparent);
-  color: var(--cp-text);
-  padding: 8px 10px;
-  font: inherit;
-  line-height: 1.1;
-  cursor: pointer;
-  transition:
-    transform 140ms ease,
-    background-color 140ms ease,
-    border-color 140ms ease;
-}
-
-.band[aria-pressed="true"] {
-  border-color: color-mix(in srgb, var(--cp-accent) 55%, var(--cp-border));
-  background: color-mix(in srgb, var(--cp-accent) 18%, var(--cp-bg0));
-}
-
-.band:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--cp-accent) 60%, transparent);
-  outline-offset: 2px;
 }
 
 .stage {

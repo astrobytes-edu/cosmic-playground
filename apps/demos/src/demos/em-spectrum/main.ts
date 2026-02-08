@@ -1,6 +1,7 @@
 import {
   createInstrumentRuntime,
   initMath,
+  initPopovers,
   initStarfield,
   setLiveRegionText
 } from "@cosmic/runtime";
@@ -455,6 +456,9 @@ function initConvertPanel() {
     convertLock = null;
   });
 }
+
+const demoRoot = document.querySelector<HTMLElement>("#cp-demo");
+if (demoRoot) initPopovers(demoRoot);
 
 copyResults.addEventListener("click", () => void handleCopyResults());
 initBandButtons();
