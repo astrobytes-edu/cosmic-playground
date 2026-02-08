@@ -333,6 +333,10 @@ test.describe("Cosmic Playground smoke", () => {
         "Effective resolution theta_eff (arcsec)",
         "Binary separation (arcsec)"
       ]
+    },
+    {
+      slug: "planetary-conjunctions",
+      expects: ["Synodic period (days)", "Days elapsed", "Conjunctions observed"]
     }
   ] as const;
 
