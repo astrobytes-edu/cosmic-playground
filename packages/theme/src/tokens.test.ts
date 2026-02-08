@@ -45,9 +45,9 @@ describe("Design tokens", () => {
       expect(css).toContain("--cp-font-bold");
     });
 
-    it("defines display font for headings (Lexend)", () => {
+    it("defines display font for headings (Outfit)", () => {
       expect(css).toContain("--cp-font-display");
-      expect(css).toMatch(/--cp-font-display:.*Lexend/);
+      expect(css).toMatch(/--cp-font-display:.*Outfit/);
     });
 
     it("applies display font to heading elements", () => {
