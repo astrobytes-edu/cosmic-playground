@@ -71,12 +71,13 @@ const logTickValues = (_self: unknown, splits: number[]) =>
 
 /**
  * uPlot log-scale range clamp for pressure axes.
- * uPlot's logAxisSplits overflows (RangeError) when the data range spans
- * more than ~40 decades.  Clamp Y-min to 1e-10 (far below any physically
- * meaningful pressure) to keep the splits count manageable.
+ * Clamp Y-axis to the physically interesting range (~1e5 to ~1e25 dyne cm⁻²).
+ * The floor of 1e5 prevents the plot from wasting vertical space on decades
+ * that never appear in stellar interiors, while staying below the lowest
+ * pressures encountered at brown-dwarf surfaces.
  */
 const logPressureRange = (_u: unknown, mn: number, mx: number): [number, number] =>
-  [Math.max(mn, 1e-10), mx];
+  [Math.max(mn, 1e5), mx];
 
 /* ================================================================
  * Presets

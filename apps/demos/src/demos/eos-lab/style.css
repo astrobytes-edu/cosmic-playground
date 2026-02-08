@@ -280,7 +280,7 @@
 .pressure-plot__surface {
   aspect-ratio: 4 / 3;
   min-height: 280px;
-  background: color-mix(in srgb, var(--cp-text) 2%, transparent);
+  background: color-mix(in srgb, var(--cp-text) 6%, transparent);
   border-radius: var(--cp-r-2);
   border: 1px solid color-mix(in srgb, var(--cp-border) 60%, transparent);
 }
@@ -368,7 +368,8 @@
 
 /* uPlot legend styling — match observatory console theme */
 .pressure-plot__surface .u-legend {
-  font-size: 0.88rem;
+  font-size: 0.92rem;
+  font-family: var(--cp-font-mono, monospace);
   padding: var(--cp-space-1) 0;
 }
 

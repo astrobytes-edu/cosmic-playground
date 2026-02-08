@@ -22,7 +22,9 @@ export function resolveCssColor(varName: string): string {
 function darkThemeDefaults(): Partial<uPlot.Options> {
   const bg = resolveCssColor("--cp-bg0") || "#0e1117";
   const grid = "rgba(255,255,255,0.12)";   // subtle but visible grid
-  const text = "rgba(255,255,255,0.6)";    // legible axis labels
+  const text = "rgba(255,255,255,0.78)";   // legible axis labels
+
+  const axisFont = "13px var(--cp-font-mono, monospace)";
 
   return {
     axes: [
@@ -30,14 +32,14 @@ function darkThemeDefaults(): Partial<uPlot.Options> {
         stroke: text,
         grid: { stroke: grid, width: 1 },
         ticks: { stroke: grid, width: 1 },
-        font: "11px monospace",
+        font: axisFont,
       },
       {
         stroke: text,
         grid: { stroke: grid, width: 1 },
         ticks: { stroke: grid, width: 1 },
-        font: "11px monospace",
-        size: 72,
+        font: axisFont,
+        size: 84,
       },
     ],
     cursor: {
