@@ -20,6 +20,8 @@ import {
   formatYearsLabel,
   checkWhyNotEveryMonth,
   checkEclipseStatistics,
+  eclipseArcExtentDeg,
+  buildArcPath,
 } from "./logic";
 import type { EclipseModelCallbacks, EclipseDemoState, DistancePresetKey, SimulationCounts } from "./logic";
 
@@ -331,6 +333,41 @@ function renderStage(args: {
   betaLabel.setAttribute("x", formatNumber(markerX, 2));
   betaLabel.setAttribute("y", formatNumber(markerY - 14, 2));
   betaLabel.textContent = `beta ~ ${formatNumber(args.betaDeg, 2)} deg`;
+
+  // Eclipse window arcs
+  renderArcs(cx, cy, r, nodeDisplayLonDeg);
+}
+
+function renderArcs(cx: number, cy: number, r: number, nodeDisplayLonDeg: number) {
+  const thresholds = EclipseGeometryModel.eclipseThresholdsDeg({
+    earthMoonDistanceKm: state.earthMoonDistanceKm,
+  });
+  const dLambda = EclipseGeometryModel.deltaLambdaFromBetaDeg;
+  const tiltDeg = state.orbitalTiltDeg;
+  const descDisplayLonDeg = EclipseGeometryModel.normalizeAngleDeg(nodeDisplayLonDeg + 180);
+
+  const arcs = [
+    { id: "arc-solar-any-asc", beta: thresholds.solarPartialDeg, center: nodeDisplayLonDeg },
+    { id: "arc-solar-central-asc", beta: thresholds.solarCentralDeg, center: nodeDisplayLonDeg },
+    { id: "arc-lunar-any-asc", beta: thresholds.lunarPenumbralDeg, center: nodeDisplayLonDeg },
+    { id: "arc-lunar-central-asc", beta: thresholds.lunarUmbralDeg, center: nodeDisplayLonDeg },
+    { id: "arc-solar-any-desc", beta: thresholds.solarPartialDeg, center: descDisplayLonDeg },
+    { id: "arc-solar-central-desc", beta: thresholds.solarCentralDeg, center: descDisplayLonDeg },
+    { id: "arc-lunar-any-desc", beta: thresholds.lunarPenumbralDeg, center: descDisplayLonDeg },
+    { id: "arc-lunar-central-desc", beta: thresholds.lunarUmbralDeg, center: descDisplayLonDeg },
+  ];
+
+  for (const arc of arcs) {
+    const halfExtent = eclipseArcExtentDeg({
+      tiltDeg,
+      thresholdBetaDeg: arc.beta,
+      deltaLambdaFromBetaDeg: dLambda,
+    });
+    const el = document.getElementById(arc.id) as SVGPathElement | null;
+    if (el) {
+      el.setAttribute("d", buildArcPath({ cx, cy, r, centerAngleDeg: arc.center, halfExtentDeg: halfExtent }));
+    }
+  }
 }
 
 function render() {

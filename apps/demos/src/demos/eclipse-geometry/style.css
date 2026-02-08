@@ -169,6 +169,24 @@
   fill-opacity: 0.95;
 }
 
+/* --- Eclipse window arcs --- */
+.stage__arc {
+  fill: none;
+  stroke-width: 6;
+  opacity: 0.2;
+  pointer-events: none;
+}
+.stage__arc--solar {
+  stroke: var(--cp-accent-rose);
+}
+.stage__arc--lunar {
+  stroke: var(--cp-accent);
+}
+.stage__arc--central {
+  stroke-width: 10;
+  opacity: 0.3;
+}
+
 /* --- Readout dot indicator (for solar/lunar outcomes) --- */
 .cp-readout__dot {
   display: inline-block;
