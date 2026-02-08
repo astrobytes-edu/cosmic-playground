@@ -127,7 +127,16 @@
 }
 
 .stage__node {
-  fill: color-mix(in srgb, var(--cp-text) 75%, transparent);
+  fill: var(--cp-accent);
+  stroke: none;
+  cursor: grab;
+  filter: drop-shadow(var(--cp-glow-accent-teal));
+  transition: filter 0.2s var(--cp-ease-out);
+}
+.stage__node:hover,
+.stage__node--dragging {
+  filter: drop-shadow(0 0 8px var(--cp-accent));
+  cursor: grabbing;
 }
 
 .stage__betaLine {

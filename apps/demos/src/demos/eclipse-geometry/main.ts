@@ -1302,6 +1302,77 @@ eclipseSvg.addEventListener("touchmove", handleDragMove, { passive: false });
 document.addEventListener("mouseup", handleDragEnd);
 document.addEventListener("touchend", handleDragEnd);
 
+/* ------------------------------------------------------------------ */
+/*  Node drag interaction on orbit SVG                                 */
+/* ------------------------------------------------------------------ */
+
+function setupNodeDrag(nodeEl: SVGCircleElement, isAscending: boolean) {
+  let dragging = false;
+
+  const start = (e: MouseEvent | TouchEvent) => {
+    e.preventDefault();
+    dragging = true;
+    nodeEl.classList.add("stage__node--dragging");
+    stopTimeActions();
+    setPhasePressed(null);
+  };
+
+  const move = (e: MouseEvent | TouchEvent) => {
+    if (!dragging) return;
+    if ("touches" in e && e.touches.length === 0) return;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    const pt = clientToSvg(clientX, clientY);
+    if (!pt) return;
+
+    // Angle in SVG display coords (Sun-fixed frame)
+    const displayAngleDeg = svgPointToAngleDeg(ORBIT_CX_SVG, ORBIT_CY_SVG, pt.x, pt.y);
+    // Convert back to ecliptic longitude: nodeLon = displayAngle + sunLon
+    // For descending node, the ascending node is 180deg away
+    if (isAscending) {
+      state.nodeLonDeg = EclipseGeometryModel.normalizeAngleDeg(displayAngleDeg + state.sunLonDeg);
+    } else {
+      state.nodeLonDeg = EclipseGeometryModel.normalizeAngleDeg(displayAngleDeg + 180 + state.sunLonDeg);
+    }
+    render();
+  };
+
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    nodeEl.classList.remove("stage__node--dragging");
+  };
+
+  nodeEl.addEventListener("mousedown", start);
+  nodeEl.addEventListener("touchstart", start, { passive: false });
+  document.addEventListener("mousemove", move);
+  document.addEventListener("touchmove", move, { passive: false });
+  document.addEventListener("mouseup", end);
+  document.addEventListener("touchend", end);
+}
+
+setupNodeDrag(ascNodeDot, true);
+setupNodeDrag(descNodeDot, false);
+
+/* ------------------------------------------------------------------ */
+/*  Keyboard support for draggable nodes                               */
+/* ------------------------------------------------------------------ */
+
+[ascNodeDot, descNodeDot].forEach((el) => {
+  el.addEventListener("keydown", (e: KeyboardEvent) => {
+    const step = e.shiftKey ? 10 : 1;
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+      state.nodeLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.nodeLonDeg + step);
+      render();
+      e.preventDefault();
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+      state.nodeLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.nodeLonDeg - step + 360);
+      render();
+      e.preventDefault();
+    }
+  });
+});
+
 render();
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
