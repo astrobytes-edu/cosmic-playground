@@ -351,3 +351,15 @@ test.describe("Eclipse Geometry -- E2E", () => {
     expect(text).toContain("/ 5");
   });
 });
+
+// --- Reduced Motion (separate describe, no beforeEach) ---
+
+test.describe("Eclipse Geometry -- Reduced Motion", () => {
+  test("respects prefers-reduced-motion", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("play/eclipse-geometry/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+    const noteText = await page.locator("#motionNote").textContent();
+    expect(noteText).toContain("reduced-motion");
+  });
+});

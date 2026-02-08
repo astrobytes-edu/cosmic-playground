@@ -414,3 +414,15 @@ test.describe("Retrograde Motion -- E2E", () => {
     });
   });
 });
+
+// --- Reduced Motion (separate describe, no beforeEach) ---
+
+test.describe("Retrograde Motion -- Reduced Motion", () => {
+  test("respects prefers-reduced-motion", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("play/retrograde-motion/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+    // Play button (#btn-play) should be disabled
+    await expect(page.locator("#btn-play")).toBeDisabled({ timeout: 5000 });
+  });
+});

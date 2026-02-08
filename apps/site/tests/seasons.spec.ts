@@ -173,3 +173,16 @@ test.describe("Seasons -- E2E", () => {
     await expect(helpDialog).toBeVisible();
   });
 });
+
+// --- Reduced Motion (separate describe, no beforeEach) ---
+
+test.describe("Seasons -- Reduced Motion", () => {
+  test("respects prefers-reduced-motion", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("play/seasons/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+    await expect(page.locator("#animateYear")).toBeDisabled();
+    const noteText = await page.locator("#motionNote").textContent();
+    expect(noteText).toContain("reduced-motion");
+  });
+});

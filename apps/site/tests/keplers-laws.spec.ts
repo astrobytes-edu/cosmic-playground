@@ -393,3 +393,15 @@ test.describe("Kepler's Laws -- E2E", () => {
     await expect(instructorLink).toBeAttached();
   });
 });
+
+// --- Reduced Motion (separate describe, no beforeEach) ---
+
+test.describe("Kepler's Laws -- Reduced Motion", () => {
+  test("respects prefers-reduced-motion", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("play/keplers-laws/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+    // Play button should be disabled when reduced motion is active
+    await expect(page.locator("#play")).toBeDisabled();
+  });
+});
