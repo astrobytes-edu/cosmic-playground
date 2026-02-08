@@ -266,6 +266,38 @@ test.describe("Eclipse Geometry -- E2E", () => {
     expect(count).toBe(3);
   });
 
+  // --- Animate Month (bug fix: Sun and Node must advance, not just the Moon) ---
+
+  test("animate-month advances Sun and Node (not just the Moon)", async ({ page }) => {
+    // Record initial slider values (raw, not rounded readouts)
+    const initialNodeSlider = await page.locator("#nodeLon").inputValue();
+    const initialMoonSlider = await page.locator("#moonLon").inputValue();
+
+    // Start the month animation
+    await page.locator("#animateMonth").click();
+
+    // Wait until moon longitude slider value changes (animation is running)
+    await expect
+      .poll(async () => {
+        return await page.locator("#moonLon").inputValue();
+      }, { timeout: 5000 })
+      .not.toBe(initialMoonSlider);
+
+    // Let animation run a bit more to accumulate enough node drift
+    // (Node regression is slow: ~0.053 deg/day, at 25 days/sec that's ~1.3 deg/sec)
+    await page.waitForTimeout(2000);
+
+    // Stop the animation by clicking again (it toggles)
+    await page.locator("#animateMonth").click();
+
+    // Read updated slider values (raw floating-point, not rounded readout text)
+    const updatedNodeSlider = await page.locator("#nodeLon").inputValue();
+
+    // Node longitude slider must have changed (this is the bug fix — previously it stayed constant)
+    // Node regression: ~0.053 deg/day * 25 days/sec * ~2s ≈ 2.6 deg drift
+    expect(parseFloat(updatedNodeSlider)).not.toBeCloseTo(parseFloat(initialNodeSlider), 0);
+  });
+
   // --- Buttons ---
 
   test("station mode button is present and not disabled", async ({ page }) => {

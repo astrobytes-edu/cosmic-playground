@@ -336,8 +336,11 @@ function renderStage(args: {
 }
 
 function render() {
-  const moonLonDeg = clamp(Number(moonLon.value), 0, 360);
-  const nodeLonDeg = clamp(Number(nodeLon.value), 0, 360);
+  const isAnimating = runMode !== "idle";
+  // During animation, use precise state values (sliders have step-snapping loss).
+  // In idle mode, read from sliders (user is adjusting controls directly).
+  const moonLonDeg = isAnimating ? state.moonLonDeg : clamp(Number(moonLon.value), 0, 360);
+  const nodeLonDeg = isAnimating ? state.nodeLonDeg : clamp(Number(nodeLon.value), 0, 360);
   const orbitalTiltDeg = clamp(Number(tilt.value), 0, 10);
   const presetKey = distancePreset.value as DistancePresetKey;
 
@@ -986,13 +989,13 @@ function tick(t: number) {
 
   if (runMode === "animate-month") {
     const dtDays = ANIMATE_MONTH_DAYS_PER_SECOND * dtSec;
+    // Advance all three bodies in state (avoid slider step-snapping loss for slow rates)
     state.sunLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + SUN_RATE_DEG_PER_DAY * dtDays);
-    moonLon.value = String(
-      EclipseGeometryModel.normalizeAngleDeg(Number(moonLon.value) + MOON_RATE_DEG_PER_DAY * dtDays)
-    );
-    nodeLon.value = String(
-      EclipseGeometryModel.normalizeAngleDeg(Number(nodeLon.value) + NODE_RATE_DEG_PER_DAY * dtDays)
-    );
+    state.moonLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.moonLonDeg + MOON_RATE_DEG_PER_DAY * dtDays);
+    state.nodeLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.nodeLonDeg + NODE_RATE_DEG_PER_DAY * dtDays);
+    // Write rounded values back to sliders for display
+    moonLon.value = String(Math.round(state.moonLonDeg));
+    nodeLon.value = String(Math.round(state.nodeLonDeg));
     render();
     rafId = requestAnimationFrame(tick);
     return;
@@ -1002,9 +1005,13 @@ function tick(t: number) {
     const dtDays = Math.min(animateYearRemainingDays, ANIMATE_YEAR_DAYS_PER_SECOND * dtSec);
     animateYearRemainingDays = Math.max(0, animateYearRemainingDays - dtDays);
 
+    // Advance all three bodies in state (avoid slider step-snapping loss for slow rates)
     state.sunLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + SUN_RATE_DEG_PER_DAY * dtDays);
-    moonLon.value = String(EclipseGeometryModel.normalizeAngleDeg(Number(moonLon.value) + MOON_RATE_DEG_PER_DAY * dtDays));
-    nodeLon.value = String(EclipseGeometryModel.normalizeAngleDeg(Number(nodeLon.value) + NODE_RATE_DEG_PER_DAY * dtDays));
+    state.moonLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.moonLonDeg + MOON_RATE_DEG_PER_DAY * dtDays);
+    state.nodeLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.nodeLonDeg + NODE_RATE_DEG_PER_DAY * dtDays);
+    // Write rounded values back to sliders for display
+    moonLon.value = String(Math.round(state.moonLonDeg));
+    nodeLon.value = String(Math.round(state.nodeLonDeg));
     render();
 
     if (animateYearRemainingDays <= 0) {
