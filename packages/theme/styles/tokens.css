@@ -234,6 +234,16 @@
   --cp-phase-play: var(--cp-accent);
   --cp-phase-explain: var(--cp-pink);
 
+  /* ---------- Topic Wayfinding Colors (museum layer) ---------- */
+  --cp-topic-earthsky:       var(--cp-celestial-earth);
+  --cp-topic-orbits:         var(--cp-accent);
+  --cp-topic-lightspectra:   var(--cp-violet);
+  --cp-topic-telescopes:     #8BE9FD;
+  --cp-topic-datainference:  #50FA7B;
+  --cp-topic-stars:          var(--cp-celestial-sun);
+  --cp-topic-galaxies:       var(--cp-pink);
+  --cp-topic-cosmology:      var(--cp-celestial-sun-corona);
+
   /* ---------- Hero ---------- */
   --cp-hero-min-height: 50vh;
 }
