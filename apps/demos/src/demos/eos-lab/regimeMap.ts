@@ -98,7 +98,7 @@ function resizeCanvasToCssPixels(
  * Y axis: log10(rho) → bottom to top  (canvas y is inverted)
  * ────────────────────────────────────────────────── */
 
-const PADDING = { top: 28, right: 16, bottom: 40, left: 58 };
+const PADDING = { top: 28, right: 16, bottom: 46, left: 64 };
 
 function plotArea(w: number, h: number) {
   return {
@@ -149,7 +149,7 @@ function resolveColors(canvas?: HTMLCanvasElement) {
     degeneracy: fromCss("--eos-deg", "#a78bfa"),
     mixed: fromCss("--eos-mixed", "#fbbf24"),
     boundary: resolveCssColor("--cp-text1") || "#e0e0e0",
-    text: "rgba(255,255,255,0.6)",
+    text: "rgba(255,255,255,0.78)",
     grid: "rgba(255,255,255,0.15)",
     bg: resolveCssColor("--cp-bg0") || "#0e1117",
     marker: "#fbbf24",     // amber — matches total pressure
@@ -248,7 +248,7 @@ function drawAnalyticalOverlay(
   drawBoundary(ctx, pa, cfg, radDegPoly, colors.radiation, [6, 3]);
 
   // Labels
-  ctx.font = "bold 11px var(--cp-font-mono, monospace)";
+  ctx.font = "bold 15px var(--cp-font-mono, monospace)";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
@@ -274,7 +274,7 @@ function drawGrid(
   const colors = resolveColors();
   ctx.strokeStyle = colors.grid;
   ctx.lineWidth = 0.5;
-  ctx.font = "10px var(--cp-font-mono, monospace)";
+  ctx.font = "12px var(--cp-font-mono, monospace)";
   ctx.fillStyle = colors.text;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
@@ -301,8 +301,8 @@ function drawGrid(
 
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  ctx.font = "11px var(--cp-font-mono, monospace)";
-  ctx.fillText("log T (K)", pa.x + pa.w / 2, pa.y + pa.h + 22);
+  ctx.font = "13px var(--cp-font-mono, monospace)";
+  ctx.fillText("log T (K)", pa.x + pa.w / 2, pa.y + pa.h + 24);
 
   ctx.save();
   ctx.translate(14, pa.y + pa.h / 2);
@@ -431,7 +431,7 @@ function drawSolarProfile(
   ctx.setLineDash([]);
 
   // Labeled dots
-  ctx.font = "10px var(--cp-font-mono, monospace)";
+  ctx.font = "12px var(--cp-font-mono, monospace)";
   ctx.textBaseline = "bottom";
   for (const pt of profile) {
     if (!pt.label) continue;
