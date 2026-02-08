@@ -135,4 +135,14 @@ describe("Parallax Distance -- Design System Contracts", () => {
       expect(mainTs).not.toMatch(/function\s+distanceParsec/);
     });
   });
+
+  describe("Component contracts", () => {
+    it("uses cp-utility-toolbar for actions", () => {
+      expect(html).toContain("cp-utility-toolbar");
+    });
+
+    it("has zero cp-action references", () => {
+      expect(html).not.toContain("cp-action");
+    });
+  });
 });

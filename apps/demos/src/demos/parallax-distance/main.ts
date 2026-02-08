@@ -1,4 +1,4 @@
-import { createDemoModes, createInstrumentRuntime, initMath, initStarfield, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { ParallaxDistanceModel } from "@cosmic/physics";
 import { nearbyStars } from "@cosmic/data-astr101";
@@ -379,3 +379,8 @@ if (starfieldCanvas) {
 }
 
 initMath(document);
+
+const demoRoot = document.getElementById("cp-demo");
+if (demoRoot) {
+  initPopovers(demoRoot);
+}
