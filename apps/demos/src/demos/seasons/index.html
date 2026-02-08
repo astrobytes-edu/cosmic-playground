@@ -9,14 +9,14 @@
   </head>
   <body>
     <canvas class="cp-starfield" aria-hidden="true"></canvas>
-    <div id="cp-demo" class="cp-layer-instrument cp-demo" data-shell="triad" aria-label="Seasons instrument">
-      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Seasons instrument">
+      <!-- ═══════════════════════════════════════════
+           SIDEBAR — physics controls
+           ═══════════════════════════════════════════ -->
+      <aside class="cp-demo__sidebar cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Seasons: Why Tilt Matters</div>
         <div class="cp-panel-body">
           <p class="cp-muted">Test how tilt changes sunlight angle and day length across the year.</p>
-          <div class="cp-callout" data-kind="misconception">
-            Common myth: seasons are caused by Earth being closer/farther from the Sun.
-          </div>
 
           <label class="control">
             <span>Day of year</span>
@@ -69,14 +69,6 @@
             />
             <span class="control__value"><span id="latitudeValue"></span></span>
           </label>
-
-          <fieldset class="cp-chip-group overlay-row" role="group" aria-label="Overlays">
-            <legend class="cp-muted">Overlays</legend>
-            <button class="cp-chip" type="button" aria-pressed="true" data-overlay="latitude-bands">Lat. Bands</button>
-            <button class="cp-chip" type="button" aria-pressed="true" data-overlay="terminator">Terminator</button>
-            <button class="cp-chip" type="button" aria-pressed="false" data-overlay="ecliptic">Ecliptic</button>
-            <button class="cp-chip" type="button" aria-pressed="false" data-overlay="equator">Cel. Equator</button>
-          </fieldset>
 
           <div class="animate-row">
             <button id="animateYear" class="cp-button cp-button--ghost" type="button">
@@ -133,6 +125,9 @@
         </div>
       </aside>
 
+      <!-- ═══════════════════════════════════════════
+           STAGE — orbit + globe SVGs
+           ═══════════════════════════════════════════ -->
       <section class="cp-demo__stage cp-stage stage" aria-label="Visualization stage">
         <svg
           id="seasonStage"
@@ -154,22 +149,42 @@
 
           <!-- Orbit panel -->
           <g id="orbitPanel" transform="translate(40, 40)">
-            <text class="stage__title" x="0" y="0">Orbit (toy distance)</text>
+            <text class="stage__title" x="0" y="0">Orbit (exaggerated distance)</text>
 
             <g transform="translate(180, 170)">
               <circle class="stage__orbit" cx="0" cy="0" r="140" />
+
+              <!-- Distance line from Sun to Earth [S5] -->
+              <line id="distanceLine" class="stage__distanceLine" x1="0" y1="0" x2="140" y2="0" />
+
               <circle class="stage__sun" cx="0" cy="0" r="26" />
               <text class="stage__label" x="0" y="40" text-anchor="middle">Sun</text>
 
               <circle id="earthOrbitDot" class="stage__earth" cx="140" cy="0" r="12" />
+
+              <!-- Polaris axis indicator from Earth [S2] -->
+              <g id="polarisGroup">
+                <line id="polarisAxis" class="stage__polarisAxis" x1="0" y1="0" x2="0" y2="-30" />
+                <text id="polarisLabel" class="stage__polarisLabel" x="0" y="-35" text-anchor="start">Polaris</text>
+              </g>
+
               <text id="orbitLabel" class="stage__label" x="0" y="170" text-anchor="middle"></text>
 
+              <!-- Season labels at orbital quadrants [S4] -->
+              <text id="seasonLabel-Mar" class="stage__seasonLabel"></text>
+              <text id="seasonLabel-Jun" class="stage__seasonLabel"></text>
+              <text id="seasonLabel-Sep" class="stage__seasonLabel"></text>
+              <text id="seasonLabel-Dec" class="stage__seasonLabel"></text>
+
+              <!-- Perihelion + Aphelion markers [S9] -->
               <circle class="stage__marker" cx="140" cy="0" r="4" />
-              <text class="stage__markerLabel" x="140" y="-12" text-anchor="middle">peri</text>
+              <text class="stage__markerLabel" x="140" y="-12" text-anchor="middle">Peri</text>
+              <circle class="stage__marker" cx="-140" cy="0" r="4" />
+              <text class="stage__markerLabel" x="-140" y="-12" text-anchor="middle">Aph</text>
             </g>
           </g>
 
-          <!-- Globe view (replaces flat tilt disk) -->
+          <!-- Globe view -->
           <g class="globe" transform="translate(670, 210)">
             <defs>
               <clipPath id="globe-clip"><circle r="155"/></clipPath>
@@ -178,6 +193,17 @@
                 <stop offset="100%" stop-color="var(--cp-celestial-earth)" stop-opacity="0.5"/>
               </radialGradient>
             </defs>
+
+            <!-- Sunlight rays from left [S3] -->
+            <g id="sunlightRays" class="stage__sunlightRays">
+              <line x1="-250" y1="-120" x2="-160" y2="-120" class="stage__ray" />
+              <line x1="-250" y1="-60" x2="-160" y2="-60" class="stage__ray" />
+              <line x1="-250" y1="0" x2="-160" y2="0" class="stage__ray" />
+              <line x1="-250" y1="60" x2="-160" y2="60" class="stage__ray" />
+              <line x1="-250" y1="120" x2="-160" y2="120" class="stage__ray" />
+              <text class="stage__rayLabel" x="-245" y="-140">Sunlight</text>
+            </g>
+
             <!-- Globe body -->
             <circle class="stage__globe" r="155" fill="url(#globeGrad)"/>
             <!-- Clipped group for internal features -->
@@ -192,10 +218,15 @@
                 <ellipse id="arctic-n" class="stage__lat-band stage__lat-band--arctic"/>
                 <ellipse id="arctic-s" class="stage__lat-band stage__lat-band--arctic"/>
               </g>
+              <!-- Day-length arc at observer's latitude -->
+              <path id="dayArc" class="stage__dayArc stage__dayArc--day" />
+              <path id="nightArc" class="stage__dayArc stage__dayArc--night" />
               <!-- Ecliptic plane (horizontal line through globe center) -->
               <line id="globe-ecliptic" class="stage__ecliptic" x1="-160" y1="0" x2="160" y2="0" style="display:none"/>
               <!-- Celestial equator (tilted with axis) -->
               <ellipse id="globe-equator" class="stage__cel-equator" style="display:none"/>
+              <!-- Hour grid (meridian lines) [S8] -->
+              <g id="hourGrid" class="stage__hourGrid" style="display:none"></g>
             </g>
             <!-- Axis line (extends beyond globe) -->
             <line id="globe-axis" class="stage__globe-axis"/>
@@ -211,75 +242,95 @@
         </svg>
       </section>
 
-      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
-        <div class="cp-panel-header">Readouts</div>
-        <div class="cp-panel-body">
-          <div class="cp-readout">
-            <div class="cp-readout__label">Solar declination $\delta$</div>
-            <div class="cp-readout__value"><span id="declinationValue"></span> <span class="cp-readout__unit">deg</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Day length</div>
-            <div class="cp-readout__value"><span id="dayLengthValue"></span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Noon altitude</div>
-            <div class="cp-readout__value"><span id="noonAltitudeValue"></span> <span class="cp-readout__unit">deg</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Earth–Sun distance $r$</div>
-            <div class="cp-readout__value"><span id="distanceAuValue"></span> <span class="cp-readout__unit">AU</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Season (North / South)</div>
-            <div class="cp-readout__value">
-              <span id="seasonNorthValue"></span>
-              <span class="cp-muted"> / </span>
-              <span id="seasonSouthValue"></span>
-            </div>
-          </div>
+      <!-- ═══════════════════════════════════════════
+           READOUT STRIP — pinned readouts
+           ═══════════════════════════════════════════ -->
+      <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
+        <div class="cp-readout">
+          <span class="cp-readout__label">Season (N/S)</span>
+          <span class="cp-readout__value">
+            <span id="seasonNorthValue"></span>
+            <span class="cp-muted"> / </span>
+            <span id="seasonSouthValue"></span>
+          </span>
         </div>
-      </aside>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Day length</span>
+          <span class="cp-readout__value"><span id="dayLengthValue"></span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Noon altitude</span>
+          <span class="cp-readout__value"><span id="noonAltitudeValue"></span> <span class="cp-readout__unit">deg</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Declination</span>
+          <span class="cp-readout__value"><span id="declinationValue"></span> <span class="cp-readout__unit">deg</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Distance</span>
+          <span class="cp-readout__value"><span id="distanceAuValue"></span> <span class="cp-readout__unit">AU</span></span>
+        </div>
+      </div>
 
-      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
-        <div class="cp-panels">
-          <details class="cp-accordion" open>
-            <summary>
-              <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">2 bullets</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <ul>
-                <li>Day length and sun angle change with date and hemisphere.</li>
-                <li>Tilt drives seasons even if distance stayed constant.</li>
-              </ul>
-            </div>
-          </details>
+      <!-- ═══════════════════════════════════════════
+           CONTEXT MESSAGE — dynamic pedagogical hints
+           ═══════════════════════════════════════════ -->
+      <p class="cp-context-message" id="contextMessage" aria-live="polite"></p>
 
-          <details class="cp-accordion">
-            <summary>
-              <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">toy geometry</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <ul>
-                <li>
-                  Declination uses a simplified geometry (toy model):
-                  $$\delta = \sin^{-1}(\sin\varepsilon\,\sin L)$$
-                  where $\varepsilon$ is axial tilt and $L$ is treated as uniform in time (about $1^\circ$ accuracy vs ephemeris).
-                </li>
-                <li>
-                  Earth–Sun distance uses a first-order eccentric model (not a Kepler solver):
-                  $$r \approx 1 - e\cos\theta$$
-                  Perihelion is anchored near day 3 (Jan 3) with an uncertainty of about ±2 days.
-                </li>
-                <li>
-                  Key idea: opposite hemispheres have opposite seasons; distance variations are small and not the main
-                  cause.
-                </li>
-              </ul>
+      <!-- ═══════════════════════════════════════════
+           SHELF — tabbed pedagogical content
+           ═══════════════════════════════════════════ -->
+      <section class="cp-demo__shelf" aria-label="Information panels">
+        <div class="cp-tabs-container">
+          <div class="cp-tabs" role="tablist" aria-label="Demo information">
+            <button class="cp-tab cp-tab--active" role="tab" aria-selected="true"
+                    aria-controls="tab-notice" id="tab-btn-notice">What to notice</button>
+            <button class="cp-tab" role="tab" aria-selected="false"
+                    aria-controls="tab-model" id="tab-btn-model">Model notes</button>
+            <button class="cp-tab" role="tab" aria-selected="false"
+                    aria-controls="tab-overlays" id="tab-btn-overlays">Overlays</button>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-notice" aria-labelledby="tab-btn-notice">
+            <div class="cp-callout" data-kind="misconception">
+              Common myth: seasons are caused by Earth being closer to the Sun.
+              In fact, Earth is closest in January (Northern Hemisphere winter)!
             </div>
-          </details>
+            <ul>
+              <li><strong>Observable:</strong> Day length and sun angle change systematically with the calendar.</li>
+              <li><strong>Model:</strong> Axial tilt ($\varepsilon$) causes the Sun's declination ($\delta$) to cycle annually.</li>
+              <li><strong>Inference:</strong> Tilt, not distance, drives seasons. Opposite hemispheres have opposite seasons at the same time.</li>
+            </ul>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-model" aria-labelledby="tab-btn-model" hidden>
+            <ul>
+              <li>
+                Declination uses a simplified geometry (toy model):
+                $$\delta = \sin^{-1}(\sin\varepsilon\,\sin L)$$
+                where $\varepsilon$ is axial tilt and $L$ is treated as uniform in time (about $1^\circ$ accuracy vs ephemeris).
+              </li>
+              <li>
+                Earth–Sun distance uses a first-order eccentric model (not a Kepler solver):
+                $$r \approx 1 - e\cos\theta$$
+                Perihelion is anchored near day 3 (Jan 3) with an uncertainty of about ±2 days.
+              </li>
+              <li>
+                Key idea: opposite hemispheres have opposite seasons; distance variations are small and not the main
+                cause.
+              </li>
+            </ul>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-overlays" aria-labelledby="tab-btn-overlays" hidden>
+            <fieldset class="cp-chip-group overlay-row" role="group" aria-label="Overlays">
+              <legend class="cp-muted">Globe overlays</legend>
+              <button class="cp-chip" type="button" aria-pressed="true" data-overlay="latitude-bands">Lat. Bands</button>
+              <button class="cp-chip" type="button" aria-pressed="true" data-overlay="terminator">Terminator</button>
+              <button class="cp-chip" type="button" aria-pressed="true" data-overlay="sunlight-rays">Sunlight</button>
+              <button class="cp-chip" type="button" aria-pressed="true" data-overlay="day-arc">Day arc</button>
+              <button class="cp-chip" type="button" aria-pressed="false" data-overlay="ecliptic">Ecliptic</button>
+              <button class="cp-chip" type="button" aria-pressed="false" data-overlay="equator">Cel. Equator</button>
+              <button class="cp-chip" type="button" aria-pressed="false" data-overlay="hour-grid">Hour Grid</button>
+            </fieldset>
+          </div>
         </div>
       </section>
     </div>

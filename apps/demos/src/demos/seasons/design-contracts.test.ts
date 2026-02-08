@@ -83,7 +83,7 @@ describe("Seasons -- Design System Contracts", () => {
 
   describe("Entry animations", () => {
     it("demo shell sections have entry animations", () => {
-      expect(css).toMatch(/\.cp-demo__controls[\s\S]*?animation.*cp-slide-up/);
+      expect(css).toMatch(/\.cp-demo__sidebar[\s\S]*?animation.*cp-slide-up/);
       expect(css).toMatch(/\.cp-demo__stage[\s\S]*?animation.*cp-fade-in/);
     });
   });
@@ -191,7 +191,7 @@ describe("Seasons -- Design System Contracts", () => {
   describe("Overlay toggles", () => {
     it("overlay chip buttons have data-overlay attributes", () => {
       const overlayBtns = html.match(/<button[^>]*data-overlay="[^"]*"[^>]*>/g) || [];
-      expect(overlayBtns.length).toBe(4);
+      expect(overlayBtns.length).toBe(7);
     });
 
     it("overlay chip buttons have aria-pressed attributes", () => {
@@ -202,7 +202,7 @@ describe("Seasons -- Design System Contracts", () => {
 
     it("overlay group has accessible fieldset with legend", () => {
       expect(html).toContain('aria-label="Overlays"');
-      expect(html).toMatch(/<legend[^>]*>.*Overlays.*<\/legend>/);
+      expect(html).toMatch(/<legend[^>]*>.*overlays.*<\/legend>/i);
     });
   });
 
@@ -218,6 +218,95 @@ describe("Seasons -- Design System Contracts", () => {
     it("tilt slider max is 90 (not 45)", () => {
       expect(html).toMatch(/id="tilt"[^>]*max="90"/);
       expect(html).not.toMatch(/id="tilt"[^>]*max="45"/);
+    });
+  });
+
+  describe("Tabbed shelf layout", () => {
+    it("shelf uses role=tablist with three tab buttons", () => {
+      expect(html).toContain('role="tablist"');
+      const tabs = html.match(/role="tab"/g) || [];
+      expect(tabs.length).toBe(3);
+    });
+
+    it("tab panels have role=tabpanel and matching aria-labelledby", () => {
+      const panels = html.match(/role="tabpanel"/g) || [];
+      expect(panels.length).toBe(3);
+      expect(html).toContain('aria-labelledby="tab-btn-notice"');
+      expect(html).toContain('aria-labelledby="tab-btn-model"');
+      expect(html).toContain('aria-labelledby="tab-btn-overlays"');
+    });
+  });
+
+  describe("Readout strip layout", () => {
+    it("has a cp-readout-strip section", () => {
+      expect(html).toContain("cp-readout-strip");
+    });
+  });
+
+  describe("Context message", () => {
+    it("context message element has aria-live=polite", () => {
+      expect(html).toContain('id="contextMessage"');
+      expect(html).toMatch(/id="contextMessage"[^>]*aria-live="polite"/);
+    });
+  });
+
+  describe("Orbit panel features", () => {
+    it("SVG contains distance line element", () => {
+      expect(html).toContain('id="distanceLine"');
+    });
+
+    it("SVG contains Polaris axis group", () => {
+      expect(html).toContain('id="polarisGroup"');
+      expect(html).toContain('id="polarisAxis"');
+    });
+
+    it("SVG contains season labels", () => {
+      expect(html).toContain('class="stage__seasonLabel"');
+      const labels = html.match(/class="stage__seasonLabel"/g) || [];
+      expect(labels.length).toBe(4);
+    });
+
+    it("SVG contains perihelion and aphelion markers", () => {
+      expect(html).toContain(">Peri<");
+      expect(html).toContain(">Aph<");
+    });
+  });
+
+  describe("Globe panel features", () => {
+    it("SVG contains sunlight rays group", () => {
+      expect(html).toContain('id="sunlightRays"');
+    });
+
+    it("SVG contains day-length arc paths", () => {
+      expect(html).toContain('id="dayArc"');
+      expect(html).toContain('id="nightArc"');
+    });
+
+    it("SVG contains hour grid group", () => {
+      expect(html).toContain('id="hourGrid"');
+    });
+  });
+
+  describe("Season color coding CSS", () => {
+    it("CSS has season color classes using accent tokens", () => {
+      expect(css).toMatch(/\.season--summer[\s\S]*?--cp-accent-amber/);
+      expect(css).toMatch(/\.season--winter[\s\S]*?--cp-accent-ice/);
+      expect(css).toMatch(/\.season--spring[\s\S]*?--cp-accent-green/);
+      expect(css).toMatch(/\.season--autumn[\s\S]*?--cp-accent-green/);
+    });
+  });
+
+  describe("Latitude band color differentiation", () => {
+    it("equator band uses green accent", () => {
+      expect(css).toMatch(/\.stage__lat-band--equator[\s\S]*?--cp-accent-green/);
+    });
+
+    it("tropic bands use amber accent", () => {
+      expect(css).toMatch(/\.stage__lat-band--tropic[\s\S]*?--cp-accent-amber/);
+    });
+
+    it("arctic bands use ice accent", () => {
+      expect(css).toMatch(/\.stage__lat-band--arctic[\s\S]*?--cp-accent-ice/);
     });
   });
 });

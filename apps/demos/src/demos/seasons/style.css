@@ -89,6 +89,12 @@
   stroke-linecap: round;
 }
 
+.stage__rayLabel {
+  fill: var(--cp-celestial-sun);
+  font-size: 11px;
+  opacity: 0.65;
+}
+
 .stage__axis {
   stroke: color-mix(in srgb, var(--cp-celestial-earth) 58%, transparent);
   stroke-width: 3px;
@@ -119,6 +125,32 @@
   fill: color-mix(in srgb, var(--cp-text) 85%, transparent);
 }
 
+/* -- Orbit panel: distance line [S5] ------------- */
+.stage__distanceLine {
+  stroke: color-mix(in srgb, var(--cp-muted) 40%, transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+/* -- Orbit panel: Polaris axis [S2] -------------- */
+.stage__polarisAxis {
+  stroke: var(--cp-accent-rose);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.stage__polarisLabel {
+  fill: var(--cp-accent-rose);
+  font-size: 10px;
+}
+
+/* -- Orbit panel: season labels [S4] ------------- */
+.stage__seasonLabel {
+  fill: var(--cp-muted);
+  font-size: 11px;
+  opacity: 0.7;
+}
+
 /* -- Globe view ----------------------------------------- */
 .stage__globe {
   filter: drop-shadow(var(--cp-glow-planet));
@@ -126,21 +158,41 @@
 
 .stage__lat-band {
   fill: none;
-  stroke: color-mix(in srgb, var(--cp-celestial-orbit) 50%, transparent);
   stroke-width: 1;
 }
 
 .stage__lat-band--equator {
-  stroke: color-mix(in srgb, white 50%, transparent);
+  stroke: color-mix(in srgb, var(--cp-accent-green) 70%, transparent);
   stroke-width: 1.5;
 }
 
+.stage__lat-band--tropic {
+  stroke: color-mix(in srgb, var(--cp-accent-amber) 60%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 6 4;
+}
+
 .stage__lat-band--arctic {
+  stroke: color-mix(in srgb, var(--cp-accent-ice) 50%, transparent);
+  stroke-width: 1;
   stroke-dasharray: 4 3;
 }
 
-.stage__lat-band--tropic {
-  stroke-dasharray: 6 4;
+/* -- Globe: day-length arc ------------------------------ */
+.stage__dayArc {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.stage__dayArc--day {
+  stroke: var(--cp-accent-amber);
+  opacity: 0.7;
+}
+
+.stage__dayArc--night {
+  stroke: color-mix(in srgb, var(--cp-bg0) 70%, transparent);
+  opacity: 0.5;
 }
 
 .stage__terminator {
@@ -172,14 +224,35 @@
   stroke-dasharray: 6 4;
 }
 
+/* -- Globe: hour grid [S8] ----------------------------- */
+.stage__hourGridLine {
+  stroke: color-mix(in srgb, var(--cp-muted) 30%, transparent);
+  stroke-width: 0.8;
+}
+
 .overlay-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
+/* -- Season readout color coding [S1] ------------------- */
+.season--summer { color: var(--cp-accent-amber); }
+.season--winter { color: var(--cp-accent-ice); }
+.season--spring { color: var(--cp-accent-green); }
+.season--autumn { color: var(--cp-accent-green); }
+
+/* -- Context message ------------------------------------ */
+.cp-context-message {
+  text-align: center;
+  padding: 0 var(--cp-space-4);
+  min-height: 1.5em;
+  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 2);
+}
+
 /* -- Entry animations -------------------------------- */
-.cp-demo__controls {
+.cp-demo__sidebar {
   animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
 }
 
@@ -193,7 +266,7 @@
   animation-delay: calc(var(--cp-stagger) * 2);
 }
 
-.cp-demo__drawer {
-  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
+.cp-demo__shelf {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 3);
 }

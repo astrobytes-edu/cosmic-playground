@@ -1,7 +1,7 @@
 import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
-import { clamp, formatNumber, formatDateFromDayOfYear, formatDayLength, formatLatitude, seasonFromPhaseNorth, oppositeSeason, orbitPosition, terminatorShiftX, latitudeBandEllipse, globeAxisEndpoints, animationProgress, easeInOutCubic, shortestDayDelta } from "./logic";
+import { clamp, formatNumber, formatDateFromDayOfYear, formatDayLength, formatLatitude, seasonFromPhaseNorth, oppositeSeason, orbitPosition, terminatorShiftX, latitudeBandEllipse, globeAxisEndpoints, animationProgress, easeInOutCubic, shortestDayDelta, orbitSeasonLabelPositions, polarisIndicatorEndpoints, seasonColorClass, contextualMessage, dayLengthArcGeometry } from "./logic";
 import type { Season } from "./logic";
 
 const dayOfYearEl = document.querySelector<HTMLInputElement>("#dayOfYear");
@@ -44,7 +44,7 @@ const seasonSouthValueEl =
 const earthOrbitDotEl = document.querySelector<SVGCircleElement>("#earthOrbitDot");
 const orbitLabelEl = document.querySelector<SVGTextElement>("#orbitLabel");
 
-// Globe elements (replacing the old tilt-disk panel)
+// Globe elements
 const terminatorEl = document.querySelector<SVGEllipseElement>("#terminator");
 const equatorBandEl = document.querySelector<SVGEllipseElement>("#equator-band");
 const tropicNEl = document.querySelector<SVGEllipseElement>("#tropic-n");
@@ -56,6 +56,16 @@ const globeMarkerEl = document.querySelector<SVGCircleElement>("#globe-marker");
 const latBandsGroupEl = document.querySelector<SVGGElement>("#latitude-bands-group");
 const globeEclipticEl = document.querySelector<SVGLineElement>("#globe-ecliptic");
 const globeEquatorEl = document.querySelector<SVGEllipseElement>("#globe-equator");
+
+// New elements: distance line, Polaris, day-length arc, sunlight rays, hour grid, context message
+const distanceLineEl = document.querySelector<SVGLineElement>("#distanceLine");
+const polarisAxisEl = document.querySelector<SVGLineElement>("#polarisAxis");
+const polarisLabelEl = document.querySelector<SVGTextElement>("#polarisLabel");
+const dayArcEl = document.querySelector<SVGPathElement>("#dayArc");
+const nightArcEl = document.querySelector<SVGPathElement>("#nightArc");
+const sunlightRaysEl = document.querySelector<SVGGElement>("#sunlightRays");
+const hourGridEl = document.querySelector<SVGGElement>("#hourGrid");
+const contextMessageEl = document.querySelector<HTMLParagraphElement>("#contextMessage");
 
 if (
   !dayOfYearEl ||
@@ -94,7 +104,15 @@ if (
   !globeMarkerEl ||
   !latBandsGroupEl ||
   !globeEclipticEl ||
-  !globeEquatorEl
+  !globeEquatorEl ||
+  !distanceLineEl ||
+  !polarisAxisEl ||
+  !polarisLabelEl ||
+  !dayArcEl ||
+  !nightArcEl ||
+  !sunlightRaysEl ||
+  !hourGridEl ||
+  !contextMessageEl
 ) {
   throw new Error("Missing required DOM elements for seasons demo.");
 }
@@ -398,75 +416,100 @@ function setEllipse(el: SVGEllipseElement, cx: number, cy: number, rx: number, r
 }
 
 /**
- * Render the globe panel: terminator, latitude bands, axis, marker.
+ * Render the globe panel: terminator, latitude bands, axis, marker, day-length arc.
  */
 function renderGlobe(args: {
   axialTiltDeg: number;
   latitudeDeg: number;
   declinationDeg: number;
+  dayLengthHours: number;
 }) {
-  const tilt = args.axialTiltDeg;
+  const tiltVal = args.axialTiltDeg;
 
   // --- Terminator ---
-  // The terminator is a tall ellipse covering the "night" half.
-  // Its cx shifts based on declination: positive declination means more of
-  // the northern hemisphere is lit, so the dark ellipse shifts to the left.
   const tShift = terminatorShiftX(args.declinationDeg, GLOBE_R);
-  // The terminator ellipse is wide enough to cover half the globe.
-  // We place it so its near edge sits at the shift position.
   const termRx = GLOBE_R;
   const termRy = GLOBE_R;
-  // Shift the dark ellipse to the opposite side of the lit hemisphere.
-  // Positive declination = more N lit = terminator ellipse centre moves left
-  // (the dark half is on the far side of the lit area).
   terminator.setAttribute("cx", formatNumber(-tShift - termRx, 2));
   terminator.setAttribute("cy", "0");
   terminator.setAttribute("rx", formatNumber(termRx, 2));
   terminator.setAttribute("ry", formatNumber(termRy, 2));
 
   // --- Latitude bands ---
-  // Tropics at +/- tilt, arctic circles at +/- (90 - tilt)
-  const tropicLat = tilt;
-  const arcticLat = 90 - tilt;
+  const tropicLat = tiltVal;
+  const arcticLat = 90 - tiltVal;
 
-  const eqBand = latitudeBandEllipse(0, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  const eqBand = latitudeBandEllipse(0, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
   setEllipse(equatorBand, GLOBE_CX, eqBand.cy, eqBand.rx, eqBand.ry);
 
-  const tnBand = latitudeBandEllipse(tropicLat, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  const tnBand = latitudeBandEllipse(tropicLat, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
   setEllipse(tropicN, GLOBE_CX, tnBand.cy, tnBand.rx, tnBand.ry);
 
-  const tsBand = latitudeBandEllipse(-tropicLat, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  const tsBand = latitudeBandEllipse(-tropicLat, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
   setEllipse(tropicS, GLOBE_CX, tsBand.cy, tsBand.rx, tsBand.ry);
 
-  const anBand = latitudeBandEllipse(arcticLat, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  const anBand = latitudeBandEllipse(arcticLat, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
   setEllipse(arcticN, GLOBE_CX, anBand.cy, anBand.rx, anBand.ry);
 
-  const asBand = latitudeBandEllipse(-arcticLat, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  const asBand = latitudeBandEllipse(-arcticLat, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
   setEllipse(arcticS, GLOBE_CX, asBand.cy, asBand.rx, asBand.ry);
 
   // --- Celestial equator ---
-  // The celestial equator is the equator of a non-tilted sphere.
-  // On our tilted globe it appears as a great circle crossing the actual
-  // equator at the equinox points. Its projected ellipse has the same
-  // geometry as latitudeBandEllipse(0, tilt) but it sits at the globe centre.
-  const ceq = latitudeBandEllipse(0, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  const ceq = latitudeBandEllipse(0, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
   setEllipse(globeEquator, GLOBE_CX, ceq.cy, ceq.rx, ceq.ry);
 
   // --- Globe axis ---
-  const axis = globeAxisEndpoints(tilt, GLOBE_CX, GLOBE_CY, GLOBE_AXIS_LEN);
+  const axis = globeAxisEndpoints(tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_AXIS_LEN);
   globeAxis.setAttribute("x1", formatNumber(axis.x1, 2));
   globeAxis.setAttribute("y1", formatNumber(axis.y1, 2));
   globeAxis.setAttribute("x2", formatNumber(axis.x2, 2));
   globeAxis.setAttribute("y2", formatNumber(axis.y2, 2));
 
   // --- Latitude marker ---
-  // Place on the visible (lit-side) edge of the globe at the observer's latitude.
-  // Use cos(lat) for the x offset (on the globe surface) and sin(lat) for y.
   const latRad = (args.latitudeDeg * Math.PI) / 180;
-  const markerX = GLOBE_R * Math.cos(latRad) * 0.98; // slightly inset
+  const markerX = GLOBE_R * Math.cos(latRad) * 0.98;
   const markerY = -GLOBE_R * Math.sin(latRad) * 0.98;
   globeMarker.setAttribute("cx", formatNumber(markerX, 2));
   globeMarker.setAttribute("cy", formatNumber(markerY, 2));
+
+  // --- Day-length arc ---
+  const arcGeom = dayLengthArcGeometry({
+    latitudeDeg: args.latitudeDeg,
+    dayLengthHours: args.dayLengthHours,
+    globeRadius: GLOBE_R,
+    tiltDeg: tiltVal,
+  });
+  dayArcEl.setAttribute("d", arcGeom.dayArcD);
+  nightArcEl.setAttribute("d", arcGeom.nightArcD);
+}
+
+// --- Season labels (positioned once at init) ---
+function initSeasonLabels() {
+  const labels = orbitSeasonLabelPositions(140, 0, 0);
+  for (const lbl of labels) {
+    const el = document.querySelector<SVGTextElement>(`#seasonLabel-${lbl.label}`);
+    if (el) {
+      el.setAttribute("x", formatNumber(lbl.x, 1));
+      el.setAttribute("y", formatNumber(lbl.y, 1));
+      el.setAttribute("text-anchor", lbl.textAnchor);
+      el.textContent = lbl.label;
+    }
+  }
+}
+
+// --- Hour grid (rendered once at init, visibility toggled) ---
+function initHourGrid() {
+  hourGridEl.innerHTML = "";
+  for (let i = -2; i <= 2; i++) {
+    const x = i * 50;
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", String(x));
+    line.setAttribute("y1", String(-GLOBE_R));
+    line.setAttribute("x2", String(x));
+    line.setAttribute("y2", String(GLOBE_R));
+    line.setAttribute("class", "stage__hourGridLine");
+    hourGridEl.appendChild(line);
+  }
 }
 
 function renderStage(args: {
@@ -475,21 +518,36 @@ function renderStage(args: {
   latitudeDeg: number;
   declinationDeg: number;
   distanceAu: number;
+  dayLengthHours: number;
 }) {
   // Orbit panel (orbit is centered at (0,0) inside its translated SVG group)
   const orbitR = 140;
 
   const angle = SeasonsModel.orbitAngleRadFromDay({ dayOfYear: args.dayOfYear });
-  const { x, y } = orbitPosition(angle, args.distanceAu, orbitR);
+  const { x, y } = orbitPosition(angle, args.distanceAu, orbitR, 2);
   earthOrbitDot.setAttribute("cx", formatNumber(x, 2));
   earthOrbitDot.setAttribute("cy", formatNumber(y, 2));
   orbitLabel.textContent = `r ~ ${formatNumber(args.distanceAu, 3)} AU`;
+
+  // Distance line [S5] — from Sun (0,0) to Earth position
+  distanceLineEl.setAttribute("x2", formatNumber(x, 2));
+  distanceLineEl.setAttribute("y2", formatNumber(y, 2));
+
+  // Polaris axis indicator [S2]
+  const polaris = polarisIndicatorEndpoints(args.axialTiltDeg, x, y, 30);
+  polarisAxisEl.setAttribute("x1", formatNumber(x, 2));
+  polarisAxisEl.setAttribute("y1", formatNumber(y, 2));
+  polarisAxisEl.setAttribute("x2", formatNumber(polaris.x2, 2));
+  polarisAxisEl.setAttribute("y2", formatNumber(polaris.y2, 2));
+  polarisLabelEl.setAttribute("x", formatNumber(polaris.x2 + 5, 2));
+  polarisLabelEl.setAttribute("y", formatNumber(polaris.y2 - 5, 2));
 
   // Globe panel
   renderGlobe({
     axialTiltDeg: args.axialTiltDeg,
     latitudeDeg: args.latitudeDeg,
     declinationDeg: args.declinationDeg,
+    dayLengthHours: args.dayLengthHours,
   });
 }
 
@@ -539,12 +597,26 @@ function render() {
   seasonNorthValue.textContent = north;
   seasonSouthValue.textContent = south;
 
+  // Season readout color coding [S1]
+  seasonNorthValue.className = seasonColorClass(north);
+  seasonSouthValue.className = seasonColorClass(south);
+
+  // Contextual message [S7]
+  const msg = contextualMessage({
+    dayOfYear: day,
+    seasonNorth: north,
+    axialTiltDeg,
+    distanceAu,
+  });
+  contextMessageEl.textContent = msg;
+
   renderStage({
     dayOfYear: day,
     axialTiltDeg,
     latitudeDeg,
     declinationDeg: declinationDegValue,
-    distanceAu
+    distanceAu,
+    dayLengthHours: dayLengthHoursValue,
   });
 
   (window as any).__cp = {
@@ -618,10 +690,10 @@ function exportResults(st: SeasonsDemoState): ExportPayloadV1 {
     "Declination uses a simplified toy model: delta = asin(sin(epsilon) * sin(L)), with L treated as uniform in time (~1 deg accuracy vs ephemeris)."
   );
   notes.push(
-    "Earth–Sun distance uses a first-order eccentric model r ~ 1 - e cos(theta) (not a Kepler solver); distance variations are small and not the main cause of seasons."
+    "Earth\u2013Sun distance uses a first-order eccentric model r ~ 1 - e cos(theta) (not a Kepler solver); distance variations are small and not the main cause of seasons."
   );
   notes.push(
-    `Perihelion is anchored near day 3 (Jan 3) with an uncertainty of about ±${SeasonsModel.PERIHELION_DAY_UNCERTAINTY} days.`
+    `Perihelion is anchored near day 3 (Jan 3) with an uncertainty of about \u00B1${SeasonsModel.PERIHELION_DAY_UNCERTAINTY} days.`
   );
   if (prefersReducedMotion) {
     notes.push("Reduced motion: year animation is disabled.");
@@ -639,7 +711,7 @@ function exportResults(st: SeasonsDemoState): ExportPayloadV1 {
       { name: "Solar declination delta (deg)", value: formatNumber(st.declinationDeg, 1) },
       { name: "Day length (h)", value: formatNumber(st.dayLengthHours, 2) },
       { name: "Noon altitude (deg)", value: formatNumber(st.noonAltitudeDeg, 1) },
-      { name: "Earth–Sun distance r (AU)", value: formatNumber(distanceAu, 3) },
+      { name: "Earth\u2013Sun distance r (AU)", value: formatNumber(distanceAu, 3) },
       { name: "Season (North)", value: seasonN },
       { name: "Season (South)", value: seasonS }
     ],
@@ -648,7 +720,7 @@ function exportResults(st: SeasonsDemoState): ExportPayloadV1 {
 }
 
 function getControlsBody(): HTMLElement {
-  const el = document.querySelector<HTMLElement>(".cp-demo__controls .cp-panel-body");
+  const el = document.querySelector<HTMLElement>(".cp-demo__sidebar .cp-panel-body");
   if (!el) throw new Error("Missing controls container for challenge mode.");
   return el;
 }
@@ -656,29 +728,29 @@ function getControlsBody(): HTMLElement {
 const challenges: Challenge[] = [
   {
     type: "custom",
-    prompt: "Show “no seasons”: set $\\varepsilon$ to $0^\\circ$ so $\\delta$ stays near $0^\\circ$.",
+    prompt: "Show \u201Cno seasons\u201D: set $\\varepsilon$ to $0^\\circ$ so $\\delta$ stays near $0^\\circ$.",
     initialState: { dayOfYear: 172, axialTiltDeg: 23.5, latitudeDeg: 40 },
     hints: ["Set axial tilt ($\\varepsilon$) close to $0^\\circ$ and watch declination ($\\delta$)."],
     check: (s: unknown) => {
       const st = s as Partial<SeasonsDemoState>;
-      const tilt = Number(st.axialTiltDeg);
+      const tiltVal = Number(st.axialTiltDeg);
       const decl = Number(st.declinationDeg);
-      if (![tilt, decl].every(Number.isFinite)) {
+      if (![tiltVal, decl].every(Number.isFinite)) {
         return { correct: false, close: false, message: "State is not finite." };
       }
-      const tiltOk = tilt <= 1;
+      const tiltOk = tiltVal <= 1;
       const declOk = Math.abs(decl) <= 1;
       if (tiltOk && declOk) {
         return {
           correct: true,
           close: true,
-          message: `Nice: $\\varepsilon \\approx ${tilt.toFixed(1)}^\\circ$, $\\delta \\approx ${decl.toFixed(1)}^\\circ$`
+          message: `Nice: $\\varepsilon \\approx ${tiltVal.toFixed(1)}^\\circ$, $\\delta \\approx ${decl.toFixed(1)}^\\circ$`
         };
       }
       return {
         correct: false,
-        close: tilt <= 2 || Math.abs(decl) <= 2,
-        message: `Not yet: $\\varepsilon = ${tilt.toFixed(1)}^\\circ$, $\\delta = ${decl.toFixed(1)}^\\circ$ (targets $\\le 1^\\circ$)`
+        close: tiltVal <= 2 || Math.abs(decl) <= 2,
+        message: `Not yet: $\\varepsilon = ${tiltVal.toFixed(1)}^\\circ$, $\\delta = ${decl.toFixed(1)}^\\circ$ (targets $\\le 1^\\circ$)`
       };
     }
   },
@@ -689,13 +761,13 @@ const challenges: Challenge[] = [
     hints: ["Set day-of-year to 80 (March equinox). Keep $|\\phi| \\le 50^\\circ$."],
     check: (s: unknown) => {
       const st = s as Partial<SeasonsDemoState>;
-      const day = Number(st.dayOfYear);
+      const dayVal = Number(st.dayOfYear);
       const lat = Number(st.latitudeDeg);
       const dayLen = Number(st.dayLengthHours);
-      if (![day, lat, dayLen].every(Number.isFinite)) {
+      if (![dayVal, lat, dayLen].every(Number.isFinite)) {
         return { correct: false, close: false, message: "State is not finite." };
       }
-      const dayOk = Math.abs(day - 80) <= 1;
+      const dayOk = Math.abs(dayVal - 80) <= 1;
       const latOk = Math.abs(lat) <= 50;
       const lenOk = Math.abs(dayLen - 12) <= 1;
 
@@ -711,7 +783,7 @@ const challenges: Challenge[] = [
       return {
         correct: false,
         close,
-        message: `Not yet: day=${Math.round(day)}, $\\phi=${Math.round(lat)}^\\circ$, day length $=${dayLen.toFixed(2)}\\,\\mathrm{h}$`
+        message: `Not yet: day=${Math.round(dayVal)}, $\\phi=${Math.round(lat)}^\\circ$, day length $=${dayLen.toFixed(2)}\\,\\mathrm{h}$`
       };
     }
   },
@@ -722,17 +794,17 @@ const challenges: Challenge[] = [
     hints: ["Set day-of-year to 172 (June solstice). Try $|\\phi|$ between $10^\\circ$ and $60^\\circ$."],
     check: (s: unknown) => {
       const st = s as Partial<SeasonsDemoState>;
-      const day = Number(st.dayOfYear);
-      const tilt = Number(st.axialTiltDeg);
+      const dayVal = Number(st.dayOfYear);
+      const tiltVal = Number(st.axialTiltDeg);
       const lat = Number(st.latitudeDeg);
-      if (![day, tilt, lat].every(Number.isFinite)) {
+      if (![dayVal, tiltVal, lat].every(Number.isFinite)) {
         return { correct: false, close: false, message: "State is not finite." };
       }
-      const dayOk = Math.abs(day - 172) <= 1;
+      const dayOk = Math.abs(dayVal - 172) <= 1;
       const absLat = Math.abs(lat);
       const latOk = absLat >= 10 && absLat <= 60;
 
-      const decl = SeasonsModel.sunDeclinationDeg({ dayOfYear: day, axialTiltDeg: tilt });
+      const decl = SeasonsModel.sunDeclinationDeg({ dayOfYear: dayVal, axialTiltDeg: tiltVal });
       const dayNorth = SeasonsModel.dayLengthHours({ latitudeDeg: absLat, sunDeclinationDeg: decl });
       const daySouth = SeasonsModel.dayLengthHours({ latitudeDeg: -absLat, sunDeclinationDeg: decl });
       const longerInNorth = dayNorth > daySouth;
@@ -749,7 +821,7 @@ const challenges: Challenge[] = [
       return {
         correct: false,
         close,
-        message: `Not yet: day=${Math.round(day)} (target 172), $|\\phi|=${absLat.toFixed(0)}^\\circ$ ($10^\\circ$–$60^\\circ$ recommended)`
+        message: `Not yet: day=${Math.round(dayVal)} (target 172), $|\\phi|=${absLat.toFixed(0)}^\\circ$ ($10^\\circ$\u2013$60^\\circ$ recommended)`
       };
     }
   }
@@ -864,7 +936,7 @@ animateYear.addEventListener("click", () => {
 });
 
 copyResults.addEventListener("click", () => {
-  setLiveRegionText(status, "Copying…");
+  setLiveRegionText(status, "Copying\u2026");
   void runtime
     .copyResults(exportResults(getState()))
     .then(() => {
@@ -879,11 +951,14 @@ copyResults.addEventListener("click", () => {
 });
 
 // --- Overlay toggles ---
-const overlayTargets: Record<string, SVGElement[]> = {
+const overlayTargets: Record<string, (SVGElement | HTMLElement)[]> = {
   "latitude-bands": [latBandsGroup],
   "terminator": [terminator],
   "ecliptic": [globeEcliptic],
   "equator": [globeEquator],
+  "sunlight-rays": [sunlightRaysEl],
+  "day-arc": [dayArcEl, nightArcEl],
+  "hour-grid": [hourGridEl],
 };
 
 const overlayButtons = document.querySelectorAll<HTMLButtonElement>("[data-overlay]");
@@ -898,10 +973,37 @@ for (const btn of overlayButtons) {
     const targets = overlayTargets[key];
     if (targets) {
       for (const el of targets) {
-        el.style.display = next ? "" : "none";
+        (el as HTMLElement).style.display = next ? "" : "none";
       }
     }
   });
+}
+
+// --- Tab switching (shelf) ---
+function initTabs() {
+  const tabButtons = document.querySelectorAll<HTMLButtonElement>('.cp-tabs [role="tab"]');
+  const tabPanels = document.querySelectorAll<HTMLElement>('.cp-tab-panel[role="tabpanel"]');
+
+  for (const btn of tabButtons) {
+    btn.addEventListener("click", () => {
+      // Deactivate all
+      for (const b of tabButtons) {
+        b.classList.remove("cp-tab--active");
+        b.setAttribute("aria-selected", "false");
+      }
+      for (const p of tabPanels) {
+        p.hidden = true;
+      }
+      // Activate clicked
+      btn.classList.add("cp-tab--active");
+      btn.setAttribute("aria-selected", "true");
+      const panelId = btn.getAttribute("aria-controls");
+      if (panelId) {
+        const panel = document.getElementById(panelId);
+        if (panel) panel.hidden = false;
+      }
+    });
+  }
 }
 
 // --- Keyboard shortcuts ---
@@ -966,6 +1068,10 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+// --- Initialize ---
+initSeasonLabels();
+initHourGrid();
+initTabs();
 render();
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");

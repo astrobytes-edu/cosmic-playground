@@ -233,3 +233,196 @@ export function shortestDayDelta(fromDay: number, toDay: number, yearLength = 36
   while (delta < -yearLength / 2) delta += yearLength;
   return delta;
 }
+
+// ---------------------------------------------------------------------------
+// Orbit panel helpers: season labels, perihelion/aphelion, distance line,
+// Polaris axis indicator
+// ---------------------------------------------------------------------------
+
+export interface OrbitLabel {
+  x: number;
+  y: number;
+  label: string;
+  textAnchor: "start" | "middle" | "end";
+}
+
+/**
+ * Season label positions around the orbit.
+ * Uses the same angle convention as the orbit SVG (0 = right = perihelion).
+ * March equinox is ~77 days after perihelion (day 3), so ~76 deg ahead.
+ * Labels placed just outside the orbit circle.
+ */
+export function orbitSeasonLabelPositions(
+  orbitR: number,
+  centerX: number,
+  centerY: number,
+): OrbitLabel[] {
+  // March equinox: day 80, perihelion: day 3 => ~77 days => ~76 deg
+  const MAR_ANGLE = (77 / 365.25) * 2 * Math.PI;
+  const labelR = orbitR + 18;
+  const seasons: { label: string; offsetQuarter: number }[] = [
+    { label: "Mar", offsetQuarter: 0 },
+    { label: "Jun", offsetQuarter: 1 },
+    { label: "Sep", offsetQuarter: 2 },
+    { label: "Dec", offsetQuarter: 3 },
+  ];
+
+  return seasons.map(({ label, offsetQuarter }) => {
+    const angle = MAR_ANGLE + (offsetQuarter * Math.PI) / 2;
+    const x = centerX + labelR * Math.cos(angle);
+    const y = centerY + labelR * Math.sin(angle);
+    const cos = Math.cos(angle);
+    const textAnchor: "start" | "middle" | "end" =
+      cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle";
+    return { x, y, label, textAnchor };
+  });
+}
+
+/**
+ * Polaris axis indicator: arrow extending from Earth position
+ * in the orbit panel. In the top-down orbit view the axis projects
+ * as a short line tilted from vertical by the axial tilt.
+ * Returns the endpoint relative to Earth position.
+ */
+export function polarisIndicatorEndpoints(
+  axialTiltDeg: number,
+  earthX: number,
+  earthY: number,
+  length: number,
+): { x2: number; y2: number } {
+  const tiltRad = (axialTiltDeg * Math.PI) / 180;
+  return {
+    x2: earthX + length * Math.sin(tiltRad),
+    y2: earthY - length * Math.cos(tiltRad),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Season readout color coding [S1]
+// ---------------------------------------------------------------------------
+
+/**
+ * Return a CSS class name for season-colored readout text.
+ */
+export function seasonColorClass(season: Season): string {
+  switch (season) {
+    case "Summer": return "season--summer";
+    case "Winter": return "season--winter";
+    case "Spring": return "season--spring";
+    case "Autumn": return "season--autumn";
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Contextual messages [S7]
+// ---------------------------------------------------------------------------
+
+export interface SeasonContextState {
+  dayOfYear: number;
+  seasonNorth: Season;
+  axialTiltDeg: number;
+  distanceAu: number;
+}
+
+/**
+ * Return a contextual pedagogical message for the current state.
+ * Priority: zero tilt > perihelion myth > solstice > equinox > empty.
+ */
+export function contextualMessage(state: SeasonContextState): string {
+  const { dayOfYear, axialTiltDeg } = state;
+
+  // Zero tilt = no seasons
+  if (axialTiltDeg < 1) {
+    return "With near-zero tilt, declination stays near 0\u00B0 all year \u2014 no seasons.";
+  }
+
+  // Perihelion in Northern winter (distance myth)
+  if (dayOfYear <= 10 || dayOfYear >= 360) {
+    return "Earth is closest to the Sun right now \u2014 yet it\u2019s Northern Hemisphere winter. Distance doesn\u2019t drive seasons.";
+  }
+
+  // Near solstices
+  if (Math.abs(dayOfYear - 172) <= 3) {
+    return "June solstice: longest day in the North, shortest in the South.";
+  }
+  if (Math.abs(dayOfYear - 356) <= 3) {
+    return "December solstice: longest day in the South, shortest in the North.";
+  }
+
+  // Near equinoxes
+  if (Math.abs(dayOfYear - 80) <= 3) {
+    return "March equinox: nearly equal day and night worldwide.";
+  }
+  if (Math.abs(dayOfYear - 266) <= 3) {
+    return "September equinox: nearly equal day and night worldwide.";
+  }
+
+  return "";
+}
+
+// ---------------------------------------------------------------------------
+// Day-length arc geometry [NEW]
+// ---------------------------------------------------------------------------
+
+export interface DayLengthArc {
+  dayArcD: string;
+  nightArcD: string;
+  dayFraction: number;
+}
+
+/**
+ * Compute SVG path strings for the day and night arcs at the observer's
+ * latitude on the globe. The day arc is centred on the sun-facing (left)
+ * side of the globe.
+ */
+export function dayLengthArcGeometry(args: {
+  latitudeDeg: number;
+  dayLengthHours: number;
+  globeRadius: number;
+  tiltDeg: number;
+}): DayLengthArc {
+  const { latitudeDeg, dayLengthHours, globeRadius, tiltDeg } = args;
+  const dayFraction = clamp(dayLengthHours / 24, 0, 1);
+
+  const band = latitudeBandEllipse(latitudeDeg, tiltDeg, 0, 0, globeRadius);
+  const { rx, ry, cy } = band;
+  const absRy = Math.abs(ry);
+
+  if (dayFraction >= 1) {
+    return {
+      dayArcD: `M ${-rx} ${cy} A ${rx} ${absRy} 0 1 1 ${rx} ${cy} A ${rx} ${absRy} 0 1 1 ${-rx} ${cy}`,
+      nightArcD: "",
+      dayFraction: 1,
+    };
+  }
+  if (dayFraction <= 0) {
+    return {
+      dayArcD: "",
+      nightArcD: `M ${-rx} ${cy} A ${rx} ${absRy} 0 1 1 ${rx} ${cy} A ${rx} ${absRy} 0 1 1 ${-rx} ${cy}`,
+      dayFraction: 0,
+    };
+  }
+
+  // The day arc spans dayFraction * 360 deg, centred at angle PI (left = sun side).
+  const halfDayAngle = dayFraction * Math.PI;
+  const dayStartAngle = Math.PI - halfDayAngle;
+  const dayEndAngle = Math.PI + halfDayAngle;
+
+  const px = (a: number) => rx * Math.cos(a);
+  const py = (a: number) => cy + absRy * Math.sin(a);
+
+  const largeArcDay = dayFraction > 0.5 ? 1 : 0;
+  const largeArcNight = dayFraction < 0.5 ? 1 : 0;
+
+  const dayArcD =
+    `M ${px(dayStartAngle).toFixed(2)} ${py(dayStartAngle).toFixed(2)} ` +
+    `A ${rx.toFixed(2)} ${absRy.toFixed(2)} 0 ${largeArcDay} 1 ` +
+    `${px(dayEndAngle).toFixed(2)} ${py(dayEndAngle).toFixed(2)}`;
+
+  const nightArcD =
+    `M ${px(dayEndAngle).toFixed(2)} ${py(dayEndAngle).toFixed(2)} ` +
+    `A ${rx.toFixed(2)} ${absRy.toFixed(2)} 0 ${largeArcNight} 1 ` +
+    `${px(dayStartAngle).toFixed(2)} ${py(dayStartAngle).toFixed(2)}`;
+
+  return { dayArcD, nightArcD, dayFraction };
+}
