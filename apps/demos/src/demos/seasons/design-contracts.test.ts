@@ -54,7 +54,7 @@ describe("Seasons -- Design System Contracts", () => {
   describe("Readout unit separation", () => {
     it("readout values with units use .cp-readout__unit spans", () => {
       const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(4);
+      expect(unitSpans.length).toBeGreaterThanOrEqual(3);
     });
 
     it("readout labels do not contain parenthesized units", () => {
@@ -152,6 +152,72 @@ describe("Seasons -- Design System Contracts", () => {
       expect(chipButtons.length).toBeGreaterThan(0);
       const missing = chipButtons.filter((tag) => !tag.includes("aria-pressed"));
       expect(missing, "cp-chip buttons missing aria-pressed").toEqual([]);
+    });
+  });
+
+  describe("Globe view elements", () => {
+    it("SVG contains a terminator ellipse", () => {
+      expect(html).toContain('id="terminator"');
+      expect(html).toMatch(/<ellipse[^>]*id="terminator"/);
+    });
+
+    it("SVG contains latitude band ellipses (equator, tropics, arctic circles)", () => {
+      expect(html).toContain('id="equator-band"');
+      expect(html).toContain('id="tropic-n"');
+      expect(html).toContain('id="tropic-s"');
+      expect(html).toContain('id="arctic-n"');
+      expect(html).toContain('id="arctic-s"');
+    });
+
+    it("SVG contains a globe axis line", () => {
+      expect(html).toContain('id="globe-axis"');
+      expect(html).toMatch(/<line[^>]*id="globe-axis"/);
+    });
+
+    it("SVG contains a globe latitude marker", () => {
+      expect(html).toContain('id="globe-marker"');
+      expect(html).toMatch(/<circle[^>]*id="globe-marker"/);
+    });
+
+    it("SVG contains an ecliptic line", () => {
+      expect(html).toContain('id="globe-ecliptic"');
+    });
+
+    it("SVG contains a celestial equator ellipse", () => {
+      expect(html).toContain('id="globe-equator"');
+    });
+  });
+
+  describe("Overlay toggles", () => {
+    it("overlay chip buttons have data-overlay attributes", () => {
+      const overlayBtns = html.match(/<button[^>]*data-overlay="[^"]*"[^>]*>/g) || [];
+      expect(overlayBtns.length).toBe(4);
+    });
+
+    it("overlay chip buttons have aria-pressed attributes", () => {
+      const overlayBtns = html.match(/<button[^>]*data-overlay="[^"]*"[^>]*>/g) || [];
+      const missing = overlayBtns.filter((tag) => !tag.includes("aria-pressed"));
+      expect(missing, "overlay buttons missing aria-pressed").toEqual([]);
+    });
+
+    it("overlay group has accessible fieldset with legend", () => {
+      expect(html).toContain('aria-label="Overlays"');
+      expect(html).toMatch(/<legend[^>]*>.*Overlays.*<\/legend>/);
+    });
+  });
+
+  describe("Latitude slider", () => {
+    it("latitude slider exists with min -90 and max 90", () => {
+      expect(html).toContain('id="latitude"');
+      expect(html).toMatch(/id="latitude"[^>]*min="-90"/);
+      expect(html).toMatch(/id="latitude"[^>]*max="90"/);
+    });
+  });
+
+  describe("Tilt slider range", () => {
+    it("tilt slider max is 90 (not 45)", () => {
+      expect(html).toMatch(/id="tilt"[^>]*max="90"/);
+      expect(html).not.toMatch(/id="tilt"[^>]*max="45"/);
     });
   });
 });

@@ -478,7 +478,7 @@ test.describe("Cosmic Playground smoke", () => {
   test("Navigation shows active state", async ({ page }) => {
     await page.goto("explore/");
 
-    const activeLink = page.locator('nav a[aria-current="page"]');
+    const activeLink = page.locator('nav a[aria-current="page"]').first();
     await expect(activeLink).toBeVisible();
     await expect(activeLink).toContainText("Explore");
   });
