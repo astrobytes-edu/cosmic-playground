@@ -553,6 +553,33 @@ export function invalidateRegimeGrid(): void {
 }
 
 /**
+ * Set the grid cache from a Web Worker result (Uint8Array with encoded channels).
+ * Channel encoding: 0=gas, 1=radiation, 2=degeneracy, 3=mixed.
+ */
+export function setGridFromWorker(
+  composition: StellarCompositionFractions,
+  eta: number,
+  encoded: Uint8Array,
+  cols: number,
+  rows: number,
+  elapsedMs: number
+): void {
+  const CHANNELS: RegimeChannel[] = ["gas", "radiation", "degeneracy", "mixed"];
+  const grid: RegimeChannel[][] = [];
+  for (let j = 0; j < rows; j++) {
+    const row: RegimeChannel[] = [];
+    for (let i = 0; i < cols; i++) {
+      row.push(CHANNELS[encoded[j * cols + i]] ?? "mixed");
+    }
+    grid.push(row);
+  }
+  gridCache = {
+    key: compositionKey(composition, eta),
+    result: { grid, xCells: cols, yCells: rows, elapsedMs },
+  };
+}
+
+/**
  * Convert canvas CSS-pixel coordinates to (logT, logRho).
  * Returns null if the click is outside the plot area.
  */

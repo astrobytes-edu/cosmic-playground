@@ -40,12 +40,81 @@ import {
 } from "./logic";
 import { createEosPlot, destroyPlot } from "./uplotHelpers";
 import type { uPlot } from "./uplotHelpers";
-import { renderRegimeMap, invalidateRegimeGrid, canvasToLogCoords } from "./regimeMap";
+import { renderRegimeMap, invalidateRegimeGrid, setGridFromWorker, canvasToLogCoords } from "./regimeMap";
+import type { RegimeWorkerResponse } from "./regimeWorker";
 import {
   GasPressureAnimation,
   RadiationPressureAnimation,
   DegeneracyPressureAnimation
 } from "./mechanismViz";
+
+/* ================================================================
+ * Regime grid Web Worker (off-main-thread computation)
+ * ================================================================ */
+
+let regimeWorker: Worker | null = null;
+let regimeWorkerSeq = 0;
+/** Composition snapshot for the in-flight Worker request */
+let regimeWorkerComp: { X: number; Y: number; Z: number; eta: number } | null = null;
+
+try {
+  regimeWorker = new Worker(
+    new URL("./regimeWorker.ts", import.meta.url),
+    { type: "module" }
+  );
+  regimeWorker.onmessage = (e: MessageEvent<RegimeWorkerResponse>) => {
+    const { grid, cols, rows, elapsed, seq } = e.data;
+    // Ignore stale responses (superseded by a newer request)
+    if (seq !== regimeWorkerSeq || !regimeWorkerComp) return;
+    setGridFromWorker(
+      {
+        hydrogenMassFractionX: regimeWorkerComp.X,
+        heliumMassFractionY: regimeWorkerComp.Y,
+        metalMassFractionZ: regimeWorkerComp.Z,
+      },
+      regimeWorkerComp.eta,
+      grid,
+      cols,
+      rows,
+      elapsed
+    );
+    render({ deferGridRebuild: true });
+  };
+} catch {
+  // Worker creation can fail in some environments; fall back to sync.
+  regimeWorker = null;
+}
+
+/** Dispatch regime grid computation to Worker, or fall back to sync. */
+function requestRegimeGridRebuild(): void {
+  const comp = state.composition;
+  const eta = state.radiationDepartureEta;
+
+  if (regimeWorker) {
+    regimeWorkerSeq++;
+    regimeWorkerComp = {
+      X: comp.hydrogenMassFractionX,
+      Y: comp.heliumMassFractionY,
+      Z: comp.metalMassFractionZ,
+      eta,
+    };
+    regimeWorker.postMessage({
+      logTMin: 3, logTMax: 9, logRhoMin: -10, logRhoMax: 10,
+      cols: 100, rows: 80,
+      X: comp.hydrogenMassFractionX,
+      Y: comp.heliumMassFractionY,
+      Z: comp.metalMassFractionZ,
+      eta,
+      seq: regimeWorkerSeq,
+    });
+    // Render immediately with stale grid (crosshairs/markers update)
+    render({ deferGridRebuild: true });
+  } else {
+    // Synchronous fallback
+    invalidateRegimeGrid();
+    render();
+  }
+}
 
 /* ================================================================
  * Formatting helpers
@@ -962,7 +1031,7 @@ for (const btn of comparePresetButtons) {
   btn.addEventListener("click", () => {
     const presetId = btn.dataset.presetId as Preset["id"];
     applyPreset(presetId);
-    render();
+    requestRegimeGridRebuild();
   });
 }
 
@@ -1201,7 +1270,7 @@ for (const button of presetButtons) {
     const presetId = button.dataset.presetId as Preset["id"] | undefined;
     if (!presetId || !(presetId in PRESET_BY_ID)) return;
     applyPreset(presetId);
-    render();
+    requestRegimeGridRebuild();
     // Announce preset selection for screen readers
     const preset = PRESET_BY_ID[presetId];
     setLiveRegionText(status, `Preset applied: ${preset.label}.`);
@@ -1252,8 +1321,7 @@ function finalizeCompositionInteraction(): void {
   compositionFinalizePending = true;
   queueMicrotask(() => {
     compositionFinalizePending = false;
-    invalidateRegimeGrid();
-    render();
+    requestRegimeGridRebuild();
   });
 }
 
