@@ -1,4 +1,4 @@
-import { createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { TwoBodyAnalytic } from "@cosmic/physics";
 
@@ -390,3 +390,6 @@ copyResults.addEventListener("click", () => {
 });
 
 initMath(document);
+
+const demoRoot = document.querySelector<HTMLElement>("#cp-demo");
+if (demoRoot) initPopovers(demoRoot);

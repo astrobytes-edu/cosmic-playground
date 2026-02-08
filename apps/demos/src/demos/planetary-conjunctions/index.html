@@ -16,6 +16,31 @@
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Planetary Conjunctions: Alignments in the Sky</div>
         <div class="cp-panel-body">
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"></circle>
+                  <circle cx="10" cy="10" r="1.5"></circle>
+                  <circle cx="16" cy="10" r="1.5"></circle>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/planetary-conjunctions/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/planetary-conjunctions/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/planetary-conjunctions/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
+          </div>
+
           <p class="cp-muted">
             Conjunctions and oppositions are line-of-sight alignments caused by relative motion.
           </p>
@@ -23,18 +48,7 @@
             This demo is currently a stub while we migrate the legacy version into the new runtime.
           </div>
 
-          <button id="copyResults" class="cp-action" type="button">Copy results</button>
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
-
-          <div class="cp-actions">
-            <a class="cp-button" href="../../exhibits/planetary-conjunctions/">Open exhibit</a>
-            <a class="cp-button cp-button--outline" href="../../stations/planetary-conjunctions/"
-              >Station card</a
-            >
-            <a class="cp-button cp-button--outline" href="../../instructor/planetary-conjunctions/"
-              >Instructor notes</a
-            >
-          </div>
         </div>
       </aside>
 

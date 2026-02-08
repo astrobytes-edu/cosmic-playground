@@ -1,4 +1,4 @@
-import { createInstrumentRuntime, initMath } from "@cosmic/runtime";
+import { createInstrumentRuntime, initMath, initPopovers } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 
 export type StubDemoOptions = {
@@ -53,4 +53,7 @@ export function initStubDemo(options: StubDemoOptions) {
   });
 
   initMath(document);
+
+  const demoRoot = document.querySelector<HTMLElement>("#cp-demo");
+  if (demoRoot) initPopovers(demoRoot);
 }
