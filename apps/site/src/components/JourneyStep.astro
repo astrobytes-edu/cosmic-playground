@@ -4,9 +4,9 @@
  * Vertical layout: numbered circle + connector line + content.
  * Required demos get solid connector, optional get dashed.
  */
-import DemoGlyph from "./DemoGlyph.astro";
+import DemoIllustration from "./DemoIllustration.astro";
 import TagPill from "./TagPill.astro";
-import { pickDemoGlyph } from "../lib/demoGlyphs";
+import { topicColor, primaryTopic } from "../lib/topicColors";
 
 interface Props {
   step: number;
@@ -21,8 +21,8 @@ interface Props {
 }
 
 const { step, title, slug, href, topics, timeMinutes, required, note, isLast } = Astro.props;
-const glyph = pickDemoGlyph(topics, slug, title);
-const timeLabel = timeMinutes <= 10 ? `${timeMinutes} min` : `${timeMinutes} min`;
+const color = topicColor(primaryTopic(topics));
+const timeLabel = `${timeMinutes} min`;
 ---
 
 <div class:list={["journey-step", { "journey-step--last": isLast }]}>
@@ -35,8 +35,10 @@ const timeLabel = timeMinutes <= 10 ? `${timeMinutes} min` : `${timeMinutes} min
       ]} />
     )}
   </div>
-  <a class="journey-step__card cp-card" href={href}>
-    <DemoGlyph name={glyph} size={32} class="journey-step__glyph" />
+  <a class="journey-step__card cp-card" href={href} style={`--topic-color: ${color}`}>
+    <div class="journey-step__illus">
+      <DemoIllustration slug={slug} />
+    </div>
     <div class="journey-step__body">
       <h3 class="journey-step__title">{title}</h3>
       <div class="journey-step__meta">
@@ -98,20 +100,33 @@ const timeLabel = timeMinutes <= 10 ? `${timeMinutes} min` : `${timeMinutes} min
     text-decoration: none;
     align-items: flex-start;
     margin-bottom: var(--cp-space-3);
+    transition:
+      border-color 200ms var(--cp-ease-out),
+      box-shadow 200ms var(--cp-ease-out);
   }
 
   .journey-step__card:hover {
     background: color-mix(in srgb, var(--cp-text) 3%, transparent);
+    border-color: color-mix(in srgb, var(--topic-color) 30%, transparent);
   }
 
-  .journey-step__glyph {
-    color: var(--cp-muted);
+  .journey-step__illus {
+    width: 64px;
     flex-shrink: 0;
-    transition: color var(--cp-transition-fast) var(--cp-ease-out);
+    border-radius: var(--cp-r-1);
+    overflow: clip;
+    background:
+      radial-gradient(
+        ellipse at 50% 50%,
+        color-mix(in srgb, var(--topic-color) 6%, transparent) 0%,
+        transparent 70%
+      );
+    border: 1px solid var(--cp-border-subtle);
+    transition: border-color 200ms var(--cp-ease-out);
   }
 
-  .journey-step__card:hover .journey-step__glyph {
-    color: var(--cp-accent);
+  .journey-step__card:hover .journey-step__illus {
+    border-color: color-mix(in srgb, var(--topic-color) 30%, transparent);
   }
 
   .journey-step__body {
