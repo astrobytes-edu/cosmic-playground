@@ -337,6 +337,10 @@ test.describe("Cosmic Playground smoke", () => {
     {
       slug: "planetary-conjunctions",
       expects: ["Synodic period (days)", "Days elapsed", "Conjunctions observed"]
+    },
+    {
+      slug: "eos-lab",
+      expects: ["Temperature T (K)", "P_gas (dyne cm^-2)", "P_tot (dyne cm^-2)"]
     }
   ] as const;
 
