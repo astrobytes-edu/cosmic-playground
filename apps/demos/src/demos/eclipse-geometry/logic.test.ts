@@ -19,6 +19,8 @@ import {
   checkWhyNotEveryMonth,
   checkEclipseStatistics,
   contextualMessage,
+  eclipseArcExtentDeg,
+  buildArcPath,
 } from "./logic";
 import type { EclipseModelCallbacks, EclipseDemoState, SimulationSummaryInput } from "./logic";
 
@@ -994,5 +996,104 @@ describe("animate-month rate constants", () => {
     const moonRate = 360 / 27.321661; // deg/day (sidereal month)
     const synodicRate = 360 / 29.530589; // deg/day (synodic month)
     expect(moonRate - sunRate).toBeCloseTo(synodicRate, 2);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  eclipseArcExtentDeg                                                */
+/* ------------------------------------------------------------------ */
+
+describe("eclipseArcExtentDeg", () => {
+  // DI stub: reimplements deltaLambdaFromBetaDeg without importing @cosmic/physics
+  const deltaLambda = (args: { tiltDeg: number; betaDeg: number }) => {
+    const { tiltDeg, betaDeg } = args;
+    if (tiltDeg === 0) return 180; // full circle
+    const ratio =
+      Math.sin(Math.abs(betaDeg) * (Math.PI / 180)) /
+      Math.abs(Math.sin(tiltDeg * (Math.PI / 180)));
+    if (ratio >= 1) return 0; // no arc
+    return Math.asin(ratio) * (180 / Math.PI);
+  };
+
+  it("returns ~17 deg half-extent at standard tilt and typical threshold", () => {
+    // asin(sin(1.5 deg) / sin(5.145 deg)) = asin(0.02618 / 0.08972) ~ 16.97 deg
+    const result = eclipseArcExtentDeg({
+      tiltDeg: 5.145,
+      thresholdBetaDeg: 1.5,
+      deltaLambdaFromBetaDeg: deltaLambda,
+    });
+    expect(result).toBeCloseTo(17.0, 0);
+  });
+
+  it("returns 180 when tilt is 0 (eclipses everywhere)", () => {
+    const result = eclipseArcExtentDeg({
+      tiltDeg: 0,
+      thresholdBetaDeg: 1.5,
+      deltaLambdaFromBetaDeg: deltaLambda,
+    });
+    expect(result).toBe(180);
+  });
+
+  it("returns near 0 when tilt is large and threshold is tiny", () => {
+    const result = eclipseArcExtentDeg({
+      tiltDeg: 10,
+      thresholdBetaDeg: 0.1,
+      deltaLambdaFromBetaDeg: deltaLambda,
+    });
+    // sin(0.1 deg) / sin(10 deg) ~ 0.010 => asin ~ 0.58 deg
+    expect(result).toBeLessThan(1);
+  });
+
+  it("returns larger arc for larger threshold", () => {
+    const small = eclipseArcExtentDeg({
+      tiltDeg: 5.145,
+      thresholdBetaDeg: 0.6,
+      deltaLambdaFromBetaDeg: deltaLambda,
+    });
+    const large = eclipseArcExtentDeg({
+      tiltDeg: 5.145,
+      thresholdBetaDeg: 1.5,
+      deltaLambdaFromBetaDeg: deltaLambda,
+    });
+    expect(large).toBeGreaterThan(small);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  buildArcPath                                                       */
+/* ------------------------------------------------------------------ */
+
+describe("buildArcPath", () => {
+  it("returns SVG path starting with M and containing A for normal extent", () => {
+    const d = buildArcPath({ cx: 200, cy: 200, r: 140, centerAngleDeg: 0, halfExtentDeg: 20 });
+    expect(d).toMatch(/^M/);
+    expect(d).toContain("A");
+  });
+
+  it("returns empty string for 0 extent", () => {
+    const d = buildArcPath({ cx: 200, cy: 200, r: 140, centerAngleDeg: 90, halfExtentDeg: 0 });
+    expect(d).toBe("");
+  });
+
+  it("returns full circle path for 180 deg extent", () => {
+    const d = buildArcPath({ cx: 200, cy: 200, r: 140, centerAngleDeg: 45, halfExtentDeg: 180 });
+    // Full circle: two semicircles, M cx+r cy A ... cx-r cy A ... cx+r cy
+    expect(d).toContain("M 340 200");
+    expect(d).toContain("A 140 140");
+    expect(d).toContain("60 200");
+  });
+
+  it("produces coordinates on the circle", () => {
+    const cx = 200, cy = 200, r = 140;
+    const d = buildArcPath({ cx, cy, r, centerAngleDeg: 45, halfExtentDeg: 30 });
+    // Parse the start point from "M x y"
+    const mMatch = d.match(/^M\s+(-?[\d.]+)\s+(-?[\d.]+)/);
+    expect(mMatch).not.toBeNull();
+    const [, xStr, yStr] = mMatch!;
+    const x = parseFloat(xStr);
+    const y = parseFloat(yStr);
+    // Distance from center should equal r
+    const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+    expect(dist).toBeCloseTo(r, 1);
   });
 });

@@ -526,3 +526,56 @@ export function snapToNearestPreset(
     entries[0]
   )[0];
 }
+
+/* ------------------------------------------------------------------ */
+/*  Eclipse window arc computation                                     */
+/* ------------------------------------------------------------------ */
+
+/** Compute the angular half-extent (in degrees) of an eclipse window arc.
+ *  Delegates to `deltaLambdaFromBetaDeg` (DI callback) which returns
+ *  the longitude offset at which |beta| first reaches the given threshold.
+ *  Returns 0-180 where 180 means eclipses are possible everywhere. */
+export function eclipseArcExtentDeg(args: {
+  tiltDeg: number;
+  thresholdBetaDeg: number;
+  deltaLambdaFromBetaDeg: (a: { tiltDeg: number; betaDeg: number }) => number;
+}): number {
+  if (args.tiltDeg === 0) return 180;
+  return args.deltaLambdaFromBetaDeg({
+    tiltDeg: args.tiltDeg,
+    betaDeg: args.thresholdBetaDeg,
+  });
+}
+
+/** Build an SVG arc path d-string for an arc centered at `centerAngleDeg`
+ *  with angular half-extent `halfExtentDeg`, on a circle of radius `r`
+ *  centered at `(cx, cy)`.
+ *
+ *  Angles are in degrees, measured CW from 3-o'clock (SVG convention):
+ *  x = cx + r * cos(angle), y = cy + r * sin(angle).
+ *
+ *  Returns empty string for zero extent and a full circle for >= 180 deg. */
+export function buildArcPath(args: {
+  cx: number;
+  cy: number;
+  r: number;
+  centerAngleDeg: number;
+  halfExtentDeg: number;
+}): string {
+  const { cx, cy, r, centerAngleDeg, halfExtentDeg } = args;
+  if (halfExtentDeg >= 180) {
+    // Full circle -- draw two semicircles
+    return `M ${cx + r} ${cy} A ${r} ${r} 0 1 1 ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy}`;
+  }
+  if (halfExtentDeg <= 0) return "";
+  const startDeg = centerAngleDeg - halfExtentDeg;
+  const endDeg = centerAngleDeg + halfExtentDeg;
+  const startRad = (startDeg * Math.PI) / 180;
+  const endRad = (endDeg * Math.PI) / 180;
+  const x1 = cx + r * Math.cos(startRad);
+  const y1 = cy + r * Math.sin(startRad);
+  const x2 = cx + r * Math.cos(endRad);
+  const y2 = cy + r * Math.sin(endRad);
+  const largeArc = halfExtentDeg * 2 > 180 ? 1 : 0;
+  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+}
