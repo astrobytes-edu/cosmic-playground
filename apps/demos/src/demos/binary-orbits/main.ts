@@ -1,6 +1,7 @@
-import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { TwoBodyAnalytic } from "@cosmic/physics";
+import { computeModel, formatNumber, bodyRadius, bodyPositions, pixelsPerUnit } from "./logic";
 
 const massRatioInputEl = document.querySelector<HTMLInputElement>("#massRatio");
 const massRatioValueEl =
@@ -51,9 +52,9 @@ const helpButton = helpEl;
 const copyResults = copyResultsEl;
 const status = statusEl;
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
+// Starfield initialization
+const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
+if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 
 function cssVar(name: string) {
   const value = getComputedStyle(document.documentElement)
@@ -99,49 +100,15 @@ const prefersReducedMotion =
 
 const yearsPerSecond = 0.06; // mapping from real seconds -> model years (teaching speed)
 
-function formatNumber(value: number, digits = 2) {
-  if (!Number.isFinite(value)) return "—";
-  return value.toFixed(digits);
-}
-
-function computeModel(args: { massRatio: number; separation: number }) {
-  const massRatio = clamp(args.massRatio, 0.2, 5);
-  const separation = clamp(args.separation, 1, 8);
-
-  const m1 = 1;
-  const m2 = massRatio;
-  const total = m1 + m2;
-
-  // Teaching units (AU / yr / Msun): with G = 4*pi^2, Kepler normalization gives:
-  // P^2 = a^3 / (M1 + M2), with P in years, a in AU.
-  const periodYr = TwoBodyAnalytic.orbitalPeriodYrFromAuSolar({
-    aAu: separation,
-    massSolar: total
-  });
-  const omegaRadPerYr = Number.isFinite(periodYr) ? (2 * Math.PI) / periodYr : 0;
-
-  // Distances from barycenter
-  const r1 = separation * (m2 / total);
-  const r2 = separation * (m1 / total);
-
-  return {
-    massRatio,
-    separation,
-    m1,
-    m2,
-    total,
-    periodYr,
-    omegaRadPerYr,
-    r1,
-    r2
-  };
-}
+/** Period callback wired to the physics package. */
+const periodFn = TwoBodyAnalytic.orbitalPeriodYrFromAuSolar;
 
 function getModel() {
-  return computeModel({
-    massRatio: Number(massRatioInput.value),
-    separation: Number(separationInput.value)
-  });
+  return computeModel(
+    Number(massRatioInput.value),
+    Number(separationInput.value),
+    periodFn
+  );
 }
 
 function draw(model: ReturnType<typeof getModel>, phaseRad: number) {
@@ -158,11 +125,9 @@ function draw(model: ReturnType<typeof getModel>, phaseRad: number) {
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, w, h);
 
-  const maxR = Math.max(model.r1, model.r2);
-  const pixelsPerUnit = maxR > 0 ? (Math.min(w, h) * 0.38) / maxR : 1;
-
-  const r1px = model.r1 * pixelsPerUnit;
-  const r2px = model.r2 * pixelsPerUnit;
+  const ppu = pixelsPerUnit(model.r1, model.r2, w, h);
+  const r1px = model.r1 * ppu;
+  const r2px = model.r2 * ppu;
 
   // Orbit guides
   ctx.strokeStyle = canvasTheme.border;
@@ -174,12 +139,7 @@ function draw(model: ReturnType<typeof getModel>, phaseRad: number) {
   ctx.arc(cx, cy, r2px, 0, Math.PI * 2);
   ctx.stroke();
 
-  const cos = Math.cos(phaseRad);
-  const sin = Math.sin(phaseRad);
-  const x1 = cx - r1px * cos;
-  const y1 = cy - r1px * sin;
-  const x2 = cx + r2px * cos;
-  const y2 = cy + r2px * sin;
+  const { x1, y1, x2, y2 } = bodyPositions(cx, cy, r1px, r2px, phaseRad);
 
   // Connection line
   ctx.strokeStyle = canvasTheme.border;
@@ -197,8 +157,8 @@ function draw(model: ReturnType<typeof getModel>, phaseRad: number) {
 
   // Body sizes (visual cue only)
   const base = Math.min(w, h) * 0.018;
-  const radius1 = base * (1 + 0.25 * Math.log10(model.m1 + 1));
-  const radius2 = base * (1 + 0.25 * Math.log10(model.m2 + 1));
+  const radius1 = bodyRadius(model.m1, base);
+  const radius2 = bodyRadius(model.m2, base);
 
   ctx.fillStyle = canvasTheme.body1;
   ctx.beginPath();
@@ -217,8 +177,9 @@ function renderAtPhase(phaseRad: number) {
   massRatioValue.textContent = `${formatNumber(model.massRatio, 1)}`;
   separationValue.textContent = `${formatNumber(model.separation, 1)}`;
 
-  baryOffsetValue.textContent = `${formatNumber(model.r1, 3)} AU`;
-  periodValue.textContent = `${formatNumber(model.periodYr, 3)} years`;
+  // Units are in separate .cp-readout__unit spans in HTML
+  baryOffsetValue.textContent = formatNumber(model.r1, 3);
+  periodValue.textContent = formatNumber(model.periodYr, 3);
 
   draw(model, phaseRad);
 }
@@ -323,7 +284,7 @@ const demoModes = createDemoModes({
             { label: "Unequal masses", massRatio: 5, separation: 4 }
           ];
           return cases.map((c) => {
-            const model = computeModel(c);
+            const model = computeModel(c.massRatio, c.separation, periodFn);
             return {
               case: c.label,
               massRatio: formatNumber(model.massRatio, 2),
@@ -336,7 +297,7 @@ const demoModes = createDemoModes({
       }
     ],
     synthesisPrompt:
-      "<p><strong>Synthesis:</strong> In one sentence, explain why the heavier body’s orbit is smaller, even though both bodies move.</p>"
+      "<p><strong>Synthesis:</strong> In one sentence, explain why the heavier body's orbit is smaller, even though both bodies move.</p>"
   }
 });
 
@@ -375,7 +336,7 @@ function exportResults(): ExportPayloadV1 {
 };
 
 copyResults.addEventListener("click", () => {
-  setLiveRegionText(status, "Copying…");
+  setLiveRegionText(status, "Copying\u2026");
   void runtime
     .copyResults(exportResults())
     .then(() => {

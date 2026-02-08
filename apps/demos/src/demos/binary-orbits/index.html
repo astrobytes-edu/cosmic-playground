@@ -89,6 +89,7 @@
       </aside>
 
       <section class="cp-demo__stage cp-stage stage" aria-label="Binary orbit visualization">
+        <canvas class="cp-starfield" aria-hidden="true"></canvas>
         <canvas id="orbitCanvas" width="520" height="520"></canvas>
       </section>
 
@@ -97,11 +98,11 @@
         <div class="cp-panel-body">
           <div class="cp-readout">
             <div class="cp-readout__label">Barycenter offset from $m_1$</div>
-            <div class="cp-readout__value"><span id="baryOffsetValue"></span></div>
+            <div class="cp-readout__value"><span id="baryOffsetValue"></span> <span class="cp-readout__unit">AU</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Orbital period</div>
-            <div class="cp-readout__value"><span id="periodValue"></span></div>
+            <div class="cp-readout__value"><span id="periodValue"></span> <span class="cp-readout__unit">yr</span></div>
           </div>
         </div>
       </aside>
