@@ -311,6 +311,8 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   min-height: 280px;
+  border-radius: var(--cp-r-2);
+  border: 1px solid color-mix(in srgb, var(--cp-border) 60%, transparent);
 }
 
 .regime-map__legend {
@@ -332,12 +334,12 @@
 }
 
 .regime-map__legend span {
-  width: 0.9rem;
-  min-width: 0.9rem;
-  height: 0.9rem;
+  width: 1rem;
+  min-width: 1rem;
+  height: 1rem;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--cp-border) 75%, transparent);
-  margin-top: 0.18rem;
+  margin-top: 0.15rem;
 }
 
 .regime-map__legend span[data-channel="gas"] {
@@ -357,13 +359,15 @@
 }
 
 #regimeDetail {
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 0.92rem;
+  font-family: var(--cp-readout-value-font, var(--cp-font-mono));
+  font-variant-numeric: tabular-nums;
+  line-height: 1.45;
 }
 
 #regimeSummary {
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 /* uPlot legend styling — match observatory console theme */
