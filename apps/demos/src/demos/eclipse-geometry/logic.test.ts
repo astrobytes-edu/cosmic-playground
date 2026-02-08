@@ -8,6 +8,7 @@ import {
   computeDerived,
   buildStationRow,
   formatSimSummary,
+  formatSimTable,
   SYZYGY_TOLERANCE_DEG,
   DISTANCE_PRESETS_KM,
   snapToNearestPreset,
@@ -25,7 +26,7 @@ import {
   lunarEclipsePreset,
   noEclipsePreset,
 } from "./logic";
-import type { EclipseModelCallbacks, EclipseDemoState, SimulationSummaryInput } from "./logic";
+import type { EclipseModelCallbacks, EclipseDemoState, SimulationSummaryInput, SimTableRow } from "./logic";
 
 /* ------------------------------------------------------------------ */
 /*  Stub physics model for DI                                         */
@@ -556,6 +557,117 @@ describe("formatSimSummary", () => {
   it("omits Examples section when no events", () => {
     const result = formatSimSummary(baseSim, TROPICAL_YEAR_DAYS);
     expect(result).not.toContain("Examples:");
+  });
+});
+
+describe("formatSimTable", () => {
+  const TROPICAL_YEAR_DAYS = 365.2422;
+
+  const baseSim: SimulationSummaryInput = {
+    totalDays: 10 * TROPICAL_YEAR_DAYS,
+    earthMoonDistanceKm: 384400,
+    orbitalTiltDeg: 5.145,
+    counts: {
+      solar: { partial: 3, annular: 2, total: 1 },
+      lunar: { penumbral: 4, partial: 2, total: 1 },
+      newWindows: 120,
+      fullWindows: 120,
+    },
+    sampleEvents: [],
+  };
+
+  it("returns empty rows when no sample events", () => {
+    const result = formatSimTable(baseSim, TROPICAL_YEAR_DAYS);
+    expect(result.rows).toEqual([]);
+  });
+
+  it("returns correct summary counts", () => {
+    const result = formatSimTable(baseSim, TROPICAL_YEAR_DAYS);
+    expect(result.summary.solarCount).toBe(6); // 3 + 2 + 1
+    expect(result.summary.lunarCount).toBe(7); // 4 + 2 + 1
+    expect(result.summary.years).toBe(10);
+  });
+
+  it("parses solar sample events into rows", () => {
+    const sim: SimulationSummaryInput = {
+      ...baseSim,
+      sampleEvents: [
+        "Year 1.50: Solar Total solar (abs(beta)=0.300 deg, Delta~0 deg)",
+      ],
+    };
+    const result = formatSimTable(sim, TROPICAL_YEAR_DAYS);
+    expect(result.rows.length).toBe(1);
+    const row = result.rows[0];
+    expect(row.year).toBeCloseTo(1.5, 1);
+    expect(row.type).toBe("Total solar");
+    expect(row.category).toBe("solar");
+    expect(row.details).toContain("0.300");
+  });
+
+  it("parses lunar sample events into rows", () => {
+    const sim: SimulationSummaryInput = {
+      ...baseSim,
+      sampleEvents: [
+        "Year 3.22: Lunar Penumbral lunar (abs(beta)=1.200 deg, Delta~180 deg)",
+      ],
+    };
+    const result = formatSimTable(sim, TROPICAL_YEAR_DAYS);
+    expect(result.rows.length).toBe(1);
+    const row = result.rows[0];
+    expect(row.year).toBeCloseTo(3.22, 1);
+    expect(row.type).toBe("Penumbral lunar");
+    expect(row.category).toBe("lunar");
+  });
+
+  it("handles multiple events", () => {
+    const sim: SimulationSummaryInput = {
+      ...baseSim,
+      sampleEvents: [
+        "Year 1.50: Solar Total solar (abs(beta)=0.300 deg, Delta~0 deg)",
+        "Year 2.10: Lunar Total lunar (abs(beta)=0.100 deg, Delta~180 deg)",
+        "Year 4.80: Solar Partial solar (abs(beta)=1.200 deg, Delta~0 deg)",
+      ],
+    };
+    const result = formatSimTable(sim, TROPICAL_YEAR_DAYS);
+    expect(result.rows.length).toBe(3);
+    expect(result.rows[0].category).toBe("solar");
+    expect(result.rows[1].category).toBe("lunar");
+    expect(result.rows[2].category).toBe("solar");
+  });
+
+  it("each row is a SimTableRow with all required fields", () => {
+    const sim: SimulationSummaryInput = {
+      ...baseSim,
+      sampleEvents: [
+        "Year 5.00: Solar Annular solar (abs(beta)=0.800 deg, Delta~0 deg)",
+      ],
+    };
+    const result = formatSimTable(sim, TROPICAL_YEAR_DAYS);
+    const row: SimTableRow = result.rows[0];
+    expect(typeof row.year).toBe("number");
+    expect(typeof row.type).toBe("string");
+    expect(typeof row.details).toBe("string");
+    expect(["solar", "lunar"]).toContain(row.category);
+  });
+
+  it("summary years rounds from totalDays / tropicalYearDays", () => {
+    const sim: SimulationSummaryInput = {
+      ...baseSim,
+      totalDays: 100 * TROPICAL_YEAR_DAYS,
+    };
+    const result = formatSimTable(sim, TROPICAL_YEAR_DAYS);
+    expect(result.summary.years).toBe(100);
+  });
+
+  it("gracefully handles unparseable event strings", () => {
+    const sim: SimulationSummaryInput = {
+      ...baseSim,
+      sampleEvents: ["This is not a valid event string"],
+    };
+    const result = formatSimTable(sim, TROPICAL_YEAR_DAYS);
+    // Unparseable events should still produce a row (fallback)
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0].category).toBe("solar"); // default fallback
   });
 });
 

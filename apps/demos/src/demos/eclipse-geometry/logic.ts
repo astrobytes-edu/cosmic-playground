@@ -405,6 +405,64 @@ export function formatSimSummary(
 }
 
 /* ------------------------------------------------------------------ */
+/*  Simulation table (structured output for styled HTML table)         */
+/* ------------------------------------------------------------------ */
+
+export type SimTableRow = {
+  year: number;
+  type: string;
+  details: string;
+  category: "solar" | "lunar";
+};
+
+/**
+ * Parse simulation sample-event strings into structured rows for table rendering.
+ * Each event string looks like:
+ *   "Year 1.50: Solar Total solar (abs(beta)=0.300 deg, Delta~0 deg)"
+ *   "Year 3.22: Lunar Penumbral lunar (abs(beta)=1.200 deg, Delta~180 deg)"
+ *
+ * Returns structured rows plus summary counts.
+ */
+export function formatSimTable(
+  sim: SimulationSummaryInput,
+  tropicalYearDays: number
+): {
+  rows: SimTableRow[];
+  summary: { solarCount: number; lunarCount: number; years: number };
+} {
+  const years = Math.round(sim.totalDays / tropicalYearDays);
+  const s = sim.counts.solar;
+  const l = sim.counts.lunar;
+  const solarCount = s.partial + s.annular + s.total;
+  const lunarCount = l.penumbral + l.partial + l.total;
+
+  const rows: SimTableRow[] = sim.sampleEvents.map((event) => {
+    // Try to parse "Year <n>: (Solar|Lunar) <type> (<details>)"
+    const match = event.match(
+      /^Year\s+([\d.]+):\s+(Solar|Lunar)\s+(.+?)\s+\((.+)\)$/
+    );
+    if (match) {
+      const [, yearStr, kind, type, details] = match;
+      return {
+        year: parseFloat(yearStr),
+        type,
+        details,
+        category: kind.toLowerCase() as "solar" | "lunar",
+      };
+    }
+    // Fallback for unparseable strings
+    return {
+      year: 0,
+      type: event,
+      details: "",
+      category: "solar" as const,
+    };
+  });
+
+  return { rows, summary: { solarCount, lunarCount, years } };
+}
+
+/* ------------------------------------------------------------------ */
 /*  Eclipse presets (snap moon + node to produce target outcomes)      */
 /* ------------------------------------------------------------------ */
 

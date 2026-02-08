@@ -10,6 +10,7 @@ import {
   computeDerived,
   buildStationRow,
   formatSimSummary,
+  formatSimTable,
   contextualMessage,
   SYZYGY_TOLERANCE_DEG,
   DISTANCE_PRESETS_KM,
@@ -51,7 +52,7 @@ const runSimulationEl =
   document.querySelector<HTMLButtonElement>("#runSimulation");
 const stopSimulationEl =
   document.querySelector<HTMLButtonElement>("#stopSimulation");
-const simOutputEl = document.querySelector<HTMLPreElement>("#simOutput");
+const simOutputEl = document.querySelector<HTMLDivElement>("#simOutput");
 
 const moonLonEl = document.querySelector<HTMLInputElement>("#moonLon");
 const moonLonValueEl = document.querySelector<HTMLSpanElement>("#moonLonValue");
@@ -988,6 +989,33 @@ function getSimSummary(sim: SimulationState): string {
   return formatSimSummary(sim, TROPICAL_YEAR_DAYS);
 }
 
+function renderSimTable(sim: SimulationState): void {
+  const data = formatSimTable(sim, TROPICAL_YEAR_DAYS);
+  const { rows, summary } = data;
+
+  const summaryHtml = `<div class="sim-summary">
+    <span>Simulated <strong>${summary.years}</strong> yr</span>
+    <span>Solar: <strong class="sim-summary__stat sim-summary__stat--solar">${summary.solarCount}</strong></span>
+    <span>Lunar: <strong class="sim-summary__stat sim-summary__stat--lunar">${summary.lunarCount}</strong></span>
+  </div>`;
+
+  let tableHtml = "";
+  if (rows.length > 0) {
+    const rowsHtml = rows
+      .map(
+        (r) =>
+          `<tr data-category="${r.category}"><td>${r.year.toFixed(2)}</td><td>${r.type}</td><td>${r.details}</td></tr>`
+      )
+      .join("");
+    tableHtml = `<table class="sim-table">
+      <thead><tr><th>Year</th><th>Type</th><th>Details</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>`;
+  }
+
+  simOutput.innerHTML = summaryHtml + tableHtml;
+}
+
 function recordSyzygyWindow(kind: "new" | "full") {
   if (!simulation) return;
   const best = kind === "new" ? simulation.bestNew : simulation.bestFull;
@@ -1148,13 +1176,18 @@ function tick(t: number) {
 
     const pct = Math.min(1, simulation.tDays / simulation.totalDays);
     simOutput.hidden = false;
-    simOutput.textContent = `${getSimSummary(simulation)}\n\nProgress: ${(pct * 100).toFixed(1)}%`;
+    renderSimTable(simulation);
+    // Append progress indicator during the run
+    const progressEl = document.createElement("div");
+    progressEl.className = "sim-summary";
+    progressEl.textContent = `Progress: ${(pct * 100).toFixed(1)}%`;
+    simOutput.appendChild(progressEl);
 
     if (simulation.tDays >= simulation.totalDays) {
       if (simulation.inNewWindow) recordSyzygyWindow("new");
       if (simulation.inFullWindow) recordSyzygyWindow("full");
 
-      simOutput.textContent = getSimSummary(simulation);
+      renderSimTable(simulation);
       lastCompletedSim = {
         yearsSimulated: simulation.tDays / TROPICAL_YEAR_DAYS,
         counts: { ...simulation.counts, solar: { ...simulation.counts.solar }, lunar: { ...simulation.counts.lunar } },
@@ -1334,7 +1367,7 @@ runSimulation.addEventListener("click", () => {
   animateMonth.disabled = true;
   animateYear.disabled = true;
   simOutput.hidden = false;
-  simOutput.textContent = getSimSummary(simulation);
+  renderSimTable(simulation);
   updateTimeButtonLabels();
   setLiveRegionText(status, "Simulation running…");
   rafId = requestAnimationFrame(tick);

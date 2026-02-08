@@ -199,6 +199,55 @@
 .stage__band-label--solar { fill: var(--cp-accent-rose); opacity: 0.6; }
 .stage__band-label--lunar { fill: var(--cp-accent); opacity: 0.6; }
 
+/* --- Simulation output table --- */
+.sim-output {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.sim-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.sim-table th {
+  text-align: left;
+  padding: 2px 6px;
+  color: var(--cp-muted);
+}
+
+.sim-table td {
+  padding: 2px 6px;
+}
+
+.sim-table tr[data-category="solar"] td {
+  color: var(--cp-accent-rose);
+}
+
+.sim-table tr[data-category="lunar"] td {
+  color: var(--cp-accent);
+}
+
+.sim-summary {
+  display: flex;
+  gap: var(--cp-space-4);
+  padding: var(--cp-space-2) 0;
+  font-size: 0.85rem;
+}
+
+.sim-summary__stat {
+  font-family: var(--cp-font-mono);
+}
+
+.sim-summary__stat--solar {
+  color: var(--cp-accent-rose);
+}
+
+.sim-summary__stat--lunar {
+  color: var(--cp-accent);
+}
+
 /* --- Readout dot indicator (for solar/lunar outcomes) --- */
 .cp-readout__dot {
   display: inline-block;
