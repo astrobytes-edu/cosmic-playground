@@ -8,11 +8,14 @@
     <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
   </head>
   <body>
-    <div id="cp-demo" class="cp-layer-instrument cp-demo" data-shell="triad" aria-label="Eclipse Geometry instrument">
-      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Eclipse Geometry instrument">
+      <!-- ═══════════════════════════════════════════
+           SIDEBAR — physics controls
+           ═══════════════════════════════════════════ -->
+      <aside class="cp-demo__sidebar cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Eclipse Geometry: Shadows in Space</div>
-        <div class="cp-panel-body">
-          <p class="cp-muted">Investigate alignment, shadow cones, and why eclipses aren’t monthly.</p>
+        <div class="cp-panel-body cp-scroll-shadow">
+          <p class="cp-muted">Investigate alignment, shadow cones, and why eclipses aren't monthly.</p>
 
           <div class="cp-callout" data-kind="model">
             Eclipses require two things at once: (1) the right phase (New/Full), and (2) the Moon near a node (small $|\beta|$).
@@ -35,20 +38,6 @@
               data-tooltip-source="#moonLonValue"
             />
             <span class="control__value"><span id="moonLonValue"></span></span>
-          </label>
-
-          <label class="control">
-            <span>Node longitude $\Omega$ ($^\circ$)</span>
-            <input
-              id="nodeLon"
-              type="range"
-              min="0"
-              max="360"
-              value="210"
-              step="1"
-              data-tooltip-source="#nodeLonValue"
-            />
-            <span class="control__value"><span id="nodeLonValue"></span></span>
           </label>
 
           <label class="control">
@@ -78,42 +67,6 @@
               <button id="animateYear" class="cp-button cp-button--ghost" type="button">Animate 1 year</button>
             </div>
             <p id="motionNote" class="cp-muted" hidden></p>
-          </div>
-
-          <div class="cp-callout" data-kind="activity">
-            <strong>Long-run simulation</strong>
-            <label class="control">
-              <span>Years (log scale)</span>
-              <input
-                id="simYears"
-                type="range"
-                min="0"
-                max="100"
-                value="33.3"
-                step="0.1"
-                data-tooltip-source="#simYearsValue"
-              />
-              <span class="control__value"><span id="simYearsValue"></span></span>
-              <span class="sim-ticks" aria-hidden="true">
-                <span>1</span><span>10</span><span>100</span><span>1,000</span>
-              </span>
-            </label>
-
-            <label class="control">
-              <span>Speed</span>
-              <select id="simSpeed">
-                <option value="slow">Slow</option>
-                <option value="medium" selected>Medium</option>
-                <option value="fast">Fast</option>
-              </select>
-            </label>
-
-            <div class="button-row" role="group" aria-label="Simulation controls">
-              <button id="runSimulation" class="cp-button cp-button--ghost" type="button">Run simulation</button>
-              <button id="stopSimulation" class="cp-button cp-button--ghost" type="button">Stop</button>
-            </div>
-
-            <pre id="simOutput" class="cp-muted" hidden></pre>
           </div>
 
           <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
@@ -164,6 +117,9 @@
         </div>
       </aside>
 
+      <!-- ═══════════════════════════════════════════
+           STAGE — dual-panel SVG visualization
+           ═══════════════════════════════════════════ -->
       <section class="cp-demo__stage cp-stage stage" aria-label="Visualization stage">
         <canvas class="cp-starfield" aria-hidden="true"></canvas>
         <svg
@@ -238,73 +194,112 @@
         </svg>
       </section>
 
-      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
-        <div class="cp-panel-header">Readouts</div>
-        <div class="cp-panel-body">
-          <div class="cp-readout">
-            <div class="cp-readout__label">Phase</div>
-            <div class="cp-readout__value"><span id="phaseLabel"></span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Phase angle $\Delta$</div>
-            <div class="cp-readout__value"><span id="phaseAngle"></span> <span class="cp-readout__unit">deg</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">$\beta$ (ecliptic lat.)</div>
-            <div class="cp-readout__value"><span id="absBeta"></span> <span class="cp-readout__unit">deg</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Nearest node distance</div>
-            <div class="cp-readout__value"><span id="nearestNode"></span> <span class="cp-readout__unit">deg</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Solar outcome</div>
-            <div class="cp-readout__value"><span id="solarOutcome"></span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Lunar outcome</div>
-            <div class="cp-readout__value"><span id="lunarOutcome"></span></div>
-          </div>
+      <!-- ═══════════════════════════════════════════
+           READOUT STRIP — horizontal readouts
+           ═══════════════════════════════════════════ -->
+      <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
+        <div class="cp-readout">
+          <span class="cp-readout__label">Phase</span>
+          <span class="cp-readout__value" id="phaseLabel"></span>
         </div>
-      </aside>
+        <div class="cp-readout">
+          <span class="cp-readout__label">$\Delta$</span>
+          <span class="cp-readout__value"><span id="phaseAngle"></span> <span class="cp-readout__unit">deg</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">$\beta$</span>
+          <span class="cp-readout__value"><span id="absBeta"></span> <span class="cp-readout__unit">deg</span></span>
+        </div>
+        <div class="cp-readout cp-readout--solar" id="solarReadout">
+          <span class="cp-readout__label">Solar</span>
+          <span class="cp-readout__value"><span class="cp-readout__dot"></span><span id="solarOutcome"></span></span>
+        </div>
+        <div class="cp-readout cp-readout--lunar" id="lunarReadout">
+          <span class="cp-readout__label">Lunar</span>
+          <span class="cp-readout__value"><span class="cp-readout__dot"></span><span id="lunarOutcome"></span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Node</span>
+          <span class="cp-readout__value"><span id="nearestNode"></span> <span class="cp-readout__unit">deg</span></span>
+        </div>
+      </div>
 
-      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
-        <div class="cp-panels">
-          <details class="cp-accordion" open>
-            <summary>
-              <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">2 bullets</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <ul>
-                <li>Orbital tilt breaks “monthly eclipse” intuition.</li>
-                <li>Small geometric differences determine eclipse visibility.</li>
-              </ul>
-            </div>
-          </details>
+      <!-- ═══════════════════════════════════════════
+           CONTEXTUAL MESSAGE
+           ═══════════════════════════════════════════ -->
+      <p id="contextMessage" class="cp-status cp-context-message" aria-live="polite"></p>
 
-          <details class="cp-accordion">
-            <summary>
-              <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">geometry</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <ul>
-                <li>
-                  We model eclipse *geometry* using similar triangles for the umbra/penumbra and compute physically
-                  motivated thresholds (in degrees) for eclipse visibility.
-                </li>
-                <li>
-                  $\beta$ is the Moon’s ecliptic latitude; when $|\beta|$ is small, the Moon is close to a node and an eclipse is
-                  possible at New/Full.
-                </li>
-                <li>
-                  Earth–Moon distance affects shadow size: at perigee a central solar eclipse can be total; at apogee it
-                  can be annular.
-                </li>
-              </ul>
+      <!-- ═══════════════════════════════════════════
+           SHELF — tabbed pedagogical + simulation content
+           ═══════════════════════════════════════════ -->
+      <section class="cp-demo__shelf" aria-label="Information panels">
+        <div class="cp-tabs-container">
+          <div class="cp-tabs" role="tablist" aria-label="Demo information">
+            <button class="cp-tab cp-tab--active" role="tab" aria-selected="true"
+                    aria-controls="tab-notice" id="tab-btn-notice">What to notice</button>
+            <button class="cp-tab" role="tab" aria-selected="false"
+                    aria-controls="tab-model" id="tab-btn-model">Model notes</button>
+            <button class="cp-tab" role="tab" aria-selected="false"
+                    aria-controls="tab-sim" id="tab-btn-sim">Simulation</button>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-notice" aria-labelledby="tab-btn-notice">
+            <ul>
+              <li>Orbital tilt breaks "monthly eclipse" intuition.</li>
+              <li>Small geometric differences determine eclipse visibility.</li>
+            </ul>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-model" aria-labelledby="tab-btn-model" hidden>
+            <ul>
+              <li>
+                We model eclipse <em>geometry</em> using similar triangles for the umbra/penumbra and compute physically
+                motivated thresholds (in degrees) for eclipse visibility.
+              </li>
+              <li>
+                $\beta$ is the Moon's ecliptic latitude; when $|\beta|$ is small, the Moon is close to a node and an eclipse is
+                possible at New/Full.
+              </li>
+              <li>
+                Earth–Moon distance affects shadow size: at perigee a central solar eclipse can be total; at apogee it
+                can be annular.
+              </li>
+            </ul>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-sim" aria-labelledby="tab-btn-sim" hidden>
+            <div class="sim-controls">
+              <label class="control">
+                <span>Years (log scale)</span>
+                <input
+                  id="simYears"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value="33.3"
+                  step="0.1"
+                  data-tooltip-source="#simYearsValue"
+                />
+                <span class="control__value"><span id="simYearsValue"></span></span>
+                <span class="sim-ticks" aria-hidden="true">
+                  <span>1</span><span>10</span><span>100</span><span>1,000</span>
+                </span>
+              </label>
+
+              <label class="control">
+                <span>Speed</span>
+                <select id="simSpeed">
+                  <option value="slow">Slow</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="fast">Fast</option>
+                </select>
+              </label>
+
+              <div class="button-row" role="group" aria-label="Simulation controls">
+                <button id="runSimulation" class="cp-button cp-button--ghost" type="button">Run simulation</button>
+                <button id="stopSimulation" class="cp-button cp-button--ghost" type="button">Stop</button>
+              </div>
+
+              <pre id="simOutput" class="cp-muted" hidden></pre>
             </div>
-          </details>
+          </div>
         </div>
       </section>
     </div>

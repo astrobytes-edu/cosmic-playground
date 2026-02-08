@@ -1,21 +1,35 @@
 @import "../../shared/stub-demo.css";
 
-.cp-demo__controls {
-  animation: cp-slide-up 0.5s ease-out both;
+/* --- Entry animations (staggered) --- */
+.cp-demo__sidebar {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
 }
 
 .cp-demo__stage {
-  animation: cp-fade-in 0.6s ease-out 0.1s both;
+  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 1);
 }
 
 .cp-demo__readouts {
-  animation: cp-slide-up 0.5s ease-out 0.2s both;
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 2);
 }
 
-.cp-demo__drawer {
-  animation: cp-fade-in 0.5s ease-out 0.3s both;
+.cp-context-message {
+  grid-area: context;
+  text-align: center;
+  padding: 0 var(--cp-space-4);
+  min-height: 1.5em;
+  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 2);
 }
 
+.cp-demo__shelf {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 3);
+}
+
+/* --- Sidebar controls --- */
 .control {
   display: grid;
   gap: 8px;
@@ -40,6 +54,12 @@
   padding: 0 2px;
 }
 
+.sim-controls {
+  display: grid;
+  gap: var(--cp-space-3);
+}
+
+/* --- Stage --- */
 .stage {
   display: grid;
   place-items: center;
@@ -138,4 +158,23 @@
 .stage__betaMarker {
   fill: var(--cp-accent-rose);
   fill-opacity: 0.95;
+}
+
+/* --- Readout dot indicator (for solar/lunar outcomes) --- */
+.cp-readout__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cp-text-muted, var(--cp-muted));
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* --- Responsive --- */
+@media (prefers-reduced-motion: reduce) {
+  .cp-button,
+  .cp-readout {
+    transition: none;
+  }
 }

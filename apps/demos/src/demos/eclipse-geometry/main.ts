@@ -42,14 +42,13 @@ const simOutputEl = document.querySelector<HTMLPreElement>("#simOutput");
 
 const moonLonEl = document.querySelector<HTMLInputElement>("#moonLon");
 const moonLonValueEl = document.querySelector<HTMLSpanElement>("#moonLonValue");
-const nodeLonEl = document.querySelector<HTMLInputElement>("#nodeLon");
-const nodeLonValueEl = document.querySelector<HTMLSpanElement>("#nodeLonValue");
 const tiltEl = document.querySelector<HTMLInputElement>("#tilt");
 const tiltValueEl = document.querySelector<HTMLSpanElement>("#tiltValue");
 const distancePresetEl =
   document.querySelector<HTMLSelectElement>("#distancePreset");
 const distanceValueEl =
   document.querySelector<HTMLSpanElement>("#distanceValue");
+const contextMessageEl = document.querySelector<HTMLParagraphElement>("#contextMessage");
 
 const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
 const challengeModeEl =
@@ -58,7 +57,7 @@ const helpEl = document.querySelector<HTMLButtonElement>("#help");
 const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
 const statusEl = document.querySelector<HTMLParagraphElement>("#status");
 const controlsBodyEl = document.querySelector<HTMLElement>(
-  ".cp-demo__controls .cp-panel-body"
+  ".cp-demo__sidebar .cp-panel-body"
 );
 
 const phaseLabelEl = document.querySelector<HTMLSpanElement>("#phaseLabel");
@@ -95,8 +94,6 @@ if (
   !simOutputEl ||
   !moonLonEl ||
   !moonLonValueEl ||
-  !nodeLonEl ||
-  !nodeLonValueEl ||
   !tiltEl ||
   !tiltValueEl ||
   !distancePresetEl ||
@@ -107,6 +104,7 @@ if (
   !copyResultsEl ||
   !statusEl ||
   !controlsBodyEl ||
+  !contextMessageEl ||
   !phaseLabelEl ||
   !phaseAngleEl ||
   !absBetaEl ||
@@ -140,12 +138,11 @@ const simOutput = simOutputEl;
 
 const moonLon = moonLonEl;
 const moonLonValue = moonLonValueEl;
-const nodeLon = nodeLonEl;
-const nodeLonValue = nodeLonValueEl;
 const tilt = tiltEl;
 const tiltValue = tiltValueEl;
 const distancePreset = distancePresetEl;
 const distanceValue = distanceValueEl;
+const contextMessage = contextMessageEl;
 
 const stationMode = stationModeEl;
 const challengeMode = challengeModeEl;
@@ -340,7 +337,8 @@ function render() {
   // During animation, use precise state values (sliders have step-snapping loss).
   // In idle mode, read from sliders (user is adjusting controls directly).
   const moonLonDeg = isAnimating ? state.moonLonDeg : clamp(Number(moonLon.value), 0, 360);
-  const nodeLonDeg = isAnimating ? state.nodeLonDeg : clamp(Number(nodeLon.value), 0, 360);
+  // Node longitude comes from state (no slider — will be draggable nodes in Task 3)
+  const nodeLonDeg = state.nodeLonDeg;
   const orbitalTiltDeg = clamp(Number(tilt.value), 0, 10);
   const presetKey = distancePreset.value as DistancePresetKey;
 
@@ -365,7 +363,6 @@ function render() {
   const phase = getPhaseInfo(derived.phaseAngleDeg);
 
   moonLonValue.textContent = `${Math.round(moonLonDeg)} deg`;
-  nodeLonValue.textContent = `${Math.round(nodeLonDeg)} deg`;
   tiltValue.textContent = `${formatNumber(orbitalTiltDeg, 3)} deg`;
   distanceValue.textContent = `${state.earthMoonDistanceKm.toLocaleString()} km`;
 
@@ -406,7 +403,7 @@ function setState(next: unknown): void {
   const obj = next as Partial<EclipseDemoState> & { distancePresetKey?: DistancePresetKey };
 
   if (Number.isFinite(obj.moonLonDeg)) moonLon.value = String(clamp(obj.moonLonDeg as number, 0, 360));
-  if (Number.isFinite(obj.nodeLonDeg)) nodeLon.value = String(clamp(obj.nodeLonDeg as number, 0, 360));
+  if (Number.isFinite(obj.nodeLonDeg)) state.nodeLonDeg = clamp(obj.nodeLonDeg as number, 0, 360);
   if (Number.isFinite(obj.orbitalTiltDeg)) tilt.value = String(clamp(obj.orbitalTiltDeg as number, 0, 10));
 
   if (obj.distancePresetKey && obj.distancePresetKey in DISTANCE_PRESETS_KM) {
@@ -479,7 +476,7 @@ const demoModes = createDemoModes({
         heading: "How to use",
         type: "bullets",
         items: [
-          "Use New/Full buttons to set phase, then adjust node longitude $\\Omega$ and tilt $i$.",
+          "Use New/Full buttons to set phase, then drag the nodes or adjust tilt $i$.",
           "Eclipses require syzygy (New/Full) and $|\\beta|$ small enough for the chosen Earth–Moon distance."
         ]
       }
@@ -993,9 +990,8 @@ function tick(t: number) {
     state.sunLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + SUN_RATE_DEG_PER_DAY * dtDays);
     state.moonLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.moonLonDeg + MOON_RATE_DEG_PER_DAY * dtDays);
     state.nodeLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.nodeLonDeg + NODE_RATE_DEG_PER_DAY * dtDays);
-    // Write rounded values back to sliders for display
+    // Write rounded value back to moon slider for display (node has no slider)
     moonLon.value = String(Math.round(state.moonLonDeg));
-    nodeLon.value = String(Math.round(state.nodeLonDeg));
     render();
     rafId = requestAnimationFrame(tick);
     return;
@@ -1009,9 +1005,8 @@ function tick(t: number) {
     state.sunLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + SUN_RATE_DEG_PER_DAY * dtDays);
     state.moonLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.moonLonDeg + MOON_RATE_DEG_PER_DAY * dtDays);
     state.nodeLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.nodeLonDeg + NODE_RATE_DEG_PER_DAY * dtDays);
-    // Write rounded values back to sliders for display
+    // Write rounded value back to moon slider for display (node has no slider)
     moonLon.value = String(Math.round(state.moonLonDeg));
-    nodeLon.value = String(Math.round(state.nodeLonDeg));
     render();
 
     if (animateYearRemainingDays <= 0) {
@@ -1043,8 +1038,8 @@ function tick(t: number) {
     }
 
     state.sunLonDeg = simulation.sunLonDeg;
+    state.nodeLonDeg = simulation.nodeLonDeg;
     moonLon.value = String(simulation.moonLonDeg);
-    nodeLon.value = String(simulation.nodeLonDeg);
     render();
 
     const pct = Math.min(1, simulation.tDays / simulation.totalDays);
@@ -1155,7 +1150,7 @@ runSimulation.addEventListener("click", () => {
     totalDays,
     sunLonDeg: state.sunLonDeg,
     moonLonDeg: EclipseGeometryModel.normalizeAngleDeg(Number(moonLon.value)),
-    nodeLonDeg: EclipseGeometryModel.normalizeAngleDeg(Number(nodeLon.value)),
+    nodeLonDeg: EclipseGeometryModel.normalizeAngleDeg(state.nodeLonDeg),
     orbitalTiltDeg: clamp(Number(tilt.value), 0, 10),
     earthMoonDistanceKm: state.earthMoonDistanceKm,
     counts: {
@@ -1207,10 +1202,6 @@ copyResults.addEventListener("click", () => {
 moonLon.addEventListener("input", () => {
   stopTimeActions();
   setPhasePressed(null);
-  render();
-});
-nodeLon.addEventListener("input", () => {
-  stopTimeActions();
   render();
 });
 tilt.addEventListener("input", () => {
@@ -1272,6 +1263,29 @@ function handleDragEnd() {
   if (!isDragging) return;
   isDragging = false;
   moonDot.classList.remove("stage__moon--dragging");
+}
+
+/* ------------------------------------------------------------------ */
+/*  Shelf tab switching                                                */
+/* ------------------------------------------------------------------ */
+
+const tabButtons = document.querySelectorAll<HTMLButtonElement>(".cp-tabs [role='tab']");
+
+function switchTab(selectedBtn: HTMLButtonElement) {
+  for (const btn of tabButtons) {
+    const isSelected = btn === selectedBtn;
+    btn.setAttribute("aria-selected", String(isSelected));
+    btn.classList.toggle("cp-tab--active", isSelected);
+    const panelId = btn.getAttribute("aria-controls");
+    if (panelId) {
+      const panel = document.getElementById(panelId);
+      if (panel) panel.hidden = !isSelected;
+    }
+  }
+}
+
+for (const btn of tabButtons) {
+  btn.addEventListener("click", () => switchTab(btn));
 }
 
 moonDot.addEventListener("mousedown", handleDragStart);
