@@ -19,6 +19,54 @@ const withBase = (path: string) => {
     </p>
   </section>
 
+  <section class="about-section tldr" aria-label="At a Glance">
+    <h2>At a Glance</h2>
+    <div class="cp-prose">
+      <p>
+        14 browser-based astronomy demos. No login, no install. Each one ships
+        with <strong>Station Mode</strong> (structured data collection),
+        <strong>Challenge Mode</strong> (self-assessment), and
+        <strong>Export</strong> (copy your table into a lab doc).
+      </p>
+      <table class="design-table">
+        <thead>
+          <tr><th>Design choice</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Station Mode data tables</td>
+            <td>Bridges "toy" to "science" — students produce exportable evidence</td>
+          </tr>
+          <tr>
+            <td>Predict before Play</td>
+            <td>Committing to a prediction activates prior knowledge (Mazur 1997)</td>
+          </tr>
+          <tr>
+            <td>Sanity checks on every card</td>
+            <td>Self-correction without instructor bottleneck</td>
+          </tr>
+          <tr>
+            <td>One relationship per demo</td>
+            <td>Minimizes cognitive load (Sweller 1988); advanced options are hidden</td>
+          </tr>
+          <tr>
+            <td>Print-first worksheets</td>
+            <td>Classrooms still run on paper; Cmd+P produces clean PDFs</td>
+          </tr>
+          <tr>
+            <td>Connection sentences</td>
+            <td>Forces transfer: "This matters for X because..." prevents isolated activities</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>Honest caveat:</strong> no pre/post assessment data yet. The design
+        is grounded in published PER (see <a href="#evidence">Evidence Base</a> below),
+        but the real test is LPCI/TOAST gains in a live classroom.
+      </p>
+    </div>
+  </section>
+
   <section class="about-section" aria-label="What is Cosmic Playground?">
     <h2>What is Cosmic Playground?</h2>
     <div class="cp-prose">
@@ -94,7 +142,7 @@ const withBase = (path: string) => {
     </div>
   </section>
 
-  <section class="about-section" aria-label="Evidence Base">
+  <section class="about-section" id="evidence" aria-label="Evidence Base">
     <h2>Evidence Base</h2>
     <div class="cp-prose">
       <p>
@@ -189,6 +237,37 @@ const withBase = (path: string) => {
     border-radius: var(--cp-r-2);
     border: 1px solid var(--cp-border-subtle);
     background: var(--cp-chip-bg);
+  }
+
+  .tldr {
+    padding: var(--cp-space-4);
+    border-radius: var(--cp-r-2);
+    border: 1px solid var(--cp-border-subtle);
+    background: var(--cp-chip-bg);
+  }
+
+  .design-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    margin: var(--cp-space-3) 0;
+  }
+
+  .design-table th,
+  .design-table td {
+    text-align: left;
+    padding: var(--cp-space-2) var(--cp-space-3);
+    border-bottom: 1px solid var(--cp-border-subtle);
+  }
+
+  .design-table th {
+    font-weight: var(--cp-font-semibold);
+    color: var(--cp-text2);
+  }
+
+  .design-table td:first-child {
+    font-weight: 500;
+    white-space: nowrap;
   }
 
   .principles {
