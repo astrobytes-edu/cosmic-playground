@@ -1,4 +1,4 @@
-import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
+import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, initTabs, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
 import { clamp, formatNumber, formatDateFromDayOfYear, formatDayLength, formatLatitude, seasonFromPhaseNorth, oppositeSeason, orbitPosition, terminatorShiftX, latitudeBandEllipse, globeAxisEndpoints, animationProgress, easeInOutCubic, shortestDayDelta, orbitSeasonLabelPositions, polarisIndicatorEndpoints, seasonColorClass, contextualMessage, dayLengthArcGeometry } from "./logic";
@@ -979,33 +979,6 @@ for (const btn of overlayButtons) {
   });
 }
 
-// --- Tab switching (shelf) ---
-function initTabs() {
-  const tabButtons = document.querySelectorAll<HTMLButtonElement>('.cp-tabs [role="tab"]');
-  const tabPanels = document.querySelectorAll<HTMLElement>('.cp-tab-panel[role="tabpanel"]');
-
-  for (const btn of tabButtons) {
-    btn.addEventListener("click", () => {
-      // Deactivate all
-      for (const b of tabButtons) {
-        b.classList.remove("cp-tab--active");
-        b.setAttribute("aria-selected", "false");
-      }
-      for (const p of tabPanels) {
-        p.hidden = true;
-      }
-      // Activate clicked
-      btn.classList.add("cp-tab--active");
-      btn.setAttribute("aria-selected", "true");
-      const panelId = btn.getAttribute("aria-controls");
-      if (panelId) {
-        const panel = document.getElementById(panelId);
-        if (panel) panel.hidden = false;
-      }
-    });
-  }
-}
-
 // --- Keyboard shortcuts ---
 document.addEventListener("keydown", (e) => {
   // Don't intercept when focus is on an input/textarea (e.g. slider keyboard usage)
@@ -1071,7 +1044,6 @@ document.addEventListener("keydown", (e) => {
 // --- Initialize ---
 initSeasonLabels();
 initHourGrid();
-initTabs();
 render();
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
@@ -1084,4 +1056,5 @@ initMath(document);
 const demoRoot = document.getElementById("cp-demo");
 if (demoRoot) {
   initPopovers(demoRoot);
+  initTabs(demoRoot);
 }
