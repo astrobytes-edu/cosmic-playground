@@ -2,8 +2,8 @@
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
-import DemoGlyph from "../../components/DemoGlyph.astro";
-import { pickDemoGlyph } from "../../lib/demoGlyphs";
+import DemoIllustration from "../../components/DemoIllustration.astro";
+import { topicColor, primaryTopic } from "../../lib/topicColors";
 import Icon from "../../components/Icon.astro";
 
 const demos = await getCollection("demos");
@@ -78,10 +78,12 @@ const sortedDemos = [...demos].sort((a, b) =>
     </div>
     <div class="instr-grid">
       {sortedDemos.map((d) => {
-        const glyph = pickDemoGlyph(d.data.topics, d.slug, d.data.title);
+        const color = topicColor(primaryTopic(d.data.topics));
         return (
-          <a class="instr-link-card cp-card" href={withBase(`stations/${d.slug}/`)}>
-            <DemoGlyph name={glyph} size={20} class="instr-link-card__glyph" />
+          <a class="instr-link-card cp-card" href={withBase(`stations/${d.slug}/`)} style={`--topic-color: ${color}`}>
+            <div class="instr-link-card__illus">
+              <DemoIllustration slug={d.slug} />
+            </div>
             <div>
               <h3>{d.data.title}</h3>
               <span class="instr-link-card__time">{d.data.time_minutes} min</span>
@@ -104,10 +106,12 @@ const sortedDemos = [...demos].sort((a, b) =>
     </div>
     <div class="instr-grid">
       {sortedDemos.map((d) => {
-        const glyph = pickDemoGlyph(d.data.topics, d.slug, d.data.title);
+        const color = topicColor(primaryTopic(d.data.topics));
         return (
-          <a class="instr-link-card cp-card" href={withBase(`instructor/${d.slug}/`)}>
-            <DemoGlyph name={glyph} size={20} class="instr-link-card__glyph" />
+          <a class="instr-link-card cp-card" href={withBase(`instructor/${d.slug}/`)} style={`--topic-color: ${color}`}>
+            <div class="instr-link-card__illus">
+              <DemoIllustration slug={d.slug} />
+            </div>
             <div>
               <h3>{d.data.title}</h3>
               <span class="instr-link-card__time">{d.data.misconceptions.length} misconceptions targeted</span>
@@ -218,10 +222,23 @@ const sortedDemos = [...demos].sort((a, b) =>
     color: var(--cp-title-strong);
   }
 
-  .instr-link-card__glyph {
-    color: var(--cp-muted);
+  .instr-link-card__illus {
+    width: 36px;
     flex-shrink: 0;
-    margin-top: 2px;
+    border-radius: var(--cp-r-1);
+    overflow: clip;
+    border: 1px solid var(--cp-border-subtle);
+    background:
+      radial-gradient(
+        ellipse at 50% 50%,
+        color-mix(in srgb, var(--topic-color) 6%, transparent) 0%,
+        transparent 70%
+      );
+    transition: border-color 200ms var(--cp-ease-out);
+  }
+
+  .instr-link-card:hover .instr-link-card__illus {
+    border-color: color-mix(in srgb, var(--topic-color) 30%, transparent);
   }
 
   .instr-link-card__meta {

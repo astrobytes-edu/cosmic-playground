@@ -2,8 +2,8 @@
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
-import DemoGlyph from "../../components/DemoGlyph.astro";
-import { pickDemoGlyph } from "../../lib/demoGlyphs";
+import DemoIllustration from "../../components/DemoIllustration.astro";
+import { topicColor, primaryTopic } from "../../lib/topicColors";
 
 const demos = await getCollection("demos");
 const instructorEntries = await getCollection("instructor");
@@ -44,10 +44,12 @@ const sortedDemos = [...demos].sort((a, b) =>
   <div class="instr-grid">
     {sortedDemos.map((d) => {
       const count = sectionCountBySlug.get(d.slug) ?? 0;
-      const glyph = pickDemoGlyph(d.data.topics, d.slug, d.data.title);
+      const color = topicColor(primaryTopic(d.data.topics));
       return (
-        <a class="instr-card cp-card" href={withBase(`instructor/${d.slug}/`)}>
-          <DemoGlyph name={glyph} size={28} class="instr-card__glyph" />
+        <a class="instr-card cp-card" href={withBase(`instructor/${d.slug}/`)} style={`--topic-color: ${color}`}>
+          <div class="instr-card__illus">
+            <DemoIllustration slug={d.slug} />
+          </div>
           <div class="instr-card__body">
             <h2 class="instr-card__title">{d.data.title}</h2>
             <div class="instr-card__meta">
@@ -108,14 +110,23 @@ const sortedDemos = [...demos].sort((a, b) =>
     border-color: var(--cp-accent);
   }
 
-  .instr-card__glyph {
-    color: var(--cp-muted);
+  .instr-card__illus {
+    width: 48px;
     flex-shrink: 0;
-    transition: color var(--cp-transition-fast) var(--cp-ease-out);
+    border-radius: var(--cp-r-1);
+    overflow: clip;
+    border: 1px solid var(--cp-border-subtle);
+    background:
+      radial-gradient(
+        ellipse at 50% 50%,
+        color-mix(in srgb, var(--topic-color) 6%, transparent) 0%,
+        transparent 70%
+      );
+    transition: border-color 200ms var(--cp-ease-out);
   }
 
-  .instr-card:hover .instr-card__glyph {
-    color: var(--cp-accent);
+  .instr-card:hover .instr-card__illus {
+    border-color: color-mix(in srgb, var(--topic-color) 30%, transparent);
   }
 
   .instr-card__body {
