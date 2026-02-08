@@ -1,7 +1,7 @@
 import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
-import { clamp, formatNumber, formatDateFromDayOfYear, seasonFromPhaseNorth, oppositeSeason, orbitPosition, axisEndpoint, diskMarkerY } from "./logic";
+import { clamp, formatNumber, formatDateFromDayOfYear, formatDayLength, seasonFromPhaseNorth, oppositeSeason, orbitPosition, terminatorShiftX, latitudeBandEllipse, globeAxisEndpoints } from "./logic";
 import type { Season } from "./logic";
 
 const dayOfYearEl = document.querySelector<HTMLInputElement>("#dayOfYear");
@@ -43,12 +43,16 @@ const seasonSouthValueEl =
 
 const earthOrbitDotEl = document.querySelector<SVGCircleElement>("#earthOrbitDot");
 const orbitLabelEl = document.querySelector<SVGTextElement>("#orbitLabel");
-const axisLineEl = document.querySelector<SVGLineElement>("#axisLine");
-const equatorLineEl = document.querySelector<SVGLineElement>("#equatorLine");
-const subsolarDotEl = document.querySelector<SVGCircleElement>("#subsolarDot");
-const subsolarLabelEl = document.querySelector<SVGTextElement>("#subsolarLabel");
-const observerDotEl = document.querySelector<SVGCircleElement>("#observerDot");
-const observerLabelEl = document.querySelector<SVGTextElement>("#observerLabel");
+
+// Globe elements (replacing the old tilt-disk panel)
+const terminatorEl = document.querySelector<SVGEllipseElement>("#terminator");
+const equatorBandEl = document.querySelector<SVGEllipseElement>("#equator-band");
+const tropicNEl = document.querySelector<SVGEllipseElement>("#tropic-n");
+const tropicSEl = document.querySelector<SVGEllipseElement>("#tropic-s");
+const arcticNEl = document.querySelector<SVGEllipseElement>("#arctic-n");
+const arcticSEl = document.querySelector<SVGEllipseElement>("#arctic-s");
+const globeAxisEl = document.querySelector<SVGLineElement>("#globe-axis");
+const globeMarkerEl = document.querySelector<SVGCircleElement>("#globe-marker");
 
 if (
   !dayOfYearEl ||
@@ -77,12 +81,14 @@ if (
   !seasonSouthValueEl ||
   !earthOrbitDotEl ||
   !orbitLabelEl ||
-  !axisLineEl ||
-  !equatorLineEl ||
-  !subsolarDotEl ||
-  !subsolarLabelEl ||
-  !observerDotEl ||
-  !observerLabelEl
+  !terminatorEl ||
+  !equatorBandEl ||
+  !tropicNEl ||
+  !tropicSEl ||
+  !arcticNEl ||
+  !arcticSEl ||
+  !globeAxisEl ||
+  !globeMarkerEl
 ) {
   throw new Error("Missing required DOM elements for seasons demo.");
 }
@@ -119,12 +125,15 @@ const seasonSouthValue = seasonSouthValueEl;
 
 const earthOrbitDot = earthOrbitDotEl;
 const orbitLabel = orbitLabelEl;
-const axisLine = axisLineEl;
-const equatorLine = equatorLineEl;
-const subsolarDot = subsolarDotEl;
-const subsolarLabel = subsolarLabelEl;
-const observerDot = observerDotEl;
-const observerLabel = observerLabelEl;
+
+const terminator = terminatorEl;
+const equatorBand = equatorBandEl;
+const tropicN = tropicNEl;
+const tropicS = tropicSEl;
+const arcticN = arcticNEl;
+const arcticS = arcticSEl;
+const globeAxis = globeAxisEl;
+const globeMarker = globeMarkerEl;
 
 stationMode.disabled = false;
 challengeMode.disabled = true;
@@ -177,7 +186,7 @@ const demoModes = createDemoModes({
     ],
     getSnapshotRow: () => {
       const day = clamp(Math.round(state.dayOfYear), 1, 365);
-      const axialTiltDeg = clamp(Number(state.axialTiltDeg), 0, 45);
+      const axialTiltDeg = clamp(Number(state.axialTiltDeg), 0, 90);
       const latitudeDeg = clamp(Number(state.latitudeDeg), -90, 90);
 
       const declinationDegValue = SeasonsModel.sunDeclinationDeg({
@@ -214,7 +223,7 @@ const demoModes = createDemoModes({
       {
         label: "Add anchor dates",
         getRows: () => {
-          const axialTiltDeg = clamp(Number(state.axialTiltDeg), 0, 45);
+          const axialTiltDeg = clamp(Number(state.axialTiltDeg), 0, 90);
           const latitudeDeg = clamp(Number(state.latitudeDeg), -90, 90);
           const anchors = [
             { label: "Mar equinox", day: 80 },
@@ -325,6 +334,84 @@ function step(t: number) {
   rafId = window.requestAnimationFrame(step);
 }
 
+// Globe geometry constants (the globe is centred at (0,0) inside its translated SVG group)
+const GLOBE_R = 155;
+const GLOBE_AXIS_LEN = 180;   // extends a bit beyond the globe radius
+const GLOBE_CX = 0;           // centre within the <g> translate
+const GLOBE_CY = 0;
+
+/** Set ellipse attributes in one call. */
+function setEllipse(el: SVGEllipseElement, cx: number, cy: number, rx: number, ry: number): void {
+  el.setAttribute("cx", formatNumber(cx, 2));
+  el.setAttribute("cy", formatNumber(cy, 2));
+  el.setAttribute("rx", formatNumber(Math.abs(rx), 2));
+  el.setAttribute("ry", formatNumber(Math.abs(ry), 2));
+}
+
+/**
+ * Render the globe panel: terminator, latitude bands, axis, marker.
+ */
+function renderGlobe(args: {
+  axialTiltDeg: number;
+  latitudeDeg: number;
+  declinationDeg: number;
+}) {
+  const tilt = args.axialTiltDeg;
+
+  // --- Terminator ---
+  // The terminator is a tall ellipse covering the "night" half.
+  // Its cx shifts based on declination: positive declination means more of
+  // the northern hemisphere is lit, so the dark ellipse shifts to the left.
+  const tShift = terminatorShiftX(args.declinationDeg, GLOBE_R);
+  // The terminator ellipse is wide enough to cover half the globe.
+  // We place it so its near edge sits at the shift position.
+  const termRx = GLOBE_R;
+  const termRy = GLOBE_R;
+  // Shift the dark ellipse to the opposite side of the lit hemisphere.
+  // Positive declination = more N lit = terminator ellipse centre moves left
+  // (the dark half is on the far side of the lit area).
+  terminator.setAttribute("cx", formatNumber(-tShift - termRx, 2));
+  terminator.setAttribute("cy", "0");
+  terminator.setAttribute("rx", formatNumber(termRx, 2));
+  terminator.setAttribute("ry", formatNumber(termRy, 2));
+
+  // --- Latitude bands ---
+  // Tropics at +/- tilt, arctic circles at +/- (90 - tilt)
+  const tropicLat = tilt;
+  const arcticLat = 90 - tilt;
+
+  const eqBand = latitudeBandEllipse(0, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  setEllipse(equatorBand, GLOBE_CX, eqBand.cy, eqBand.rx, eqBand.ry);
+
+  const tnBand = latitudeBandEllipse(tropicLat, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  setEllipse(tropicN, GLOBE_CX, tnBand.cy, tnBand.rx, tnBand.ry);
+
+  const tsBand = latitudeBandEllipse(-tropicLat, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  setEllipse(tropicS, GLOBE_CX, tsBand.cy, tsBand.rx, tsBand.ry);
+
+  const anBand = latitudeBandEllipse(arcticLat, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  setEllipse(arcticN, GLOBE_CX, anBand.cy, anBand.rx, anBand.ry);
+
+  const asBand = latitudeBandEllipse(-arcticLat, tilt, GLOBE_CX, GLOBE_CY, GLOBE_R);
+  setEllipse(arcticS, GLOBE_CX, asBand.cy, asBand.rx, asBand.ry);
+
+  // --- Globe axis ---
+  const axis = globeAxisEndpoints(tilt, GLOBE_CX, GLOBE_CY, GLOBE_AXIS_LEN);
+  globeAxis.setAttribute("x1", formatNumber(axis.x1, 2));
+  globeAxis.setAttribute("y1", formatNumber(axis.y1, 2));
+  globeAxis.setAttribute("x2", formatNumber(axis.x2, 2));
+  globeAxis.setAttribute("y2", formatNumber(axis.y2, 2));
+
+  // --- Latitude marker ---
+  // Place on the visible (lit-side) edge of the globe at the observer's latitude.
+  // Use cos(lat) for the x offset (on the globe surface) and sin(lat) for y.
+  const latRad = (args.latitudeDeg * Math.PI) / 180;
+  const markerX = GLOBE_R * Math.cos(latRad) * 0.98; // slightly inset
+  const markerY = -GLOBE_R * Math.sin(latRad) * 0.98;
+  globeMarker.setAttribute("cx", formatNumber(markerX, 2));
+  globeMarker.setAttribute("cy", formatNumber(markerY, 2));
+}
+
 function renderStage(args: {
   dayOfYear: number;
   axialTiltDeg: number;
@@ -341,38 +428,17 @@ function renderStage(args: {
   earthOrbitDot.setAttribute("cy", formatNumber(y, 2));
   orbitLabel.textContent = `r ~ ${formatNumber(args.distanceAu, 3)} AU`;
 
-  // Tilt panel
-  const diskR = 92;
-
-  const axisEnd = axisEndpoint(args.axialTiltDeg, 120);
-  axisLine.setAttribute("x1", formatNumber(-axisEnd.x, 2));
-  axisLine.setAttribute("y1", formatNumber(-axisEnd.y, 2));
-  axisLine.setAttribute("x2", formatNumber(axisEnd.x, 2));
-  axisLine.setAttribute("y2", formatNumber(axisEnd.y, 2));
-
-  // Keep the equator line horizontal (schematic), regardless of axis tilt.
-  equatorLine.setAttribute("x1", "-120");
-  equatorLine.setAttribute("y1", "0");
-  equatorLine.setAttribute("x2", "120");
-  equatorLine.setAttribute("y2", "0");
-
-  // Subsolar point at latitude = declination (schematic marker on the sun-facing meridian).
-  const sunFacingX = 0.85 * diskR;
-  const subY = diskMarkerY(args.declinationDeg, diskR);
-  subsolarDot.setAttribute("cx", formatNumber(sunFacingX, 2));
-  subsolarDot.setAttribute("cy", formatNumber(subY, 2));
-  subsolarLabel.textContent = `delta = ${formatNumber(args.declinationDeg, 1)} deg`;
-
-  // Observer marker at chosen latitude.
-  const obsY = diskMarkerY(args.latitudeDeg, diskR);
-  observerDot.setAttribute("cx", formatNumber(sunFacingX, 2));
-  observerDot.setAttribute("cy", formatNumber(obsY, 2));
-  observerLabel.textContent = `lat = ${Math.round(args.latitudeDeg)} deg`;
+  // Globe panel
+  renderGlobe({
+    axialTiltDeg: args.axialTiltDeg,
+    latitudeDeg: args.latitudeDeg,
+    declinationDeg: args.declinationDeg,
+  });
 }
 
 function render() {
   const day = clamp(Math.round(state.dayOfYear), 1, 365);
-  const axialTiltDeg = clamp(Number(state.axialTiltDeg), 0, 45);
+  const axialTiltDeg = clamp(Number(state.axialTiltDeg), 0, 90);
   const latitudeDeg = clamp(Number(state.latitudeDeg), -90, 90);
 
   state.dayOfYear = day;
@@ -410,7 +476,7 @@ function render() {
   latitudeValue.textContent = `${Math.round(latitudeDeg)} deg`;
 
   declinationValue.textContent = formatNumber(declinationDegValue, 1);
-  dayLengthValue.textContent = formatNumber(dayLengthHoursValue, 2);
+  dayLengthValue.textContent = formatDayLength(dayLengthHoursValue);
   noonAltitudeValue.textContent = formatNumber(noonAltitudeDegValue, 1);
   distanceAuValue.textContent = formatNumber(distanceAu, 3);
   seasonNorthValue.textContent = north;
@@ -442,7 +508,7 @@ type SeasonsDemoState = {
 
 function getState(): SeasonsDemoState {
   const day = clamp(Math.round(state.dayOfYear), 1, 365);
-  const axialTiltDeg = clamp(Number(state.axialTiltDeg), 0, 45);
+  const axialTiltDeg = clamp(Number(state.axialTiltDeg), 0, 90);
   const latitudeDeg = clamp(Number(state.latitudeDeg), -90, 90);
 
   const declinationDegValue = SeasonsModel.sunDeclinationDeg({
@@ -473,7 +539,7 @@ function setState(next: unknown): void {
   const obj = next as Partial<SeasonsDemoState>;
 
   if (Number.isFinite(obj.dayOfYear)) state.dayOfYear = clamp(obj.dayOfYear as number, 1, 365);
-  if (Number.isFinite(obj.axialTiltDeg)) state.axialTiltDeg = clamp(obj.axialTiltDeg as number, 0, 45);
+  if (Number.isFinite(obj.axialTiltDeg)) state.axialTiltDeg = clamp(obj.axialTiltDeg as number, 0, 90);
   if (Number.isFinite(obj.latitudeDeg)) state.latitudeDeg = clamp(obj.latitudeDeg as number, -90, 90);
 
   stopAnimation();
@@ -483,7 +549,7 @@ function setState(next: unknown): void {
 function exportResults(st: SeasonsDemoState): ExportPayloadV1 {
   const day = clamp(Math.round(st.dayOfYear), 1, 365);
   const dateLabel = formatDateFromDayOfYear(day);
-  const axialTiltDeg = clamp(Number(st.axialTiltDeg), 0, 45);
+  const axialTiltDeg = clamp(Number(st.axialTiltDeg), 0, 90);
   const latitudeDeg = clamp(Number(st.latitudeDeg), -90, 90);
 
   const distanceAu = SeasonsModel.earthSunDistanceAu({ dayOfYear: day });

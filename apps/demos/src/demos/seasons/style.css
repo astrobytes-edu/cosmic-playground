@@ -119,6 +119,46 @@
   fill: color-mix(in srgb, var(--cp-text) 85%, transparent);
 }
 
+/* -- Globe view ----------------------------------------- */
+.stage__globe {
+  filter: drop-shadow(var(--cp-glow-planet));
+}
+
+.stage__lat-band {
+  fill: none;
+  stroke: color-mix(in srgb, var(--cp-celestial-orbit) 50%, transparent);
+  stroke-width: 1;
+}
+
+.stage__lat-band--equator {
+  stroke: color-mix(in srgb, white 50%, transparent);
+  stroke-width: 1.5;
+}
+
+.stage__lat-band--arctic {
+  stroke-dasharray: 4 3;
+}
+
+.stage__lat-band--tropic {
+  stroke-dasharray: 6 4;
+}
+
+.stage__terminator {
+  fill: color-mix(in srgb, var(--cp-bg0) 60%, transparent);
+}
+
+.stage__globe-axis {
+  stroke: color-mix(in srgb, var(--cp-muted) 60%, transparent);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  stroke-linecap: round;
+}
+
+.stage__globe-marker {
+  fill: var(--cp-accent-rose);
+  filter: drop-shadow(0 0 4px var(--cp-accent-rose));
+}
+
 /* -- Entry animations -------------------------------- */
 .cp-demo__controls {
   animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;

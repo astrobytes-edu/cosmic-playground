@@ -48,7 +48,7 @@
               id="tilt"
               type="range"
               min="0"
-              max="45"
+              max="90"
               value="23.5"
               step="0.1"
               data-tooltip-source="#tiltValue"
@@ -161,30 +161,34 @@
             </g>
           </g>
 
-          <!-- Sunlight/tilt panel -->
-          <g id="tiltPanel" transform="translate(420, 40)">
-            <text class="stage__title" x="0" y="0">Sunlight geometry (toy)</text>
-
-            <g transform="translate(240, 190)">
-              <!-- Sun rays -->
-              <line class="stage__ray" x1="-220" y1="0" x2="-90" y2="0" />
-              <polygon class="stage__ray" points="-90,0 -108,-8 -108,8" />
-              <text class="stage__label" x="-170" y="-12" text-anchor="middle">Sunlight</text>
-
-              <!-- Earth disk -->
-              <circle id="earthDisk" class="stage__earthDisk" cx="0" cy="0" r="92" />
-
-              <!-- Axis + equator -->
-              <line id="axisLine" class="stage__axis" x1="0" y1="-120" x2="0" y2="120" />
-              <line id="equatorLine" class="stage__equator" x1="-120" y1="0" x2="120" y2="0" />
-
-              <!-- Subsolar and observer markers -->
-              <circle id="subsolarDot" class="stage__markerSun" cx="78" cy="0" r="6" />
-              <text id="subsolarLabel" class="stage__label" x="78" y="-14" text-anchor="middle"></text>
-
-              <circle id="observerDot" class="stage__markerObs" cx="78" cy="0" r="6" />
-              <text id="observerLabel" class="stage__label" x="78" y="22" text-anchor="middle"></text>
+          <!-- Globe view (replaces flat tilt disk) -->
+          <g class="globe" transform="translate(670, 210)">
+            <defs>
+              <clipPath id="globe-clip"><circle r="155"/></clipPath>
+              <radialGradient id="globeGrad" cx="35%" cy="35%">
+                <stop offset="0%" stop-color="var(--cp-celestial-earth)" stop-opacity="0.95"/>
+                <stop offset="100%" stop-color="var(--cp-celestial-earth)" stop-opacity="0.5"/>
+              </radialGradient>
+            </defs>
+            <!-- Globe body -->
+            <circle class="stage__globe" r="155" fill="url(#globeGrad)"/>
+            <!-- Clipped group for internal features -->
+            <g clip-path="url(#globe-clip)">
+              <!-- Night-side terminator (drawn first so latitude bands show through) -->
+              <ellipse id="terminator" class="stage__terminator"/>
+              <!-- Latitude bands -->
+              <ellipse id="equator-band" class="stage__lat-band stage__lat-band--equator"/>
+              <ellipse id="tropic-n" class="stage__lat-band stage__lat-band--tropic"/>
+              <ellipse id="tropic-s" class="stage__lat-band stage__lat-band--tropic"/>
+              <ellipse id="arctic-n" class="stage__lat-band stage__lat-band--arctic"/>
+              <ellipse id="arctic-s" class="stage__lat-band stage__lat-band--arctic"/>
             </g>
+            <!-- Axis line (extends beyond globe) -->
+            <line id="globe-axis" class="stage__globe-axis"/>
+            <!-- Latitude marker -->
+            <circle id="globe-marker" class="stage__globe-marker" r="6"/>
+            <!-- Globe title -->
+            <text class="stage__title" y="-175" text-anchor="middle">Globe View</text>
           </g>
 
           <text class="stage__note" x="40" y="392">
@@ -202,7 +206,7 @@
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Day length</div>
-            <div class="cp-readout__value"><span id="dayLengthValue"></span> <span class="cp-readout__unit">h</span></div>
+            <div class="cp-readout__value"><span id="dayLengthValue"></span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Noon altitude</div>

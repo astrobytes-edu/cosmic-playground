@@ -60,13 +60,18 @@ export function oppositeSeason(season: Season): Season {
 /**
  * Compute the earth's position on the orbit diagram.
  * Returns { x, y } in the orbit SVG coordinate system.
+ *
+ * `distExaggeration` amplifies the visual deviation from a circle so that
+ * Earth's small orbital eccentricity (e ~ 0.017) is actually visible.
+ * Legacy value is 8; set to 0 for a true-scale (nearly circular) orbit.
  */
 export function orbitPosition(
   angleRad: number,
   distanceAu: number,
-  orbitR: number
+  orbitR: number,
+  distExaggeration = 8
 ): { x: number; y: number } {
-  const rScaled = orbitR * clamp(distanceAu, 0.95, 1.05);
+  const rScaled = orbitR * (1 + distExaggeration * (distanceAu - 1));
   return {
     x: rScaled * Math.cos(angleRad),
     y: rScaled * Math.sin(angleRad),
@@ -92,4 +97,93 @@ export function axisEndpoint(axialTiltDeg: number, length: number): { x: number;
 export function diskMarkerY(angleDeg: number, diskR: number, scale = 0.85): number {
   const rad = (angleDeg * Math.PI) / 180;
   return -Math.sin(rad) * scale * diskR;
+}
+
+/**
+ * Format decimal hours as "Xh Ym" string.
+ * E.g. 14.53 -> "14h 32m"
+ */
+export function formatDayLength(hours: number): string {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  return `${h}h ${String(m).padStart(2, "0")}m`;
+}
+
+// ---------------------------------------------------------------------------
+// Globe projection helpers (pure geometry, no DOM)
+// ---------------------------------------------------------------------------
+
+/**
+ * How far the terminator centre shifts horizontally based on solar declination.
+ *
+ * At equinox (dec = 0) the terminator bisects the globe vertically (shift = 0).
+ * At solstice the lit hemisphere expands, pushing the terminator sideways.
+ * Positive shift = more of the northern hemisphere is lit (summer solstice).
+ */
+export function terminatorShiftX(declinationDeg: number, globeRadius: number): number {
+  return globeRadius * Math.sin((declinationDeg * Math.PI) / 180);
+}
+
+/**
+ * Convert latitude to Y position on an orthographic globe.
+ * Returns SVG y-down coordinate: north pole at top, south at bottom.
+ */
+export function latitudeToGlobeY(latDeg: number, centerY: number, globeRadius: number): number {
+  return centerY - globeRadius * Math.sin((latDeg * Math.PI) / 180);
+}
+
+/**
+ * Compute ellipse parameters for a latitude circle on a tilted globe.
+ *
+ * The globe is viewed from the side (orthographic projection). The tilt
+ * determines how "open" latitude circles appear: at tilt = 0 the globe is
+ * seen exactly edge-on and every latitude circle collapses to a horizontal
+ * line (ry = 0).
+ *
+ * Returns { cy, rx, ry } for an SVG <ellipse> centred at cx = 0 (globe centre).
+ */
+export function latitudeBandEllipse(
+  latDeg: number,
+  tiltDeg: number,
+  centerX: number,
+  centerY: number,
+  globeRadius: number,
+): { cy: number; rx: number; ry: number } {
+  const latRad = (latDeg * Math.PI) / 180;
+  const tiltRad = (tiltDeg * Math.PI) / 180;
+
+  // Radius of this latitude circle on the sphere
+  const circleRadius = globeRadius * Math.cos(latRad);
+
+  // Projected vertical position shifts with tilt
+  const cy = centerY - globeRadius * Math.sin(latRad) * Math.cos(tiltRad);
+
+  // rx is the full circle radius (face-on from the side)
+  const rx = circleRadius;
+
+  // ry depends on the tilt: at tilt = 0 we see the globe edge-on => ry = 0
+  const ry = circleRadius * Math.sin(tiltRad);
+
+  return { cy, rx, ry };
+}
+
+/**
+ * Globe axis endpoints for a given tilt angle.
+ *
+ * The axis runs from south-pole end (x1, y1) to north-pole end (x2, y2).
+ * At tilt = 0 the axis is perfectly vertical.
+ */
+export function globeAxisEndpoints(
+  tiltDeg: number,
+  centerX: number,
+  centerY: number,
+  axisLength: number,
+): { x1: number; y1: number; x2: number; y2: number } {
+  const tiltRad = (tiltDeg * Math.PI) / 180;
+  const dx = axisLength * Math.sin(tiltRad);
+  const dy = axisLength * Math.cos(tiltRad);
+  return {
+    x1: centerX - dx, y1: centerY + dy,  // south-pole end (bottom)
+    x2: centerX + dx, y2: centerY - dy,  // north-pole end (top)
+  };
 }

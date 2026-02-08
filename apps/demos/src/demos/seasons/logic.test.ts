@@ -8,6 +8,11 @@ import {
   orbitPosition,
   axisEndpoint,
   diskMarkerY,
+  formatDayLength,
+  terminatorShiftX,
+  latitudeToGlobeY,
+  latitudeBandEllipse,
+  globeAxisEndpoints,
 } from "./logic";
 
 describe("Seasons -- UI Logic", () => {
@@ -117,11 +122,25 @@ describe("Seasons -- UI Logic", () => {
       expect(pos.x).toBeCloseTo(0, 5);
       expect(pos.y).toBeCloseTo(140, 5);
     });
-    it("clamps distance scaling to 0.95-1.05 range", () => {
-      const posLow = orbitPosition(0, 0.5, 140);
-      expect(posLow.x).toBeCloseTo(0.95 * 140, 5);
-      const posHigh = orbitPosition(0, 2.0, 140);
-      expect(posHigh.x).toBeCloseTo(1.05 * 140, 5);
+    it("default distExaggeration is 8", () => {
+      // At 1.0 AU the exaggeration term is zero regardless of factor
+      const pos = orbitPosition(0, 1.0, 150);
+      expect(pos.x).toBeCloseTo(150, 5);
+    });
+    it("exaggerates perihelion distance visually", () => {
+      // 0.983 AU, exag = 8 => rScaled = 150 * (1 + 8*(0.983-1)) = 150 * 0.864 = 129.6
+      const pos = orbitPosition(0, 0.983, 150, 8);
+      expect(pos.x).toBeCloseTo(129.6, 0);
+      expect(pos.y).toBeCloseTo(0, 0);
+    });
+    it("exaggerates aphelion distance visually", () => {
+      // 1.017 AU, exag = 8 => rScaled = 150 * (1 + 8*(1.017-1)) = 150 * 1.136 = 170.4
+      const pos = orbitPosition(0, 1.017, 150, 8);
+      expect(pos.x).toBeCloseTo(170.4, 0);
+    });
+    it("no exaggeration when factor is 0", () => {
+      const pos = orbitPosition(0, 1.017, 150, 0);
+      expect(pos.x).toBeCloseTo(150, 0);
     });
   });
 
@@ -152,6 +171,171 @@ describe("Seasons -- UI Logic", () => {
       const y1 = diskMarkerY(45, 92);
       const y2 = diskMarkerY(45, 184);
       expect(Math.abs(y2)).toBeCloseTo(Math.abs(y1) * 2, 2);
+    });
+  });
+
+  describe("formatDayLength", () => {
+    it("formats 14.53 hours as 14h 32m", () => {
+      expect(formatDayLength(14.53)).toBe("14h 32m");
+    });
+    it("formats 0 hours as 0h 00m", () => {
+      expect(formatDayLength(0)).toBe("0h 00m");
+    });
+    it("formats 24 hours as 24h 00m", () => {
+      expect(formatDayLength(24)).toBe("24h 00m");
+    });
+    it("formats 12.0 hours as 12h 00m", () => {
+      expect(formatDayLength(12.0)).toBe("12h 00m");
+    });
+    it("rounds minutes correctly", () => {
+      expect(formatDayLength(14.99)).toBe("14h 59m");
+    });
+    it("formats fractional hours near half", () => {
+      expect(formatDayLength(6.5)).toBe("6h 30m");
+    });
+    it("formats small fractional hours", () => {
+      expect(formatDayLength(1.25)).toBe("1h 15m");
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Globe projection helpers
+  // -----------------------------------------------------------------------
+
+  describe("terminatorShiftX", () => {
+    it("returns 0 for zero declination (equinox)", () => {
+      expect(terminatorShiftX(0, 150)).toBeCloseTo(0, 5);
+    });
+
+    it("shifts right (positive) for positive declination (summer solstice)", () => {
+      const shift = terminatorShiftX(23.5, 150);
+      expect(shift).toBeGreaterThan(0);
+      expect(shift).toBeLessThan(150);
+    });
+
+    it("shifts left (negative) for negative declination (winter solstice)", () => {
+      const shift = terminatorShiftX(-23.5, 150);
+      expect(shift).toBeLessThan(0);
+    });
+
+    it("is antisymmetric about zero declination", () => {
+      const pos = terminatorShiftX(23.5, 150);
+      const neg = terminatorShiftX(-23.5, 150);
+      expect(pos).toBeCloseTo(-neg, 5);
+    });
+
+    it("equals globeRadius at 90 deg declination", () => {
+      expect(terminatorShiftX(90, 150)).toBeCloseTo(150, 5);
+    });
+
+    it("scales linearly with globe radius", () => {
+      const s1 = terminatorShiftX(23.5, 100);
+      const s2 = terminatorShiftX(23.5, 200);
+      expect(s2).toBeCloseTo(s1 * 2, 5);
+    });
+  });
+
+  describe("latitudeToGlobeY", () => {
+    it("maps equator (0 deg) to centre", () => {
+      expect(latitudeToGlobeY(0, 200, 150)).toBeCloseTo(200, 0);
+    });
+
+    it("maps north pole (+90 deg) to top", () => {
+      expect(latitudeToGlobeY(90, 200, 150)).toBeCloseTo(50, 0);
+    });
+
+    it("maps south pole (-90 deg) to bottom", () => {
+      expect(latitudeToGlobeY(-90, 200, 150)).toBeCloseTo(350, 0);
+    });
+
+    it("northern latitudes are above centre (smaller y)", () => {
+      expect(latitudeToGlobeY(45, 200, 150)).toBeLessThan(200);
+    });
+
+    it("southern latitudes are below centre (larger y)", () => {
+      expect(latitudeToGlobeY(-45, 200, 150)).toBeGreaterThan(200);
+    });
+
+    it("is symmetric about equator", () => {
+      const yN = latitudeToGlobeY(30, 200, 150);
+      const yS = latitudeToGlobeY(-30, 200, 150);
+      // Both should be equally distant from 200
+      expect(200 - yN).toBeCloseTo(yS - 200, 5);
+    });
+  });
+
+  describe("latitudeBandEllipse", () => {
+    it("equator at zero tilt collapses to a horizontal line (ry = 0)", () => {
+      const band = latitudeBandEllipse(0, 0, 200, 200, 150);
+      expect(band.cy).toBeCloseTo(200, 0);
+      expect(band.rx).toBeCloseTo(150, 0);
+      expect(band.ry).toBeCloseTo(0, 0);
+    });
+
+    it("equator at 23.5 tilt has visible ry", () => {
+      const band = latitudeBandEllipse(0, 23.5, 200, 200, 150);
+      expect(band.ry).toBeGreaterThan(0);
+      expect(band.rx).toBeCloseTo(150, 0); // equator radius = globe radius
+    });
+
+    it("tropic of Cancer at 23.5 tilt is above centre", () => {
+      const band = latitudeBandEllipse(23.5, 23.5, 200, 200, 150);
+      expect(band.cy).toBeLessThan(200);
+    });
+
+    it("tropic of Capricorn at 23.5 tilt is below centre", () => {
+      const band = latitudeBandEllipse(-23.5, 23.5, 200, 200, 150);
+      expect(band.cy).toBeGreaterThan(200);
+    });
+
+    it("arctic circle has smaller rx than equator (high latitude)", () => {
+      const eq = latitudeBandEllipse(0, 23.5, 200, 200, 150);
+      const arc = latitudeBandEllipse(66.5, 23.5, 200, 200, 150);
+      expect(arc.rx).toBeLessThan(eq.rx);
+    });
+
+    it("90 deg tilt shows full circles (ry = rx)", () => {
+      const band = latitudeBandEllipse(0, 90, 200, 200, 150);
+      expect(band.ry).toBeCloseTo(band.rx, 1);
+    });
+
+    it("rx equals globe radius times cos(latitude)", () => {
+      const lat = 45;
+      const R = 150;
+      const band = latitudeBandEllipse(lat, 23.5, 200, 200, R);
+      expect(band.rx).toBeCloseTo(R * Math.cos((lat * Math.PI) / 180), 3);
+    });
+  });
+
+  describe("globeAxisEndpoints", () => {
+    it("at zero tilt the axis is vertical (dx = 0)", () => {
+      const axis = globeAxisEndpoints(0, 200, 200, 180);
+      expect(axis.x1).toBeCloseTo(200, 5); // south end
+      expect(axis.x2).toBeCloseTo(200, 5); // north end
+      expect(axis.y1).toBeGreaterThan(200); // south end below centre
+      expect(axis.y2).toBeLessThan(200);    // north end above centre
+    });
+
+    it("at 23.5 tilt has non-zero dx (tilted axis)", () => {
+      const axis = globeAxisEndpoints(23.5, 200, 200, 180);
+      expect(axis.x2).toBeGreaterThan(200); // north end tilts right
+      expect(axis.x1).toBeLessThan(200);    // south end tilts left
+    });
+
+    it("at 90 tilt the axis is horizontal", () => {
+      const axis = globeAxisEndpoints(90, 200, 200, 180);
+      expect(axis.y1).toBeCloseTo(200, 0); // both ends at centre height
+      expect(axis.y2).toBeCloseTo(200, 0);
+      expect(axis.x2 - axis.x1).toBeCloseTo(360, 0); // full horizontal span
+    });
+
+    it("axis span equals 2 * axisLength", () => {
+      const len = 180;
+      const axis = globeAxisEndpoints(23.5, 200, 200, len);
+      const dx = axis.x2 - axis.x1;
+      const dy = axis.y1 - axis.y2; // y1 > y2 (south below north)
+      const span = Math.sqrt(dx * dx + dy * dy);
+      expect(span).toBeCloseTo(2 * len, 1);
     });
   });
 });
