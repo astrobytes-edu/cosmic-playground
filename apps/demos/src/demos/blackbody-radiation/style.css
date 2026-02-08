@@ -98,8 +98,8 @@
 /* Override default shell grid: no readouts column — stage is the centerpiece */
 .cp-demo {
   grid-template-areas:
-    "controls stage"
-    "controls drawer";
+    "sidebar viz"
+    "sidebar shelf";
 }
 
 .cp-demo__controls {
