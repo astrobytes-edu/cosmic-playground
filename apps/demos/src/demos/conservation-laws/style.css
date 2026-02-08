@@ -26,11 +26,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.preset.cp-action {
-  padding: var(--cp-space-2) var(--cp-space-3);
-  font-size: var(--cp-text-sm);
-}
-
 .stage {
   display: grid;
   place-items: center;

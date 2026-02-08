@@ -1,4 +1,4 @@
-import { createDemoModes, createInstrumentRuntime, initMath, setLiveRegionText } from "@cosmic/runtime";
+import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { ConservationLawsModel, TwoBodyAnalytic } from "@cosmic/physics";
 
@@ -707,3 +707,8 @@ if (prefersReducedMotion) {
 
 recomputeOrbit();
 initMath(document);
+
+const demoRoot = document.getElementById("cp-demo");
+if (demoRoot) {
+  initPopovers(demoRoot);
+}
