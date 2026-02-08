@@ -11,11 +11,36 @@
     <div
       id="cp-demo"
       class="cp-layer-instrument cp-demo"
+      data-shell="triad"
       aria-label="Planetary Conjunctions instrument"
     >
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
-        <div class="cp-panel-header">Planetary Conjunctions: Alignments in the Sky</div>
+        <div class="cp-panel-header">Planetary Conjunctions: Synodic Periods</div>
         <div class="cp-panel-body">
+          <p class="cp-muted">
+            Watch how relative orbital motion produces conjunctions at the synodic period.
+          </p>
+
+          <div class="planet-selector">
+            <div class="planet-selector__label">Target planet</div>
+            <div class="cp-chip-group--grid planet-selector__row" role="radiogroup" aria-label="Target planet">
+              <button class="cp-chip planet-chip" data-planet="Venus" type="button" role="radio" aria-checked="false">Venus</button>
+              <button class="cp-chip planet-chip" data-planet="Mars" type="button" role="radio" aria-checked="true">Mars</button>
+              <button class="cp-chip planet-chip" data-planet="Jupiter" type="button" role="radio" aria-checked="false">Jupiter</button>
+              <button class="cp-chip planet-chip" data-planet="Saturn" type="button" role="radio" aria-checked="false">Saturn</button>
+            </div>
+          </div>
+
+          <label class="control">
+            <span>Speed</span>
+            <input id="speedSlider" type="range" min="1" max="100" step="1" value="10" />
+            <span class="control__value"><span id="speedValue">10</span>x</span>
+          </label>
+
+          <div class="cp-button-row" role="group" aria-label="Animation controls">
+            <button id="reset" class="cp-button cp-button--ghost" type="button">Reset</button>
+          </div>
+
           <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
             <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -40,34 +65,71 @@
               </div>
             </div>
           </div>
-
-          <p class="cp-muted">
-            Conjunctions and oppositions are line-of-sight alignments caused by relative motion.
-          </p>
-          <div class="cp-callout" data-kind="model">
-            This demo is currently a stub while we migrate the legacy version into the new runtime.
-          </div>
-
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage cp-stage--stub" aria-label="Visualization stage">
-        <div class="cp-stage__inner">
-          <p class="cp-stage__headline">Migration pending</p>
-          <p class="cp-muted">
-            This space will host the interactive visualization once the demo is migrated.
-          </p>
-        </div>
+      <section class="cp-demo__stage cp-stage stage" aria-label="Conjunction visualization stage">
+        <canvas class="cp-starfield" aria-hidden="true"></canvas>
+        <svg id="conjunctionSvg" class="conjunction" viewBox="0 0 600 600" role="img" aria-label="Orbital diagram showing Earth and target planet">
+          <defs>
+            <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" class="conjunction__sun-glow-inner" />
+              <stop offset="100%" class="conjunction__sun-glow-outer" />
+            </radialGradient>
+          </defs>
+
+          <!-- Earth orbit -->
+          <circle id="earthOrbit" class="conjunction__orbit conjunction__orbit--earth" cx="300" cy="300" r="100"></circle>
+          <!-- Target orbit -->
+          <circle id="targetOrbit" class="conjunction__orbit conjunction__orbit--target" cx="300" cy="300" r="200"></circle>
+
+          <!-- Conjunction line (Sun through both planets) -->
+          <line id="conjunctionLine" class="conjunction__line" x1="300" y1="300" x2="300" y2="300"></line>
+
+          <!-- Sun -->
+          <circle class="conjunction__sun" cx="300" cy="300" r="14" fill="url(#sunGlow)"></circle>
+          <circle class="conjunction__sun-core" cx="300" cy="300" r="8"></circle>
+
+          <!-- Earth -->
+          <circle id="earthDot" class="conjunction__earth" cx="400" cy="300" r="7"></circle>
+          <text id="earthLabel" class="conjunction__label" x="400" y="286">Earth</text>
+
+          <!-- Target planet -->
+          <circle id="targetDot" class="conjunction__target" cx="500" cy="300" r="7"></circle>
+          <text id="targetLabel" class="conjunction__label" x="500" y="286">Mars</text>
+
+          <!-- Conjunction flash overlay -->
+          <circle id="conjunctionFlash" class="conjunction__flash" cx="300" cy="300" r="0" opacity="0"></circle>
+        </svg>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Migration pending (stub).</p>
           <div class="cp-readout">
-            <div class="cp-readout__label">(example) Time between conjunctions (days)</div>
-            <div class="cp-readout__value">—</div>
+            <div class="cp-readout__label">Synodic period $P_{\rm syn}$</div>
+            <div class="cp-readout__value"><span id="synodicPeriod"></span> <span class="cp-readout__unit">days</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Days elapsed</div>
+            <div class="cp-readout__value"><span id="daysElapsed">0</span> <span class="cp-readout__unit">days</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Conjunctions observed</div>
+            <div class="cp-readout__value"><span id="conjunctionCount">0</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Earth longitude $\lambda_\oplus$</div>
+            <div class="cp-readout__value"><span id="earthAngle">0</span> <span class="cp-readout__unit">deg</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Target longitude $\lambda_{\rm t}$</div>
+            <div class="cp-readout__value"><span id="targetAngle">0</span> <span class="cp-readout__unit">deg</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Angular separation</div>
+            <div class="cp-readout__value"><span id="separation">0</span> <span class="cp-readout__unit">deg</span></div>
           </div>
         </div>
       </aside>
@@ -77,12 +139,13 @@
           <details class="cp-accordion" open>
             <summary>
               <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">2 bullets</span>
+              <span class="cp-accordion__meta">3 bullets</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>Conjunctions are sky alignments, not physical closeness.</li>
-                <li>Repeat timing depends on relative orbital motion (synodic period).</li>
+                <li>Venus laps Earth frequently (~584 days) because their orbits differ significantly in period.</li>
+                <li>Mars has the longest synodic period (~780 days) among naked-eye planets because its sidereal period is closest to Earth's.</li>
+                <li>As you go to outer planets (Jupiter, Saturn), synodic periods approach Earth's year (365 days) from above.</li>
               </ul>
             </div>
           </details>
@@ -90,12 +153,15 @@
           <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">stub</span>
+              <span class="cp-accordion__meta">AU / yr / $M_\odot$</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>This stub contains no physics yet; it’s a placeholder <code>/play/</code> target.</li>
-                <li>When migrated, this drawer will host deeper model notes and (optionally) math mode.</li>
+                <li>Teaching units: AU / yr / $M_{\odot}$ with $G=4\pi^2\,\mathrm{AU}^3/(\mathrm{yr}^2\,M_{\odot})$.</li>
+                <li>Orbits are shown as circles at the mean semi-major axis (eccentricity ignored for visual clarity).</li>
+                <li>Sidereal periods come from JPL J2000 approximate elements via Kepler's third law: $P^2 = a^3$.</li>
+                <li>Synodic period: $P_{\rm syn} = \dfrac{P_1 \cdot P_2}{|P_1 - P_2|}$.</li>
+                <li>A conjunction is detected when the heliocentric angular separation drops below 5 degrees.</li>
               </ul>
             </div>
           </details>
@@ -105,4 +171,3 @@
     <script type="module" src="./main.ts"></script>
   </body>
 </html>
-

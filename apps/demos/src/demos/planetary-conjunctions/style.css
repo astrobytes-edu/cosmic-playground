@@ -1,2 +1,144 @@
 @import "../../shared/stub-demo.css";
 
+.control {
+  display: grid;
+  gap: 8px;
+}
+
+.control__value {
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.planet-selector {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.planet-selector__label {
+  color: var(--cp-muted);
+  font-size: 0.9rem;
+}
+
+.planet-selector__row {
+  display: grid;
+  gap: var(--cp-space-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stage {
+  display: grid;
+  place-items: center;
+  padding: var(--cp-space-4);
+}
+
+.conjunction {
+  width: 100%;
+  height: auto;
+  max-width: 980px;
+  aspect-ratio: 1 / 1;
+  display: block;
+  border-radius: 18px;
+  border: 1px solid var(--cp-border);
+  background: radial-gradient(
+    circle at 20% 20%,
+    var(--cp-glow-teal),
+    color-mix(in srgb, var(--cp-bg0) 75%, transparent)
+  );
+}
+
+/* --- Orbit rings --- */
+.conjunction__orbit {
+  fill: none;
+  stroke: var(--cp-celestial-orbit);
+  stroke-width: 1.5;
+  opacity: 0.5;
+}
+
+.conjunction__orbit--earth {
+  stroke-dasharray: 6 4;
+}
+
+.conjunction__orbit--target {
+  stroke-dasharray: 10 5;
+}
+
+/* --- Conjunction line --- */
+.conjunction__line {
+  stroke: var(--cp-accent-amber);
+  stroke-width: 1.5;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.conjunction__line--visible {
+  opacity: 0.7;
+}
+
+/* --- Sun --- */
+.conjunction__sun {
+  opacity: 0.6;
+}
+
+.conjunction__sun-glow-inner {
+  stop-color: var(--cp-celestial-sun-core);
+}
+
+.conjunction__sun-glow-outer {
+  stop-color: transparent;
+}
+
+.conjunction__sun-core {
+  fill: var(--cp-celestial-sun-core);
+  filter: drop-shadow(var(--cp-glow-sun));
+}
+
+/* --- Planets --- */
+.conjunction__earth {
+  fill: var(--cp-celestial-earth);
+  filter: drop-shadow(var(--cp-glow-planet));
+}
+
+.conjunction__target {
+  fill: var(--cp-celestial-mars);
+  filter: drop-shadow(var(--cp-glow-planet));
+}
+
+.conjunction__label {
+  fill: var(--cp-muted);
+  font-size: 12px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* --- Conjunction flash --- */
+.conjunction__flash {
+  fill: var(--cp-accent-amber);
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  .planet-selector__row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* -- Entry animations -------------------------------- */
+.cp-demo__controls {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 1);
+}
+
+.cp-demo__readouts {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 2);
+}
+
+.cp-demo__drawer {
+  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 3);
+}

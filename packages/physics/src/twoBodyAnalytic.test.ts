@@ -54,6 +54,40 @@ describe("TwoBodyAnalytic teaching-unit relations (AU/yr/M☉)", () => {
     expect(vKms).toBeCloseTo(29.7852543656, 6);
   });
 
+  it("synodicPeriod: Earth-Venus gives ~584 days", () => {
+    const pEarth = 365.25;
+    const pVenus = 224.7;
+    const syn = TwoBodyAnalytic.synodicPeriod(pEarth, pVenus);
+    // Expected: 365.25 * 224.7 / (365.25 - 224.7) = 583.9 days
+    expect(syn).toBeCloseTo(365.25 * 224.7 / (365.25 - 224.7), 4);
+  });
+
+  it("synodicPeriod: Earth-Mars gives ~780 days", () => {
+    const pEarth = 365.25;
+    const pMars = 687.0;
+    const syn = TwoBodyAnalytic.synodicPeriod(pEarth, pMars);
+    // Expected: 365.25 * 687.0 / |365.25 - 687.0| = 779.9 days
+    expect(syn).toBeCloseTo(365.25 * 687.0 / Math.abs(365.25 - 687.0), 3);
+  });
+
+  it("synodicPeriod: Earth-Jupiter gives ~399 days", () => {
+    const pEarth = 365.25;
+    const pJupiter = 4332.6;
+    const syn = TwoBodyAnalytic.synodicPeriod(pEarth, pJupiter);
+    // Expected: 365.25 * 4332.6 / |365.25 - 4332.6| = 399.0 days
+    expect(syn).toBeCloseTo(365.25 * 4332.6 / Math.abs(365.25 - 4332.6), 3);
+  });
+
+  it("synodicPeriod: equal periods returns Infinity", () => {
+    expect(TwoBodyAnalytic.synodicPeriod(365.25, 365.25)).toBe(Infinity);
+  });
+
+  it("synodicPeriod: non-positive input returns NaN", () => {
+    expect(TwoBodyAnalytic.synodicPeriod(0, 365.25)).toBeNaN();
+    expect(TwoBodyAnalytic.synodicPeriod(-1, 365.25)).toBeNaN();
+    expect(TwoBodyAnalytic.synodicPeriod(365.25, NaN)).toBeNaN();
+  });
+
   it("orbitElementsFromState detects a circular orbit at 1 AU", () => {
     const mu = AstroConstants.GRAV.G_AU3_YR2_PER_SOLAR_MASS * 1;
     const state = TwoBodyAnalytic.orbitElementsFromStateAuYr({

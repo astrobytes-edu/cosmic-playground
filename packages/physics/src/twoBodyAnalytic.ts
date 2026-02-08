@@ -261,6 +261,19 @@ function accelMPerS2FromAuPerYr2(aAuYr2: number): number {
   return AstroUnits.auPerYr2ToMPerS2(aAuYr2);
 }
 
+/**
+ * Synodic period between two orbiting bodies with sidereal periods p1 and p2.
+ * P_syn = |p1 * p2 / (p1 - p2)|.
+ * Returns Infinity when the two periods are equal (same orbit).
+ */
+function synodicPeriod(p1: number, p2: number): number {
+  if (!isFinitePositive(p1)) return Number.NaN;
+  if (!isFinitePositive(p2)) return Number.NaN;
+  const diff = p1 - p2;
+  if (Math.abs(diff) < 1e-12) return Infinity;
+  return Math.abs((p1 * p2) / diff);
+}
+
 export const TwoBodyAnalytic = {
   orbitalRadius,
   trueToEccentricAnomalyRad,
@@ -281,5 +294,7 @@ export const TwoBodyAnalytic = {
 
   muCgsFromMuAu3Yr2,
   speedKmPerSFromAuPerYr,
-  accelMPerS2FromAuPerYr2
+  accelMPerS2FromAuPerYr2,
+
+  synodicPeriod
 } as const;
