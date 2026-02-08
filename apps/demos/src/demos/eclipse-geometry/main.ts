@@ -985,8 +985,12 @@ function tick(t: number) {
 
   if (runMode === "animate-month") {
     const dtDays = ANIMATE_MONTH_DAYS_PER_SECOND * dtSec;
+    state.sunLonDeg = EclipseGeometryModel.normalizeAngleDeg(state.sunLonDeg + SUN_RATE_DEG_PER_DAY * dtDays);
     moonLon.value = String(
-      EclipseGeometryModel.normalizeAngleDeg(Number(moonLon.value) + PHASE_RATE_DEG_PER_DAY * dtDays)
+      EclipseGeometryModel.normalizeAngleDeg(Number(moonLon.value) + MOON_RATE_DEG_PER_DAY * dtDays)
+    );
+    nodeLon.value = String(
+      EclipseGeometryModel.normalizeAngleDeg(Number(nodeLon.value) + NODE_RATE_DEG_PER_DAY * dtDays)
     );
     render();
     rafId = requestAnimationFrame(tick);

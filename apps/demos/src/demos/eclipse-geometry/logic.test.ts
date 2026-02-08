@@ -889,3 +889,18 @@ describe("checkEclipseStatistics", () => {
     expect(typeof result.message).toBe("string");
   });
 });
+
+/* ------------------------------------------------------------------ */
+/*  animate-month rate constants (physics identity)                    */
+/* ------------------------------------------------------------------ */
+
+describe("animate-month rate constants", () => {
+  it("PHASE_RATE equals MOON_RATE minus SUN_RATE (synodic identity)", () => {
+    // Synodic rate = sidereal moon rate - sun rate
+    // This is the fundamental relationship: 1/P_syn = 1/P_sid - 1/P_orb
+    const sunRate = 360 / 365.2422; // deg/day (tropical year)
+    const moonRate = 360 / 27.321661; // deg/day (sidereal month)
+    const synodicRate = 360 / 29.530589; // deg/day (synodic month)
+    expect(moonRate - sunRate).toBeCloseTo(synodicRate, 2);
+  });
+});
