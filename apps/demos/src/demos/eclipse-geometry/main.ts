@@ -10,6 +10,7 @@ import {
   computeDerived,
   buildStationRow,
   formatSimSummary,
+  contextualMessage,
   SYZYGY_TOLERANCE_DEG,
   DISTANCE_PRESETS_KM,
   snapToNearestPreset,
@@ -359,6 +360,12 @@ function render() {
   const thresholds = EclipseGeometryModel.eclipseThresholdsDeg({
     earthMoonDistanceKm: state.earthMoonDistanceKm,
   });
+
+  const ctxMsg = contextualMessage(derived, {
+    solarPartialDeg: thresholds.solarPartialDeg,
+    lunarPenumbralDeg: thresholds.lunarPenumbralDeg,
+  });
+  contextMessage.textContent = ctxMsg;
 
   const phase = getPhaseInfo(derived.phaseAngleDeg);
 

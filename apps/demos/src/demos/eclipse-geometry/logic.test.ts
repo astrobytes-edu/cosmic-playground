@@ -18,8 +18,9 @@ import {
   formatYearsLabel,
   checkWhyNotEveryMonth,
   checkEclipseStatistics,
+  contextualMessage,
 } from "./logic";
-import type { EclipseModelCallbacks, SimulationSummaryInput } from "./logic";
+import type { EclipseModelCallbacks, EclipseDemoState, SimulationSummaryInput } from "./logic";
 
 /* ------------------------------------------------------------------ */
 /*  Stub physics model for DI                                         */
@@ -921,6 +922,69 @@ describe("checkEclipseStatistics", () => {
 /* ------------------------------------------------------------------ */
 /*  animate-month rate constants (physics identity)                    */
 /* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/*  contextualMessage                                                   */
+/* ------------------------------------------------------------------ */
+
+/** Helper: build an EclipseDemoState with sensible defaults,
+ *  overriding only the fields relevant to each test. */
+function makeState(overrides: Partial<EclipseDemoState> = {}): EclipseDemoState {
+  return {
+    moonLonDeg: 0,
+    sunLonDeg: 0,
+    nodeLonDeg: 0,
+    orbitalTiltDeg: 5.145,
+    earthMoonDistanceKm: 384400,
+    phaseAngleDeg: 90,
+    betaDeg: 3,
+    absBetaDeg: 3,
+    nearestNodeDeg: 60,
+    solarType: "none",
+    lunarType: "none",
+    ...overrides,
+  };
+}
+
+describe("contextualMessage", () => {
+  it("returns wrong-phase message when not near New or Full", () => {
+    // nearestNodeDeg must be > NODE_NEAR_DEG (20) but < 40 to trigger this branch
+    const state = makeState({ phaseAngleDeg: 90, absBetaDeg: 1.0, nearestNodeDeg: 30 });
+    expect(contextualMessage(state)).toContain("require New or Full Moon");
+  });
+
+  it("returns too-far-from-node when near syzygy but |beta| large", () => {
+    const state = makeState({ phaseAngleDeg: 2, absBetaDeg: 3.5, nearestNodeDeg: 40, solarType: "none", lunarType: "none" });
+    expect(contextualMessage(state)).toContain("too far from a node");
+  });
+
+  it("returns near-node-wrong-phase when near node but wrong phase", () => {
+    const state = makeState({ phaseAngleDeg: 90, nearestNodeDeg: 5 });
+    expect(contextualMessage(state)).toContain("near a node but not at New/Full");
+  });
+
+  it("returns eclipse-achieved for solar eclipse", () => {
+    const state = makeState({ phaseAngleDeg: 1, absBetaDeg: 0.3, solarType: "total-solar", lunarType: "none" });
+    expect(contextualMessage(state)).toContain("solar eclipse");
+  });
+
+  it("returns eclipse-achieved for lunar eclipse", () => {
+    const state = makeState({ phaseAngleDeg: 179, absBetaDeg: 0.5, solarType: "none", lunarType: "total-lunar" });
+    expect(contextualMessage(state)).toContain("lunar eclipse");
+  });
+
+  it("returns almost message when close to threshold", () => {
+    // beta just above solar partial threshold (~1.5 deg)
+    const state = makeState({ phaseAngleDeg: 1, absBetaDeg: 1.8, nearestNodeDeg: 10, solarType: "none", lunarType: "none" });
+    const msg = contextualMessage(state, { solarPartialDeg: 1.5 });
+    expect(msg).toContain("Almost");
+  });
+
+  it("returns empty string for mundane state (far from everything)", () => {
+    const state = makeState({ phaseAngleDeg: 90, absBetaDeg: 4, nearestNodeDeg: 60 });
+    expect(contextualMessage(state)).toBe("");
+  });
+});
 
 describe("animate-month rate constants", () => {
   it("PHASE_RATE equals MOON_RATE minus SUN_RATE (synodic identity)", () => {

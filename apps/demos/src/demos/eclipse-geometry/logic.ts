@@ -142,6 +142,84 @@ export function outcomeLabel(type: string): string {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Contextual feedback messages                                      */
+/* ------------------------------------------------------------------ */
+
+export type EclipseThresholds = {
+  solarPartialDeg: number;
+  solarCentralDeg: number;
+  lunarPenumbralDeg: number;
+};
+
+const SYZYGY_NEAR_DEG = 10; // within 10 deg of New/Full
+const NODE_NEAR_DEG = 20; // within 20 deg of a node
+const ALMOST_MARGIN_DEG = 0.5; // how close to threshold counts as "almost"
+
+/**
+ * Return a pedagogical feedback string based on the current eclipse geometry.
+ *
+ * Priority order:
+ *  1. Eclipse achieved (solar or lunar)
+ *  2. "Almost" -- near syzygy and beta is just above a threshold
+ *  3. Near syzygy but too far from node
+ *  4. Near node but wrong phase
+ *  5. Wrong phase (general, only when somewhat near a node)
+ *  6. Mundane state -- returns empty string
+ */
+export function contextualMessage(
+  state: EclipseDemoState,
+  thresholds?: Partial<EclipseThresholds>
+): string {
+  const { phaseAngleDeg, absBetaDeg, nearestNodeDeg, solarType, lunarType } = state;
+  const nearSyzygy =
+    phaseAngleDeg <= SYZYGY_NEAR_DEG ||
+    phaseAngleDeg >= 360 - SYZYGY_NEAR_DEG ||
+    Math.abs(phaseAngleDeg - 180) <= SYZYGY_NEAR_DEG;
+  const nearNode = nearestNodeDeg <= NODE_NEAR_DEG;
+  const hasSolar = solarType !== "none";
+  const hasLunar = lunarType !== "none";
+
+  // Eclipse achieved
+  if (hasSolar) {
+    return `${outcomeLabel(solarType)} eclipse! Moon at New Moon, ${formatNumber(nearestNodeDeg, 1)}\u00b0 from nearest node.`;
+  }
+  if (hasLunar) {
+    return `${outcomeLabel(lunarType)} eclipse! Moon at Full Moon, ${formatNumber(nearestNodeDeg, 1)}\u00b0 from nearest node.`;
+  }
+
+  // Almost -- near syzygy and beta is close to a threshold
+  if (nearSyzygy && thresholds) {
+    const solarPartial = thresholds.solarPartialDeg ?? 1.5;
+    const lunarPenumbral = thresholds.lunarPenumbralDeg ?? 1.6;
+    if (absBetaDeg > solarPartial && absBetaDeg < solarPartial + ALMOST_MARGIN_DEG) {
+      return `Almost! |\u03b2| = ${formatNumber(absBetaDeg, 2)}\u00b0 \u2014 needs to be below ${formatNumber(solarPartial, 1)}\u00b0 for a solar eclipse.`;
+    }
+    if (absBetaDeg > lunarPenumbral && absBetaDeg < lunarPenumbral + ALMOST_MARGIN_DEG) {
+      return `Almost! |\u03b2| = ${formatNumber(absBetaDeg, 2)}\u00b0 \u2014 needs to be below ${formatNumber(lunarPenumbral, 1)}\u00b0 for a lunar eclipse.`;
+    }
+  }
+
+  // Near syzygy but too far from node
+  if (nearSyzygy && !nearNode) {
+    return `Moon is ${formatNumber(absBetaDeg, 1)}\u00b0 above the ecliptic \u2014 too far from a node for an eclipse.`;
+  }
+
+  // Near node but wrong phase
+  if (nearNode && !nearSyzygy) {
+    return "Moon is near a node but not at New/Full \u2014 no alignment.";
+  }
+
+  // Wrong phase (general) -- only show if somewhat near a node
+  if (!nearSyzygy) {
+    if (nearestNodeDeg < 40) {
+      return "Eclipses require New or Full Moon \u2014 adjust the phase.";
+    }
+  }
+
+  return "";
+}
+
+/* ------------------------------------------------------------------ */
 /*  Derived state computation                                         */
 /* ------------------------------------------------------------------ */
 
