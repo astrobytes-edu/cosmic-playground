@@ -105,14 +105,31 @@ export function minorLogTicks(minExponent: number, maxExponent: number): number[
   for (let exponent = minExponent; exponent < maxExponent; exponent += 1) {
     const base = 10 ** exponent;
     for (let coefficient = 2; coefficient <= 9; coefficient += 1) {
-      ticks.push(coefficient * base);
+      ticks.push(Number((coefficient * base).toPrecision(12)));
     }
   }
   return ticks;
 }
 
+export function superscript(value: number): string {
+  const map: Record<string, string> = {
+    "0": "\u2070",
+    "1": "\u00B9",
+    "2": "\u00B2",
+    "3": "\u00B3",
+    "4": "\u2074",
+    "5": "\u2075",
+    "6": "\u2076",
+    "7": "\u2077",
+    "8": "\u2078",
+    "9": "\u2079",
+    "-": "\u207B",
+  };
+  return String(value).split("").map((character) => map[character] ?? character).join("");
+}
+
 export function logTickPowersOfTenLabel(value: number): string {
   if (!Number.isFinite(value) || value <= 0) return "-";
   const exponent = Math.round(Math.log10(value));
-  return `10^${exponent}`;
+  return `10${superscript(exponent)}`;
 }

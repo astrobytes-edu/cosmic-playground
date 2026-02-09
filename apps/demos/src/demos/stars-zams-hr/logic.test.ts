@@ -8,8 +8,10 @@ import {
   formatNumber,
   hrDiagramCoordinates,
   luminosityLsunFromRadiusTemperature,
+  minorLogTicks,
   logSliderToValue,
   logTickPowersOfTenLabel,
+  superscript,
   valueToLogSlider,
 } from "./logic";
 
@@ -75,9 +77,23 @@ describe("Stars ZAMS HR -- logic", () => {
     expect(decadeTicks(-4, 2)).toEqual([1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100]);
   });
 
-  it("formats decade labels using powers of ten", () => {
-    expect(logTickPowersOfTenLabel(1e-2)).toBe("10^-2");
-    expect(logTickPowersOfTenLabel(10)).toBe("10^1");
+  it("formats decade labels using superscript powers of ten", () => {
+    expect(logTickPowersOfTenLabel(1e-2)).toBe("10⁻²");
+    expect(logTickPowersOfTenLabel(10)).toBe("10¹");
+    expect(logTickPowersOfTenLabel(10)).not.toContain("e");
+  });
+
+  it("formats superscripts for positive and negative exponents", () => {
+    expect(superscript(12)).toBe("¹²");
+    expect(superscript(-3)).toBe("⁻³");
+  });
+
+  it("creates minor log ticks at 2..9 within each decade", () => {
+    expect(minorLogTicks(0, 1)).toEqual([2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(minorLogTicks(-1, 1)).toEqual([
+      0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
+      2, 3, 4, 5, 6, 7, 8, 9,
+    ]);
   });
 
   it("uses kK-based Teff axis domain limits", () => {

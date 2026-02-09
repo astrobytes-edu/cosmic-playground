@@ -15,6 +15,7 @@ apps/site/public/play/
 
 apps/site/public/assets/katex/
 apps/demos/public/assets/katex/
+apps/demos/src/assets/katex/
 
 .serena/
 .worktrees/

@@ -47,30 +47,38 @@ async function resolveKatexDistDir() {
   return path.join(path.dirname(pkgJson), "dist");
 }
 
+async function copyKatexBundle(distDir, targetKatexDir) {
+  await copyFile(
+    path.join(distDir, "katex.min.css"),
+    path.join(targetKatexDir, "katex.min.css")
+  );
+  await copyDir(path.join(distDir, "fonts"), path.join(targetKatexDir, "fonts"));
+}
+
 async function copyKatexIntoPublic(appDir) {
   const distDir = await resolveKatexDistDir();
   const publicKatexDir = path.join(appDir, "public", "assets", "katex");
+  await copyKatexBundle(distDir, publicKatexDir);
+}
 
-  await copyFile(
-    path.join(distDir, "katex.min.css"),
-    path.join(publicKatexDir, "katex.min.css")
-  );
-  await copyDir(path.join(distDir, "fonts"), path.join(publicKatexDir, "fonts"));
+async function copyKatexIntoSourceAssets(appDir) {
+  const distDir = await resolveKatexDistDir();
+  const sourceKatexDir = path.join(appDir, "src", "assets", "katex");
+  await copyKatexBundle(distDir, sourceKatexDir);
 }
 
 async function main() {
-  const apps = [
-    path.join(repoRoot, "apps", "site"),
-    path.join(repoRoot, "apps", "demos")
-  ];
+  const siteDir = path.join(repoRoot, "apps", "site");
+  const demosDir = path.join(repoRoot, "apps", "demos");
 
-  for (const appDir of apps) {
-    await copyKatexIntoPublic(appDir);
-  }
+  await copyKatexIntoPublic(siteDir);
+  await copyKatexIntoPublic(demosDir);
+  // Demos source HTML links resolve ../../assets/... from src/demos/<slug>/index.html.
+  await copyKatexIntoSourceAssets(demosDir);
 }
 
 main().catch((err) => {
-  console.error("Failed to copy KaTeX assets into apps/*/public/assets/katex.");
+  console.error("Failed to copy KaTeX assets into apps/*/{public,src}/assets/katex.");
   console.error(err);
   process.exit(1);
 });

@@ -70,6 +70,13 @@ const X_MAJOR_TICKS_KK = decadeTicks(Math.log10(HR_AXIS_LIMITS.teffMinKK), Math.
 const X_MINOR_TICKS_KK = minorLogTicks(Math.log10(HR_AXIS_LIMITS.teffMinKK), Math.log10(HR_AXIS_LIMITS.teffMaxKK));
 const Y_MAJOR_TICKS_LSUN = decadeTicks(HR_AXIS_LIMITS.logLumMin, HR_AXIS_LIMITS.logLumMax);
 const Y_MINOR_TICKS_LSUN = minorLogTicks(HR_AXIS_LIMITS.logLumMin, HR_AXIS_LIMITS.logLumMax);
+const X_AXIS_LABEL = "log₁₀(T_eff / kK)";
+const Y_AXIS_LABEL = "log₁₀(L/L⊙)";
+
+const FONT_TICK_MAJOR = "500 11px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
+const FONT_TICK_MINOR = "500 10px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
+const FONT_AXIS_LABEL = "600 12px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
+const FONT_GUIDE_LABEL = "500 10.5px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
 
 const massSliderEl = document.querySelector<HTMLInputElement>("#massSlider");
 const massValueEl = document.querySelector<HTMLSpanElement>("#massValue");
@@ -364,10 +371,10 @@ function resizeCanvasToCssPixels(canvas: HTMLCanvasElement, context: CanvasRende
 function drawHrDiagram(readouts: StarReadouts): void {
   const { width: w, height: h } = resizeCanvasToCssPixels(hrCanvas, ctx);
 
-  const mL = 78;
-  const mR = 18;
+  const mL = 92;
+  const mR = 20;
   const mT = 24;
-  const mB = 64;
+  const mB = 86;
   const plotW = Math.max(1, w - mL - mR);
   const plotH = Math.max(1, h - mT - mB);
 
@@ -379,8 +386,10 @@ function drawHrDiagram(readouts: StarReadouts): void {
   const logLumMax = HR_AXIS_LIMITS.logLumMax;
 
   const bg = resolveCssColor(cssVar("--cp-bg0"));
-  const border = resolveCssColor(cssVar("--cp-border-subtle"));
-  const text = resolveCssColor(cssVar("--cp-text2"));
+  const plotBg = resolveCssColor(cssVar("--cp-bg1"));
+  const frame = resolveCssColor(cssVar("--cp-text"));
+  const text = resolveCssColor(cssVar("--cp-text"));
+  const mutedText = resolveCssColor(cssVar("--cp-text2"));
   const minorGrid = resolveCssColor(cssVar("--cp-border-subtle"));
   const majorGrid = resolveCssColor(cssVar("--cp-border"));
   const track = resolveCssColor(cssVar("--cp-chart-1"));
@@ -402,11 +411,13 @@ function drawHrDiagram(readouts: StarReadouts): void {
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = plotBg;
+  ctx.fillRect(mL, mT, plotW, plotH);
 
   ctx.save();
   ctx.strokeStyle = minorGrid;
-  ctx.globalAlpha = 0.35;
-  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = 0.9;
   for (const teffTickKK of X_MINOR_TICKS_KK) {
     const x = xFromTeffKK(teffTickKK);
     ctx.beginPath();
@@ -425,8 +436,8 @@ function drawHrDiagram(readouts: StarReadouts): void {
 
   ctx.save();
   ctx.strokeStyle = majorGrid;
-  ctx.globalAlpha = 0.8;
-  ctx.lineWidth = 1.1;
+  ctx.globalAlpha = 0.9;
+  ctx.lineWidth = 1.2;
   for (const teffTickKK of X_MAJOR_TICKS_KK) {
     const x = xFromTeffKK(teffTickKK);
     ctx.beginPath();
@@ -494,10 +505,10 @@ function drawHrDiagram(readouts: StarReadouts): void {
           const labelY = yFromLum(labelLum) - 4;
           const exponent = Math.round(Math.log10(radiusRsun));
           const radiusLabel = Math.abs(radiusRsun - 10 ** exponent) < 1e-12
-            ? `R=10^${exponent}`
-            : `R=${formatWithoutENotation(radiusRsun, 2)}`;
+            ? `R/R⊙ = ${logTickPowersOfTenLabel(10 ** exponent)}`
+            : `R/R⊙ = ${formatWithoutENotation(radiusRsun, 2)}`;
           ctx.fillStyle = guideColor;
-          ctx.font = "11px system-ui, -apple-system, sans-serif";
+          ctx.font = FONT_GUIDE_LABEL;
           ctx.fillText(radiusLabel, labelX, labelY);
         }
       }
@@ -508,7 +519,7 @@ function drawHrDiagram(readouts: StarReadouts): void {
 
   ctx.save();
   ctx.strokeStyle = track;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.2;
   ctx.beginPath();
   const samples = 180;
   for (let i = 0; i < samples; i += 1) {
@@ -549,62 +560,95 @@ function drawHrDiagram(readouts: StarReadouts): void {
   ctx.save();
   ctx.fillStyle = markerColor;
   ctx.beginPath();
-  ctx.arc(markerX, markerY, 6, 0, Math.PI * 2);
+  ctx.arc(markerX, markerY, 5.5, 0, Math.PI * 2);
   ctx.fill();
   ctx.lineWidth = 1.2;
-  ctx.strokeStyle = resolveCssColor(cssVar("--cp-bg0"));
+  ctx.strokeStyle = resolveCssColor(cssVar("--cp-bg1"));
   ctx.stroke();
   ctx.restore();
 
   ctx.save();
-  ctx.strokeStyle = border;
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = frame;
+  ctx.globalAlpha = 0.85;
+  ctx.lineWidth = 1.3;
   ctx.strokeRect(mL, mT, plotW, plotH);
+  ctx.restore();
+
+  const majorTickLength = 7;
+  const minorTickLength = 4;
+
+  ctx.save();
+  ctx.strokeStyle = mutedText;
+  ctx.globalAlpha = 0.9;
+  ctx.lineWidth = 0.9;
+  for (const teffTickKK of X_MINOR_TICKS_KK) {
+    const x = xFromTeffKK(teffTickKK);
+    ctx.beginPath();
+    ctx.moveTo(x, mT + plotH);
+    ctx.lineTo(x, mT + plotH + minorTickLength);
+    ctx.stroke();
+  }
+  for (const lumTick of Y_MINOR_TICKS_LSUN) {
+    const y = yFromLum(lumTick);
+    ctx.beginPath();
+    ctx.moveTo(mL - minorTickLength, y);
+    ctx.lineTo(mL, y);
+    ctx.stroke();
+  }
   ctx.restore();
 
   ctx.save();
   ctx.fillStyle = text;
-  ctx.font = "11px system-ui, -apple-system, sans-serif";
+  ctx.strokeStyle = text;
+  ctx.font = FONT_TICK_MAJOR;
   ctx.textAlign = "center";
+  ctx.textBaseline = "top";
   for (const teffTickKK of X_MAJOR_TICKS_KK) {
     const x = xFromTeffKK(teffTickKK);
     ctx.beginPath();
     ctx.moveTo(x, mT + plotH);
-    ctx.lineTo(x, mT + plotH + 4);
-    ctx.strokeStyle = text;
-    ctx.lineWidth = 1;
+    ctx.lineTo(x, mT + plotH + majorTickLength);
+    ctx.lineWidth = 1.25;
     ctx.stroke();
-    ctx.fillText(logTickPowersOfTenLabel(teffTickKK), x, mT + plotH + 16);
-    ctx.fillText(`(${Math.round(teffTickKK)})`, x, mT + plotH + 28);
+    ctx.fillText(logTickPowersOfTenLabel(teffTickKK), x, mT + plotH + 10);
+    ctx.fillStyle = mutedText;
+    ctx.font = FONT_TICK_MINOR;
+    ctx.fillText(`${formatWithoutENotation(teffTickKK, 0)} kK`, x, mT + plotH + 24);
+    ctx.fillStyle = text;
+    ctx.font = FONT_TICK_MAJOR;
   }
 
   ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
   for (const lumTick of Y_MAJOR_TICKS_LSUN) {
     const y = yFromLum(lumTick);
     ctx.beginPath();
-    ctx.moveTo(mL - 4, y);
+    ctx.moveTo(mL - majorTickLength, y);
     ctx.lineTo(mL, y);
     ctx.strokeStyle = text;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.25;
     ctx.stroke();
-    ctx.fillText(logTickPowersOfTenLabel(lumTick), mL - 8, y + 4);
+    ctx.fillStyle = text;
+    ctx.fillText(logTickPowersOfTenLabel(lumTick), mL - 10, y);
   }
 
   ctx.textAlign = "center";
-  ctx.font = "bold 12px system-ui, -apple-system, sans-serif";
-  ctx.fillText("log10(T_eff [kK])", mL + plotW / 2, h - 8);
+  ctx.textBaseline = "alphabetic";
+  ctx.font = FONT_AXIS_LABEL;
+  ctx.fillText(X_AXIS_LABEL, mL + plotW / 2, h - 9);
 
   ctx.save();
-  ctx.translate(18, mT + plotH / 2);
+  ctx.translate(20, mT + plotH / 2);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillText("log10(L/L_odot)", 0, 0);
+  ctx.fillText(Y_AXIS_LABEL, 0, 0);
   ctx.restore();
 
-  ctx.font = "11px system-ui, -apple-system, sans-serif";
+  ctx.font = FONT_TICK_MINOR;
+  ctx.fillStyle = mutedText;
   ctx.textAlign = "left";
-  ctx.fillText("hotter", mL, h - 24);
+  ctx.fillText("hotter \u2190", mL, h - 46);
   ctx.textAlign = "right";
-  ctx.fillText("cooler", mL + plotW, h - 24);
+  ctx.fillText("\u2192 cooler", mL + plotW, h - 46);
   ctx.restore();
 }
 
