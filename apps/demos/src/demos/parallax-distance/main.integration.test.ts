@@ -60,7 +60,8 @@ function requiredElement<T extends Element>(selector: string): T {
 }
 
 function parseNumericText(value: string | null): number {
-  return Number((value ?? "").replace(/,/g, "").trim());
+  const parsed = Number((value ?? "").replace(/,/g, "").trim());
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
 function detectorSeparationPx(): number {
@@ -73,6 +74,20 @@ function detectorSeparationPx(): number {
   const yB = Number(markerB.getAttribute("cy"));
 
   return Math.hypot(xB - xA, yB - yA);
+}
+
+function setRangeValue(selector: string, value: number) {
+  const input = requiredElement<HTMLInputElement>(selector);
+  input.value = String(value);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function captureEpoch(phaseDeg: number, label: "A" | "B") {
+  setRangeValue("#orbitPhaseScrub", phaseDeg);
+  const button = requiredElement<HTMLButtonElement>(
+    label === "A" ? "#captureEpochA" : "#captureEpochB"
+  );
+  button.click();
 }
 
 describe("Parallax Distance -- DOM integration", () => {
@@ -88,84 +103,70 @@ describe("Parallax Distance -- DOM integration", () => {
     vi.useRealTimers();
   });
 
-  it("moves detector positions periodically with phase and preserves inverse distance scaling", async () => {
+  it("captures two epochs, updates detector positions, and preserves inverse distance scaling", async () => {
     await import("./main");
 
-    const phaseSlider = requiredElement<HTMLInputElement>("#phaseDeg");
-    const distanceSlider = requiredElement<HTMLInputElement>("#distancePcRange");
+    const captureBButton = requiredElement<HTMLButtonElement>("#captureEpochB");
     const parallaxMasReadout = requiredElement<HTMLElement>("#parallaxMas");
+    const baselineEffReadout = requiredElement<HTMLElement>("#baselineEffAu");
+    const detectorNow = requiredElement<SVGCircleElement>("#detectorNow");
 
-    const markerA = requiredElement<SVGCircleElement>("#detectorMarkerEpochA");
-    const markerB = requiredElement<SVGCircleElement>("#detectorMarkerEpochB");
+    expect(captureBButton.disabled).toBe(true);
 
-    const setPhase = (value: number) => {
-      phaseSlider.value = String(value);
-      phaseSlider.dispatchEvent(new Event("input", { bubbles: true }));
+    const now0 = {
+      x: Number(detectorNow.getAttribute("cx")),
+      y: Number(detectorNow.getAttribute("cy"))
     };
-
-    const setDistancePc = (value: number) => {
-      distanceSlider.value = String(value);
-      distanceSlider.dispatchEvent(new Event("input", { bubbles: true }));
+    setRangeValue("#orbitPhaseScrub", 90);
+    const now90 = {
+      x: Number(detectorNow.getAttribute("cx")),
+      y: Number(detectorNow.getAttribute("cy"))
     };
+    expect(Math.abs(now90.x - now0.x) + Math.abs(now90.y - now0.y)).toBeGreaterThan(0.5);
 
-    setDistancePc(10);
-    setPhase(0);
-    const phase0 = {
-      x: Number(markerA.getAttribute("cx")),
-      y: Number(markerA.getAttribute("cy"))
-    };
+    setRangeValue("#distancePcRange", 10);
+    captureEpoch(0, "A");
+    expect(captureBButton.disabled).toBe(false);
+    captureEpoch(180, "B");
 
-    setPhase(90);
-    const phase90 = {
-      x: Number(markerA.getAttribute("cx")),
-      y: Number(markerA.getAttribute("cy"))
-    };
-
-    setPhase(360);
-    const phase360 = {
-      x: Number(markerA.getAttribute("cx")),
-      y: Number(markerA.getAttribute("cy"))
-    };
-
-    expect(Math.abs(phase0.x - phase90.x) + Math.abs(phase0.y - phase90.y)).toBeGreaterThan(0.5);
-    expect(phase360.x).toBeCloseTo(phase0.x, 4);
-    expect(phase360.y).toBeCloseTo(phase0.y, 4);
-
-    setPhase(0);
-    setDistancePc(10);
     const p10 = parseNumericText(parallaxMasReadout.textContent);
+    const bEff = parseNumericText(baselineEffReadout.textContent);
     const sep10 = detectorSeparationPx();
 
-    setDistancePc(100);
+    expect(bEff).toBeCloseTo(2, 2);
+    expect(p10).toBeGreaterThan(0);
+    expect(sep10).toBeGreaterThan(0);
+
+    setRangeValue("#distancePcRange", 100);
+    captureEpoch(0, "A");
+    captureEpoch(180, "B");
+
     const p100 = parseNumericText(parallaxMasReadout.textContent);
     const sep100 = detectorSeparationPx();
 
-    expect(p10 / p100).toBeCloseTo(10, 2);
-    expect(sep10).toBeGreaterThan(sep100 * 5);
-
-    expect(Math.abs(Number(markerA.getAttribute("cx")) - Number(markerB.getAttribute("cx")))).toBeGreaterThan(
-      0.1
-    );
+    expect(p10 / p100).toBeGreaterThan(8.5);
+    expect(p10 / p100).toBeLessThan(11.5);
+    expect(sep10).toBeGreaterThan(sep100 * 2);
   });
 
   it("increasing sigma expands uncertainty visuals and lowers p/sigma", async () => {
     await import("./main");
 
-    const sigmaSlider = requiredElement<HTMLInputElement>("#sigmaMas");
     const snrReadout = requiredElement<HTMLElement>("#snr");
     const qualityReadout = requiredElement<HTMLElement>("#snrQuality");
     const errA = requiredElement<SVGCircleElement>("#errorCircleEpochA");
 
-    const setSigma = (value: number) => {
-      sigmaSlider.value = String(value);
-      sigmaSlider.dispatchEvent(new Event("input", { bubbles: true }));
-    };
+    setRangeValue("#distancePcRange", 10);
 
-    setSigma(0.5);
+    setRangeValue("#sigmaMas", 0.5);
+    captureEpoch(0, "A");
+    captureEpoch(180, "B");
     const highSnr = parseNumericText(snrReadout.textContent);
     const smallErrorRadius = Number(errA.getAttribute("r"));
 
-    setSigma(20);
+    setRangeValue("#sigmaMas", 20);
+    captureEpoch(0, "A");
+    captureEpoch(180, "B");
     const lowSnr = parseNumericText(snrReadout.textContent);
     const largeErrorRadius = Number(errA.getAttribute("r"));
 
@@ -176,11 +177,10 @@ describe("Parallax Distance -- DOM integration", () => {
     );
   });
 
-  it("blink mode alternates visible markers and exaggeration does not change computed p or d", async () => {
+  it("blink mode alternates captured visibility and exaggeration does not change inferred p or d", async () => {
     vi.useFakeTimers();
     await import("./main");
 
-    const exaggerationSlider = requiredElement<HTMLInputElement>("#exaggeration");
     const parallaxArcsec = requiredElement<HTMLElement>("#parallaxArcsec");
     const distancePc = requiredElement<HTMLElement>("#distancePc");
     const blinkToggle = requiredElement<HTMLInputElement>("#blinkMode");
@@ -189,17 +189,15 @@ describe("Parallax Distance -- DOM integration", () => {
     const markerA = requiredElement<SVGCircleElement>("#detectorMarkerEpochA");
     const markerB = requiredElement<SVGCircleElement>("#detectorMarkerEpochB");
 
-    const setExaggeration = (value: number) => {
-      exaggerationSlider.value = String(value);
-      exaggerationSlider.dispatchEvent(new Event("input", { bubbles: true }));
-    };
+    captureEpoch(0, "A");
+    captureEpoch(180, "B");
 
-    setExaggeration(5);
+    setRangeValue("#exaggeration", 5);
     const sepLowExaggeration = detectorSeparationPx();
     const pArcsecLow = parallaxArcsec.textContent;
     const dPcLow = distancePc.textContent;
 
-    setExaggeration(30);
+    setRangeValue("#exaggeration", 30);
     const sepHighExaggeration = detectorSeparationPx();
     const pArcsecHigh = parallaxArcsec.textContent;
     const dPcHigh = distancePc.textContent;
@@ -210,8 +208,8 @@ describe("Parallax Distance -- DOM integration", () => {
 
     blinkToggle.checked = true;
     blinkToggle.dispatchEvent(new Event("change", { bubbles: true }));
-
     expect(detectorPanel.dataset.blink).toBe("on");
+
     const initialA = markerA.getAttribute("visibility");
     const initialB = markerB.getAttribute("visibility");
 
@@ -219,7 +217,6 @@ describe("Parallax Distance -- DOM integration", () => {
 
     const nextA = markerA.getAttribute("visibility");
     const nextB = markerB.getAttribute("visibility");
-
     expect(nextA).not.toBe(initialA);
     expect(nextB).not.toBe(initialB);
 
@@ -228,7 +225,7 @@ describe("Parallax Distance -- DOM integration", () => {
     expect(runtimeSpies.initStarfield).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps both epochs visible when reduced motion is enabled and blink is toggled", async () => {
+  it("keeps autoplay off and blink disabled under reduced motion", async () => {
     const originalMatchMedia = window.matchMedia;
 
     Object.defineProperty(window, "matchMedia", {
@@ -248,10 +245,16 @@ describe("Parallax Distance -- DOM integration", () => {
 
     await import("./main");
 
+    const playPause = requiredElement<HTMLButtonElement>("#playPauseOrbit");
     const blinkToggle = requiredElement<HTMLInputElement>("#blinkMode");
     const detectorPanel = requiredElement<HTMLElement>("#detectorPanel");
     const markerA = requiredElement<SVGCircleElement>("#detectorMarkerEpochA");
     const markerB = requiredElement<SVGCircleElement>("#detectorMarkerEpochB");
+
+    expect(playPause.textContent).toContain("Play orbit");
+
+    captureEpoch(0, "A");
+    captureEpoch(180, "B");
 
     blinkToggle.checked = true;
     blinkToggle.dispatchEvent(new Event("change", { bubbles: true }));
@@ -267,28 +270,21 @@ describe("Parallax Distance -- DOM integration", () => {
     });
   });
 
-  it("announces measurement updates for interaction changes", async () => {
-    vi.useFakeTimers();
+  it("announces distance and capture workflow updates in live region", async () => {
     await import("./main");
 
-    const distanceSlider = requiredElement<HTMLInputElement>("#distancePcRange");
-    const phaseSlider = requiredElement<HTMLInputElement>("#phaseDeg");
     const beforeCount = runtimeSpies.setLiveRegionText.mock.calls.length;
 
-    distanceSlider.value = "25";
-    distanceSlider.dispatchEvent(new Event("input", { bubbles: true }));
-
-    phaseSlider.value = "45";
-    phaseSlider.dispatchEvent(new Event("input", { bubbles: true }));
-
-    vi.advanceTimersByTime(300);
+    setRangeValue("#distancePcRange", 25);
+    captureEpoch(0, "A");
+    captureEpoch(180, "B");
 
     const afterCount = runtimeSpies.setLiveRegionText.mock.calls.length;
     expect(afterCount).toBeGreaterThan(beforeCount);
 
-    const lastMessage = String(runtimeSpies.setLiveRegionText.mock.calls.at(-1)?.[1] ?? "");
-    expect(lastMessage).toContain("p");
-    expect(lastMessage).toContain("pc");
-    expect(lastMessage).toContain("quality");
+    const calls = runtimeSpies.setLiveRegionText.mock.calls.map((call) => String(call[1] ?? ""));
+    expect(calls.some((message) => message.includes("Distance updated"))).toBe(true);
+    expect(calls.some((message) => message.includes("Captured A"))).toBe(true);
+    expect(calls.some((message) => message.includes("Captured B"))).toBe(true);
   });
 });

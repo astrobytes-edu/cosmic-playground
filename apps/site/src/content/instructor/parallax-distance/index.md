@@ -3,7 +3,7 @@ title: "Parallax Distance"
 bundle: "parallax-distance"
 section: "index"
 demo_slug: "parallax-distance"
-last_updated: "2026-02-02"
+last_updated: "2026-02-09"
 has_math: true
 ---
 > **Navigation**
@@ -29,11 +29,11 @@ has_math: true
 > **Why This Matters**
 > Parallax is the first “rung” of the distance ladder: a distance measurement built from **geometry** rather than assumptions about a star’s brightness or physics. This demo helps students see the core astronomy move: use a baseline (Earth’s orbit), measure a tiny angle, and infer an otherwise unreachable distance.
 
-This demo is built to emphasize **observable → model → inference**:
+This demo is built to emphasize **cause → observable → inference**:
 
-- **Observable:** the star’s apparent position shift against a background over six months.
-- **Model:** simple triangle geometry linking baseline and angle.
-- **Inference:** a distance in parsecs (and how measurement limits cap what we can know directly).
+- **Cause:** Earth moves along its orbit and changes the observing geometry.
+- **Observable:** the target’s detector position shifts against fixed background stars.
+- **Inference:** two captures provide $\Delta\theta$ and $B_{\rm eff}$, yielding $\hat p$ and $\hat d$.
 
 ## Learning goals (ASTR 101)
 
@@ -56,13 +56,13 @@ Students should be able to:
 
 1. **Warm start: human parallax.** Have students do the thumb demo (alternate eyes). Ask: *“If your thumb were farther away, would the shift look bigger or smaller?”* (Prediction before observation.)
 
-2. **Introduce the baseline.** In the demo, point to the two observation points (Jan vs July) and ask: *“What is the baseline we’re using?”* (Opposite sides of Earth’s orbit: ~2 AU.)
+2. **Introduce cause and measurement axis.** In the orbit panel, point to target direction and parallax axis. Ask: *“What changes when Earth moves?”* (The line-of-sight from Earth to the same star.)
 
-3. **Use the parallax slider.** Start at $p=1000\,\mathrm{mas}$ (1 arcsec, 1 pc). Ask students to predict: *“If parallax drops by a factor of 10, what happens to distance?”* Then set $p=100\,\mathrm{mas}$ and read the distance.
+3. **Use distance-first setup.** Set $d_{\rm true}=10\,\mathrm{pc}$. Capture A, then move to a separated phase and capture B. Read $\Delta\theta$ and $B_{\rm eff}$, then show inferred $\hat p$ and $\hat d$.
 
-4. **Make the inverse relationship explicit.** Pause on a clean value (e.g., 10 pc) and read off the parallax magnitude. Then ask: *“If parallax is half as big, is the star closer or farther? By what factor?”*
+4. **Make inverse scaling explicit.** Increase $d_{\rm true}$ to $100\,\mathrm{pc}$, repeat captures at similar phases, and compare shifts. Ask: *“Why did $\Delta\theta$ shrink and $\hat d$ grow?”*
 
-5. **Measurement limits = knowledge limits.** Increase $\sigma_p$ and ask: *“When does $p$ become comparable to the uncertainty?”* Use the signal-to-noise readout $p/\sigma_p$ to connect “tiny angle” to “measurement challenge.”
+5. **Measurement limits = knowledge limits.** Increase $\sigma_p$ and ask: *“When does $\hat p$ become comparable to $\sigma_{\hat p}$?”* Use $\hat p/\sigma_{\hat p}$ and $\sigma_{\hat d}$ to connect tiny angles to weak inference.
 
 6. **Close the story.** Say explicitly: *“Parallax gives us distances that calibrate everything else. When the angle is too tiny, we need other methods — but those methods are anchored to this geometric rung.”*
 
@@ -76,8 +76,8 @@ Use these to surface and correct common wrong models:
 - **Misconception:** “Closer stars have smaller parallax.”  
   **Prompt:** *“Thumb at arm’s length vs across the room: which shifts more?”* Then map that directly to the demo slider.
 
-- **Misconception:** “We can measure parallax to any star.”  
-  **Prompt:** *“What happens to the shift at 10,000 pc?”* Use the precision toggle to make the limitation concrete.
+- **Misconception:** “Any two captures are equally good.”  
+  **Prompt:** *“What happens when captures are close along the parallax axis?”* Use $B_{\rm eff}$ warning to make ill-conditioning concrete.
 
 - **Misconception:** “Light-years are more ‘natural’ than parsecs.”  
   **Prompt:** *“Which unit is defined by the measurement itself?”* (Parsec.)

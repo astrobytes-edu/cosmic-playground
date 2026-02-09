@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -6,12 +6,12 @@ import path from "node:path";
  * Design System Contract Tests -- Parallax Distance
  *
  * Invariants:
- *   1. Uses composable layout primitives (sidebar, stage, readout strip, drawer)
- *   2. Uses explicit two-panel pedagogy (geometry cause + detector observable)
- *   3. Distance is the primary control; p is inferred in readouts
- *   4. Stage includes orbit-epoch geometry and detector-shift measurement nodes
- *   5. Keeps play-contract markers and runtime initialization hooks
- *   6. CSS remains token-first (no hex literals, no raw rgba() literals)
+ *   1. Uses composable shell layout primitives.
+ *   2. Preserves two-panel causality pedagogy (cause -> observable).
+ *   3. Keeps distance-first + capture-first controls.
+ *   4. Maintains axis-aware geometry and detector nodes.
+ *   5. Uses inferred readouts (p_hat, d_hat) rather than p-as-input framing.
+ *   6. Keeps runtime wiring and token-first CSS constraints.
  */
 
 describe("Parallax Distance -- Design System Contracts", () => {
@@ -46,15 +46,15 @@ describe("Parallax Distance -- Design System Contracts", () => {
   });
 
   describe("Two-panel pedagogy", () => {
-    it("contains explicit left and right panel titles", () => {
-      expect(html).toContain("View from Above (orbit geometry)");
-      expect(html).toContain("As Seen on the Sky / Detector (observable shift)");
+    it("contains explicit cause and observable panel titles", () => {
+      expect(html).toContain("Cause: Orbit Geometry (Top View)");
+      expect(html).toContain("Observable: Detector/Sky Shift");
     });
 
-    it("contains microcopy with causal steps", () => {
-      expect(html).toContain("Set a distance, then drag Earth around the orbit.");
-      expect(html).toContain("Use blink/overlay and read $2p\\rightarrow p\\rightarrow d$.");
-      expect(html).toContain("Parallax is not the star moving - it's the viewing direction changing.");
+    it("contains capture-first causality microcopy", () => {
+      expect(html).toContain("Watch the causal chain:");
+      expect(html).toContain("Capture two moments to infer parallax.");
+      expect(html).toContain("Parallax is not star motion");
     });
   });
 
@@ -65,12 +65,13 @@ describe("Parallax Distance -- Design System Contracts", () => {
       expect(html).toContain('id="distancePcRange"');
     });
 
-    it("includes phase presets and orbital phase slider", () => {
-      expect(html).toContain('id="phasePresetJan"');
-      expect(html).toContain('id="phasePresetApr"');
-      expect(html).toContain('id="phasePresetJul"');
-      expect(html).toContain('id="phasePresetOct"');
-      expect(html).toContain('id="phaseDeg"');
+    it("includes live orbit + capture controls", () => {
+      expect(html).toContain('id="playPauseOrbit"');
+      expect(html).toContain('id="captureEpochA"');
+      expect(html).toContain('id="captureEpochB"');
+      expect(html).toContain('id="swapCaptures"');
+      expect(html).toContain('id="clearCaptures"');
+      expect(html).toContain('id="orbitPhaseScrub"');
     });
 
     it("includes baseline, detector-mode, blink, sigma, and exaggeration controls", () => {
@@ -84,19 +85,24 @@ describe("Parallax Distance -- Design System Contracts", () => {
   });
 
   describe("Stage geometry and detector nodes", () => {
-    it("includes orbit geometry nodes", () => {
+    it("includes axis-aware orbit geometry nodes", () => {
       expect(html).toContain('id="orbitPath"');
       expect(html).toContain('id="sun"');
-      expect(html).toContain('id="earthEpochAGroup"');
-      expect(html).toContain('id="earthEpochA"');
-      expect(html).toContain('id="earthEpochB"');
-      expect(html).toContain('id="rayEpochA"');
-      expect(html).toContain('id="rayEpochB"');
+      expect(html).toContain('id="targetDirectionLine"');
+      expect(html).toContain('id="parallaxAxisLine"');
+      expect(html).toContain('id="earthNow"');
+      expect(html).toContain('id="earthCaptureA"');
+      expect(html).toContain('id="earthCaptureB"');
+      expect(html).toContain('id="rayNow"');
+      expect(html).toContain('id="rayCaptureA"');
+      expect(html).toContain('id="rayCaptureB"');
       expect(html).toContain('id="baseline"');
     });
 
     it("includes detector nodes for overlay, difference, and uncertainty", () => {
       expect(html).toContain('id="backgroundStars"');
+      expect(html).toContain('id="detectorMeasurementAxis"');
+      expect(html).toContain('id="detectorNow"');
       expect(html).toContain('id="detectorMarkerEpochA"');
       expect(html).toContain('id="detectorMarkerEpochB"');
       expect(html).toContain('id="differenceVector"');
@@ -110,13 +116,15 @@ describe("Parallax Distance -- Design System Contracts", () => {
   describe("Readout units and inference framing", () => {
     it("keeps readout unit spans", () => {
       const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(4);
+      expect(unitSpans.length).toBeGreaterThanOrEqual(5);
     });
 
-    it("labels inferred p and inferred d instead of p-as-input framing", () => {
-      expect(html).toContain("Inferred parallax $p$");
-      expect(html).toContain("Inferred distance $d$ in parsecs");
-      expect(html).toContain("Inferred distance $d$ in light-years");
+    it("labels inferred p_hat and inferred d_hat with distance-first framing", () => {
+      expect(html).toContain("Measured shift $\\Delta\\theta$");
+      expect(html).toContain("Inferred parallax $\\hat p$");
+      expect(html).toContain("True distance (set) $d_{\\rm true}$");
+      expect(html).toContain("Inferred distance (measured) $\\hat d$");
+      expect(html).toContain("Equivalent Jan-Jul shift $2\\hat p$ (derived)");
     });
   });
 

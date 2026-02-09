@@ -59,14 +59,45 @@
   letter-spacing: 0.03em;
 }
 
-.steps-list {
-  margin: var(--cp-space-2) 0 0;
-  padding-left: var(--cp-space-5);
-  color: var(--cp-text2);
+.cp-workflow {
+  display: grid;
+  gap: var(--cp-space-1);
 }
 
-.steps-list li + li {
-  margin-top: var(--cp-space-1);
+.cp-workflow-step {
+  border: 1px solid color-mix(in srgb, var(--cp-border) 74%, transparent);
+  border-radius: var(--cp-r-1);
+  padding: var(--cp-space-1) var(--cp-space-2);
+  font-size: var(--cp-text-sm);
+  color: var(--cp-muted);
+  background: color-mix(in srgb, var(--cp-bg2) 70%, transparent);
+}
+
+.cp-workflow-step[data-step-state="current"] {
+  color: var(--cp-text);
+  border-color: color-mix(in srgb, var(--cp-accent-ice) 52%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-accent-ice) 18%, transparent);
+}
+
+.cp-workflow-step[data-step-state="complete"] {
+  color: var(--cp-text);
+  border-color: color-mix(in srgb, var(--cp-celestial-star) 54%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-celestial-star) 18%, transparent);
+}
+
+.capture-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--cp-space-2);
+}
+
+.capture-row + .capture-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: var(--cp-space-2);
+}
+
+.capture-row .cp-chip {
+  justify-content: center;
 }
 
 .stage {
@@ -135,37 +166,23 @@
 }
 
 .stage__earth {
-  fill: var(--cp-celestial-earth);
-  stroke: color-mix(in srgb, var(--cp-celestial-earth) 44%, var(--cp-text));
   stroke-width: 1.6;
   filter: drop-shadow(var(--cp-glow-planet));
 }
 
-.stage__earth--jan {
+.stage__earth--now {
+  fill: color-mix(in srgb, var(--cp-accent-amber) 76%, var(--cp-celestial-earth));
+  stroke: color-mix(in srgb, var(--cp-accent-amber) 52%, var(--cp-text));
+}
+
+.stage__earth--a {
   fill: color-mix(in srgb, var(--cp-accent-ice) 76%, var(--cp-celestial-earth));
   stroke: color-mix(in srgb, var(--cp-accent-ice) 46%, var(--cp-text));
 }
 
-.stage__earth--jul {
+.stage__earth--b {
   fill: color-mix(in srgb, var(--cp-accent-rose) 74%, var(--cp-celestial-earth));
   stroke: color-mix(in srgb, var(--cp-accent-rose) 42%, var(--cp-text));
-}
-
-.earth-draggable {
-  cursor: grab;
-}
-
-.earth-draggable:active {
-  cursor: grabbing;
-}
-
-.earth-draggable:focus-visible {
-  outline: none;
-}
-
-.earth-draggable:focus-visible #earthEpochA {
-  stroke: color-mix(in srgb, var(--cp-accent-ice) 85%, var(--cp-text));
-  stroke-width: 3;
 }
 
 .stage__star {
@@ -173,29 +190,45 @@
   filter: drop-shadow(var(--cp-glow-star));
 }
 
+.stage__direction {
+  stroke: color-mix(in srgb, var(--cp-celestial-star) 72%, transparent);
+  stroke-width: 2;
+  stroke-dasharray: 4 5;
+}
+
+.stage__axis {
+  stroke: color-mix(in srgb, var(--cp-accent-ice) 64%, transparent);
+  stroke-width: 1.8;
+  stroke-dasharray: 7 6;
+}
+
 .stage__baseline {
-  stroke: color-mix(in srgb, var(--cp-text) 55%, transparent);
+  stroke: color-mix(in srgb, var(--cp-text) 58%, transparent);
   stroke-width: 2.2;
   stroke-linecap: round;
 }
 
 .stage__ray {
-  stroke-width: 2.2;
+  stroke-width: 2;
   stroke-linecap: round;
 }
 
-.stage__ray--jan {
+.stage__ray--now {
+  stroke: color-mix(in srgb, var(--cp-accent-amber) 70%, var(--cp-text));
+}
+
+.stage__ray--a {
   stroke: color-mix(in srgb, var(--cp-accent-ice) 64%, var(--cp-text));
 }
 
-.stage__ray--jul {
+.stage__ray--b {
   stroke: color-mix(in srgb, var(--cp-accent-rose) 64%, var(--cp-text));
 }
 
 .stage__label {
   fill: var(--cp-text);
   font-family: var(--cp-font-sans);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: var(--cp-font-medium);
   text-anchor: middle;
 }
@@ -207,17 +240,23 @@
 
 .stage__label--earth,
 .stage__label--baseline,
-.stage__label--detector-dot {
+.stage__label--detector-dot,
+.stage__label--axis {
   fill: var(--cp-text2);
-  font-size: 13px;
+  font-size: 12px;
 }
 
-.stage__label--earth-jan,
+.stage__label--earth-now,
+#detectorNowLabel {
+  fill: color-mix(in srgb, var(--cp-accent-amber) 68%, var(--cp-text));
+}
+
+.stage__label--earth-a,
 #detectorEpochALabel {
   fill: color-mix(in srgb, var(--cp-accent-ice) 68%, var(--cp-text));
 }
 
-.stage__label--earth-jul,
+.stage__label--earth-b,
 #detectorEpochBLabel {
   fill: color-mix(in srgb, var(--cp-accent-rose) 68%, var(--cp-text));
 }
@@ -225,8 +264,13 @@
 .stage__note {
   fill: var(--cp-muted);
   font-family: var(--cp-font-sans);
-  font-size: 13px;
+  font-size: 12px;
   text-anchor: middle;
+}
+
+.stage__note--warning {
+  fill: color-mix(in srgb, var(--cp-accent-rose) 72%, var(--cp-text));
+  font-weight: var(--cp-font-semibold);
 }
 
 .detector__background-stars circle {
@@ -252,11 +296,11 @@
   stroke-width: 1.5;
 }
 
-.detector__error--jan {
+.detector__error--a {
   stroke: color-mix(in srgb, var(--cp-accent-ice) 70%, transparent);
 }
 
-.detector__error--jul {
+.detector__error--b {
   stroke: color-mix(in srgb, var(--cp-accent-rose) 70%, transparent);
 }
 
@@ -264,11 +308,11 @@
   opacity: 0.78;
 }
 
-.detector__scatter--jan circle {
+.detector__scatter--a circle {
   fill: color-mix(in srgb, var(--cp-accent-ice) 75%, var(--cp-text));
 }
 
-.detector__scatter--jul circle {
+.detector__scatter--b circle {
   fill: color-mix(in srgb, var(--cp-accent-rose) 75%, var(--cp-text));
 }
 
@@ -276,22 +320,23 @@
   stroke-width: 1.7;
 }
 
-.stage__detector-dot--jan {
+.stage__detector-dot--now {
+  fill: color-mix(in srgb, var(--cp-accent-amber) 90%, var(--cp-text));
+  stroke: color-mix(in srgb, var(--cp-accent-amber) 42%, var(--cp-text));
+}
+
+.stage__detector-dot--a {
   fill: color-mix(in srgb, var(--cp-accent-ice) 90%, var(--cp-text));
   stroke: color-mix(in srgb, var(--cp-accent-ice) 42%, var(--cp-text));
 }
 
-.stage__detector-dot--jul {
+.stage__detector-dot--b {
   fill: color-mix(in srgb, var(--cp-accent-rose) 90%, var(--cp-text));
   stroke: color-mix(in srgb, var(--cp-accent-rose) 42%, var(--cp-text));
 }
 
 #detectorPanel[data-detector-mode="difference"] .detector__background-stars {
-  opacity: 0.3;
-}
-
-#detectorPanel[data-detector-mode="difference"] .detector__axis {
-  opacity: 0.6;
+  opacity: 0.4;
 }
 
 #detectorPanel[data-detector-mode="difference"] .detector__difference {
@@ -304,17 +349,13 @@
 
 #detectorPanel[data-blink="on"] .detector__error,
 #detectorPanel[data-blink="on"] .detector__scatter {
-  opacity: 0.68;
+  opacity: 0.65;
 }
 
 .schematic-note {
   text-align: center;
   color: var(--cp-muted);
   font-size: var(--cp-text-sm);
-}
-
-.cp-demo__readouts {
-  align-items: stretch;
 }
 
 .cp-readout-strip .cp-readout__value {
@@ -363,12 +404,12 @@
     grid-template-columns: 1fr;
   }
 
-  .stage__label {
-    font-size: 12px;
+  .capture-row {
+    grid-template-columns: 1fr 1fr;
   }
 
-  .stage__note {
-    font-size: 12px;
+  .capture-row + .capture-row {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -377,17 +418,17 @@
     grid-template-columns: 1fr;
   }
 
+  .capture-row,
+  .capture-row + .capture-row {
+    grid-template-columns: 1fr;
+  }
+
   .cp-readout-strip {
     gap: var(--cp-space-2) var(--cp-space-3);
   }
 
   .cp-readout-strip .cp-readout {
-    min-width: min(190px, 100%);
-  }
-
-  #detectorModeLabel,
-  #detectorSeparationLabel {
-    display: none;
+    min-width: min(210px, 100%);
   }
 }
 
