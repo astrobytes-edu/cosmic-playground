@@ -3,7 +3,7 @@ title: "Parallax Distance — Assessment Bank"
 bundle: "parallax-distance"
 section: "assessment"
 demo_slug: "parallax-distance"
-last_updated: "2026-02-02"
+last_updated: "2026-02-09"
 has_math: true
 ---
 > **Navigation**
@@ -12,28 +12,36 @@ has_math: true
 > - Student demo: [/play/parallax-distance/](../../play/parallax-distance/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
+## Observable keys used in prompts
+
+- `deltaTheta`: measured A→B detector shift (mas)
+- `B_eff`: effective baseline along the parallax axis (AU)
+- `p_hat`: inferred parallax from captures (mas)
+- `d_hat`: inferred distance from `p_hat` (pc)
+- `inferred uncertainty`: read from `sigma_{p_hat}`, `sigma_{d_hat}`, or `p_hat/sigma_{p_hat}`
+
 ## Clicker questions (with distractors + explanation)
 
 ### Clicker 1 — Direction of the relationship
 
-**Demo setup:** open `/play/parallax-distance/` and decrease parallax $p$.
+**Demo setup:** set $d_{\rm true}=10\,\mathrm{pc}$, capture A/B at $0^\circ/180^\circ$, and record `deltaTheta`, `B_eff`, `p_hat`, `d_hat`. Repeat with $d_{\rm true}=100\,\mathrm{pc}$ at the same phases.
 
-**Question:** As parallax decreases, the inferred distance…
+**Question:** With similar `B_eff`, the second run has smaller `deltaTheta`. Which readout change is expected?
 
-A. increases  
-B. decreases  
-C. stays the same  
-D. changes sign randomly
+A. `p_hat` decreases while `d_hat` increases  
+B. `p_hat` increases while `d_hat` increases  
+C. `p_hat` decreases while `d_hat` decreases  
+D. `p_hat` and `d_hat` both stay the same
 
 **Correct:** A  
-**Why:** Parallax is inverse: $d \propto 1/p$.  
+**Why:** With similar geometry, smaller measured shift implies smaller inferred parallax and larger inferred distance.  
 **Misconception targeted:** “Closer stars have smaller parallax.”
 
 ### Clicker 2 — Parsecs from parallax
 
-**Demo setup:** any.
+**Demo setup:** use any high-quality capture pair (`B_eff` near $2\,\mathrm{AU}$) and read `p_hat`.
 
-**Question:** A star with parallax $p = 0.1"$ has distance:
+**Question:** If `p_hat = 100\,\mathrm{mas} = 0.1"`, what `d_hat` should the class expect?
 
 A. 0.1 pc  
 B. 1 pc  
@@ -41,78 +49,78 @@ C. 10 pc
 D. 100 pc
 
 **Correct:** C  
-**Why:** $d(\text{pc}) = 1/p(\text{arcsec}) = 1/0.1 = 10$.  
+**Why:** $\hat d(\text{pc}) = 1/\hat p(\text{arcsec}) = 1/0.1 = 10$.  
 **Misconception targeted:** inverse scaling confusion.
 
-### Clicker 3 — What is the baseline?
+### Clicker 3 — Which capture geometry improves inference?
 
-**Demo setup:** look at the diagram baseline label (Jan ↔ Jul).
+**Demo setup:** hold $d_{\rm true}$ fixed. Compare captures at $0^\circ/180^\circ$ versus $80^\circ/100^\circ$. Record `B_eff` and inferred uncertainty.
 
-**Question:** The demo’s six-month parallax measurement uses Earth at opposite sides of its orbit, which is a baseline of approximately:
+**Question:** Which pair should give lower inferred uncertainty in `d_hat`?
 
-A. 1 AU  
-B. 2 AU  
-C. 1 light-year  
-D. 1 parsec
+A. $80^\circ/100^\circ$, because captures are closer in time  
+B. $80^\circ/100^\circ$, because small `B_eff` stabilizes inference  
+C. $0^\circ/180^\circ$, because larger `B_eff` strengthens inference  
+D. Both pairs, because `d_{\rm true}` is unchanged
+
+**Correct:** C  
+**Why:** Large effective baseline produces a stronger geometry signal and smaller inferred uncertainty for the same target distance.  
+**Misconception targeted:** “Any two captures are equally informative.”
+
+### Clicker 4 — Precision and confidence
+
+**Demo setup:** keep one capture pair fixed (e.g., $0^\circ/180^\circ$), then increase the uncertainty control and watch inferred uncertainty plus `p_hat/sigma_{p_hat}`.
+
+**Question:** If inferred uncertainty grows while `p_hat` stays similar, what should happen?
+
+A. `p_hat/sigma_{p_hat}` increases and confidence in `d_hat` increases  
+B. `p_hat/sigma_{p_hat}` decreases and confidence in `d_hat` decreases  
+C. `p_hat/sigma_{p_hat}` stays fixed while confidence in `d_hat` decreases  
+D. `p_hat/sigma_{p_hat}` decreases but confidence in `d_hat` is unchanged
 
 **Correct:** B  
-**Why:** January ↔ July corresponds to opposite sides of Earth’s orbit, about 2 AU apart.  
-**Misconception targeted:** confusing baseline and distance units.
-
-### Clicker 4 — Which mission measures smaller angles?
-
-**Demo setup:** increase $\sigma_p$.
-
-**Question:** If the uncertainty $\sigma_p$ increases (while $p$ stays the same), the signal-to-noise $p/\sigma_p$…
-
-A. increases  
-B. decreases  
-C. stays the same  
-D. becomes negative
-
-**Correct:** B  
-**Why:** Dividing by a larger $\sigma_p$ makes $p/\sigma_p$ smaller.  
+**Why:** Larger uncertainty lowers signal-to-noise and weakens distance inference reliability.  
 **Misconception targeted:** “Measurement precision doesn’t matter.”
 
-### Clicker 5 — Is parallax a property of the star?
+### Clicker 5 — Geometry versus star property
 
-**Demo setup:** none.
+**Demo setup:** keep one $d_{\rm true}$ value, then compare two capture geometries with different `B_eff`. Record `deltaTheta`, `p_hat`, and `d_hat`.
 
 **Question:** Which statement is most accurate?
 
 A. Parallax is a physical property of the star.  
-B. Parallax depends on the observer’s baseline and the star’s distance.  
-C. Parallax depends on the star’s temperature.  
-D. Parallax is caused by the star moving in space.
+B. `deltaTheta` depends on capture geometry, but `p_hat` and `d_hat` are the geometry-corrected inference.  
+C. `B_eff` only changes visuals, not measured quantities.  
+D. Changing capture geometry should never change any readout.
 
 **Correct:** B  
-**Why:** Parallax is geometric (baseline + distance).  
+**Why:** The measured shift changes with baseline projection; the inference uses `B_eff` to recover parallax/distance.  
 **Misconception targeted:** “Parallax is a property of the star.”
 
 ### Clicker 6 — Bigger baseline thought experiment
 
-**Demo setup:** none.
+**Demo setup:** use any completed capture pair as a reference, then consider a larger physical baseline thought experiment with the same star and measurement precision.
 
-**Question:** If we could observe a star from a **larger baseline** than Earth’s orbit (e.g., from farther out in the Solar System), then the measured parallax angle would:
+**Question:** With a larger baseline, which change is expected in the same observable framework?
 
-A. get smaller (harder to measure)  
-B. get larger (easier to measure)  
-C. stay the same  
-D. become negative
+A. smaller `deltaTheta` and larger inferred uncertainty  
+B. larger `deltaTheta` and smaller inferred uncertainty in `d_hat`  
+C. unchanged `deltaTheta` and unchanged uncertainty  
+D. negative `d_hat`
 
 **Correct:** B  
-**Why:** A larger baseline produces a larger apparent shift for the same distance.  
+**Why:** Bigger baseline increases measured shift for the same distance, improving inference confidence.  
 **Misconception targeted:** “Better measurement is only about better cameras, not geometry.”
 
 ## Short-answer prompts
 
-1. Explain why measuring stellar parallax was historically difficult (what had to be measured, and how small it is).
-2. In your own words, define a parsec and explain why astronomers like it.
-3. Using the demo, describe how the star’s apparent position changes from January to July.
-4. Why can’t parallax be the only distance method for the whole Milky Way?
+1. From one capture pair, explain how `deltaTheta` and `B_eff` combine to produce `p_hat` and then `d_hat`.
+2. In your own words, define a parsec and connect it to `p_hat` in arcseconds.
+3. Describe one case where `deltaTheta` is measurable but inferred uncertainty is still high.
+4. Why does inferred uncertainty set the distance reach of parallax methods?
 
 ## Exit ticket (3 questions)
 
-1. What happens to parallax when distance increases? (One sentence.)
-2. A star has $p = 0.5"$. What is its distance in pc? (One number.)
-3. Name one factor that limits parallax measurements.
+1. Two runs have similar `B_eff`; one has `deltaTheta` about $10\times$ smaller. What happens to `p_hat` and `d_hat`? (One sentence.)
+2. If `p_hat = 0.5"`, what `d_hat` should you report in pc? (One number.)
+3. Name one geometry factor and one measurement factor that increase inferred uncertainty.

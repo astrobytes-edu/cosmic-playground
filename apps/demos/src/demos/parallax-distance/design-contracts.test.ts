@@ -82,6 +82,15 @@ describe("Parallax Distance -- Design System Contracts", () => {
       expect(html).toContain('id="sigmaMas"');
       expect(html).toContain('id="exaggeration"');
     });
+
+    it("uses measurement-framed uncertainty copy (sigma_meas) instead of ambiguous sigma_p copy", () => {
+      expect(html).toContain("Astrometric measurement uncertainty $\\sigma_{\\rm meas}$");
+      expect(html).not.toContain("Astrometric uncertainty $\\sigma_p$");
+      expect(html).toContain("Inferred parallax uncertainty $\\sigma_{\\hat p}$");
+      expect(html).toContain("Inferred distance uncertainty $\\sigma_{\\hat d}$");
+      expect(html).toContain("Larger measurement uncertainty $\\sigma_{\\rm meas}$");
+      expect(html).not.toContain("Larger uncertainty can dominate tiny shifts");
+    });
   });
 
   describe("Stage geometry and detector nodes", () => {
@@ -135,6 +144,17 @@ describe("Parallax Distance -- Design System Contracts", () => {
       expect(mainTs).toContain("initStarfield");
       expect(mainTs).toContain("initPopovers");
       expect(mainTs).toContain("initTabs");
+    });
+
+    it("uses measurement-vs-inferred uncertainty wording in helper and export copy", () => {
+      expect(mainTs).toContain("Measurement uncertainty sigma_meas (mas)");
+      expect(mainTs).toContain(
+        "Control sigma_meas sets per-capture measurement uncertainty; readouts report inferred sigma_p_hat and sigma_d_hat."
+      );
+      expect(mainTs).toContain(
+        "Compare inferred d_hat to d_true and explain how measurement uncertainty (sigma_meas) propagates into inferred uncertainty."
+      );
+      expect(mainTs).toContain("Measurement uncertainty updated. Capture A and B again.");
     });
 
     it("imports physics and data packages, not hardcoded formulas in DOM", () => {

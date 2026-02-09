@@ -27,4 +27,11 @@
 - Station-mode table columns changed to distance-first capture workflow fields.
 
 ## 6) Promotion recommendation
-- Recommendation remains **experimental** until full site e2e pass and screenshot refresh are completed.
+- All technical launch gates are now passing.
+- Recommendation should remain **conservative** (hold at **experimental**) if instructor-backlog P0 items are still open, because unresolved instructor-facing blockers can still cause classroom failure despite technical readiness.
+- Promote to **beta** after instructor-backlog P0 items are closed.
+
+### 2026-02-09 Closure update
+- Closed: uncertainty semantics fix by framing `sigma_meas` explicitly as measurement uncertainty (precision), not physical spread.
+- Closed: infinite-SNR classification correction so the zero-uncertainty limit is no longer misclassified.
+- Closed: instructor-doc alignment to capture workflow semantics and current quality framing.

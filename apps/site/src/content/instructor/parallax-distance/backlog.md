@@ -3,7 +3,7 @@ title: "Parallax Distance — Backlog"
 bundle: "parallax-distance"
 section: "backlog"
 demo_slug: "parallax-distance"
-last_updated: "2026-02-02"
+last_updated: "2026-02-09"
 ---
 > **Navigation**
 > - Instructor hub: [/demos/_instructor/](../../instructor/)
@@ -15,7 +15,7 @@ last_updated: "2026-02-02"
 
 - **Measurement-limit clarity:** add one explicit instructor note (and/or student microcopy) that “measurable” depends on precision and that the visualization is exaggerated for teaching.
 - **Unit scaffolding:** add a tiny on-page “arcsec <-> mas <-> $\mu\mathrm{as}$” conversion reminder so students don’t treat unit changes as physics changes.
-- **Assessment alignment:** package the clickers into a quick sequence that pairs each with a demo action (parallax slider, uncertainty slider, preset stars).
+- **Assessment alignment:** package the clickers into a quick capture sequence where students record `deltaTheta`, `B_eff`, `p_hat`, `d_hat`, and inferred uncertainty for each case.
 
 ## P1 (important)
 

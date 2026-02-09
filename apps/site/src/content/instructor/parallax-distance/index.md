@@ -74,7 +74,7 @@ Use these to surface and correct common wrong models:
   **Prompt:** *“If the star stayed exactly the same, could its parallax change?”* (Yes: change baseline or observer location.)
 
 - **Misconception:** “Closer stars have smaller parallax.”  
-  **Prompt:** *“Thumb at arm’s length vs across the room: which shifts more?”* Then map that directly to the demo slider.
+  **Prompt:** *“Thumb at arm’s length vs across the room: which shifts more?”* Then run near/far distance capture pairs and compare $\Delta\theta$ with inferred $\hat d$.
 
 - **Misconception:** “Any two captures are equally good.”  
   **Prompt:** *“What happens when captures are close along the parallax axis?”* Use $B_{\rm eff}$ warning to make ill-conditioning concrete.

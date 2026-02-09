@@ -270,6 +270,30 @@ describe("Parallax Distance -- DOM integration", () => {
     });
   });
 
+  it("shows baseline-too-small guidance and placeholder inferred readouts", async () => {
+    await import("./main");
+
+    const detectorSeparationLabel = requiredElement<SVGTextElement>("#detectorSeparationLabel");
+    const degenerateWarningLabel = requiredElement<SVGTextElement>("#degenerateWarningLabel");
+    const parallaxMasReadout = requiredElement<HTMLElement>("#parallaxMas");
+    const parallaxArcsecReadout = requiredElement<HTMLElement>("#parallaxArcsec");
+    const distancePcReadout = requiredElement<HTMLElement>("#distancePc");
+
+    setRangeValue("#distancePcRange", 10);
+    captureEpoch(90, "A");
+    captureEpoch(270, "B");
+
+    expect(detectorSeparationLabel.textContent).toContain("baseline too small");
+    expect(detectorSeparationLabel.textContent).toContain("stable inference");
+    expect(degenerateWarningLabel.textContent).toContain(
+      "Increase capture separation along the parallax axis."
+    );
+
+    expect(parallaxMasReadout.textContent?.trim()).toBe("—");
+    expect(parallaxArcsecReadout.textContent?.trim()).toBe("—");
+    expect(distancePcReadout.textContent?.trim()).toBe("—");
+  });
+
   it("announces distance and capture workflow updates in live region", async () => {
     await import("./main");
 

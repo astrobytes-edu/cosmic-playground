@@ -220,6 +220,7 @@ export function signalToNoise(signal: number, sigma: number): number {
 }
 
 export function describeMeasurability(snr: number): string {
+  if (snr === Infinity) return "Excellent";
   if (!Number.isFinite(snr) || snr <= 0) return "Not measurable";
   if (snr >= 10) return "Excellent";
   if (snr >= 5) return "Good";

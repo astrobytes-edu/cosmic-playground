@@ -188,10 +188,13 @@ describe("Parallax Distance -- UI Logic", () => {
   describe("readability helpers", () => {
     it("computes SNR and quality labels", () => {
       expect(signalToNoise(100, 2)).toBeCloseTo(50, 12);
+      expect(describeMeasurability(Infinity)).toBe("Excellent");
       expect(describeMeasurability(25)).toBe("Excellent");
       expect(describeMeasurability(6)).toBe("Good");
       expect(describeMeasurability(2)).toBe("Poor");
       expect(describeMeasurability(0)).toBe("Not measurable");
+      expect(describeMeasurability(-1)).toBe("Not measurable");
+      expect(describeMeasurability(NaN)).toBe("Not measurable");
     });
 
     it("keeps visual exaggeration and error radius display-only", () => {

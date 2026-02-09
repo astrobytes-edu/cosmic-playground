@@ -49,6 +49,17 @@ test.describe("Parallax Distance -- E2E", () => {
     );
   });
 
+  test("instructor page requires capture-first wording and rejects legacy slider language", async ({ page }) => {
+    await page.goto("instructor/parallax-distance/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: "Parallax Distance" })
+    ).toBeVisible();
+    await expect(page.locator("main")).toContainText(
+      /Capture A, then move to a separated phase and capture B/i
+    );
+    await expect(page.locator("main")).not.toContainText(/demo slider/i);
+  });
+
   test("distance increase reduces measured shift after capture workflow", async ({ page }) => {
     await setRange(page, "#distancePcRange", 10);
     await captureEpoch(page, 0, "A");

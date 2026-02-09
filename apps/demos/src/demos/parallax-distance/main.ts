@@ -1093,7 +1093,7 @@ function exportResults(): ExportPayloadV1 {
         name: "Capture B phase (deg)",
         value: state.captureB ? formatNumber(state.captureB.phaseDeg, 3) : "\u2014"
       },
-      { name: "Uncertainty sigma_p (mas)", value: formatNumber(state.sigmaMas, 3) },
+      { name: "Measurement uncertainty sigma_meas (mas)", value: formatNumber(state.sigmaMas, 3) },
       { name: "Exaggeration (visual only)", value: formatNumber(state.exaggerationVisual, 2) },
       { name: "Detector mode", value: state.detectorMode },
       { name: "Blink", value: state.blinkMode ? "on" : "off" }
@@ -1131,7 +1131,7 @@ function exportResults(): ExportPayloadV1 {
             : "\u2014"
       },
       {
-        name: "Signal-to-noise p_hat/sigma_p_hat",
+        name: "Signal-to-noise p_hat/sigma_p_hat (inferred)",
         value: snap.inference.snrPHat !== null ? formatNumber(snap.inference.snrPHat, 6) : "\u2014"
       },
       { name: "Measurement quality", value: snap.inference.quality }
@@ -1173,6 +1173,7 @@ const demoModes = createDemoModes({
         items: [
           "Set true distance first, then run orbit motion.",
           "Capture A and B to measure deltaTheta and infer p_hat and d_hat.",
+          "Control sigma_meas sets per-capture measurement uncertainty; readouts report inferred sigma_p_hat and sigma_d_hat.",
           "If B_eff is tiny, captures are ill-conditioned for inference."
         ]
       }
@@ -1184,7 +1185,7 @@ const demoModes = createDemoModes({
     steps: [
       "Set true distance d_true and capture A and B.",
       "Record measured deltaTheta and effective baseline B_eff.",
-      "Compare inferred d_hat to d_true and explain uncertainty limits."
+      "Compare inferred d_hat to d_true and explain how measurement uncertainty (sigma_meas) propagates into inferred uncertainty."
     ],
     columns: [
       { key: "case", label: "Case" },
@@ -1195,7 +1196,7 @@ const demoModes = createDemoModes({
       { key: "bEffAu", label: "B_eff (AU)" },
       { key: "pHatMas", label: "Inferred p_hat (mas)" },
       { key: "dHatPc", label: "Inferred d_hat (pc)" },
-      { key: "snr", label: "p_hat/sigma_p_hat" }
+      { key: "snr", label: "p_hat/sigma_p_hat (inferred)" }
     ],
     getSnapshotRow() {
       const snap = snapshot();
@@ -1226,7 +1227,7 @@ const demoModes = createDemoModes({
     },
     snapshotLabel: "Add row (snapshot)",
     synthesisPrompt:
-      "<p><strong>Synthesis:</strong> Explain how baseline geometry and uncertainty affect parallax inference quality.</p>"
+      "<p><strong>Synthesis:</strong> Explain how baseline geometry and measurement uncertainty shape inferred uncertainty and parallax inference quality.</p>"
   }
 });
 
@@ -1320,7 +1321,7 @@ sigmaMas.addEventListener("input", () => {
   state.sigmaMas = clamp(Number(sigmaMas.value), SIGMA_MAS_MIN, SIGMA_MAS_MAX);
   clearCaptures(false);
   render();
-  setLiveRegionText(status, "Uncertainty updated. Capture A and B again.");
+  setLiveRegionText(status, "Measurement uncertainty updated. Capture A and B again.");
 });
 
 exaggeration.addEventListener("input", () => {
