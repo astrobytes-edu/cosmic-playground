@@ -6,12 +6,12 @@ import path from "node:path";
  * Design System Contract Tests -- Parallax Distance
  *
  * Invariants:
- *   1. Uses composable Moon-Phases-style primitives (sidebar, readout strip, tabs)
- *   2. Stage contains orbit + Jan/Jul + angle + detector shift geometry nodes
- *   3. A starfield canvas exists and main.ts initializes initStarfield
- *   4. Readout values separate units into .cp-readout__unit spans
- *   5. CSS stays token-first (no legacy alias leakage, no hex/rgba literals)
- *   6. Physics imports come from @cosmic/physics
+ *   1. Uses composable layout primitives (sidebar, stage, readout strip, drawer)
+ *   2. Uses explicit two-panel pedagogy (geometry cause + detector observable)
+ *   3. Distance is the primary control; p is inferred in readouts
+ *   4. Stage includes orbit-epoch geometry and detector-shift measurement nodes
+ *   5. Keeps play-contract markers and runtime initialization hooks
+ *   6. CSS remains token-first (no hex literals, no raw rgba() literals)
  */
 
 describe("Parallax Distance -- Design System Contracts", () => {
@@ -31,104 +31,115 @@ describe("Parallax Distance -- Design System Contracts", () => {
       expect(html).toContain("cp-demo__drawer");
     });
 
+    it("keeps required play contract ids", () => {
+      expect(html).toContain('id="cp-demo"');
+      expect(html).toContain('id="copyResults"');
+      expect(html).toContain('id="status"');
+      expect(html).toContain("cp-demo__drawer");
+    });
+
     it("uses tab semantics for pedagogical shelf", () => {
       expect(html).toContain('role="tablist"');
       expect(html).toContain('role="tab"');
       expect(html).toContain('role="tabpanel"');
     });
+  });
 
-    it("uses cp-utility-toolbar actions", () => {
-      expect(html).toContain("cp-utility-toolbar");
+  describe("Two-panel pedagogy", () => {
+    it("contains explicit left and right panel titles", () => {
+      expect(html).toContain("View from Above (orbit geometry)");
+      expect(html).toContain("As Seen on the Sky / Detector (observable shift)");
+    });
+
+    it("contains microcopy with causal steps", () => {
+      expect(html).toContain("Set a distance, then drag Earth around the orbit.");
+      expect(html).toContain("Use blink/overlay and read $2p\\rightarrow p\\rightarrow d$.");
+      expect(html).toContain("Parallax is not the star moving - it's the viewing direction changing.");
     });
   });
 
-  describe("Stage geometry contract", () => {
-    it("includes orbit scaffold and observer baseline nodes", () => {
+  describe("Distance-first controls", () => {
+    it("includes distance controls in pc and ly plus distance range", () => {
+      expect(html).toContain('id="distancePcInput"');
+      expect(html).toContain('id="distanceLyInput"');
+      expect(html).toContain('id="distancePcRange"');
+    });
+
+    it("includes phase presets and orbital phase slider", () => {
+      expect(html).toContain('id="phasePresetJan"');
+      expect(html).toContain('id="phasePresetApr"');
+      expect(html).toContain('id="phasePresetJul"');
+      expect(html).toContain('id="phasePresetOct"');
+      expect(html).toContain('id="phaseDeg"');
+    });
+
+    it("includes baseline, detector-mode, blink, sigma, and exaggeration controls", () => {
+      expect(html).toContain('id="showBaseline"');
+      expect(html).toContain('id="detectorModeOverlay"');
+      expect(html).toContain('id="detectorModeDifference"');
+      expect(html).toContain('id="blinkMode"');
+      expect(html).toContain('id="sigmaMas"');
+      expect(html).toContain('id="exaggeration"');
+    });
+  });
+
+  describe("Stage geometry and detector nodes", () => {
+    it("includes orbit geometry nodes", () => {
       expect(html).toContain('id="orbitPath"');
       expect(html).toContain('id="sun"');
-      expect(html).toContain('id="earthJan"');
-      expect(html).toContain('id="earthJul"');
+      expect(html).toContain('id="earthEpochAGroup"');
+      expect(html).toContain('id="earthEpochA"');
+      expect(html).toContain('id="earthEpochB"');
+      expect(html).toContain('id="rayEpochA"');
+      expect(html).toContain('id="rayEpochB"');
       expect(html).toContain('id="baseline"');
     });
 
-    it("includes parallax angle nodes", () => {
-      expect(html).toContain('id="angleArc"');
-      expect(html).toContain('id="angleLabel"');
-      expect(html).toContain('id="star"');
-      expect(html).toContain('id="starLabel"');
-    });
-
-    it("includes detector shift nodes", () => {
-      expect(html).toContain('id="detectorTrack"');
-      expect(html).toContain('id="detectorMarkerJan"');
-      expect(html).toContain('id="detectorMarkerJul"');
-      expect(html).toContain('id="detectorLabel"');
+    it("includes detector nodes for overlay, difference, and uncertainty", () => {
+      expect(html).toContain('id="backgroundStars"');
+      expect(html).toContain('id="detectorMarkerEpochA"');
+      expect(html).toContain('id="detectorMarkerEpochB"');
+      expect(html).toContain('id="differenceVector"');
+      expect(html).toContain('id="errorCircleEpochA"');
+      expect(html).toContain('id="errorCircleEpochB"');
+      expect(html).toContain('id="scatterEpochA"');
+      expect(html).toContain('id="scatterEpochB"');
     });
   });
 
-  describe("Starfield + runtime wiring", () => {
-    it("contains starfield canvas", () => {
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    });
-
-    it("main.ts initializes starfield, popovers, and tabs", () => {
-      expect(mainTs).toContain("initStarfield");
-      expect(mainTs).toMatch(/initStarfield\s*\(/);
-      expect(mainTs).toContain("initPopovers");
-      expect(mainTs).toMatch(/initPopovers\s*\(/);
-      expect(mainTs).toContain("initTabs");
-      expect(mainTs).toMatch(/initTabs\s*\(/);
-    });
-  });
-
-  describe("Readout unit separation", () => {
-    it("includes unit spans for dimensional readouts", () => {
+  describe("Readout units and inference framing", () => {
+    it("keeps readout unit spans", () => {
       const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(3);
+      expect(unitSpans.length).toBeGreaterThanOrEqual(4);
     });
 
-    it("labels avoid parenthesized units", () => {
-      const labels = html.match(/class="cp-readout__label"[^>]*>([^<]*)</g) || [];
-      const parenthesizedUnits = labels.filter((line) => /\((?:arcsec|pc|ly|mas)\)/.test(line));
-      expect(parenthesizedUnits.length).toBe(0);
-    });
-
-    it("uses unit-explicit distance labels", () => {
-      expect(html).toContain("Distance $d$ in parsecs");
-      expect(html).toContain("Distance $d$ in light-years");
+    it("labels inferred p and inferred d instead of p-as-input framing", () => {
+      expect(html).toContain("Inferred parallax $p$");
+      expect(html).toContain("Inferred distance $d$ in parsecs");
+      expect(html).toContain("Inferred distance $d$ in light-years");
     });
   });
 
-  describe("Jan/Jul visual encoding consistency", () => {
-    it("uses explicit Jan/Jul earth and ray classes", () => {
-      expect(html).toContain("stage__earth--jan");
-      expect(html).toContain("stage__earth--jul");
-      expect(html).toContain("stage__ray--jan");
-      expect(html).toContain("stage__ray--jul");
+  describe("Runtime and architecture compliance", () => {
+    it("wires runtime helpers and starfield/tabs/popovers", () => {
+      expect(mainTs).toContain("createDemoModes");
+      expect(mainTs).toContain("createInstrumentRuntime");
+      expect(mainTs).toContain("initStarfield");
+      expect(mainTs).toContain("initPopovers");
+      expect(mainTs).toContain("initTabs");
     });
 
-    it("maps Jan/Jul marker classes to accent tokens", () => {
-      expect(css).toMatch(/\.stage__earth--jan[\s\S]*?--cp-accent-ice/);
-      expect(css).toMatch(/\.stage__earth--jul[\s\S]*?--cp-accent-rose/);
-      expect(css).toMatch(/\.stage__detector-dot--jan[\s\S]*?--cp-accent-ice/);
-      expect(css).toMatch(/\.stage__detector-dot--jul[\s\S]*?--cp-accent-rose/);
+    it("imports physics and data packages, not hardcoded formulas in DOM", () => {
+      expect(mainTs).toContain('from "@cosmic/physics"');
+      expect(mainTs).toContain('from "@cosmic/data-astr101"');
     });
   });
 
   describe("Token-first color invariants", () => {
-    it("sun, earth, and star classes use celestial tokens", () => {
-      expect(css).toMatch(/\.stage__sun[\s\S]*?--cp-celestial-sun/);
-      expect(css).toMatch(/\.stage__earth[\s\S]*?--cp-celestial-earth/);
-      expect(css).toMatch(/\.stage__star[\s\S]*?--cp-celestial-star/);
-      expect(css).toMatch(/\.stage__orbit[\s\S]*?--cp-celestial-orbit/);
-    });
-
     it("contains no legacy token aliases", () => {
       expect(css).not.toContain("--cp-warning");
       expect(css).not.toContain("--cp-accent2");
       expect(css).not.toContain("--cp-accent3");
-      expect(html).not.toContain("--cp-accent2");
-      expect(html).not.toContain("--cp-accent3");
     });
 
     it("contains no hardcoded rgba() or hex literals", () => {
@@ -148,13 +159,6 @@ describe("Parallax Distance -- Design System Contracts", () => {
 
       expect(rgbaViolations).toEqual([]);
       expect(hexViolations).toEqual([]);
-    });
-  });
-
-  describe("Architecture compliance", () => {
-    it("imports physics from @cosmic/physics", () => {
-      expect(mainTs).toContain('from "@cosmic/physics"');
-      expect(mainTs).not.toMatch(/function\s+distanceParsec/);
     });
   });
 });

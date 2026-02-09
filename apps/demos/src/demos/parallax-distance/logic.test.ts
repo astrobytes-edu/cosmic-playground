@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
   clamp,
-  detectorOffsetPx,
+  detectorOffsetsMas,
   describeMeasurability,
-  diagramHalfAngle,
-  diagramStarY,
+  errorRadiusPx,
   formatNumber,
-  parallaxArcsecFromMas,
-  parallaxRadiansFromMas,
+  normalizePhaseDeg,
+  oppositePhaseDeg,
+  offsetPx,
   signalToNoise
 } from "./logic";
 
@@ -36,15 +36,18 @@ describe("Parallax Distance -- UI Logic", () => {
     });
   });
 
-  describe("parallax conversions", () => {
-    it("converts mas to arcsec", () => {
-      expect(parallaxArcsecFromMas(1000)).toBeCloseTo(1, 12);
-      expect(parallaxArcsecFromMas(250)).toBeCloseTo(0.25, 12);
+  describe("phase helpers", () => {
+    it("normalizes phase to [0, 360)", () => {
+      expect(normalizePhaseDeg(0)).toBeCloseTo(0, 12);
+      expect(normalizePhaseDeg(360)).toBeCloseTo(0, 12);
+      expect(normalizePhaseDeg(725)).toBeCloseTo(5, 12);
+      expect(normalizePhaseDeg(-90)).toBeCloseTo(270, 12);
     });
 
-    it("converts mas to radians", () => {
-      const oneArcsecRad = (Math.PI / 180) / 3600;
-      expect(parallaxRadiansFromMas(1000)).toBeCloseTo(oneArcsecRad, 12);
+    it("returns opposite phases separated by 180 deg", () => {
+      expect(oppositePhaseDeg(0)).toBeCloseTo(180, 12);
+      expect(oppositePhaseDeg(90)).toBeCloseTo(270, 12);
+      expect(oppositePhaseDeg(270)).toBeCloseTo(90, 12);
     });
   });
 
@@ -60,85 +63,57 @@ describe("Parallax Distance -- UI Logic", () => {
 
     it("classifies measurement quality", () => {
       expect(describeMeasurability(25)).toBe("Excellent");
-      expect(describeMeasurability(8)).toBe("Good");
-      expect(describeMeasurability(4)).toBe("Marginal");
+      expect(describeMeasurability(6)).toBe("Good");
       expect(describeMeasurability(2)).toBe("Poor");
       expect(describeMeasurability(0)).toBe("Not measurable");
       expect(describeMeasurability(Infinity)).toBe("Not measurable");
     });
   });
 
-  describe("diagramHalfAngle", () => {
-    it("is monotonic across p = 1..1000 mas", () => {
-      const values = [1, 10, 100, 1000].map((p) => diagramHalfAngle(p));
+  describe("detector offsets", () => {
+    it("keeps Jan/Jul separation equal to 2p independent of phase", () => {
+      const pMas = 40;
+      const atJan = detectorOffsetsMas(pMas, 0);
+      const atApr = detectorOffsetsMas(pMas, 90);
+      const atRandom = detectorOffsetsMas(pMas, 233);
 
-      expect(values[0].halfAngle).toBeLessThan(values[1].halfAngle);
-      expect(values[1].halfAngle).toBeLessThan(values[2].halfAngle);
-      expect(values[2].halfAngle).toBeLessThan(values[3].halfAngle);
-
-      expect(values[0].logProgress).toBeCloseTo(0, 6);
-      expect(values[3].logProgress).toBeCloseTo(1, 6);
-      expect(values[2].logProgress).toBeCloseTo(2 / 3, 5);
+      expect(atJan.separationMas).toBeCloseTo(80, 10);
+      expect(atApr.separationMas).toBeCloseTo(80, 10);
+      expect(atRandom.separationMas).toBeCloseTo(80, 10);
     });
 
-    it("returns finite exaggeration factors", () => {
-      const near = diagramHalfAngle(1000);
-      const far = diagramHalfAngle(1);
-      expect(near.exaggeration).toBeGreaterThan(1);
-      expect(far.exaggeration).toBeGreaterThan(near.exaggeration);
-      expect(Number.isFinite(near.exaggeration)).toBe(true);
-      expect(Number.isFinite(far.exaggeration)).toBe(true);
-    });
-  });
-
-  describe("diagramStarY", () => {
-    it("moves monotonically with visual half-angle", () => {
-      const yA = diagramStarY(320, 320, 0.45, 88, 236);
-      const yB = diagramStarY(320, 320, 0.75, 88, 236);
-      const yC = diagramStarY(320, 320, 1.0, 88, 236);
-
-      expect(yA).toBeLessThan(yB);
-      expect(yB).toBeLessThan(yC);
+    it("returns opposite detector vectors for opposite epochs", () => {
+      const result = detectorOffsetsMas(24, 57);
+      expect(result.epochA.xMas).toBeCloseTo(-result.epochB.xMas, 10);
+      expect(result.epochA.yMas).toBeCloseTo(-result.epochB.yMas, 10);
     });
 
-    it("does not collapse to a single value across slider domain", () => {
-      const starYs = [1, 10, 100, 1000].map((p) => {
-        const { halfAngle } = diagramHalfAngle(p);
-        return diagramStarY(320, 320, halfAngle, 88, 236);
-      });
+    it("changes smoothly and periodically with phase", () => {
+      const a = detectorOffsetsMas(30, 0).epochA;
+      const b = detectorOffsetsMas(30, 45).epochA;
+      const c = detectorOffsetsMas(30, 360).epochA;
 
-      expect(new Set(starYs.map((value) => value.toFixed(2))).size).toBeGreaterThanOrEqual(3);
-    });
-
-    it("keeps visible motion in the far-distance regime", () => {
-      const lowParallaxYs = [1, 2, 5, 10].map((p) => {
-        const { halfAngle } = diagramHalfAngle(p);
-        return diagramStarY(320, 320, halfAngle, 88, 236);
-      });
-
-      expect(new Set(lowParallaxYs.map((value) => value.toFixed(2))).size).toBe(4);
-      expect(lowParallaxYs[0]).toBeLessThan(lowParallaxYs[1]);
-      expect(lowParallaxYs[1]).toBeLessThan(lowParallaxYs[2]);
-      expect(lowParallaxYs[2]).toBeLessThan(lowParallaxYs[3]);
+      expect(Math.abs(a.xMas - b.xMas) + Math.abs(a.yMas - b.yMas)).toBeGreaterThan(0.1);
+      expect(c.xMas).toBeCloseTo(a.xMas, 10);
+      expect(c.yMas).toBeCloseTo(a.yMas, 10);
     });
   });
 
-  describe("detectorOffsetPx", () => {
-    it("is monotonic and bounded", () => {
-      const offsets = [1, 10, 100, 1000].map((p) => detectorOffsetPx(p, 120, 12));
-
-      expect(offsets[0]).toBeLessThan(offsets[1]);
-      expect(offsets[1]).toBeLessThan(offsets[2]);
-      expect(offsets[2]).toBeLessThan(offsets[3]);
-
-      for (const value of offsets) {
-        expect(value).toBeGreaterThanOrEqual(12);
-        expect(value).toBeLessThanOrEqual(120);
-      }
+  describe("display scaling helpers", () => {
+    it("scales displayed offset with exaggeration only", () => {
+      const base = offsetPx(10, 1, 0.06);
+      const exaggerated = offsetPx(10, 12, 0.06);
+      expect(exaggerated).toBeCloseTo(base * 12, 12);
     });
 
-    it("respects minimum offset when track half-width is tiny", () => {
-      expect(detectorOffsetPx(500, 6, 12)).toBeGreaterThanOrEqual(12);
+    it("maps sigma to visible error radius with clamping", () => {
+      const low = errorRadiusPx(0.1, 5, 0.08, 3, 40);
+      const high = errorRadiusPx(12, 5, 0.08, 3, 40);
+      const capped = errorRadiusPx(1000, 5, 0.08, 3, 40);
+
+      expect(low).toBeGreaterThanOrEqual(3);
+      expect(high).toBeGreaterThan(low);
+      expect(capped).toBeLessThanOrEqual(40);
     });
   });
 });

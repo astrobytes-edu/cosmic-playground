@@ -58,7 +58,9 @@
             </div>
           </div>
 
-          <p class="cp-muted">Use Earth’s orbit baseline to infer stellar distance from tiny angular shifts.</p>
+          <p class="cp-muted">
+            Earth moves along its orbit, the viewing direction changes, and the target appears to shift against distant stars.
+          </p>
 
           <div class="cp-callout" data-kind="model">
             <strong>Model</strong>
@@ -66,25 +68,74 @@
           </div>
 
           <label class="cp-field">
-            <span class="cp-label">Preset star</span>
+            <span class="cp-label">Preset star (optional)</span>
             <select id="starPreset" class="cp-select"></select>
           </label>
 
-          <label class="cp-field">
-            <span class="cp-label">Parallax angle $p$</span>
-            <div id="parallaxMasValue" class="cp-field__value">100 mas</div>
+          <div class="cp-field">
+            <span class="cp-label">Distance $d$ (primary input)</span>
+            <div class="distance-input-grid">
+              <label class="distance-input-cell">
+                <span class="distance-input-label">pc</span>
+                <input id="distancePcInput" class="cp-input" type="number" min="1" max="5000" step="0.1" value="10" />
+              </label>
+              <label class="distance-input-cell">
+                <span class="distance-input-label">ly</span>
+                <input id="distanceLyInput" class="cp-input" type="number" min="3.26" max="16308" step="0.1" value="32.62" />
+              </label>
+            </div>
+            <div id="distancePcValue" class="cp-field__value">10.0 pc</div>
             <input
-              id="parallaxMas"
+              id="distancePcRange"
               class="cp-range"
               type="range"
               min="1"
-              max="1000"
-              value="100"
-              step="1"
-              data-tooltip-source="#parallaxMasValue"
+              max="5000"
+              value="10"
+              step="0.1"
+              data-tooltip-source="#distancePcValue"
             />
-            <div class="cp-field__hint">Range: 1–1000 mas</div>
-          </label>
+            <div class="cp-field__hint">Parallax $p$ is inferred from this distance, not directly set.</div>
+          </div>
+
+          <div class="cp-field">
+            <span class="cp-label">Observation epochs</span>
+            <div class="cp-chip-group" role="group" aria-label="Reference epoch presets">
+              <button id="phasePresetJan" class="cp-chip phase-preset is-active" type="button" data-phase="0" aria-pressed="true">Jan</button>
+              <button id="phasePresetApr" class="cp-chip phase-preset" type="button" data-phase="90" aria-pressed="false">Apr</button>
+              <button id="phasePresetJul" class="cp-chip phase-preset" type="button" data-phase="180" aria-pressed="false">Jul</button>
+              <button id="phasePresetOct" class="cp-chip phase-preset" type="button" data-phase="270" aria-pressed="false">Oct</button>
+            </div>
+            <div id="phaseDegValue" class="cp-field__value">0° (Jan reference)</div>
+            <input
+              id="phaseDeg"
+              class="cp-range"
+              type="range"
+              min="0"
+              max="360"
+              value="0"
+              step="1"
+              data-tooltip-source="#phaseDegValue"
+            />
+            <div class="cp-field__hint">The second epoch is always 180° later (about 6 months).</div>
+          </div>
+
+          <div class="cp-field cp-field--compact">
+            <label class="cp-check">
+              <input id="showBaseline" type="checkbox" checked /> Show baseline vector (default on)
+            </label>
+          </div>
+
+          <div class="cp-field">
+            <span class="cp-label">Detector view mode</span>
+            <div class="cp-chip-group" role="group" aria-label="Detector mode">
+              <button id="detectorModeOverlay" class="cp-chip is-active" type="button" aria-pressed="true">Overlay</button>
+              <button id="detectorModeDifference" class="cp-chip" type="button" aria-pressed="false">Difference</button>
+            </div>
+            <label class="cp-check cp-check--inline">
+              <input id="blinkMode" type="checkbox" /> Blink Jan/Jul
+            </label>
+          </div>
 
           <label class="cp-field">
             <span class="cp-label">Uncertainty $\sigma_p$</span>
@@ -99,12 +150,37 @@
               step="0.1"
               data-tooltip-source="#sigmaMasValue"
             />
-            <div class="cp-field__hint">Higher uncertainty lowers confidence in $d$.</div>
+          </label>
+
+          <label class="cp-field">
+            <span class="cp-label">Detector exaggeration (visual only)</span>
+            <div id="exaggerationValue" class="cp-field__value">15.0×</div>
+            <input
+              id="exaggeration"
+              class="cp-range"
+              type="range"
+              min="1"
+              max="40"
+              value="15"
+              step="0.5"
+              data-tooltip-source="#exaggerationValue"
+            />
+            <div class="cp-field__hint">Exaggeration affects visualization only, not computed $p$ or $d$.</div>
           </label>
 
           <div class="cp-notice">
-            <h3>Predict</h3>
-            <p>If $p$ becomes 10x smaller, does $d$ become 10x larger or 10x smaller?</p>
+            <h3>What to do</h3>
+            <ol class="steps-list">
+              <li>Set a distance, then drag Earth around the orbit.</li>
+              <li>Watch the target shift on the detector relative to background stars.</li>
+              <li>Use blink/overlay and read $2p\rightarrow p\rightarrow d$.</li>
+              <li>Increase $\sigma_p$ and explain why distant stars are hard.</li>
+            </ol>
+          </div>
+
+          <div class="cp-callout" data-kind="warning">
+            <strong>Misconception check</strong>
+            <div>Parallax is not the star moving - it's the viewing direction changing.</div>
           </div>
 
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -114,66 +190,116 @@
       <section class="cp-demo__stage cp-stage stage" aria-label="Parallax visualization stage">
         <div class="viz-layout">
           <div class="viz-panel">
-            <div class="panel-title">Earth Orbit Baseline and Apparent Shift</div>
+            <div class="panel-title">View from Above (orbit geometry)</div>
             <svg
-              id="diagram"
+              id="orbitSvg"
               class="stage__svg"
-              viewBox="0 0 960 560"
+              viewBox="0 0 560 420"
               role="img"
-              aria-label="Schematic showing Earth in January and July, parallax angle, and apparent star shift"
+              aria-label="Top view showing Sun, Earth orbit, two observation epochs, and line-of-sight rays"
             >
-              <rect x="0" y="0" width="960" height="560" rx="16" class="stage__bg" />
+              <rect x="0" y="0" width="560" height="420" rx="16" class="stage__bg" />
 
-              <circle id="orbitPath" class="stage__orbit" cx="480" cy="296" r="160" />
-              <circle id="sun" class="stage__sun" cx="480" cy="296" r="20" />
-              <text id="sunLabel" class="stage__label stage__label--sun" x="480" y="332">Sun</text>
+              <circle id="orbitPath" class="stage__orbit" cx="280" cy="220" r="138" />
+              <circle id="sun" class="stage__sun" cx="280" cy="220" r="18" />
+              <text class="stage__label stage__label--sun" x="280" y="252">Sun</text>
 
               <line id="baseline" class="stage__baseline" x1="0" y1="0" x2="0" y2="0" />
-              <circle id="earthJan" class="stage__earth stage__earth--jan" r="11" cx="0" cy="0" />
-              <circle id="earthJul" class="stage__earth stage__earth--jul" r="11" cx="0" cy="0" />
-              <text id="earthJanLabel" class="stage__label stage__label--earth stage__label--earth-jan" x="0" y="0">Earth (Jan)</text>
-              <text id="earthJulLabel" class="stage__label stage__label--earth stage__label--earth-jul" x="0" y="0">Earth (Jul)</text>
-              <text id="baselineLabel" class="stage__label stage__label--baseline" x="0" y="0">Baseline: 2 AU (schematic)</text>
+              <text id="baselineLabel" class="stage__label stage__label--baseline" x="280" y="388">Baseline ≈ 2 AU (schematic)</text>
 
-              <line id="rayJan" class="stage__ray stage__ray--jan" x1="0" y1="0" x2="0" y2="0" />
-              <line id="rayJul" class="stage__ray stage__ray--jul" x1="0" y1="0" x2="0" y2="0" />
+              <line id="rayEpochA" class="stage__ray stage__ray--jan" x1="0" y1="0" x2="0" y2="0" />
+              <line id="rayEpochB" class="stage__ray stage__ray--jul" x1="0" y1="0" x2="0" y2="0" />
 
-              <path id="angleArc" class="stage__arc" d="" />
-              <text id="angleLabel" class="stage__label stage__label--angle" x="0" y="0">2p (visual)</text>
+              <circle id="targetStar" class="stage__star" cx="280" cy="58" r="8" />
+              <text id="targetStarLabel" class="stage__label stage__label--star" x="302" y="52">Target star</text>
 
-              <circle id="star" class="stage__star" r="9" cx="0" cy="0" />
-              <text id="starLabel" class="stage__label stage__label--star" x="0" y="0">Target star</text>
+              <circle id="earthEpochB" class="stage__earth stage__earth--jul" cx="0" cy="0" r="10" />
+              <text id="earthEpochBLabel" class="stage__label stage__label--earth stage__label--earth-jul" x="0" y="0">Jul</text>
 
-              <g id="detectorGroup">
-                <rect id="detectorFrame" class="stage__detector-frame" x="290" y="434" width="380" height="92" rx="12" />
-                <line id="detectorTrack" class="stage__detector-track" x1="0" y1="0" x2="0" y2="0" />
-                <line id="detectorCenter" class="stage__detector-center" x1="0" y1="0" x2="0" y2="0" />
-                <circle id="detectorMarkerJan" class="stage__detector-dot stage__detector-dot--jan" r="6" cx="0" cy="0" />
-                <circle id="detectorMarkerJul" class="stage__detector-dot stage__detector-dot--jul" r="6" cx="0" cy="0" />
-                <text id="detectorJanLabel" class="stage__label stage__label--detector-dot" x="0" y="0">Jan</text>
-                <text id="detectorJulLabel" class="stage__label stage__label--detector-dot" x="0" y="0">Jul</text>
-                <text id="detectorLabel" class="stage__label stage__label--detector" x="480" y="458">Apparent sky position shift (exaggerated)</text>
+              <g
+                id="earthEpochAGroup"
+                class="earth-draggable"
+                role="slider"
+                tabindex="0"
+                aria-label="Earth orbital phase"
+                aria-valuemin="0"
+                aria-valuemax="360"
+                aria-valuenow="0"
+                aria-valuetext="Jan"
+              >
+                <circle id="earthEpochA" class="stage__earth stage__earth--jan" cx="0" cy="0" r="11" />
+              </g>
+              <text id="earthEpochALabel" class="stage__label stage__label--earth stage__label--earth-jan" x="0" y="0">Jan</text>
+
+              <text id="geometryCue" class="stage__note" x="280" y="28">Earth orbit changes line-of-sight direction to the same star.</text>
+            </svg>
+            <div class="schematic-note">Drag the blue Earth marker or use the phase slider.</div>
+          </div>
+
+          <div class="viz-panel" id="detectorPanel" data-detector-mode="overlay" data-blink="off">
+            <div class="panel-title">As Seen on the Sky / Detector (observable shift)</div>
+            <svg
+              id="detectorSvg"
+              class="stage__svg"
+              viewBox="0 0 560 420"
+              role="img"
+              aria-label="Detector sky view with fixed background stars and two apparent target positions"
+            >
+              <rect x="0" y="0" width="560" height="420" rx="16" class="stage__bg" />
+
+              <g id="backgroundStars" class="detector__background-stars">
+                <circle cx="112" cy="84" r="3" />
+                <circle cx="158" cy="146" r="2.5" />
+                <circle cx="204" cy="70" r="2" />
+                <circle cx="354" cy="92" r="2.5" />
+                <circle cx="412" cy="138" r="2" />
+                <circle cx="454" cy="248" r="3" />
+                <circle cx="206" cy="278" r="2" />
+                <circle cx="126" cy="242" r="2.5" />
               </g>
 
-              <text id="distanceCue" class="stage__note" x="480" y="548">Smaller $p$ means a smaller apparent shift and a larger distance $d$.</text>
-              <text id="exaggerationNote" class="stage__note stage__note--top" x="480" y="34">Visual angle exaggeration is used so tiny parallax is visible.</text>
+              <line id="detectorAxisX" class="detector__axis" x1="72" y1="210" x2="488" y2="210" />
+              <line id="detectorAxisY" class="detector__axis" x1="280" y1="64" x2="280" y2="356" />
+
+              <line id="differenceVector" class="detector__difference" x1="0" y1="0" x2="0" y2="0" />
+
+              <circle id="errorCircleEpochA" class="detector__error detector__error--jan" cx="0" cy="0" r="0" />
+              <circle id="errorCircleEpochB" class="detector__error detector__error--jul" cx="0" cy="0" r="0" />
+
+              <g id="scatterEpochA" class="detector__scatter detector__scatter--jan"></g>
+              <g id="scatterEpochB" class="detector__scatter detector__scatter--jul"></g>
+
+              <circle id="detectorMarkerEpochA" class="stage__detector-dot stage__detector-dot--jan" cx="0" cy="0" r="7" />
+              <circle id="detectorMarkerEpochB" class="stage__detector-dot stage__detector-dot--jul" cx="0" cy="0" r="7" />
+
+              <text id="detectorEpochALabel" class="stage__label stage__label--detector-dot" x="0" y="0">Jan</text>
+              <text id="detectorEpochBLabel" class="stage__label stage__label--detector-dot" x="0" y="0">Jul</text>
+
+              <text id="detectorModeLabel" class="stage__note" x="280" y="28">Overlay mode: compare both epochs directly.</text>
+              <text id="detectorSeparationLabel" class="stage__note" x="280" y="396">Measured angular separation = 2p.</text>
             </svg>
-            <div class="schematic-note">Schematic geometry (not to scale).</div>
+            <div class="schematic-note">Background stars stay fixed; target shifts with observer baseline.</div>
           </div>
         </div>
       </section>
 
       <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
         <div class="cp-readout">
-          <span class="cp-readout__label">Parallax $p$</span>
-          <span class="cp-readout__value"><span id="parallaxArcsec"></span><span class="cp-readout__unit">arcsec</span></span>
+          <span class="cp-readout__label">Angular separation $2p$</span>
+          <span class="cp-readout__value"><span id="separationArcsec"></span><span class="cp-readout__unit">arcsec</span></span>
+          <div class="cp-readout__sub"><span id="separationMas"></span> mas</div>
         </div>
         <div class="cp-readout">
-          <span class="cp-readout__label">Distance $d$ in parsecs</span>
+          <span class="cp-readout__label">Inferred parallax $p$</span>
+          <span class="cp-readout__value"><span id="parallaxArcsec"></span><span class="cp-readout__unit">arcsec</span></span>
+          <div class="cp-readout__sub"><span id="parallaxMas"></span> mas</div>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Inferred distance $d$ in parsecs</span>
           <span class="cp-readout__value"><span id="distancePc"></span><span class="cp-readout__unit">pc</span></span>
         </div>
         <div class="cp-readout">
-          <span class="cp-readout__label">Distance $d$ in light-years</span>
+          <span class="cp-readout__label">Inferred distance $d$ in light-years</span>
           <span class="cp-readout__value"><span id="distanceLy"></span><span class="cp-readout__unit">ly</span></span>
         </div>
         <div class="cp-readout">
@@ -195,23 +321,23 @@
           </div>
           <div class="cp-tab-panel" role="tabpanel" id="tab-notice" aria-labelledby="tab-btn-notice">
             <ul>
-              <li><strong>Observable:</strong> Jan and Jul sightlines separate by a visible angle $2p$.</li>
-              <li><strong>Pattern:</strong> as $p$ shrinks, detector shift shrinks and $d$ grows.</li>
-              <li><strong>Inference:</strong> distance depends inversely on parallax, $d\propto 1/p$.</li>
+              <li><strong>Cause:</strong> moving Earth changes the viewing direction to the same target.</li>
+              <li><strong>Observable:</strong> the target marker shifts relative to fixed background stars.</li>
+              <li><strong>Inference:</strong> measure $2p$, infer $p$, then compute $d(\mathrm{pc})=1/p(\mathrm{arcsec})$.</li>
             </ul>
           </div>
           <div class="cp-tab-panel" role="tabpanel" id="tab-model" aria-labelledby="tab-btn-model" hidden>
             <ul>
-              <li>Standard relation: $d\,(\mathrm{pc}) = 1 / p\,(\mathrm{arcsec})$.</li>
-              <li>Conversion: $1\,\mathrm{arcsec} = 1000\,\mathrm{mas}$.</li>
-              <li>The orbit and detector are schematic; the real angles are far smaller.</li>
+              <li>Small-angle parallax relation: $d\,(\mathrm{pc}) = 1/p\,(\mathrm{arcsec})$.</li>
+              <li>Detector markers come from two epochs separated by about 6 months.</li>
+              <li>Exaggeration scales displayed offsets only; readout math is unchanged.</li>
             </ul>
           </div>
           <div class="cp-tab-panel" role="tabpanel" id="tab-misconception" aria-labelledby="tab-btn-misconception" hidden>
             <ul>
-              <li>Parallax comes from <strong>observer baseline change</strong>, not stars zig-zagging through space.</li>
-              <li>Smaller $p$ means larger $d$; the relation is inverse, not direct.</li>
-              <li>When $p$ is tiny, uncertainty $\sigma_p$ can dominate the distance estimate.</li>
+              <li><strong>Parallax is not the star moving</strong>; it is the observer baseline changing.</li>
+              <li>Greater distance means smaller $p$ and a smaller detector shift.</li>
+              <li>Larger $\sigma_p$ causes overlap, making $p$ and therefore $d$ harder to infer.</li>
             </ul>
           </div>
         </div>

@@ -2,13 +2,12 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const runtimeSpies = {
   bindButtons: vi.fn(),
   copyResults: vi.fn(async () => undefined),
   initMath: vi.fn(),
-  renderMath: vi.fn(),
   initPopovers: vi.fn(),
   initStarfield: vi.fn(),
   initTabs: vi.fn(),
@@ -25,7 +24,6 @@ vi.mock("@cosmic/runtime", () => ({
     copyResults: runtimeSpies.copyResults
   }),
   initMath: runtimeSpies.initMath,
-  renderMath: runtimeSpies.renderMath,
   initPopovers: runtimeSpies.initPopovers,
   initStarfield: runtimeSpies.initStarfield,
   initTabs: runtimeSpies.initTabs,
@@ -34,7 +32,7 @@ vi.mock("@cosmic/runtime", () => ({
 
 vi.mock("@cosmic/data-astr101", () => ({
   nearbyStars: [
-    { name: "Alpha Centauri", parallaxMas: 747.1 },
+    { name: "Proxima Centauri", parallaxMas: 768.5 },
     { name: "Vega", parallaxMas: 130.2 },
     { name: "Far Probe", parallaxMas: 5.2 }
   ]
@@ -61,6 +59,22 @@ function requiredElement<T extends Element>(selector: string): T {
   return element;
 }
 
+function parseNumericText(value: string | null): number {
+  return Number((value ?? "").replace(/,/g, "").trim());
+}
+
+function detectorSeparationPx(): number {
+  const markerA = requiredElement<SVGCircleElement>("#detectorMarkerEpochA");
+  const markerB = requiredElement<SVGCircleElement>("#detectorMarkerEpochB");
+
+  const xA = Number(markerA.getAttribute("cx"));
+  const yA = Number(markerA.getAttribute("cy"));
+  const xB = Number(markerB.getAttribute("cx"));
+  const yB = Number(markerB.getAttribute("cy"));
+
+  return Math.hypot(xB - xA, yB - yA);
+}
+
 describe("Parallax Distance -- DOM integration", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -70,47 +84,147 @@ describe("Parallax Distance -- DOM integration", () => {
     mountDemoHtml();
   });
 
-  it("keeps presets, slider, geometry, and readouts synchronized", async () => {
-    await import("./main.ts");
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
-    const parallaxSlider = requiredElement<HTMLInputElement>("#parallaxMas");
-    const presetSelect = requiredElement<HTMLSelectElement>("#starPreset");
-    const starNode = requiredElement<SVGCircleElement>("#star");
-    const detectorJan = requiredElement<SVGCircleElement>("#detectorMarkerJan");
-    const detectorJul = requiredElement<SVGCircleElement>("#detectorMarkerJul");
+  it("moves detector positions periodically with phase and preserves inverse distance scaling", async () => {
+    await import("./main");
+
+    const phaseSlider = requiredElement<HTMLInputElement>("#phaseDeg");
+    const distanceSlider = requiredElement<HTMLInputElement>("#distancePcRange");
+    const parallaxMasReadout = requiredElement<HTMLElement>("#parallaxMas");
+
+    const markerA = requiredElement<SVGCircleElement>("#detectorMarkerEpochA");
+    const markerB = requiredElement<SVGCircleElement>("#detectorMarkerEpochB");
+
+    const setPhase = (value: number) => {
+      phaseSlider.value = String(value);
+      phaseSlider.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+
+    const setDistancePc = (value: number) => {
+      distanceSlider.value = String(value);
+      distanceSlider.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+
+    setDistancePc(10);
+    setPhase(0);
+    const phase0 = {
+      x: Number(markerA.getAttribute("cx")),
+      y: Number(markerA.getAttribute("cy"))
+    };
+
+    setPhase(90);
+    const phase90 = {
+      x: Number(markerA.getAttribute("cx")),
+      y: Number(markerA.getAttribute("cy"))
+    };
+
+    setPhase(360);
+    const phase360 = {
+      x: Number(markerA.getAttribute("cx")),
+      y: Number(markerA.getAttribute("cy"))
+    };
+
+    expect(Math.abs(phase0.x - phase90.x) + Math.abs(phase0.y - phase90.y)).toBeGreaterThan(0.5);
+    expect(phase360.x).toBeCloseTo(phase0.x, 4);
+    expect(phase360.y).toBeCloseTo(phase0.y, 4);
+
+    setPhase(0);
+    setDistancePc(10);
+    const p10 = parseNumericText(parallaxMasReadout.textContent);
+    const sep10 = detectorSeparationPx();
+
+    setDistancePc(100);
+    const p100 = parseNumericText(parallaxMasReadout.textContent);
+    const sep100 = detectorSeparationPx();
+
+    expect(p10 / p100).toBeCloseTo(10, 2);
+    expect(sep10).toBeGreaterThan(sep100 * 5);
+
+    expect(Math.abs(Number(markerA.getAttribute("cx")) - Number(markerB.getAttribute("cx")))).toBeGreaterThan(
+      0.1
+    );
+  });
+
+  it("increasing sigma expands uncertainty visuals and lowers p/sigma", async () => {
+    await import("./main");
+
+    const sigmaSlider = requiredElement<HTMLInputElement>("#sigmaMas");
+    const snrReadout = requiredElement<HTMLElement>("#snr");
+    const qualityReadout = requiredElement<HTMLElement>("#snrQuality");
+    const errA = requiredElement<SVGCircleElement>("#errorCircleEpochA");
+
+    const setSigma = (value: number) => {
+      sigmaSlider.value = String(value);
+      sigmaSlider.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+
+    setSigma(0.5);
+    const highSnr = parseNumericText(snrReadout.textContent);
+    const smallErrorRadius = Number(errA.getAttribute("r"));
+
+    setSigma(20);
+    const lowSnr = parseNumericText(snrReadout.textContent);
+    const largeErrorRadius = Number(errA.getAttribute("r"));
+
+    expect(lowSnr).toBeLessThan(highSnr);
+    expect(largeErrorRadius).toBeGreaterThan(smallErrorRadius);
+    expect(["Excellent", "Good", "Poor", "Not measurable"]).toContain(
+      qualityReadout.textContent?.trim() || ""
+    );
+  });
+
+  it("blink mode alternates visible markers and exaggeration does not change computed p or d", async () => {
+    vi.useFakeTimers();
+    await import("./main");
+
+    const exaggerationSlider = requiredElement<HTMLInputElement>("#exaggeration");
+    const parallaxArcsec = requiredElement<HTMLElement>("#parallaxArcsec");
     const distancePc = requiredElement<HTMLElement>("#distancePc");
-    const parallaxValue = requiredElement<HTMLElement>("#parallaxMasValue");
+    const blinkToggle = requiredElement<HTMLInputElement>("#blinkMode");
+    const detectorPanel = requiredElement<HTMLElement>("#detectorPanel");
 
-    const currentState = () => ({
-      starY: Number(starNode.getAttribute("cy")),
-      detectorSeparation: Math.abs(
-        Number(detectorJul.getAttribute("cx")) - Number(detectorJan.getAttribute("cx"))
-      ),
-      distancePc: Number(distancePc.textContent || "NaN")
-    });
+    const markerA = requiredElement<SVGCircleElement>("#detectorMarkerEpochA");
+    const markerB = requiredElement<SVGCircleElement>("#detectorMarkerEpochB");
 
-    parallaxSlider.value = "1000";
-    parallaxSlider.dispatchEvent(new Event("input", { bubbles: true }));
-    const nearState = currentState();
+    const setExaggeration = (value: number) => {
+      exaggerationSlider.value = String(value);
+      exaggerationSlider.dispatchEvent(new Event("input", { bubbles: true }));
+    };
 
-    parallaxSlider.value = "1";
-    parallaxSlider.dispatchEvent(new Event("input", { bubbles: true }));
-    const farState = currentState();
+    setExaggeration(5);
+    const sepLowExaggeration = detectorSeparationPx();
+    const pArcsecLow = parallaxArcsec.textContent;
+    const dPcLow = distancePc.textContent;
 
-    expect(farState.distancePc).toBeGreaterThan(nearState.distancePc);
-    expect(farState.detectorSeparation).toBeLessThan(nearState.detectorSeparation);
-    expect(farState.starY).toBeLessThan(nearState.starY);
+    setExaggeration(30);
+    const sepHighExaggeration = detectorSeparationPx();
+    const pArcsecHigh = parallaxArcsec.textContent;
+    const dPcHigh = distancePc.textContent;
 
-    presetSelect.value = "Vega";
-    presetSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(sepHighExaggeration).toBeGreaterThan(sepLowExaggeration * 2);
+    expect(pArcsecHigh).toBe(pArcsecLow);
+    expect(dPcHigh).toBe(dPcLow);
 
-    expect(parallaxSlider.value).toBe("130");
-    expect(parallaxValue.textContent).toContain("130 mas");
-    expect(Number(distancePc.textContent || "NaN")).toBeGreaterThan(0);
+    blinkToggle.checked = true;
+    blinkToggle.dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(detectorPanel.dataset.blink).toBe("on");
+    const initialA = markerA.getAttribute("visibility");
+    const initialB = markerB.getAttribute("visibility");
+
+    vi.advanceTimersByTime(500);
+
+    const nextA = markerA.getAttribute("visibility");
+    const nextB = markerB.getAttribute("visibility");
+
+    expect(nextA).not.toBe(initialA);
+    expect(nextB).not.toBe(initialB);
 
     expect(runtimeSpies.initTabs).toHaveBeenCalledTimes(1);
     expect(runtimeSpies.initPopovers).toHaveBeenCalledTimes(1);
     expect(runtimeSpies.initStarfield).toHaveBeenCalledTimes(1);
-    expect(runtimeSpies.renderMath).toHaveBeenCalled();
   });
 });

@@ -16,6 +16,13 @@
   margin-bottom: 0;
 }
 
+.cp-field--compact {
+  padding: var(--cp-space-2);
+  border: 1px solid color-mix(in srgb, var(--cp-border) 70%, transparent);
+  border-radius: var(--cp-r-1);
+  background: color-mix(in srgb, var(--cp-bg2) 64%, transparent);
+}
+
 .cp-field__value {
   font-family: var(--cp-font-mono);
   font-size: var(--cp-text-sm);
@@ -29,13 +36,46 @@
   font-size: var(--cp-text-sm);
 }
 
+.cp-check--inline {
+  margin-top: var(--cp-space-2);
+}
+
+.distance-input-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--cp-space-2);
+  margin-bottom: var(--cp-space-2);
+}
+
+.distance-input-cell {
+  display: grid;
+  gap: var(--cp-space-1);
+}
+
+.distance-input-label {
+  font-size: var(--cp-text-xs);
+  color: var(--cp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.steps-list {
+  margin: var(--cp-space-2) 0 0;
+  padding-left: var(--cp-space-5);
+  color: var(--cp-text2);
+}
+
+.steps-list li + li {
+  margin-top: var(--cp-space-1);
+}
+
 .stage {
   padding: var(--cp-space-3);
 }
 
 .viz-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--cp-space-3);
 }
 
@@ -65,14 +105,14 @@
   border: 1px solid color-mix(in srgb, var(--cp-border) 75%, transparent);
   background:
     radial-gradient(
-      circle at 20% 16%,
+      circle at 16% 14%,
       color-mix(in srgb, var(--cp-celestial-sun) 24%, transparent),
-      transparent 52%
+      transparent 56%
     ),
     radial-gradient(
       circle at 80% 18%,
-      color-mix(in srgb, var(--cp-accent-ice) 20%, transparent),
-      transparent 56%
+      color-mix(in srgb, var(--cp-accent-ice) 18%, transparent),
+      transparent 60%
     ),
     radial-gradient(circle at 50% 52%, var(--cp-bg1), var(--cp-bg0));
 }
@@ -96,19 +136,36 @@
 
 .stage__earth {
   fill: var(--cp-celestial-earth);
-  stroke: color-mix(in srgb, var(--cp-celestial-earth) 42%, var(--cp-text));
-  stroke-width: 1.5;
+  stroke: color-mix(in srgb, var(--cp-celestial-earth) 44%, var(--cp-text));
+  stroke-width: 1.6;
   filter: drop-shadow(var(--cp-glow-planet));
 }
 
 .stage__earth--jan {
   fill: color-mix(in srgb, var(--cp-accent-ice) 76%, var(--cp-celestial-earth));
-  stroke: color-mix(in srgb, var(--cp-accent-ice) 44%, var(--cp-text));
+  stroke: color-mix(in srgb, var(--cp-accent-ice) 46%, var(--cp-text));
 }
 
 .stage__earth--jul {
   fill: color-mix(in srgb, var(--cp-accent-rose) 74%, var(--cp-celestial-earth));
   stroke: color-mix(in srgb, var(--cp-accent-rose) 42%, var(--cp-text));
+}
+
+.earth-draggable {
+  cursor: grab;
+}
+
+.earth-draggable:active {
+  cursor: grabbing;
+}
+
+.earth-draggable:focus-visible {
+  outline: none;
+}
+
+.earth-draggable:focus-visible #earthEpochA {
+  stroke: color-mix(in srgb, var(--cp-accent-ice) 85%, var(--cp-text));
+  stroke-width: 3;
 }
 
 .stage__star {
@@ -123,7 +180,6 @@
 }
 
 .stage__ray {
-  stroke: color-mix(in srgb, var(--cp-celestial-orbit) 70%, transparent);
   stroke-width: 2.2;
   stroke-linecap: round;
 }
@@ -133,47 +189,7 @@
 }
 
 .stage__ray--jul {
-  stroke: color-mix(in srgb, var(--cp-accent-rose) 62%, var(--cp-text));
-}
-
-.stage__arc {
-  fill: none;
-  stroke: color-mix(in srgb, var(--cp-accent-amber) 96%, var(--cp-text));
-  stroke-width: 3.2;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cp-accent-amber) 22%, transparent));
-}
-
-.stage__detector-frame {
-  fill: color-mix(in srgb, var(--cp-bg1) 70%, transparent);
-  stroke: color-mix(in srgb, var(--cp-border) 80%, transparent);
-  stroke-width: 1.5;
-}
-
-.stage__detector-track {
-  stroke: color-mix(in srgb, var(--cp-text) 65%, transparent);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-
-.stage__detector-center {
-  stroke: color-mix(in srgb, var(--cp-muted) 85%, transparent);
-  stroke-width: 1.5;
-  stroke-dasharray: 4 4;
-}
-
-.stage__detector-dot {
-  stroke-width: 1.5;
-}
-
-.stage__detector-dot--jan {
-  fill: color-mix(in srgb, var(--cp-accent-ice) 88%, var(--cp-text));
-  stroke: color-mix(in srgb, var(--cp-accent-ice) 40%, var(--cp-text));
-}
-
-.stage__detector-dot--jul {
-  fill: color-mix(in srgb, var(--cp-accent-rose) 88%, var(--cp-text));
-  stroke: color-mix(in srgb, var(--cp-accent-rose) 40%, var(--cp-text));
+  stroke: color-mix(in srgb, var(--cp-accent-rose) 64%, var(--cp-text));
 }
 
 .stage__label {
@@ -185,31 +201,25 @@
 }
 
 .stage__label--sun,
-.stage__label--star,
-.stage__label--angle {
+.stage__label--star {
   font-weight: var(--cp-font-semibold);
 }
 
 .stage__label--earth,
 .stage__label--baseline,
-.stage__label--detector,
 .stage__label--detector-dot {
   fill: var(--cp-text2);
   font-size: 13px;
 }
 
 .stage__label--earth-jan,
-#detectorJanLabel {
-  fill: color-mix(in srgb, var(--cp-accent-ice) 64%, var(--cp-text));
+#detectorEpochALabel {
+  fill: color-mix(in srgb, var(--cp-accent-ice) 68%, var(--cp-text));
 }
 
 .stage__label--earth-jul,
-#detectorJulLabel {
-  fill: color-mix(in srgb, var(--cp-accent-rose) 64%, var(--cp-text));
-}
-
-.stage__label--angle {
-  fill: color-mix(in srgb, var(--cp-accent-amber) 90%, var(--cp-text));
+#detectorEpochBLabel {
+  fill: color-mix(in srgb, var(--cp-accent-rose) 68%, var(--cp-text));
 }
 
 .stage__note {
@@ -219,8 +229,82 @@
   text-anchor: middle;
 }
 
-.stage__note--top {
-  font-size: 12px;
+.detector__background-stars circle {
+  fill: color-mix(in srgb, var(--cp-celestial-star) 78%, var(--cp-text));
+  opacity: 0.9;
+}
+
+.detector__axis {
+  stroke: color-mix(in srgb, var(--cp-border) 80%, transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 5;
+}
+
+.detector__difference {
+  stroke: color-mix(in srgb, var(--cp-accent-amber) 84%, var(--cp-text));
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+.detector__error {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.detector__error--jan {
+  stroke: color-mix(in srgb, var(--cp-accent-ice) 70%, transparent);
+}
+
+.detector__error--jul {
+  stroke: color-mix(in srgb, var(--cp-accent-rose) 70%, transparent);
+}
+
+.detector__scatter circle {
+  opacity: 0.78;
+}
+
+.detector__scatter--jan circle {
+  fill: color-mix(in srgb, var(--cp-accent-ice) 75%, var(--cp-text));
+}
+
+.detector__scatter--jul circle {
+  fill: color-mix(in srgb, var(--cp-accent-rose) 75%, var(--cp-text));
+}
+
+.stage__detector-dot {
+  stroke-width: 1.7;
+}
+
+.stage__detector-dot--jan {
+  fill: color-mix(in srgb, var(--cp-accent-ice) 90%, var(--cp-text));
+  stroke: color-mix(in srgb, var(--cp-accent-ice) 42%, var(--cp-text));
+}
+
+.stage__detector-dot--jul {
+  fill: color-mix(in srgb, var(--cp-accent-rose) 90%, var(--cp-text));
+  stroke: color-mix(in srgb, var(--cp-accent-rose) 42%, var(--cp-text));
+}
+
+#detectorPanel[data-detector-mode="difference"] .detector__background-stars {
+  opacity: 0.3;
+}
+
+#detectorPanel[data-detector-mode="difference"] .detector__axis {
+  opacity: 0.6;
+}
+
+#detectorPanel[data-detector-mode="difference"] .detector__difference {
+  opacity: 1;
+}
+
+#detectorPanel[data-detector-mode="overlay"] .detector__difference {
+  opacity: 0.45;
+}
+
+#detectorPanel[data-blink="on"] .detector__error,
+#detectorPanel[data-blink="on"] .detector__scatter {
+  opacity: 0.68;
 }
 
 .schematic-note {
@@ -229,15 +313,18 @@
   font-size: var(--cp-text-sm);
 }
 
-.cp-notice p {
-  margin: var(--cp-space-2) 0 0;
-}
-
 .cp-demo__readouts {
-  align-items: center;
+  align-items: stretch;
 }
 
 .cp-readout-strip .cp-readout__value {
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-readout__sub {
+  margin-top: var(--cp-space-1);
+  color: var(--cp-muted);
+  font-size: var(--cp-text-sm);
   font-variant-numeric: tabular-nums;
 }
 
@@ -256,7 +343,7 @@
 }
 
 .cp-demo__stage {
-  min-height: clamp(360px, 58svh, 680px);
+  min-height: clamp(380px, 62svh, 760px);
   animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 1);
 }
@@ -271,9 +358,9 @@
   animation-delay: calc(var(--cp-stagger) * 3);
 }
 
-@media (max-width: 1100px) {
-  .stage__svg {
-    border-radius: var(--cp-r-1);
+@media (max-width: 1080px) {
+  .viz-layout {
+    grid-template-columns: 1fr;
   }
 
   .stage__label {
@@ -286,17 +373,20 @@
 }
 
 @media (max-width: 720px) {
+  .distance-input-grid {
+    grid-template-columns: 1fr;
+  }
+
   .cp-readout-strip {
     gap: var(--cp-space-2) var(--cp-space-3);
   }
 
   .cp-readout-strip .cp-readout {
-    min-width: min(180px, 100%);
+    min-width: min(190px, 100%);
   }
 
-  .stage__label--detector,
-  .stage__label--detector-dot,
-  .stage__note--top {
+  #detectorModeLabel,
+  #detectorSeparationLabel {
     display: none;
   }
 }
@@ -310,7 +400,8 @@
   }
 
   .cp-button,
-  .cp-readout {
+  .cp-readout,
+  .cp-chip {
     transition: none;
   }
 }
