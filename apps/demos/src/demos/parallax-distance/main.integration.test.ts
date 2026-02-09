@@ -227,4 +227,68 @@ describe("Parallax Distance -- DOM integration", () => {
     expect(runtimeSpies.initPopovers).toHaveBeenCalledTimes(1);
     expect(runtimeSpies.initStarfield).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps both epochs visible when reduced motion is enabled and blink is toggled", async () => {
+    const originalMatchMedia = window.matchMedia;
+
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: vi.fn().mockImplementation(() => ({
+        matches: true,
+        media: "(prefers-reduced-motion: reduce)",
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn().mockReturnValue(true)
+      }))
+    });
+
+    await import("./main");
+
+    const blinkToggle = requiredElement<HTMLInputElement>("#blinkMode");
+    const detectorPanel = requiredElement<HTMLElement>("#detectorPanel");
+    const markerA = requiredElement<SVGCircleElement>("#detectorMarkerEpochA");
+    const markerB = requiredElement<SVGCircleElement>("#detectorMarkerEpochB");
+
+    blinkToggle.checked = true;
+    blinkToggle.dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(detectorPanel.dataset.blink).toBe("off");
+    expect(markerA.getAttribute("visibility")).toBe("visible");
+    expect(markerB.getAttribute("visibility")).toBe("visible");
+
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: originalMatchMedia
+    });
+  });
+
+  it("announces measurement updates for interaction changes", async () => {
+    vi.useFakeTimers();
+    await import("./main");
+
+    const distanceSlider = requiredElement<HTMLInputElement>("#distancePcRange");
+    const phaseSlider = requiredElement<HTMLInputElement>("#phaseDeg");
+    const beforeCount = runtimeSpies.setLiveRegionText.mock.calls.length;
+
+    distanceSlider.value = "25";
+    distanceSlider.dispatchEvent(new Event("input", { bubbles: true }));
+
+    phaseSlider.value = "45";
+    phaseSlider.dispatchEvent(new Event("input", { bubbles: true }));
+
+    vi.advanceTimersByTime(300);
+
+    const afterCount = runtimeSpies.setLiveRegionText.mock.calls.length;
+    expect(afterCount).toBeGreaterThan(beforeCount);
+
+    const lastMessage = String(runtimeSpies.setLiveRegionText.mock.calls.at(-1)?.[1] ?? "");
+    expect(lastMessage).toContain("p");
+    expect(lastMessage).toContain("pc");
+    expect(lastMessage).toContain("quality");
+  });
 });

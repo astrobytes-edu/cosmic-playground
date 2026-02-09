@@ -111,12 +111,17 @@ const state: DemoState = {
 
 let blinkTimer: number | null = null;
 let blinkShowEpochA = true;
+let measurementAnnouncementTimer: number | null = null;
 
 function prefersReducedMotionEnabled(): boolean {
   return (
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
+}
+
+function blinkAnimationEnabled(): boolean {
+  return state.blinkMode && !prefersReducedMotionEnabled();
 }
 
 const starPreset = requireEl(
@@ -533,8 +538,10 @@ function renderDetector(snapshot: ModelSnapshot) {
   renderScatter(scatterEpochA, epochAX, epochAY, uncertaintyRadius);
   renderScatter(scatterEpochB, epochBX, epochBY, uncertaintyRadius);
 
+  const blinkActive = blinkAnimationEnabled();
+
   detectorPanel.dataset.detectorMode = state.detectorMode;
-  detectorPanel.dataset.blink = state.blinkMode ? "on" : "off";
+  detectorPanel.dataset.blink = blinkActive ? "on" : "off";
 
   if (state.detectorMode === "difference") {
     detectorModeLabel.textContent = "Difference mode: compare the Jan\u2013Jul vector directly.";
@@ -547,8 +554,8 @@ function renderDetector(snapshot: ModelSnapshot) {
     2
   )} mas`;
 
-  const showEpochA = !state.blinkMode || blinkShowEpochA;
-  const showEpochB = !state.blinkMode || !blinkShowEpochA;
+  const showEpochA = !blinkActive || blinkShowEpochA;
+  const showEpochB = !blinkActive || !blinkShowEpochA;
 
   setVisibility(detectorMarkerEpochA, showEpochA);
   setVisibility(detectorEpochALabel, showEpochA);
@@ -583,19 +590,48 @@ function render() {
   renderReadouts(snapshot);
 }
 
-function setDistancePc(nextDistancePc: number, source: "preset" | "manual" = "manual") {
+function cancelMeasurementAnnouncement() {
+  if (measurementAnnouncementTimer !== null) {
+    window.clearTimeout(measurementAnnouncementTimer);
+    measurementAnnouncementTimer = null;
+  }
+}
+
+function scheduleMeasurementAnnouncement(reason: string) {
+  cancelMeasurementAnnouncement();
+  measurementAnnouncementTimer = window.setTimeout(() => {
+    const snapshot = modelSnapshot();
+    const message = `${reason}: p ${formatNumber(snapshot.parallaxMas, 2)} mas, d ${formatDistance(
+      snapshot.inferredDistancePc
+    )} pc, quality ${snapshot.quality}.`;
+    setLiveRegionText(status, message);
+    measurementAnnouncementTimer = null;
+  }, 180);
+}
+
+function setDistancePc(
+  nextDistancePc: number,
+  source: "preset" | "manual" = "manual",
+  announce = true
+) {
   if (!Number.isFinite(nextDistancePc)) return;
   state.distancePc = clamp(nextDistancePc, DISTANCE_PC_MIN, DISTANCE_PC_MAX);
   if (source === "manual" && starPreset.value !== "") {
     starPreset.value = "";
   }
   render();
+  if (announce) {
+    scheduleMeasurementAnnouncement("Distance updated");
+  }
 }
 
-function setPhaseDeg(nextPhaseDeg: number) {
+function setPhaseDeg(nextPhaseDeg: number, announce = true) {
   if (!Number.isFinite(nextPhaseDeg)) return;
   state.phaseDeg = normalizePhaseDeg(nextPhaseDeg);
   render();
+  if (announce) {
+    scheduleMeasurementAnnouncement("Epoch updated");
+  }
 }
 
 function populatePresetSelect() {
@@ -624,7 +660,7 @@ function currentPresetLabel(): string {
 }
 
 function updateBlinkTimer() {
-  const shouldAnimate = state.blinkMode && !prefersReducedMotionEnabled();
+  const shouldAnimate = blinkAnimationEnabled();
 
   if (shouldAnimate && blinkTimer === null) {
     blinkTimer = window.setInterval(() => {
@@ -912,6 +948,7 @@ blinkMode.addEventListener("change", () => {
 sigmaMas.addEventListener("input", () => {
   state.sigmaMas = clamp(Number(sigmaMas.value), SIGMA_MAS_MIN, SIGMA_MAS_MAX);
   render();
+  scheduleMeasurementAnnouncement("Uncertainty updated");
 });
 
 exaggeration.addEventListener("input", () => {
@@ -920,6 +957,7 @@ exaggeration.addEventListener("input", () => {
 });
 
 copyResults.addEventListener("click", () => {
+  cancelMeasurementAnnouncement();
   setLiveRegionText(status, "Copying...");
   void runtime
     .copyResults(exportResults())
