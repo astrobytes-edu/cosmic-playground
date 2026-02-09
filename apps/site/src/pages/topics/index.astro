@@ -69,6 +69,9 @@ const topics = topicOrder
     <p class="topics-hero__lede">
       Explore interactive exhibits organized by subject area.
     </p>
+    <div class="site-state-note cp-card" role="note" aria-label="Project state">
+      Cosmic Playground is in active beta. Topic pages include demos at mixed readiness levels.
+    </div>
   </section>
 
   <div class="topics-grid" aria-label="Topic areas">
@@ -98,12 +101,23 @@ const topics = topicOrder
 <style>
   .topics-hero {
     margin-bottom: var(--cp-space-5);
+    display: grid;
+    gap: var(--cp-space-2);
   }
 
   .topics-hero__lede {
-    margin: 6px 0 0;
+    margin: 0;
     color: var(--cp-muted);
     max-width: 72ch;
+  }
+
+  .site-state-note {
+    font-size: var(--cp-text-sm);
+    color: var(--cp-text2);
+    border-color: color-mix(in srgb, var(--cp-status-beta-text) 35%, var(--cp-border));
+    background: color-mix(in srgb, var(--cp-status-beta-bg) 55%, transparent);
+    padding: var(--cp-space-2) var(--cp-space-3);
+    max-width: 52ch;
   }
 
   .topics-grid {

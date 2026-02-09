@@ -169,6 +169,9 @@ const topicSections = noFilters
     <h1>Explore</h1>
     <p class="explore-hero__tagline">Play with the universe. Learn the physics.</p>
     <p class="lede">Interactive exhibits for seeing how astronomy actually works.</p>
+    <div class="site-state-note cp-card" role="note" aria-label="Project state">
+      Cosmic Playground is in active beta. Use status and readiness badges to judge classroom readiness.
+    </div>
   </section>
 
   <FilterBar
@@ -209,6 +212,7 @@ const topicSections = noFilters
             href={`${base}exhibits/${d.slug}/`}
             description={excerptFromBody(d.body)}
             status={d.data.status}
+            readiness={d.data.readiness}
             topics={d.data.topics}
             levels={d.data.levels}
             timeMinutes={d.data.time_minutes}
@@ -280,6 +284,7 @@ const topicSections = noFilters
                   href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
                   description={excerptFromBody(d.body)}
                   status={d.data.status}
+                  readiness={d.data.readiness}
                   topics={d.data.topics}
                   levels={d.data.levels}
                   timeMinutes={d.data.time_minutes}
@@ -301,6 +306,7 @@ const topicSections = noFilters
                 href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
                 description={excerptFromBody(d.body)}
                 status={d.data.status}
+                readiness={d.data.readiness}
                 topics={d.data.topics}
                 levels={d.data.levels}
                 timeMinutes={d.data.time_minutes}
@@ -352,6 +358,8 @@ const topicSections = noFilters
 <style>
   .explore-hero {
     margin-bottom: var(--cp-space-5);
+    display: grid;
+    gap: var(--cp-space-2);
   }
 
   .lede {
@@ -361,11 +369,20 @@ const topicSections = noFilters
   }
 
   .explore-hero__tagline {
-    margin: 10px 0 0;
+    margin: 0;
     font-size: var(--cp-text-xl);
     font-weight: var(--cp-font-semibold);
     color: var(--cp-title-strong);
     max-width: 60ch;
+  }
+
+  .site-state-note {
+    font-size: var(--cp-text-sm);
+    color: var(--cp-text2);
+    border-color: color-mix(in srgb, var(--cp-status-beta-text) 35%, var(--cp-border));
+    background: color-mix(in srgb, var(--cp-status-beta-bg) 55%, transparent);
+    padding: var(--cp-space-2) var(--cp-space-3);
+    max-width: 52ch;
   }
 
   .filter-chips {

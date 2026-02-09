@@ -5,6 +5,7 @@
  */
 import DemoIllustration from "./DemoIllustration.astro";
 import TopicIcon from "./TopicIcon.astro";
+import TagPill from "./TagPill.astro";
 import { topicColor, primaryTopic } from "../lib/topicColors";
 
 interface Props {
@@ -13,10 +14,22 @@ interface Props {
   href: string;
   topics: string[];
   lastUpdated: string;
+  status: "stable" | "beta" | "draft";
+  readiness: "stub" | "experimental" | "candidate" | "launch-ready";
 }
 
-const { title, slug, href, topics, lastUpdated } = Astro.props;
+const { title, slug, href, topics, lastUpdated, status, readiness } = Astro.props;
 const color = topicColor(primaryTopic(topics));
+const statusTone =
+  status === "stable" ? "teal" : status === "beta" ? "status-beta" : "status-draft";
+const readinessTone =
+  readiness === "launch-ready"
+    ? "teal"
+    : readiness === "candidate"
+      ? "violet"
+      : readiness === "experimental"
+        ? "status-beta"
+        : "status-draft";
 ---
 
 <a class="mini-card cp-card" href={href} style={`--topic-color: ${color}`}>
@@ -27,6 +40,10 @@ const color = topicColor(primaryTopic(topics));
   <span class="mini-card__meta">
     {topics[0] && <TopicIcon topic={topics[0]} size={12} />}
     <time class="mini-card__date">{lastUpdated}</time>
+  </span>
+  <span class="mini-card__state" aria-label="Demo state">
+    <TagPill label={status} tone={statusTone} />
+    <TagPill label={readiness} tone={readinessTone} />
   </span>
 </a>
 
@@ -93,6 +110,13 @@ const color = topicColor(primaryTopic(topics));
     color: var(--cp-faint);
     font-size: 0.75rem;
     margin-top: auto;
+    padding: 0 var(--cp-space-3) var(--cp-space-3);
+  }
+
+  .mini-card__state {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
     padding: 0 var(--cp-space-3) var(--cp-space-3);
   }
 

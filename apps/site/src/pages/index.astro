@@ -53,6 +53,9 @@ const base = import.meta.env.BASE_URL;
       <div class="obs-hero__content">
         <h1 class="obs-hero__title">Cosmic Playground</h1>
         <p class="obs-hero__tagline">Play with the universe. Learn the physics.</p>
+        <div class="site-state-note cp-card" role="note" aria-label="Project state">
+          Cosmic Playground is in active beta. Expect frequent improvements as demos are hardened.
+        </div>
         <div class="obs-hero__actions">
           <a class="cp-button cp-button--primary" href={`${base}explore/`}>
             Explore demos
@@ -121,6 +124,8 @@ const base = import.meta.env.BASE_URL;
           href={`${base}exhibits/${d.slug}/`}
           topics={d.data.topics}
           lastUpdated={d.data.last_updated}
+          status={d.data.status}
+          readiness={d.data.readiness}
         />
       ))}
     </div>
@@ -208,6 +213,15 @@ const base = import.meta.env.BASE_URL;
     display: grid;
     gap: var(--cp-space-3);
     max-width: 36rem;
+  }
+
+  .site-state-note {
+    font-size: var(--cp-text-sm);
+    color: var(--cp-text2);
+    border-color: color-mix(in srgb, var(--cp-status-beta-text) 35%, var(--cp-border));
+    background: color-mix(in srgb, var(--cp-status-beta-bg) 55%, transparent);
+    padding: var(--cp-space-2) var(--cp-space-3);
+    max-width: 42ch;
   }
 
   .obs-hero__orbit {

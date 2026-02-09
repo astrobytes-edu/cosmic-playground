@@ -10,6 +10,7 @@ export type DemoCardProps = {
   href: string;
   description: string;
   status: "stable" | "beta" | "draft";
+  readiness: "stub" | "experimental" | "candidate" | "launch-ready";
   topics: string[];
   levels: string[];
   timeMinutes: number;
@@ -22,6 +23,7 @@ const {
   href,
   description,
   status,
+  readiness,
   topics,
   levels,
   timeMinutes,
@@ -32,6 +34,22 @@ const topic = primaryTopic(topics);
 const color = topicColor(topic);
 const statusTone =
   status === "stable" ? "teal" : status === "beta" ? "status-beta" : "status-draft";
+const readinessTone =
+  readiness === "launch-ready"
+    ? "teal"
+    : readiness === "candidate"
+      ? "violet"
+      : readiness === "experimental"
+        ? "status-beta"
+        : "status-draft";
+const readinessLabel =
+  readiness === "launch-ready"
+    ? "launch-ready"
+    : readiness === "candidate"
+      ? "candidate"
+      : readiness === "experimental"
+        ? "experimental"
+        : "stub";
 const timeLabel =
   timeMinutes <= 10 ? "\u226410 min" : timeMinutes <= 20 ? "10\u201320 min" : "20+ min";
 ---
@@ -46,6 +64,7 @@ const timeLabel =
       <p class="demo-card__desc">{description}</p>
       <div class="demo-card__badges" aria-label="Tags">
         <TagPill label={status} tone={statusTone} />
+        <TagPill label={`readiness: ${readinessLabel}`} tone={readinessTone} />
         {topics.map((t) => (
           <TagPill label={t} tone="blue">
             <TopicIcon slot="icon" topic={t} />

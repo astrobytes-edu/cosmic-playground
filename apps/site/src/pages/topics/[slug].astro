@@ -144,6 +144,10 @@ const description = topicDescription[topicKey];
     </div>
   </header>
 
+  <section class="topic-state-note cp-card" role="note" aria-label="Project state">
+    Cosmic Playground is in active beta. Check each exhibit's status and readiness badges before assigning.
+  </section>
+
   {order.length > 0 && (
     <section class="topic-order" aria-label="Suggested order">
       <h2>Suggested sequence</h2>
@@ -174,6 +178,7 @@ const description = topicDescription[topicKey];
           href={withBase(`exhibits/${d.slug}/`)}
           description={excerptFromBody(d.body)}
           status={d.data.status}
+          readiness={d.data.readiness}
           topics={d.data.topics}
           levels={d.data.levels}
           timeMinutes={d.data.time_minutes}
@@ -224,6 +229,17 @@ const description = topicDescription[topicKey];
     gap: var(--cp-space-5);
     align-items: flex-start;
     margin-bottom: var(--cp-space-5);
+  }
+
+  .topic-state-note {
+    margin-top: calc(-1 * var(--cp-space-2));
+    margin-bottom: var(--cp-space-5);
+    font-size: var(--cp-text-sm);
+    color: var(--cp-text2);
+    border-color: color-mix(in srgb, var(--cp-status-beta-text) 35%, var(--cp-border));
+    background: color-mix(in srgb, var(--cp-status-beta-bg) 55%, transparent);
+    padding: var(--cp-space-2) var(--cp-space-3);
+    max-width: 56ch;
   }
 
   .topic-hero__icon {

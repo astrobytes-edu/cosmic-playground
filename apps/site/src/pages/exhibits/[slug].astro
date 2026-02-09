@@ -45,12 +45,29 @@ const { Content } = await entry.render();
         label={entry.data.status}
         tone={entry.data.status === "stable" ? "teal" : entry.data.status === "beta" ? "status-beta" : "status-draft"}
       />
+      <TagPill
+        label={`readiness: ${entry.data.readiness}`}
+        tone={entry.data.readiness === "launch-ready"
+          ? "teal"
+          : entry.data.readiness === "candidate"
+            ? "violet"
+            : entry.data.readiness === "experimental"
+              ? "status-beta"
+              : "status-draft"}
+      />
       {entry.data.topics.map((t) => <TagPill label={t} tone="blue" />)}
       {entry.data.levels.map((l) => <TagPill label={l} tone="default" />)}
       <TagPill label={`${entry.data.time_minutes} min`} tone="default" />
       {entry.data.has_math_mode ? <TagPill label="math mode" tone="violet" /> : null}
     </div>
   </header>
+
+  {entry.data.status !== "stable" ? (
+    <section class="cp-callout exhibit-state-callout" aria-label="Development status">
+      <strong>Active development: {entry.data.status} / {entry.data.readiness}</strong>
+      <div>{entry.data.readinessReason}</div>
+    </section>
+  ) : null}
 
   <section class="launch" aria-label="Launch controls">
     <a class="cp-button cp-button--primary" href={demoHref}>Launch demo</a>
@@ -183,6 +200,12 @@ const { Content } = await entry.render();
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+  }
+
+  .exhibit-state-callout {
+    margin-top: var(--cp-space-3);
+    border-color: color-mix(in srgb, var(--cp-status-beta-text) 35%, var(--cp-border));
+    background: color-mix(in srgb, var(--cp-status-beta-bg) 55%, transparent);
   }
 
   .prompt {
