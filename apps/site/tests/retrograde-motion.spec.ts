@@ -76,15 +76,45 @@ test.describe("Retrograde Motion -- E2E", () => {
     expect(childCount).toBeGreaterThan(0);
   });
 
+  test("Earth target option supports Venus observer comparisons", async ({ page }) => {
+    await page.locator(".cp-accordion summary").click();
+    const earthTargetOptions = page.locator("#target option[value='Earth']");
+    expect(await earthTargetOptions.count()).toBeGreaterThan(0);
+    await page.locator("#observer").selectOption("Venus");
+    await page.locator("#target").selectOption("Earth");
+    const lambdaText = await page.locator("#readoutLambda").textContent();
+    expect(lambdaText).toBeTruthy();
+    expect(parseFloat(lambdaText || "NaN")).not.toBeNaN();
+  });
+
   test("window months slider updates displayed month count", async ({ page }) => {
     await page.locator(".cp-accordion summary").click();
-    const slider = page.locator("#windowMonths");
+    const slider = page.locator(".cp-demo__sidebar #windowMonths");
+    await expect(slider).toHaveAttribute("max", "72");
     await slider.evaluate((el: HTMLInputElement) => {
-      el.value = "12";
+      el.value = "48";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
     const value = await page.locator("#windowMonthsValue").textContent();
-    expect(value).toContain("12");
+    expect(value).toContain("48");
+  });
+
+  test("max window scrubbing is stable and uses split svg layers", async ({ page }) => {
+    await page.locator(".cp-accordion summary").click();
+    await page.locator("#windowMonths").evaluate((el: HTMLInputElement) => {
+      el.value = "72";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await page.locator("#scrubSlider").fill("1800");
+    const dayText = await page.locator("#readoutDay").textContent();
+    expect(parseFloat(dayText || "NaN")).not.toBeNaN();
+
+    await expect(page.locator("#plotSvg g[data-layer='static']")).toHaveCount(1);
+    await expect(page.locator("#plotSvg g[data-layer='dynamic']")).toHaveCount(1);
+    await expect(page.locator("#orbitSvg g[data-layer='static']")).toHaveCount(1);
+    await expect(page.locator("#orbitSvg g[data-layer='dynamic']")).toHaveCount(1);
+    await expect(page.locator("#skySvg g[data-layer='static']")).toHaveCount(1);
+    await expect(page.locator("#skySvg g[data-layer='dynamic']")).toHaveCount(1);
   });
 
   test("plot step select changes decimation", async ({ page }) => {
@@ -127,24 +157,29 @@ test.describe("Retrograde Motion -- E2E", () => {
     await expect(checkbox).toBeChecked();
   });
 
-  // --- Playbar ---
+  // --- Sidebar Transport + Timeline ---
 
-  test("playbar has play, pause, step, reset buttons", async ({ page }) => {
-    await expect(page.locator("#btn-play")).toBeVisible();
-    await expect(page.locator("#btn-pause")).toBeVisible();
-    await expect(page.locator("#btn-step-back")).toBeVisible();
-    await expect(page.locator("#btn-step-forward")).toBeVisible();
-    await expect(page.locator("#btn-reset")).toBeVisible();
+  test("sidebar has play, pause, step, reset buttons", async ({ page }) => {
+    await expect(page.locator(".cp-demo__sidebar #btn-play")).toBeVisible();
+    await expect(page.locator(".cp-demo__sidebar #btn-pause")).toBeVisible();
+    await expect(page.locator(".cp-demo__sidebar #btn-step-back")).toBeVisible();
+    await expect(page.locator(".cp-demo__sidebar #btn-step-forward")).toBeVisible();
+    await expect(page.locator(".cp-demo__sidebar #btn-reset")).toBeVisible();
   });
 
-  test("speed select defaults to 5x", async ({ page }) => {
-    const val = await page.locator("#speed-select").inputValue();
+  test("sidebar speed select defaults to 5x", async ({ page }) => {
+    const val = await page.locator(".cp-demo__sidebar #speed-select").inputValue();
     expect(val).toBe("5");
+  });
+
+  test("timeline row is stage-adjacent and visible", async ({ page }) => {
+    await expect(page.locator(".retro__timeline-row #scrubSlider")).toBeVisible();
+    await expect(page.locator(".retro__timeline-row #nextStationary")).toBeVisible();
   });
 
   test("step forward button advances cursor", async ({ page }) => {
     const before = await page.locator("#readoutDay").textContent();
-    await page.locator("#btn-step-forward").click();
+    await page.locator(".cp-demo__sidebar #btn-step-forward").click();
     const after = await page.locator("#readoutDay").textContent();
     const beforeNum = parseFloat(before || "0");
     const afterNum = parseFloat(after || "0");
@@ -153,11 +188,11 @@ test.describe("Retrograde Motion -- E2E", () => {
 
   test("reset button returns cursor to start", async ({ page }) => {
     // Advance first
-    await page.locator("#btn-step-forward").click();
+    await page.locator(".cp-demo__sidebar #btn-step-forward").click();
     const afterStep = parseFloat(await page.locator("#readoutDay").textContent() || "0");
     expect(afterStep).toBeGreaterThan(0);
     // Reset
-    await page.locator("#btn-reset").click();
+    await page.locator(".cp-demo__sidebar #btn-reset").click();
     const afterReset = parseFloat(await page.locator("#readoutDay").textContent() || "0");
     expect(afterReset).toBe(0);
   });
@@ -246,6 +281,13 @@ test.describe("Retrograde Motion -- E2E", () => {
     });
     const stateText = await page.locator("#readoutState").textContent();
     expect(stateText).toMatch(/Direct|Retrograde|Stationary/);
+  });
+
+  test("geometry hint readout distinguishes superior vs inferior cases", async ({ page }) => {
+    await expect(page.locator("#readoutGeometryHint")).toContainText(/Superior|Inferior/);
+    await page.locator(".cp-accordion summary").click();
+    await page.locator("#target").selectOption("Venus");
+    await expect(page.locator("#readoutGeometryHint")).toContainText("Inferior");
   });
 
   test("retrograde duration readout shows days value or em dash", async ({ page }) => {

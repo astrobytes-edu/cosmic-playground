@@ -133,6 +133,33 @@ describe("Retrograde Motion — Design System Contracts", () => {
     });
   });
 
+  // ── Hybrid controls contract ──────────────────────────────
+  describe("Hybrid controls contract", () => {
+    it("keeps speed and window controls in the sidebar", () => {
+      expect(html).toMatch(/<aside[^>]*class="cp-demo__sidebar/);
+      expect(html).toMatch(/id="speed-select"/);
+      expect(html).toMatch(/id="windowMonths"/);
+      expect(html).toMatch(/id="windowMonths"[\s\S]*max="72"/);
+    });
+
+    it("uses a stage-adjacent timeline row for scrub and nav", () => {
+      expect(html).toMatch(/class="[^"]*retro__timeline-row/);
+      expect(html).toMatch(/id="scrubSlider"/);
+      expect(html).toMatch(/id="prevStationary"/);
+      expect(html).toMatch(/id="nextStationary"/);
+      expect(html).toMatch(/id="centerRetrograde"/);
+    });
+  });
+
+  // ── Unicode-math normalization ────────────────────────────
+  describe("Unicode math normalization", () => {
+    it("avoids unicode math glyphs in non-KaTeX UI code", () => {
+      const forbiddenUnicodeMath = /\\u00B0|\\u00B1|\\u2264|\\u2265|\\u2248|\\u2190|\\u2192/;
+      expect(html).not.toMatch(forbiddenUnicodeMath);
+      expect(main).not.toMatch(forbiddenUnicodeMath);
+    });
+  });
+
   // ── Panel translucency ────────────────────────────────────
   describe("Panel translucency", () => {
     it("SVG backgrounds use translucent treatment", () => {

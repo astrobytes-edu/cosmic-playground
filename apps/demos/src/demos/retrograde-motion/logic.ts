@@ -249,6 +249,12 @@ export type PresetConfig = {
   target: string;
 };
 
+export type DistinctPairResult = {
+  observer: string;
+  target: string;
+  adjusted: boolean;
+};
+
 export function presetToConfig(value: string): PresetConfig | null {
   const map: Record<string, PresetConfig> = {
     "earth-mars": { observer: "Earth", target: "Mars" },
@@ -257,6 +263,27 @@ export function presetToConfig(value: string): PresetConfig | null {
     "earth-saturn": { observer: "Earth", target: "Saturn" },
   };
   return map[value] ?? null;
+}
+
+export function resolveDistinctPair(
+  observer: string,
+  target: string,
+): DistinctPairResult {
+  if (observer !== target) {
+    return { observer, target, adjusted: false };
+  }
+
+  const fallbackTarget = observer === "Earth" ? "Mars" : "Earth";
+  return { observer, target: fallbackTarget, adjusted: true };
+}
+
+export function isRetrogradeDurationComparisonComplete(
+  durationByTarget: Partial<Record<"Mars" | "Venus", number>>,
+): boolean {
+  return (
+    Number.isFinite(durationByTarget.Mars) &&
+    Number.isFinite(durationByTarget.Venus)
+  );
 }
 
 // ── Display state (DI pattern) ──────────────────────────────

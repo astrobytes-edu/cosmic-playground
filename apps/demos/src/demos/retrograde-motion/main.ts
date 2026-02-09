@@ -18,12 +18,14 @@ import {
   dayFromPlotX,
   findPrevNextStationary,
   formatNumber,
+  isRetrogradeDurationComparisonComplete,
   nearestRetrogradeInterval,
   orbitEllipsePoints,
   plotXFromDay,
   plotYFromDeg,
   presetToConfig,
   projectToSkyView,
+  resolveDistinctPair,
   seriesIndexAtDay,
   zodiacLabelPositions,
   type RetroModelCallbacks,
@@ -91,6 +93,10 @@ const readoutDay = requireEl(document.querySelector<HTMLSpanElement>("#readoutDa
 const readoutLambda = requireEl(document.querySelector<HTMLSpanElement>("#readoutLambda"), "#readoutLambda");
 const readoutSlope = requireEl(document.querySelector<HTMLSpanElement>("#readoutSlope"), "#readoutSlope");
 const readoutState = requireEl(document.querySelector<HTMLSpanElement>("#readoutState"), "#readoutState");
+const readoutGeometryHint = requireEl(
+  document.querySelector<HTMLSpanElement>("#readoutGeometryHint"),
+  "#readoutGeometryHint",
+);
 const readoutRetroDuration = requireEl(document.querySelector<HTMLSpanElement>("#readoutRetroDuration"), "#readoutRetroDuration");
 
 const copyResults = requireEl(document.querySelector<HTMLButtonElement>("#copyResults"), "#copyResults");
@@ -172,9 +178,67 @@ let animationId: number | null = null;
 let lastTimestamp = 0;
 let hasShownRetroAnnotation = false;
 
+type PlotRenderContext = {
+  staticLayer: SVGGElement;
+  dynamicLayer: SVGGElement;
+  t0: number;
+  t1: number;
+  x0: number;
+  x1: number;
+  mainTop: number;
+  mainBottom: number;
+  unwrapped: number[];
+  yMin: number;
+  yMax: number;
+};
+
+type OrbitRenderContext = {
+  staticLayer: SVGGElement;
+  dynamicLayer: SVGGElement;
+  centerX: number;
+  centerY: number;
+  scale: number;
+};
+
+type SkyRenderContext = {
+  staticLayer: SVGGElement;
+  dynamicLayer: SVGGElement;
+  width: number;
+  height: number;
+};
+
+let plotRenderContext: PlotRenderContext | null = null;
+let orbitRenderContext: OrbitRenderContext | null = null;
+let skyRenderContext: SkyRenderContext | null = null;
+
+function createLayerGroup(layer: "static" | "dynamic"): SVGGElement {
+  const group = svgEl("g") as SVGGElement;
+  group.setAttribute("data-layer", layer);
+  return group;
+}
+
 const modelCallbacks: RetroModelCallbacks = {
   planetElements: (key: string) => RetrogradeMotionModel.planetElements(key as PlanetKey),
 };
+
+function applyObserverTargetPair(
+  nextObserver: PlanetKey,
+  nextTarget: PlanetKey,
+  announceAdjustment = false,
+) {
+  const resolved = resolveDistinctPair(nextObserver, nextTarget);
+  state.observer = resolved.observer as PlanetKey;
+  state.target = resolved.target as PlanetKey;
+  observer.value = state.observer;
+  target.value = state.target;
+
+  if (announceAdjustment && resolved.adjusted) {
+    setLiveRegionText(
+      statusEl,
+      `Observer and target must be different. Target reset to ${state.target}.`,
+    );
+  }
+}
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -209,6 +273,9 @@ function recomputeSeries() {
   scrubSlider.max = String(series.windowEndDay);
   scrubSlider.step = String(series.dtInternalDay);
   hasShownRetroAnnotation = false;
+  buildPlotLayers();
+  buildOrbitLayers();
+  buildSkyLayers();
   setCursorDay(state.cursorDay);
 }
 
@@ -293,18 +360,19 @@ function renderReadouts() {
   readoutLambda.textContent = formatNumber(ds.lambdaDeg, 1);
   readoutSlope.textContent = formatNumber(ds.dLambdaDt, 3);
   readoutState.textContent = ds.stateLabel;
+  readoutGeometryHint.textContent = ds.geometryHint || "\u2014";
   readoutRetroDuration.textContent = ds.retroDuration;
 
   // State badge
   stateBadge.classList.remove("retro__state-badge--retrograde", "retro__state-badge--stationary");
   if (ds.stateLabel === "Retrograde") {
-    stateBadge.textContent = "\u2190 Retrograde";
+    stateBadge.textContent = "Retrograde";
     stateBadge.classList.add("retro__state-badge--retrograde");
   } else if (ds.stateLabel === "Stationary") {
-    stateBadge.textContent = "\u25CF Stationary";
+    stateBadge.textContent = "Stationary";
     stateBadge.classList.add("retro__state-badge--stationary");
   } else {
-    stateBadge.textContent = "\u2192 Direct";
+    stateBadge.textContent = "Direct";
   }
 
   // First-retrograde annotation
@@ -316,9 +384,14 @@ function renderReadouts() {
 
 // ── Plot rendering ───────────────────────────────────────────
 
-function renderPlot() {
+function buildPlotLayers() {
   if (!series) return;
   clear(plotSvgEl);
+
+  const staticLayer = createLayerGroup("static");
+  const dynamicLayer = createLayerGroup("dynamic");
+  plotSvgEl.appendChild(staticLayer);
+  plotSvgEl.appendChild(dynamicLayer);
 
   const W = PLOT_W;
   const H = PLOT_H;
@@ -328,7 +401,6 @@ function renderPlot() {
   const mainBottom = mainTop + mainH;
   const x0 = PLOT_X0;
   const x1 = PLOT_X1;
-
   const t0 = series.windowStartDay;
   const t1 = series.windowEndDay;
   const xScale = (t: number) => plotXFromDay(t, t0, t1, x0, x1);
@@ -353,7 +425,6 @@ function renderPlot() {
 
   const yScale = (y: number) => plotYFromDeg(y, yMin, yMax, mainTop, mainBottom);
 
-  // ── Defs: hatch pattern ──
   const defs = svgEl("defs");
   const pattern = svgEl("pattern");
   pattern.setAttribute("id", "retroHatch");
@@ -376,9 +447,8 @@ function renderPlot() {
   pattern.appendChild(hatchRect);
   pattern.appendChild(hatchLine);
   defs.appendChild(pattern);
-  plotSvgEl.appendChild(defs);
+  plotSvgEl.insertBefore(defs, staticLayer);
 
-  // ── Gridlines ──
   const yRange = yMax - yMin;
   const yStep = yRange > 200 ? 60 : yRange > 100 ? 30 : yRange > 40 ? 10 : 5;
   const yGridStart = Math.ceil(yMin / yStep) * yStep;
@@ -392,7 +462,7 @@ function renderPlot() {
     gl.setAttribute("stroke", "var(--cp-faint)");
     gl.setAttribute("stroke-opacity", "0.15");
     gl.setAttribute("stroke-dasharray", "4 4");
-    plotSvgEl.appendChild(gl);
+    staticLayer.appendChild(gl);
 
     const label = svgEl("text");
     label.textContent = String(Math.round(v));
@@ -401,7 +471,7 @@ function renderPlot() {
     label.setAttribute("fill", "var(--cp-muted)");
     label.setAttribute("font-size", "11");
     label.setAttribute("text-anchor", "end");
-    plotSvgEl.appendChild(label);
+    staticLayer.appendChild(label);
   }
 
   const tRange = t1 - t0;
@@ -417,7 +487,7 @@ function renderPlot() {
     gl.setAttribute("stroke", "var(--cp-faint)");
     gl.setAttribute("stroke-opacity", "0.15");
     gl.setAttribute("stroke-dasharray", "4 4");
-    plotSvgEl.appendChild(gl);
+    staticLayer.appendChild(gl);
 
     const label = svgEl("text");
     label.textContent = String(Math.round(v));
@@ -426,10 +496,9 @@ function renderPlot() {
     label.setAttribute("fill", "var(--cp-muted)");
     label.setAttribute("font-size", "11");
     label.setAttribute("text-anchor", "middle");
-    plotSvgEl.appendChild(label);
+    staticLayer.appendChild(label);
   }
 
-  // ── Axis labels ──
   const xAxisLabel = svgEl("text");
   xAxisLabel.textContent = "Model Day t";
   xAxisLabel.setAttribute("x", String((x0 + x1) / 2));
@@ -437,7 +506,7 @@ function renderPlot() {
   xAxisLabel.setAttribute("fill", "var(--cp-text2)");
   xAxisLabel.setAttribute("font-size", "13");
   xAxisLabel.setAttribute("text-anchor", "middle");
-  plotSvgEl.appendChild(xAxisLabel);
+  staticLayer.appendChild(xAxisLabel);
 
   const yAxisLabel = svgEl("text");
   yAxisLabel.textContent = "Unwrapped longitude (deg)";
@@ -447,9 +516,8 @@ function renderPlot() {
   yAxisLabel.setAttribute("font-size", "13");
   yAxisLabel.setAttribute("text-anchor", "middle");
   yAxisLabel.setAttribute("transform", `rotate(-90 14 ${(mainTop + mainBottom) / 2})`);
-  plotSvgEl.appendChild(yAxisLabel);
+  staticLayer.appendChild(yAxisLabel);
 
-  // ── Retrograde bands ──
   for (const interval of series.retrogradeIntervals) {
     const bx = xScale(interval.startDay);
     const bw = xScale(interval.endDay) - bx;
@@ -461,7 +529,7 @@ function renderPlot() {
     base.setAttribute("height", String(mainH));
     base.setAttribute("fill", "var(--cp-pink)");
     base.setAttribute("fill-opacity", "0.10");
-    plotSvgEl.appendChild(base);
+    staticLayer.appendChild(base);
 
     const band = svgEl("rect");
     band.setAttribute("x", String(bx));
@@ -470,7 +538,7 @@ function renderPlot() {
     band.setAttribute("height", String(mainH));
     band.setAttribute("fill", "url(#retroHatch)");
     band.setAttribute("opacity", "0.95");
-    plotSvgEl.appendChild(band);
+    staticLayer.appendChild(band);
 
     const bandLabel = svgEl("text");
     bandLabel.textContent = "retrograde";
@@ -480,10 +548,9 @@ function renderPlot() {
     bandLabel.setAttribute("font-size", "11");
     bandLabel.setAttribute("text-anchor", "middle");
     bandLabel.setAttribute("opacity", "0.6");
-    plotSvgEl.appendChild(bandLabel);
+    staticLayer.appendChild(bandLabel);
   }
 
-  // ── Main curve ──
   let d = "";
   let moved = false;
   for (let i = 0; i < series.timesDay.length; i += stride) {
@@ -502,70 +569,100 @@ function renderPlot() {
   mainPath.setAttribute("stroke-width", "2.5");
   mainPath.setAttribute("stroke-linecap", "round");
   mainPath.setAttribute("stroke-linejoin", "round");
-  plotSvgEl.appendChild(mainPath);
+  staticLayer.appendChild(mainPath);
 
-  // ── Stationary markers ──
   for (const tStat of series.stationaryDays) {
     const px = xScale(tStat);
     const idx = seriesIndexAtDay(tStat, series.windowStartDay, series.dtInternalDay);
     const yi = clamp(idx, 0, unwrapped.length - 1);
     const py = yScale(unwrapped[yi]);
 
-    const c = svgEl("circle");
-    c.setAttribute("cx", String(px));
-    c.setAttribute("cy", String(py));
-    c.setAttribute("r", "5");
-    c.setAttribute("fill", "var(--cp-accent-ice)");
-    c.setAttribute("stroke", "var(--cp-bg0)");
-    c.setAttribute("stroke-width", "2");
-    c.setAttribute("aria-label", `stationary at t=${formatNumber(tStat, 1)} day`);
-    plotSvgEl.appendChild(c);
+    const marker = svgEl("circle");
+    marker.setAttribute("cx", String(px));
+    marker.setAttribute("cy", String(py));
+    marker.setAttribute("r", "5");
+    marker.setAttribute("fill", "var(--cp-accent-ice)");
+    marker.setAttribute("stroke", "var(--cp-bg0)");
+    marker.setAttribute("stroke-width", "2");
+    marker.setAttribute("aria-label", `stationary at t=${formatNumber(tStat, 1)} day`);
+    staticLayer.appendChild(marker);
   }
 
-  // ── Cursor ──
-  const xCur = xScale(state.cursorDay);
-  const cursorLine = svgEl("line");
-  cursorLine.setAttribute("x1", String(xCur));
-  cursorLine.setAttribute("x2", String(xCur));
-  cursorLine.setAttribute("y1", String(mainTop));
-  cursorLine.setAttribute("y2", String(mainBottom));
-  cursorLine.setAttribute("stroke", "var(--cp-accent-ice)");
-  cursorLine.setAttribute("stroke-opacity", "0.7");
-  cursorLine.setAttribute("stroke-width", "2");
-  plotSvgEl.appendChild(cursorLine);
-
-  // Cursor dot on curve
-  const curIdx = seriesIndexAtDay(state.cursorDay, series.windowStartDay, series.dtInternalDay);
-  const safeCurIdx = clamp(curIdx, 0, unwrapped.length - 1);
-  const curY = unwrapped[safeCurIdx];
-  if (Number.isFinite(curY)) {
-    const dot = svgEl("circle");
-    dot.setAttribute("cx", String(xCur));
-    dot.setAttribute("cy", String(yScale(curY)));
-    dot.setAttribute("r", "5");
-    dot.setAttribute("fill", "var(--cp-accent-ice)");
-    plotSvgEl.appendChild(dot);
-  }
-
-  // ── Axes border ──
   const axisPath = svgEl("path");
   axisPath.setAttribute("d", `M${x0},${mainTop}V${mainBottom}H${x1}`);
   axisPath.setAttribute("fill", "none");
   axisPath.setAttribute("stroke", "var(--cp-border)");
   axisPath.setAttribute("stroke-width", "1");
-  plotSvgEl.appendChild(axisPath);
+  staticLayer.appendChild(axisPath);
+
+  plotRenderContext = {
+    staticLayer,
+    dynamicLayer,
+    t0,
+    t1,
+    x0,
+    x1,
+    mainTop,
+    mainBottom,
+    unwrapped,
+    yMin,
+    yMax,
+  };
+}
+
+function renderPlotDynamic() {
+  if (!series || !plotRenderContext) return;
+  const ctx = plotRenderContext;
+  clear(ctx.dynamicLayer);
+
+  const xCur = plotXFromDay(state.cursorDay, ctx.t0, ctx.t1, ctx.x0, ctx.x1);
+  const cursorLine = svgEl("line");
+  cursorLine.setAttribute("x1", String(xCur));
+  cursorLine.setAttribute("x2", String(xCur));
+  cursorLine.setAttribute("y1", String(ctx.mainTop));
+  cursorLine.setAttribute("y2", String(ctx.mainBottom));
+  cursorLine.setAttribute("stroke", "var(--cp-accent-ice)");
+  cursorLine.setAttribute("stroke-opacity", "0.7");
+  cursorLine.setAttribute("stroke-width", "2");
+  ctx.dynamicLayer.appendChild(cursorLine);
+
+  const curIdx = seriesIndexAtDay(state.cursorDay, series.windowStartDay, series.dtInternalDay);
+  const safeCurIdx = clamp(curIdx, 0, ctx.unwrapped.length - 1);
+  const curY = ctx.unwrapped[safeCurIdx];
+  if (Number.isFinite(curY)) {
+    const dot = svgEl("circle");
+    dot.setAttribute("cx", String(xCur));
+    dot.setAttribute(
+      "cy",
+      String(plotYFromDeg(curY, ctx.yMin, ctx.yMax, ctx.mainTop, ctx.mainBottom)),
+    );
+    dot.setAttribute("r", "5");
+    dot.setAttribute("fill", "var(--cp-accent-ice)");
+    ctx.dynamicLayer.appendChild(dot);
+  }
 }
 
 // ── Orbit view ───────────────────────────────────────────────
 
-function renderOrbit() {
+function orbitToPx(context: OrbitRenderContext, xAu: number, yAu: number) {
+  return {
+    x: context.centerX + xAu * context.scale,
+    y: context.centerY - yAu * context.scale,
+  };
+}
+
+function buildOrbitLayers() {
   if (!series) return;
   clear(orbitSvgEl);
+
+  const staticLayer = createLayerGroup("static");
+  const dynamicLayer = createLayerGroup("dynamic");
+  orbitSvgEl.appendChild(staticLayer);
+  orbitSvgEl.appendChild(dynamicLayer);
 
   const W = 420;
   const H = 420;
   const padOrbit = 22;
-
   const keys: PlanetKey[] = state.showOtherPlanets
     ? ["Venus", "Earth", "Mars", "Jupiter", "Saturn"]
     : [state.observer, state.target];
@@ -577,24 +674,18 @@ function renderOrbit() {
   }
   extent *= 1.12;
 
-  const scale = (Math.min(W, H) / 2 - padOrbit) / extent;
-  const cx = W / 2;
-  const cy = H / 2;
+  const context: OrbitRenderContext = {
+    staticLayer,
+    dynamicLayer,
+    centerX: W / 2,
+    centerY: H / 2,
+    scale: (Math.min(W, H) / 2 - padOrbit) / extent,
+  };
+  orbitRenderContext = context;
 
-  const toPx = (xAu: number, yAu: number) => ({
-    x: cx + xAu * scale,
-    y: cy - yAu * scale,
-  });
-
-  // Cache resolved planet colors for this frame
-  const colorCache: Record<string, string> = {};
-  const cachedColor = (key: string) =>
-    (colorCache[key] ??= resolvePlanetColor(key));
-
-  // ── Zodiac ring ──
   if (state.showZodiac) {
     const zodiacRadius = Math.min(W, H) / 2 - 6;
-    const labels = zodiacLabelPositions(zodiacRadius, cx, cy);
+    const labels = zodiacLabelPositions(zodiacRadius, context.centerX, context.centerY);
     for (const z of labels) {
       const label = svgEl("text");
       label.textContent = z.label;
@@ -605,63 +696,68 @@ function renderOrbit() {
       label.setAttribute("text-anchor", "middle");
       label.setAttribute("dominant-baseline", "central");
       label.setAttribute("opacity", "0.35");
-      orbitSvgEl.appendChild(label);
+      staticLayer.appendChild(label);
     }
   }
 
-  // ── Sun ──
   const sun = svgEl("circle");
-  sun.setAttribute("cx", String(cx));
-  sun.setAttribute("cy", String(cy));
+  sun.setAttribute("cx", String(context.centerX));
+  sun.setAttribute("cy", String(context.centerY));
   sun.setAttribute("r", "7");
   sun.setAttribute("fill", "var(--cp-celestial-sun-core)");
   sun.setAttribute("filter", "drop-shadow(var(--cp-glow-sun))");
-  orbitSvgEl.appendChild(sun);
+  staticLayer.appendChild(sun);
 
-  // ── Orbit ellipses ──
   for (const key of keys) {
     const el = RetrogradeMotionModel.planetElements(key);
     const pts = orbitEllipsePoints(el.aAu, el.e, el.varpiDeg, 240);
-    const pxPts = pts.map((pt) => toPx(pt.x, pt.y));
+    const pxPts = pts.map((pt) => orbitToPx(context, pt.x, pt.y));
     const pathD = buildOrbitPath(pxPts);
     const isActive = key === state.observer || key === state.target;
 
-    const p = svgEl("path");
-    p.setAttribute("d", pathD);
-    p.setAttribute("fill", "none");
-    p.setAttribute("stroke", "var(--cp-celestial-orbit)");
-    p.setAttribute("stroke-opacity", isActive ? "0.9" : "0.3");
-    p.setAttribute("stroke-width", isActive ? "2" : "1.5");
-    orbitSvgEl.appendChild(p);
+    const orbitPath = svgEl("path");
+    orbitPath.setAttribute("d", pathD);
+    orbitPath.setAttribute("fill", "none");
+    orbitPath.setAttribute("stroke", "var(--cp-celestial-orbit)");
+    orbitPath.setAttribute("stroke-opacity", isActive ? "0.9" : "0.3");
+    orbitPath.setAttribute("stroke-width", isActive ? "2" : "1.5");
+    staticLayer.appendChild(orbitPath);
   }
+}
 
-  // ── Planet positions ──
-  const oState = RetrogradeMotionModel.orbitStateAtModelDay({
+function renderOrbitDynamic() {
+  if (!series || !orbitRenderContext) return;
+  const ctx = orbitRenderContext;
+  clear(ctx.dynamicLayer);
+
+  const colorCache: Record<string, string> = {};
+  const cachedColor = (key: string) => (colorCache[key] ??= resolvePlanetColor(key));
+
+  const observerState = RetrogradeMotionModel.orbitStateAtModelDay({
     elements: RetrogradeMotionModel.planetElements(state.observer),
     tDay: state.cursorDay,
     t0Day: series.t0Day,
   });
-  const tState = RetrogradeMotionModel.orbitStateAtModelDay({
+  const targetState = RetrogradeMotionModel.orbitStateAtModelDay({
     elements: RetrogradeMotionModel.planetElements(state.target),
     tDay: state.cursorDay,
     t0Day: series.t0Day,
   });
 
-  const oPx = toPx(oState.xAu, oState.yAu);
-  const tPx = toPx(tState.xAu, tState.yAu);
+  const observerPx = orbitToPx(ctx, observerState.xAu, observerState.yAu);
+  const targetPx = orbitToPx(ctx, targetState.xAu, targetState.yAu);
 
-  // ── Target trail ──
-  const trailLen = 60;
+  const trailLength = 60;
   const curIdx = seriesIndexAtDay(state.cursorDay, series.windowStartDay, series.dtInternalDay);
   const safeIdx = clamp(curIdx, 0, series.timesDay.length - 1);
-  const trailStartIdx = Math.max(0, safeIdx - trailLen);
+  const trailStartIdx = Math.max(0, safeIdx - trailLength);
   const trailCount = safeIdx - trailStartIdx;
   if (trailCount > 1) {
-    const targetElem = RetrogradeMotionModel.planetElements(state.target);
+    const targetElements = RetrogradeMotionModel.planetElements(state.target);
     for (let i = trailStartIdx; i <= safeIdx; i++) {
       const tDay = series.timesDay[i];
-      const ts = RetrogradeMotionModel.orbitStateAtModelDay({
-        elements: targetElem,
+      const trailState = RetrogradeMotionModel.orbitStateAtModelDay({
+        elements: targetElements,
         tDay,
         t0Day: series.t0Day,
       });
@@ -669,13 +765,13 @@ function renderOrbit() {
       const opacity = 0.05 + frac * 0.7;
       if (i > trailStartIdx) {
         const prevDay = series.timesDay[i - 1];
-        const prevTs = RetrogradeMotionModel.orbitStateAtModelDay({
-          elements: targetElem,
+        const prevTrailState = RetrogradeMotionModel.orbitStateAtModelDay({
+          elements: targetElements,
           tDay: prevDay,
           t0Day: series.t0Day,
         });
-        const p1 = toPx(prevTs.xAu, prevTs.yAu);
-        const p2 = toPx(ts.xAu, ts.yAu);
+        const p1 = orbitToPx(ctx, prevTrailState.xAu, prevTrailState.yAu);
+        const p2 = orbitToPx(ctx, trailState.xAu, trailState.yAu);
         const seg = svgEl("line");
         seg.setAttribute("x1", String(p1.x));
         seg.setAttribute("y1", String(p1.y));
@@ -685,85 +781,89 @@ function renderOrbit() {
         seg.setAttribute("stroke-opacity", String(opacity));
         seg.setAttribute("stroke-width", String(1 + opacity * 2));
         seg.setAttribute("stroke-linecap", "round");
-        orbitSvgEl.appendChild(seg);
+        ctx.dynamicLayer.appendChild(seg);
       }
     }
   }
 
-  // ── Line of sight ──
-  const dx = tPx.x - oPx.x;
-  const dy = tPx.y - oPx.y;
+  const dx = targetPx.x - observerPx.x;
+  const dy = targetPx.y - observerPx.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
   if (dist > 0.01) {
-    const extendFactor = Math.max(W, H) / dist;
+    const extendFactor = 420 / dist;
     const los = svgEl("line");
-    los.setAttribute("x1", String(oPx.x));
-    los.setAttribute("y1", String(oPx.y));
-    los.setAttribute("x2", String(oPx.x + dx * extendFactor));
-    los.setAttribute("y2", String(oPx.y + dy * extendFactor));
+    los.setAttribute("x1", String(observerPx.x));
+    los.setAttribute("y1", String(observerPx.y));
+    los.setAttribute("x2", String(observerPx.x + dx * extendFactor));
+    los.setAttribute("y2", String(observerPx.y + dy * extendFactor));
     los.setAttribute("stroke", "var(--cp-accent-amber)");
     los.setAttribute("stroke-width", "1.5");
     los.setAttribute("stroke-opacity", "0.4");
     los.setAttribute("stroke-dasharray", "6 4");
-    orbitSvgEl.appendChild(los);
+    ctx.dynamicLayer.appendChild(los);
   }
 
-  // ── Observer dot ──
-  const obs = svgEl("circle");
-  obs.setAttribute("cx", String(oPx.x));
-  obs.setAttribute("cy", String(oPx.y));
-  obs.setAttribute("r", "6");
-  obs.setAttribute("fill", cachedColor(state.observer));
-  obs.setAttribute("filter", "drop-shadow(var(--cp-glow-planet))");
-  orbitSvgEl.appendChild(obs);
+  const observerDot = svgEl("circle");
+  observerDot.setAttribute("cx", String(observerPx.x));
+  observerDot.setAttribute("cy", String(observerPx.y));
+  observerDot.setAttribute("r", "6");
+  observerDot.setAttribute("fill", cachedColor(state.observer));
+  observerDot.setAttribute("filter", "drop-shadow(var(--cp-glow-planet))");
+  ctx.dynamicLayer.appendChild(observerDot);
 
-  // ── Target dot ──
-  const tgt = svgEl("circle");
-  tgt.setAttribute("cx", String(tPx.x));
-  tgt.setAttribute("cy", String(tPx.y));
-  tgt.setAttribute("r", "6");
-  tgt.setAttribute("fill", cachedColor(state.target));
-  tgt.setAttribute("filter", "drop-shadow(var(--cp-glow-planet))");
-  orbitSvgEl.appendChild(tgt);
+  const targetDot = svgEl("circle");
+  targetDot.setAttribute("cx", String(targetPx.x));
+  targetDot.setAttribute("cy", String(targetPx.y));
+  targetDot.setAttribute("r", "6");
+  targetDot.setAttribute("fill", cachedColor(state.target));
+  targetDot.setAttribute("filter", "drop-shadow(var(--cp-glow-planet))");
+  ctx.dynamicLayer.appendChild(targetDot);
 
-  // ── Labels ──
-  const obsLabel = svgEl("text");
-  obsLabel.textContent = state.observer;
-  obsLabel.setAttribute("x", String(oPx.x));
-  obsLabel.setAttribute("y", String(oPx.y - 10));
-  obsLabel.setAttribute("fill", "var(--cp-text2)");
-  obsLabel.setAttribute("font-size", "10");
-  obsLabel.setAttribute("text-anchor", "middle");
-  orbitSvgEl.appendChild(obsLabel);
+  const observerLabel = svgEl("text");
+  observerLabel.textContent = state.observer;
+  observerLabel.setAttribute("x", String(observerPx.x));
+  observerLabel.setAttribute("y", String(observerPx.y - 10));
+  observerLabel.setAttribute("fill", "var(--cp-text2)");
+  observerLabel.setAttribute("font-size", "10");
+  observerLabel.setAttribute("text-anchor", "middle");
+  ctx.dynamicLayer.appendChild(observerLabel);
 
-  const tgtLabel = svgEl("text");
-  tgtLabel.textContent = state.target;
-  tgtLabel.setAttribute("x", String(tPx.x));
-  tgtLabel.setAttribute("y", String(tPx.y - 10));
-  tgtLabel.setAttribute("fill", "var(--cp-text2)");
-  tgtLabel.setAttribute("font-size", "10");
-  tgtLabel.setAttribute("text-anchor", "middle");
-  orbitSvgEl.appendChild(tgtLabel);
+  const targetLabel = svgEl("text");
+  targetLabel.textContent = state.target;
+  targetLabel.setAttribute("x", String(targetPx.x));
+  targetLabel.setAttribute("y", String(targetPx.y - 10));
+  targetLabel.setAttribute("fill", "var(--cp-text2)");
+  targetLabel.setAttribute("font-size", "10");
+  targetLabel.setAttribute("text-anchor", "middle");
+  ctx.dynamicLayer.appendChild(targetLabel);
 }
 
 // ── Sky-view strip ───────────────────────────────────────────
 
-function renderSkyView() {
+function buildSkyLayers() {
   if (!series) return;
   clear(skySvgEl);
 
-  const W = 400;
-  const H = 60;
+  const staticLayer = createLayerGroup("static");
+  const dynamicLayer = createLayerGroup("dynamic");
+  skySvgEl.appendChild(staticLayer);
+  skySvgEl.appendChild(dynamicLayer);
 
-  // Background gradient (dark sky)
+  const context: SkyRenderContext = {
+    staticLayer,
+    dynamicLayer,
+    width: 400,
+    height: 60,
+  };
+  skyRenderContext = context;
+
   const bg = svgEl("rect");
-  bg.setAttribute("width", String(W));
-  bg.setAttribute("height", String(H));
+  bg.setAttribute("width", String(context.width));
+  bg.setAttribute("height", String(context.height));
   bg.setAttribute("fill", "var(--cp-bg0)");
   bg.setAttribute("rx", "4");
-  skySvgEl.appendChild(bg);
+  staticLayer.appendChild(bg);
 
-  // Faint background star markers
   const starSeeds = [20, 55, 88, 120, 158, 195, 230, 265, 300, 340, 370];
   for (const sx of starSeeds) {
     const star = svgEl("circle");
@@ -772,53 +872,55 @@ function renderSkyView() {
     star.setAttribute("r", "1");
     star.setAttribute("fill", "var(--cp-celestial-star)");
     star.setAttribute("opacity", "0.3");
-    skySvgEl.appendChild(star);
+    staticLayer.appendChild(star);
   }
+}
 
-  // Current target position in sky
+function renderSkyDynamic() {
+  if (!series || !skyRenderContext) return;
+  const ctx = skyRenderContext;
+  clear(ctx.dynamicLayer);
+
   const curIdx = seriesIndexAtDay(state.cursorDay, series.windowStartDay, series.dtInternalDay);
   const safeIdx = clamp(curIdx, 0, series.lambdaWrappedDeg.length - 1);
   const lambdaDeg = series.lambdaWrappedDeg[safeIdx];
-  if (Number.isFinite(lambdaDeg)) {
-    const px = projectToSkyView(wrap360(lambdaDeg), W);
+  if (!Number.isFinite(lambdaDeg)) return;
 
-    // Glow
-    const glow = svgEl("circle");
-    glow.setAttribute("cx", String(px));
-    glow.setAttribute("cy", String(H / 2));
-    glow.setAttribute("r", "8");
-    glow.setAttribute("fill", resolvePlanetColor(state.target));
-    glow.setAttribute("opacity", "0.15");
-    skySvgEl.appendChild(glow);
+  const px = projectToSkyView(wrap360(lambdaDeg), ctx.width);
 
-    // Dot
-    const dot = svgEl("circle");
-    dot.setAttribute("cx", String(px));
-    dot.setAttribute("cy", String(H / 2));
-    dot.setAttribute("r", "4");
-    dot.setAttribute("fill", resolvePlanetColor(state.target));
-    dot.setAttribute("filter", "drop-shadow(var(--cp-glow-planet))");
-    skySvgEl.appendChild(dot);
+  const glow = svgEl("circle");
+  glow.setAttribute("cx", String(px));
+  glow.setAttribute("cy", String(ctx.height / 2));
+  glow.setAttribute("r", "8");
+  glow.setAttribute("fill", resolvePlanetColor(state.target));
+  glow.setAttribute("opacity", "0.15");
+  ctx.dynamicLayer.appendChild(glow);
 
-    // Label
-    const label = svgEl("text");
-    label.textContent = `${formatNumber(wrap360(lambdaDeg), 0)}\u00B0`;
-    label.setAttribute("x", String(px));
-    label.setAttribute("y", String(H / 2 + 16));
-    label.setAttribute("fill", "var(--cp-text2)");
-    label.setAttribute("font-size", "10");
-    label.setAttribute("text-anchor", "middle");
-    skySvgEl.appendChild(label);
-  }
+  const dot = svgEl("circle");
+  dot.setAttribute("cx", String(px));
+  dot.setAttribute("cy", String(ctx.height / 2));
+  dot.setAttribute("r", "4");
+  dot.setAttribute("fill", resolvePlanetColor(state.target));
+  dot.setAttribute("filter", "drop-shadow(var(--cp-glow-planet))");
+  ctx.dynamicLayer.appendChild(dot);
+
+  const label = svgEl("text");
+  label.textContent = `${formatNumber(wrap360(lambdaDeg), 0)} deg`;
+  label.setAttribute("x", String(px));
+  label.setAttribute("y", String(ctx.height / 2 + 16));
+  label.setAttribute("fill", "var(--cp-text2)");
+  label.setAttribute("font-size", "10");
+  label.setAttribute("text-anchor", "middle");
+  ctx.dynamicLayer.appendChild(label);
 }
 
 // ── Render all ───────────────────────────────────────────────
 
 function render() {
   renderReadouts();
-  renderPlot();
-  renderOrbit();
-  renderSkyView();
+  renderPlotDynamic();
+  renderOrbitDynamic();
+  renderSkyDynamic();
 }
 
 // ── Export ────────────────────────────────────────────────────
@@ -910,24 +1012,21 @@ preset.addEventListener("change", () => {
   const config = presetToConfig(preset.value);
   if (!config) return;
   stopAnimation();
-  state.observer = config.observer as PlanetKey;
-  state.target = config.target as PlanetKey;
-  observer.value = state.observer;
-  target.value = state.target;
+  applyObserverTargetPair(config.observer as PlanetKey, config.target as PlanetKey);
   state.cursorDay = 0;
   recomputeSeries();
 });
 
 observer.addEventListener("change", () => {
   stopAnimation();
-  state.observer = observer.value as PlanetKey;
+  applyObserverTargetPair(observer.value as PlanetKey, target.value as PlanetKey, true);
   state.cursorDay = 0;
   recomputeSeries();
 });
 
 target.addEventListener("change", () => {
   stopAnimation();
-  state.target = target.value as PlanetKey;
+  applyObserverTargetPair(observer.value as PlanetKey, target.value as PlanetKey, true);
   state.cursorDay = 0;
   recomputeSeries();
 });
@@ -940,17 +1039,20 @@ windowMonths.addEventListener("input", () => {
 
 plotStepDay.addEventListener("change", () => {
   state.plotStepDay = Number(plotStepDay.value);
+  buildPlotLayers();
   render();
 });
 
 showOtherPlanets.addEventListener("change", () => {
   state.showOtherPlanets = Boolean(showOtherPlanets.checked);
-  renderOrbit();
+  buildOrbitLayers();
+  render();
 });
 
 showZodiac.addEventListener("change", () => {
   state.showZodiac = Boolean(showZodiac.checked);
-  renderOrbit();
+  buildOrbitLayers();
+  render();
 });
 
 // Playbar controls
@@ -1029,6 +1131,8 @@ retroAnnotationClose.addEventListener("click", () => {
 // ── Challenges ───────────────────────────────────────────────
 
 function setupChallenges() {
+  const comparisonDurations: Partial<Record<"Mars" | "Venus", number>> = {};
+
   const challenges = [
     {
       prompt: "Find Mars during a retrograde interval. What happens to its apparent longitude?",
@@ -1052,15 +1156,59 @@ function setupChallenges() {
     {
       prompt: "Compare Mars and Venus retrograde durations. Which is shorter?",
       hints: [
-        "Select the Earth-Venus preset from the sidebar.",
-        "Look at the retrograde duration readout.",
+        "Measure and remember a duration for Mars and a duration for Venus.",
+        "Use the Retrograde readout while each target is selected.",
       ],
       initialState: { preset: "earth-mars", cursorDay: 0 },
       check(s: any) {
-        const tgt = String(s?.target ?? "");
-        if (tgt === "Venus")
-          return { correct: true, close: false, message: "Venus retrograde is shorter (~40 days vs Mars ~70 days). The higher angular velocity difference at inferior conjunction makes the reversal quicker." };
-        return { correct: false, close: false, message: "Switch to the Venus preset to compare." };
+        if (!series)
+          return { correct: false, close: false, message: "Load a valid target pair first." };
+
+        const targetKey =
+          String(s?.target ?? "") === "Mars" || String(s?.target ?? "") === "Venus"
+            ? (String(s?.target) as "Mars" | "Venus")
+            : null;
+        const cursorDay = Number(s?.cursorDay);
+        const safeCursorDay = Number.isFinite(cursorDay) ? cursorDay : state.cursorDay;
+
+        if (targetKey) {
+          const nearest = nearestRetrogradeInterval(
+            series.retrogradeIntervals,
+            safeCursorDay,
+          );
+          if (nearest) {
+            comparisonDurations[targetKey] = nearest.endDay - nearest.startDay;
+          }
+        }
+
+        if (isRetrogradeDurationComparisonComplete(comparisonDurations)) {
+          const marsDays = comparisonDurations.Mars!;
+          const venusDays = comparisonDurations.Venus!;
+          const shorter = venusDays < marsDays ? "Venus" : "Mars";
+          return {
+            correct: true,
+            close: false,
+            message:
+              `${shorter} is shorter (Mars ${formatNumber(marsDays, 1)} d, ` +
+              `Venus ${formatNumber(venusDays, 1)} d).`,
+          };
+        }
+
+        if (targetKey === "Mars") {
+          return {
+            correct: false,
+            close: true,
+            message: "Mars captured. Switch target to Venus and record its duration.",
+          };
+        }
+        if (targetKey === "Venus") {
+          return {
+            correct: false,
+            close: true,
+            message: "Venus captured. Switch target to Mars and record its duration.",
+          };
+        }
+        return { correct: false, close: false, message: "Use Mars and Venus as targets to compare." };
       },
     },
     {
@@ -1101,10 +1249,10 @@ function setupChallenges() {
         preset.value = String(next.preset);
         const config = presetToConfig(String(next.preset));
         if (config) {
-          state.observer = config.observer as PlanetKey;
-          state.target = config.target as PlanetKey;
-          observer.value = state.observer;
-          target.value = state.target;
+          applyObserverTargetPair(
+            config.observer as PlanetKey,
+            config.target as PlanetKey,
+          );
         }
       }
       if ("cursorDay" in next && Number.isFinite(Number(next.cursorDay))) {
@@ -1165,14 +1313,16 @@ function setupModes() {
       title: "Station Mode: Retrograde Motion",
       subtitle: "Collect evidence that retrograde is a viewing-geometry effect.",
       steps: [
-        "Run the Earth\u2013Mars preset and find the first retrograde interval.",
-        "Record the start day, end day, and duration of the interval.",
-        "Switch to Earth\u2013Venus and compare the retrograde duration.",
+        "Run the Earth -> Mars preset and find the first retrograde interval.",
+        "Use sidebar transport controls; use the timeline row near the stage for scrub and stationary jumps.",
+        "Record model day t at the start, end, and midpoint of retrograde.",
+        "Switch to Earth -> Venus and compare the retrograde duration.",
         "Use your data to explain why inner planets have shorter retrograde arcs.",
       ],
       columns: [
         { key: "observer", label: "Observer" },
         { key: "target", label: "Target" },
+        { key: "geometry", label: "Geometry" },
         { key: "cursorDay", label: "Day t" },
         { key: "lambdaDeg", label: "Lambda (deg)" },
         { key: "state", label: "State" },
@@ -1181,12 +1331,21 @@ function setupModes() {
       snapshotLabel: "Add row (current state)",
       getSnapshotRow() {
         if (!series) {
-          return { observer: state.observer, target: state.target, cursorDay: "\u2014", lambdaDeg: "\u2014", state: "\u2014", retroDuration: "\u2014" };
+          return {
+            observer: state.observer,
+            target: state.target,
+            geometry: "\u2014",
+            cursorDay: "\u2014",
+            lambdaDeg: "\u2014",
+            state: "\u2014",
+            retroDuration: "\u2014",
+          };
         }
         const ds = computeDisplayState(series, state.cursorDay, modelCallbacks);
         return {
           observer: state.observer,
           target: state.target,
+          geometry: ds.geometryHint || "\u2014",
           cursorDay: formatNumber(ds.cursorDay, 1),
           lambdaDeg: formatNumber(ds.lambdaDeg, 1),
           state: ds.stateLabel,

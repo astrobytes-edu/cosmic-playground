@@ -17,6 +17,8 @@ import {
   projectToSkyView,
   zodiacLabelPositions,
   presetToConfig,
+  resolveDistinctPair,
+  isRetrogradeDurationComparisonComplete,
   computeDisplayState,
   type RetroModelCallbacks,
 } from "./logic";
@@ -294,6 +296,50 @@ describe("computeDisplayState", () => {
     const noRetro = { ...mockSeries, retrogradeIntervals: [] };
     const state = computeDisplayState(noRetro, 0, stubCallbacks);
     expect(state.retroDuration).toBe("\u2014");
+  });
+});
+
+describe("resolveDistinctPair", () => {
+  it("keeps observer/target when already distinct", () => {
+    expect(resolveDistinctPair("Venus", "Earth")).toEqual({
+      observer: "Venus",
+      target: "Earth",
+      adjusted: false,
+    });
+  });
+
+  it("re-targets Earth observer away from Earth", () => {
+    expect(resolveDistinctPair("Earth", "Earth")).toEqual({
+      observer: "Earth",
+      target: "Mars",
+      adjusted: true,
+    });
+  });
+
+  it("re-targets non-Earth observer to Earth when duplicated", () => {
+    expect(resolveDistinctPair("Venus", "Venus")).toEqual({
+      observer: "Venus",
+      target: "Earth",
+      adjusted: true,
+    });
+  });
+});
+
+describe("isRetrogradeDurationComparisonComplete", () => {
+  it("returns false when only one target is present", () => {
+    expect(isRetrogradeDurationComparisonComplete({ Mars: 74 })).toBe(false);
+  });
+
+  it("returns true when Mars and Venus durations are both finite", () => {
+    expect(
+      isRetrogradeDurationComparisonComplete({ Mars: 74, Venus: 42 }),
+    ).toBe(true);
+  });
+
+  it("returns false when either duration is not finite", () => {
+    expect(
+      isRetrogradeDurationComparisonComplete({ Mars: Number.NaN, Venus: 42 }),
+    ).toBe(false);
   });
 });
 

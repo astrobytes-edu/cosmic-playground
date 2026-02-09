@@ -70,11 +70,41 @@
           <div class="cp-field">
             <span class="cp-label">Preset</span>
             <select id="preset" class="cp-select">
-              <option value="earth-mars">Earth &rarr; Mars</option>
-              <option value="earth-venus">Earth &rarr; Venus</option>
-              <option value="earth-jupiter">Earth &rarr; Jupiter</option>
-              <option value="earth-saturn">Earth &rarr; Saturn</option>
+              <option value="earth-mars">Earth -> Mars</option>
+              <option value="earth-venus">Earth -> Venus</option>
+              <option value="earth-jupiter">Earth -> Jupiter</option>
+              <option value="earth-saturn">Earth -> Saturn</option>
             </select>
+          </div>
+
+          <div class="retro__transport-card" role="group" aria-label="Animation controls">
+            <div class="cp-label">Transport</div>
+            <div class="retro__transport-row">
+              <button class="cp-playbar__btn" id="btn-play" type="button" aria-label="Play">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6z"/></svg>
+              </button>
+              <button class="cp-playbar__btn" id="btn-pause" type="button" aria-label="Pause" disabled>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12"/><rect x="9.5" y="2" width="3.5" height="12"/></svg>
+              </button>
+              <button class="cp-playbar__btn" id="btn-step-back" type="button" aria-label="Step backward">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="2" height="12"/><path d="M14 2L6 8l8 6z"/></svg>
+              </button>
+              <button class="cp-playbar__btn" id="btn-step-forward" type="button" aria-label="Step forward">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="12" y="2" width="2" height="12"/><path d="M2 2l8 6-8 6z"/></svg>
+              </button>
+              <button class="cp-playbar__btn" id="btn-reset" type="button" aria-label="Reset to start" title="Reset to start">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1 1 1.8 4.3"/><path d="M2 13V8h5"/></svg>
+              </button>
+            </div>
+            <div class="cp-field retro__speed-field">
+              <span class="cp-label">Speed</span>
+              <select id="speed-select" class="cp-select">
+                <option value="1">1x</option>
+                <option value="5" selected>5x</option>
+                <option value="10">10x</option>
+                <option value="20">20x</option>
+              </select>
+            </div>
           </div>
 
           <details class="cp-accordion">
@@ -97,6 +127,7 @@
               <div class="cp-field">
                 <span class="cp-label">Target planet</span>
                 <select id="target" class="cp-select">
+                  <option value="Earth">Earth</option>
                   <option value="Mars">Mars</option>
                   <option value="Venus">Venus</option>
                   <option value="Jupiter">Jupiter</option>
@@ -111,7 +142,7 @@
                   class="cp-range"
                   type="range"
                   min="6"
-                  max="36"
+                  max="72"
                   step="1"
                   value="24"
                 />
@@ -151,7 +182,7 @@
         <div class="viz-layout">
           <div class="viz-panel retro__plot-panel">
             <div class="panel-title">Apparent Longitude $\lambda_{\mathrm{app}}$</div>
-            <span class="retro__state-badge" id="stateBadge">&rarr; Direct</span>
+            <span class="retro__state-badge" id="stateBadge">Direct</span>
             <div id="plotFocus" class="retro__plot-focus" tabindex="0" aria-label="Longitude plot — click or drag to scrub time">
               <svg id="plotSvg" class="retro__svg" viewBox="0 0 1000 400"></svg>
             </div>
@@ -174,34 +205,7 @@
       <!-- ═══════════════════════════════════════════
            PLAYBAR — animation transport + scrub
            ═══════════════════════════════════════════ -->
-      <div class="cp-playbar" role="region" aria-label="Animation and timeline">
-        <div class="playbar-transport">
-          <button class="cp-playbar__btn" id="btn-play" type="button" aria-label="Play">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6z"/></svg>
-          </button>
-          <button class="cp-playbar__btn" id="btn-pause" type="button" aria-label="Pause" disabled>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12"/><rect x="9.5" y="2" width="3.5" height="12"/></svg>
-          </button>
-          <button class="cp-playbar__btn" id="btn-step-back" type="button" aria-label="Step backward">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="2" height="12"/><path d="M14 2L6 8l8 6z"/></svg>
-          </button>
-          <button class="cp-playbar__btn" id="btn-step-forward" type="button" aria-label="Step forward">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="12" y="2" width="2" height="12"/><path d="M2 2l8 6-8 6z"/></svg>
-          </button>
-          <button class="cp-playbar__btn" id="btn-reset" type="button" aria-label="Reset to start" title="Reset to start">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1 1 1.8 4.3"/><path d="M2 13V8h5"/></svg>
-          </button>
-          <label class="speed-control" for="speed-select">
-            <span>Speed</span>
-            <select id="speed-select" class="cp-select">
-              <option value="1">1x</option>
-              <option value="5" selected>5x</option>
-              <option value="10">10x</option>
-              <option value="20">20x</option>
-            </select>
-          </label>
-        </div>
-
+      <div class="cp-playbar retro__timeline-row" role="region" aria-label="Animation and timeline">
         <div class="playbar-scrub">
           <span class="playbar-day" id="playbar-day">Day 0 of 720</span>
           <input
@@ -248,6 +252,10 @@
         <div class="cp-readout">
           <span class="cp-readout__label">State</span>
           <span class="cp-readout__value"><span id="readoutState">&mdash;</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Geometry</span>
+          <span class="cp-readout__value"><span id="readoutGeometryHint">&mdash;</span></span>
         </div>
         <div class="cp-readout">
           <span class="cp-readout__label">Retrograde</span>

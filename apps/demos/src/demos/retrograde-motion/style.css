@@ -99,19 +99,30 @@
   align-items: stretch;
 }
 
-.playbar-transport {
-  display: flex;
-  align-items: center;
+.retro__transport-card {
+  display: grid;
   gap: var(--cp-space-2);
+  padding: var(--cp-space-2);
+  border: 1px solid var(--cp-instr-panel-border);
+  border-radius: 12px;
+  background: var(--cp-instr-panel-bg-muted);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.speed-control {
+.retro__transport-row {
   display: flex;
   align-items: center;
   gap: var(--cp-space-2);
-  margin-left: auto;
-  font-size: 0.85rem;
-  color: var(--cp-text2);
+  flex-wrap: wrap;
+}
+
+.retro__speed-field {
+  margin-top: var(--cp-space-1);
+}
+
+.retro__speed-field .cp-select {
+  width: 100%;
 }
 
 .playbar-scrub {

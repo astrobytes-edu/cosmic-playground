@@ -20,9 +20,9 @@ misconceptions:
   - "Retrograde means the planet reverses its real orbit."
 predict_prompt: "If Earth is moving faster than Mars, what do you predict happens to Mars’s apparent direction in the sky near opposition?"
 play_steps:
-  - "Use the Earth (observer) -> Mars (target) preset and find a retrograde interval (shaded)."
-  - "Click the plot to scrub time and locate the two stationary points that bound retrograde."
-  - "Switch to Earth -> Venus and compare how the geometry hint changes for an inferior planet."
+  - "Use the Earth (observer) $\\to$ Mars (target) preset and find a retrograde interval (shaded)."
+  - "Use sidebar transport controls; use the stage-adjacent timeline row to scrub model day $t$."
+  - "Switch to Earth $\\to$ Venus and compare how the geometry hint changes for an inferior planet."
 explain_prompt: "Use relative motion and the observer-to-target direction to explain why $d\\tilde{\\lambda}/dt$ can become negative even though neither orbit reverses."
 model_notes:
   - "The model uses coplanar Keplerian ellipses around the Sun with elements $(a,e,\\varpi,L_0)$ defined at an epoch $t_0$; it is not ephemeris-grade."
