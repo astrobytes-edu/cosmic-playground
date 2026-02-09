@@ -40,7 +40,7 @@ describe("Stars ZAMS HR -- logic", () => {
 
   it("formats metallicity readouts", () => {
     expect(formatMetallicity(0.02)).toBe("0.0200");
-    expect(formatMetallicity(1e-4)).toBe("10^-4");
+    expect(formatMetallicity(1e-4)).toBe("10^{-4}");
     expect(formatMetallicity(NaN)).toBe("-");
   });
 
@@ -77,15 +77,15 @@ describe("Stars ZAMS HR -- logic", () => {
     expect(decadeTicks(-4, 2)).toEqual([1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100]);
   });
 
-  it("formats decade labels using superscript powers of ten", () => {
-    expect(logTickPowersOfTenLabel(1e-2)).toBe("10⁻²");
-    expect(logTickPowersOfTenLabel(10)).toBe("10¹");
+  it("formats decade labels using LaTeX-style powers of ten", () => {
+    expect(logTickPowersOfTenLabel(1e-2)).toBe("10^{-2}");
+    expect(logTickPowersOfTenLabel(10)).toBe("10^{1}");
     expect(logTickPowersOfTenLabel(10)).not.toContain("e");
   });
 
-  it("formats superscripts for positive and negative exponents", () => {
-    expect(superscript(12)).toBe("¹²");
-    expect(superscript(-3)).toBe("⁻³");
+  it("formats exponents in LaTeX-style superscript wrappers", () => {
+    expect(superscript(12)).toBe("^{12}");
+    expect(superscript(-3)).toBe("^{-3}");
   });
 
   it("creates minor log ticks at 2..9 within each decade", () => {

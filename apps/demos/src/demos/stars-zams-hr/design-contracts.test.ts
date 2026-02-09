@@ -83,7 +83,7 @@ describe("Stars ZAMS HR -- Design System Contracts", () => {
       expect(mainTs).toContain("base-10 logarithmic axes");
       expect(mainTs).toContain("T_eff");
       expect(mainTs).toContain("(K)");
-      expect(mainTs).toContain("L/L⊙");
+      expect(mainTs).toContain("L/L_{\\\\odot}");
     });
 
     it("clears non-ZAMS presets by declared mode when switching back to ZAMS", () => {

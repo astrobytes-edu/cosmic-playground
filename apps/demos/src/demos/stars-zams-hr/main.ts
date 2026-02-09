@@ -506,8 +506,8 @@ function drawHrDiagram(readouts: StarReadouts): void {
           const labelY = yFromLum(labelLum) - 4;
           const exponent = Math.round(Math.log10(radiusRsun));
           const radiusLabel = Math.abs(radiusRsun - 10 ** exponent) < 1e-12
-            ? `R/R⊙ = ${logTickPowersOfTenLabel(10 ** exponent)}`
-            : `R/R⊙ = ${formatWithoutENotation(radiusRsun, 2)}`;
+            ? `R/R_{\\odot} = ${logTickPowersOfTenLabel(10 ** exponent)}`
+            : `R/R_{\\odot} = ${formatWithoutENotation(radiusRsun, 2)}`;
           ctx.fillStyle = guideColor;
           ctx.font = FONT_GUIDE_LABEL;
           ctx.fillText(radiusLabel, labelX, labelY);
@@ -644,9 +644,9 @@ function drawHrDiagram(readouts: StarReadouts): void {
   ctx.font = FONT_TICK_MINOR;
   ctx.fillStyle = mutedText;
   ctx.textAlign = "left";
-  ctx.fillText("hotter \u2190", mL, h - 28);
+  ctx.fillText("hotter <-", mL, h - 28);
   ctx.textAlign = "right";
-  ctx.fillText("\u2192 cooler", mL + plotW, h - 28);
+  ctx.fillText("-> cooler", mL + plotW, h - 28);
   ctx.restore();
 }
 
@@ -715,20 +715,20 @@ function exportResults(readouts: StarReadouts): ExportPayloadV1 {
     timestamp: new Date().toISOString(),
     parameters: [
       { name: "Source mode", value: readouts.sourceMode },
-      { name: "Mass M (M/M⊙)", value: formatWithoutENotation(readouts.massMsun, 6) },
+      { name: "Mass M (M/M_{\\odot})", value: formatWithoutENotation(readouts.massMsun, 6) },
       { name: "Metallicity Z", value: formatMetallicity(readouts.metallicityZ) },
       { name: "Show constant-R guides", value: state.showRadiusGuides ? "yes" : "no" }
     ],
     readouts: [
       { name: "Effective temperature T_eff (K)", value: formatIntegerWithCommas(readouts.teffK) },
-      { name: "Luminosity L/L⊙", value: formatWithoutENotation(readouts.luminosityLsun, 6) },
-      { name: "Radius R/R⊙", value: formatWithoutENotation(readouts.radiusRsun, 6) },
-      { name: "Surface flux ratio F/F⊙", value: formatWithoutENotation(readouts.surfaceFluxRatio, 6) }
+      { name: "Luminosity L/L_{\\odot}", value: formatWithoutENotation(readouts.luminosityLsun, 6) },
+      { name: "Radius R/R_{\\odot}", value: formatWithoutENotation(readouts.radiusRsun, 6) },
+      { name: "Surface flux ratio F/F_{\\odot}", value: formatWithoutENotation(readouts.surfaceFluxRatio, 6) }
     ],
     notes: [
-      "H-R plot uses base-10 logarithmic axes with T_eff in K and luminosity in L/L⊙.",
-      "ZAMS mode uses Tout et al. (1996) over 0.1 <= M/M⊙ <= 100 and 1e-4 <= Z <= 0.03.",
-      "Stefan mode computes luminosity from radius and effective temperature: L/L⊙ = (R/R⊙)^2 (T/T⊙)^4.",
+      "H-R plot uses base-10 logarithmic axes with T_eff in K and luminosity in L/L_{\\odot}.",
+      "ZAMS mode uses Tout et al. (1996) over 0.1 <= M/M_{\\odot} <= 100 and 1e-4 <= Z <= 0.03.",
+      "Stefan mode computes luminosity from radius and effective temperature: L/L_{\\odot} = (R/R_{\\odot})^2 (T/T_{\\odot})^4.",
       readouts.presetState === "override"
         ? "Override presets intentionally bypass ZAMS constraints."
         : "Current state follows the selected source-mode assumptions."
@@ -809,7 +809,7 @@ for (const button of presetButtons) {
 }
 
 copyResults.addEventListener("click", () => {
-  setLiveRegionText(status, "Copying…");
+  setLiveRegionText(status, "Copying...");
   const readouts = computeReadouts();
   void runtime
     .copyResults(exportResults(readouts))
@@ -858,12 +858,12 @@ const demoModes = createDemoModes({
     columns: [
       { key: "case", label: "Case" },
       { key: "source", label: "Source" },
-      { key: "mMsun", label: "M (M/M⊙)" },
+      { key: "mMsun", label: "M (M/M_{\\odot})" },
       { key: "z", label: "Z" },
       { key: "teffK", label: "T_eff (K)" },
-      { key: "lumLsun", label: "L/L⊙" },
-      { key: "radiusRsun", label: "R/R⊙" },
-      { key: "fluxRatio", label: "F/F⊙" }
+      { key: "lumLsun", label: "L/L_{\\odot}" },
+      { key: "radiusRsun", label: "R/R_{\\odot}" },
+      { key: "fluxRatio", label: "F/F_{\\odot}" }
     ],
     getSnapshotRow() {
       const readouts = computeReadouts();

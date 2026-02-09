@@ -38,8 +38,8 @@ function asPowerOfTenString(value: number, digits = 2): string {
   if (!Number.isFinite(value) || value <= 0) return "-";
   const exponent = Math.floor(Math.log10(value));
   const coefficient = value / 10 ** exponent;
-  if (Math.abs(coefficient - 1) < 1e-10) return `10^${exponent}`;
-  return `${coefficient.toFixed(digits)}x10^${exponent}`;
+  if (Math.abs(coefficient - 1) < 1e-10) return `10^{${exponent}}`;
+  return `${coefficient.toFixed(digits)}x10^{${exponent}}`;
 }
 
 export function formatMetallicity(value: number): string {
@@ -112,20 +112,7 @@ export function minorLogTicks(minExponent: number, maxExponent: number): number[
 }
 
 export function superscript(value: number): string {
-  const map: Record<string, string> = {
-    "0": "\u2070",
-    "1": "\u00B9",
-    "2": "\u00B2",
-    "3": "\u00B3",
-    "4": "\u2074",
-    "5": "\u2075",
-    "6": "\u2076",
-    "7": "\u2077",
-    "8": "\u2078",
-    "9": "\u2079",
-    "-": "\u207B",
-  };
-  return String(value).split("").map((character) => map[character] ?? character).join("");
+  return `^{${value}}`;
 }
 
 export function logTickPowersOfTenLabel(value: number): string {
