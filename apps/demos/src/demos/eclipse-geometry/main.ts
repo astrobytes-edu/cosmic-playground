@@ -963,13 +963,13 @@ const MOON_RATE_DEG_PER_DAY = 360 / SIDEREAL_MONTH_DAYS;
 const NODE_RATE_DEG_PER_DAY = -360 / (NODE_REGRESSION_YEARS * JULIAN_YEAR_DAYS);
 const PHASE_RATE_DEG_PER_DAY = 360 / SYNODIC_MONTH_DAYS;
 
-// Base rate: 1 day/sec (one synodic month ≈ 30 seconds at 1x).
+// Base rate: 1 day/sec (one synodic month is about 30 seconds at 1x).
 // User selects a multiplier via the speed dropdown (1x / 3x / 5x / 10x).
 const BASE_DAYS_PER_SECOND = 1;
 let animSpeedMultiplier = Number(animSpeed.value) || 5;
 
 // Year animation uses 3x the current speed so a full year stays brisk
-// but still trackable (≈ 24 s at default 5x).
+// but still trackable (about 24 s at default 5x).
 const YEAR_SPEED_FACTOR = 3;
 
 const SIM_SPEED_DAYS_PER_SECOND: Record<SimSpeedKey, number> = {
