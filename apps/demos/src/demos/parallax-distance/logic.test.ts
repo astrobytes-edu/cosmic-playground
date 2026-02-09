@@ -1,11 +1,14 @@
 import { describe, it, expect } from "vitest";
 import {
   clamp,
-  formatNumber,
-  signalToNoise,
+  detectorOffsetPx,
   describeMeasurability,
   diagramHalfAngle,
   diagramStarY,
+  formatNumber,
+  parallaxArcsecFromMas,
+  parallaxRadiansFromMas,
+  signalToNoise
 } from "./logic";
 
 describe("Parallax Distance -- UI Logic", () => {
@@ -13,125 +16,129 @@ describe("Parallax Distance -- UI Logic", () => {
     it("returns value when within range", () => {
       expect(clamp(5, 0, 10)).toBe(5);
     });
-    it("clamps to min", () => {
-      expect(clamp(-1, 0, 10)).toBe(0);
-    });
-    it("clamps to max", () => {
-      expect(clamp(11, 0, 10)).toBe(10);
-    });
-    it("handles min === max", () => {
-      expect(clamp(5, 3, 3)).toBe(3);
+
+    it("clamps to bounds", () => {
+      expect(clamp(-2, 0, 10)).toBe(0);
+      expect(clamp(17, 0, 10)).toBe(10);
     });
   });
 
   describe("formatNumber", () => {
-    it("formats normal numbers with default 2 digits", () => {
+    it("formats finite values", () => {
       expect(formatNumber(3.14159)).toBe("3.14");
+      expect(formatNumber(3.14159, 4)).toBe("3.1416");
     });
-    it("formats with custom digit count", () => {
-      expect(formatNumber(1.23456, 4)).toBe("1.2346");
-    });
-    it("returns em-dash for NaN", () => {
+
+    it("returns em dash for non-finite values", () => {
       expect(formatNumber(NaN)).toBe("\u2014");
-    });
-    it("returns em-dash for Infinity", () => {
       expect(formatNumber(Infinity)).toBe("\u2014");
-    });
-    it("returns em-dash for -Infinity", () => {
       expect(formatNumber(-Infinity)).toBe("\u2014");
     });
   });
 
-  describe("signalToNoise", () => {
-    it("computes p/sigma for positive sigma", () => {
-      expect(signalToNoise(100, 1)).toBe(100);
+  describe("parallax conversions", () => {
+    it("converts mas to arcsec", () => {
+      expect(parallaxArcsecFromMas(1000)).toBeCloseTo(1, 12);
+      expect(parallaxArcsecFromMas(250)).toBeCloseTo(0.25, 12);
     });
-    it("returns Infinity for zero sigma", () => {
-      expect(signalToNoise(100, 0)).toBe(Infinity);
-    });
-    it("returns Infinity for negative sigma", () => {
-      expect(signalToNoise(100, -1)).toBe(Infinity);
-    });
-    it("handles small parallax with large sigma", () => {
-      expect(signalToNoise(0.5, 10)).toBeCloseTo(0.05, 10);
+
+    it("converts mas to radians", () => {
+      const oneArcsecRad = (Math.PI / 180) / 3600;
+      expect(parallaxRadiansFromMas(1000)).toBeCloseTo(oneArcsecRad, 12);
     });
   });
 
-  describe("describeMeasurability", () => {
-    it("returns Excellent for high SNR", () => {
+  describe("signalToNoise + measurability", () => {
+    it("computes p/sigma for positive sigma", () => {
+      expect(signalToNoise(100, 2)).toBe(50);
+    });
+
+    it("returns Infinity for non-positive sigma", () => {
+      expect(signalToNoise(100, 0)).toBe(Infinity);
+      expect(signalToNoise(100, -1)).toBe(Infinity);
+    });
+
+    it("classifies measurement quality", () => {
       expect(describeMeasurability(25)).toBe("Excellent");
-    });
-    it("returns Good for moderate SNR", () => {
-      expect(describeMeasurability(10)).toBe("Good");
-    });
-    it("returns Marginal for low SNR", () => {
+      expect(describeMeasurability(8)).toBe("Good");
       expect(describeMeasurability(4)).toBe("Marginal");
-    });
-    it("returns Poor for very low SNR", () => {
       expect(describeMeasurability(2)).toBe("Poor");
-    });
-    it("returns Not measurable for zero SNR", () => {
       expect(describeMeasurability(0)).toBe("Not measurable");
-    });
-    it("returns Not measurable for Infinity", () => {
       expect(describeMeasurability(Infinity)).toBe("Not measurable");
     });
   });
 
   describe("diagramHalfAngle", () => {
-    it("returns unclamped result for mid-range parallax (1000 mas)", () => {
-      // 1000 mas => pArcsec=1.0, pRad~4.85e-6, raw~0.0291 (between 0.02 and 0.34)
-      const { halfAngle, clamped } = diagramHalfAngle(1000);
-      expect(halfAngle).toBeCloseTo(0.0291, 3);
-      expect(clamped).toBe(false);
+    it("is monotonic across p = 1..1000 mas", () => {
+      const values = [1, 10, 100, 1000].map((p) => diagramHalfAngle(p));
+
+      expect(values[0].halfAngle).toBeLessThan(values[1].halfAngle);
+      expect(values[1].halfAngle).toBeLessThan(values[2].halfAngle);
+      expect(values[2].halfAngle).toBeLessThan(values[3].halfAngle);
+
+      expect(values[0].logProgress).toBeCloseTo(0, 6);
+      expect(values[3].logProgress).toBeCloseTo(1, 6);
+      expect(values[2].logProgress).toBeCloseTo(2 / 3, 5);
     });
-    it("clamps large parallax angles to max (100000 mas)", () => {
-      // 100000 mas => raw~2.91, clamped to 0.34
-      const { halfAngle, clamped } = diagramHalfAngle(100000);
-      expect(halfAngle).toBe(0.34);
-      expect(clamped).toBe(true);
-    });
-    it("clamps tiny parallax angles to minimum (1 mas)", () => {
-      // 1 mas => raw~2.9e-5, clamped to 0.02
-      const { halfAngle, clamped } = diagramHalfAngle(1);
-      expect(halfAngle).toBe(0.02);
-      expect(clamped).toBe(true);
-    });
-    it("clamps moderate parallax below threshold (100 mas)", () => {
-      // 100 mas => raw~0.00291, below 0.02, clamped
-      const { halfAngle, clamped } = diagramHalfAngle(100);
-      expect(halfAngle).toBe(0.02);
-      expect(clamped).toBe(true);
-    });
-    it("returns unclamped for parallax near upper mid-range (10000 mas)", () => {
-      // 10000 mas => raw~0.291, between 0.02 and 0.34
-      const { halfAngle, clamped } = diagramHalfAngle(10000);
-      expect(halfAngle).toBeCloseTo(0.2909, 3);
-      expect(clamped).toBe(false);
+
+    it("returns finite exaggeration factors", () => {
+      const near = diagramHalfAngle(1000);
+      const far = diagramHalfAngle(1);
+      expect(near.exaggeration).toBeGreaterThan(1);
+      expect(far.exaggeration).toBeGreaterThan(near.exaggeration);
+      expect(Number.isFinite(near.exaggeration)).toBe(true);
+      expect(Number.isFinite(far.exaggeration)).toBe(true);
     });
   });
 
   describe("diagramStarY", () => {
-    it("places star above baseline for large angle (unclamped)", () => {
-      // baselineY=400, baselineLen=100, halfAngle=0.3
-      // starY = 400 - (100/2)/tan(0.3) = 400 - 50/0.3093 ~ 238.4
-      const { starY, clamped } = diagramStarY(400, 100, 0.3);
-      expect(starY).toBeCloseTo(238.4, 0);
-      expect(starY).toBeGreaterThan(80);
-      expect(clamped).toBe(false);
+    it("moves monotonically with visual half-angle", () => {
+      const yA = diagramStarY(320, 320, 0.45, 88, 236);
+      const yB = diagramStarY(320, 320, 0.75, 88, 236);
+      const yC = diagramStarY(320, 320, 1.0, 88, 236);
+
+      expect(yA).toBeLessThan(yB);
+      expect(yB).toBeLessThan(yC);
     });
-    it("clamps starY to 80 for very small angles", () => {
-      // halfAngle=0.02 => (100/2)/tan(0.02) ~ 2500, starY = 400 - 2500 = -2100 => clamped
-      const { starY, clamped } = diagramStarY(400, 100, 0.02);
-      expect(starY).toBe(80);
-      expect(clamped).toBe(true);
+
+    it("does not collapse to a single value across slider domain", () => {
+      const starYs = [1, 10, 100, 1000].map((p) => {
+        const { halfAngle } = diagramHalfAngle(p);
+        return diagramStarY(320, 320, halfAngle, 88, 236);
+      });
+
+      expect(new Set(starYs.map((value) => value.toFixed(2))).size).toBeGreaterThanOrEqual(3);
     });
-    it("clamps when baseline is long and angle small", () => {
-      // baselineY=420, baselineLen=320, halfAngle=0.15
-      // (320/2)/tan(0.15) = 160/0.1511 ~ 1058.9, starY = 420 - 1059 = -639 => clamped
-      const { starY, clamped } = diagramStarY(420, 320, 0.15);
-      expect(starY).toBe(80);
-      expect(clamped).toBe(true);
+
+    it("keeps visible motion in the far-distance regime", () => {
+      const lowParallaxYs = [1, 2, 5, 10].map((p) => {
+        const { halfAngle } = diagramHalfAngle(p);
+        return diagramStarY(320, 320, halfAngle, 88, 236);
+      });
+
+      expect(new Set(lowParallaxYs.map((value) => value.toFixed(2))).size).toBe(4);
+      expect(lowParallaxYs[0]).toBeLessThan(lowParallaxYs[1]);
+      expect(lowParallaxYs[1]).toBeLessThan(lowParallaxYs[2]);
+      expect(lowParallaxYs[2]).toBeLessThan(lowParallaxYs[3]);
+    });
+  });
+
+  describe("detectorOffsetPx", () => {
+    it("is monotonic and bounded", () => {
+      const offsets = [1, 10, 100, 1000].map((p) => detectorOffsetPx(p, 120, 12));
+
+      expect(offsets[0]).toBeLessThan(offsets[1]);
+      expect(offsets[1]).toBeLessThan(offsets[2]);
+      expect(offsets[2]).toBeLessThan(offsets[3]);
+
+      for (const value of offsets) {
+        expect(value).toBeGreaterThanOrEqual(12);
+        expect(value).toBeLessThanOrEqual(120);
+      }
+    });
+
+    it("respects minimum offset when track half-width is tiny", () => {
+      expect(detectorOffsetPx(500, 6, 12)).toBeGreaterThanOrEqual(12);
     });
   });
 });

@@ -1,55 +1,114 @@
 @import "../../shared/stub-demo.css";
 
-.control {
-  display: grid;
-  gap: 8px;
+.parallax-demo .cp-panel,
+.parallax-demo .cp-tabs-container {
+  background: color-mix(in srgb, var(--cp-instr-panel-bg) 92%, transparent);
+  border-color: color-mix(in srgb, var(--cp-instr-panel-border) 80%, transparent);
+  box-shadow: none;
 }
 
-.control__value {
+.parallax-demo .cp-panel-body {
+  display: grid;
+  gap: var(--cp-space-3);
+}
+
+.cp-field {
+  margin-bottom: 0;
+}
+
+.cp-field__value {
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-text-sm);
+  color: var(--cp-text);
+  margin-bottom: var(--cp-space-1);
+}
+
+.cp-field__hint {
+  margin-top: var(--cp-space-1);
   color: var(--cp-muted);
-  font-size: 0.95rem;
+  font-size: var(--cp-text-sm);
 }
 
 .stage {
+  padding: var(--cp-space-3);
+}
+
+.viz-layout {
   display: grid;
-  place-items: center;
-  padding: var(--cp-space-4);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--cp-space-3);
+}
+
+.viz-panel {
+  background: var(--cp-instr-panel-bg);
+  border: 1px solid var(--cp-instr-panel-border);
+  border-radius: var(--cp-r-2);
+  padding: var(--cp-space-3);
+  display: grid;
+  gap: var(--cp-space-2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.panel-title {
+  font-size: var(--cp-text-sm);
+  font-weight: var(--cp-font-semibold);
+  color: var(--cp-text2);
+  letter-spacing: 0.01em;
 }
 
 .stage__svg {
   width: 100%;
-  max-width: none;
   height: auto;
-  border-radius: 18px;
-  border: 1px solid var(--cp-border);
+  display: block;
+  border-radius: var(--cp-r-2);
+  border: 1px solid color-mix(in srgb, var(--cp-border) 75%, transparent);
   background:
     radial-gradient(
-      circle at 18% 24%,
-      var(--cp-glow-teal),
-      color-mix(in srgb, var(--cp-bg0) 78%, transparent)
+      circle at 20% 16%,
+      color-mix(in srgb, var(--cp-celestial-sun) 24%, transparent),
+      transparent 52%
     ),
-    radial-gradient(circle at 82% 20%, var(--cp-glow-violet), transparent 55%),
-    color-mix(in srgb, var(--cp-bg0) 72%, transparent);
-  box-shadow: 0 24px 50px color-mix(in srgb, var(--cp-bg0) 65%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+    radial-gradient(
+      circle at 80% 18%,
+      color-mix(in srgb, var(--cp-accent-ice) 20%, transparent),
+      transparent 56%
+    ),
+    radial-gradient(circle at 50% 52%, var(--cp-bg1), var(--cp-bg0));
 }
 
 .stage__bg {
   fill: transparent;
 }
 
-.stage__baseline {
-  stroke: color-mix(in srgb, var(--cp-text) 26%, transparent);
-  stroke-width: 2px;
-  stroke-linecap: round;
+.stage__orbit {
+  fill: none;
+  stroke: color-mix(in srgb, var(--cp-celestial-orbit) 85%, transparent);
+  stroke-width: 2;
+  stroke-dasharray: 5 6;
+  opacity: 0.86;
+}
+
+.stage__sun {
+  fill: var(--cp-celestial-sun);
+  filter: drop-shadow(var(--cp-glow-sun));
 }
 
 .stage__earth {
-  fill: color-mix(in srgb, var(--cp-bg0) 55%, transparent);
-  stroke: color-mix(in srgb, var(--cp-celestial-earth) 65%, transparent);
-  stroke-width: 2px;
+  fill: var(--cp-celestial-earth);
+  stroke: color-mix(in srgb, var(--cp-celestial-earth) 42%, var(--cp-text));
+  stroke-width: 1.5;
   filter: drop-shadow(var(--cp-glow-planet));
+}
+
+.stage__earth--jan {
+  fill: color-mix(in srgb, var(--cp-accent-ice) 76%, var(--cp-celestial-earth));
+  stroke: color-mix(in srgb, var(--cp-accent-ice) 44%, var(--cp-text));
+}
+
+.stage__earth--jul {
+  fill: color-mix(in srgb, var(--cp-accent-rose) 74%, var(--cp-celestial-earth));
+  stroke: color-mix(in srgb, var(--cp-accent-rose) 42%, var(--cp-text));
 }
 
 .stage__star {
@@ -57,60 +116,201 @@
   filter: drop-shadow(var(--cp-glow-star));
 }
 
-.stage__ray {
-  stroke: color-mix(in srgb, var(--cp-celestial-orbit) 55%, transparent);
-  stroke-width: 2px;
+.stage__baseline {
+  stroke: color-mix(in srgb, var(--cp-text) 55%, transparent);
+  stroke-width: 2.2;
   stroke-linecap: round;
-  opacity: 0.9;
+}
+
+.stage__ray {
+  stroke: color-mix(in srgb, var(--cp-celestial-orbit) 70%, transparent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.stage__ray--jan {
+  stroke: color-mix(in srgb, var(--cp-accent-ice) 64%, var(--cp-text));
+}
+
+.stage__ray--jul {
+  stroke: color-mix(in srgb, var(--cp-accent-rose) 62%, var(--cp-text));
 }
 
 .stage__arc {
   fill: none;
-  stroke: var(--cp-accent-amber);
-  stroke-opacity: 0.95;
-  stroke-width: 3px;
+  stroke: color-mix(in srgb, var(--cp-accent-amber) 96%, var(--cp-text));
+  stroke-width: 3.2;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cp-accent-amber) 18%, transparent));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cp-accent-amber) 22%, transparent));
+}
+
+.stage__detector-frame {
+  fill: color-mix(in srgb, var(--cp-bg1) 70%, transparent);
+  stroke: color-mix(in srgb, var(--cp-border) 80%, transparent);
+  stroke-width: 1.5;
+}
+
+.stage__detector-track {
+  stroke: color-mix(in srgb, var(--cp-text) 65%, transparent);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.stage__detector-center {
+  stroke: color-mix(in srgb, var(--cp-muted) 85%, transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.stage__detector-dot {
+  stroke-width: 1.5;
+}
+
+.stage__detector-dot--jan {
+  fill: color-mix(in srgb, var(--cp-accent-ice) 88%, var(--cp-text));
+  stroke: color-mix(in srgb, var(--cp-accent-ice) 40%, var(--cp-text));
+}
+
+.stage__detector-dot--jul {
+  fill: color-mix(in srgb, var(--cp-accent-rose) 88%, var(--cp-text));
+  stroke: color-mix(in srgb, var(--cp-accent-rose) 40%, var(--cp-text));
 }
 
 .stage__label {
   fill: var(--cp-text);
   font-family: var(--cp-font-sans);
-  font-size: 16px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: var(--cp-font-medium);
+  text-anchor: middle;
+}
+
+.stage__label--sun,
+.stage__label--star,
+.stage__label--angle {
+  font-weight: var(--cp-font-semibold);
+}
+
+.stage__label--earth,
+.stage__label--baseline,
+.stage__label--detector,
+.stage__label--detector-dot {
+  fill: var(--cp-text2);
+  font-size: 13px;
+}
+
+.stage__label--earth-jan,
+#detectorJanLabel {
+  fill: color-mix(in srgb, var(--cp-accent-ice) 64%, var(--cp-text));
+}
+
+.stage__label--earth-jul,
+#detectorJulLabel {
+  fill: color-mix(in srgb, var(--cp-accent-rose) 64%, var(--cp-text));
 }
 
 .stage__label--angle {
-  fill: color-mix(in srgb, var(--cp-accent-amber) 85%, var(--cp-text));
-}
-
-.stage__label--star {
-  fill: color-mix(in srgb, var(--cp-text) 80%, transparent);
-  font-weight: 600;
+  fill: color-mix(in srgb, var(--cp-accent-amber) 90%, var(--cp-text));
 }
 
 .stage__note {
   fill: var(--cp-muted);
   font-family: var(--cp-font-sans);
-  font-size: 14px;
+  font-size: 13px;
+  text-anchor: middle;
 }
 
-/* --- Entry animations --- */
-.cp-demo__controls {
-  animation: cp-slide-up var(--cp-transition-slow) var(--cp-ease-out) both;
+.stage__note--top {
+  font-size: 12px;
+}
+
+.schematic-note {
+  text-align: center;
+  color: var(--cp-muted);
+  font-size: var(--cp-text-sm);
+}
+
+.cp-notice p {
+  margin: var(--cp-space-2) 0 0;
+}
+
+.cp-demo__readouts {
+  align-items: center;
+}
+
+.cp-readout-strip .cp-readout__value {
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-demo__shelf ul {
+  margin: 0;
+  padding-left: var(--cp-space-5);
+  color: var(--cp-text2);
+}
+
+.cp-demo__shelf li + li {
+  margin-top: var(--cp-space-2);
+}
+
+.cp-demo__sidebar {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
 }
 
 .cp-demo__stage {
-  animation: cp-fade-in var(--cp-transition-slow) var(--cp-ease-out) both;
+  min-height: clamp(360px, 58svh, 680px);
+  animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 1);
 }
 
 .cp-demo__readouts {
-  animation: cp-slide-up var(--cp-transition-slow) var(--cp-ease-out) both;
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 2);
 }
 
-.cp-demo__drawer {
-  animation: cp-fade-in var(--cp-transition-slow) var(--cp-ease-out) both;
+.cp-demo__shelf {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 3);
+}
+
+@media (max-width: 1100px) {
+  .stage__svg {
+    border-radius: var(--cp-r-1);
+  }
+
+  .stage__label {
+    font-size: 12px;
+  }
+
+  .stage__note {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 720px) {
+  .cp-readout-strip {
+    gap: var(--cp-space-2) var(--cp-space-3);
+  }
+
+  .cp-readout-strip .cp-readout {
+    min-width: min(180px, 100%);
+  }
+
+  .stage__label--detector,
+  .stage__label--detector-dot,
+  .stage__note--top {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-demo__sidebar,
+  .cp-demo__stage,
+  .cp-demo__readouts,
+  .cp-demo__shelf {
+    animation: none;
+  }
+
+  .cp-button,
+  .cp-readout {
+    transition: none;
+  }
 }

@@ -8,56 +8,16 @@
     <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
   </head>
   <body>
+    <canvas class="cp-starfield" aria-hidden="true"></canvas>
     <div
       id="cp-demo"
-      class="cp-layer-instrument cp-demo"
+      class="cp-layer-instrument cp-demo parallax-demo"
       data-shell="triad"
       aria-label="Parallax Distance instrument"
     >
-      <canvas class="cp-starfield" aria-hidden="true"></canvas>
-      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
-        <div class="cp-panel-header">Parallax Distance: Measuring the Stars</div>
-        <div class="cp-panel-body">
-          <p class="cp-muted">Use triangles and tiny angles to infer distance from apparent shift.</p>
-
-          <div class="cp-callout" data-kind="tip">
-            <strong>Parsec definition</strong>
-            <div>$$d\,(\mathrm{pc})=\frac{1}{p\,(\mathrm{arcsec})}$$</div>
-          </div>
-
-          <label class="control">
-            <span>Preset star</span>
-            <select id="starPreset"></select>
-          </label>
-
-          <label class="control">
-            <span>Parallax angle $p$ (mas)</span>
-            <input
-              id="parallaxMas"
-              type="range"
-              min="1"
-              max="1000"
-              value="100"
-              step="1"
-              data-tooltip-source="#parallaxMasValue"
-            />
-            <span class="control__value"><span id="parallaxMasValue"></span></span>
-          </label>
-
-          <label class="control">
-            <span>Measurement uncertainty $\sigma_p$ (mas)</span>
-            <input
-              id="sigmaMas"
-              type="range"
-              min="0.1"
-              max="20"
-              value="1"
-              step="0.1"
-              data-tooltip-source="#sigmaMasValue"
-            />
-            <span class="control__value"><span id="sigmaMasValue"></span></span>
-          </label>
-
+      <aside class="cp-demo__sidebar cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Parallax Distance</div>
+        <div class="cp-panel-body cp-scroll-shadow">
           <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
             <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -97,97 +57,167 @@
               </div>
             </div>
           </div>
+
+          <p class="cp-muted">Use Earth’s orbit baseline to infer stellar distance from tiny angular shifts.</p>
+
+          <div class="cp-callout" data-kind="model">
+            <strong>Model</strong>
+            <div>$$d\,(\mathrm{pc})=\frac{1}{p\,(\mathrm{arcsec})}$$</div>
+          </div>
+
+          <label class="cp-field">
+            <span class="cp-label">Preset star</span>
+            <select id="starPreset" class="cp-select"></select>
+          </label>
+
+          <label class="cp-field">
+            <span class="cp-label">Parallax angle $p$</span>
+            <div id="parallaxMasValue" class="cp-field__value">100 mas</div>
+            <input
+              id="parallaxMas"
+              class="cp-range"
+              type="range"
+              min="1"
+              max="1000"
+              value="100"
+              step="1"
+              data-tooltip-source="#parallaxMasValue"
+            />
+            <div class="cp-field__hint">Range: 1–1000 mas</div>
+          </label>
+
+          <label class="cp-field">
+            <span class="cp-label">Uncertainty $\sigma_p$</span>
+            <div id="sigmaMasValue" class="cp-field__value">1.0 mas</div>
+            <input
+              id="sigmaMas"
+              class="cp-range"
+              type="range"
+              min="0.1"
+              max="20"
+              value="1"
+              step="0.1"
+              data-tooltip-source="#sigmaMasValue"
+            />
+            <div class="cp-field__hint">Higher uncertainty lowers confidence in $d$.</div>
+          </label>
+
+          <div class="cp-notice">
+            <h3>Predict</h3>
+            <p>If $p$ becomes 10x smaller, does $d$ become 10x larger or 10x smaller?</p>
+          </div>
+
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
       </aside>
 
       <section class="cp-demo__stage cp-stage stage" aria-label="Parallax visualization stage">
-        <svg
-          id="diagram"
-          class="stage__svg"
-          viewBox="0 0 900 520"
-          role="img"
-          aria-label="Parallax triangle diagram with two observation points and a star"
-        >
-          <rect x="0" y="0" width="900" height="520" rx="18" class="stage__bg" />
+        <div class="viz-layout">
+          <div class="viz-panel">
+            <div class="panel-title">Earth Orbit Baseline and Apparent Shift</div>
+            <svg
+              id="diagram"
+              class="stage__svg"
+              viewBox="0 0 960 560"
+              role="img"
+              aria-label="Schematic showing Earth in January and July, parallax angle, and apparent star shift"
+            >
+              <rect x="0" y="0" width="960" height="560" rx="16" class="stage__bg" />
 
-          <line id="baseline" class="stage__baseline" x1="0" y1="0" x2="0" y2="0" />
-          <circle id="earthA" class="stage__earth" r="10" cx="0" cy="0" />
-          <circle id="earthB" class="stage__earth" r="10" cx="0" cy="0" />
-          <text id="baselineLabel" class="stage__label" x="0" y="0">Baseline (Jan ↔ Jul): 2 AU (schematic)</text>
+              <circle id="orbitPath" class="stage__orbit" cx="480" cy="296" r="160" />
+              <circle id="sun" class="stage__sun" cx="480" cy="296" r="20" />
+              <text id="sunLabel" class="stage__label stage__label--sun" x="480" y="332">Sun</text>
 
-          <line id="rayA" class="stage__ray" x1="0" y1="0" x2="0" y2="0" />
-          <line id="rayB" class="stage__ray" x1="0" y1="0" x2="0" y2="0" />
+              <line id="baseline" class="stage__baseline" x1="0" y1="0" x2="0" y2="0" />
+              <circle id="earthJan" class="stage__earth stage__earth--jan" r="11" cx="0" cy="0" />
+              <circle id="earthJul" class="stage__earth stage__earth--jul" r="11" cx="0" cy="0" />
+              <text id="earthJanLabel" class="stage__label stage__label--earth stage__label--earth-jan" x="0" y="0">Earth (Jan)</text>
+              <text id="earthJulLabel" class="stage__label stage__label--earth stage__label--earth-jul" x="0" y="0">Earth (Jul)</text>
+              <text id="baselineLabel" class="stage__label stage__label--baseline" x="0" y="0">Baseline: 2 AU (schematic)</text>
 
-          <path id="angleArc" class="stage__arc" d="" />
-          <text id="angleLabel" class="stage__label stage__label--angle" x="0" y="0">2p</text>
+              <line id="rayJan" class="stage__ray stage__ray--jan" x1="0" y1="0" x2="0" y2="0" />
+              <line id="rayJul" class="stage__ray stage__ray--jul" x1="0" y1="0" x2="0" y2="0" />
 
-          <circle id="star" class="stage__star" r="9" cx="0" cy="0" />
-          <text id="starLabel" class="stage__label stage__label--star" x="0" y="0">Star</text>
+              <path id="angleArc" class="stage__arc" d="" />
+              <text id="angleLabel" class="stage__label stage__label--angle" x="0" y="0">2p (visual)</text>
 
-          <text id="clampNote" class="stage__note" x="0" y="0"></text>
-        </svg>
-      </section>
+              <circle id="star" class="stage__star" r="9" cx="0" cy="0" />
+              <text id="starLabel" class="stage__label stage__label--star" x="0" y="0">Target star</text>
 
-      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
-        <div class="cp-panel-header">Readouts</div>
-        <div class="cp-panel-body">
-          <div class="cp-readout">
-            <div class="cp-readout__label">Parallax $p$</div>
-            <div class="cp-readout__value"><span id="parallaxArcsec"></span> <span class="cp-readout__unit">arcsec</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Distance $d$</div>
-            <div class="cp-readout__value"><span id="distancePc"></span> <span class="cp-readout__unit">pc</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Distance $d$</div>
-            <div class="cp-readout__value"><span id="distanceLy"></span> <span class="cp-readout__unit">ly</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Signal-to-noise $p/\sigma_p$</div>
-            <div class="cp-readout__value"><span id="snr"></span></div>
+              <g id="detectorGroup">
+                <rect id="detectorFrame" class="stage__detector-frame" x="290" y="434" width="380" height="92" rx="12" />
+                <line id="detectorTrack" class="stage__detector-track" x1="0" y1="0" x2="0" y2="0" />
+                <line id="detectorCenter" class="stage__detector-center" x1="0" y1="0" x2="0" y2="0" />
+                <circle id="detectorMarkerJan" class="stage__detector-dot stage__detector-dot--jan" r="6" cx="0" cy="0" />
+                <circle id="detectorMarkerJul" class="stage__detector-dot stage__detector-dot--jul" r="6" cx="0" cy="0" />
+                <text id="detectorJanLabel" class="stage__label stage__label--detector-dot" x="0" y="0">Jan</text>
+                <text id="detectorJulLabel" class="stage__label stage__label--detector-dot" x="0" y="0">Jul</text>
+                <text id="detectorLabel" class="stage__label stage__label--detector" x="480" y="458">Apparent sky position shift (exaggerated)</text>
+              </g>
+
+              <text id="distanceCue" class="stage__note" x="480" y="548">Smaller $p$ means a smaller apparent shift and a larger distance $d$.</text>
+              <text id="exaggerationNote" class="stage__note stage__note--top" x="480" y="34">Visual angle exaggeration is used so tiny parallax is visible.</text>
+            </svg>
+            <div class="schematic-note">Schematic geometry (not to scale).</div>
           </div>
         </div>
-      </aside>
+      </section>
 
-      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
-        <div class="cp-panels">
-          <details class="cp-accordion" open>
-            <summary>
-              <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">2 bullets</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <ul>
-                <li>Farther stars have smaller parallax angles ($p$ shrinks as $d$ grows).</li>
-                <li>Because $d\propto 1/p$, small errors in tiny angles can create large distance uncertainty.</li>
-              </ul>
-            </div>
-          </details>
+      <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
+        <div class="cp-readout">
+          <span class="cp-readout__label">Parallax $p$</span>
+          <span class="cp-readout__value"><span id="parallaxArcsec"></span><span class="cp-readout__unit">arcsec</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Distance $d$ in parsecs</span>
+          <span class="cp-readout__value"><span id="distancePc"></span><span class="cp-readout__unit">pc</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Distance $d$ in light-years</span>
+          <span class="cp-readout__value"><span id="distanceLy"></span><span class="cp-readout__unit">ly</span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Signal-to-noise $p/\sigma_p$</span>
+          <span class="cp-readout__value"><span id="snr"></span></span>
+        </div>
+        <div class="cp-readout">
+          <span class="cp-readout__label">Measurement quality</span>
+          <span class="cp-readout__value"><span id="snrQuality"></span></span>
+        </div>
+      </div>
 
-          <details class="cp-accordion">
-            <summary>
-              <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">pc / arcsec / mas</span>
-            </summary>
-            <div class="cp-accordion__body">
-              <ul>
-                <li>This diagram is schematic (angles are exaggerated for visibility).</li>
-                <li>
-                  We use the standard parallax definition:
-                  $$d\,(\mathrm{pc})=\frac{1}{p\,(\mathrm{arcsec})}.$$
-                </li>
-                <li>
-                  The demo reports parallax in milliarcseconds (mas), where
-                  $$1\,\mathrm{arcsec}=1000\,\mathrm{mas}.$$
-                </li>
-              </ul>
-            </div>
-          </details>
+      <section class="cp-demo__shelf cp-demo__drawer" aria-label="Information panels">
+        <div class="cp-tabs-container">
+          <div class="cp-tabs" role="tablist" aria-label="Demo information">
+            <button class="cp-tab cp-tab--active" role="tab" aria-selected="true" aria-controls="tab-notice" id="tab-btn-notice">What to notice</button>
+            <button class="cp-tab" role="tab" aria-selected="false" aria-controls="tab-model" id="tab-btn-model">Model notes</button>
+            <button class="cp-tab" role="tab" aria-selected="false" aria-controls="tab-misconception" id="tab-btn-misconception">Misconceptions</button>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-notice" aria-labelledby="tab-btn-notice">
+            <ul>
+              <li><strong>Observable:</strong> Jan and Jul sightlines separate by a visible angle $2p$.</li>
+              <li><strong>Pattern:</strong> as $p$ shrinks, detector shift shrinks and $d$ grows.</li>
+              <li><strong>Inference:</strong> distance depends inversely on parallax, $d\propto 1/p$.</li>
+            </ul>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-model" aria-labelledby="tab-btn-model" hidden>
+            <ul>
+              <li>Standard relation: $d\,(\mathrm{pc}) = 1 / p\,(\mathrm{arcsec})$.</li>
+              <li>Conversion: $1\,\mathrm{arcsec} = 1000\,\mathrm{mas}$.</li>
+              <li>The orbit and detector are schematic; the real angles are far smaller.</li>
+            </ul>
+          </div>
+          <div class="cp-tab-panel" role="tabpanel" id="tab-misconception" aria-labelledby="tab-btn-misconception" hidden>
+            <ul>
+              <li>Parallax comes from <strong>observer baseline change</strong>, not stars zig-zagging through space.</li>
+              <li>Smaller $p$ means larger $d$; the relation is inverse, not direct.</li>
+              <li>When $p$ is tiny, uncertainty $\sigma_p$ can dominate the distance estimate.</li>
+            </ul>
+          </div>
         </div>
       </section>
     </div>
+
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

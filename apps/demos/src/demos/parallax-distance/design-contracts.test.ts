@@ -5,144 +5,156 @@ import path from "node:path";
 /**
  * Design System Contract Tests -- Parallax Distance
  *
- * These tests enforce hard invariants that every instrument-layer demo
- * must satisfy. They read the source files as strings and assert
- * token usage patterns.
- *
  * Invariants:
- *   1. SVG celestial objects MUST use --cp-celestial-* tokens (not legacy)
- *   2. A starfield canvas MUST exist in the HTML
- *   3. Readout values MUST separate units into .cp-readout__unit spans
- *   4. No hardcoded rgba() color literals in CSS (use tokens)
- *   5. Entry animations MUST use cp-slide-up / cp-fade-in
- *   6. main.ts must import initStarfield and call it
- *   7. Physics must come from @cosmic/physics only
+ *   1. Uses composable Moon-Phases-style primitives (sidebar, readout strip, tabs)
+ *   2. Stage contains orbit + Jan/Jul + angle + detector shift geometry nodes
+ *   3. A starfield canvas exists and main.ts initializes initStarfield
+ *   4. Readout values separate units into .cp-readout__unit spans
+ *   5. CSS stays token-first (no legacy alias leakage, no hex/rgba literals)
+ *   6. Physics imports come from @cosmic/physics
  */
 
 describe("Parallax Distance -- Design System Contracts", () => {
   const htmlPath = path.resolve(__dirname, "index.html");
   const cssPath = path.resolve(__dirname, "style.css");
+  const mainPath = path.resolve(__dirname, "main.ts");
+
   const html = fs.readFileSync(htmlPath, "utf-8");
   const css = fs.readFileSync(cssPath, "utf-8");
+  const mainTs = fs.readFileSync(mainPath, "utf-8");
 
-  describe("Celestial token invariants", () => {
-    it("earth circles use --cp-celestial-earth, not --cp-accent3 or --cp-accent", () => {
-      expect(css).toMatch(/\.stage__earth[\s\S]*?--cp-celestial-earth/);
-      expect(css).not.toMatch(/\.stage__earth[\s\S]*?--cp-accent3/);
+  describe("Composable layout primitives", () => {
+    it("uses sidebar + stage + readout strip + shelf drawer marker", () => {
+      expect(html).toContain("cp-demo__sidebar");
+      expect(html).toContain("cp-demo__stage");
+      expect(html).toContain("cp-readout-strip");
+      expect(html).toContain("cp-demo__drawer");
     });
 
-    it("star uses --cp-celestial-star, not --cp-warning", () => {
-      expect(css).toMatch(/\.stage__star[\s\S]*?--cp-celestial-star/);
-      expect(css).not.toMatch(/\.stage__star[\s\S]*?--cp-warning/);
+    it("uses tab semantics for pedagogical shelf", () => {
+      expect(html).toContain('role="tablist"');
+      expect(html).toContain('role="tab"');
+      expect(html).toContain('role="tabpanel"');
     });
 
-    it("arc uses --cp-accent-amber or celestial token, not --cp-warning", () => {
-      expect(css).not.toMatch(/\.stage__arc[\s\S]*?--cp-warning/);
-    });
-
-    it("rays use --cp-celestial-orbit or semantic token, not --cp-accent3", () => {
-      expect(css).not.toMatch(/\.stage__ray[\s\S]*?--cp-accent3/);
+    it("uses cp-utility-toolbar actions", () => {
+      expect(html).toContain("cp-utility-toolbar");
     });
   });
 
-  describe("Starfield invariant", () => {
-    it("demo HTML contains a starfield canvas element", () => {
-      expect(html).toContain('class="cp-starfield"');
+  describe("Stage geometry contract", () => {
+    it("includes orbit scaffold and observer baseline nodes", () => {
+      expect(html).toContain('id="orbitPath"');
+      expect(html).toContain('id="sun"');
+      expect(html).toContain('id="earthJan"');
+      expect(html).toContain('id="earthJul"');
+      expect(html).toContain('id="baseline"');
+    });
+
+    it("includes parallax angle nodes", () => {
+      expect(html).toContain('id="angleArc"');
+      expect(html).toContain('id="angleLabel"');
+      expect(html).toContain('id="star"');
+      expect(html).toContain('id="starLabel"');
+    });
+
+    it("includes detector shift nodes", () => {
+      expect(html).toContain('id="detectorTrack"');
+      expect(html).toContain('id="detectorMarkerJan"');
+      expect(html).toContain('id="detectorMarkerJul"');
+      expect(html).toContain('id="detectorLabel"');
+    });
+  });
+
+  describe("Starfield + runtime wiring", () => {
+    it("contains starfield canvas", () => {
       expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
+    });
+
+    it("main.ts initializes starfield, popovers, and tabs", () => {
+      expect(mainTs).toContain("initStarfield");
+      expect(mainTs).toMatch(/initStarfield\s*\(/);
+      expect(mainTs).toContain("initPopovers");
+      expect(mainTs).toMatch(/initPopovers\s*\(/);
+      expect(mainTs).toContain("initTabs");
+      expect(mainTs).toMatch(/initTabs\s*\(/);
     });
   });
 
   describe("Readout unit separation", () => {
-    it("readout values with units use .cp-readout__unit spans", () => {
-      // parallax has arcsec unit, distance has pc and ly units, SNR is dimensionless
-      // At minimum: arcsec, pc, ly = 3 unit spans
+    it("includes unit spans for dimensional readouts", () => {
       const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
       expect(unitSpans.length).toBeGreaterThanOrEqual(3);
     });
 
-    it("readout labels do not contain parenthesized units", () => {
+    it("labels avoid parenthesized units", () => {
       const labels = html.match(/class="cp-readout__label"[^>]*>([^<]*)</g) || [];
-      const parenthesizedUnits = labels.filter((l) => /\((?:arcsec|pc|ly|mas)\)/.test(l));
+      const parenthesizedUnits = labels.filter((line) => /\((?:arcsec|pc|ly|mas)\)/.test(line));
       expect(parenthesizedUnits.length).toBe(0);
     });
-  });
 
-  describe("Panel translucency", () => {
-    it("stage SVG container uses backdrop-filter", () => {
-      expect(css).toMatch(/backdrop-filter/);
+    it("uses unit-explicit distance labels", () => {
+      expect(html).toContain("Distance $d$ in parsecs");
+      expect(html).toContain("Distance $d$ in light-years");
     });
   });
 
-  describe("No legacy token leakage in CSS", () => {
-    it("no --cp-warning tokens remain in demo CSS", () => {
+  describe("Jan/Jul visual encoding consistency", () => {
+    it("uses explicit Jan/Jul earth and ray classes", () => {
+      expect(html).toContain("stage__earth--jan");
+      expect(html).toContain("stage__earth--jul");
+      expect(html).toContain("stage__ray--jan");
+      expect(html).toContain("stage__ray--jul");
+    });
+
+    it("maps Jan/Jul marker classes to accent tokens", () => {
+      expect(css).toMatch(/\.stage__earth--jan[\s\S]*?--cp-accent-ice/);
+      expect(css).toMatch(/\.stage__earth--jul[\s\S]*?--cp-accent-rose/);
+      expect(css).toMatch(/\.stage__detector-dot--jan[\s\S]*?--cp-accent-ice/);
+      expect(css).toMatch(/\.stage__detector-dot--jul[\s\S]*?--cp-accent-rose/);
+    });
+  });
+
+  describe("Token-first color invariants", () => {
+    it("sun, earth, and star classes use celestial tokens", () => {
+      expect(css).toMatch(/\.stage__sun[\s\S]*?--cp-celestial-sun/);
+      expect(css).toMatch(/\.stage__earth[\s\S]*?--cp-celestial-earth/);
+      expect(css).toMatch(/\.stage__star[\s\S]*?--cp-celestial-star/);
+      expect(css).toMatch(/\.stage__orbit[\s\S]*?--cp-celestial-orbit/);
+    });
+
+    it("contains no legacy token aliases", () => {
       expect(css).not.toContain("--cp-warning");
-    });
-
-    it("no --cp-accent2 or --cp-accent3 aliases remain in CSS", () => {
       expect(css).not.toContain("--cp-accent2");
       expect(css).not.toContain("--cp-accent3");
-    });
-
-    it("no --cp-accent2 or --cp-accent3 aliases remain in HTML", () => {
       expect(html).not.toContain("--cp-accent2");
       expect(html).not.toContain("--cp-accent3");
     });
-  });
 
-  describe("Entry animations", () => {
-    it("demo shell sections have entry animations", () => {
-      expect(css).toMatch(/\.cp-demo__controls[\s\S]*?animation.*cp-slide-up/);
-      expect(css).toMatch(/\.cp-demo__stage[\s\S]*?animation.*cp-fade-in/);
-    });
-  });
+    it("contains no hardcoded rgba() or hex literals", () => {
+      const cssLines = css.split("\n");
 
-  describe("Color literal absence", () => {
-    it("CSS has no hardcoded rgba() color literals (outside color-mix)", () => {
-      const lines = css.split("\n");
-      const violations = lines.filter((line) => {
-        if (line.trim().startsWith("/*") || line.trim().startsWith("*")) return false;
-        if (/rgba\s*\(/.test(line) && !line.includes("color-mix")) return true;
-        return false;
+      const rgbaViolations = cssLines.filter((line) => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("/*") || trimmed.startsWith("*")) return false;
+        return /rgba\s*\(/.test(line) && !line.includes("color-mix");
       });
-      expect(violations).toEqual([]);
-    });
 
-    it("CSS has no hardcoded hex color values", () => {
-      const lines = css.split("\n");
-      const violations = lines.filter((line) => {
-        if (line.trim().startsWith("/*") || line.trim().startsWith("*")) return false;
+      const hexViolations = cssLines.filter((line) => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("/*") || trimmed.startsWith("*")) return false;
         return /#[0-9a-fA-F]{3,8}\b/.test(line);
       });
-      expect(violations).toEqual([]);
-    });
-  });
 
-  describe("Starfield initialization", () => {
-    it("main.ts imports and calls initStarfield", () => {
-      const mainPath = path.resolve(__dirname, "main.ts");
-      const mainTs = fs.readFileSync(mainPath, "utf-8");
-      expect(mainTs).toContain("initStarfield");
-      expect(mainTs).toMatch(/initStarfield\s*\(/);
+      expect(rgbaViolations).toEqual([]);
+      expect(hexViolations).toEqual([]);
     });
   });
 
   describe("Architecture compliance", () => {
-    it("main.ts imports physics from @cosmic/physics, not inline", () => {
-      const mainPath = path.resolve(__dirname, "main.ts");
-      const mainTs = fs.readFileSync(mainPath, "utf-8");
+    it("imports physics from @cosmic/physics", () => {
       expect(mainTs).toContain('from "@cosmic/physics"');
-      // Should NOT define its own parallax function
       expect(mainTs).not.toMatch(/function\s+distanceParsec/);
-    });
-  });
-
-  describe("Component contracts", () => {
-    it("uses cp-utility-toolbar for actions", () => {
-      expect(html).toContain("cp-utility-toolbar");
-    });
-
-    it("has zero cp-action references", () => {
-      expect(html).not.toContain("cp-action");
     });
   });
 });
