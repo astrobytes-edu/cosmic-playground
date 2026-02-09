@@ -72,7 +72,7 @@
 
 .hr-plot {
   position: relative;
-  padding: 6px 12px 30px 38px;
+  padding: 16px 64px 132px 132px;
 }
 
 #hrCanvas {
@@ -90,7 +90,7 @@
   position: absolute;
   margin: 0;
   color: var(--cp-text);
-  font-size: 1.2rem;
+  font-size: 1.45rem;
   line-height: 1;
   pointer-events: none;
   z-index: 3;
@@ -138,6 +138,16 @@
   min-width: 96px;
 }
 
+.hr-tick--x.edge-left {
+  transform: translateX(0);
+  text-align: left;
+}
+
+.hr-tick--x.edge-right {
+  transform: translateX(-100%);
+  text-align: right;
+}
+
 .hr-tick--y {
   transform: translate(-100%, -50%);
   text-align: right;
@@ -146,14 +156,14 @@
 .hr-tick__math {
   display: block;
   line-height: 1.05;
-  font-size: 1rem;
+  font-size: 1.08rem;
 }
 
 .hr-tick__value {
   display: block;
   margin-top: 3px;
   color: var(--cp-text2);
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.1;
 }
 
@@ -172,6 +182,16 @@
 .hr-direction--right {
   transform: translate(-100%, -50%);
   text-align: right;
+}
+
+@media (max-width: 1280px) {
+  .hr-plot {
+    padding: 14px 48px 118px 110px;
+  }
+
+  .hr-axis {
+    font-size: 1.3rem;
+  }
 }
 
 /* Two-region layout: controls + stage + shelf (no separate readouts strip). */

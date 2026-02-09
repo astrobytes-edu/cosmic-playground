@@ -86,6 +86,13 @@ describe("Stars ZAMS HR -- Design System Contracts", () => {
       expect(mainTs).toContain("L/L_{\\\\odot}");
     });
 
+    it("anchors edge x-ticks to avoid clipping", () => {
+      const mainPath = path.resolve(__dirname, "main.ts");
+      const mainTs = fs.readFileSync(mainPath, "utf-8");
+      expect(mainTs).toContain("edge-left");
+      expect(mainTs).toContain("edge-right");
+    });
+
     it("clears non-ZAMS presets by declared mode when switching back to ZAMS", () => {
       const mainPath = path.resolve(__dirname, "main.ts");
       const mainTs = fs.readFileSync(mainPath, "utf-8");
@@ -160,6 +167,12 @@ describe("Stars ZAMS HR -- Design System Contracts", () => {
         return false;
       });
       expect(violations).toEqual([]);
+    });
+
+    it("sets projection-safe axis and tick typography sizes", () => {
+      expect(css).toContain("font-size: 1.45rem");
+      expect(css).toContain("font-size: 1.08rem");
+      expect(css).toContain("font-size: 1rem");
     });
   });
 

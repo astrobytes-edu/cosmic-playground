@@ -261,7 +261,7 @@ function formatIntegerWithCommas(value: number): string {
 }
 
 function initializeHrMathOverlay(): void {
-  hrAxisX.innerHTML = "$T_{\\rm eff}\\;[\\mathrm{K}]$";
+  hrAxisX.innerHTML = "$T_{\\rm eff}[\\mathrm{K}]$";
   hrAxisY.innerHTML = "$L/L_{\\odot}$";
 
   hrXTicks.replaceChildren();
@@ -269,9 +269,15 @@ function initializeHrMathOverlay(): void {
   xTickElements.length = 0;
   yTickElements.length = 0;
 
-  for (const valueK of X_MAJOR_TICKS_K) {
+  for (let index = 0; index < X_MAJOR_TICKS_K.length; index += 1) {
+    const valueK = X_MAJOR_TICKS_K[index];
     const tick = document.createElement("div");
-    tick.className = "hr-tick hr-tick--x";
+    const edgeClass = index === 0
+      ? "edge-left"
+      : index === X_MAJOR_TICKS_K.length - 1
+        ? "edge-right"
+        : "";
+    tick.className = `hr-tick hr-tick--x ${edgeClass}`.trim();
     tick.innerHTML = [
       `<span class="hr-tick__math">$${logTickPowersOfTenLabel(valueK)}$</span>`,
       `<span class="hr-tick__value">${formatIntegerWithCommas(valueK)} K</span>`
@@ -308,19 +314,34 @@ function positionHrMathOverlay(args: {
   const plotTop = canvasTop + mT;
   const plotRight = plotLeft + plotW;
   const plotBottom = plotTop + plotH;
+  const xTickMin = plotLeft + 2;
+  const xTickMax = plotRight - 2;
 
+  let maxXTickHeight = 0;
   for (const tick of xTickElements) {
-    tick.element.style.left = `${canvasLeft + xFromTeffK(tick.valueK)}px`;
+    const targetX = canvasLeft + xFromTeffK(tick.valueK);
+    const clampedX = clamp(targetX, xTickMin, xTickMax);
+    tick.element.style.left = `${clampedX}px`;
     tick.element.style.top = `${plotBottom + 10}px`;
-  }
-  for (const tick of yTickElements) {
-    tick.element.style.left = `${plotLeft - 14}px`;
-    tick.element.style.top = `${canvasTop + yFromLum(tick.valueLsun)}px`;
+    maxXTickHeight = Math.max(maxXTickHeight, tick.element.offsetHeight);
   }
 
+  let maxYTickWidth = 0;
+  for (const tick of yTickElements) {
+    const targetY = canvasTop + yFromLum(tick.valueLsun);
+    const halfHeight = Math.max(1, tick.element.offsetHeight / 2);
+    const clampedY = clamp(targetY, plotTop + halfHeight + 2, plotBottom - halfHeight - 2);
+    tick.element.style.left = `${plotLeft - 14}px`;
+    tick.element.style.top = `${clampedY}px`;
+    maxYTickWidth = Math.max(maxYTickWidth, tick.element.offsetWidth);
+  }
+
+  const xTickBottom = plotBottom + 10 + maxXTickHeight;
+  const directionY = xTickBottom + 16;
+  const xAxisY = directionY + 28;
   hrAxisX.style.left = `${plotLeft + plotW / 2}px`;
-  hrAxisX.style.top = `${plotBottom + 84}px`;
-  hrAxisY.style.left = `${plotLeft - 98}px`;
+  hrAxisX.style.top = `${xAxisY}px`;
+  hrAxisY.style.left = `${plotLeft - maxYTickWidth - 28}px`;
   hrAxisY.style.top = `${plotTop + plotH / 2}px`;
 
   hrTickOverlay.style.left = `${canvasLeft}px`;
@@ -329,9 +350,9 @@ function positionHrMathOverlay(args: {
   hrTickOverlay.style.height = `${canvasRect.height}px`;
 
   hrTempDirectionLeft.style.left = `${plotLeft}px`;
-  hrTempDirectionLeft.style.top = `${plotBottom + 62}px`;
+  hrTempDirectionLeft.style.top = `${directionY}px`;
   hrTempDirectionRight.style.left = `${plotRight}px`;
-  hrTempDirectionRight.style.top = `${plotBottom + 62}px`;
+  hrTempDirectionRight.style.top = `${directionY}px`;
 }
 
 function sliderStepValue(event: KeyboardEvent): number {
@@ -475,10 +496,10 @@ function resizeCanvasToCssPixels(canvas: HTMLCanvasElement, context: CanvasRende
 function drawHrDiagram(readouts: StarReadouts): void {
   const { width: w, height: h } = resizeCanvasToCssPixels(hrCanvas, ctx);
 
-  const mL = 122;
-  const mR = 28;
+  const mL = 134;
+  const mR = 52;
   const mT = 30;
-  const mB = 120;
+  const mB = 132;
   const plotW = Math.max(1, w - mL - mR);
   const plotH = Math.max(1, h - mT - mB);
 
