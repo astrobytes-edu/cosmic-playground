@@ -25,6 +25,7 @@ import {
   plotYFromDeg,
   presetToConfig,
   projectToSkyView,
+  retrogradeDurationIfActiveAtCursor,
   resolveDistinctPair,
   seriesIndexAtDay,
   zodiacLabelPositions,
@@ -1164,6 +1165,19 @@ function setupChallenges() {
         if (!series)
           return { correct: false, close: false, message: "Load a valid target pair first." };
 
+        if (isRetrogradeDurationComparisonComplete(comparisonDurations)) {
+          const marsDays = comparisonDurations.Mars!;
+          const venusDays = comparisonDurations.Venus!;
+          const shorter = venusDays < marsDays ? "Venus" : "Mars";
+          return {
+            correct: true,
+            close: false,
+            message:
+              `${shorter} is shorter (Mars ${formatNumber(marsDays, 1)} d, ` +
+              `Venus ${formatNumber(venusDays, 1)} d).`,
+          };
+        }
+
         const targetKey =
           String(s?.target ?? "") === "Mars" || String(s?.target ?? "") === "Venus"
             ? (String(s?.target) as "Mars" | "Venus")
@@ -1171,15 +1185,22 @@ function setupChallenges() {
         const cursorDay = Number(s?.cursorDay);
         const safeCursorDay = Number.isFinite(cursorDay) ? cursorDay : state.cursorDay;
 
-        if (targetKey) {
-          const nearest = nearestRetrogradeInterval(
-            series.retrogradeIntervals,
-            safeCursorDay,
-          );
-          if (nearest) {
-            comparisonDurations[targetKey] = nearest.endDay - nearest.startDay;
-          }
+        if (!targetKey) {
+          return { correct: false, close: false, message: "Use Mars and Venus as targets to compare." };
         }
+
+        const retroDuration = retrogradeDurationIfActiveAtCursor(
+          series.retrogradeIntervals,
+          safeCursorDay,
+        );
+        if (!Number.isFinite(retroDuration)) {
+          return {
+            correct: false,
+            close: false,
+            message: `Move into a shaded retrograde interval for ${targetKey} before recording duration.`,
+          };
+        }
+        comparisonDurations[targetKey] = retroDuration;
 
         if (isRetrogradeDurationComparisonComplete(comparisonDurations)) {
           const marsDays = comparisonDurations.Mars!;
@@ -1267,6 +1288,8 @@ function setupChallenges() {
       engine.stop();
       challengeBtn.classList.remove("active");
     } else {
+      delete comparisonDurations.Mars;
+      delete comparisonDurations.Venus;
       engine.start();
       challengeBtn.classList.add("active");
     }

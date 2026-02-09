@@ -286,6 +286,17 @@ export function isRetrogradeDurationComparisonComplete(
   );
 }
 
+export function retrogradeDurationIfActiveAtCursor(
+  intervals: { startDay: number; endDay: number }[],
+  cursorDay: number,
+): number | null {
+  const activeInterval = intervals.find(
+    (interval) => cursorDay >= interval.startDay && cursorDay <= interval.endDay,
+  );
+  if (!activeInterval) return null;
+  return activeInterval.endDay - activeInterval.startDay;
+}
+
 // ── Display state (DI pattern) ──────────────────────────────
 
 export type RetroModelCallbacks = {

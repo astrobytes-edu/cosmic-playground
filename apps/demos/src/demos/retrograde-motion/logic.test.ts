@@ -19,6 +19,7 @@ import {
   presetToConfig,
   resolveDistinctPair,
   isRetrogradeDurationComparisonComplete,
+  retrogradeDurationIfActiveAtCursor,
   computeDisplayState,
   type RetroModelCallbacks,
 } from "./logic";
@@ -340,6 +341,21 @@ describe("isRetrogradeDurationComparisonComplete", () => {
     expect(
       isRetrogradeDurationComparisonComplete({ Mars: Number.NaN, Venus: 42 }),
     ).toBe(false);
+  });
+});
+
+describe("retrogradeDurationIfActiveAtCursor", () => {
+  const intervals = [
+    { startDay: 100, endDay: 170 },
+    { startDay: 400, endDay: 460 },
+  ];
+
+  it("returns duration when cursor is inside a retrograde interval", () => {
+    expect(retrogradeDurationIfActiveAtCursor(intervals, 120)).toBe(70);
+  });
+
+  it("returns null when cursor is outside all retrograde intervals", () => {
+    expect(retrogradeDurationIfActiveAtCursor(intervals, 250)).toBeNull();
   });
 });
 

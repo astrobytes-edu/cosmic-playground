@@ -346,6 +346,57 @@ test.describe("Retrograde Motion -- E2E", () => {
     expect(noticeText).toContain("viewing-geometry");
   });
 
+  test("challenge duration capture requires being inside retrograde interval", async ({ page }) => {
+    await page.locator("#btn-challenges").click();
+    await page.locator(".cp-challenge-panel").evaluate((panel) => {
+      const prevBtn = panel.querySelector<HTMLButtonElement>(".prev-btn");
+      let safety = 0;
+      while (prevBtn && !prevBtn.disabled && safety < 4) {
+        prevBtn.click();
+        safety += 1;
+      }
+    });
+    await page.locator(".cp-challenge-panel .next-btn").click();
+    await page.locator(".cp-challenge-panel .check-btn").click();
+    await expect(page.locator(".cp-challenge-feedback")).toContainText(
+      "Move into a shaded retrograde interval",
+    );
+  });
+
+  test("challenge duration evidence resets when challenge mode restarts", async ({ page }) => {
+    await page.locator("#btn-challenges").click();
+    await page.locator(".cp-challenge-panel").evaluate((panel) => {
+      const prevBtn = panel.querySelector<HTMLButtonElement>(".prev-btn");
+      let safety = 0;
+      while (prevBtn && !prevBtn.disabled && safety < 4) {
+        prevBtn.click();
+        safety += 1;
+      }
+    });
+    await page.locator(".cp-challenge-panel .next-btn").click();
+    await page.locator("#centerRetrograde").click();
+    await page.locator(".cp-challenge-panel .check-btn").click();
+    await expect(page.locator(".cp-challenge-feedback")).toContainText("Mars captured");
+
+    await page.locator("#btn-challenges").click();
+    await page.locator("#btn-challenges").click();
+    await page.locator(".cp-challenge-panel").evaluate((panel) => {
+      const prevBtn = panel.querySelector<HTMLButtonElement>(".prev-btn");
+      let safety = 0;
+      while (prevBtn && !prevBtn.disabled && safety < 4) {
+        prevBtn.click();
+        safety += 1;
+      }
+    });
+    await page.locator(".cp-challenge-panel .next-btn").click();
+    await page.locator("#preset").selectOption("earth-venus");
+    await page.locator("#centerRetrograde").click();
+    await page.locator(".cp-challenge-panel .check-btn").click();
+    await expect(page.locator(".cp-challenge-feedback")).toContainText(
+      "Venus captured. Switch target to Mars",
+    );
+  });
+
   // --- DOM Structure ---
 
   test("readout units are in separate .cp-readout__unit spans", async ({ page }) => {
