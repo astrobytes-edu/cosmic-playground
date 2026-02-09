@@ -121,6 +121,14 @@ describe("Stars ZAMS HR -- Design System Contracts", () => {
       expect(html).toMatch(/<canvas[^>]*id="hrCanvas"/);
     });
 
+    it("renders axis labels and tick overlay in LaTeX-capable HTML", () => {
+      expect(html).toContain('id="hrTickOverlay"');
+      expect(html).toContain('id="hrXTicks"');
+      expect(html).toContain('id="hrYTicks"');
+      expect(html).toContain("$T_{\\rm eff}\\;[\\mathrm{K}]$");
+      expect(html).toContain("$L/L_{\\odot}$");
+    });
+
     it("includes ZAMS/Stefan source-mode controls and Stefan sliders", () => {
       expect(html).toContain('id="modeZams"');
       expect(html).toContain('id="modeStefan"');

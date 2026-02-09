@@ -72,7 +72,7 @@
 
 .hr-plot {
   position: relative;
-  padding: 6px 8px 30px 38px;
+  padding: 6px 12px 30px 38px;
 }
 
 #hrCanvas {
@@ -90,22 +90,88 @@
   position: absolute;
   margin: 0;
   color: var(--cp-text);
-  font-size: 1rem;
+  font-size: 1.2rem;
   line-height: 1;
   pointer-events: none;
+  z-index: 3;
+}
+
+.hr-axis .katex {
+  font-size: 1em;
 }
 
 .hr-axis--x {
-  left: 50%;
-  bottom: 4px;
+  bottom: auto;
   transform: translateX(-50%);
 }
 
 .hr-axis--y {
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%) rotate(-90deg);
-  transform-origin: left top;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  transform-origin: center;
+}
+
+.hr-tick-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hr-ticks {
+  position: absolute;
+  inset: 0;
+}
+
+.hr-tick {
+  position: absolute;
+  margin: 0;
+  color: var(--cp-text);
+}
+
+.hr-tick .katex {
+  font-size: 1em;
+}
+
+.hr-tick--x {
+  transform: translateX(-50%);
+  text-align: center;
+  min-width: 96px;
+}
+
+.hr-tick--y {
+  transform: translate(-100%, -50%);
+  text-align: right;
+}
+
+.hr-tick__math {
+  display: block;
+  line-height: 1.05;
+  font-size: 1rem;
+}
+
+.hr-tick__value {
+  display: block;
+  margin-top: 3px;
+  color: var(--cp-text2);
+  font-size: 0.95rem;
+  line-height: 1.1;
+}
+
+.hr-direction {
+  position: absolute;
+  margin: 0;
+  color: var(--cp-text2);
+  font-size: 0.92rem;
+  line-height: 1;
+}
+
+.hr-direction--left {
+  transform: translateY(-50%);
+}
+
+.hr-direction--right {
+  transform: translate(-100%, -50%);
+  text-align: right;
 }
 
 /* Two-region layout: controls + stage + shelf (no separate readouts strip). */

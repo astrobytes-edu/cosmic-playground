@@ -148,6 +148,12 @@
         <div class="cp-tab-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
           <div class="hr-plot" aria-label="Log-log H-R plot">
             <canvas id="hrCanvas" role="img" aria-label="H-R diagram with current stellar point"></canvas>
+            <div id="hrTickOverlay" class="hr-tick-overlay" aria-hidden="true">
+              <div id="hrXTicks" class="hr-ticks hr-ticks--x"></div>
+              <div id="hrYTicks" class="hr-ticks hr-ticks--y"></div>
+              <p id="hrTempDirectionLeft" class="hr-direction hr-direction--left">hotter &lt;-</p>
+              <p id="hrTempDirectionRight" class="hr-direction hr-direction--right">-&gt; cooler</p>
+            </div>
             <p class="hr-axis hr-axis--x">$T_{\rm eff}\;[\mathrm{K}]$</p>
             <p class="hr-axis hr-axis--y">$L/L_{\odot}$</p>
           </div>

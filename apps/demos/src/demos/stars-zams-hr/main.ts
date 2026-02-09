@@ -71,8 +71,6 @@ const X_MINOR_TICKS_K = minorLogTicks(Math.log10(HR_AXIS_LIMITS.teffMinK), Math.
 const Y_MAJOR_TICKS_LSUN = decadeTicks(HR_AXIS_LIMITS.logLumMin, HR_AXIS_LIMITS.logLumMax);
 const Y_MINOR_TICKS_LSUN = minorLogTicks(HR_AXIS_LIMITS.logLumMin, HR_AXIS_LIMITS.logLumMax);
 
-const FONT_TICK_MAJOR = "600 14px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
-const FONT_TICK_MINOR = "500 12px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
 const FONT_GUIDE_LABEL = "500 12px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
 
 const massSliderEl = document.querySelector<HTMLInputElement>("#massSlider");
@@ -97,6 +95,14 @@ const modeAssumptionTextEl = document.querySelector<HTMLParagraphElement>("#mode
 const overrideModeHintEl = document.querySelector<HTMLParagraphElement>("#overrideModeHint");
 const statusEl = document.querySelector<HTMLParagraphElement>("#status");
 const hrCanvasEl = document.querySelector<HTMLCanvasElement>("#hrCanvas");
+const hrPlotEl = document.querySelector<HTMLDivElement>(".hr-plot");
+const hrAxisXEl = document.querySelector<HTMLParagraphElement>(".hr-axis--x");
+const hrAxisYEl = document.querySelector<HTMLParagraphElement>(".hr-axis--y");
+const hrTickOverlayEl = document.querySelector<HTMLDivElement>("#hrTickOverlay");
+const hrXTicksEl = document.querySelector<HTMLDivElement>("#hrXTicks");
+const hrYTicksEl = document.querySelector<HTMLDivElement>("#hrYTicks");
+const hrTempDirectionLeftEl = document.querySelector<HTMLParagraphElement>("#hrTempDirectionLeft");
+const hrTempDirectionRightEl = document.querySelector<HTMLParagraphElement>("#hrTempDirectionRight");
 
 const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
 const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
@@ -136,6 +142,14 @@ if (
   !overrideModeHintEl ||
   !statusEl ||
   !hrCanvasEl ||
+  !hrPlotEl ||
+  !hrAxisXEl ||
+  !hrAxisYEl ||
+  !hrTickOverlayEl ||
+  !hrXTicksEl ||
+  !hrYTicksEl ||
+  !hrTempDirectionLeftEl ||
+  !hrTempDirectionRightEl ||
   !copyResultsEl ||
   !stationModeEl ||
   !helpEl ||
@@ -165,6 +179,14 @@ const modeAssumptionText = modeAssumptionTextEl;
 const overrideModeHint = overrideModeHintEl;
 const status = statusEl;
 const hrCanvas = hrCanvasEl;
+const hrPlot = hrPlotEl;
+const hrAxisX = hrAxisXEl;
+const hrAxisY = hrAxisYEl;
+const hrTickOverlay = hrTickOverlayEl;
+const hrXTicks = hrXTicksEl;
+const hrYTicks = hrYTicksEl;
+const hrTempDirectionLeft = hrTempDirectionLeftEl;
+const hrTempDirectionRight = hrTempDirectionRightEl;
 const copyResults = copyResultsEl;
 const stationMode = stationModeEl;
 const help = helpEl;
@@ -185,6 +207,12 @@ const state: DemoState = {
   presetState: "inferred",
   selectedPresetId: "sun"
 };
+
+type PositionedXTick = { valueK: number; element: HTMLDivElement };
+type PositionedYTick = { valueLsun: number; element: HTMLDivElement };
+
+const xTickElements: PositionedXTick[] = [];
+const yTickElements: PositionedYTick[] = [];
 
 function requireCanvas2dContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
   const context = canvas.getContext("2d");
@@ -230,6 +258,80 @@ function formatWithoutENotation(value: number, digits = 3): string {
 function formatIntegerWithCommas(value: number): string {
   if (!Number.isFinite(value)) return "-";
   return Math.round(value).toLocaleString("en-US");
+}
+
+function initializeHrMathOverlay(): void {
+  hrAxisX.innerHTML = "$T_{\\rm eff}\\;[\\mathrm{K}]$";
+  hrAxisY.innerHTML = "$L/L_{\\odot}$";
+
+  hrXTicks.replaceChildren();
+  hrYTicks.replaceChildren();
+  xTickElements.length = 0;
+  yTickElements.length = 0;
+
+  for (const valueK of X_MAJOR_TICKS_K) {
+    const tick = document.createElement("div");
+    tick.className = "hr-tick hr-tick--x";
+    tick.innerHTML = [
+      `<span class="hr-tick__math">$${logTickPowersOfTenLabel(valueK)}$</span>`,
+      `<span class="hr-tick__value">${formatIntegerWithCommas(valueK)} K</span>`
+    ].join("");
+    hrXTicks.appendChild(tick);
+    xTickElements.push({ valueK, element: tick });
+  }
+
+  for (const valueLsun of Y_MAJOR_TICKS_LSUN) {
+    const tick = document.createElement("div");
+    tick.className = "hr-tick hr-tick--y";
+    tick.innerHTML = `<span class="hr-tick__math">$${logTickPowersOfTenLabel(valueLsun)}$</span>`;
+    hrYTicks.appendChild(tick);
+    yTickElements.push({ valueLsun, element: tick });
+  }
+
+  initMath(hrPlot);
+}
+
+function positionHrMathOverlay(args: {
+  mL: number;
+  mT: number;
+  plotW: number;
+  plotH: number;
+  xFromTeffK: (teffK: number) => number;
+  yFromLum: (luminosityLsun: number) => number;
+}): void {
+  const { mL, mT, plotW, plotH, xFromTeffK, yFromLum } = args;
+  const plotRect = hrPlot.getBoundingClientRect();
+  const canvasRect = hrCanvas.getBoundingClientRect();
+  const canvasLeft = canvasRect.left - plotRect.left;
+  const canvasTop = canvasRect.top - plotRect.top;
+  const plotLeft = canvasLeft + mL;
+  const plotTop = canvasTop + mT;
+  const plotRight = plotLeft + plotW;
+  const plotBottom = plotTop + plotH;
+
+  for (const tick of xTickElements) {
+    tick.element.style.left = `${canvasLeft + xFromTeffK(tick.valueK)}px`;
+    tick.element.style.top = `${plotBottom + 10}px`;
+  }
+  for (const tick of yTickElements) {
+    tick.element.style.left = `${plotLeft - 14}px`;
+    tick.element.style.top = `${canvasTop + yFromLum(tick.valueLsun)}px`;
+  }
+
+  hrAxisX.style.left = `${plotLeft + plotW / 2}px`;
+  hrAxisX.style.top = `${plotBottom + 84}px`;
+  hrAxisY.style.left = `${plotLeft - 98}px`;
+  hrAxisY.style.top = `${plotTop + plotH / 2}px`;
+
+  hrTickOverlay.style.left = `${canvasLeft}px`;
+  hrTickOverlay.style.top = `${canvasTop}px`;
+  hrTickOverlay.style.width = `${canvasRect.width}px`;
+  hrTickOverlay.style.height = `${canvasRect.height}px`;
+
+  hrTempDirectionLeft.style.left = `${plotLeft}px`;
+  hrTempDirectionLeft.style.top = `${plotBottom + 62}px`;
+  hrTempDirectionRight.style.left = `${plotRight}px`;
+  hrTempDirectionRight.style.top = `${plotBottom + 62}px`;
 }
 
 function sliderStepValue(event: KeyboardEvent): number {
@@ -603,11 +705,7 @@ function drawHrDiagram(readouts: StarReadouts): void {
   ctx.restore();
 
   ctx.save();
-  ctx.fillStyle = text;
   ctx.strokeStyle = text;
-  ctx.font = FONT_TICK_MAJOR;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
   for (const teffTickK of X_MAJOR_TICKS_K) {
     const x = xFromTeffK(teffTickK);
     ctx.beginPath();
@@ -617,16 +715,8 @@ function drawHrDiagram(readouts: StarReadouts): void {
     ctx.lineTo(x, mT - majorTickLength);
     ctx.lineWidth = 1.4;
     ctx.stroke();
-    ctx.fillText(logTickPowersOfTenLabel(teffTickK), x, mT + plotH + 11);
-    ctx.fillStyle = mutedText;
-    ctx.font = FONT_TICK_MINOR;
-    ctx.fillText(`${formatIntegerWithCommas(teffTickK)} K`, x, mT + plotH + 30);
-    ctx.fillStyle = text;
-    ctx.font = FONT_TICK_MAJOR;
   }
 
-  ctx.textAlign = "right";
-  ctx.textBaseline = "middle";
   for (const lumTick of Y_MAJOR_TICKS_LSUN) {
     const y = yFromLum(lumTick);
     ctx.beginPath();
@@ -634,20 +724,12 @@ function drawHrDiagram(readouts: StarReadouts): void {
     ctx.lineTo(mL, y);
     ctx.moveTo(mL + plotW, y);
     ctx.lineTo(mL + plotW + majorTickLength, y);
-    ctx.strokeStyle = text;
     ctx.lineWidth = 1.4;
     ctx.stroke();
-    ctx.fillStyle = text;
-    ctx.fillText(logTickPowersOfTenLabel(lumTick), mL - 12, y);
   }
-
-  ctx.font = FONT_TICK_MINOR;
-  ctx.fillStyle = mutedText;
-  ctx.textAlign = "left";
-  ctx.fillText("hotter <-", mL, h - 28);
-  ctx.textAlign = "right";
-  ctx.fillText("-> cooler", mL + plotW, h - 28);
   ctx.restore();
+
+  positionHrMathOverlay({ mL, mT, plotW, plotH, xFromTeffK, yFromLum });
 }
 
 function syncSlidersFromReadouts(readouts: StarReadouts): void {
@@ -892,6 +974,7 @@ tabExploreEl?.addEventListener("click", () => {
   window.requestAnimationFrame(() => render());
 });
 
+initializeHrMathOverlay();
 render();
 initMath(document);
 
