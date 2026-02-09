@@ -60,8 +60,10 @@
 
   const canvas = document.querySelector<HTMLCanvasElement>(".hero-orbit");
   if (!canvas) throw new Error("HeroOrbit: canvas not found");
+  const heroCanvas: HTMLCanvasElement = canvas;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("HeroOrbit: 2d context unavailable");
+  const heroCtx: CanvasRenderingContext2D = ctx;
 
   const model = computeModel(0.4, 3);
   const YEARS_PER_SEC = 0.06;
@@ -82,15 +84,15 @@
   const trail2: { x: number; y: number }[] = [];
 
   function resize() {
-    const rect = canvas.getBoundingClientRect();
+    const rect = heroCanvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     const w = Math.max(1, Math.round(rect.width * dpr));
     const h = Math.max(1, Math.round(rect.height * dpr));
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width = w;
-      canvas.height = h;
+    if (heroCanvas.width !== w || heroCanvas.height !== h) {
+      heroCanvas.width = w;
+      heroCanvas.height = h;
     }
-    ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+    heroCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return { w: rect.width, h: rect.height };
   }
 
@@ -98,14 +100,14 @@
     const { w, h } = resize();
     const cx = w / 2;
     const cy = h / 2;
-    ctx!.clearRect(0, 0, w, h);
+    heroCtx.clearRect(0, 0, w, h);
 
     // Soft background glow
-    const glow = ctx!.createRadialGradient(cx, cy, 0, cx, cy, Math.min(w, h) * 0.5);
+    const glow = heroCtx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(w, h) * 0.5);
     glow.addColorStop(0, COLOR_GLOW);
     glow.addColorStop(1, "transparent");
-    ctx!.fillStyle = glow;
-    ctx!.fillRect(0, 0, w, h);
+    heroCtx.fillStyle = glow;
+    heroCtx.fillRect(0, 0, w, h);
 
     // Scale orbits to fit canvas
     const maxR = Math.max(model.r1, model.r2);
@@ -131,26 +133,26 @@
     function drawTrail(trail: { x: number; y: number }[], color: string) {
       for (let i = 0; i < trail.length; i++) {
         const alpha = (i / trail.length) * 0.6;
-        ctx!.fillStyle = color.startsWith("#")
+        heroCtx.fillStyle = color.startsWith("#")
           ? color + Math.round(alpha * 255).toString(16).padStart(2, "0")
           : color.replace(/[\d.]+\)$/, `${alpha})`);
-        ctx!.beginPath();
-        ctx!.arc(trail[i].x, trail[i].y, 1.5, 0, Math.PI * 2);
-        ctx!.fill();
+        heroCtx.beginPath();
+        heroCtx.arc(trail[i].x, trail[i].y, 1.5, 0, Math.PI * 2);
+        heroCtx.fill();
       }
     }
     drawTrail(trail1, COLOR_PRIMARY);
     drawTrail(trail2, COLOR_SECONDARY);
 
     // Barycenter cross
-    ctx!.strokeStyle = COLOR_MUTED;
-    ctx!.globalAlpha = 0.3;
-    ctx!.lineWidth = 1;
-    ctx!.beginPath();
-    ctx!.moveTo(cx - 4, cy); ctx!.lineTo(cx + 4, cy);
-    ctx!.moveTo(cx, cy - 4); ctx!.lineTo(cx, cy + 4);
-    ctx!.stroke();
-    ctx!.globalAlpha = 1;
+    heroCtx.strokeStyle = COLOR_MUTED;
+    heroCtx.globalAlpha = 0.3;
+    heroCtx.lineWidth = 1;
+    heroCtx.beginPath();
+    heroCtx.moveTo(cx - 4, cy); heroCtx.lineTo(cx + 4, cy);
+    heroCtx.moveTo(cx, cy - 4); heroCtx.lineTo(cx, cy + 4);
+    heroCtx.stroke();
+    heroCtx.globalAlpha = 1;
 
     // Bodies with glow
     const base = Math.min(w, h) * 0.02;
@@ -158,18 +160,18 @@
     function drawBody(x: number, y: number, mass: number, color: string) {
       const r = bodyRadius(mass, base);
       // Glow
-      const g = ctx!.createRadialGradient(x, y, 0, x, y, r * 3);
+      const g = heroCtx.createRadialGradient(x, y, 0, x, y, r * 3);
       g.addColorStop(0, color);
       g.addColorStop(1, "transparent");
-      ctx!.fillStyle = g;
-      ctx!.beginPath();
-      ctx!.arc(x, y, r * 3, 0, Math.PI * 2);
-      ctx!.fill();
+      heroCtx.fillStyle = g;
+      heroCtx.beginPath();
+      heroCtx.arc(x, y, r * 3, 0, Math.PI * 2);
+      heroCtx.fill();
       // Solid body
-      ctx!.fillStyle = color;
-      ctx!.beginPath();
-      ctx!.arc(x, y, r, 0, Math.PI * 2);
-      ctx!.fill();
+      heroCtx.fillStyle = color;
+      heroCtx.beginPath();
+      heroCtx.arc(x, y, r, 0, Math.PI * 2);
+      heroCtx.fill();
     }
     drawBody(x1, y1, model.m1, COLOR_PRIMARY);
     drawBody(x2, y2, model.m2, COLOR_SECONDARY);

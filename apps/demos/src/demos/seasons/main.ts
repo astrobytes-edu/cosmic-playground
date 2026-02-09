@@ -161,6 +161,13 @@ const globeMarker = globeMarkerEl;
 const latBandsGroup = latBandsGroupEl;
 const globeEcliptic = globeEclipticEl;
 const globeEquator = globeEquatorEl;
+const distanceLine = distanceLineEl;
+const polarisAxis = polarisAxisEl;
+const polarisLabel = polarisLabelEl;
+const dayArc = dayArcEl;
+const nightArc = nightArcEl;
+const hourGrid = hourGridEl;
+const contextMessage = contextMessageEl;
 
 stationMode.disabled = false;
 challengeMode.disabled = true;
@@ -479,8 +486,8 @@ function renderGlobe(args: {
     globeRadius: GLOBE_R,
     tiltDeg: tiltVal,
   });
-  dayArcEl.setAttribute("d", arcGeom.dayArcD);
-  nightArcEl.setAttribute("d", arcGeom.nightArcD);
+  dayArc.setAttribute("d", arcGeom.dayArcD);
+  nightArc.setAttribute("d", arcGeom.nightArcD);
 }
 
 // --- Season labels (positioned once at init) ---
@@ -499,7 +506,7 @@ function initSeasonLabels() {
 
 // --- Hour grid (rendered once at init, visibility toggled) ---
 function initHourGrid() {
-  hourGridEl.innerHTML = "";
+  hourGrid.innerHTML = "";
   for (let i = -2; i <= 2; i++) {
     const x = i * 50;
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -508,7 +515,7 @@ function initHourGrid() {
     line.setAttribute("x2", String(x));
     line.setAttribute("y2", String(GLOBE_R));
     line.setAttribute("class", "stage__hourGridLine");
-    hourGridEl.appendChild(line);
+    hourGrid.appendChild(line);
   }
 }
 
@@ -530,17 +537,17 @@ function renderStage(args: {
   orbitLabel.textContent = `r ~ ${formatNumber(args.distanceAu, 3)} AU`;
 
   // Distance line [S5] — from Sun (0,0) to Earth position
-  distanceLineEl.setAttribute("x2", formatNumber(x, 2));
-  distanceLineEl.setAttribute("y2", formatNumber(y, 2));
+  distanceLine.setAttribute("x2", formatNumber(x, 2));
+  distanceLine.setAttribute("y2", formatNumber(y, 2));
 
   // Polaris axis indicator [S2]
   const polaris = polarisIndicatorEndpoints(args.axialTiltDeg, x, y, 30);
-  polarisAxisEl.setAttribute("x1", formatNumber(x, 2));
-  polarisAxisEl.setAttribute("y1", formatNumber(y, 2));
-  polarisAxisEl.setAttribute("x2", formatNumber(polaris.x2, 2));
-  polarisAxisEl.setAttribute("y2", formatNumber(polaris.y2, 2));
-  polarisLabelEl.setAttribute("x", formatNumber(polaris.x2 + 5, 2));
-  polarisLabelEl.setAttribute("y", formatNumber(polaris.y2 - 5, 2));
+  polarisAxis.setAttribute("x1", formatNumber(x, 2));
+  polarisAxis.setAttribute("y1", formatNumber(y, 2));
+  polarisAxis.setAttribute("x2", formatNumber(polaris.x2, 2));
+  polarisAxis.setAttribute("y2", formatNumber(polaris.y2, 2));
+  polarisLabel.setAttribute("x", formatNumber(polaris.x2 + 5, 2));
+  polarisLabel.setAttribute("y", formatNumber(polaris.y2 - 5, 2));
 
   // Globe panel
   renderGlobe({
@@ -608,7 +615,7 @@ function render() {
     axialTiltDeg,
     distanceAu,
   });
-  contextMessageEl.textContent = msg;
+  contextMessage.textContent = msg;
 
   renderStage({
     dayOfYear: day,
@@ -957,8 +964,8 @@ const overlayTargets: Record<string, (SVGElement | HTMLElement)[]> = {
   "ecliptic": [globeEcliptic],
   "equator": [globeEquator],
   "sunlight-rays": [sunlightRaysEl],
-  "day-arc": [dayArcEl, nightArcEl],
-  "hour-grid": [hourGridEl],
+  "day-arc": [dayArc, nightArc],
+  "hour-grid": [hourGrid],
 };
 
 const overlayButtons = document.querySelectorAll<HTMLButtonElement>("[data-overlay]");

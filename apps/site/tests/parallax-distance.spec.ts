@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
 
+function parseNumeric(text: string | null): number {
+  if (!text) return Number.NaN;
+  const match = text.match(/-?\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : Number.NaN;
+}
+
 test.describe("Parallax Distance -- E2E", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("play/parallax-distance/", { waitUntil: "domcontentloaded" });
@@ -9,7 +15,7 @@ test.describe("Parallax Distance -- E2E", () => {
   // --- Layout & Visual ---
 
   test("demo loads with all four shell sections visible", async ({ page }) => {
-    await expect(page.locator(".cp-demo__controls")).toBeVisible();
+    await expect(page.locator(".cp-demo__sidebar")).toBeVisible();
     await expect(page.locator(".cp-demo__stage")).toBeVisible();
     await expect(page.locator(".cp-demo__readouts")).toBeVisible();
     await expect(page.locator(".cp-demo__drawer")).toBeVisible();
@@ -20,13 +26,28 @@ test.describe("Parallax Distance -- E2E", () => {
     await expect(canvas).toBeVisible();
   });
 
-  test("SVG stage has correct viewBox and accessible label", async ({ page }) => {
-    const svg = page.locator("#diagram");
-    await expect(svg).toHaveAttribute("viewBox", "0 0 900 520");
-    await expect(svg).toHaveAttribute("role", "img");
-    await expect(svg).toHaveAttribute(
+  test("both orbit and detector panels render with expected labels", async ({ page }) => {
+    const orbitSvg = page.locator("#orbitSvg");
+    await expect(orbitSvg).toHaveAttribute("viewBox", "0 0 560 420");
+    await expect(orbitSvg).toHaveAttribute("role", "img");
+    await expect(orbitSvg).toHaveAttribute(
       "aria-label",
-      "Parallax triangle diagram with two observation points and a star"
+      "Top view showing Sun, Earth orbit, two observation epochs, and line-of-sight rays"
+    );
+
+    const detectorSvg = page.locator("#detectorSvg");
+    await expect(detectorSvg).toHaveAttribute("viewBox", "0 0 560 420");
+    await expect(detectorSvg).toHaveAttribute("role", "img");
+    await expect(detectorSvg).toHaveAttribute(
+      "aria-label",
+      "Detector sky view with fixed background stars and two apparent target positions"
+    );
+
+    await expect(page.locator(".viz-panel .panel-title").first()).toHaveText(
+      "View from Above (orbit geometry)"
+    );
+    await expect(page.locator(".viz-panel .panel-title").nth(1)).toHaveText(
+      "As Seen on the Sky / Detector (observable shift)"
     );
   });
 
@@ -36,7 +57,7 @@ test.describe("Parallax Distance -- E2E", () => {
     await page.waitForSelector(".katex", { timeout: 5000 }).catch(() => {});
     await page.waitForTimeout(500);
     await expect(page).toHaveScreenshot("parallax-distance-default.png", {
-      maxDiffPixelRatio: 0.05,
+      maxDiffPixelRatio: 0.05
     });
   });
 
@@ -44,18 +65,29 @@ test.describe("Parallax Distance -- E2E", () => {
     await page.locator("#stationMode").click();
     await page.waitForTimeout(400);
     await expect(page).toHaveScreenshot("parallax-distance-station.png", {
-      maxDiffPixelRatio: 0.05,
+      maxDiffPixelRatio: 0.05
     });
   });
 
-  // --- Slider Interaction ---
+  // --- Distance-first Interaction ---
 
-  test("parallax slider updates readouts when moved", async ({ page }) => {
-    const before = await page.locator("#parallaxArcsec").textContent();
-    await page.locator("#parallaxMas").fill("500");
-    await page.locator("#parallaxMas").dispatchEvent("input");
-    const after = await page.locator("#parallaxArcsec").textContent();
-    expect(after).not.toBe(before);
+  test("distance slider updates inferred parallax and distance readouts inversely", async ({
+    page
+  }) => {
+    await page.locator("#distancePcRange").fill("10");
+    await page.locator("#distancePcRange").dispatchEvent("input");
+
+    const pNear = parseNumeric(await page.locator("#parallaxMas").textContent());
+    const dNear = parseNumeric(await page.locator("#distancePc").textContent());
+
+    await page.locator("#distancePcRange").fill("100");
+    await page.locator("#distancePcRange").dispatchEvent("input");
+
+    const pFar = parseNumeric(await page.locator("#parallaxMas").textContent());
+    const dFar = parseNumeric(await page.locator("#distancePc").textContent());
+
+    expect(pFar).toBeLessThan(pNear);
+    expect(dFar).toBeGreaterThan(dNear);
   });
 
   test("sigma slider updates sigma readout", async ({ page }) => {
@@ -66,37 +98,46 @@ test.describe("Parallax Distance -- E2E", () => {
     expect(after).not.toBe(before);
   });
 
-  test("moving parallax slider updates distance readouts inversely", async ({ page }) => {
-    await page.locator("#parallaxMas").fill("100");
-    await page.locator("#parallaxMas").dispatchEvent("input");
-    const dPc100 = await page.locator("#distancePc").textContent();
+  test("changing orbital phase moves detector marker smoothly", async ({ page }) => {
+    await page.locator("#phaseDeg").fill("0");
+    await page.locator("#phaseDeg").dispatchEvent("input");
 
-    await page.locator("#parallaxMas").fill("10");
-    await page.locator("#parallaxMas").dispatchEvent("input");
-    const dPc10 = await page.locator("#distancePc").textContent();
+    const beforeCx = await page.locator("#detectorMarkerEpochA").getAttribute("cx");
+    const beforeCy = await page.locator("#detectorMarkerEpochA").getAttribute("cy");
 
-    expect(parseFloat(dPc10 ?? "0")).toBeGreaterThan(parseFloat(dPc100 ?? "0"));
+    await page.locator("#phaseDeg").fill("90");
+    await page.locator("#phaseDeg").dispatchEvent("input");
+
+    const afterCx = await page.locator("#detectorMarkerEpochA").getAttribute("cx");
+    const afterCy = await page.locator("#detectorMarkerEpochA").getAttribute("cy");
+
+    expect(afterCx).not.toBe(beforeCx);
+    expect(afterCy).not.toBe(beforeCy);
   });
 
   // --- Preset Selection ---
 
-  test("selecting a preset updates parallax slider", async ({ page }) => {
+  test("selecting a preset updates distance input and inferred readouts", async ({ page }) => {
     const options = page.locator("#starPreset option");
     const count = await options.count();
     expect(count).toBeGreaterThan(1);
 
     await page.locator("#starPreset").selectOption({ index: 1 });
-    const parallaxVal = await page.locator("#parallaxMas").inputValue();
-    expect(parseInt(parallaxVal)).toBeGreaterThan(0);
+
+    const distancePc = parseNumeric(await page.locator("#distancePcInput").inputValue());
+    const parallaxMas = parseNumeric(await page.locator("#parallaxMas").textContent());
+    expect(distancePc).toBeGreaterThan(0);
+    expect(parallaxMas).toBeGreaterThan(0);
   });
 
-  test("manual slider movement clears preset to Custom", async ({ page }) => {
+  test("manual distance change clears preset to Custom", async ({ page }) => {
     await page.locator("#starPreset").selectOption({ index: 1 });
     const presetBefore = await page.locator("#starPreset").inputValue();
     expect(presetBefore).not.toBe("");
 
-    await page.locator("#parallaxMas").fill("42");
-    await page.locator("#parallaxMas").dispatchEvent("input");
+    await page.locator("#distancePcInput").fill("42");
+    await page.locator("#distancePcInput").dispatchEvent("input");
+
     const presetAfter = await page.locator("#starPreset").inputValue();
     expect(presetAfter).toBe("");
   });
@@ -110,8 +151,8 @@ test.describe("Parallax Distance -- E2E", () => {
 
     for (let i = 0; i < count; i++) {
       await page.locator("#starPreset").selectOption({ index: i });
-      const pArcsec = await page.locator("#parallaxArcsec").textContent();
-      expect(pArcsec?.trim().length).toBeGreaterThan(0);
+      const distanceValue = await page.locator("#distancePcValue").textContent();
+      expect(distanceValue?.trim().length).toBeGreaterThan(0);
     }
 
     expect(errors).toEqual([]);
@@ -122,22 +163,24 @@ test.describe("Parallax Distance -- E2E", () => {
   test("readout units are displayed in separate spans", async ({ page }) => {
     const unitSpans = page.locator(".cp-readout__unit");
     const count = await unitSpans.count();
-    expect(count).toBeGreaterThanOrEqual(3);
+    expect(count).toBeGreaterThanOrEqual(4);
   });
 
-  // --- Accordion / Drawer ---
+  // --- Shelf Tabs ---
 
-  test("What to notice accordion is open by default", async ({ page }) => {
-    const firstAccordion = page.locator(".cp-accordion").first();
-    await expect(firstAccordion).toHaveAttribute("open", "");
-    await expect(firstAccordion).toContainText("What to notice");
+  test("What to notice tab is active by default", async ({ page }) => {
+    await expect(page.locator("#tab-btn-notice")).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#tab-notice")).toBeVisible();
+    await expect(page.locator("#tab-notice")).toContainText("Cause:");
   });
 
-  test("Model notes accordion can be opened", async ({ page }) => {
-    const modelNotes = page.locator(".cp-accordion").nth(1);
-    await modelNotes.locator("summary").click();
-    await expect(modelNotes).toHaveAttribute("open", "");
-    await expect(modelNotes).toContainText("Model notes");
+  test("Model notes tab can be opened", async ({ page }) => {
+    const modelTab = page.locator("#tab-btn-model");
+    await modelTab.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#tab-btn-model")).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#tab-model")).toBeVisible();
+    await expect(page.locator("#tab-model")).toContainText("Small-angle parallax relation");
   });
 
   // --- Station Mode ---
@@ -149,7 +192,7 @@ test.describe("Parallax Distance -- E2E", () => {
     await stationBtn.click();
 
     const stationDialog = page.getByRole("dialog", {
-      name: "Station Mode: Parallax Distance",
+      name: "Station Mode: Parallax Distance"
     });
     await expect(stationDialog).toBeVisible();
     await expect(page.locator(".cp-station-table")).toBeVisible();
@@ -164,13 +207,13 @@ test.describe("Parallax Distance -- E2E", () => {
   });
 
   test("controls panel has accessible label", async ({ page }) => {
-    const controls = page.locator(".cp-demo__controls");
+    const controls = page.locator(".cp-demo__sidebar");
     await expect(controls).toHaveAttribute("aria-label", "Controls panel");
   });
 
   test("readouts panel has accessible label", async ({ page }) => {
     const readouts = page.locator(".cp-demo__readouts");
-    await expect(readouts).toHaveAttribute("aria-label", "Readouts panel");
+    await expect(readouts).toHaveAttribute("aria-label", "Readouts");
   });
 
   test("help button opens help modal", async ({ page }) => {

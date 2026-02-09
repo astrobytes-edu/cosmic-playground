@@ -761,7 +761,7 @@ export function degEquationSymbolic(): string {
  * ────────────────────────────────────────────────── */
 
 export type ContextualSuggestionInput = {
-  dominantChannel: "gas" | "radiation" | "degeneracy" | "mixed" | "extension";
+  dominantChannel: "gas" | "radiation" | "degeneracy" | "mixed" | "extension" | "invalid";
   radiationToGas: number;
   degeneracyToTotal: number;
   chiDegeneracy: number;
@@ -771,6 +771,10 @@ export type ContextualSuggestionInput = {
 
 export function getContextualSuggestion(input: ContextualSuggestionInput): string {
   const { dominantChannel, radiationToGas, chiDegeneracy, gammaEff, lteTag } = input;
+
+  if (dominantChannel === "invalid") {
+    return "Inputs are outside model validity. Try using a preset or move temperature and density back into a physical range.";
+  }
 
   // 1. Near instability threshold — most dramatic and urgent
   if (Number.isFinite(gammaEff) && gammaEff < 4 / 3 + 0.05) {

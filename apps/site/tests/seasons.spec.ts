@@ -81,22 +81,19 @@ test.describe("Seasons -- E2E", () => {
   // --- Anchor Buttons ---
 
   test("anchor buttons set day-of-year to expected values", async ({ page }) => {
-    // Preset transitions animate over 500ms; wait for each to finish
+    const dayOfYear = page.locator("#dayOfYear");
+
     await page.locator("#anchorJunSol").click();
-    await page.waitForTimeout(700);
-    expect(await page.locator("#dayOfYear").inputValue()).toBe("172");
+    await expect(dayOfYear).toHaveValue("172");
 
     await page.locator("#anchorMarEqx").click();
-    await page.waitForTimeout(700);
-    expect(await page.locator("#dayOfYear").inputValue()).toBe("80");
+    await expect(dayOfYear).toHaveValue("80");
 
     await page.locator("#anchorSepEqx").click();
-    await page.waitForTimeout(700);
-    expect(await page.locator("#dayOfYear").inputValue()).toBe("266");
+    await expect(dayOfYear).toHaveValue("266");
 
     await page.locator("#anchorDecSol").click();
-    await page.waitForTimeout(700);
-    expect(await page.locator("#dayOfYear").inputValue()).toBe("356");
+    await expect(dayOfYear).toHaveValue("356");
   });
 
   // --- Season Labels ---

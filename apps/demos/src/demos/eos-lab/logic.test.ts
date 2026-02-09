@@ -661,6 +661,11 @@ describe("getContextualSuggestion", () => {
     expect(s).toContain("composition");
   });
 
+  it("returns validity guidance for invalid dominant-channel states", () => {
+    const s = getContextualSuggestion({ ...base, dominantChannel: "invalid" });
+    expect(s).toContain("outside model validity");
+  });
+
   it("highlights transition at mixed dominance", () => {
     const s = getContextualSuggestion({ ...base, dominantChannel: "mixed" });
     expect(s).toContain("transition");
