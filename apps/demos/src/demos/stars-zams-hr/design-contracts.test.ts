@@ -80,9 +80,9 @@ describe("Stars ZAMS HR -- Design System Contracts", () => {
     it("uses explicit log-scale axis framing text", () => {
       const mainPath = path.resolve(__dirname, "main.ts");
       const mainTs = fs.readFileSync(mainPath, "utf-8");
-      expect(mainTs).toContain("log₁₀");
+      expect(mainTs).toContain("base-10 logarithmic axes");
       expect(mainTs).toContain("T_eff");
-      expect(mainTs).toContain("kK");
+      expect(mainTs).toContain("(K)");
       expect(mainTs).toContain("L/L⊙");
     });
 

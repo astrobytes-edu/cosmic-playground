@@ -3,8 +3,8 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 export const HR_AXIS_LIMITS = {
-  teffMinKK: 1,
-  teffMaxKK: 100,
+  teffMinK: 1_000,
+  teffMaxK: 100_000,
   logLumMin: -4,
   logLumMax: 6,
 } as const;
@@ -59,8 +59,8 @@ export function hrDiagramCoordinates(args: {
   const {
     teffK,
     luminosityLsun,
-    teffMinK = HR_AXIS_LIMITS.teffMinKK * 1000,
-    teffMaxK = HR_AXIS_LIMITS.teffMaxKK * 1000,
+    teffMinK = HR_AXIS_LIMITS.teffMinK,
+    teffMaxK = HR_AXIS_LIMITS.teffMaxK,
     logLumMin = HR_AXIS_LIMITS.logLumMin,
     logLumMax = HR_AXIS_LIMITS.logLumMax,
   } = args;

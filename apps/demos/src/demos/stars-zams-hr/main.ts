@@ -66,17 +66,14 @@ const RADIUS_MAX_RSUN = 1000;
 const FSUN_CGS = BlackbodyRadiationModel.stefanBoltzmannFluxCgs({ temperatureK: TSUN_K });
 const RADIUS_GUIDES_RSUN = [0.01, 0.1, 1, 10, 100, 1000] as const;
 
-const X_MAJOR_TICKS_KK = decadeTicks(Math.log10(HR_AXIS_LIMITS.teffMinKK), Math.log10(HR_AXIS_LIMITS.teffMaxKK));
-const X_MINOR_TICKS_KK = minorLogTicks(Math.log10(HR_AXIS_LIMITS.teffMinKK), Math.log10(HR_AXIS_LIMITS.teffMaxKK));
+const X_MAJOR_TICKS_K = decadeTicks(Math.log10(HR_AXIS_LIMITS.teffMinK), Math.log10(HR_AXIS_LIMITS.teffMaxK));
+const X_MINOR_TICKS_K = minorLogTicks(Math.log10(HR_AXIS_LIMITS.teffMinK), Math.log10(HR_AXIS_LIMITS.teffMaxK));
 const Y_MAJOR_TICKS_LSUN = decadeTicks(HR_AXIS_LIMITS.logLumMin, HR_AXIS_LIMITS.logLumMax);
 const Y_MINOR_TICKS_LSUN = minorLogTicks(HR_AXIS_LIMITS.logLumMin, HR_AXIS_LIMITS.logLumMax);
-const X_AXIS_LABEL = "log₁₀(T_eff / kK)";
-const Y_AXIS_LABEL = "log₁₀(L/L⊙)";
 
-const FONT_TICK_MAJOR = "500 11px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
-const FONT_TICK_MINOR = "500 10px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
-const FONT_AXIS_LABEL = "600 12px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
-const FONT_GUIDE_LABEL = "500 10.5px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
+const FONT_TICK_MAJOR = "600 14px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
+const FONT_TICK_MINOR = "500 12px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
+const FONT_GUIDE_LABEL = "500 12px 'Source Sans 3', 'Inter', ui-sans-serif, sans-serif";
 
 const massSliderEl = document.querySelector<HTMLInputElement>("#massSlider");
 const massValueEl = document.querySelector<HTMLSpanElement>("#massValue");
@@ -230,6 +227,11 @@ function formatWithoutENotation(value: number, digits = 3): string {
   return value.toFixed(digits);
 }
 
+function formatIntegerWithCommas(value: number): string {
+  if (!Number.isFinite(value)) return "-";
+  return Math.round(value).toLocaleString("en-US");
+}
+
 function sliderStepValue(event: KeyboardEvent): number {
   return event.shiftKey ? 20 : 1;
 }
@@ -371,17 +373,17 @@ function resizeCanvasToCssPixels(canvas: HTMLCanvasElement, context: CanvasRende
 function drawHrDiagram(readouts: StarReadouts): void {
   const { width: w, height: h } = resizeCanvasToCssPixels(hrCanvas, ctx);
 
-  const mL = 92;
-  const mR = 20;
-  const mT = 24;
-  const mB = 86;
+  const mL = 122;
+  const mR = 28;
+  const mT = 30;
+  const mB = 120;
   const plotW = Math.max(1, w - mL - mR);
   const plotH = Math.max(1, h - mT - mB);
 
-  const teffMinKK = HR_AXIS_LIMITS.teffMinKK;
-  const teffMaxKK = HR_AXIS_LIMITS.teffMaxKK;
-  const logTeffMin = Math.log10(teffMinKK);
-  const logTeffMax = Math.log10(teffMaxKK);
+  const teffMinK = HR_AXIS_LIMITS.teffMinK;
+  const teffMaxK = HR_AXIS_LIMITS.teffMaxK;
+  const logTeffMin = Math.log10(teffMinK);
+  const logTeffMax = Math.log10(teffMaxK);
   const logLumMin = HR_AXIS_LIMITS.logLumMin;
   const logLumMax = HR_AXIS_LIMITS.logLumMax;
 
@@ -396,8 +398,8 @@ function drawHrDiagram(readouts: StarReadouts): void {
   const guideColor = resolveCssColor(cssVar("--cp-chart-3"));
   const overrideMarker = resolveCssColor(cssVar("--cp-chart-2"));
 
-  const xFromTeffKK = (teffKK: number) => {
-    const logTeff = Math.log10(teffKK);
+  const xFromTeffK = (teffK: number) => {
+    const logTeff = Math.log10(teffK);
     const xNorm = (logTeffMax - logTeff) / (logTeffMax - logTeffMin);
     return mL + clamp(xNorm, 0, 1) * plotW;
   };
@@ -416,10 +418,10 @@ function drawHrDiagram(readouts: StarReadouts): void {
 
   ctx.save();
   ctx.strokeStyle = minorGrid;
-  ctx.globalAlpha = 0.55;
-  ctx.lineWidth = 0.9;
-  for (const teffTickKK of X_MINOR_TICKS_KK) {
-    const x = xFromTeffKK(teffTickKK);
+  ctx.globalAlpha = 0.44;
+  ctx.lineWidth = 0.95;
+  for (const teffTickK of X_MINOR_TICKS_K) {
+    const x = xFromTeffK(teffTickK);
     ctx.beginPath();
     ctx.moveTo(x, mT);
     ctx.lineTo(x, mT + plotH);
@@ -436,10 +438,10 @@ function drawHrDiagram(readouts: StarReadouts): void {
 
   ctx.save();
   ctx.strokeStyle = majorGrid;
-  ctx.globalAlpha = 0.9;
-  ctx.lineWidth = 1.2;
-  for (const teffTickKK of X_MAJOR_TICKS_KK) {
-    const x = xFromTeffKK(teffTickKK);
+  ctx.globalAlpha = 0.92;
+  ctx.lineWidth = 1.45;
+  for (const teffTickK of X_MAJOR_TICKS_K) {
+    const x = xFromTeffK(teffTickK);
     ctx.beginPath();
     ctx.moveTo(x, mT);
     ctx.lineTo(x, mT + plotH);
@@ -457,15 +459,14 @@ function drawHrDiagram(readouts: StarReadouts): void {
   if (state.showRadiusGuides) {
     ctx.save();
     ctx.strokeStyle = guideColor;
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([6, 5]);
+    ctx.lineWidth = 1.35;
+    ctx.setLineDash([7, 5]);
     for (const radiusRsun of RADIUS_GUIDES_RSUN) {
       ctx.beginPath();
       let started = false;
       for (let i = 0; i <= 140; i += 1) {
         const frac = i / 140;
-        const teffKK = teffMinKK * (teffMaxKK / teffMinKK) ** frac;
-        const teffK = teffKK * 1000;
+        const teffK = teffMinK * (teffMaxK / teffMinK) ** frac;
         const luminosityLsun = luminosityLsunFromRadiusTemperature({
           radiusRsun,
           teffK,
@@ -481,7 +482,7 @@ function drawHrDiagram(readouts: StarReadouts): void {
           }
           continue;
         }
-        const x = xFromTeffKK(teffKK);
+        const x = xFromTeffK(teffK);
         const y = yFromLum(luminosityLsun);
         if (!started) {
           ctx.moveTo(x, y);
@@ -492,16 +493,16 @@ function drawHrDiagram(readouts: StarReadouts): void {
       }
       ctx.stroke();
 
-      const labelTeffKK = 3;
+      const labelTeffK = 3_000;
       const labelLum = luminosityLsunFromRadiusTemperature({
         radiusRsun,
-        teffK: labelTeffKK * 1000,
+        teffK: labelTeffK,
         tSunK: TSUN_K
       });
       if (Number.isFinite(labelLum) && labelLum > 0) {
         const logLum = Math.log10(labelLum);
         if (logLum >= logLumMin && logLum <= logLumMax) {
-          const labelX = xFromTeffKK(labelTeffKK) + 6;
+          const labelX = xFromTeffK(labelTeffK) + 7;
           const labelY = yFromLum(labelLum) - 4;
           const exponent = Math.round(Math.log10(radiusRsun));
           const radiusLabel = Math.abs(radiusRsun - 10 ** exponent) < 1e-12
@@ -519,7 +520,7 @@ function drawHrDiagram(readouts: StarReadouts): void {
 
   ctx.save();
   ctx.strokeStyle = track;
-  ctx.lineWidth = 2.2;
+  ctx.lineWidth = 2.35;
   ctx.beginPath();
   const samples = 180;
   for (let i = 0; i < samples; i += 1) {
@@ -535,7 +536,7 @@ function drawHrDiagram(readouts: StarReadouts): void {
     });
     if (!Number.isFinite(luminosityLsun) || !Number.isFinite(teffK)) continue;
     const point = hrDiagramCoordinates({ teffK, luminosityLsun });
-    const x = mL + point.xNorm * plotW;
+    const x = xFromTeffK(teffK);
     const y = mT + (1 - point.yNorm) * plotH;
     if (i === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
@@ -560,32 +561,34 @@ function drawHrDiagram(readouts: StarReadouts): void {
   ctx.save();
   ctx.fillStyle = markerColor;
   ctx.beginPath();
-  ctx.arc(markerX, markerY, 5.5, 0, Math.PI * 2);
+  ctx.arc(markerX, markerY, 6.1, 0, Math.PI * 2);
   ctx.fill();
-  ctx.lineWidth = 1.2;
+  ctx.lineWidth = 1.3;
   ctx.strokeStyle = resolveCssColor(cssVar("--cp-bg1"));
   ctx.stroke();
   ctx.restore();
 
   ctx.save();
   ctx.strokeStyle = frame;
-  ctx.globalAlpha = 0.85;
-  ctx.lineWidth = 1.3;
+  ctx.globalAlpha = 0.94;
+  ctx.lineWidth = 1.5;
   ctx.strokeRect(mL, mT, plotW, plotH);
   ctx.restore();
 
-  const majorTickLength = 7;
-  const minorTickLength = 4;
+  const majorTickLength = 9;
+  const minorTickLength = 5;
 
   ctx.save();
   ctx.strokeStyle = mutedText;
-  ctx.globalAlpha = 0.9;
-  ctx.lineWidth = 0.9;
-  for (const teffTickKK of X_MINOR_TICKS_KK) {
-    const x = xFromTeffKK(teffTickKK);
+  ctx.globalAlpha = 0.95;
+  ctx.lineWidth = 1;
+  for (const teffTickK of X_MINOR_TICKS_K) {
+    const x = xFromTeffK(teffTickK);
     ctx.beginPath();
     ctx.moveTo(x, mT + plotH);
     ctx.lineTo(x, mT + plotH + minorTickLength);
+    ctx.moveTo(x, mT);
+    ctx.lineTo(x, mT - minorTickLength);
     ctx.stroke();
   }
   for (const lumTick of Y_MINOR_TICKS_LSUN) {
@@ -593,6 +596,8 @@ function drawHrDiagram(readouts: StarReadouts): void {
     ctx.beginPath();
     ctx.moveTo(mL - minorTickLength, y);
     ctx.lineTo(mL, y);
+    ctx.moveTo(mL + plotW, y);
+    ctx.lineTo(mL + plotW + minorTickLength, y);
     ctx.stroke();
   }
   ctx.restore();
@@ -603,17 +608,19 @@ function drawHrDiagram(readouts: StarReadouts): void {
   ctx.font = FONT_TICK_MAJOR;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  for (const teffTickKK of X_MAJOR_TICKS_KK) {
-    const x = xFromTeffKK(teffTickKK);
+  for (const teffTickK of X_MAJOR_TICKS_K) {
+    const x = xFromTeffK(teffTickK);
     ctx.beginPath();
     ctx.moveTo(x, mT + plotH);
     ctx.lineTo(x, mT + plotH + majorTickLength);
-    ctx.lineWidth = 1.25;
+    ctx.moveTo(x, mT);
+    ctx.lineTo(x, mT - majorTickLength);
+    ctx.lineWidth = 1.4;
     ctx.stroke();
-    ctx.fillText(logTickPowersOfTenLabel(teffTickKK), x, mT + plotH + 10);
+    ctx.fillText(logTickPowersOfTenLabel(teffTickK), x, mT + plotH + 11);
     ctx.fillStyle = mutedText;
     ctx.font = FONT_TICK_MINOR;
-    ctx.fillText(`${formatWithoutENotation(teffTickKK, 0)} kK`, x, mT + plotH + 24);
+    ctx.fillText(`${formatIntegerWithCommas(teffTickK)} K`, x, mT + plotH + 30);
     ctx.fillStyle = text;
     ctx.font = FONT_TICK_MAJOR;
   }
@@ -625,30 +632,21 @@ function drawHrDiagram(readouts: StarReadouts): void {
     ctx.beginPath();
     ctx.moveTo(mL - majorTickLength, y);
     ctx.lineTo(mL, y);
+    ctx.moveTo(mL + plotW, y);
+    ctx.lineTo(mL + plotW + majorTickLength, y);
     ctx.strokeStyle = text;
-    ctx.lineWidth = 1.25;
+    ctx.lineWidth = 1.4;
     ctx.stroke();
     ctx.fillStyle = text;
-    ctx.fillText(logTickPowersOfTenLabel(lumTick), mL - 10, y);
+    ctx.fillText(logTickPowersOfTenLabel(lumTick), mL - 12, y);
   }
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
-  ctx.font = FONT_AXIS_LABEL;
-  ctx.fillText(X_AXIS_LABEL, mL + plotW / 2, h - 9);
-
-  ctx.save();
-  ctx.translate(20, mT + plotH / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText(Y_AXIS_LABEL, 0, 0);
-  ctx.restore();
 
   ctx.font = FONT_TICK_MINOR;
   ctx.fillStyle = mutedText;
   ctx.textAlign = "left";
-  ctx.fillText("hotter \u2190", mL, h - 46);
+  ctx.fillText("hotter \u2190", mL, h - 28);
   ctx.textAlign = "right";
-  ctx.fillText("\u2192 cooler", mL + plotW, h - 46);
+  ctx.fillText("\u2192 cooler", mL + plotW, h - 28);
   ctx.restore();
 }
 
@@ -670,16 +668,16 @@ function renderReadouts(readouts: StarReadouts): void {
 
   massSlider.setAttribute("aria-valuetext", `${formatNumber(state.massMsun, 3)} solar masses`);
   metallicitySlider.setAttribute("aria-valuetext", `metallicity ${formatMetallicity(state.metallicityZ)}`);
-  teffSlider.setAttribute("aria-valuetext", `${formatWithoutENotation(state.stefanTeffK / 1000, 3)} kilokelvin`);
+  teffSlider.setAttribute("aria-valuetext", `${formatIntegerWithCommas(state.stefanTeffK)} kelvin`);
   radiusSlider.setAttribute("aria-valuetext", `${formatWithoutENotation(state.stefanRadiusRsun, 3)} solar radii`);
 
   massValue.textContent = formatWithoutENotation(state.massMsun, 3);
   metallicityValue.textContent = formatMetallicity(state.metallicityZ);
-  teffSliderValue.textContent = formatWithoutENotation(state.stefanTeffK / 1000, 3);
+  teffSliderValue.textContent = formatIntegerWithCommas(state.stefanTeffK);
   radiusSliderValue.textContent = formatWithoutENotation(state.stefanRadiusRsun, 3);
 
   massReadout.textContent = formatWithoutENotation(readouts.massMsun, 3);
-  teffValue.textContent = formatWithoutENotation(readouts.teffK / 1000, 3);
+  teffValue.textContent = formatIntegerWithCommas(readouts.teffK);
   luminosityValue.textContent = formatWithoutENotation(readouts.luminosityLsun, 4);
   radiusValue.textContent = formatWithoutENotation(readouts.radiusRsun, 4);
   fluxRatioValue.textContent = formatWithoutENotation(readouts.surfaceFluxRatio, 4);
@@ -717,20 +715,20 @@ function exportResults(readouts: StarReadouts): ExportPayloadV1 {
     timestamp: new Date().toISOString(),
     parameters: [
       { name: "Source mode", value: readouts.sourceMode },
-      { name: "Mass M (M_odot)", value: formatWithoutENotation(readouts.massMsun, 6) },
+      { name: "Mass M (M/M⊙)", value: formatWithoutENotation(readouts.massMsun, 6) },
       { name: "Metallicity Z", value: formatMetallicity(readouts.metallicityZ) },
       { name: "Show constant-R guides", value: state.showRadiusGuides ? "yes" : "no" }
     ],
     readouts: [
-      { name: "Effective temperature Teff (kK)", value: formatWithoutENotation(readouts.teffK / 1000, 6) },
-      { name: "Luminosity L/L_odot", value: formatWithoutENotation(readouts.luminosityLsun, 6) },
-      { name: "Radius R/R_odot", value: formatWithoutENotation(readouts.radiusRsun, 6) },
-      { name: "Surface flux ratio F/F_odot", value: formatWithoutENotation(readouts.surfaceFluxRatio, 6) }
+      { name: "Effective temperature T_eff (K)", value: formatIntegerWithCommas(readouts.teffK) },
+      { name: "Luminosity L/L⊙", value: formatWithoutENotation(readouts.luminosityLsun, 6) },
+      { name: "Radius R/R⊙", value: formatWithoutENotation(readouts.radiusRsun, 6) },
+      { name: "Surface flux ratio F/F⊙", value: formatWithoutENotation(readouts.surfaceFluxRatio, 6) }
     ],
     notes: [
-      "H-R plot uses base-10 logarithmic axes: log10(T_eff [kK]) and log10(L/L_odot).",
-      "ZAMS mode uses Tout et al. (1996) over 0.1 <= M/M_odot <= 100 and 1e-4 <= Z <= 0.03.",
-      "Stefan mode computes luminosity from radius and effective temperature: L/L_odot = (R/R_odot)^2 (T/T_odot)^4.",
+      "H-R plot uses base-10 logarithmic axes with T_eff in K and luminosity in L/L⊙.",
+      "ZAMS mode uses Tout et al. (1996) over 0.1 <= M/M⊙ <= 100 and 1e-4 <= Z <= 0.03.",
+      "Stefan mode computes luminosity from radius and effective temperature: L/L⊙ = (R/R⊙)^2 (T/T⊙)^4.",
       readouts.presetState === "override"
         ? "Override presets intentionally bypass ZAMS constraints."
         : "Current state follows the selected source-mode assumptions."
@@ -860,12 +858,12 @@ const demoModes = createDemoModes({
     columns: [
       { key: "case", label: "Case" },
       { key: "source", label: "Source" },
-          { key: "mMsun", label: "M (M_odot)" },
+      { key: "mMsun", label: "M (M/M⊙)" },
       { key: "z", label: "Z" },
-      { key: "teffKK", label: "Teff (kK)" },
-          { key: "lumLsun", label: "L/L_odot" },
-          { key: "radiusRsun", label: "R/R_odot" },
-          { key: "fluxRatio", label: "F/F_odot" }
+      { key: "teffK", label: "T_eff (K)" },
+      { key: "lumLsun", label: "L/L⊙" },
+      { key: "radiusRsun", label: "R/R⊙" },
+      { key: "fluxRatio", label: "F/F⊙" }
     ],
     getSnapshotRow() {
       const readouts = computeReadouts();
@@ -874,7 +872,7 @@ const demoModes = createDemoModes({
         source: readouts.sourceMode,
         mMsun: formatWithoutENotation(readouts.massMsun, 4),
         z: formatMetallicity(readouts.metallicityZ),
-        teffKK: formatWithoutENotation(readouts.teffK / 1000, 4),
+        teffK: formatIntegerWithCommas(readouts.teffK),
         lumLsun: formatWithoutENotation(readouts.luminosityLsun, 6),
         radiusRsun: formatWithoutENotation(readouts.radiusRsun, 6),
         fluxRatio: formatWithoutENotation(readouts.surfaceFluxRatio, 6)

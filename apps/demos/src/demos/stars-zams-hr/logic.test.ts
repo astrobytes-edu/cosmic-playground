@@ -96,8 +96,14 @@ describe("Stars ZAMS HR -- logic", () => {
     ]);
   });
 
-  it("uses kK-based Teff axis domain limits", () => {
-    expect(HR_AXIS_LIMITS.teffMinKK).toBe(1);
-    expect(HR_AXIS_LIMITS.teffMaxKK).toBe(100);
+  it("uses Kelvin-based Teff axis domain limits", () => {
+    expect(HR_AXIS_LIMITS.teffMinK).toBe(1000);
+    expect(HR_AXIS_LIMITS.teffMaxK).toBe(100000);
+  });
+
+  it("derives Teff major ticks in Kelvin decades", () => {
+    expect(
+      decadeTicks(Math.log10(HR_AXIS_LIMITS.teffMinK), Math.log10(HR_AXIS_LIMITS.teffMaxK))
+    ).toEqual([1000, 10000, 100000]);
   });
 });

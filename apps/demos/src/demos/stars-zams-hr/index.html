@@ -73,7 +73,7 @@
           </label>
 
           <label class="control">
-            <span>Effective temperature $T_{\rm eff}$ [kK]</span>
+            <span>Effective temperature $T_{\rm eff}$ [K]</span>
             <input id="teffSlider" type="range" min="0" max="1000" step="1" value="381" data-tooltip-source="#teffSliderValue" aria-label="Effective temperature slider" />
             <span class="control__value"><span id="teffSliderValue"></span></span>
           </label>
@@ -109,7 +109,7 @@
 
           <div class="cp-readout">
             <div class="cp-readout__label">Effective temperature $T_{\rm eff}$</div>
-            <div class="cp-readout__value"><span id="teffValue"></span> <span class="cp-readout__unit">kK</span></div>
+            <div class="cp-readout__value"><span id="teffValue"></span> <span class="cp-readout__unit">K</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Luminosity $L/L_{\odot}$</div>
@@ -146,8 +146,12 @@
         </div>
 
         <div class="cp-tab-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
-          <canvas id="hrCanvas" role="img" aria-label="H-R diagram with current stellar point"></canvas>
-          <p class="cp-muted stage-note">Both axes use base-10 logarithmic scaling to show stellar orders-of-magnitude clearly.</p>
+          <div class="hr-plot" aria-label="Log-log H-R plot">
+            <canvas id="hrCanvas" role="img" aria-label="H-R diagram with current stellar point"></canvas>
+            <p class="hr-axis hr-axis--x">$T_{\rm eff}\;[\mathrm{K}]$</p>
+            <p class="hr-axis hr-axis--y">$L/L_{\odot}$</p>
+          </div>
+          <p class="cp-muted stage-note">Both axes use base-10 logarithmic scaling with real numeric values; hotter stars are on the left.</p>
         </div>
 
         <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
@@ -210,7 +214,7 @@
               <ul>
                 <li>ZAMS relations use Tout et al. (1996) analytic fits for $L(M,Z)$ and $R(M,Z)$.</li>
                 <li>Validity range: $0.1\le M/M_{\odot}\le100$ and $10^{-4}\le Z\le0.03$.</li>
-                <li>H-R axes are logarithmic: $T_{\rm eff}$ axis in kK and $L/L_{\odot}$ axis in powers of ten.</li>
+                <li>H-R axes are logarithmic: $T_{\rm eff}$ axis in K and $L/L_{\odot}$ axis in powers of ten.</li>
                 <li>Effective temperature closure: $$T_{\rm eff}=T_{\odot}\left[(L/L_{\odot})/(R/R_{\odot})^2\right]^{1/4}$$</li>
               </ul>
             </div>
