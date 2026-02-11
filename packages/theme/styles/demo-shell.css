@@ -58,6 +58,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 /* Stage: visualization area */
@@ -92,6 +93,8 @@
 /* --- Sidebar internals --- */
 .cp-demo__controls .cp-panel-body,
 .cp-demo__sidebar .cp-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
 }
 

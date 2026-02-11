@@ -350,6 +350,10 @@ function resetToStart() {
   setCursorDay(0);
 }
 
+function dismissRetroAnnotation() {
+  retroAnnotation.hidden = true;
+}
+
 // ── Readouts ─────────────────────────────────────────────────
 
 function renderReadouts() {
@@ -1126,7 +1130,13 @@ copyResults.addEventListener("click", () => {
 
 // Annotation dismiss
 retroAnnotationClose.addEventListener("click", () => {
-  retroAnnotation.hidden = true;
+  dismissRetroAnnotation();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" || retroAnnotation.hidden) return;
+  dismissRetroAnnotation();
+  e.preventDefault();
 });
 
 // ── Challenges ───────────────────────────────────────────────
@@ -1193,7 +1203,7 @@ function setupChallenges() {
           series.retrogradeIntervals,
           safeCursorDay,
         );
-        if (!Number.isFinite(retroDuration)) {
+        if (retroDuration == null || !Number.isFinite(retroDuration)) {
           return {
             correct: false,
             close: false,

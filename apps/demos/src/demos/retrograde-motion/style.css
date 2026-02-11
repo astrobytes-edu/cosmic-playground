@@ -157,32 +157,53 @@
   transform: translateX(-50%);
   z-index: 100;
   max-width: 500px;
-  padding: var(--cp-space-3) var(--cp-space-4);
+  padding: var(--cp-space-3) calc(var(--cp-space-4) + 2.5rem) var(--cp-space-3)
+    var(--cp-space-4);
   background: var(--cp-instr-panel-bg);
   border: 1px solid var(--cp-pink);
   border-radius: 12px;
   color: var(--cp-text);
   font-size: 0.9rem;
+  line-height: 1.4;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--cp-space-3);
   animation: cp-slide-up 0.4s ease-out both;
 }
 
+.retro__annotation[hidden] {
+  display: none !important;
+}
+
 .retro__annotation-close {
+  position: absolute;
+  top: var(--cp-space-2);
+  right: var(--cp-space-2);
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
   color: var(--cp-muted);
   font-size: 1.4rem;
   cursor: pointer;
-  padding: 0 4px;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 
 .retro__annotation-close:hover {
   color: var(--cp-text);
+  border-color: color-mix(in srgb, var(--cp-border) 65%, transparent);
+}
+
+.retro__annotation-close:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 1px;
 }
 
 /* --- Entry animations (staggered) --- */

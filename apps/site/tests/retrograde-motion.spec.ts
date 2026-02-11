@@ -416,6 +416,81 @@ test.describe("Retrograde Motion -- E2E", () => {
     await expect(sidebar).toHaveAttribute("aria-label", "Controls panel");
   });
 
+  test("sidebar panel body is scrollable when content overflows", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 640 });
+    await page.locator(".cp-accordion summary").click();
+    const panelBody = page.locator(".cp-demo__sidebar .cp-panel-body");
+    await expect(panelBody).toBeVisible();
+    const metrics = await panelBody.evaluate((el) => {
+      const filler = document.createElement("div");
+      filler.setAttribute("data-test-filler", "sidebar-overflow");
+      filler.style.height = "520px";
+      filler.style.pointerEvents = "none";
+      filler.style.opacity = "0";
+      el.appendChild(filler);
+      const before = el.scrollTop;
+      el.scrollTop = 120;
+      return {
+        before,
+        after: el.scrollTop,
+        clientHeight: el.clientHeight,
+        scrollHeight: el.scrollHeight
+      };
+    });
+    expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
+    expect(metrics.after).toBeGreaterThan(metrics.before);
+  });
+
+  test("annotation message does not contain escaped unicode literal", async ({ page }) => {
+    const text = await page.locator("#retroAnnotation span").textContent();
+    expect(text).toBeTruthy();
+    expect(text).not.toContain("\\u2014");
+  });
+
+  test("annotation dismiss button is top-right and supports click + Escape close", async ({
+    page
+  }) => {
+    const annotation = page.locator("#retroAnnotation");
+    const closeBtn = page.locator("#retroAnnotationClose");
+    await page.evaluate(() => {
+      const el = document.querySelector<HTMLDivElement>("#retroAnnotation");
+      if (el) el.hidden = false;
+    });
+    await expect(annotation).toBeVisible();
+    await expect(closeBtn).toBeVisible();
+
+    const geometry = await page.evaluate(() => {
+      const ann = document.querySelector<HTMLElement>("#retroAnnotation");
+      const close = document.querySelector<HTMLElement>("#retroAnnotationClose");
+      if (!ann || !close) return null;
+      const annRect = ann.getBoundingClientRect();
+      const closeRect = close.getBoundingClientRect();
+      return {
+        annTop: annRect.top,
+        annHeight: annRect.height,
+        closeCenterY: closeRect.top + closeRect.height / 2,
+        annRight: annRect.right,
+        closeCenterX: closeRect.left + closeRect.width / 2
+      };
+    });
+    expect(geometry).not.toBeNull();
+    expect(geometry!.closeCenterY).toBeLessThanOrEqual(
+      geometry!.annTop + geometry!.annHeight * 0.45
+    );
+    expect(geometry!.closeCenterX).toBeGreaterThanOrEqual(geometry!.annRight - 56);
+
+    await closeBtn.click();
+    await expect(annotation).toBeHidden();
+
+    await page.evaluate(() => {
+      const el = document.querySelector<HTMLDivElement>("#retroAnnotation");
+      if (el) el.hidden = false;
+    });
+    await expect(annotation).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(annotation).toBeHidden();
+  });
+
   test("readouts strip has accessible label", async ({ page }) => {
     const readouts = page.locator(".cp-demo__readouts");
     await expect(readouts).toHaveAttribute("aria-label", "Readouts");

@@ -320,7 +320,11 @@ test.describe("Cosmic Playground smoke", () => {
     },
     {
       slug: "parallax-distance",
-      expects: ["Parallax p (mas)", "Distance input d (pc)", "Signal-to-noise p/sigma_p"]
+      expects: [
+        "Inferred parallax p_hat (mas)",
+        "Distance true d_true (pc)",
+        "Signal-to-noise p_hat/sigma_p_hat (inferred)"
+      ]
     },
     {
       slug: "em-spectrum",
