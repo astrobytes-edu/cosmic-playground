@@ -1,0 +1,187 @@
+@import "../../shared/stub-demo.css";
+
+.cp-demo {
+  min-height: 100dvh;
+}
+
+.cp-demo__controls {
+  animation: cp-slide-up 420ms ease-out both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in 480ms ease-out both;
+}
+
+.cp-panel-body {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.control {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.control input[type="range"],
+.control select {
+  width: 100%;
+}
+
+.control__value {
+  font-family: var(--cp-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.85rem;
+  color: var(--cp-text);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--cp-muted);
+  font-size: 0.9rem;
+}
+
+.stage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.viz-card {
+  border: 1px solid color-mix(in srgb, var(--cp-border) 80%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--cp-bg1) 88%, transparent);
+  padding: 0.8rem;
+  min-height: 280px;
+}
+
+.viz-card header {
+  margin-bottom: 0.5rem;
+}
+
+.viz-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--cp-text);
+}
+
+.viz-card .cp-muted {
+  margin: 0.2rem 0 0;
+}
+
+#galaxyView {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: block;
+}
+
+#rotationCanvas {
+  width: 100%;
+  min-height: 300px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 80%, transparent);
+  background: color-mix(in srgb, var(--cp-bg0) 86%, transparent);
+}
+
+.readout-grid {
+  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.cp-readout {
+  border: 1px solid color-mix(in srgb, var(--cp-border) 72%, transparent);
+  background: color-mix(in srgb, var(--cp-bg1) 82%, transparent);
+  border-radius: 12px;
+  padding: 0.5rem 0.55rem;
+  display: grid;
+  gap: 0.12rem;
+}
+
+.cp-readout__label {
+  color: var(--cp-muted);
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+
+.cp-readout__unit {
+  color: var(--cp-accent-ice);
+  font-size: 0.72rem;
+  opacity: 0.9;
+}
+
+.challenge-panel {
+  margin-top: 0.2rem;
+}
+
+.challenge-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.copy-lock-hint {
+  color: color-mix(in srgb, var(--cp-accent) 60%, var(--cp-text));
+}
+
+.understand-panel .understand-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.understand-card h3 {
+  margin-top: 0;
+}
+
+.understand-equation {
+  overflow-x: auto;
+}
+
+.cp-demo__drawer {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--cp-border) 80%, transparent);
+  background: color-mix(in srgb, var(--cp-bg1) 90%, transparent);
+}
+
+.cp-demo__drawer h2 {
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1200px) {
+  .stage-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .readout-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .readout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .understand-panel .understand-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #rotationCanvas {
+    min-height: 240px;
+  }
+}

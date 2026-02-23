@@ -10,6 +10,7 @@ const DEMOS = [
   "eclipse-geometry",
   "em-spectrum",
   "eos-lab",
+  "galaxy-rotation",
   "keplers-laws",
   "moon-phases",
   "parallax-distance",

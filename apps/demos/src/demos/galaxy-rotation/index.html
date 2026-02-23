@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Galaxy Rotation Curves — Cosmic Playground</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
+  </head>
+  <body>
+    <div id="cp-demo" class="cp-layer-instrument cp-demo" data-shell="viz-first" aria-label="Galaxy rotation instrument">
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Galaxy Rotation Curves</div>
+        <div class="cp-panel-body">
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"></rect>
+                <line x1="7" y1="7" x2="13" y2="7"></line>
+                <line x1="7" y1="10" x2="13" y2="10"></line>
+                <line x1="7" y1="13" x2="10" y2="13"></line>
+              </svg>
+            </button>
+            <button id="help" class="cp-utility-btn" type="button" aria-label="Help and shortcuts" title="Help / keys">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"></circle>
+                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"></path>
+                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"></circle>
+              </svg>
+            </button>
+            <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"></circle>
+                  <circle cx="10" cy="10" r="1.5"></circle>
+                  <circle cx="16" cy="10" r="1.5"></circle>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/galaxy-rotation/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/galaxy-rotation/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/galaxy-rotation/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
+          </div>
+
+          <p class="cp-muted">
+            Build a galaxy mass model and compare observed flat rotation curves to Keplerian decline from visible matter.
+          </p>
+
+          <label class="control" for="presetSelect">
+            <span>Galaxy preset</span>
+            <select id="presetSelect">
+              <option value="milky-way-like">Milky Way-like</option>
+              <option value="dwarf-galaxy">Dwarf galaxy</option>
+              <option value="massive-spiral">Massive spiral</option>
+              <option value="no-dark-matter">No dark matter</option>
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+
+          <label class="control" for="haloMassSlider">
+            <span>Dark halo mass ($\times 10^{10}\,M_\odot$)</span>
+            <input id="haloMassSlider" type="range" min="0" max="200" step="0.5" value="110" />
+            <span class="control__value"><span id="haloMassSliderValue">110.0</span></span>
+          </label>
+
+          <label class="control" for="haloScaleSlider">
+            <span>Halo scale radius (kpc)</span>
+            <input id="haloScaleSlider" type="range" min="5" max="50" step="0.1" value="21.5" />
+            <span class="control__value"><span id="haloScaleSliderValue">21.5</span></span>
+          </label>
+
+          <label class="control" for="diskMassSlider">
+            <span>Disk mass ($\times 10^{10}\,M_\odot$)</span>
+            <input id="diskMassSlider" type="range" min="0.1" max="20" step="0.1" value="4.3" />
+            <span class="control__value"><span id="diskMassSliderValue">4.3</span></span>
+          </label>
+
+          <label class="control" for="diskScaleSlider">
+            <span>Disk scale length (kpc)</span>
+            <input id="diskScaleSlider" type="range" min="1" max="10" step="0.1" value="2.6" />
+            <span class="control__value"><span id="diskScaleSliderValue">2.6</span></span>
+          </label>
+
+          <label class="control" for="bulgeMassSlider">
+            <span>Bulge mass ($\times 10^{10}\,M_\odot$)</span>
+            <input id="bulgeMassSlider" type="range" min="0" max="5" step="0.05" value="0.8" />
+            <span class="control__value"><span id="bulgeMassSliderValue">0.8</span></span>
+          </label>
+
+          <label class="control" for="bulgeScaleSlider">
+            <span>Bulge scale radius (kpc)</span>
+            <input id="bulgeScaleSlider" type="range" min="0.1" max="2" step="0.05" value="0.3" />
+            <span class="control__value"><span id="bulgeScaleSliderValue">0.3</span></span>
+          </label>
+
+          <label class="control" for="radiusSlider">
+            <span>Radius marker $R$ (kpc)</span>
+            <input id="radiusSlider" type="range" min="0.5" max="50" step="0.1" value="10" />
+            <span class="control__value"><span id="radiusSliderValue">10.0</span></span>
+          </label>
+
+          <div class="cp-chip-group" role="radiogroup" aria-label="Plot mode">
+            <button id="plotVelocity" class="cp-chip" role="radio" aria-checked="true" type="button">Velocity $V(R)$</button>
+            <button id="plotMass" class="cp-chip" role="radio" aria-checked="false" type="button">Enclosed mass $M(&lt;R)$</button>
+          </div>
+
+          <label class="check">
+            <input id="showKeplerian" type="checkbox" checked />
+            Show Keplerian reference
+          </label>
+          <label class="check">
+            <input id="showDisk" type="checkbox" />
+            Show disk contribution
+          </label>
+          <label class="check">
+            <input id="showBulge" type="checkbox" />
+            Show bulge contribution
+          </label>
+          <label class="check">
+            <input id="showHalo" type="checkbox" />
+            Show halo contribution
+          </label>
+          <label class="check">
+            <input id="showMond" type="checkbox" />
+            Show MOND comparison
+          </label>
+          <label class="check">
+            <input id="insetToggle" type="checkbox" checked />
+            Show solar-system normalized inset
+          </label>
+
+          <button id="challengeModeBtn" class="cp-button cp-button--outline" type="button">Mystery Curve Challenge</button>
+          <div id="challengePanel" class="cp-notice challenge-panel" hidden>
+            <p id="challengePrompt" class="cp-muted">Guess the hidden preset and whether the outer curve is flat or Keplerian.</p>
+            <label class="control" for="challengeGuessPreset">
+              <span>Preset guess</span>
+              <select id="challengeGuessPreset">
+                <option value="milky-way-like">Milky Way-like</option>
+                <option value="dwarf-galaxy">Dwarf galaxy</option>
+                <option value="massive-spiral">Massive spiral</option>
+                <option value="no-dark-matter">No dark matter</option>
+              </select>
+            </label>
+            <div class="cp-chip-group" role="radiogroup" aria-label="Outer behavior guess">
+              <button id="guessFlat" class="cp-chip" role="radio" aria-checked="true" type="button">Flat</button>
+              <button id="guessKeplerian" class="cp-chip" role="radio" aria-checked="false" type="button">Keplerian decline</button>
+            </div>
+            <div class="challenge-actions">
+              <button id="checkChallenge" class="cp-button cp-button--outline" type="button">Check answer</button>
+              <button id="copyChallengeEvidence" class="cp-button cp-button--outline" type="button" hidden>Copy challenge evidence</button>
+              <button id="challengeHint" class="cp-button cp-button--outline" type="button">Hint</button>
+              <button id="endChallenge" class="cp-button cp-button--ghost" type="button">End challenge</button>
+            </div>
+          </div>
+
+          <p id="copyLockHint" class="cp-muted copy-lock-hint" hidden>
+            Copy Results is locked until you check or end the mystery challenge.
+          </p>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </aside>
+
+      <section class="cp-demo__stage cp-stage" aria-label="Visualization stage">
+        <canvas class="cp-starfield" aria-hidden="true"></canvas>
+        <div class="cp-tabs stage-tabs" role="tablist" aria-label="View mode">
+          <button class="cp-tab" role="tab" aria-selected="true" aria-controls="panel-explore" id="tab-explore">Explore</button>
+          <button class="cp-tab" role="tab" aria-selected="false" aria-controls="panel-understand" id="tab-understand">Understand</button>
+        </div>
+
+        <div class="cp-tab-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
+          <div class="stage-grid">
+            <article class="viz-card galaxy-card">
+              <header>
+                <h3>Galaxy schematic with slit</h3>
+                <p class="cp-muted">Face-on pedagogical view. Published curves are inclination-corrected intrinsic $V(R)$.</p>
+              </header>
+              <svg id="galaxyView" viewBox="0 0 600 600" role="img" aria-label="Galaxy schematic with slit and radius marker"></svg>
+            </article>
+
+            <article class="viz-card curve-card">
+              <header>
+                <h3>Rotation and mass curves</h3>
+                <p class="cp-muted">Compare total, visible-only Keplerian, components, and optional MOND prediction.</p>
+              </header>
+              <canvas id="rotationCanvas" role="img" aria-label="Rotation curve showing velocity versus radius for galaxy model"></canvas>
+              <p id="plotAria" class="sr-only">
+                Rotation curve showing velocity versus radius for the currently selected galaxy preset.
+              </p>
+            </article>
+          </div>
+
+          <section class="readout-grid" aria-label="Readouts">
+            <div class="cp-readout"><span class="cp-readout__label">Radius</span><span id="radiusValue">10.0</span><span class="cp-readout__unit">kpc</span></div>
+            <div class="cp-readout"><span class="cp-readout__label">Total velocity $V(R)$</span><span id="vTotalValue">0.0</span><span class="cp-readout__unit">km/s</span></div>
+            <div class="cp-readout"><span class="cp-readout__label">Keplerian velocity</span><span id="vKeplerianValue">0.0</span><span class="cp-readout__unit">km/s</span></div>
+            <div class="cp-readout"><span class="cp-readout__label">Enclosed mass $M(&lt;R)$</span><span id="mEnclosedValue">0.0</span><span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
+            <div class="cp-readout"><span class="cp-readout__label">Visible mass $M_{\rm vis}$</span><span id="mVisibleValue">0.0</span><span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
+            <div class="cp-readout"><span class="cp-readout__label">Dark mass $M_{\rm dark}$</span><span id="mDarkValue">0.0</span><span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
+            <div class="cp-readout"><span class="cp-readout__label">Dark-to-visible ratio</span><span id="darkVisRatioValue">0.0</span><span class="cp-readout__unit">1</span></div>
+            <div class="cp-readout"><span class="cp-readout__label">Baryon fraction $f_b$</span><span id="baryonFracValue">0.0</span><span class="cp-readout__unit">1</span></div>
+            <div class="cp-readout"><span class="cp-readout__label">21-cm Doppler shift</span><span id="deltaLambda21Value">0.0</span><span class="cp-readout__unit">mm</span></div>
+            <div class="cp-readout"><span class="cp-readout__label">Concentration $c$</span><span id="concValue">0.0</span><span class="cp-readout__unit">1</span></div>
+            <div class="cp-readout"><span class="cp-readout__label">Virial radius $R_{\rm vir}$</span><span id="rVirValue">0.0</span><span class="cp-readout__unit">kpc</span></div>
+          </section>
+        </div>
+
+        <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
+          <div class="cp-notice understand-intro">
+            <h3>Core equations</h3>
+            <p>Dark matter evidence appears when observed $V(R)$ stays flat where visible-mass-only Keplerian prediction declines.</p>
+          </div>
+          <div class="understand-grid">
+            <article class="cp-notice understand-card">
+              <h3>Quadrature composition</h3>
+              <p class="understand-equation">$$V_{\rm total}(R)=\sqrt{V_{\rm bulge}^2+V_{\rm disk}^2+V_{\rm halo}^2}$$</p>
+            </article>
+            <article class="cp-notice understand-card">
+              <h3>Dark matter inference</h3>
+              <p class="understand-equation">$$M_{\rm dark}(&lt;R)=\frac{V_{\rm obs}^2R}{G}-M_{\rm vis}(&lt;R)$$</p>
+            </article>
+            <article class="cp-notice understand-card">
+              <h3>Keplerian benchmark</h3>
+              <p class="understand-equation">$$V_{\rm Kep}(R)\propto R^{-1/2} \quad (R\gg R_d)$$</p>
+            </article>
+            <article class="cp-notice understand-card">
+              <h3>MOND comparison</h3>
+              <p class="understand-equation">$$V_{\rm MOND}\approx\left(G\,M_{\rm vis}\,a_0\right)^{1/4}$$</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="cp-demo__drawer cp-panel" aria-label="Understand panel">
+        <h2>Dark Matter Across Scales</h2>
+        <p>
+          Rotation curves are one line of evidence. Cluster dynamics, lensing offsets (Bullet Cluster), and CMB structure all indicate that most matter is non-luminous.
+        </p>
+      </section>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

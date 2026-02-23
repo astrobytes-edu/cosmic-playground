@@ -6,6 +6,14 @@ export { ConservationLawsModel } from "./conservationLawsModel";
 export { DopplerShiftModel } from "./dopplerShiftModel";
 export type { DopplerRegimeLabel, ShiftLineInput, ShiftLineResult } from "./dopplerShiftModel";
 export { EclipseGeometryModel } from "./eclipseGeometryModel";
+export { GalaxyRotationModel } from "./galaxyRotationModel";
+export type {
+  EnclosedMass10,
+  GalaxyParams,
+  GalaxyPresetKey,
+  NfwDerived,
+  RotationCurvePoint
+} from "./galaxyRotationModel";
 export { KeplersLawsModel } from "./keplersLawsModel";
 export { MoonPhasesModel } from "./moonPhasesModel";
 export { ParallaxDistanceModel } from "./parallaxDistanceModel";
