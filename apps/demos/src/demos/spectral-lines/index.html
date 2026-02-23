@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spectral Lines &amp; the Bohr Atom — Cosmic Playground</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
+  </head>
+  <body>
+    <div
+      id="cp-demo"
+      class="cp-layer-instrument cp-demo"
+      aria-label="Spectral Lines instrument"
+    >
+      <!-- ─── Controls sidebar ──────────────────────────────── -->
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Spectral Lines &amp; the Bohr Atom</div>
+        <div class="cp-panel-body">
+          <p class="cp-muted">Explore how atoms produce light at specific wavelengths through quantum energy-level transitions.</p>
+
+          <!-- Sidebar tabs: Hydrogen / Elements -->
+          <div class="cp-chip-group sidebar-tabs" role="tablist" aria-label="Element mode">
+            <button class="cp-chip" role="tab" aria-selected="true"
+                    aria-controls="sidebar-hydrogen" id="sidebar-tab-H" type="button">Hydrogen</button>
+            <button class="cp-chip" role="tab" aria-selected="false"
+                    aria-controls="sidebar-elements" id="sidebar-tab-elem" type="button">Elements</button>
+          </div>
+
+          <!-- ── Hydrogen controls ── -->
+          <div id="sidebar-hydrogen" role="tabpanel" aria-labelledby="sidebar-tab-H">
+            <div class="cp-chip-group" role="radiogroup" aria-label="Transition mode">
+              <button id="modeEmission" class="cp-chip" role="radio" aria-checked="true" type="button">Emission</button>
+              <button id="modeAbsorption" class="cp-chip" role="radio" aria-checked="false" type="button">Absorption</button>
+            </div>
+
+            <label class="control">
+              <span>Upper level $n_{\text{upper}}$</span>
+              <input
+                id="nUpperSlider"
+                type="range"
+                min="2" max="8" step="1" value="3"
+                aria-label="Upper quantum number"
+              />
+              <span class="control__value"><span id="nUpperValue">3</span></span>
+            </label>
+
+            <label class="control">
+              <span>Lower level $n_{\text{lower}}$</span>
+              <input
+                id="nLowerSlider"
+                type="range"
+                min="1" max="7" step="1" value="2"
+                aria-label="Lower quantum number"
+              />
+              <span class="control__value"><span id="nLowerValue">2</span></span>
+            </label>
+
+            <div class="presets">
+              <div class="presets__label">Series</div>
+              <div class="cp-chip-group--grid presets__row" role="group" aria-label="Series filter">
+                <button class="cp-chip series-chip" data-series="all" type="button" aria-pressed="true">All</button>
+                <button class="cp-chip series-chip" data-series="1" type="button" aria-pressed="false">Lyman</button>
+                <button class="cp-chip series-chip" data-series="2" type="button" aria-pressed="false">Balmer</button>
+                <button class="cp-chip series-chip" data-series="3" type="button" aria-pressed="false">Paschen</button>
+                <button class="cp-chip series-chip" data-series="4" type="button" aria-pressed="false">Brackett</button>
+              </div>
+            </div>
+
+            <div class="presets">
+              <div class="presets__label">Named lines</div>
+              <div class="cp-chip-group--grid presets__row presets__row--3col" role="group" aria-label="Named line presets">
+                <button class="cp-chip preset" data-n-upper="3" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\alpha$</button>
+                <button class="cp-chip preset" data-n-upper="4" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\beta$</button>
+                <button class="cp-chip preset" data-n-upper="5" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\gamma$</button>
+                <button class="cp-chip preset" data-n-upper="6" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\delta$</button>
+                <button class="cp-chip preset" data-n-upper="2" data-n-lower="1" type="button" aria-pressed="false">$\text{Ly}\alpha$</button>
+                <button class="cp-chip preset" data-n-upper="4" data-n-lower="3" type="button" aria-pressed="false">$\text{Pa}\alpha$</button>
+              </div>
+            </div>
+
+            <button id="playTransition" class="cp-button cp-button--outline" type="button" aria-label="Replay transition animation">
+              ▶ Play transition
+            </button>
+          </div>
+
+          <!-- ── Elements controls ── -->
+          <div id="sidebar-elements" role="tabpanel" aria-labelledby="sidebar-tab-elem" hidden>
+            <div id="elementsStandardControls">
+              <div class="cp-chip-group--grid presets__row" role="group" aria-label="Element selector">
+                <button class="cp-chip element-chip" data-element="H" type="button" aria-pressed="true">H</button>
+                <button class="cp-chip element-chip" data-element="He" type="button" aria-pressed="false">He</button>
+                <button class="cp-chip element-chip" data-element="Na" type="button" aria-pressed="false">Na</button>
+                <button class="cp-chip element-chip" data-element="Ca" type="button" aria-pressed="false">Ca</button>
+                <button class="cp-chip element-chip" data-element="Fe" type="button" aria-pressed="false">Fe</button>
+              </div>
+
+              <div class="cp-chip-group" role="radiogroup" aria-label="Transition mode (elements)">
+                <button id="elemModeEmission" class="cp-chip" role="radio" aria-checked="true" type="button">Emission</button>
+                <button id="elemModeAbsorption" class="cp-chip" role="radio" aria-checked="false" type="button">Absorption</button>
+              </div>
+
+              <label class="check">
+                <input id="showHComparison" type="checkbox" />
+                Show H Balmer lines for comparison
+              </label>
+            </div>
+
+            <button id="mysterySpectrumBtn" class="cp-button cp-button--outline" type="button">
+              Mystery Spectrum
+            </button>
+
+            <div id="mysteryPanel" class="mystery-panel cp-notice" hidden>
+              <p id="mysteryPrompt" class="cp-muted">
+                Mystery challenge: identify the hidden element and mode from the spectrum pattern.
+              </p>
+              <p class="cp-muted mystery-loop">
+                Predict -> check -> explain: commit to a guess, check it, then explain which line pattern convinced you.
+              </p>
+              <label class="control" for="mysteryGuessElement">
+                <span>Element guess</span>
+                <select id="mysteryGuessElement">
+                  <option value="H">H</option>
+                  <option value="He">He</option>
+                  <option value="Na">Na</option>
+                  <option value="Ca">Ca</option>
+                  <option value="Fe">Fe</option>
+                </select>
+              </label>
+              <div class="cp-chip-group" role="radiogroup" aria-label="Mystery mode guess">
+                <button id="guessModeEmission" class="cp-chip" role="radio" aria-checked="true" type="button">Guess emission</button>
+                <button id="guessModeAbsorption" class="cp-chip" role="radio" aria-checked="false" type="button">Guess absorption</button>
+              </div>
+              <div class="mystery-actions">
+                <button id="checkMysteryAnswer" class="cp-button cp-button--outline" type="button">Check answer</button>
+                <button id="mysteryHint" class="cp-button cp-button--outline" type="button">Hint</button>
+                <button id="exitMystery" class="cp-button cp-button--ghost" type="button">End mystery</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Readouts (always visible) ── -->
+          <div class="readout-group">
+            <div class="cp-readout">
+              <div id="readoutTransitionLabel" class="cp-readout__label">Transition</div>
+              <div class="cp-readout__value"><span id="readoutTransition">$n = 3 \to n = 2$</span></div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Wavelength $\lambda$</div>
+              <div class="cp-readout__value">
+                <span id="readoutWavelength">656.1</span>
+                <span class="cp-readout__unit">nm</span>
+              </div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Energy $E_\gamma$</div>
+              <div class="cp-readout__value">
+                <span id="readoutEnergy">1.89</span>
+                <span class="cp-readout__unit">eV</span>
+              </div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Frequency $\nu$</div>
+              <div class="cp-readout__value">
+                <span id="readoutFrequency">4.57e14</span>
+                <span class="cp-readout__unit">Hz</span>
+              </div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Series</div>
+              <div class="cp-readout__value"><span id="readoutSeries">Balmer</span></div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Band</div>
+              <div class="cp-readout__value"><span id="readoutBand">Visible (red)</span></div>
+            </div>
+          </div>
+
+          <!-- ── Utility toolbar ── -->
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"></rect>
+                <line x1="7" y1="7" x2="13" y2="7"></line>
+                <line x1="7" y1="10" x2="13" y2="10"></line>
+                <line x1="7" y1="13" x2="10" y2="13"></line>
+              </svg>
+            </button>
+            <button id="help" class="cp-utility-btn" type="button" aria-label="Help and shortcuts" title="Help / keys">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"></circle>
+                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"></path>
+                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"></circle>
+              </svg>
+            </button>
+            <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"></circle>
+                  <circle cx="10" cy="10" r="1.5"></circle>
+                  <circle cx="16" cy="10" r="1.5"></circle>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/spectral-lines/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/spectral-lines/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/spectral-lines/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
+          </div>
+          <p id="copyLockHint" class="cp-muted copy-lock-hint" hidden>
+            Copy Results is locked until you check or end the mystery challenge.
+          </p>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </aside>
+
+      <!-- ─── Main stage ────────────────────────────────────── -->
+      <section class="cp-demo__stage cp-stage" aria-label="Visualization stage">
+        <canvas class="cp-starfield" aria-hidden="true"></canvas>
+        <div class="cp-tabs stage-tabs" role="tablist" aria-label="View mode">
+          <button class="cp-tab" role="tab" aria-selected="true"
+                  aria-controls="panel-explore" id="tab-explore">Explore</button>
+          <button class="cp-tab" role="tab" aria-selected="false"
+                  aria-controls="panel-understand" id="tab-understand">Understand</button>
+        </div>
+
+        <!-- ── Explore tab ── -->
+        <div class="cp-tab-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
+          <div class="explore-layout">
+            <!-- Bohr atom + energy-level diagram -->
+            <div id="hydrogenVizTop" class="viz-top">
+              <div class="bohr-container">
+                <svg id="bohrAtom" viewBox="0 0 400 400"
+                     role="img" aria-label="Bohr model of the hydrogen atom showing concentric electron orbits">
+                </svg>
+                <div id="orbitTooltip" class="orbit-tooltip" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+              </div>
+              <div class="energy-container">
+                <svg id="energyLevels" viewBox="0 0 220 400"
+                     role="img" aria-label="Energy-level diagram showing quantized hydrogen energy states">
+                </svg>
+              </div>
+            </div>
+            <!-- Spectrum strip -->
+            <div class="spectrum-container">
+              <canvas id="spectrumCanvas"
+                      role="img"
+                      aria-label="Spectrum strip showing emission or absorption lines at specific wavelengths">
+              </canvas>
+            </div>
+            <div id="elementsGuidance" class="cp-notice elements-guidance" hidden>
+              <h3>Elements tab uses empirical spectra</h3>
+              <p>
+                These line patterns are measured catalog data. The Bohr ladder in this demo applies to hydrogen only, not to multi-electron atoms.
+              </p>
+              <p>
+                Use pattern matching: compare strongest lines and spacing to identify element fingerprints.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Understand tab ── -->
+        <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
+          <div class="cp-notice understand-intro">
+            <h3>The Bohr Model of Hydrogen</h3>
+            <p>
+              Niels Bohr (1913) proposed that electrons in hydrogen orbit the nucleus at discrete energy levels.
+              Transitions between levels emit or absorb photons of exact energies — producing spectral lines.
+            </p>
+          </div>
+
+          <div class="understand-grid">
+            <article class="cp-notice understand-card">
+              <h3>Quantized Energy Levels</h3>
+              <p class="understand-equation">
+                $$E_n = -\frac{13.6\ \text{eV}}{n^2}$$
+              </p>
+              <ul>
+                <li>Energy is <em>negative</em> for bound states because we set $E=0$ at infinite separation (free electron + proton).</li>
+                <li>$n=\infty$ is the ionization limit: the electron is no longer bound and the level energy is exactly $0\ \text{eV}$.</li>
+                <li>Levels get closer together as $n$ increases — this is why spectral series converge to a limit.</li>
+                <li>For hydrogen, the Bohr energies match the full quantum-mechanical (Schrödinger) result exactly.</li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>The Bohr Radius</h3>
+              <p class="understand-equation">
+                $$r_n = n^2\, a_0, \quad a_0 = 0.0529\ \text{nm}$$
+              </p>
+              <ul>
+                <li>The orbit radius grows as $n^2$: the $n = 3$ orbit is $9\times$ larger than $n = 1$.</li>
+                <li>The Bohr atom view on the Explore tab uses a compressed scale for visibility — labeled "not to scale."</li>
+                <li>Real electrons occupy probability clouds (orbitals), not circular paths. Bohr's picture gives correct <em>energies</em>, not correct shapes.</li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>Photon Emission &amp; Absorption</h3>
+              <p class="understand-equation">
+                $$E_\gamma = h\nu = \frac{hc}{\lambda} = 13.6\ \text{eV}\left(\frac{1}{n_{\text{lower}}^2} - \frac{1}{n_{\text{upper}}^2}\right)$$
+              </p>
+              <ul>
+                <li><strong>Emission:</strong> electron drops from $n_{\text{upper}}$ to $n_{\text{lower}}$; photon carries away exactly $\Delta E$.</li>
+                <li><strong>Absorption:</strong> photon with exactly $\Delta E$ is absorbed; electron jumps up. Photons with wrong energy pass through.</li>
+                <li>Emission and absorption occur at the same $\Delta E$ values: bright lines vs. dark dips at identical wavelengths.</li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>The Rydberg Formula</h3>
+              <p class="understand-equation">
+                $$\frac{1}{\lambda} = R_\infty \left(\frac{1}{n_{\text{lower}}^2} - \frac{1}{n_{\text{upper}}^2}\right), \quad R_\infty = 1.097 \times 10^7\ \text{m}^{-1}$$
+              </p>
+              <ul>
+                <li>Discovered <em>empirically</em> by Rydberg (1888) — 25 years before Bohr explained it.</li>
+                <li>As $n_{\text{upper}} \to \infty$, we reach the <strong>series limit</strong>: the shortest wavelength in a series and the ionization boundary for that lower level.</li>
+                <li>The Balmer series limit (364.6 nm) is where Balmer lines pile up and merge into the continuum.</li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>Spectral Series of Hydrogen</h3>
+              <p class="understand-equation">
+                $$\text{Lyman:}\ n_{\text{lower}} = 1\ (\text{UV}), \quad \text{Balmer:}\ n_{\text{lower}} = 2\ (\text{visible}), \quad \text{Paschen:}\ n_{\text{lower}} = 3\ (\text{IR})$$
+              </p>
+              <ul>
+                <li>Each series is named for $n_{\text{lower}}$ — the level the electron falls <em>to</em> (emission) or jumps <em>from</em> (absorption).</li>
+                <li>Only the Balmer series falls primarily in visible light — explaining why hydrogen glows red ($\text{H}\alpha$ at 656 nm).</li>
+                <li>The Lyman series is even stronger but falls in the UV, invisible to our eyes.</li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>Why Other Elements Have Different Lines</h3>
+              <p class="understand-equation">
+                $$\text{Each element} \longrightarrow \text{unique energy levels} \longrightarrow \text{unique spectral fingerprint}$$
+              </p>
+              <ul>
+                <li>Multi-electron atoms have more complex energy-level structures due to electron-electron interactions.</li>
+                <li>Each element produces a unique line pattern — a "spectral fingerprint."</li>
+                <li>Astronomers identify elements in distant stars by matching observed lines against laboratory reference spectra.</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="cp-notice understand-callout" role="note" aria-label="Bohr model caveat">
+            <strong>Do electrons really orbit like planets?</strong>
+            The Bohr model gives correct <em>energies</em> for hydrogen but incorrect spatial pictures.
+            Real electrons exist in probability clouds (orbitals), not circular paths.
+            We use Bohr's picture because it builds correct energy-level intuition — but it is a stepping stone, not the final answer.
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Drawer ────────────────────────────────────────── -->
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">3 bullets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>As $n_{\text{upper}}$ increases within a series, the lines get closer together — converging to the series limit.</li>
+                <li>Emission and absorption lines appear at the same wavelengths: bright lines vs. dark dips on a continuum.</li>
+                <li>Each element's line pattern is unique — this is how astronomers identify elements across the universe.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">Bohr + NIST</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Hydrogen energy levels are computed from the Bohr formula: $E_n = -13.6\ \text{eV} / n^2$ (exact for hydrogen).</li>
+                <li>Negative energies are bound states: the reference $E=0$ is a free electron and proton at infinite separation.</li>
+                <li>$n=\infty$ is the ionization limit, where the electron is no longer bound and $E_{\infty}=0$.</li>
+                <li>Wavelengths are vacuum wavelengths via $\lambda = hc / \Delta E$ with $hc = 1239.8\ \text{eV·nm}$.</li>
+                <li>Multi-element line data from the NIST Atomic Spectra Database (strongest lines only).</li>
+                <li>Bohr atom radii in the visualization use a compressed display scale (labeled "not to scale").</li>
+                <li>Line widths in the spectrum strip are for display only (fixed Gaussian, not physical broadening).</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

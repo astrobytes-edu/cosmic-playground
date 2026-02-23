@@ -10,6 +10,8 @@ export { ParallaxDistanceModel } from "./parallaxDistanceModel";
 export { PhotonModel } from "./photonModel";
 export { RetrogradeMotionModel } from "./retrogradeMotionModel";
 export { SeasonsModel } from "./seasonsModel";
+export { SpectralLineModel } from "./spectralLineModel";
+export type { TransitionRecord, ElementLineData, ElementLineEntry } from "./spectralLineModel";
 export { StellarEosModel } from "./stellarEosModel";
 export type {
   AdditionalPressureTerm,

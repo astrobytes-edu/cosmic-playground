@@ -1,0 +1,318 @@
+@import "../../shared/stub-demo.css";
+
+/* ── Layout ──────────────────────────────────────────────── */
+
+.control {
+  display: grid;
+  gap: 8px;
+}
+
+.control__value {
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.check {
+  display: flex;
+  gap: var(--cp-space-2);
+  align-items: center;
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.check input[type="checkbox"] {
+  accent-color: var(--cp-accent);
+}
+
+.mystery-panel {
+  display: grid;
+  gap: var(--cp-space-2);
+  margin-top: var(--cp-space-2);
+}
+
+.mystery-loop {
+  margin: 0;
+}
+
+.mystery-panel select {
+  width: 100%;
+  border-radius: var(--cp-r-2);
+  border: 1px solid var(--cp-border);
+  background: var(--cp-bg1);
+  color: var(--cp-text);
+  padding: 0.42rem 0.5rem;
+}
+
+.mystery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-2);
+}
+
+.copy-lock-hint {
+  margin: var(--cp-space-1) 0 0;
+}
+
+.presets {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.presets__label {
+  color: var(--cp-muted);
+  font-size: 0.9rem;
+}
+
+.presets__row {
+  display: grid;
+  gap: var(--cp-space-1);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.presets__row--3col {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.sidebar-tabs {
+  margin-bottom: var(--cp-space-1);
+}
+
+.readout-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--cp-space-2);
+}
+
+/* ── Stage layout ────────────────────────────────────────── */
+
+.stage-tabs {
+  padding: var(--cp-space-2) var(--cp-space-2) 0;
+}
+
+.explore-layout {
+  display: grid;
+  gap: var(--cp-space-3);
+  padding: var(--cp-space-3);
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.viz-top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--cp-space-3);
+  align-items: stretch;
+}
+
+.explore-layout--mystery .viz-top,
+.explore-layout--elements .viz-top {
+  display: none;
+}
+
+/* ── Bohr atom container ─────────────────────────────────── */
+
+.bohr-container {
+  display: grid;
+  place-items: center;
+  background: var(--cp-instr-panel-bg);
+  backdrop-filter: blur(8px);
+  border-radius: var(--cp-r-3);
+  border: 1px solid var(--cp-border);
+  padding: var(--cp-space-3);
+  min-height: 320px;
+  position: relative;
+}
+
+.bohr-container svg {
+  width: 100%;
+  height: auto;
+  max-width: 400px;
+}
+
+.orbit-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: var(--cp-r-2);
+  border: 1px solid var(--cp-border);
+  background: color-mix(in srgb, var(--cp-bg1) 94%, transparent);
+  color: var(--cp-text);
+  font-size: var(--cp-text-xs);
+  padding: 0.3rem 0.45rem;
+  max-width: 180px;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--cp-bg0) 65%, transparent);
+}
+
+.bohr-scale-label {
+  position: absolute;
+  bottom: 6px;
+  right: 10px;
+  color: var(--cp-muted);
+  font-size: var(--cp-text-xs);
+  opacity: 0.6;
+}
+
+/* ── Energy-level diagram container ──────────────────────── */
+
+.energy-container {
+  display: grid;
+  place-items: center;
+  background: var(--cp-instr-panel-bg);
+  backdrop-filter: blur(8px);
+  border-radius: var(--cp-r-3);
+  border: 1px solid var(--cp-border);
+  padding: var(--cp-space-2) var(--cp-space-3);
+  min-height: 320px;
+  min-width: 200px;
+}
+
+.energy-container svg {
+  width: 100%;
+  height: auto;
+  max-width: 220px;
+}
+
+/* ── Spectrum strip ──────────────────────────────────────── */
+
+.spectrum-container {
+  width: 100%;
+}
+
+.elements-guidance {
+  margin-top: var(--cp-space-2);
+}
+
+.elements-guidance h3 {
+  margin: 0 0 var(--cp-space-2);
+}
+
+.elements-guidance p {
+  margin: 0;
+}
+
+.elements-guidance p + p {
+  margin-top: var(--cp-space-2);
+}
+
+#spectrumCanvas {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 3;
+  display: block;
+  border-radius: var(--cp-r-2);
+  border: 1px solid var(--cp-border);
+  background: var(--cp-bg0);
+}
+
+/* ── Understand tab ──────────────────────────────────────── */
+
+.understand-panel {
+  padding: var(--cp-space-2) var(--cp-space-2) var(--cp-space-3);
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.understand-intro p {
+  margin: var(--cp-space-2) 0 0;
+}
+
+.understand-grid {
+  display: grid;
+  gap: var(--cp-space-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.understand-card {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.understand-card h3 {
+  margin: 0;
+}
+
+.understand-equation {
+  margin: 0;
+}
+
+.understand-card ul {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: var(--cp-space-1);
+}
+
+.understand-callout {
+  margin: 0;
+}
+
+@media (max-width: 880px) {
+  .understand-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Photon animation ────────────────────────────────────── */
+
+.photon-glow {
+  filter: drop-shadow(var(--cp-glow-accent-teal));
+}
+
+.photon-glow--emission {
+  animation: cp-glow-pulse 1.2s ease-in-out;
+}
+
+/* ── Active transition highlight ─────────────────────────── */
+
+.orbit-active {
+  stroke: var(--cp-accent-amber);
+  stroke-width: 2;
+}
+
+.orbit-selectable {
+  cursor: pointer;
+}
+
+.orbit-selectable:focus-visible {
+  outline: none;
+  stroke: var(--cp-accent-ice);
+  stroke-width: 2.4;
+  opacity: 1;
+}
+
+.energy-level-active {
+  stroke: var(--cp-accent-amber);
+  stroke-width: 2.5;
+}
+
+/* ── Grid override: include readouts alongside sidebar ──── */
+
+.cp-demo {
+  grid-template-areas:
+    "sidebar viz"
+    "sidebar shelf";
+}
+
+/* ── Entry animations ────────────────────────────────────── */
+
+.cp-demo__controls {
+  animation: cp-slide-up 0.6s var(--cp-ease-out);
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in 0.8s var(--cp-ease-out) 0.1s backwards;
+}
+
+.cp-demo__drawer {
+  animation: cp-fade-in 0.8s var(--cp-ease-out) 0.3s backwards;
+}
+
+@media (max-width: 700px) {
+  .viz-top {
+    grid-template-columns: 1fr;
+  }
+  .readout-group {
+    grid-template-columns: 1fr;
+  }
+}
