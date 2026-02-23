@@ -25,3 +25,9 @@ last_updated: "2026-02-23"
 
 - Add optional CSV worksheet export from station-mode rows.
 - Add side-by-side challenge history panel for rapid repeated practice rounds.
+
+## P3 (optional polish from post-push audit)
+
+- Add a subtle regime marker on the redshift slider showing where non-relativistic error exceeds 5%.
+- Add an optional "show representative-line rule" helper chip to explain visible-line anchoring in one click.
+- Add a one-step "copy challenge evidence" helper for instructor debrief workflows.
