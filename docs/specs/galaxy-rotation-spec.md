@@ -122,6 +122,36 @@ The central scientific graphic. A standard Cartesian plot with a **toggle** betw
 
 **The "aha" moment**: with the halo slider at zero, the observed curve drops off (Keplerian). As students increase the dark halo mass, the curve flattens out to match real observations. They are literally adding dark matter to make the physics work.
 
+##### Normalized comparison inset: Solar System vs. Galaxy
+
+A small inset panel (top-right corner of the rotation curve plot, ~200×150 px) shows a **normalized** comparison:
+
+**Axes**:
+- Horizontal: $R / R_{\rm ref}$ (dimensionless), range 0–6
+- Vertical: $V / V_{\rm ref}$ (dimensionless), range 0–1.5
+
+**Curves**:
+- **Solar System** (orange dots with Keplerian fit): actual planet velocities normalized to Earth ($R_{\rm ref} = 1$ AU, $V_{\rm ref} = 29.8$ km/s). Mercury through Neptune follow $V/V_{\rm ref} = (R/R_{\rm ref})^{-1/2}$ almost exactly — a textbook Keplerian system.
+- **Galaxy** (amber line): current galaxy model normalized at $R_{\rm ref} = 8.2$ kpc (solar circle), $V_{\rm ref} = V(8.2)$. Stays nearly flat ($V/V_{\rm ref} \approx 0.95$–$1.0$) from $R/R_{\rm ref} = 0.5$ to $6$.
+- **$R^{-1/2}$ reference** (dashed ice): pure Keplerian falloff for comparison.
+
+**Purpose**: This inset grounds the comparison in something familiar. Students see that the solar system behaves exactly as Kepler predicts (nearly all the mass is in the Sun), while the galaxy does not. The shapes are strikingly different. The inset answers the question: "Why don't galaxies work like the solar system?"
+
+**Toggleable**: checkbox "Show solar system comparison" (default ON for ASTR 101 audience).
+
+| Planet | $R/R_\oplus$ | $V/V_\oplus$ | Keplerian $V/V_\oplus$ |
+|--------|-------------|-------------|----------------------|
+| Mercury | 0.387 | 1.607 | 1.607 |
+| Venus | 0.723 | 1.176 | 1.176 |
+| Earth | 1.000 | 1.000 | 1.000 |
+| Mars | 1.524 | 0.809 | 0.810 |
+| Jupiter | 5.203 | 0.439 | 0.438 |
+| Saturn | 9.537 | 0.325 | 0.324 |
+| Uranus | 19.19 | 0.228 | 0.228 |
+| Neptune | 30.07 | 0.182 | 0.182 |
+
+> The solar system is Keplerian to better than 0.3%. Galaxies are not. That's the dark matter problem in one picture.
+
 ##### Mode 2: Enclosed Mass — $M(<R)$ vs. $R$
 
 **Axes**:
@@ -182,6 +212,10 @@ This view shows the mass decomposition directly and makes the dark-matter domina
 - [ ] Halo contribution
 - [ ] MOND prediction
 - Default: Observed + Keplerian checked (the two essential curves for the dark matter argument)
+
+### Solar system comparison inset checkbox
+- [x] Show solar system comparison (default ON)
+- Toggles the normalized $V/V_{\rm ref}$ vs $R/R_{\rm ref}$ inset in the corner of the plot
 
 ### Plot mode toggle
 - "Velocity $V(R)$" (default) / "Enclosed mass $M(<R)$"
@@ -317,6 +351,28 @@ where $\lambda_0 = 21.106$ cm and $c = 299{,}792.458$ km/s. This readout directl
 $$f_b(R) = \frac{M_{\rm vis}(<R)}{M_{\rm total}(<R)}$$
 
 Compare to the cosmological baryon fraction $f_{b,\rm cosmic} = \Omega_b / \Omega_m \approx 0.157$ (Planck 2018).
+
+### Solar system reference data (for normalized inset)
+
+The solar system serves as the Keplerian reference. Planet orbital velocities are computed from $V = \sqrt{G_\odot M_\odot / a}$ where $a$ is the semi-major axis. All eight planets follow $V \propto R^{-1/2}$ to better than 0.3% — the cleanest Keplerian system students will encounter. The data is static (not recomputed) and normalized to Earth: $R_{\rm ref} = 1$ AU, $V_{\rm ref} = 29.78$ km/s.
+
+```typescript
+/** Solar system planet data for normalized inset. */
+const SOLAR_SYSTEM_PLANETS: Array<{
+  name: string;
+  rNorm: number;  // R / R_Earth (AU)
+  vNorm: number;  // V / V_Earth
+}> = [
+  { name: "Mercury", rNorm: 0.387, vNorm: 1.607 },
+  { name: "Venus",   rNorm: 0.723, vNorm: 1.176 },
+  { name: "Earth",   rNorm: 1.000, vNorm: 1.000 },
+  { name: "Mars",    rNorm: 1.524, vNorm: 0.809 },
+  { name: "Jupiter", rNorm: 5.203, vNorm: 0.439 },
+  { name: "Saturn",  rNorm: 9.537, vNorm: 0.325 },
+  { name: "Uranus",  rNorm: 19.19, vNorm: 0.228 },
+  { name: "Neptune", rNorm: 30.07, vNorm: 0.182 },
+];
+```
 
 ### Constants and units
 
@@ -463,7 +519,7 @@ All masses in $10^{10}\,M_\odot$.
 | 10 | NFW concentration | MW preset | $c \approx 10.7$, $R_{\rm vir} \approx 231$ kpc | ±0.5, ±5 kpc | From $H_0 = 67.4$ |
 | 11 | Dark-to-visible at 50 kpc | MW preset | $M_{\rm dark}/M_{\rm vis} \approx 7.2$ | ±0.5 | Readout check |
 | 12 | Baryon fraction at 50 kpc | MW preset | $f_b \approx 0.12$ | ±0.02 | Below cosmic $f_{b} = 0.157$ |
-| 13 | MOND at 30 kpc | MW preset visible mass | $V_{\rm MOND} \approx 175$ km/s | ±5 km/s | Deep-MOND from $M_{\rm vis} \approx 5.88$ |
+| 13 | MOND at 30 kpc | MW preset visible mass | $V_{\rm MOND} \approx 187$ km/s | ±5 km/s | Full interpolation; deep-MOND asymptote ≈ 175 km/s |
 | 14 | 21-cm shift at 200 km/s | $V = 200$ km/s | $\Delta\lambda_{21} \approx 0.141$ mm | ±0.005 mm | $\lambda_0 V / c$ |
 | 15 | Explain prompt | $V = 200$, $R = 30$ kpc | $M_{\rm total} \approx 27.9 \times 10^{10}\,M_\odot$ | ±0.5 | $V^2 R / G_{\rm galaxy}$ |
 | 16 | Dwarf dark fraction | Dwarf, $R = 10$ kpc | $M_{\rm dark}/M_{\rm vis} \approx 2.9$ | ±0.3 | Dark-dominated even at small $R$ |
@@ -505,13 +561,19 @@ V_{\rm obs}(R) = \frac{c\,\Delta\lambda}{\lambda_0\,\sin i}
 ```
 Caption: The rotation speed at each radius is measured by the Doppler shift of the 21-cm hydrogen line (or optical emission lines like H$\alpha$). The $\sin i$ correction accounts for the galaxy's inclination to our line of sight. This demo displays the intrinsic (corrected) $V(R)$, as is standard in published rotation curves.
 
-**Card 6: MOND prediction**
+**Card 6: Solar system — the Keplerian benchmark**
+```latex
+V_{\rm planet} = \sqrt{\frac{G\,M_\odot}{a}} \propto a^{-1/2}
+```
+Caption: In the solar system, nearly all the mass is in the Sun. Planet velocities follow a perfect $R^{-1/2}$ Keplerian curve — the exact behavior our galaxy models predict for visible-mass-only systems. Galaxies don't follow this pattern, which is the dark matter problem.
+
+**Card 7: MOND prediction**
 ```latex
 V_{\rm MOND} = \left(G\,M_{\rm vis}\,a_0\right)^{1/4}
 ```
 Caption: In Milgrom's Modified Newtonian Dynamics, the asymptotic (deep-MOND) velocity depends only on visible mass and the acceleration constant $a_0 \approx 1.2 \times 10^{-10}$ m/s². MOND fits many galaxy rotation curves without dark matter but faces challenges at cluster scales.
 
-**Card 7: Baryon fraction**
+**Card 8: Baryon fraction**
 ```latex
 f_b(R) = \frac{M_{\rm vis}(<R)}{M_{\rm total}(<R)} \quad ; \quad f_{b,\rm cosmic} \approx 0.157
 ```
@@ -534,13 +596,14 @@ Caption: The local baryon fraction can be compared to the cosmic average from Pl
 > Stars at the outer edge of a spiral galaxy (30 kpc from center) orbit at about the same speed as stars halfway in (15 kpc). According to Kepler's laws, if most of the galaxy's mass is concentrated in the bright central region, should the outer stars be moving faster, slower, or the same speed as the inner stars? What does it mean that they move at the same speed?
 
 ### Play steps
-1. Select **"No dark matter"** preset. Observe the rotation curve — it rises and then **falls off** at large radii. This is the Keplerian prediction.
-2. Now select **"Milky Way-like"** preset. The curve stays **flat** out to 50 kpc. Toggle ON the halo contribution to see why — the dark matter halo provides the extra gravity.
-3. Switch back to "No dark matter" and **slowly increase the dark halo mass** slider from 0. Watch the rotation curve flatten out. How much dark matter do you need to match a flat curve at ~220 km/s?
-4. Toggle ON the **MOND prediction**. Notice it also produces a flat curve from visible mass alone — no dark matter needed at the galaxy scale. Science demands we test alternatives!
-5. Select **"Dwarf galaxy"** preset. Notice the dark-to-visible ratio is even larger. Dwarf galaxies are the most dark-matter-dominated objects in the universe.
-6. Switch to **"Enclosed mass" plot mode**. Find the radius where $M_{\rm dark}$ exceeds $M_{\rm vis}$. For the MW preset, this happens at $R \approx 10$ kpc.
-7. Move the radius marker to $R = 50$ kpc and read the baryon fraction. Compare to the cosmic value of 0.157.
+1. Look at the **solar system inset** in the corner of the plot. The planets (orange dots) follow a perfect $R^{-1/2}$ curve — nearly all the mass is in the Sun. This is what Kepler predicts.
+2. Select **"No dark matter"** preset. The galaxy's rotation curve also falls off, just like the solar system. This is the Keplerian prediction when mass is concentrated.
+3. Now select **"Milky Way-like"** preset. The galaxy curve stays **flat** out to 50 kpc — completely unlike the solar system. Toggle ON the halo contribution to see why — the dark matter halo provides the extra gravity.
+4. Switch back to "No dark matter" and **slowly increase the dark halo mass** slider from 0. Watch the rotation curve flatten out. How much dark matter do you need to match a flat curve at ~220 km/s?
+5. Toggle ON the **MOND prediction**. Notice it also produces a flat curve from visible mass alone — no dark matter needed at the galaxy scale. Science demands we test alternatives!
+6. Select **"Dwarf galaxy"** preset. Notice the dark-to-visible ratio is even larger. Dwarf galaxies are the most dark-matter-dominated objects in the universe.
+7. Switch to **"Enclosed mass" plot mode**. Find the radius where $M_{\rm dark}$ exceeds $M_{\rm vis}$. For the MW preset, this happens at $R \approx 10$ kpc.
+8. Move the radius marker to $R = 50$ kpc and read the baryon fraction. Compare to the cosmic value of 0.157.
 
 ### Explain prompt
 > You measured a galaxy's rotation curve and found $V = 200$ km/s at $R = 30$ kpc. The visible mass inside that radius is $4 \times 10^{10}\,M_\odot$. Calculate the total mass inside 30 kpc using $M = V^2 R / G$. How much of it is dark matter? What is the baryon fraction, and how does it compare to the cosmic average?
@@ -631,6 +694,14 @@ Generate rows at $R = 2, 5, 10, 15, 20, 30, 40, 50$ kpc for the current galaxy m
 
 **Fill region** (velocity mode): when both total and Keplerian curves are shown, a subtle fill between them (light `--cp-accent-rose` at 15% opacity) to highlight the "missing mass" discrepancy. Label: "Dark matter contribution"
 
+**Normalized comparison inset** (velocity mode, toggleable):
+- Position: top-right corner, ~200×150 px, semi-transparent panel background (`--cp-instr-panel-bg`)
+- Axes: $R/R_{\rm ref}$ (0–6) × $V/V_{\rm ref}$ (0–1.5), minimal gridlines
+- Solar system planets: filled circles in `--cp-accent-amber` at 70% opacity, with 1-letter labels (M, V, E, M, J, S, U, N) — only shown for planets within the axis range (Mercury through Jupiter; Saturn+ are off-scale in $R$ but could be shown with a break)
+- $R^{-1/2}$ Keplerian curve: dashed, `--cp-accent-ice`
+- Galaxy normalized curve: solid, `--cp-accent-amber`
+- Title label: "Solar System vs. Galaxy" in `--cp-readout-label-color`
+
 ---
 
 ## 11) Keyboard Shortcuts
@@ -641,6 +712,7 @@ Generate rows at $R = 2, 5, 10, 15, 20, 30, 40, 50$ kpc for the current galaxy m
 | `g` | Toggle station mode |
 | `k` | Toggle Keplerian curve |
 | `m` | Toggle MOND curve |
+| `s` | Toggle solar system comparison inset |
 | `p` | Toggle plot mode (velocity ↔ mass) |
 | `[` / `]` | Move radius marker by 2 kpc |
 | `1`–`4` | Activate galaxy preset 1–4 |
