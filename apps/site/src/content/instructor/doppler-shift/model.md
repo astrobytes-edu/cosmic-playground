@@ -38,13 +38,17 @@ $$
 - Shared physics API: `packages/physics/src/dopplerShiftModel.ts`
 - Demo state coupling is relativistic for $v_r \leftrightarrow z$ synchronization.
 - Formula toggle chooses prediction/readout rendering mode.
+- The redshift slider includes two regime markers at the 5% NR-divergence boundary (blue side and red side) because the $z(v_r)$ mapping is asymmetric.
 - Spectrum lines come from `SpectralLineModel`; Fe uses a dense catalog path and defaults to strongest-8 view for readability.
+- Representative-line readouts use visible-first anchoring (strongest line in $380$-$750\ \text{nm}$) with fallback to strongest-overall when no visible line exists.
+- Mystery workflow now includes a post-check **Copy challenge evidence** helper for debrief artifacts.
 
 ## Pedagogical clarifications
 
 - **Uniform light-wave spacing in this demo:** The observer receives crests at one steady spacing $\lambda_{\rm obs}$ for a fixed source velocity; the diagram intentionally rejects sound-style ripple intuition.
 - **Non-rel asymmetry:** the wavelength relation is multiplicative while the frequency relation is divisive; they agree to first order, not exactly at finite speed.
 - **Divergence interpretation:** the readout reports percent difference between $z_{\rm nonrel}$ and $z_{\rm rel}$ so students can quantify approximation quality.
+- **Regime markers:** slider markers make the 5% NR-error boundary visible in both blue and red directions, with text cue for non-color accessibility.
 - **Mechanism boundaries:** kinematic Doppler is modeled; cosmological and gravitational redshift are conceptually noted but not simulated.
 
 ## Instructor sanity checks

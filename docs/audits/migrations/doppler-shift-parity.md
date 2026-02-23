@@ -33,12 +33,15 @@ Content and teaching materials:
 
 Implemented:
 - Dual coupled controls (`v_r`, `z`) with relativistic state coupling and slider clamp indicator.
+- Red/blue regime marker thresholds on the redshift slider at the 5% non-rel divergence boundary, with non-color explanatory caption.
 - Formula toggle (non-rel vs relativistic) affecting rendered predictions/readouts while preserving physical state mapping.
 - Wave diagram with uniform observer-side crest spacing and rest-wavelength ghost reference.
 - Lab-vs-observed spectrum comparator with line connectors, shift annotation, zoom-visible, and center-on-lines controls.
 - Element catalogs from `SpectralLineModel`, including additive dense Fe path with strongest-8 default / show-all toggle.
 - Preset set 1-8 (including z-driven presets) plus keyboard shortcuts per contract.
 - Mystery Spectrum challenge using `ChallengeEngine`, deterministic `?challengeSeed=...` test path, non-repeating target selection, and accessible lifecycle announcements.
+- Mystery panel includes a post-check `Copy challenge evidence` helper (locked until check/reveal).
+- Readout panel includes `Why this line?` helper chip explaining visible-first representative-line anchoring and fallback behavior.
 
 ## 2) Accessibility parity
 
@@ -47,6 +50,8 @@ Implemented:
 - Keyboard-operable controls for velocity/z/formula/presets/challenge actions.
 - Reduced-motion path disables animation loop and announces static mode.
 - Copy lock semantics during unrevealed mystery challenge (`disabled`, `aria-disabled`, helper text + live-region reason).
+- Representative-line helper is disabled during unrevealed mystery to prevent hidden-target leakage.
+- Challenge evidence copy reports lock/success/failure via live region.
 
 Coverage:
 - `apps/site/tests/doppler-shift.spec.ts`

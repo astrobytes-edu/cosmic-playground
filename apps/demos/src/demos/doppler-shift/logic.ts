@@ -29,6 +29,7 @@ export const REDSHIFT_SLIDER_MIN = -0.8;
 export const REDSHIFT_SLIDER_MAX = 10;
 export const DEFAULT_SPECTRUM_DOMAIN: SpectrumDomain = { minNm: 80, maxNm: 2200 };
 export const VISIBLE_SPECTRUM_DOMAIN: SpectrumDomain = { minNm: 300, maxNm: 900 };
+export const REGIME_DIVERGENCE_THRESHOLD_PERCENT = 5;
 
 const MAX_PHYSICAL_BETA = 0.999_999;
 
@@ -313,6 +314,100 @@ export function isMysteryCopyLocked(args: {
   return args.mysteryActive && !args.mysteryRevealed;
 }
 
+function solveRegimeBoundaryVelocityKmS(args: {
+  thresholdPercent: number;
+  sign: -1 | 1;
+  iterations?: number;
+}): number {
+  const iterations = Math.max(16, Math.floor(args.iterations ?? 80));
+  const thresholdPercent = Number.isFinite(args.thresholdPercent) && args.thresholdPercent > 0
+    ? args.thresholdPercent
+    : REGIME_DIVERGENCE_THRESHOLD_PERCENT;
+
+  const maxAbsVelocityKmS = DopplerShiftModel.C_KM_S * 0.999_999;
+  let lowMagnitude = 0;
+  let highMagnitude = maxAbsVelocityKmS;
+
+  const divergenceAt = (magnitudeKmS: number) => {
+    return DopplerShiftModel.formulaDivergencePercent(args.sign * magnitudeKmS);
+  };
+
+  const scanSteps = 4096;
+  let previousMagnitude = 0;
+  let previousDivergence = divergenceAt(previousMagnitude);
+  let foundBracket = false;
+
+  for (let step = 1; step <= scanSteps; step += 1) {
+    const magnitude = (maxAbsVelocityKmS * step) / scanSteps;
+    const divergence = divergenceAt(magnitude);
+    if (
+      Number.isFinite(divergence)
+      && divergence >= thresholdPercent
+      && Number.isFinite(previousDivergence)
+      && previousDivergence < thresholdPercent
+    ) {
+      lowMagnitude = previousMagnitude;
+      highMagnitude = magnitude;
+      foundBracket = true;
+      break;
+    }
+    previousMagnitude = magnitude;
+    previousDivergence = divergence;
+  }
+
+  if (!foundBracket) {
+    return args.sign * maxAbsVelocityKmS;
+  }
+
+  for (let i = 0; i < iterations; i += 1) {
+    const midMagnitude = (lowMagnitude + highMagnitude) / 2;
+    const midDivergence = divergenceAt(midMagnitude);
+    if (!Number.isFinite(midDivergence) || midDivergence >= thresholdPercent) {
+      highMagnitude = midMagnitude;
+    } else {
+      lowMagnitude = midMagnitude;
+    }
+  }
+
+  return args.sign * highMagnitude;
+}
+
+export interface RegimeThresholdMarkers {
+  thresholdPercent: number;
+  blueVelocityKmS: number;
+  redVelocityKmS: number;
+  blueZ: number;
+  redZ: number;
+}
+
+export function computeRegimeThresholdMarkers(args?: {
+  thresholdPercent?: number;
+}): RegimeThresholdMarkers {
+  const thresholdPercent = Number.isFinite(args?.thresholdPercent) && (args?.thresholdPercent ?? 0) > 0
+    ? (args?.thresholdPercent as number)
+    : REGIME_DIVERGENCE_THRESHOLD_PERCENT;
+
+  const blueVelocityKmS = solveRegimeBoundaryVelocityKmS({ thresholdPercent, sign: -1 });
+  const redVelocityKmS = solveRegimeBoundaryVelocityKmS({ thresholdPercent, sign: 1 });
+
+  const blueZRaw = DopplerShiftModel.redshiftFromVelocity({
+    velocityKmS: blueVelocityKmS,
+    relativistic: true,
+  });
+  const redZRaw = DopplerShiftModel.redshiftFromVelocity({
+    velocityKmS: redVelocityKmS,
+    relativistic: true,
+  });
+
+  return {
+    thresholdPercent,
+    blueVelocityKmS,
+    redVelocityKmS,
+    blueZ: Number.isFinite(blueZRaw) ? blueZRaw : REDSHIFT_SLIDER_MIN,
+    redZ: Number.isFinite(redZRaw) ? redZRaw : REDSHIFT_SLIDER_MAX,
+  };
+}
+
 function formulaLabel(mode: FormulaMode): string {
   return mode === "relativistic" ? "Relativistic" : "Non-relativistic";
 }
@@ -323,6 +418,58 @@ function spectrumModeLabel(mode: SpectrumMode): string {
 
 function lineDensityLabel(mode: LineDensityMode): string {
   return mode === "all" ? "Show all" : "Strongest 8";
+}
+
+export function buildRepresentativeLineRuleText(args: {
+  hasVisibleRepresentative: boolean;
+  visibleMinNm?: number;
+  visibleMaxNm?: number;
+}): string {
+  const visibleMinNm = Math.round(args.visibleMinNm ?? 380);
+  const visibleMaxNm = Math.round(args.visibleMaxNm ?? 750);
+
+  if (args.hasVisibleRepresentative) {
+    return `Representative readout anchor: strongest visible rest line (${visibleMinNm}-${visibleMaxNm} nm). This keeps the anchor in the observer-friendly band, and all selected lines still shift in the comparator.`;
+  }
+
+  return `Representative readout anchor: no lines fall in the visible window (${visibleMinNm}-${visibleMaxNm} nm), so the strongest overall rest line is used. In this fallback case, all selected lines still shift in the comparator.`;
+}
+
+export function buildChallengeEvidenceText(args: {
+  checkedAtIso?: string;
+  guessedElement: string;
+  guessedMode: SpectrumMode;
+  targetElement: string;
+  targetMode: SpectrumMode;
+  correct: boolean;
+  formulaMode: FormulaMode;
+  radialVelocityKmS: number;
+  redshift: number;
+  representativeLineLabel: string;
+  lambdaObsNm: number;
+  deltaLambdaNm: number;
+  regimeLabel: string;
+  divergencePercent: number;
+}): string {
+  const checkedAtIso = args.checkedAtIso ?? new Date().toISOString();
+  const outcomeLabel = args.correct ? "Correct" : "Incorrect";
+
+  return [
+    "Doppler Shift — Mystery Evidence",
+    `Checked at: ${checkedAtIso}`,
+    `Outcome: ${outcomeLabel}`,
+    `Guess: ${args.guessedElement} (${spectrumModeLabel(args.guessedMode)})`,
+    `Target: ${args.targetElement} (${spectrumModeLabel(args.targetMode)})`,
+    `Formula applied: ${formulaLabel(args.formulaMode)}`,
+    `Radial velocity (km/s): ${formatSigned(args.radialVelocityKmS, 2)}`,
+    `Physical redshift z_rel: ${formatNumber(args.redshift, 6)}`,
+    `Representative line: ${args.representativeLineLabel}`,
+    `Observed wavelength (nm): ${formatNumber(args.lambdaObsNm, 3)}`,
+    `Wavelength shift (nm): ${formatSigned(args.deltaLambdaNm, 3)}`,
+    `Regime: ${args.regimeLabel}`,
+    `NR divergence (%): ${formatNumber(args.divergencePercent, 3)}`,
+    "Debrief prompt: Claim + evidence + why formula choice.",
+  ].join("\n");
 }
 
 export function buildDopplerExportPayload(args: {

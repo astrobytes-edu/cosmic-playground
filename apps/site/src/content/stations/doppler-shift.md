@@ -18,11 +18,12 @@ has_math: true
 >    - Record $\lambda_{\rm obs}$, $\Delta\lambda$, $\nu_{\rm obs}$, and shift direction.
 > 3. Switch to presets 7 and 8.
 >    - Compare non-rel and relativistic predictions.
->    - Record the NR error percentage.
+>    - Use the red/blue marker thresholds on the $z$ slider and record the NR error percentage.
 > 4. Use the Sound vs Light callout.
 >    - Explain why the wave crests in this demo are uniformly spaced at the observer.
-> 5. Run one Mystery Spectrum round (predict -> check -> explain).
-> 6. Write one sentence claim:
+> 5. Tap **Why this line?** and note how representative-line anchoring is chosen.
+> 6. Run one Mystery Spectrum round (predict -> check -> explain), then use **Copy challenge evidence**.
+> 7. Write one sentence claim:
 >    - "For this case, the non-rel formula is / is not acceptable because _____."
 
 | Case | Element | $v_r$ (km/s) | $z_{\rm nonrel}$ | $z_{\rm rel}$ | $\lambda_{\rm obs}$ (nm) | $\Delta\lambda$ (nm) | NR error (%) |

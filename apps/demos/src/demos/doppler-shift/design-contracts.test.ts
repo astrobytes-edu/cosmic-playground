@@ -49,9 +49,19 @@ describe("Doppler Shift -- Design System Contracts", () => {
   it("contains mystery controls and copy-lock hint", () => {
     expect(html).toContain('id="mysterySpectrumBtn"');
     expect(html).toContain('id="mysteryPanel"');
+    expect(html).toContain('id="copyChallengeEvidence"');
     expect(html).toContain('id="copyLockHint"');
     expect(html).toContain('id="formulaLimitIndicator"');
     expect(main).toContain("ChallengeEngine");
+  });
+
+  it("contains redshift regime markers and representative-line helper affordances", () => {
+    expect(html).toContain('id="redshiftRegimeTrack"');
+    expect(html).toContain('id="regimeMarkerBlue"');
+    expect(html).toContain('id="regimeMarkerRed"');
+    expect(html).toContain('id="regimeMarkerCaption"');
+    expect(html).toContain('id="repLineRuleChip"');
+    expect(html).toContain('id="repLineRuleNote"');
   });
 
   it("loads KaTeX and includes equation content", () => {
@@ -78,6 +88,8 @@ describe("Doppler Shift -- Design System Contracts", () => {
   it("wires runtime helpers", () => {
     expect(main).toContain("createDemoModes");
     expect(main).toContain("buildDopplerExportPayload");
+    expect(main).toContain("buildChallengeEvidenceText");
+    expect(main).toContain("copyTextToClipboard");
     expect(main).toContain(".copyResults(");
   });
 });

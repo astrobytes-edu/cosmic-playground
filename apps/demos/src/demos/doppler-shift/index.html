@@ -64,12 +64,19 @@
 
           <label class="control" for="redshiftSlider">
             <span>Physical redshift $z_{\rm rel}$</span>
-            <input id="redshiftSlider" type="range" min="-0.8" max="10" step="0.001" value="0" />
+            <input id="redshiftSlider" type="range" min="-0.8" max="10" step="0.001" value="0" aria-describedby="regimeMarkerCaption" />
+            <div id="redshiftRegimeTrack" class="regime-track" aria-hidden="true">
+              <span id="regimeMarkerBlue" class="regime-track__marker regime-track__marker--blue"></span>
+              <span id="regimeMarkerRed" class="regime-track__marker regime-track__marker--red"></span>
+            </div>
             <span class="control__value">
               <span id="redshiftValue">0</span>
               <span class="control__hint">step <span id="redshiftStep">0.001</span></span>
             </span>
           </label>
+          <p id="regimeMarkerCaption" class="cp-muted regime-caption">
+            Approximation boundary (5% NR error): outside these markers, relativistic is required.
+          </p>
 
           <p id="velocityClampIndicator" class="cp-muted clamp-indicator" hidden>
             Velocity slider is clamped. Use the $z$ slider for high-speed cases.
@@ -142,6 +149,7 @@
             </div>
             <div class="mystery-actions">
               <button id="checkMysteryAnswer" class="cp-button cp-button--outline" type="button">Check answer</button>
+              <button id="copyChallengeEvidence" class="cp-button cp-button--outline" type="button" hidden>Copy challenge evidence</button>
               <button id="mysteryHint" class="cp-button cp-button--outline" type="button">Hint</button>
               <button id="exitMystery" class="cp-button cp-button--ghost" type="button">End mystery</button>
             </div>
@@ -267,8 +275,14 @@
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body readout-grid">
           <div class="cp-readout">
-            <div class="cp-readout__label">Representative line</div>
+            <div class="cp-readout__label readout-label-with-chip">
+              <span>Representative line</span>
+              <button id="repLineRuleChip" class="cp-chip cp-chip--inline" type="button" aria-expanded="false" aria-controls="repLineRuleNote">
+                Why this line?
+              </button>
+            </div>
             <div class="cp-readout__value"><span id="lineLabelValue">H-alpha 656.3</span></div>
+            <p id="repLineRuleNote" class="cp-muted rep-line-rule-note" hidden></p>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Radial velocity $v_r$</div>

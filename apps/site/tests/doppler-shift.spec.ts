@@ -51,6 +51,13 @@ test.describe("Doppler Shift -- E2E", () => {
     await expect(page.locator("#comparisonReadouts")).toBeHidden();
   });
 
+  test("redshift slider shows 5% regime markers with non-color cue", async ({ page }) => {
+    await expect(page.locator("#regimeMarkerBlue")).toBeVisible();
+    await expect(page.locator("#regimeMarkerRed")).toBeVisible();
+    await expect(page.locator("#regimeMarkerCaption")).toContainText("5% NR error");
+    await expect(page.locator("#regimeMarkerCaption")).toContainText(/outside these markers, relativistic is required/i);
+  });
+
   test("Fe line density toggle shows and can switch", async ({ page }) => {
     await page.locator('button.element-chip[data-element="Fe"]').click();
     await expect(page.locator("#lineDensityWrap")).toBeVisible();
@@ -77,13 +84,46 @@ test.describe("Doppler Shift -- E2E", () => {
     await page.goto("play/doppler-shift/?challengeSeed=e2e-seed", { waitUntil: "domcontentloaded" });
     await expect(page.locator("#cp-demo")).toBeVisible();
 
+    await expect(page.locator("#repLineRuleChip")).toBeEnabled();
+    await page.locator("#repLineRuleChip").click();
+    await expect(page.locator("#repLineRuleNote")).toBeVisible();
+
     await page.locator("#mysterySpectrumBtn").click();
     await expect(page.locator("#mysteryPanel")).toBeVisible();
     await expect(page.locator("#copyResults")).toBeDisabled();
+    await expect(page.locator("#repLineRuleChip")).toBeDisabled();
+    await expect(page.locator("#repLineRuleNote")).toBeHidden();
+    await expect(page.locator("#copyChallengeEvidence")).toBeHidden();
 
     await page.locator("#checkMysteryAnswer").click();
     await expect(page.locator("#copyResults")).toBeEnabled();
     await expect(page.locator("#status")).toContainText(/Correct\.|Not yet\./);
+    await expect(page.locator("#repLineRuleChip")).toBeEnabled();
+    await expect(page.locator("#copyChallengeEvidence")).toBeVisible();
+    await expect(page.locator("#copyChallengeEvidence")).toBeEnabled();
+  });
+
+  test("copy challenge evidence includes debrief context after reveal", async ({ page }) => {
+    await page.goto("play/doppler-shift/?challengeSeed=e2e-seed", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+
+    await page.locator("#mysterySpectrumBtn").click();
+    await page.locator("#checkMysteryAnswer").click();
+    await page.locator("#copyChallengeEvidence").click();
+
+    const copied = await page.evaluate(() => {
+      // @ts-ignore test-only bridge
+      return window.__cpClipboardStore?.text ?? "";
+    });
+
+    expect(copied).toContain("Doppler Shift — Mystery Evidence");
+    expect(copied).toContain("Outcome:");
+    expect(copied).toContain("Guess:");
+    expect(copied).toContain("Target:");
+    expect(copied).toContain("Representative line:");
+    expect(copied).toContain("Radial velocity (km/s):");
+    expect(copied).toContain("Physical redshift z_rel:");
+    expect(copied).toContain("Claim + evidence + why formula choice");
   });
 
   test("copy results includes doppler export context", async ({ page }) => {

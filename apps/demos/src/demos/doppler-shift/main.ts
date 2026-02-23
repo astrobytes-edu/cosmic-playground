@@ -1,5 +1,6 @@
 import {
   ChallengeEngine,
+  copyTextToClipboard,
   createDemoModes,
   createInstrumentRuntime,
   initMath,
@@ -14,13 +15,17 @@ import {
   DEFAULT_SPECTRUM_DOMAIN,
   REDSHIFT_SLIDER_MAX,
   REDSHIFT_SLIDER_MIN,
+  REGIME_DIVERGENCE_THRESHOLD_PERCENT,
   VELOCITY_SLIDER_MAX_KM_S,
   VELOCITY_SLIDER_MIN_KM_S,
   VISIBLE_SPECTRUM_DOMAIN,
   axisTicks,
+  buildChallengeEvidenceText,
   buildDopplerExportPayload,
+  buildRepresentativeLineRuleText,
   centerDomainOnLines,
   clamp,
+  computeRegimeThresholdMarkers,
   createSeededRandom,
   directionSummary,
   formatNumber,
@@ -52,6 +57,10 @@ const $ = <T extends Element>(selector: string): T => {
 
 const velocitySlider = $<HTMLInputElement>("#velocitySlider");
 const redshiftSlider = $<HTMLInputElement>("#redshiftSlider");
+const redshiftRegimeTrack = $<HTMLDivElement>("#redshiftRegimeTrack");
+const regimeMarkerBlue = $<HTMLSpanElement>("#regimeMarkerBlue");
+const regimeMarkerRed = $<HTMLSpanElement>("#regimeMarkerRed");
+const regimeMarkerCaption = $<HTMLParagraphElement>("#regimeMarkerCaption");
 const velocityValue = $<HTMLSpanElement>("#velocityValue");
 const redshiftValue = $<HTMLSpanElement>("#redshiftValue");
 const redshiftStepValue = $<HTMLSpanElement>("#redshiftStep");
@@ -78,6 +87,7 @@ const guessModeAbsorption = $<HTMLButtonElement>("#guessModeAbsorption");
 const checkMysteryAnswerBtn = $<HTMLButtonElement>("#checkMysteryAnswer");
 const mysteryHintBtn = $<HTMLButtonElement>("#mysteryHint");
 const exitMysteryBtn = $<HTMLButtonElement>("#exitMystery");
+const copyChallengeEvidenceBtn = $<HTMLButtonElement>("#copyChallengeEvidence");
 const copyLockHint = $<HTMLParagraphElement>("#copyLockHint");
 
 const zoomVisibleBtn = $<HTMLButtonElement>("#zoomVisible");
@@ -90,6 +100,8 @@ const spectrumCanvas = $<HTMLCanvasElement>("#spectrumCanvas");
 const statusEl = $<HTMLParagraphElement>("#status");
 
 const lineLabelValue = $<HTMLSpanElement>("#lineLabelValue");
+const repLineRuleChip = $<HTMLButtonElement>("#repLineRuleChip");
+const repLineRuleNote = $<HTMLParagraphElement>("#repLineRuleNote");
 const vrValue = $<HTMLSpanElement>("#vrValue");
 const zValue = $<HTMLSpanElement>("#zValue");
 const lambdaObsValue = $<HTMLSpanElement>("#lambdaObsValue");
@@ -152,6 +164,22 @@ const PRESETS: DopplerPreset[] = [
 const CHALLENGE_PRESET_IDS = ["2", "4", "5", "7"] as const;
 const CHALLENGE_ELEMENTS = ["H", "He", "Na", "Ca", "Fe"] as const;
 
+type ChallengeEvidenceSnapshot = {
+  guessedElement: string;
+  guessedMode: SpectrumMode;
+  targetElement: string;
+  targetMode: SpectrumMode;
+  correct: boolean;
+  formulaMode: FormulaMode;
+  radialVelocityKmS: number;
+  redshift: number;
+  representativeLineLabel: string;
+  lambdaObsNm: number;
+  deltaLambdaNm: number;
+  regimeLabel: string;
+  divergencePercent: number;
+};
+
 const state = {
   velocityKmS: 0,
   z: 0,
@@ -161,6 +189,7 @@ const state = {
   lineDensityMode: "strongest-8" as LineDensityMode,
   domain: { ...DEFAULT_SPECTRUM_DOMAIN },
   activePresetId: "1",
+  repLineRuleExpanded: false,
   mystery: {
     active: false,
     revealed: false,
@@ -168,8 +197,13 @@ const state = {
     guessMode: "emission" as SpectrumMode,
     target: null as ChallengeTarget | null,
     lastTarget: null as ChallengeTarget | null,
+    lastCheckEvidence: null as ChallengeEvidenceSnapshot | null,
   },
 };
+
+const regimeThresholds = computeRegimeThresholdMarkers({
+  thresholdPercent: REGIME_DIVERGENCE_THRESHOLD_PERCENT,
+});
 
 let wavePhasePx = 0;
 let waveFrame = 0;
@@ -230,6 +264,14 @@ function representativeLine(): SpectrumLine | undefined {
   return selectRepresentativeLine(lineCatalog(), { preferVisible: true });
 }
 
+function hasVisibleRepresentativeCandidate(lines: SpectrumLine[]): boolean {
+  return lines.some((line) => line.wavelengthNm >= 380 && line.wavelengthNm <= 750);
+}
+
+function normalizedSliderPercent(value: number): number {
+  return ((value - REDSHIFT_SLIDER_MIN) / (REDSHIFT_SLIDER_MAX - REDSHIFT_SLIDER_MIN)) * 100;
+}
+
 function formulaAppliedMode(requestedMode: FormulaMode, velocityKmS: number): FormulaMode {
   if (requestedMode === "non-relativistic" && DopplerShiftModel.regime(velocityKmS).label === "relativistic") {
     return "relativistic";
@@ -238,7 +280,9 @@ function formulaAppliedMode(requestedMode: FormulaMode, velocityKmS: number): Fo
 }
 
 function computeReadoutContext() {
-  const representative = representativeLine();
+  const catalog = lineCatalog();
+  const representative = selectRepresentativeLine(catalog, { preferVisible: true });
+  const hasVisibleRepresentative = hasVisibleRepresentativeCandidate(catalog);
   const fallbackLabel = `${state.selectedElement} strongest line`;
   const requestedFormulaMode = state.formulaMode;
   const appliedFormulaMode = formulaAppliedMode(requestedFormulaMode, state.velocityKmS);
@@ -275,6 +319,7 @@ function computeReadoutContext() {
 
   return {
     representativeLineLabel: representative?.label ?? fallbackLabel,
+    hasVisibleRepresentative,
     formulaRequestedMode: requestedFormulaMode,
     formulaAppliedMode: appliedFormulaMode,
     formulaFallbackApplied: requestedFormulaMode !== appliedFormulaMode,
@@ -306,11 +351,33 @@ function isCopyLocked(): boolean {
   });
 }
 
+function challengeEvidenceReady(): boolean {
+  return state.mystery.revealed && state.mystery.lastCheckEvidence !== null;
+}
+
 function syncCopyLockState() {
   const locked = isCopyLocked();
   copyResultsBtn.disabled = locked;
   copyResultsBtn.setAttribute("aria-disabled", String(locked));
   copyLockHint.hidden = !locked;
+
+  const evidenceReady = challengeEvidenceReady();
+  copyChallengeEvidenceBtn.hidden = !state.mystery.revealed;
+  copyChallengeEvidenceBtn.disabled = !evidenceReady;
+  copyChallengeEvidenceBtn.setAttribute("aria-disabled", String(!evidenceReady));
+}
+
+function updateRegimeMarkers() {
+  const blueZ = clamp(regimeThresholds.blueZ, REDSHIFT_SLIDER_MIN, REDSHIFT_SLIDER_MAX);
+  const redZ = clamp(regimeThresholds.redZ, REDSHIFT_SLIDER_MIN, REDSHIFT_SLIDER_MAX);
+  const bluePercent = clamp(normalizedSliderPercent(blueZ), 0, 100);
+  const redPercent = clamp(normalizedSliderPercent(redZ), 0, 100);
+
+  regimeMarkerBlue.style.left = `${bluePercent}%`;
+  regimeMarkerRed.style.left = `${redPercent}%`;
+  redshiftRegimeTrack.style.setProperty("--cp-regime-blue-pos", `${bluePercent}%`);
+  redshiftRegimeTrack.style.setProperty("--cp-regime-red-pos", `${redPercent}%`);
+  regimeMarkerCaption.textContent = `Approximation boundary (${REGIME_DIVERGENCE_THRESHOLD_PERCENT}% NR error): blue z~${formatSigned(blueZ, 3)}, red z~${formatSigned(redZ, 3)}. Outside these markers, relativistic is required.`;
 }
 
 function currentShiftDirection(): "toward blue" | "toward red" | "no shift" {
@@ -795,6 +862,9 @@ function updateReadouts() {
   const hideTarget = state.mystery.active && !state.mystery.revealed;
 
   lineLabelValue.textContent = hideTarget ? "Hidden during mystery" : readouts.representativeLineLabel;
+  repLineRuleNote.textContent = buildRepresentativeLineRuleText({
+    hasVisibleRepresentative: readouts.hasVisibleRepresentative,
+  });
   vrValue.textContent = formatSigned(state.velocityKmS, 2);
   zValue.textContent = formatSigned(state.z, 6);
   lambdaObsValue.textContent = formatNumber(readouts.lambdaObsNm, 3);
@@ -818,6 +888,7 @@ function render() {
   velocitySlider.value = String(clamp(state.velocityKmS, VELOCITY_SLIDER_MIN_KM_S, VELOCITY_SLIDER_MAX_KM_S));
   redshiftSlider.value = String(state.z);
   redshiftSlider.step = String(redshiftSliderStep(state.z));
+  updateRegimeMarkers();
 
   velocityValue.textContent = `${formatSigned(state.velocityKmS, 2)} km/s`;
   redshiftValue.textContent = formatSigned(state.z, 6);
@@ -850,6 +921,14 @@ function render() {
 
   modeEmission.disabled = state.mystery.active;
   modeAbsorption.disabled = state.mystery.active;
+
+  if (hideTarget && state.repLineRuleExpanded) {
+    state.repLineRuleExpanded = false;
+  }
+  repLineRuleChip.disabled = hideTarget;
+  repLineRuleChip.setAttribute("aria-disabled", String(hideTarget));
+  repLineRuleChip.setAttribute("aria-expanded", String(state.repLineRuleExpanded && !hideTarget));
+  repLineRuleNote.hidden = hideTarget || !state.repLineRuleExpanded;
 
   const denseAvailable = state.selectedElement === "Fe" && lineCatalog().length > 10;
   lineDensityWrap.hidden = !denseAvailable;
@@ -952,10 +1031,12 @@ function startMystery() {
   const target = drawMysteryTarget();
   state.mystery.active = true;
   state.mystery.revealed = false;
+  state.mystery.lastCheckEvidence = null;
   state.mystery.target = target;
   state.mystery.lastTarget = target;
   state.mystery.guessElement = "H";
   state.mystery.guessMode = "emission";
+  state.repLineRuleExpanded = false;
 
   state.selectedElement = target.element;
   state.spectrumMode = target.mode;
@@ -973,7 +1054,9 @@ function stopMystery() {
 
   state.mystery.active = false;
   state.mystery.revealed = false;
+  state.mystery.lastCheckEvidence = null;
   state.mystery.target = null;
+  state.repLineRuleExpanded = false;
 
   if (mysteryEngine.isActive()) {
     mysteryEngine.stop();
@@ -985,6 +1068,7 @@ function stopMystery() {
 
 function checkMysteryAnswer() {
   if (!state.mystery.active || !state.mystery.target) return;
+  const readouts = computeReadoutContext();
 
   const result = mysteryEngine.check({
     guessedElement: mysteryGuessElement.value,
@@ -995,6 +1079,21 @@ function checkMysteryAnswer() {
 
   state.mystery.active = false;
   state.mystery.revealed = true;
+  state.mystery.lastCheckEvidence = {
+    guessedElement: mysteryGuessElement.value,
+    guessedMode: state.mystery.guessMode,
+    targetElement: state.mystery.target.element,
+    targetMode: state.mystery.target.mode,
+    correct: Boolean(result.correct),
+    formulaMode: readouts.formulaAppliedMode,
+    radialVelocityKmS: state.velocityKmS,
+    redshift: state.z,
+    representativeLineLabel: readouts.representativeLineLabel,
+    lambdaObsNm: readouts.lambdaObsNm,
+    deltaLambdaNm: readouts.deltaLambdaNm,
+    regimeLabel: readouts.regime.label,
+    divergencePercent: readouts.regime.divergencePercent,
+  };
   if (mysteryEngine.isActive()) {
     mysteryEngine.stop();
   }
@@ -1083,6 +1182,21 @@ guessModeAbsorption.addEventListener("click", () => {
   render();
 });
 
+repLineRuleChip.addEventListener("click", () => {
+  if (state.mystery.active && !state.mystery.revealed) {
+    setLiveRegionText(statusEl, "Representative-line rule is hidden until you check or end the mystery challenge.");
+    return;
+  }
+  state.repLineRuleExpanded = !state.repLineRuleExpanded;
+  render();
+  setLiveRegionText(
+    statusEl,
+    state.repLineRuleExpanded
+      ? "Representative-line rule shown."
+      : "Representative-line rule hidden.",
+  );
+});
+
 mysterySpectrumBtn.addEventListener("click", () => {
   startMystery();
 });
@@ -1107,6 +1221,28 @@ mysteryHintBtn.addEventListener("click", () => {
 
 exitMysteryBtn.addEventListener("click", () => {
   stopMystery();
+});
+
+copyChallengeEvidenceBtn.addEventListener("click", () => {
+  if (!challengeEvidenceReady() || !state.mystery.lastCheckEvidence) {
+    setLiveRegionText(statusEl, "Challenge evidence is available only after you check the mystery answer.");
+    return;
+  }
+
+  const text = buildChallengeEvidenceText({
+    ...state.mystery.lastCheckEvidence,
+    checkedAtIso: new Date().toISOString(),
+  });
+
+  setLiveRegionText(statusEl, "Copying challenge evidence...");
+  void copyTextToClipboard(text)
+    .then(() => {
+      setLiveRegionText(statusEl, "Copied challenge evidence to clipboard.");
+    })
+    .catch((error) => {
+      const message = error instanceof Error ? error.message : "Copy failed.";
+      setLiveRegionText(statusEl, `Copy failed: ${message}`);
+    });
 });
 
 copyResultsBtn.addEventListener("click", () => {

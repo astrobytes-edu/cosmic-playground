@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { DopplerShiftModel } from "@cosmic/physics";
 import {
   DEFAULT_SPECTRUM_DOMAIN,
   REDSHIFT_SLIDER_MIN,
   VELOCITY_SLIDER_MAX_KM_S,
+  buildChallengeEvidenceText,
   buildDopplerExportPayload,
+  buildRepresentativeLineRuleText,
   centerDomainOnLines,
+  computeRegimeThresholdMarkers,
   createSeededRandom,
   isMysteryCopyLocked,
   pickChallengeTarget,
@@ -56,6 +60,22 @@ describe("Doppler Shift demo logic", () => {
 
     it("uses coarse step for |z| >= 3", () => {
       expect(redshiftSliderStep(5)).toBe(0.1);
+    });
+  });
+
+  describe("regime marker boundaries", () => {
+    it("solves asymmetric 5% divergence boundaries in redshift space", () => {
+      const markers = computeRegimeThresholdMarkers({ thresholdPercent: 5 });
+      expect(markers.thresholdPercent).toBe(5);
+      expect(markers.blueZ).toBeLessThan(0);
+      expect(markers.redZ).toBeGreaterThan(0);
+      expect(markers.blueVelocityKmS).toBeLessThan(0);
+      expect(markers.redVelocityKmS).toBeGreaterThan(0);
+
+      const blueDivergence = DopplerShiftModel.formulaDivergencePercent(markers.blueVelocityKmS);
+      const redDivergence = DopplerShiftModel.formulaDivergencePercent(markers.redVelocityKmS);
+      expect(Math.abs(blueDivergence - 5)).toBeLessThan(0.1);
+      expect(Math.abs(redDivergence - 5)).toBeLessThan(0.1);
     });
   });
 
@@ -147,6 +167,49 @@ describe("Doppler Shift demo logic", () => {
       expect(isMysteryCopyLocked({ mysteryActive: true, mysteryRevealed: false })).toBe(true);
       expect(isMysteryCopyLocked({ mysteryActive: false, mysteryRevealed: false })).toBe(false);
       expect(isMysteryCopyLocked({ mysteryActive: true, mysteryRevealed: true })).toBe(false);
+    });
+  });
+
+  describe("representative-line helper", () => {
+    it("explains visible-first anchoring when visible lines exist", () => {
+      const text = buildRepresentativeLineRuleText({ hasVisibleRepresentative: true });
+      expect(text).toContain("strongest visible rest line (380-750 nm)");
+      expect(text).toContain("all selected lines still shift");
+    });
+
+    it("explains fallback behavior when no visible lines exist", () => {
+      const text = buildRepresentativeLineRuleText({ hasVisibleRepresentative: false });
+      expect(text).toContain("no lines fall in the visible window");
+      expect(text).toContain("strongest overall rest line");
+    });
+  });
+
+  describe("challenge evidence copy text", () => {
+    it("includes guess/target/outcome and debrief readouts", () => {
+      const text = buildChallengeEvidenceText({
+        checkedAtIso: "2026-02-23T12:00:00.000Z",
+        guessedElement: "Na",
+        guessedMode: "absorption",
+        targetElement: "H",
+        targetMode: "emission",
+        correct: false,
+        formulaMode: "relativistic",
+        radialVelocityKmS: 43_665,
+        redshift: 0.158,
+        representativeLineLabel: "H-alpha 656.3",
+        lambdaObsNm: 760.0,
+        deltaLambdaNm: 103.7,
+        regimeLabel: "relativistic",
+        divergencePercent: 11.3,
+      });
+
+      expect(text).toContain("Outcome: Incorrect");
+      expect(text).toContain("Guess: Na (Absorption)");
+      expect(text).toContain("Target: H (Emission)");
+      expect(text).toContain("Formula applied: Relativistic");
+      expect(text).toContain("Representative line: H-alpha 656.3");
+      expect(text).toContain("NR divergence (%):");
+      expect(text).toContain("Claim + evidence + why formula choice");
     });
   });
 
