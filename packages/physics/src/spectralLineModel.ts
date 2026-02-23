@@ -69,6 +69,8 @@ export interface ElementLineData {
   lines: ElementLineEntry[];
 }
 
+export type ElementLineDetail = "standard" | "dense";
+
 // ── Multi-element empirical data (NIST ASD) ────────────────
 
 const ELEMENT_CATALOG: Record<string, ElementLineData> = {
@@ -126,6 +128,43 @@ const ELEMENT_CATALOG: Record<string, ElementLineData> = {
     ]
   }
 };
+
+const FE_DENSE_LINES: ElementLineEntry[] = [
+  { wavelengthNm: 361.9, relativeIntensity: 0.16, label: "Fe I 361.9" },
+  { wavelengthNm: 372.0, relativeIntensity: 0.20, label: "Fe I 372.0" },
+  { wavelengthNm: 374.6, relativeIntensity: 0.18, label: "Fe I 374.6" },
+  { wavelengthNm: 382.0, relativeIntensity: 0.26, label: "Fe I 382.0" },
+  { wavelengthNm: 386.0, relativeIntensity: 0.22, label: "Fe I 386.0" },
+  { wavelengthNm: 404.6, relativeIntensity: 0.32, label: "Fe I 404.6" },
+  { wavelengthNm: 406.4, relativeIntensity: 0.28, label: "Fe I 406.4" },
+  { wavelengthNm: 414.4, relativeIntensity: 0.30, label: "Fe I 414.4" },
+  { wavelengthNm: 427.2, relativeIntensity: 0.34, label: "Fe I 427.2" },
+  { wavelengthNm: 430.8, relativeIntensity: 0.42, label: "Fe I 430.8" },
+  { wavelengthNm: 432.6, relativeIntensity: 0.38, label: "Fe I 432.6" },
+  { wavelengthNm: 438.4, relativeIntensity: 0.70, label: "Fe I 438.4" },
+  { wavelengthNm: 440.5, relativeIntensity: 0.55, label: "Fe I 440.5" },
+  { wavelengthNm: 452.9, relativeIntensity: 0.33, label: "Fe I 452.9" },
+  { wavelengthNm: 466.8, relativeIntensity: 0.45, label: "Fe I 466.8" },
+  { wavelengthNm: 489.1, relativeIntensity: 0.40, label: "Fe I 489.1" },
+  { wavelengthNm: 495.8, relativeIntensity: 0.50, label: "Fe I 495.8" },
+  { wavelengthNm: 501.8, relativeIntensity: 0.36, label: "Fe I 501.8" },
+  { wavelengthNm: 516.7, relativeIntensity: 0.65, label: "Fe I 516.7" },
+  { wavelengthNm: 519.8, relativeIntensity: 0.41, label: "Fe I 519.8" },
+  { wavelengthNm: 522.7, relativeIntensity: 0.48, label: "Fe I 522.7" },
+  { wavelengthNm: 527.0, relativeIntensity: 0.60, label: "Fe I 527.0" },
+  { wavelengthNm: 532.8, relativeIntensity: 0.75, label: "Fe I 532.8" },
+  { wavelengthNm: 537.2, relativeIntensity: 0.39, label: "Fe I 537.2" },
+  { wavelengthNm: 540.6, relativeIntensity: 0.35, label: "Fe I 540.6" },
+  { wavelengthNm: 543.5, relativeIntensity: 0.37, label: "Fe I 543.5" },
+  { wavelengthNm: 561.6, relativeIntensity: 0.43, label: "Fe I 561.6" },
+  { wavelengthNm: 570.1, relativeIntensity: 0.31, label: "Fe I 570.1" },
+  { wavelengthNm: 595.7, relativeIntensity: 0.29, label: "Fe I 595.7" },
+  { wavelengthNm: 613.7, relativeIntensity: 0.27, label: "Fe I 613.7" },
+  { wavelengthNm: 621.9, relativeIntensity: 0.24, label: "Fe I 621.9" },
+  { wavelengthNm: 643.1, relativeIntensity: 0.22, label: "Fe I 643.1" },
+  { wavelengthNm: 649.5, relativeIntensity: 0.20, label: "Fe I 649.5" },
+  { wavelengthNm: 667.8, relativeIntensity: 0.18, label: "Fe I 667.8" },
+];
 
 // ── Model ──────────────────────────────────────────────────
 
@@ -281,8 +320,9 @@ export const SpectralLineModel = {
    * Get the line catalog for a given element.
    * For hydrogen, lines are computed from the Bohr model (Balmer series visible lines).
    */
-  elementLines(args: { element: string }): ElementLineData {
+  elementLines(args: { element: string; detail?: ElementLineDetail }): ElementLineData {
     const { element } = args;
+    const detail = args.detail ?? "standard";
     const key = element.trim();
     if (key === "H") {
       // Generate hydrogen Balmer + Lyman alpha dynamically
@@ -306,6 +346,13 @@ export const SpectralLineModel = {
     const data = ELEMENT_CATALOG[key];
     if (!data) {
       return { symbol: key, name: "Unknown", lines: [] };
+    }
+    if (key === "Fe" && detail === "dense") {
+      return {
+        symbol: data.symbol,
+        name: data.name,
+        lines: FE_DENSE_LINES.map((line) => ({ ...line })),
+      };
     }
     return data;
   },

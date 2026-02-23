@@ -331,6 +331,16 @@ test.describe("Cosmic Playground smoke", () => {
       expects: ["Wavelength lambda (nm)", "Frequency nu (Hz)", "Photon energy E (eV)"]
     },
     {
+      slug: "doppler-shift",
+      expects: [
+        "Radial velocity (km/s)",
+        "Redshift z",
+        "Observed wavelength (nm)",
+        "Observed frequency (THz)",
+        "NR divergence (%)"
+      ]
+    },
+    {
       slug: "telescope-resolution",
       expects: [
         "Diffraction limit theta_diff (arcsec)",

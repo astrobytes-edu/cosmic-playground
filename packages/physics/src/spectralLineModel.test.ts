@@ -142,6 +142,19 @@ describe("SpectralLineModel", () => {
         }
       }
     });
+
+    it("Fe dense catalog has more lines than standard and includes standard anchors", () => {
+      const feStandard = SpectralLineModel.elementLines({ element: "Fe" });
+      const feDense = SpectralLineModel.elementLines({ element: "Fe", detail: "dense" });
+
+      expect(feStandard.lines.length).toBeGreaterThanOrEqual(8);
+      expect(feDense.lines.length).toBeGreaterThan(feStandard.lines.length);
+
+      const anchorWavelengths = [438.4, 516.7, 532.8];
+      for (const anchor of anchorWavelengths) {
+        expect(feDense.lines.some((line) => Math.abs(line.wavelengthNm - anchor) < 0.15)).toBe(true);
+      }
+    });
   });
 
   // ── Monotonicity tests ───────────────────────────────────

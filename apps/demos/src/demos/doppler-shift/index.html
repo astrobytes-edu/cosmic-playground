@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Doppler Shift of Light — Cosmic Playground</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
+  </head>
+  <body>
+    <div id="cp-demo" class="cp-layer-instrument cp-demo" data-shell="viz-first" aria-label="Doppler Shift instrument">
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Doppler Shift of Light</div>
+        <div class="cp-panel-body">
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"></rect>
+                <line x1="7" y1="7" x2="13" y2="7"></line>
+                <line x1="7" y1="10" x2="13" y2="10"></line>
+                <line x1="7" y1="13" x2="10" y2="13"></line>
+              </svg>
+            </button>
+            <button id="help" class="cp-utility-btn" type="button" aria-label="Help and shortcuts" title="Help / keys">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"></circle>
+                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"></path>
+                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"></circle>
+              </svg>
+            </button>
+            <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"></circle>
+                  <circle cx="10" cy="10" r="1.5"></circle>
+                  <circle cx="16" cy="10" r="1.5"></circle>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/doppler-shift/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/doppler-shift/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/doppler-shift/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
+          </div>
+
+          <p class="cp-muted">
+            Connect relative motion to shifted spectral lines with synchronized wave spacing and lab-vs-observed comparison strips.
+          </p>
+
+          <label class="control" for="velocitySlider">
+            <span>Radial velocity $v_r$ (km/s)</span>
+            <input id="velocitySlider" type="range" min="-100000" max="100000" step="10" value="0" />
+            <span class="control__value"><span id="velocityValue">0</span></span>
+          </label>
+
+          <label class="control" for="redshiftSlider">
+            <span>Physical redshift $z_{\rm rel}$</span>
+            <input id="redshiftSlider" type="range" min="-0.8" max="10" step="0.001" value="0" />
+            <span class="control__value">
+              <span id="redshiftValue">0</span>
+              <span class="control__hint">step <span id="redshiftStep">0.001</span></span>
+            </span>
+          </label>
+
+          <p id="velocityClampIndicator" class="cp-muted clamp-indicator" hidden>
+            Velocity slider is clamped. Use the $z$ slider for high-speed cases.
+          </p>
+
+          <div id="directionIndicator" class="direction-indicator">At rest: no Doppler shift</div>
+
+          <div class="cp-chip-group" role="radiogroup" aria-label="Spectrum mode">
+            <button id="modeEmission" class="cp-chip" role="radio" aria-checked="true" type="button">Emission</button>
+            <button id="modeAbsorption" class="cp-chip" role="radio" aria-checked="false" type="button">Absorption</button>
+          </div>
+
+          <div class="cp-chip-group" role="radiogroup" aria-label="Formula selector">
+            <button id="formulaNonRel" class="cp-chip" role="radio" aria-checked="true" type="button">Non-relativistic</button>
+            <button id="formulaRel" class="cp-chip" role="radio" aria-checked="false" type="button">Relativistic</button>
+          </div>
+
+          <p id="formulaLimitIndicator" class="cp-muted clamp-indicator" hidden>
+            Non-relativistic approximation exceeds 5% here; relativistic prediction is applied.
+          </p>
+
+          <div class="presets">
+            <div class="presets__label">Element catalog</div>
+            <div class="cp-chip-group--grid presets__row" role="group" aria-label="Element selector">
+              <button class="cp-chip element-chip" data-element="H" type="button" aria-pressed="true">H</button>
+              <button class="cp-chip element-chip" data-element="He" type="button" aria-pressed="false">He</button>
+              <button class="cp-chip element-chip" data-element="Na" type="button" aria-pressed="false">Na</button>
+              <button class="cp-chip element-chip" data-element="Ca" type="button" aria-pressed="false">Ca</button>
+              <button class="cp-chip element-chip" data-element="Fe" type="button" aria-pressed="false">Fe</button>
+            </div>
+          </div>
+
+          <label id="lineDensityWrap" class="check" hidden>
+            <input id="showAllLines" type="checkbox" />
+            Show all element lines
+          </label>
+
+          <div class="presets">
+            <div class="presets__label">Presets (keys 1-8)</div>
+            <div class="cp-chip-group--grid presets__row presets__row--2col" role="group" aria-label="Velocity presets">
+              <button class="cp-chip preset-chip" data-preset="1" type="button" aria-pressed="false">1: At rest</button>
+              <button class="cp-chip preset-chip" data-preset="2" type="button" aria-pressed="false">2: Vega</button>
+              <button class="cp-chip preset-chip" data-preset="3" type="button" aria-pressed="false">3: Barnard</button>
+              <button class="cp-chip preset-chip" data-preset="4" type="button" aria-pressed="false">4: M31</button>
+              <button class="cp-chip preset-chip" data-preset="5" type="button" aria-pressed="false">5: Cluster</button>
+              <button class="cp-chip preset-chip" data-preset="6" type="button" aria-pressed="false">6: Coma</button>
+              <button class="cp-chip preset-chip" data-preset="7" type="button" aria-pressed="false">7: 3C 273</button>
+              <button class="cp-chip preset-chip" data-preset="8" type="button" aria-pressed="false">8: High-z</button>
+            </div>
+          </div>
+
+          <button id="mysterySpectrumBtn" class="cp-button cp-button--outline" type="button">Mystery Spectrum</button>
+
+          <div id="mysteryPanel" class="mystery-panel cp-notice" hidden>
+            <p id="mysteryPrompt" class="cp-muted">Mystery challenge: identify the hidden element and spectrum mode.</p>
+            <p class="cp-muted mystery-loop">Predict -> check -> explain: commit to a guess, check it, then explain your spectral evidence.</p>
+            <label class="control" for="mysteryGuessElement">
+              <span>Element guess</span>
+              <select id="mysteryGuessElement">
+                <option value="H">H</option>
+                <option value="He">He</option>
+                <option value="Na">Na</option>
+                <option value="Ca">Ca</option>
+                <option value="Fe">Fe</option>
+              </select>
+            </label>
+            <div class="cp-chip-group" role="radiogroup" aria-label="Mystery mode guess">
+              <button id="guessModeEmission" class="cp-chip" role="radio" aria-checked="true" type="button">Guess emission</button>
+              <button id="guessModeAbsorption" class="cp-chip" role="radio" aria-checked="false" type="button">Guess absorption</button>
+            </div>
+            <div class="mystery-actions">
+              <button id="checkMysteryAnswer" class="cp-button cp-button--outline" type="button">Check answer</button>
+              <button id="mysteryHint" class="cp-button cp-button--outline" type="button">Hint</button>
+              <button id="exitMystery" class="cp-button cp-button--ghost" type="button">End mystery</button>
+            </div>
+          </div>
+
+          <p id="copyLockHint" class="cp-muted copy-lock-hint" hidden>
+            Copy Results is locked until you check or end the mystery challenge.
+          </p>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </aside>
+
+      <section class="cp-demo__stage cp-stage" aria-label="Visualization stage">
+        <canvas class="cp-starfield" aria-hidden="true"></canvas>
+        <div class="cp-tabs stage-tabs" role="tablist" aria-label="View mode">
+          <button class="cp-tab" role="tab" aria-selected="true" aria-controls="panel-explore" id="tab-explore">Explore</button>
+          <button class="cp-tab" role="tab" aria-selected="false" aria-controls="panel-understand" id="tab-understand">Understand</button>
+        </div>
+
+        <div class="cp-tab-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
+          <div class="stage-grid">
+            <article class="viz-card wave-card">
+              <header>
+                <h3>Wave spacing at the observer</h3>
+                <p class="cp-muted">Observed crests are uniformly spaced at $\lambda_{\rm obs}$.</p>
+              </header>
+              <svg id="waveDiagram" viewBox="0 0 800 250" role="img" aria-label="Wave diagram showing Doppler shift of light"></svg>
+            </article>
+
+            <article class="viz-card spectrum-card">
+              <header>
+                <h3>Lab vs observed spectral lines</h3>
+                <p class="cp-muted">Connectors show how each rest line shifts under $v_r$.</p>
+              </header>
+              <canvas id="spectrumCanvas" role="img" aria-label="Spectrum comparator with lab and observed line strips"></canvas>
+              <div class="spectrum-actions">
+                <button id="zoomVisible" class="cp-button cp-button--outline" type="button">Zoom to visible</button>
+                <button id="centerLines" class="cp-button cp-button--outline" type="button">Center on lines</button>
+                <button id="zoomReset" class="cp-button cp-button--ghost" type="button">Reset range</button>
+                <span id="domainLabel" class="cp-muted">80-2200 nm</span>
+              </div>
+            </article>
+
+            <details id="soundVsLight" class="cp-notice misconception-callout">
+              <summary>Why don't waves bunch near the source?</summary>
+              <div class="callout-grid">
+                <section>
+                  <h4>Sound (medium)</h4>
+                  <p>
+                    Ripples compress ahead and stretch behind because air carries the disturbance.
+                  </p>
+                </section>
+                <section>
+                  <h4>Light (no medium)</h4>
+                  <p>
+                    Each crest travels at $c$ in vacuum. The spacing is set at emission and remains uniform when observed.
+                  </p>
+                </section>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
+          <div class="cp-notice understand-intro">
+            <h3>Doppler formulas for light</h3>
+            <p>
+              Compare the non-relativistic approximation with the exact relativistic relation and watch where they diverge.
+            </p>
+          </div>
+
+          <div class="understand-grid">
+            <article class="cp-notice understand-card">
+              <h3>Non-relativistic wavelength and frequency</h3>
+              <p class="understand-equation">
+                $$\lambda_{\rm obs} = \lambda_0\left(1 + \frac{v_r}{c}\right),\qquad
+                \nu_{\rm obs} = \frac{\nu_0}{1 + v_r/c}$$
+              </p>
+              <ul>
+                <li>Good for small $|v_r|/c$.</li>
+                <li>Wavelength and frequency shifts are not exact sign mirrors at finite speed.</li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>Relativistic Doppler</h3>
+              <p class="understand-equation">
+                $$\lambda_{\rm obs} = \lambda_0\sqrt{\frac{1+\beta}{1-\beta}},\qquad
+                \nu_{\rm obs} = \nu_0\sqrt{\frac{1-\beta}{1+\beta}},\qquad
+                \beta = \frac{v_r}{c}$$
+              </p>
+              <ul>
+                <li>Required as $|v_r|$ approaches a meaningful fraction of $c$.</li>
+                <li>The wavelength and frequency factors are exact reciprocals.</li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>Redshift and inverse velocity</h3>
+              <p class="understand-equation">
+                $$z = \frac{\lambda_{\rm obs} - \lambda_0}{\lambda_0},\qquad
+                \beta = \frac{(1+z)^2 - 1}{(1+z)^2 + 1}$$
+              </p>
+              <ul>
+                <li>$z > 0$ means redshift (receding).</li>
+                <li>$z &lt; 0$ means blueshift (approaching).</li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>Model boundary</h3>
+              <ul>
+                <li>This demo models kinematic Doppler shift only.</li>
+                <li>Cosmological and gravitational redshift are distinct mechanisms.</li>
+                <li>Line catalogs are empirical rest wavelengths (vacuum).</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
+        <div class="cp-panel-header">Readouts</div>
+        <div class="cp-panel-body readout-grid">
+          <div class="cp-readout">
+            <div class="cp-readout__label">Representative line</div>
+            <div class="cp-readout__value"><span id="lineLabelValue">H-alpha 656.3</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Radial velocity $v_r$</div>
+            <div class="cp-readout__value"><span id="vrValue">0</span> <span class="cp-readout__unit">km/s</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Physical redshift $z_{\rm rel}$</div>
+            <div class="cp-readout__value"><span id="zValue">0</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Observed wavelength</div>
+            <div class="cp-readout__value"><span id="lambdaObsValue">656.3</span> <span class="cp-readout__unit">nm</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Wavelength shift $\Delta\lambda$</div>
+            <div class="cp-readout__value"><span id="deltaLambdaValue">0</span> <span class="cp-readout__unit">nm</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Observed frequency</div>
+            <div class="cp-readout__value"><span id="nuObsValue">456.8</span> <span class="cp-readout__unit">THz</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Frequency shift $\Delta\nu$</div>
+            <div class="cp-readout__value"><span id="deltaNuValue">0</span> <span class="cp-readout__unit">THz</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Band</div>
+            <div class="cp-readout__value"><span id="bandValue">Visible (red)</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Regime</div>
+            <div class="cp-readout__value"><span id="regimeValue">non-relativistic</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">NR divergence</div>
+            <div class="cp-readout__value"><span id="divergenceValue">0</span> <span class="cp-readout__unit">%</span></div>
+          </div>
+        </div>
+        <div id="comparisonReadouts" class="comparison-readouts" hidden>
+          <div class="cp-readout">
+            <div class="cp-readout__label">$\lambda_{\rm obs}$ non-rel</div>
+            <div class="cp-readout__value"><span id="lambdaNonRelValue">656.3</span> <span class="cp-readout__unit">nm</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">$\lambda_{\rm obs}$ relativistic</div>
+            <div class="cp-readout__value"><span id="lambdaRelValue">656.3</span> <span class="cp-readout__unit">nm</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">$z_{\rm nonrel}$ vs $z_{\rm rel}$</div>
+            <div class="cp-readout__value"><span id="zCompareValue">0 vs 0</span></div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">4 bullets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Wave crests stay uniformly spaced at the observer; only spacing changes with velocity.</li>
+                <li>Connectors tie each lab line to its observed position so shifts are visually traceable.</li>
+                <li>Non-rel and relativistic formulas agree at low speed but diverge at higher $|v_r|$.</li>
+                <li>Hydrogen uses model-computed lines; heavier elements use empirical catalogs.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">Doppler + spectra</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Speed of light: $c = 299,792.458\ \text{km/s}$ (exact).</li>
+                <li>Positive velocity means receding (redshift), negative means approaching (blueshift).</li>
+                <li>The physical state couples $v_r$ and $z$ through the relativistic inverse relation.</li>
+                <li>Vacuum wavelengths are used throughout.</li>
+                <li>This instrument models kinematic Doppler shift, not cosmological expansion or gravitational redshift.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

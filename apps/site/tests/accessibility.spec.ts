@@ -1,11 +1,12 @@
 import { test, expect } from "@playwright/test";
 
-// All 14 demos in the Cosmic Playground suite
+// All demos in the Cosmic Playground suite
 const DEMOS = [
   "angular-size",
   "binary-orbits",
   "blackbody-radiation",
   "conservation-laws",
+  "doppler-shift",
   "eclipse-geometry",
   "em-spectrum",
   "eos-lab",

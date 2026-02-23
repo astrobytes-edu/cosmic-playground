@@ -3,6 +3,8 @@ export { AstroUnits } from "./units";
 export { AngularSizeModel } from "./angularSizeModel";
 export { BlackbodyRadiationModel } from "./blackbodyRadiationModel";
 export { ConservationLawsModel } from "./conservationLawsModel";
+export { DopplerShiftModel } from "./dopplerShiftModel";
+export type { DopplerRegimeLabel, ShiftLineInput, ShiftLineResult } from "./dopplerShiftModel";
 export { EclipseGeometryModel } from "./eclipseGeometryModel";
 export { KeplersLawsModel } from "./keplersLawsModel";
 export { MoonPhasesModel } from "./moonPhasesModel";
@@ -11,7 +13,12 @@ export { PhotonModel } from "./photonModel";
 export { RetrogradeMotionModel } from "./retrogradeMotionModel";
 export { SeasonsModel } from "./seasonsModel";
 export { SpectralLineModel } from "./spectralLineModel";
-export type { TransitionRecord, ElementLineData, ElementLineEntry } from "./spectralLineModel";
+export type {
+  ElementLineData,
+  ElementLineDetail,
+  ElementLineEntry,
+  TransitionRecord
+} from "./spectralLineModel";
 export { StellarEosModel } from "./stellarEosModel";
 export type {
   AdditionalPressureTerm,
