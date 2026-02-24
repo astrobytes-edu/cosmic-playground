@@ -69,7 +69,15 @@
 
           <label class="control" for="haloMassSlider">
             <span>Dark halo mass ($\times 10^{10}\,M_\odot$)</span>
-            <input id="haloMassSlider" type="range" min="0" max="200" step="0.5" value="110" />
+            <input
+              id="haloMassSlider"
+              type="range"
+              min="0"
+              max="200"
+              step="0.5"
+              value="110"
+              data-tooltip-source="#haloMassSliderValue"
+            />
             <span class="control__value"><span id="haloMassSliderValue">110.0</span></span>
           </label>
 
@@ -105,7 +113,15 @@
 
           <label class="control" for="radiusSlider">
             <span>Radius marker $R$ (kpc)</span>
-            <input id="radiusSlider" type="range" min="0.5" max="50" step="0.1" value="10" />
+            <input
+              id="radiusSlider"
+              type="range"
+              min="0.5"
+              max="50"
+              step="0.1"
+              value="10"
+              data-tooltip-source="#radiusSliderValue"
+            />
             <span class="control__value"><span id="radiusSliderValue">10.0</span></span>
           </label>
 
@@ -141,7 +157,7 @@
 
           <button id="challengeModeBtn" class="cp-button cp-button--outline" type="button">Mystery Curve Challenge</button>
           <div id="challengePanel" class="cp-notice challenge-panel" hidden>
-            <p id="challengePrompt" class="cp-muted">Guess the hidden preset and whether the outer curve is flat or Keplerian.</p>
+            <p id="challengePrompt" class="cp-muted">Guess the hidden preset and whether the outer curve is flat or Keplerian decline.</p>
             <label class="control" for="challengeGuessPreset">
               <span>Preset guess</span>
               <select id="challengeGuessPreset">
@@ -236,6 +252,34 @@
         </div>
       </section>
 
+      <div class="cp-playbar" role="region" aria-label="Radius sweep transport">
+        <button class="cp-playbar__btn" id="btn-play" type="button" aria-label="Play radius sweep">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6z" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-pause" type="button" aria-label="Pause radius sweep" disabled>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" /><rect x="9.5" y="2" width="3.5" height="12" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-step-back" type="button" aria-label="Step radius backward">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="2" height="12" /><path d="M14 2L6 8l8 6z" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-step-forward" type="button" aria-label="Step radius forward">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="12" y="2" width="2" height="12" /><path d="M2 2l8 6-8 6z" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-reset" type="button" aria-label="Reset radius sweep">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1 1 1.8 4.3" /><path d="M2 13V8h5" /></svg>
+        </button>
+        <label class="speed-control" for="speed-select">
+          Speed
+          <select id="speed-select" class="cp-select">
+            <option value="1">1x</option>
+            <option value="2" selected>2x</option>
+            <option value="5">5x</option>
+            <option value="10">10x</option>
+          </select>
+        </label>
+        <span class="cp-playbar__phase" id="playbarState">Sweep paused</span>
+      </div>
+
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body readout-grid">
@@ -245,43 +289,43 @@
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Total velocity $V(R)$</div>
-            <div class="cp-readout__value"><span id="vTotalValue">0.0</span> <span class="cp-readout__unit">km/s</span></div>
+            <div class="cp-readout__value"><span id="vTotalValue">&mdash;</span> <span class="cp-readout__unit">km/s</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Keplerian velocity</div>
-            <div class="cp-readout__value"><span id="vKeplerianValue">0.0</span> <span class="cp-readout__unit">km/s</span></div>
+            <div class="cp-readout__value"><span id="vKeplerianValue">&mdash;</span> <span class="cp-readout__unit">km/s</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Enclosed mass $M(&lt;R)$</div>
-            <div class="cp-readout__value"><span id="mEnclosedValue">0.0</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
+            <div class="cp-readout__value"><span id="mEnclosedValue">&mdash;</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Visible mass $M_{\rm vis}$</div>
-            <div class="cp-readout__value"><span id="mVisibleValue">0.0</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
+            <div class="cp-readout__value"><span id="mVisibleValue">&mdash;</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Dark mass $M_{\rm dark}$</div>
-            <div class="cp-readout__value"><span id="mDarkValue">0.0</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
+            <div class="cp-readout__value"><span id="mDarkValue">&mdash;</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Dark-to-visible ratio</div>
-            <div class="cp-readout__value"><span id="darkVisRatioValue">0.0</span> <span class="cp-readout__unit">1</span></div>
+            <div class="cp-readout__value"><span id="darkVisRatioValue">&mdash;</span> <span class="cp-readout__unit">1</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Baryon fraction $f_b$</div>
-            <div class="cp-readout__value"><span id="baryonFracValue">0.0</span> <span class="cp-readout__unit">1</span></div>
+            <div class="cp-readout__value"><span id="baryonFracValue">&mdash;</span> <span class="cp-readout__unit">1</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">21-cm Doppler shift</div>
-            <div class="cp-readout__value"><span id="deltaLambda21Value">0.0</span> <span class="cp-readout__unit">mm</span></div>
+            <div class="cp-readout__value"><span id="deltaLambda21Value">&mdash;</span> <span class="cp-readout__unit">mm</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Concentration $c$</div>
-            <div class="cp-readout__value"><span id="concValue">0.0</span> <span class="cp-readout__unit">1</span></div>
+            <div class="cp-readout__value"><span id="concValue">&mdash;</span> <span class="cp-readout__unit">1</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Virial radius $R_{\rm vir}$</div>
-            <div class="cp-readout__value"><span id="rVirValue">0.0</span> <span class="cp-readout__unit">kpc</span></div>
+            <div class="cp-readout__value"><span id="rVirValue">&mdash;</span> <span class="cp-readout__unit">kpc</span></div>
           </div>
         </div>
       </aside>

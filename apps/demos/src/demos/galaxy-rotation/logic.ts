@@ -41,6 +41,25 @@ export function formatSigned(value: number, digits = 3): string {
   return `${sign}${Math.abs(value).toFixed(digits)}`;
 }
 
+export function advanceRadiusSweep(args: {
+  radiusKpc: number;
+  minKpc: number;
+  maxKpc: number;
+  direction: -1 | 1;
+  deltaKpc: number;
+}): { radiusKpc: number; direction: -1 | 1 } {
+  let radiusKpc = args.radiusKpc + args.deltaKpc * args.direction;
+  let direction: -1 | 1 = args.direction;
+  if (radiusKpc >= args.maxKpc) {
+    radiusKpc = args.maxKpc;
+    direction = -1;
+  } else if (radiusKpc <= args.minKpc) {
+    radiusKpc = args.minKpc;
+    direction = 1;
+  }
+  return { radiusKpc, direction };
+}
+
 export function findDarkDominanceRadiusKpc(samples: RotationSample[]): number | null {
   const sorted = [...samples].sort((a, b) => a.radiusKpc - b.radiusKpc);
   for (const row of sorted) {

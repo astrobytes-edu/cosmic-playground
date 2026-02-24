@@ -72,14 +72,16 @@ test.describe("Galaxy Rotation -- E2E", () => {
     await page.locator("#challengeModeBtn").click();
     await expect(page.locator("#challengePanel")).toBeVisible();
     await expect(page.locator("#copyResults")).toBeDisabled();
-    await expect(page.locator("#haloMassSlider")).toBeDisabled();
-    await expect(page.locator("#diskMassSlider")).toBeDisabled();
+    await expect(page.locator("#haloMassSlider")).toBeEnabled();
+    await expect(page.locator("#diskMassSlider")).toBeEnabled();
     await expect(page.locator("#mDarkValue")).toHaveText("—");
     await expect(page.locator("#copyChallengeEvidence")).toHaveAttribute("hidden", "");
 
     const haloMassBefore = await page.locator("#haloMassSliderValue").innerText();
     await page.keyboard.press("4");
     await expect(page.locator("#haloMassSliderValue")).toHaveText(haloMassBefore);
+    await page.locator("#haloMassSlider").fill("200");
+    await expect(page.locator("#haloMassSliderValue")).toHaveText("200.0");
 
     await page.locator("#checkChallenge").click();
     await expect(page.locator("#copyResults")).toBeEnabled();

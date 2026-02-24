@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   RADIAL_PROFILE_SAMPLE_KPC,
+  advanceRadiusSweep,
   buildChallengeEvidenceText,
   buildGalaxyRotationExportPayload,
   classifyOuterCurveBehavior,
@@ -66,6 +67,28 @@ describe("Galaxy Rotation demo logic", () => {
     expect(isChallengeCopyLocked({ challengeActive: true, challengeRevealed: false })).toBe(true);
     expect(isChallengeCopyLocked({ challengeActive: true, challengeRevealed: true })).toBe(false);
     expect(isChallengeCopyLocked({ challengeActive: false, challengeRevealed: false })).toBe(false);
+  });
+
+  it("advances radius sweep and flips direction at bounds", () => {
+    const high = advanceRadiusSweep({
+      radiusKpc: 49.8,
+      minKpc: 0.5,
+      maxKpc: 50,
+      direction: 1,
+      deltaKpc: 0.6,
+    });
+    expect(high.radiusKpc).toBe(50);
+    expect(high.direction).toBe(-1);
+
+    const low = advanceRadiusSweep({
+      radiusKpc: 0.7,
+      minKpc: 0.5,
+      maxKpc: 50,
+      direction: -1,
+      deltaKpc: 0.4,
+    });
+    expect(low.radiusKpc).toBe(0.5);
+    expect(low.direction).toBe(1);
   });
 
   it("builds challenge evidence text with debrief context", () => {

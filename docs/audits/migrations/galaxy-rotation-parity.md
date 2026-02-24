@@ -1,8 +1,22 @@
 # galaxy-rotation Migration Parity Audit
 
-Date: 2026-02-23
+Date: 2026-02-24
 
 Scope: compare `galaxy-rotation` implementation against `docs/specs/galaxy-rotation-spec.md` and launch-gate contracts.
+
+## 2026-02-24 SoTA uplift addendum
+
+Completed:
+- Added full `cp-playbar` transport (`play/pause/step/reset/speed`) for radius-marker sweep with reduced-motion guard.
+- Added tooltip hooks for halo-mass and radius sliders.
+- Expanded challenge deck from one scenario to three scenario prompts.
+- Kept model sliders available during hidden-challenge state while locking preset switching to preserve mystery integrity.
+- Replaced pre-hydration readout placeholders with neutral em-dash values to avoid misleading zeros.
+- Normalized challenge copy to “Keplerian decline” wording.
+- Applied celestial-token and glow-oriented styling updates in galaxy schematic rendering and translucent panel treatment.
+
+Verification:
+- `corepack pnpm -C apps/demos test -- src/demos/galaxy-rotation/design-contracts.test.ts src/demos/galaxy-rotation/logic.test.ts`
 
 ## References
 

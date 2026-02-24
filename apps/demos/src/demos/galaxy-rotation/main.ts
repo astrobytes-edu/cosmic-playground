@@ -13,6 +13,7 @@ import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { GalaxyRotationModel, type GalaxyParams, type GalaxyPresetKey, type RotationCurvePoint } from "@cosmic/physics";
 import {
   RADIAL_PROFILE_SAMPLE_KPC,
+  advanceRadiusSweep,
   buildChallengeEvidenceText,
   buildGalaxyRotationExportPayload,
   classifyOuterCurveBehavior,
@@ -79,6 +80,13 @@ const stationMode = $<HTMLButtonElement>("#stationMode");
 const help = $<HTMLButtonElement>("#help");
 const copyResults = $<HTMLButtonElement>("#copyResults");
 const status = $<HTMLParagraphElement>("#status");
+const playBtn = $<HTMLButtonElement>("#btn-play");
+const pauseBtn = $<HTMLButtonElement>("#btn-pause");
+const stepBackBtn = $<HTMLButtonElement>("#btn-step-back");
+const stepForwardBtn = $<HTMLButtonElement>("#btn-step-forward");
+const resetBtn = $<HTMLButtonElement>("#btn-reset");
+const speedSelect = $<HTMLSelectElement>("#speed-select");
+const playbarState = $<HTMLSpanElement>("#playbarState");
 
 const galaxyView = $<SVGSVGElement>("#galaxyView");
 
@@ -187,6 +195,16 @@ const state = {
 
 const challengeSeed = new URL(window.location.href).searchParams.get("challengeSeed");
 const challengeRandom = challengeSeed ? createSeededRandom(challengeSeed) : null;
+const prefersReducedMotion =
+  typeof window !== "undefined"
+  && typeof window.matchMedia !== "undefined"
+  && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let sweepFrame = 0;
+let sweepLastTimestamp = 0;
+let sweepDirection: -1 | 1 = 1;
+
+const RADIUS_SWEEP_RATE_KPC_PER_SEC = 3.4;
 
 function curveForParams(params: GalaxyParams): RotationCurvePoint[] {
   return GalaxyRotationModel.rotationCurve({
@@ -254,7 +272,7 @@ function sliderToParams() {
 function setPreset(presetId: GalaxyPresetId, announce = true) {
   if (state.challenge.active && !state.challenge.revealed) {
     if (announce) {
-      setLiveRegionText(status, "Preset changes are locked while mystery challenge is hidden.");
+      setLiveRegionText(status, "Preset switching is locked while the mystery target is hidden. Tune model sliders instead.");
     }
     return;
   }
@@ -270,9 +288,6 @@ function setPreset(presetId: GalaxyPresetId, announce = true) {
 }
 
 function setCustomFromSliderChange() {
-  if (state.challenge.active && !state.challenge.revealed) {
-    return;
-  }
   if (state.presetId !== "custom") {
     state.presetId = "custom";
   }
@@ -382,6 +397,60 @@ function syncCopyLockState() {
   copyChallengeEvidence.setAttribute("aria-disabled", String(!evidenceReady));
 }
 
+function syncPlaybarState() {
+  const running = sweepFrame !== 0;
+  playBtn.disabled = running || prefersReducedMotion;
+  pauseBtn.disabled = !running;
+  playbarState.textContent = running
+    ? `Sweeping ${sweepDirection > 0 ? "outward" : "inward"}`
+    : "Sweep paused";
+}
+
+function stopRadiusSweep() {
+  if (sweepFrame !== 0) {
+    window.cancelAnimationFrame(sweepFrame);
+    sweepFrame = 0;
+  }
+  sweepLastTimestamp = 0;
+  syncPlaybarState();
+}
+
+function startRadiusSweep() {
+  if (prefersReducedMotion) {
+    setLiveRegionText(status, "Reduced motion enabled; autoplay sweep is disabled.");
+    return;
+  }
+  if (sweepFrame !== 0) return;
+
+  sweepLastTimestamp = 0;
+  const tick = (timestamp: number) => {
+    if (sweepFrame === 0) return;
+    if (sweepLastTimestamp === 0) {
+      sweepLastTimestamp = timestamp;
+      sweepFrame = window.requestAnimationFrame(tick);
+      return;
+    }
+
+    const dtSec = Math.min(0.12, (timestamp - sweepLastTimestamp) / 1000);
+    sweepLastTimestamp = timestamp;
+    const speed = Number(speedSelect.value) || 1;
+    const next = advanceRadiusSweep({
+      radiusKpc: state.radiusMarkerKpc,
+      minKpc: 0.5,
+      maxKpc: 50,
+      direction: sweepDirection,
+      deltaKpc: RADIUS_SWEEP_RATE_KPC_PER_SEC * speed * dtSec,
+    });
+    sweepDirection = next.direction;
+    state.radiusMarkerKpc = next.radiusKpc;
+    render();
+    sweepFrame = window.requestAnimationFrame(tick);
+  };
+
+  sweepFrame = window.requestAnimationFrame(tick);
+  syncPlaybarState();
+}
+
 function drawGalaxyView(curveSample: RotationCurvePoint) {
   clearSvg(galaxyView);
 
@@ -391,15 +460,23 @@ function drawGalaxyView(curveSample: RotationCurvePoint) {
   const cy = height / 2;
 
   const defs = svgEl("defs");
+  const glowFilter = svgEl("filter", { id: "galaxyGlow", x: "-40%", y: "-40%", width: "180%", height: "180%" });
+  glowFilter.appendChild(svgEl("feGaussianBlur", { stdDeviation: "5", result: "blur" }));
+  const merge = svgEl("feMerge");
+  merge.appendChild(svgEl("feMergeNode", { in: "blur" }));
+  merge.appendChild(svgEl("feMergeNode", { in: "SourceGraphic" }));
+  glowFilter.appendChild(merge);
+  defs.appendChild(glowFilter);
+
   const diskGrad = svgEl("radialGradient", { id: "diskGrad", cx: "50%", cy: "50%", r: "50%" });
-  diskGrad.appendChild(svgEl("stop", { offset: "0%", "stop-color": "#f8d29a", "stop-opacity": "0.98" }));
-  diskGrad.appendChild(svgEl("stop", { offset: "55%", "stop-color": "#9caed6", "stop-opacity": "0.42" }));
-  diskGrad.appendChild(svgEl("stop", { offset: "100%", "stop-color": "#3f4f82", "stop-opacity": "0.07" }));
+  diskGrad.appendChild(svgEl("stop", { offset: "0%", "stop-color": "var(--cp-celestial-sun)", "stop-opacity": "0.95" }));
+  diskGrad.appendChild(svgEl("stop", { offset: "55%", "stop-color": "var(--cp-celestial-earth)", "stop-opacity": "0.34" }));
+  diskGrad.appendChild(svgEl("stop", { offset: "100%", "stop-color": "var(--cp-celestial-orbit)", "stop-opacity": "0.05" }));
   defs.appendChild(diskGrad);
 
   const haloGrad = svgEl("radialGradient", { id: "haloGrad", cx: "50%", cy: "50%", r: "50%" });
-  haloGrad.appendChild(svgEl("stop", { offset: "0%", "stop-color": "#8aa4ff", "stop-opacity": "0.22" }));
-  haloGrad.appendChild(svgEl("stop", { offset: "100%", "stop-color": "#8aa4ff", "stop-opacity": "0.02" }));
+  haloGrad.appendChild(svgEl("stop", { offset: "0%", "stop-color": "var(--cp-celestial-orbit)", "stop-opacity": "0.24" }));
+  haloGrad.appendChild(svgEl("stop", { offset: "100%", "stop-color": "var(--cp-celestial-orbit)", "stop-opacity": "0.02" }));
   defs.appendChild(haloGrad);
   galaxyView.appendChild(defs);
 
@@ -414,6 +491,7 @@ function drawGalaxyView(curveSample: RotationCurvePoint) {
     cy,
     r: haloRadius,
     fill: "url(#haloGrad)",
+    filter: "url(#galaxyGlow)",
   }));
 
   galaxyView.appendChild(svgEl("circle", {
@@ -421,6 +499,7 @@ function drawGalaxyView(curveSample: RotationCurvePoint) {
     cy,
     r: 158,
     fill: "url(#diskGrad)",
+    filter: "url(#galaxyGlow)",
   }));
 
   for (let arm = 0; arm < 2; arm += 1) {
@@ -434,7 +513,7 @@ function drawGalaxyView(curveSample: RotationCurvePoint) {
     }
     galaxyView.appendChild(svgEl("path", {
       d: pathParts.join(" "),
-      stroke: "rgba(200, 220, 255, 0.24)",
+      stroke: "color-mix(in srgb, var(--cp-celestial-orbit) 45%, transparent)",
       "stroke-width": 1.3,
       fill: "none",
     }));
@@ -444,7 +523,8 @@ function drawGalaxyView(curveSample: RotationCurvePoint) {
     cx,
     cy,
     r: 24,
-    fill: "rgba(255, 208, 138, 0.96)",
+    fill: "var(--cp-celestial-sun-core)",
+    filter: "url(#galaxyGlow)",
   }));
 
   const slitY = cy;
@@ -455,7 +535,7 @@ function drawGalaxyView(curveSample: RotationCurvePoint) {
     y1: slitY,
     x2: cx,
     y2: slitY,
-    stroke: "rgba(109, 199, 255, 0.85)",
+    stroke: "var(--cp-accent-cyan)",
     "stroke-width": 4,
     "stroke-linecap": "round",
   }));
@@ -464,7 +544,7 @@ function drawGalaxyView(curveSample: RotationCurvePoint) {
     y1: slitY,
     x2: slitRight,
     y2: slitY,
-    stroke: "rgba(255, 132, 132, 0.85)",
+    stroke: "var(--cp-accent-red)",
     "stroke-width": 4,
     "stroke-linecap": "round",
   }));
@@ -475,18 +555,18 @@ function drawGalaxyView(curveSample: RotationCurvePoint) {
     y1: slitY - 24,
     x2: markerX,
     y2: slitY + 24,
-    stroke: "#ffe8b2",
+    stroke: "var(--cp-celestial-sun-core)",
     "stroke-width": 3,
   }));
 
-  const labelBlue = svgEl("text", { x: slitLeft - 8, y: slitY - 10, fill: "#8ed9ff", "font-size": 12 });
+  const labelBlue = svgEl("text", { x: slitLeft - 8, y: slitY - 10, fill: "var(--cp-accent-cyan)", "font-size": 12 });
   labelBlue.textContent = "Blueshift";
   galaxyView.appendChild(labelBlue);
-  const labelRed = svgEl("text", { x: slitRight - 56, y: slitY - 10, fill: "#ffadad", "font-size": 12 });
+  const labelRed = svgEl("text", { x: slitRight - 56, y: slitY - 10, fill: "var(--cp-accent-red)", "font-size": 12 });
   labelRed.textContent = "Redshift";
   galaxyView.appendChild(labelRed);
 
-  const note = svgEl("text", { x: 16, y: 580, fill: "rgba(226,234,248,0.72)", "font-size": 11 });
+  const note = svgEl("text", { x: 16, y: 580, fill: "var(--cp-muted)", "font-size": 11 });
   note.textContent = "Schematic face-on view. V(R) is intrinsic inclination-corrected velocity.";
   galaxyView.appendChild(note);
 
@@ -813,7 +893,7 @@ function render() {
   radiusSliderValue.textContent = formatNumber(state.radiusMarkerKpc, 1);
 
   const lockedPreset = state.presetId !== "custom";
-  const modelControlsLocked = challengeHidden || (lockedPreset && !state.challenge.active);
+  const modelControlsLocked = lockedPreset && !state.challenge.active;
   haloMassSlider.disabled = modelControlsLocked;
   haloScaleSlider.disabled = modelControlsLocked;
   diskMassSlider.disabled = modelControlsLocked;
@@ -821,7 +901,7 @@ function render() {
   bulgeMassSlider.disabled = modelControlsLocked;
   bulgeScaleSlider.disabled = modelControlsLocked;
   for (const row of modelControlRows) {
-    row.hidden = challengeHidden;
+    row.hidden = false;
   }
 
   plotVelocity.setAttribute("aria-checked", String(state.plotMode === "velocity"));
@@ -838,9 +918,10 @@ function render() {
   insetToggle.disabled = state.plotMode !== "velocity";
 
   challengePanel.hidden = !(state.challenge.active || state.challenge.revealed);
+  const activePrompt = challengeEngine.getCurrentChallenge()?.prompt;
   challengePrompt.textContent = state.challenge.revealed
     ? "Answer revealed. Start another challenge to try a new hidden target."
-    : "Guess the hidden preset and whether its outer curve is flat or Keplerian.";
+    : activePrompt ?? "Guess the hidden preset and whether its outer curve is flat or Keplerian decline.";
   challengeGuessPreset.value = state.challenge.guessPreset;
   guessFlat.setAttribute("aria-checked", String(state.challenge.guessBehavior === "flat"));
   guessKeplerian.setAttribute("aria-checked", String(state.challenge.guessBehavior === "keplerian"));
@@ -850,6 +931,7 @@ function render() {
   challengeHint.disabled = !state.challenge.active;
 
   syncCopyLockState();
+  syncPlaybarState();
 
   radiusValue.textContent = formatNumber(state.radiusMarkerKpc, 1);
   if (challengeHidden) {
@@ -895,35 +977,79 @@ type ChallengeCheckState = {
   targetBehavior: OuterCurveBehavior;
 };
 
-const challengeDefinition: Challenge = {
-  type: "custom",
-  prompt: "Identify the hidden preset and outer-curve behavior.",
-  hints: [
-    "Check whether V_total stays nearly constant or declines like R^(-1/2) between 30 and 50 kpc.",
-    "Dwarfs have lower overall speeds and high dark/visible ratios, while massive spirals peak higher.",
-  ],
-  check(rawState: unknown) {
-    const payload = rawState as ChallengeCheckState;
-    const correct = payload.guessedPreset === payload.targetPreset
-      && payload.guessedBehavior === payload.targetBehavior;
-    if (correct) {
+const challenges: Challenge[] = [
+  {
+    type: "custom",
+    prompt: "Scenario 1: Identify the hidden preset and outer-curve behavior.",
+    hints: [
+      "Check whether V_total stays nearly constant or declines like R^(-1/2) between 30 and 50 kpc.",
+      "Dwarfs have lower overall speeds and high dark/visible ratios, while massive spirals peak higher.",
+    ],
+    check(rawState: unknown) {
+      const payload = rawState as ChallengeCheckState;
+      const correct = payload.guessedPreset === payload.targetPreset
+        && payload.guessedBehavior === payload.targetBehavior;
+      if (correct) {
+        return {
+          correct: true,
+          close: true,
+          message: `Correct. Hidden preset was ${PRESETS[payload.targetPreset].label} with ${payload.targetBehavior} outer behavior.`,
+        };
+      }
       return {
-        correct: true,
-        close: true,
-        message: `Correct. Hidden preset was ${PRESETS[payload.targetPreset].label} with ${payload.targetBehavior} outer behavior.`,
+        correct: false,
+        close: false,
+        message: `Not yet. You guessed ${PRESETS[payload.guessedPreset].label} (${payload.guessedBehavior}); target was ${PRESETS[payload.targetPreset].label} (${payload.targetBehavior}).`,
       };
-    }
-    return {
-      correct: false,
-      close: false,
-      message: `Not yet. You guessed ${PRESETS[payload.guessedPreset].label} (${payload.guessedBehavior}); target was ${PRESETS[payload.targetPreset].label} (${payload.targetBehavior}).`,
-    };
+    },
   },
-};
+  {
+    type: "custom",
+    prompt: "Scenario 2: Classify whether the outer curve stays flat or follows Keplerian decline.",
+    hints: [
+      "Compare R=30 and R=50 kpc values before deciding.",
+      "A pronounced R^(-1/2) falloff indicates Keplerian decline.",
+    ],
+    check(rawState: unknown) {
+      const payload = rawState as ChallengeCheckState;
+      const correct = payload.guessedPreset === payload.targetPreset
+        && payload.guessedBehavior === payload.targetBehavior;
+      return {
+        correct,
+        close: correct,
+        message: correct
+          ? "Correct. Your slope classification matches the hidden curve."
+          : "Not yet. Use the outer-slope trend between 30 and 50 kpc as your evidence.",
+      };
+    },
+  },
+  {
+    type: "custom",
+    prompt: "Scenario 3: Estimate where dark matter dominates and use it to support your inference.",
+    hints: [
+      "Use mass mode and find where M_dark crosses M_vis.",
+      "Combine dark-to-visible ratio with outer-slope behavior for your argument.",
+    ],
+    check(rawState: unknown) {
+      const payload = rawState as ChallengeCheckState;
+      const correct = payload.guessedPreset === payload.targetPreset
+        && payload.guessedBehavior === payload.targetBehavior;
+      return {
+        correct,
+        close: correct,
+        message: correct
+          ? "Correct. Your classification is consistent with dark-dominance evidence."
+          : "Not yet. Re-check dark-mass dominance and slope evidence together.",
+      };
+    },
+  },
+];
 
-const challengeEngine = new ChallengeEngine([challengeDefinition], {
+const challengeEngine = new ChallengeEngine(challenges, {
   showUI: false,
   onProgress: () => {
+    const prompt = challengeEngine.getCurrentChallenge()?.prompt;
+    if (prompt) challengePrompt.textContent = prompt;
     setLiveRegionText(status, "Mystery challenge started. Inspect the curve, then check your guess.");
   },
   onStop: () => {
@@ -997,35 +1123,43 @@ function checkChallengeAnswer() {
 }
 
 presetSelect.addEventListener("change", () => {
+  stopRadiusSweep();
   setPreset(presetSelect.value as GalaxyPresetId);
 });
 
 haloMassSlider.addEventListener("input", () => {
+  stopRadiusSweep();
   setCustomFromSliderChange();
   render();
 });
 haloScaleSlider.addEventListener("input", () => {
+  stopRadiusSweep();
   setCustomFromSliderChange();
   render();
 });
 diskMassSlider.addEventListener("input", () => {
+  stopRadiusSweep();
   setCustomFromSliderChange();
   render();
 });
 diskScaleSlider.addEventListener("input", () => {
+  stopRadiusSweep();
   setCustomFromSliderChange();
   render();
 });
 bulgeMassSlider.addEventListener("input", () => {
+  stopRadiusSweep();
   setCustomFromSliderChange();
   render();
 });
 bulgeScaleSlider.addEventListener("input", () => {
+  stopRadiusSweep();
   setCustomFromSliderChange();
   render();
 });
 
 radiusSlider.addEventListener("input", () => {
+  stopRadiusSweep();
   state.radiusMarkerKpc = Number(radiusSlider.value);
   render();
   const curve = curveForParams(state.params);
@@ -1046,36 +1180,47 @@ bindButtonRadioGroup({
 });
 
 showKeplerian.addEventListener("change", () => {
+  stopRadiusSweep();
   state.show.keplerian = showKeplerian.checked;
   render();
 });
 showDisk.addEventListener("change", () => {
+  stopRadiusSweep();
   state.show.disk = showDisk.checked;
   render();
 });
 showBulge.addEventListener("change", () => {
+  stopRadiusSweep();
   state.show.bulge = showBulge.checked;
   render();
 });
 showHalo.addEventListener("change", () => {
+  stopRadiusSweep();
   state.show.halo = showHalo.checked;
   render();
 });
 showMond.addEventListener("change", () => {
+  stopRadiusSweep();
   state.show.mond = showMond.checked;
   render();
 });
 insetToggle.addEventListener("change", () => {
+  stopRadiusSweep();
   state.show.inset = insetToggle.checked;
   render();
 });
 
-challengeModeBtn.addEventListener("click", () => startChallenge());
+challengeModeBtn.addEventListener("click", () => {
+  stopRadiusSweep();
+  startChallenge();
+});
 guessFlat.addEventListener("click", () => {
+  stopRadiusSweep();
   state.challenge.guessBehavior = "flat";
   render();
 });
 guessKeplerian.addEventListener("click", () => {
+  stopRadiusSweep();
   state.challenge.guessBehavior = "keplerian";
   render();
 });
@@ -1088,9 +1233,13 @@ bindButtonRadioGroup({
   },
 });
 challengeGuessPreset.addEventListener("change", () => {
+  stopRadiusSweep();
   state.challenge.guessPreset = challengeGuessPreset.value as Exclude<GalaxyPresetId, "custom">;
 });
-checkChallenge.addEventListener("click", () => checkChallengeAnswer());
+checkChallenge.addEventListener("click", () => {
+  stopRadiusSweep();
+  checkChallengeAnswer();
+});
 challengeHint.addEventListener("click", () => {
   if (!state.challenge.active) {
     setLiveRegionText(status, "Start a challenge to request a hint.");
@@ -1103,7 +1252,10 @@ challengeHint.addEventListener("click", () => {
   }
   setLiveRegionText(status, `Hint: ${hint}`);
 });
-endChallenge.addEventListener("click", () => stopChallenge());
+endChallenge.addEventListener("click", () => {
+  stopRadiusSweep();
+  stopChallenge();
+});
 
 copyChallengeEvidence.addEventListener("click", () => {
   if (!state.challenge.lastEvidence) {
@@ -1135,6 +1287,42 @@ copyResults.addEventListener("click", () => {
       const message = error instanceof Error ? error.message : "Copy failed.";
       setLiveRegionText(status, `Copy failed: ${message}`);
     });
+});
+
+playBtn.addEventListener("click", () => {
+  startRadiusSweep();
+});
+
+pauseBtn.addEventListener("click", () => {
+  stopRadiusSweep();
+});
+
+stepBackBtn.addEventListener("click", () => {
+  stopRadiusSweep();
+  sweepDirection = -1;
+  state.radiusMarkerKpc = clamp(state.radiusMarkerKpc - 1, 0.5, 50);
+  render();
+});
+
+stepForwardBtn.addEventListener("click", () => {
+  stopRadiusSweep();
+  sweepDirection = 1;
+  state.radiusMarkerKpc = clamp(state.radiusMarkerKpc + 1, 0.5, 50);
+  render();
+});
+
+resetBtn.addEventListener("click", () => {
+  stopRadiusSweep();
+  sweepDirection = 1;
+  state.radiusMarkerKpc = 10;
+  render();
+  setLiveRegionText(status, "Radius marker reset to 10.0 kpc.");
+});
+
+speedSelect.addEventListener("change", () => {
+  syncPlaybarState();
+  const speed = Number(speedSelect.value) || 1;
+  setLiveRegionText(status, `Sweep speed set to ${formatNumber(speed, 0)}x.`);
 });
 
 window.addEventListener("resize", () => render());
@@ -1249,16 +1437,19 @@ document.addEventListener("keydown", (event) => {
   switch (event.key) {
     case "k":
       event.preventDefault();
+      stopRadiusSweep();
       state.show.keplerian = !state.show.keplerian;
       render();
       break;
     case "m":
       event.preventDefault();
+      stopRadiusSweep();
       state.show.mond = !state.show.mond;
       render();
       break;
     case "s":
       event.preventDefault();
+      stopRadiusSweep();
       state.show.inset = !state.show.inset;
       render();
       break;
@@ -1268,32 +1459,42 @@ document.addEventListener("keydown", (event) => {
       break;
     case "[":
       event.preventDefault();
+      stopRadiusSweep();
       applyKeyboardNudge(-2);
       break;
     case "]":
       event.preventDefault();
+      stopRadiusSweep();
       applyKeyboardNudge(2);
       break;
     case "1":
       event.preventDefault();
+      stopRadiusSweep();
       setPreset("milky-way-like");
       break;
     case "2":
       event.preventDefault();
+      stopRadiusSweep();
       setPreset("dwarf-galaxy");
       break;
     case "3":
       event.preventDefault();
+      stopRadiusSweep();
       setPreset("massive-spiral");
       break;
     case "4":
       event.preventDefault();
+      stopRadiusSweep();
       setPreset("no-dark-matter");
       break;
     default:
       break;
   }
 });
+
+if (prefersReducedMotion) {
+  setLiveRegionText(status, "Reduced motion enabled; autoplay sweep is disabled.");
+}
 
 render();
 initMath(document);

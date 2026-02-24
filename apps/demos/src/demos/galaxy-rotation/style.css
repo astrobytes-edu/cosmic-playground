@@ -12,6 +12,10 @@
   animation: cp-fade-in 480ms ease-out both;
 }
 
+.cp-demo__drawer {
+  animation: cp-fade-in 560ms var(--cp-ease-out) 0.1s both;
+}
+
 .cp-panel-body {
   display: grid;
   gap: 0.65rem;
@@ -50,7 +54,9 @@
 .viz-card {
   border: 1px solid color-mix(in srgb, var(--cp-border) 80%, transparent);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--cp-bg1) 88%, transparent);
+  background: var(--cp-instr-panel-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   padding: 0.8rem;
   min-height: 280px;
 }
@@ -124,6 +130,22 @@
   color: color-mix(in srgb, var(--cp-accent) 60%, var(--cp-text));
 }
 
+.cp-playbar {
+  animation: cp-fade-in 560ms var(--cp-ease-out) 0.08s backwards;
+}
+
+.speed-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  color: var(--cp-muted);
+  font-size: var(--cp-text-sm);
+}
+
+.speed-control .cp-select {
+  min-width: 84px;
+}
+
 .understand-panel .understand-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -174,5 +196,14 @@
 
   #rotationCanvas {
     min-height: 240px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-demo__controls,
+  .cp-demo__stage,
+  .cp-demo__drawer,
+  .cp-playbar {
+    animation: none;
   }
 }
