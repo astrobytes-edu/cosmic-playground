@@ -19,12 +19,14 @@ has_math: true
 >    - H-gamma: $n=5 \to 2$
 > 2. For each transition, record wavelength $\lambda$ (nm), energy $E_\gamma$ (eV), and series name.
 > 3. Switch to Lyman and record one transition. Note whether it is visible.
-> 4. Switch to Absorption mode and verify the same wavelengths appear as dark dips.
-> 5. Move to Elements tab and run one Mystery Spectrum round (predict -> check -> explain).
+> 4. Switch to Inverse mode and enter $656\ \text{nm}$. Record the inferred transition and residual.
+> 5. On the Hydrogen tab, use the Series Limit Microscope and move the probe toward high $n_{\rm upper}$. Describe the spacing trend.
+> 6. Switch to Absorption mode and verify the same wavelengths appear as dark dips.
+> 7. Move to Elements tab and run one Mystery Spectrum round (predict -> commit evidence -> check -> explain).
 >    - Explain how you used empirical line-pattern matching (not Bohr $n$-levels) to make your guess.
-> 6. Write one sentence claim:
+> 8. Write one sentence claim:
 >    - "Hydrogen lines are discrete because ____; evidence: ____."
-> 7. Explain the limit $n=\infty$ in your own words:
+> 9. Explain the limit $n=\infty$ in your own words:
 >    - What does $E=0$ mean physically?
 >    - Why are bound-state energies negative?
 

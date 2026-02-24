@@ -57,6 +57,28 @@ export interface TransitionRecord {
   seriesName: string;
 }
 
+export type InferenceQuality = "exact" | "near" | "low-confidence";
+
+export interface HydrogenTransitionInference {
+  nUpper: number;
+  nLower: number;
+  wavelengthNm: number;
+  energyEv: number;
+  frequencyHz: number;
+  seriesName: string;
+  residualNm: number;
+  quality: InferenceQuality;
+}
+
+export interface HydrogenPopulationProxy {
+  temperatureK: number;
+  n1Fraction: number;
+  n2Fraction: number;
+  n3Fraction: number;
+  neutralHydrogenFractionProxy: number;
+  balmerStrengthProxy: number;
+}
+
 export interface ElementLineEntry {
   wavelengthNm: number;
   relativeIntensity: number;
@@ -165,6 +187,17 @@ const FE_DENSE_LINES: ElementLineEntry[] = [
   { wavelengthNm: 649.5, relativeIntensity: 0.20, label: "Fe I 649.5" },
   { wavelengthNm: 667.8, relativeIntensity: 0.18, label: "Fe I 667.8" },
 ];
+
+function clamp01(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(1, Math.max(0, value));
+}
+
+function classifyInferenceQuality(residualNm: number): InferenceQuality {
+  if (residualNm <= 0.5) return "exact";
+  if (residualNm <= 2.0) return "near";
+  return "low-confidence";
+}
 
 // ── Model ──────────────────────────────────────────────────
 
@@ -289,6 +322,45 @@ export const SpectralLineModel = {
   },
 
   /**
+   * Inverse solver: infer the hydrogen transition that best matches an observed wavelength.
+   * Scans allowed series and nUpper values, then returns the minimum-residual candidate.
+   */
+  inferHydrogenTransitionFromObservedWavelength(args: {
+    wavelengthNm: number;
+    seriesFilter?: "all" | 1 | 2 | 3 | 4;
+    nUpperMax?: number;
+  }): HydrogenTransitionInference | null {
+    const wavelengthNm = args.wavelengthNm;
+    if (!Number.isFinite(wavelengthNm) || wavelengthNm <= 0) return null;
+    const nUpperMax = args.nUpperMax ?? 40;
+    const seriesFilter = args.seriesFilter ?? "all";
+    const candidateSeries = seriesFilter === "all" ? [1, 2, 3, 4] : [seriesFilter];
+
+    let best: HydrogenTransitionInference | null = null;
+    for (const nLower of candidateSeries) {
+      for (let nUpper = nLower + 1; nUpper <= nUpperMax; nUpper += 1) {
+        const candidateWavelengthNm = SpectralLineModel.transitionWavelengthNm({ nUpper, nLower });
+        if (!Number.isFinite(candidateWavelengthNm)) continue;
+        const residualNm = Math.abs(candidateWavelengthNm - wavelengthNm);
+        if (best && residualNm >= best.residualNm) continue;
+        const energyEv = SpectralLineModel.transitionEnergyEv({ nUpper, nLower });
+        const frequencyHz = SpectralLineModel.transitionFrequencyHz({ nUpper, nLower });
+        best = {
+          nUpper,
+          nLower,
+          wavelengthNm: candidateWavelengthNm,
+          energyEv,
+          frequencyHz,
+          seriesName: SpectralLineModel.seriesName({ nLower }),
+          residualNm,
+          quality: classifyInferenceQuality(residualNm),
+        };
+      }
+    }
+    return best;
+  },
+
+  /**
    * Boltzmann population ratio N_n / N_1 at temperature T.
    * N_n / N_1 = (g_n / g_1) × exp(−(E_n − E_1) / (k_B T))
    * where g_n = 2n² is the statistical weight (degeneracy).
@@ -305,6 +377,61 @@ export const SpectralLineModel = {
     // Prevent underflow
     if (exponent < -700) return 0;
     return gRatio * Math.exp(exponent);
+  },
+
+  /**
+   * Qualitative population + Balmer-strength proxy for instruction.
+   * This is intentionally simplified and should be labeled as such in UI copy.
+   * n1/n2/n3 are relative proxy populations normalized over n=1..3 only.
+   */
+  hydrogenPopulationProxy(args: { temperatureK: number }): HydrogenPopulationProxy {
+    const temperatureK = args.temperatureK;
+    if (!Number.isFinite(temperatureK) || temperatureK <= 0) {
+      return {
+        temperatureK: Number.isFinite(temperatureK) ? temperatureK : 0,
+        n1Fraction: 1,
+        n2Fraction: 0,
+        n3Fraction: 0,
+        neutralHydrogenFractionProxy: 1,
+        balmerStrengthProxy: 0,
+      };
+    }
+
+    const n1 = 1;
+    const n2 = SpectralLineModel.boltzmannPopulationRatio({ n: 2, temperatureK });
+    const n3 = SpectralLineModel.boltzmannPopulationRatio({ n: 3, temperatureK });
+    const total = n1 + n2 + n3;
+    const n1Fraction = total > 0 ? n1 / total : 1;
+    const n2Fraction = total > 0 ? n2 / total : 0;
+    const n3Fraction = total > 0 ? n3 / total : 0;
+
+    // Simplified neutral-H proxy: high near A-star temperatures, lower toward hotter ionized and cooler low-excitation regimes.
+    const coolSuppression = clamp01((temperatureK - 4500) / 3500);
+    const hotSuppression = clamp01((17000 - temperatureK) / 8000);
+    const neutralHydrogenFractionProxy = clamp01(coolSuppression * hotSuppression);
+
+    // Scale n=2 excitation into a pedagogical 0..1 range, then combine with neutral fraction proxy.
+    const excitationScaled = clamp01(n2Fraction / 2.5e-5);
+    const balmerStrengthProxy = clamp01(excitationScaled * neutralHydrogenFractionProxy);
+
+    return {
+      temperatureK,
+      n1Fraction,
+      n2Fraction,
+      n3Fraction,
+      neutralHydrogenFractionProxy,
+      balmerStrengthProxy,
+    };
+  },
+
+  /**
+   * Large-n approximation for adjacent (Δn=1) energy spacing.
+   * ΔE ≈ 2 * Rydberg / n^3  (eV)
+   */
+  largeNAdjacentSpacingEv(args: { n: number }): number {
+    const n = args.n;
+    if (!Number.isFinite(n) || n <= 0) return NaN;
+    return (2 * BOHR.RYDBERG_EV) / (n * n * n);
   },
 
   // ── Multi-element (empirical) ────────────────────────────

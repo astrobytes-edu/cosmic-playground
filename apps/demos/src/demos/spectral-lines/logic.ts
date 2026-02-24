@@ -9,6 +9,26 @@ export type TransitionMode = "emission" | "absorption";
 export type ViewTab = "hydrogen" | "elements";
 export type SeriesFilter = "all" | 1 | 2 | 3 | 4;
 export type MysteryTarget = { element: string; mode: TransitionMode };
+export type InferenceMode = "forward" | "inverse";
+export type ReflectionEvidenceKey =
+  | "spacing-pattern"
+  | "line-strengths"
+  | "series-location"
+  | "element-complexity";
+export type InverseMatchQuality = "exact" | "near" | "low-confidence";
+
+export interface HydrogenTransitionCandidate {
+  nUpper: number;
+  nLower: number;
+  wavelengthNm: number;
+  energyEv: number;
+  seriesName: string;
+}
+
+export interface InferredHydrogenTransition extends HydrogenTransitionCandidate {
+  residualNm: number;
+  quality: InverseMatchQuality;
+}
 
 export interface SpectrumDomain {
   minNm: number;
@@ -23,12 +43,35 @@ export interface ElementLineLike {
   label?: string;
 }
 
+export interface SeriesPileupBin {
+  binStartNm: number;
+  binEndNm: number;
+  count: number;
+  density: number;
+}
+
 export function isMysteryCopyLocked(args: {
   viewTab: ViewTab;
   mysteryActive: boolean;
   mysteryRevealed: boolean;
 }): boolean {
   return args.viewTab === "elements" && args.mysteryActive && !args.mysteryRevealed;
+}
+
+export function isMysteryReflectionReady(args: {
+  mysteryActive: boolean;
+  selectedEvidence: ReflectionEvidenceKey | null;
+}): boolean {
+  if (!args.mysteryActive) return true;
+  return Boolean(args.selectedEvidence);
+}
+
+export function isHydrogenInferenceContext(args: {
+  viewTab: ViewTab;
+  inferenceMode: InferenceMode;
+  hasInference: boolean;
+}): boolean {
+  return args.viewTab === "hydrogen" && args.inferenceMode === "inverse" && args.hasInference;
 }
 
 function hashSeed(seed: string): number {
@@ -320,6 +363,74 @@ export function selectRepresentativeElementLine<T extends ElementLineLike>(lines
   return best;
 }
 
+export function classifyInverseMatchQuality(residualNm: number): InverseMatchQuality {
+  if (residualNm <= 0.5) return "exact";
+  if (residualNm <= 2) return "near";
+  return "low-confidence";
+}
+
+export function inferHydrogenTransitionFromObservedWavelength(args: {
+  observedWavelengthNm: number;
+  candidates: HydrogenTransitionCandidate[];
+}): InferredHydrogenTransition | null {
+  if (!Number.isFinite(args.observedWavelengthNm) || args.observedWavelengthNm <= 0) return null;
+  if (args.candidates.length === 0) return null;
+
+  let best: InferredHydrogenTransition | null = null;
+  for (const candidate of args.candidates) {
+    if (!Number.isFinite(candidate.wavelengthNm)) continue;
+    const residualNm = Math.abs(candidate.wavelengthNm - args.observedWavelengthNm);
+    if (best && residualNm >= best.residualNm) continue;
+    best = {
+      ...candidate,
+      residualNm,
+      quality: classifyInverseMatchQuality(residualNm),
+    };
+  }
+  return best;
+}
+
+export function computeSeriesPileupDensity(args: {
+  wavelengthsNm: number[];
+  minNm: number;
+  maxNm: number;
+  bins: number;
+}): SeriesPileupBin[] {
+  const minNm = args.minNm;
+  const maxNm = args.maxNm;
+  const bins = Math.max(1, Math.floor(args.bins));
+  if (!Number.isFinite(minNm) || !Number.isFinite(maxNm) || maxNm <= minNm) return [];
+  const binWidth = (maxNm - minNm) / bins;
+  const counts = Array.from({ length: bins }, () => 0);
+
+  for (const wavelengthNm of args.wavelengthsNm) {
+    if (!Number.isFinite(wavelengthNm) || wavelengthNm < minNm || wavelengthNm > maxNm) continue;
+    const rawIndex = Math.floor((wavelengthNm - minNm) / binWidth);
+    const index = clamp(rawIndex, 0, bins - 1);
+    counts[index] += 1;
+  }
+
+  const maxCount = Math.max(1, ...counts);
+  return counts.map((count, index) => {
+    const binStartNm = minNm + index * binWidth;
+    const binEndNm = binStartNm + binWidth;
+    return {
+      binStartNm,
+      binEndNm,
+      count,
+      density: count / maxCount,
+    };
+  });
+}
+
+export function computeLargeNSpacingApproximation(args: { nUpper: number; rydbergEv?: number }): number {
+  const nUpper = args.nUpper;
+  const rydbergEv = args.rydbergEv ?? 13.605693;
+  if (!Number.isFinite(nUpper) || nUpper <= 0) return NaN;
+  if (!Number.isFinite(rydbergEv) || rydbergEv <= 0) return NaN;
+  return (2 * rydbergEv) / (nUpper * nUpper * nUpper);
+}
+
 export function transitionAnnouncement(args: {
   mode: TransitionMode;
   viewTab: ViewTab;
@@ -382,9 +493,16 @@ export function buildSpectralExportPayload(args: {
   seriesName: string;
   band: string;
   representativeLineLabel?: string;
+  inferenceMode?: InferenceMode;
+  observedWavelengthNm?: number;
+  inferredTransitionLabel?: string;
+  inverseResidualNm?: number;
+  includeHydrogenInferenceFields?: boolean;
+  mysteryReflectionEvidence?: ReflectionEvidenceKey | null;
 }): ExportPayloadV1 {
   const timestampIso = args.timestampIso ?? new Date().toISOString();
   const isElementsTab = args.viewTab === "elements";
+  const includeHydrogenInferenceFields = args.includeHydrogenInferenceFields ?? false;
   const transitionValue = isElementsTab
     ? (args.representativeLineLabel ?? `${args.selectedElement} strongest line`)
     : transitionLabel(args.nUpper, args.nLower);
@@ -397,6 +515,15 @@ export function buildSpectralExportPayload(args: {
     { name: "n_lower", value: String(args.nLower) },
     { name: "Series filter", value: seriesFilterLabel(args.seriesFilter) },
   ];
+  if (includeHydrogenInferenceFields && args.inferenceMode) {
+    parameters.push({ name: "Inference mode", value: args.inferenceMode === "inverse" ? "Inverse (lambda→transition)" : "Forward (n→lambda)" });
+  }
+  if (includeHydrogenInferenceFields && Number.isFinite(args.observedWavelengthNm)) {
+    parameters.push({ name: "Observed wavelength input (nm)", value: Number(args.observedWavelengthNm).toFixed(1) });
+  }
+  if (args.mysteryReflectionEvidence) {
+    parameters.push({ name: "Mystery evidence choice", value: args.mysteryReflectionEvidence });
+  }
   if (isElementsTab) {
     parameters.push({ name: "Representative line", value: transitionValue });
   }
@@ -415,6 +542,12 @@ export function buildSpectralExportPayload(args: {
     { name: "Series", value: args.seriesName },
     { name: "Band", value: args.band },
   ];
+  if (includeHydrogenInferenceFields && args.inferredTransitionLabel) {
+    readouts.push({ name: "Inferred transition", value: args.inferredTransitionLabel });
+  }
+  if (includeHydrogenInferenceFields && Number.isFinite(args.inverseResidualNm)) {
+    readouts.push({ name: "Inverse residual (nm)", value: Number(args.inverseResidualNm).toFixed(2) });
+  }
 
   return {
     version: 1,
@@ -426,6 +559,8 @@ export function buildSpectralExportPayload(args: {
       "Wavelengths computed via lambda = hc / Delta E (vacuum wavelengths).",
       "Multi-element line data from NIST Atomic Spectra Database (strongest lines only).",
       "Elements tab readouts use each selected element's canonical strongest-intensity representative line.",
+      "Inverse mode solves for the nearest hydrogen transition to an observed wavelength and reports residual.",
+      "Hydrogen temperature panel uses a qualitative excitation/neutral-fraction proxy; not full radiative transfer.",
       "Bohr atom radii in the visualization use a compressed display scale (not physical n^2 scaling).",
       "Line widths in the spectrum strip are for display only (fixed width, not physical broadening).",
     ],

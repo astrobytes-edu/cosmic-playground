@@ -24,6 +24,10 @@
   accent-color: var(--cp-accent);
 }
 
+.compare-hint {
+  margin: var(--cp-space-1) 0 0;
+}
+
 .mystery-panel {
   display: grid;
   gap: var(--cp-space-2);
@@ -49,6 +53,21 @@
   gap: var(--cp-space-2);
 }
 
+.mystery-reflection {
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-r-2);
+  padding: var(--cp-space-2);
+  background: color-mix(in srgb, var(--cp-bg2) 65%, transparent);
+}
+
+.mystery-reflection p {
+  margin: 0 0 var(--cp-space-2);
+}
+
+.mystery-reflection-group {
+  gap: var(--cp-space-1);
+}
+
 .copy-lock-hint {
   margin: var(--cp-space-1) 0 0;
 }
@@ -72,6 +91,14 @@
 .presets {
   display: grid;
   gap: var(--cp-space-2);
+}
+
+.inverse-panel h3 {
+  margin: 0;
+}
+
+.inverse-panel p {
+  margin: 0;
 }
 
 .presets__label {
@@ -197,6 +224,21 @@
   width: 100%;
 }
 
+.microscope-panel {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+#seriesMicroscopeCanvas {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 3;
+  display: block;
+  border-radius: var(--cp-r-2);
+  border: 1px solid var(--cp-border);
+  background: var(--cp-bg0);
+}
+
 .elements-guidance {
   margin-top: var(--cp-space-2);
 }
@@ -262,6 +304,33 @@
 }
 
 .understand-callout {
+  margin: 0;
+}
+
+.bohr-caveat summary {
+  cursor: pointer;
+}
+
+.temperature-panel {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.temperature-equation {
+  margin: 0;
+}
+
+.temperature-proxy-note {
+  margin: 0;
+}
+
+.temperature-readouts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--cp-space-1) var(--cp-space-2);
+}
+
+.temperature-readouts p {
   margin: 0;
 }
 

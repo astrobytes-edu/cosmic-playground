@@ -14,11 +14,15 @@ import {
   type ViewTab,
   type SeriesFilter,
   type MysteryTarget,
+  type InferenceMode,
+  type ReflectionEvidenceKey,
   nextSequenceIndex,
   filterHydrogenTransitionsBySeries,
   spectrumDomainForSeries,
   shouldRenderEmission,
   selectRepresentativeElementLine,
+  computeSeriesPileupDensity,
+  computeLargeNSpacingApproximation,
   transitionAnnouncement,
   buildSpectralExportPayload,
   wavelengthToFraction,
@@ -26,6 +30,8 @@ import {
   createSeededRandom,
   pickMysteryTarget,
   isMysteryCopyLocked,
+  isMysteryReflectionReady,
+  isHydrogenInferenceContext,
 } from "./logic";
 
 // ── DOM elements ──────────────────────────────────────────
@@ -36,6 +42,13 @@ const nUpperSlider = $<HTMLInputElement>("#nUpperSlider")!;
 const nLowerSlider = $<HTMLInputElement>("#nLowerSlider")!;
 const nUpperValue = $<HTMLSpanElement>("#nUpperValue")!;
 const nLowerValue = $<HTMLSpanElement>("#nLowerValue")!;
+const inferenceForward = $<HTMLButtonElement>("#inferenceForward");
+const inferenceInverse = $<HTMLButtonElement>("#inferenceInverse");
+const forwardControls = $<HTMLDivElement>("#forwardControls");
+const inverseControls = $<HTMLDivElement>("#inverseControls");
+const inverseObservedWavelength = $<HTMLInputElement>("#inverseObservedWavelength");
+const solveInverseBtn = $<HTMLButtonElement>("#solveInverse");
+const inverseResult = $<HTMLParagraphElement>("#inverseResult");
 
 const modeEmission = $<HTMLButtonElement>("#modeEmission")!;
 const modeAbsorption = $<HTMLButtonElement>("#modeAbsorption")!;
@@ -64,12 +77,25 @@ const readoutBand = $<HTMLSpanElement>("#readoutBand")!;
 const bohrSvg = document.querySelector<SVGSVGElement>("#bohrAtom")!;
 const energySvg = document.querySelector<SVGSVGElement>("#energyLevels")!;
 const spectrumCanvas = $<HTMLCanvasElement>("#spectrumCanvas")!;
+const seriesMicroscopeCanvas = $<HTMLCanvasElement>("#seriesMicroscopeCanvas");
+const microscopeProbeSlider = $<HTMLInputElement>("#microscopeProbeSlider");
+const microscopeProbeValue = $<HTMLSpanElement>("#microscopeProbeValue");
+const microscopeInfinity = $<HTMLInputElement>("#microscopeInfinity");
+const scalingInsight = $<HTMLParagraphElement>("#scalingInsight");
+const temperatureSlider = $<HTMLInputElement>("#temperatureSlider");
+const temperatureValue = $<HTMLSpanElement>("#temperatureValue");
+const tempN1 = $<HTMLSpanElement>("#tempN1");
+const tempN2 = $<HTMLSpanElement>("#tempN2");
+const tempN3 = $<HTMLSpanElement>("#tempN3");
+const tempNeutralProxy = $<HTMLSpanElement>("#tempNeutralProxy");
+const tempBalmerProxy = $<HTMLSpanElement>("#tempBalmerProxy");
 
 const stationModeBtn = $<HTMLButtonElement>("#stationMode")!;
 const helpBtn = $<HTMLButtonElement>("#help")!;
 const copyResultsBtn = $<HTMLButtonElement>("#copyResults")!;
 const statusEl = $<HTMLParagraphElement>("#status")!;
 const showHComparison = $<HTMLInputElement>("#showHComparison")!;
+const hComparisonHint = $<HTMLParagraphElement>("#hComparisonHint");
 const tabExploreEl = $<HTMLButtonElement>("#tab-explore");
 const exploreLayout = document.querySelector<HTMLElement>(".explore-layout");
 
@@ -85,12 +111,17 @@ const exitMysteryBtn = $<HTMLButtonElement>("#exitMystery");
 const elementsStandardControls = $<HTMLDivElement>("#elementsStandardControls");
 const copyLockHint = $<HTMLParagraphElement>("#copyLockHint");
 const hydrogenVizTop = $<HTMLDivElement>("#hydrogenVizTop");
+const microscopePanel = $<HTMLDivElement>("#microscopePanel");
 const elementsGuidance = $<HTMLDivElement>("#elementsGuidance");
+const temperaturePanel = $<HTMLDivElement>("#temperaturePanel");
 const orbitTooltip = $<HTMLDivElement>("#orbitTooltip");
+const mysteryReflectionHint = $<HTMLParagraphElement>("#mysteryReflectionHint");
 
 const presetButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("button.preset[data-n-upper]"));
 const seriesChips = Array.from(document.querySelectorAll<HTMLButtonElement>("button.series-chip"));
 const elementChips = Array.from(document.querySelectorAll<HTMLButtonElement>("button.element-chip"));
+const inverseScopeChips = Array.from(document.querySelectorAll<HTMLButtonElement>("button.inverse-scope-chip"));
+const reflectionChips = Array.from(document.querySelectorAll<HTMLButtonElement>("button.reflection-chip"));
 
 if (!nUpperSlider || !nLowerSlider || !bohrSvg || !energySvg || !spectrumCanvas) {
   throw new Error("Missing required DOM elements for spectral-lines demo.");
@@ -99,6 +130,7 @@ if (!nUpperSlider || !nLowerSlider || !bohrSvg || !energySvg || !spectrumCanvas)
 const ctxOrNull = spectrumCanvas.getContext("2d");
 if (!ctxOrNull) throw new Error("Canvas 2D context unavailable.");
 const ctx = ctxOrNull;
+const microscopeCtx = seriesMicroscopeCanvas?.getContext("2d") ?? null;
 
 // ── Runtime ─────────────────────────────────────────────────
 
@@ -121,10 +153,21 @@ const state = {
   nUpper: 3,
   nLower: 2,
   mode: "emission" as TransitionMode,
+  inferenceMode: "forward" as InferenceMode,
   viewTab: "hydrogen" as ViewTab,
   seriesFilter: "all" as SeriesFilter,
-  selectedElement: "H",
+  selectedElement: "Na",
   showHComparison: false,
+  inverse: {
+    observedWavelengthNm: 656,
+    seriesScope: "all" as SeriesFilter,
+    lastInference: null as ReturnType<typeof SpectralLineModel.inferHydrogenTransitionFromObservedWavelength> | null,
+  },
+  microscope: {
+    probeNUpper: 20,
+    includeInfinity: false,
+  },
+  temperatureK: 9000,
   animating: false,
   sequencePlaying: false,
   sequenceDirection: 1 as -1 | 1,
@@ -133,12 +176,15 @@ const state = {
     targetElement: "H",
     targetMode: "emission" as TransitionMode,
     guessMode: "emission" as TransitionMode,
+    reflectionEvidence: null as ReflectionEvidenceKey | null,
     revealed: false,
     lastTarget: null as MysteryTarget | null,
   },
 };
 
 const N_MAX = 8;
+const INVERSE_N_UPPER_MAX = 40;
+const MICROSCOPE_BIN_COUNT = 32;
 const BOHR_VIEW_SIZE = 400;
 const ENERGY_SVG_W = 220;
 const ENERGY_SVG_H = 400;
@@ -163,10 +209,46 @@ interface CurrentReadoutContext {
   series: string;
   band: string;
   representativeLineLabel?: string;
+  inverseResidualNm?: number;
 }
 
-function currentSeriesName(): string {
-  return SpectralLineModel.seriesName({ nLower: state.nLower });
+function activeHydrogenSeriesForMicroscope(): number {
+  if (state.seriesFilter !== "all") return state.seriesFilter;
+  if (state.inferenceMode === "inverse" && state.inverse.lastInference) {
+    return state.inverse.lastInference.nLower;
+  }
+  return state.nLower;
+}
+
+function solveInverseTransition() {
+  const scope = state.inverse.seriesScope;
+  const inference = SpectralLineModel.inferHydrogenTransitionFromObservedWavelength({
+    wavelengthNm: state.inverse.observedWavelengthNm,
+    seriesFilter: scope,
+    nUpperMax: INVERSE_N_UPPER_MAX,
+  });
+  state.inverse.lastInference = inference;
+  if (!inference) {
+    if (inverseResult) {
+      inverseResult.textContent = "No valid hydrogen transition found for the entered wavelength.";
+    }
+    setLiveRegionText(statusEl, "No valid hydrogen transition found.");
+    render();
+    return;
+  }
+
+  state.nUpper = inference.nUpper;
+  state.nLower = inference.nLower;
+  state.seriesFilter = inference.nLower <= 4 ? (inference.nLower as SeriesFilter) : "all";
+
+  if (inverseResult) {
+    inverseResult.textContent = `Inferred ${transitionLabel(inference.nUpper, inference.nLower)} (${inference.seriesName}), DeltaE=${inference.energyEv.toFixed(3)} eV, residual=${inference.residualNm.toFixed(2)} nm (${inference.quality}).`;
+  }
+  render();
+  setLiveRegionText(
+    statusEl,
+    `Inverse inference: ${transitionLabel(inference.nUpper, inference.nLower)} in ${inference.seriesName}, residual ${inference.residualNm.toFixed(2)} nm.`,
+  );
 }
 
 function activeElementLineContext() {
@@ -205,17 +287,22 @@ function currentReadoutContext(): CurrentReadoutContext {
     };
   }
 
-  const wavelengthNm = SpectralLineModel.transitionWavelengthNm({ nUpper: state.nUpper, nLower: state.nLower });
-  const energyEv = SpectralLineModel.transitionEnergyEv({ nUpper: state.nUpper, nLower: state.nLower });
-  const frequencyHz = SpectralLineModel.transitionFrequencyHz({ nUpper: state.nUpper, nLower: state.nLower });
+  const inverseInference = state.inferenceMode === "inverse" ? state.inverse.lastInference : null;
+  const wavelengthNm = inverseInference?.wavelengthNm ?? SpectralLineModel.transitionWavelengthNm({ nUpper: state.nUpper, nLower: state.nLower });
+  const energyEv = inverseInference?.energyEv ?? SpectralLineModel.transitionEnergyEv({ nUpper: state.nUpper, nLower: state.nLower });
+  const frequencyHz = inverseInference?.frequencyHz ?? SpectralLineModel.transitionFrequencyHz({ nUpper: state.nUpper, nLower: state.nLower });
   return {
     transitionLabel: "Transition",
-    transitionText: transitionLabel(state.nUpper, state.nLower),
+    transitionText: transitionLabel(
+      inverseInference?.nUpper ?? state.nUpper,
+      inverseInference?.nLower ?? state.nLower,
+    ),
     wavelengthNm,
     energyEv,
     frequencyHz,
-    series: SpectralLineModel.seriesName({ nLower: state.nLower }),
+    series: inverseInference?.seriesName ?? SpectralLineModel.seriesName({ nLower: state.nLower }),
     band: SpectralLineModel.wavelengthBand({ wavelengthNm }),
+    inverseResidualNm: inverseInference?.residualNm,
   };
 }
 
@@ -249,7 +336,7 @@ function announceCurrentTransition(prefix?: string) {
     nUpper: state.nUpper,
     nLower: state.nLower,
     wavelengthNm: context.wavelengthNm,
-    seriesName: state.viewTab === "hydrogen" ? currentSeriesName() : "Element catalog",
+    seriesName: state.viewTab === "hydrogen" ? context.series : "Element catalog",
     representativeLineLabel: context.representativeLineLabel,
   });
   setLiveRegionText(statusEl, prefix ? `${prefix} ${message}` : message);
@@ -259,6 +346,18 @@ function setMode(nextMode: TransitionMode) {
   state.mode = nextMode;
   render();
   announceCurrentTransition();
+}
+
+function setInferenceMode(nextMode: InferenceMode) {
+  state.inferenceMode = nextMode;
+  if (nextMode === "forward") {
+    state.inverse.lastInference = null;
+    if (inverseResult) {
+      inverseResult.textContent = "Forward mode: choose quantum levels to predict wavelength.";
+    }
+  }
+  render();
+  setLiveRegionText(statusEl, nextMode === "inverse" ? "Inverse mode enabled: observed wavelength to inferred transition." : "Forward mode enabled: quantum levels to predicted wavelength.");
 }
 
 function setSidebarView(tab: ViewTab) {
@@ -364,7 +463,7 @@ const mysteryChallengeEngine = new ChallengeEngine(challenges, {
   onProgress: () => {
     const prompt = mysteryChallengeEngine.getCurrentChallenge()?.prompt;
     if (prompt && mysteryPrompt) mysteryPrompt.textContent = prompt;
-    setLiveRegionText(statusEl, "Mystery spectrum ready. Guess the element and mode, then choose Check answer.");
+    setLiveRegionText(statusEl, "Mystery spectrum ready. Guess the element and mode, choose one evidence pattern, then check.");
   },
   onStop: () => {
     syncCopyLockState();
@@ -379,6 +478,7 @@ function startMysterySpectrum() {
   state.mystery.targetMode = next.mode;
   state.mystery.lastTarget = next;
   state.mystery.guessMode = "emission";
+  state.mystery.reflectionEvidence = null;
   state.selectedElement = next.element;
   state.mode = next.mode;
   state.showHComparison = false;
@@ -393,6 +493,7 @@ function stopMysterySpectrum() {
   if (!state.mystery.active && !state.mystery.revealed) return;
   state.mystery.active = false;
   state.mystery.revealed = false;
+  state.mystery.reflectionEvidence = null;
   if (mysteryChallengeEngine.isActive()) {
     mysteryChallengeEngine.stop();
   } else {
@@ -404,6 +505,13 @@ function stopMysterySpectrum() {
 
 function checkMysteryAnswer() {
   if (!state.mystery.active || !mysteryGuessElement) return;
+  if (!isMysteryReflectionReady({
+    mysteryActive: state.mystery.active,
+    selectedEvidence: state.mystery.reflectionEvidence,
+  })) {
+    setLiveRegionText(statusEl, "Select what pattern convinced you before checking the mystery answer.");
+    return;
+  }
   const result = mysteryChallengeEngine.check({
     guessedElement: mysteryGuessElement.value,
     guessedMode: state.mystery.guessMode,
@@ -419,6 +527,8 @@ function checkMysteryAnswer() {
 
 function selectOrbitLevel(orbitN: number) {
   if (!Number.isFinite(orbitN) || orbitN < 1 || orbitN > N_MAX) return;
+  state.inferenceMode = "forward";
+  state.inverse.lastInference = null;
   if (state.mode === "emission") {
     if (orbitN > state.nLower) {
       state.nUpper = orbitN;
@@ -471,10 +581,129 @@ function resizeCanvas() {
   return { width: w, height: h };
 }
 
+function resizeMicroscopeCanvas() {
+  if (!seriesMicroscopeCanvas || !microscopeCtx) return null;
+  const rect = seriesMicroscopeCanvas.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect.width));
+  const height = Math.max(1, Math.round(rect.height));
+  const dpr = window.devicePixelRatio ?? 1;
+  const pixelWidth = Math.max(1, Math.round(width * dpr));
+  const pixelHeight = Math.max(1, Math.round(height * dpr));
+  if (seriesMicroscopeCanvas.width !== pixelWidth || seriesMicroscopeCanvas.height !== pixelHeight) {
+    seriesMicroscopeCanvas.width = pixelWidth;
+    seriesMicroscopeCanvas.height = pixelHeight;
+  }
+  microscopeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { width, height };
+}
+
 // ── CSS color probe ─────────────────────────────────────────
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function drawSeriesMicroscope() {
+  if (!microscopeCtx || !seriesMicroscopeCanvas) return;
+  const size = resizeMicroscopeCanvas();
+  if (!size) return;
+  const { width, height } = size;
+  microscopeCtx.clearRect(0, 0, width, height);
+  microscopeCtx.fillStyle = cssVar("--cp-bg0") || "rgb(7, 10, 18)";
+  microscopeCtx.fillRect(0, 0, width, height);
+
+  const margin = { left: 48, right: 16, top: 14, bottom: 24 };
+  const plotW = Math.max(1, width - margin.left - margin.right);
+  const plotH = Math.max(1, height - margin.top - margin.bottom);
+
+  const nLower = activeHydrogenSeriesForMicroscope();
+  const limitNm = SpectralLineModel.seriesLimitNm({ nLower });
+  const zoomSpanNm = Math.max(12, limitNm * 0.18);
+  const domainMin = limitNm;
+  const domainMax = limitNm + zoomSpanNm;
+
+  const transitions = SpectralLineModel.seriesTransitions({ nLower, nMax: 80 });
+  const pileup = computeSeriesPileupDensity({
+    wavelengthsNm: transitions.map((transition) => transition.wavelengthNm),
+    minNm: domainMin,
+    maxNm: domainMax,
+    bins: MICROSCOPE_BIN_COUNT,
+  });
+
+  for (const bin of pileup) {
+    const x0 = margin.left + ((bin.binStartNm - domainMin) / (domainMax - domainMin)) * plotW;
+    const x1 = margin.left + ((bin.binEndNm - domainMin) / (domainMax - domainMin)) * plotW;
+    microscopeCtx.fillStyle = `rgba(102, 196, 255, ${0.08 + 0.52 * bin.density})`;
+    microscopeCtx.fillRect(x0, margin.top, Math.max(1, x1 - x0), plotH);
+  }
+
+  for (const transition of transitions) {
+    if (transition.wavelengthNm < domainMin || transition.wavelengthNm > domainMax) continue;
+    const x = margin.left + ((transition.wavelengthNm - domainMin) / (domainMax - domainMin)) * plotW;
+    microscopeCtx.strokeStyle = wavelengthToRgbString(transition.wavelengthNm);
+    microscopeCtx.lineWidth = 1.5;
+    microscopeCtx.globalAlpha = 0.85;
+    microscopeCtx.beginPath();
+    microscopeCtx.moveTo(x, margin.top);
+    microscopeCtx.lineTo(x, margin.top + plotH);
+    microscopeCtx.stroke();
+    microscopeCtx.globalAlpha = 1;
+  }
+
+  const probeTransition = SpectralLineModel.transitionWavelengthNm({
+    nUpper: Math.max(nLower + 1, state.microscope.probeNUpper),
+    nLower,
+  });
+  if (Number.isFinite(probeTransition) && probeTransition >= domainMin && probeTransition <= domainMax) {
+    const probeX = margin.left + ((probeTransition - domainMin) / (domainMax - domainMin)) * plotW;
+    microscopeCtx.strokeStyle = "rgba(255, 207, 102, 0.95)";
+    microscopeCtx.lineWidth = 2.3;
+    microscopeCtx.beginPath();
+    microscopeCtx.moveTo(probeX, margin.top - 3);
+    microscopeCtx.lineTo(probeX, margin.top + plotH + 3);
+    microscopeCtx.stroke();
+  }
+
+  if (state.microscope.includeInfinity) {
+    const limitX = margin.left;
+    microscopeCtx.strokeStyle = "rgba(255, 130, 130, 0.95)";
+    microscopeCtx.lineWidth = 2;
+    microscopeCtx.setLineDash([5, 4]);
+    microscopeCtx.beginPath();
+    microscopeCtx.moveTo(limitX, margin.top - 3);
+    microscopeCtx.lineTo(limitX, margin.top + plotH + 3);
+    microscopeCtx.stroke();
+    microscopeCtx.setLineDash([]);
+    microscopeCtx.fillStyle = "rgba(255, 130, 130, 0.95)";
+    microscopeCtx.font = "11px system-ui, sans-serif";
+    microscopeCtx.fillText("n->inf", limitX + 4, margin.top + 12);
+  }
+
+  microscopeCtx.strokeStyle = cssVar("--cp-border") || "rgba(255,255,255,0.2)";
+  microscopeCtx.strokeRect(margin.left, margin.top, plotW, plotH);
+  microscopeCtx.fillStyle = cssVar("--cp-muted") || "rgba(200, 210, 220, 0.8)";
+  microscopeCtx.font = "10px system-ui, sans-serif";
+  microscopeCtx.textAlign = "left";
+  microscopeCtx.fillText(`${SpectralLineModel.seriesName({ nLower })} limit ${limitNm.toFixed(1)} nm`, margin.left, height - 8);
+  microscopeCtx.textAlign = "right";
+  microscopeCtx.fillText(`${domainMax.toFixed(1)} nm`, width - margin.right, height - 8);
+}
+
+function updateScalingInsight() {
+  if (!scalingInsight) return;
+  const nUpper = Math.max(2, state.microscope.probeNUpper);
+  const approx = computeLargeNSpacingApproximation({ nUpper, rydbergEv: SpectralLineModel.BOHR.RYDBERG_EV });
+  scalingInsight.textContent = `DeltaE ~ 27.2 eV / n^3 (large n). At n=${nUpper}, adjacent spacing ~ ${approx.toFixed(4)} eV.`;
+}
+
+function updateTemperaturePanel() {
+  const proxy = SpectralLineModel.hydrogenPopulationProxy({ temperatureK: state.temperatureK });
+  if (temperatureValue) temperatureValue.textContent = `${Math.round(state.temperatureK)}`;
+  if (tempN1) tempN1.textContent = proxy.n1Fraction.toExponential(3);
+  if (tempN2) tempN2.textContent = proxy.n2Fraction.toExponential(3);
+  if (tempN3) tempN3.textContent = proxy.n3Fraction.toExponential(3);
+  if (tempNeutralProxy) tempNeutralProxy.textContent = proxy.neutralHydrogenFractionProxy.toFixed(3);
+  if (tempBalmerProxy) tempBalmerProxy.textContent = proxy.balmerStrengthProxy.toFixed(3);
 }
 
 function hideOrbitTooltip() {
@@ -855,8 +1084,6 @@ function drawSpectrum() {
   // Visible band rainbow background
   const visStart = wavelengthToFraction(380, activeDomain);
   const visEnd = wavelengthToFraction(750, activeDomain);
-  const vx0 = mL + visStart * plotW;
-  const vx1 = mL + visEnd * plotW;
 
   // Draw rainbow gradient in visible range
   const nSteps = 200;
@@ -872,90 +1099,122 @@ function drawSpectrum() {
   }
   ctx.globalAlpha = 1;
 
-  // For absorption mode: draw continuous spectrum background
-  if (!shouldRenderEmission({ mode: state.mode, viewTab: state.viewTab })) {
-    // Already drawn rainbow above as background; lines will be dark dips
-  }
+  type SpectrumLine = { wavelengthNm: number; intensity: number; color: string };
+  type RowSpec = {
+    label: string;
+    top: number;
+    height: number;
+    lines: SpectrumLine[];
+  };
 
-  // Gather lines to draw
-  let lines: { wavelengthNm: number; intensity: number; label?: string; color: string }[] = [];
-
-  if (state.viewTab === "hydrogen") {
-    // All hydrogen transitions up to N_MAX
-    const allTransitions = SpectralLineModel.allHydrogenTransitions({ nMax: N_MAX, maxSeries: 4 });
-    const filteredTransitions = filterHydrogenTransitionsBySeries({
+  const hydrogenLines = (): SpectrumLine[] => {
+    const transitions = filterHydrogenTransitionsBySeries({
       seriesFilter: state.seriesFilter,
-      transitions: allTransitions,
+      transitions: SpectralLineModel.allHydrogenTransitions({ nMax: N_MAX, maxSeries: 4 }),
     });
-    for (const t of filteredTransitions) {
-      lines.push({
-        wavelengthNm: t.wavelengthNm,
-        intensity: 1 / (t.nUpper - t.nLower + 1), // simple falloff
-        label: t.nUpper === state.nUpper && t.nLower === state.nLower ? `${t.nUpper}→${t.nLower}` : undefined,
-        color: wavelengthToRgbString(t.wavelengthNm),
-      });
-    }
-  } else {
-    // Element lines
+    return transitions.map((transition) => ({
+      wavelengthNm: transition.wavelengthNm,
+      intensity: 1 / (transition.nUpper - transition.nLower + 1),
+      color: wavelengthToRgbString(transition.wavelengthNm),
+    }));
+  };
+
+  const elementLines = (): SpectrumLine[] => {
     const data = SpectralLineModel.elementLines({ element: state.selectedElement });
-    for (const line of data.lines) {
-      lines.push({
-        wavelengthNm: line.wavelengthNm,
-        intensity: line.relativeIntensity,
-        label: line.label,
-        color: wavelengthToRgbString(line.wavelengthNm),
-      });
-    }
-    // H comparison lines
-    if (state.showHComparison && state.selectedElement !== "H") {
-      const hBalmer = SpectralLineModel.seriesTransitions({ nLower: 2, nMax: 7 });
-      for (const t of hBalmer) {
-        lines.push({
-          wavelengthNm: t.wavelengthNm,
-          intensity: 0.3,
-          color: "rgba(100, 180, 255, 0.4)",
-        });
-      }
-    }
+    return data.lines.map((line) => ({
+      wavelengthNm: line.wavelengthNm,
+      intensity: line.relativeIntensity,
+      color: wavelengthToRgbString(line.wavelengthNm),
+    }));
+  };
+
+  const compareEnabled = state.viewTab === "elements" && state.showHComparison && state.selectedElement !== "H";
+  const rows: RowSpec[] = [];
+
+  if (compareEnabled) {
+    const rowHeight = plotH * 0.44;
+    const firstTop = mT;
+    const secondTop = mT + plotH * 0.56;
+    rows.push({
+      label: `${state.selectedElement} fingerprint`,
+      top: firstTop,
+      height: rowHeight,
+      lines: elementLines(),
+    });
+    rows.push({
+      label: "H Balmer reference",
+      top: secondTop,
+      height: rowHeight,
+      lines: SpectralLineModel.seriesTransitions({ nLower: 2, nMax: 10 }).map((transition) => ({
+        wavelengthNm: transition.wavelengthNm,
+        intensity: 0.65,
+        color: "rgba(100, 180, 255, 0.95)",
+      })),
+    });
+  } else {
+    rows.push({
+      label: state.viewTab === "hydrogen" ? "Hydrogen" : `${state.selectedElement}`,
+      top: mT,
+      height: plotH,
+      lines: state.viewTab === "hydrogen" ? hydrogenLines() : elementLines(),
+    });
   }
 
-  // Draw spectral lines
-  for (const line of lines) {
-    const frac = wavelengthToFraction(line.wavelengthNm, activeDomain);
-    if (frac <= 0 || frac >= 1) continue;
-    const x = mL + frac * plotW;
-
-    if (shouldRenderEmission({ mode: state.mode, viewTab: state.viewTab })) {
-      // Emission: bright lines on dark background
-      ctx.strokeStyle = line.color;
-      ctx.lineWidth = Math.max(1.5, line.intensity * 3);
-      ctx.globalAlpha = clamp(line.intensity * 0.9 + 0.1, 0.2, 1);
-      ctx.beginPath();
-      ctx.moveTo(x, mT);
-      ctx.lineTo(x, mT + plotH);
-      ctx.stroke();
-
-      // Glow effect for bright lines
-      if (line.intensity > 0.5 && isVisible(line.wavelengthNm)) {
+  const drawLineRow = (row: RowSpec) => {
+    for (const line of row.lines) {
+      const frac = wavelengthToFraction(line.wavelengthNm, activeDomain);
+      if (frac <= 0 || frac >= 1) continue;
+      const x = mL + frac * plotW;
+      if (shouldRenderEmission({ mode: state.mode, viewTab: state.viewTab })) {
         ctx.strokeStyle = line.color;
-        ctx.lineWidth = 6;
-        ctx.globalAlpha = 0.15;
+        ctx.lineWidth = Math.max(1.4, line.intensity * 3);
+        ctx.globalAlpha = clamp(line.intensity * 0.9 + 0.1, 0.2, 1);
         ctx.beginPath();
-        ctx.moveTo(x, mT);
-        ctx.lineTo(x, mT + plotH);
+        ctx.moveTo(x, row.top);
+        ctx.lineTo(x, row.top + row.height);
+        ctx.stroke();
+        if (line.intensity > 0.5 && isVisible(line.wavelengthNm)) {
+          ctx.strokeStyle = line.color;
+          ctx.lineWidth = 5.5;
+          ctx.globalAlpha = 0.15;
+          ctx.beginPath();
+          ctx.moveTo(x, row.top);
+          ctx.lineTo(x, row.top + row.height);
+          ctx.stroke();
+        }
+      } else {
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
+        ctx.lineWidth = Math.max(1.8, line.intensity * 3.5);
+        ctx.globalAlpha = clamp(line.intensity * 0.8 + 0.2, 0.3, 0.95);
+        ctx.beginPath();
+        ctx.moveTo(x, row.top);
+        ctx.lineTo(x, row.top + row.height);
         ctx.stroke();
       }
-    } else {
-      // Absorption: dark dips
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
-      ctx.lineWidth = Math.max(2, line.intensity * 3.5);
-      ctx.globalAlpha = clamp(line.intensity * 0.8 + 0.2, 0.3, 0.95);
-      ctx.beginPath();
-      ctx.moveTo(x, mT);
-      ctx.lineTo(x, mT + plotH);
-      ctx.stroke();
+      ctx.globalAlpha = 1;
     }
-    ctx.globalAlpha = 1;
+  };
+
+  for (const row of rows) {
+    drawLineRow(row);
+    if (rows.length > 1) {
+      ctx.fillStyle = cssVar("--cp-muted") || "rgba(190, 205, 220, 0.8)";
+      ctx.font = "10px system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(row.label, mL + 4, row.top + 12);
+    }
+  }
+
+  if (rows.length > 1) {
+    const dividerY = mT + plotH * 0.5;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(mL, dividerY);
+    ctx.lineTo(mL + plotW, dividerY);
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
 
   // Highlight active transition
@@ -970,15 +1229,15 @@ function drawSpectrum() {
       ctx.lineWidth = 3;
       ctx.globalAlpha = 1;
       ctx.beginPath();
-      ctx.moveTo(ax, mT - 4);
-      ctx.lineTo(ax, mT + plotH + 4);
+      ctx.moveTo(ax, rows[0].top - 4);
+      ctx.lineTo(ax, rows[0].top + rows[0].height + 4);
       ctx.stroke();
       // Glow
       ctx.lineWidth = 10;
       ctx.globalAlpha = 0.25;
       ctx.beginPath();
-      ctx.moveTo(ax, mT);
-      ctx.lineTo(ax, mT + plotH);
+      ctx.moveTo(ax, rows[0].top);
+      ctx.lineTo(ax, rows[0].top + rows[0].height);
       ctx.stroke();
       ctx.globalAlpha = 1;
 
@@ -1030,13 +1289,22 @@ function drawSpectrum() {
     }
   }
   ctx.globalAlpha = 1;
+
+  if (!shouldRenderEmission({ mode: state.mode, viewTab: state.viewTab })) {
+    ctx.fillStyle = cssVar("--cp-text2") || "#d6dbe6";
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText("Same DeltaE. Different boundary conditions.", mL + plotW - 4, mT + 12);
+  }
 }
 
 // ── Update readouts ─────────────────────────────────────────
 
 function updateReadouts() {
   const context = currentReadoutContext();
-  readoutTransitionLabel.textContent = context.transitionLabel;
+  readoutTransitionLabel.textContent = state.inferenceMode === "inverse" && state.viewTab === "hydrogen"
+    ? "Inferred transition"
+    : context.transitionLabel;
   readoutTransition.textContent = context.transitionText;
 
   const wReadout = formatWavelengthReadout(context.wavelengthNm);
@@ -1070,6 +1338,31 @@ function render() {
   nLowerSlider.value = String(state.nLower);
   nUpperValue.textContent = String(state.nUpper);
   nLowerValue.textContent = String(state.nLower);
+  if (inferenceForward) inferenceForward.setAttribute("aria-checked", String(state.inferenceMode === "forward"));
+  if (inferenceInverse) inferenceInverse.setAttribute("aria-checked", String(state.inferenceMode === "inverse"));
+  if (forwardControls) forwardControls.hidden = state.inferenceMode !== "forward";
+  if (inverseControls) inverseControls.hidden = state.inferenceMode !== "inverse";
+  if (inverseObservedWavelength) inverseObservedWavelength.value = state.inverse.observedWavelengthNm.toFixed(1);
+  for (const chip of inverseScopeChips) {
+    const scope = chip.getAttribute("data-scope");
+    const active = state.inverse.seriesScope === "all" ? scope === "all" : scope === String(state.inverse.seriesScope);
+    chip.setAttribute("aria-pressed", String(active));
+  }
+  if (microscopeProbeSlider) microscopeProbeSlider.value = String(state.microscope.probeNUpper);
+  if (microscopeProbeValue) microscopeProbeValue.textContent = String(state.microscope.probeNUpper);
+  if (microscopeInfinity) microscopeInfinity.checked = state.microscope.includeInfinity;
+  if (temperatureSlider) temperatureSlider.value = String(state.temperatureK);
+  const hydrogenComparisonAllowed = state.selectedElement !== "H";
+  if (!hydrogenComparisonAllowed) {
+    state.showHComparison = false;
+  }
+  showHComparison.checked = state.showHComparison;
+  showHComparison.disabled = !hydrogenComparisonAllowed;
+  showHComparison.setAttribute("aria-disabled", String(!hydrogenComparisonAllowed));
+  if (hComparisonHint) {
+    hComparisonHint.hidden = hydrogenComparisonAllowed;
+    hComparisonHint.setAttribute("aria-hidden", String(hydrogenComparisonAllowed));
+  }
 
   // Sync mode buttons
   modeEmission.setAttribute("aria-checked", String(state.mode === "emission"));
@@ -1099,6 +1392,14 @@ function render() {
     exploreLayout.classList.toggle("explore-layout--elements", !isHydrogenTab);
   }
   if (hydrogenVizTop) hydrogenVizTop.hidden = !isHydrogenTab;
+  if (microscopePanel) {
+    microscopePanel.hidden = !isHydrogenTab;
+    microscopePanel.setAttribute("aria-hidden", String(!isHydrogenTab));
+  }
+  if (temperaturePanel) {
+    temperaturePanel.hidden = !isHydrogenTab;
+    temperaturePanel.setAttribute("aria-hidden", String(!isHydrogenTab));
+  }
   if (elementsGuidance) elementsGuidance.hidden = isHydrogenTab;
   if (mysteryPrompt && mysteryPanelVisible) {
     const activePrompt = mysteryChallengeEngine.getCurrentChallenge()?.prompt;
@@ -1112,8 +1413,22 @@ function render() {
   if (guessModeAbsorption) {
     guessModeAbsorption.setAttribute("aria-checked", String(state.mystery.guessMode === "absorption"));
   }
-  if (checkMysteryAnswerBtn) checkMysteryAnswerBtn.disabled = !state.mystery.active;
+  for (const chip of reflectionChips) {
+    const reflection = chip.getAttribute("data-reflection");
+    chip.setAttribute("aria-checked", String(reflection === state.mystery.reflectionEvidence));
+  }
+  if (checkMysteryAnswerBtn) {
+    checkMysteryAnswerBtn.disabled = !state.mystery.active || !isMysteryReflectionReady({
+      mysteryActive: state.mystery.active,
+      selectedEvidence: state.mystery.reflectionEvidence,
+    });
+  }
   if (mysteryHintBtn) mysteryHintBtn.disabled = !state.mystery.active;
+  if (mysteryReflectionHint) {
+    mysteryReflectionHint.textContent = state.mystery.active && !state.mystery.reflectionEvidence
+      ? "Pick one evidence pattern before checking your answer."
+      : "Evidence recorded. Check your answer when ready.";
+  }
   syncCopyLockState();
   syncPlaybarState();
 
@@ -1121,10 +1436,16 @@ function render() {
     ? `Spectrum strip showing ${state.mode} hydrogen lines (${state.seriesFilter === "all" ? "all series" : SpectralLineModel.seriesName({ nLower: state.seriesFilter })}).`
     : (state.mystery.active && !state.mystery.revealed
       ? "Mystery spectrum challenge with hidden element and hidden mode."
-      : `Spectrum strip showing ${state.mode} lines for element ${state.selectedElement}.`);
+      : state.showHComparison && state.selectedElement !== "H"
+        ? `Spectrum strip comparing ${state.selectedElement} with hydrogen Balmer fingerprints in ${state.mode} mode.`
+        : `Spectrum strip showing ${state.mode} lines for element ${state.selectedElement}.`);
   spectrumCanvas.setAttribute("aria-label", spectrumLabel);
 
   updateReadouts();
+  if (isHydrogenTab) {
+    updateTemperaturePanel();
+    updateScalingInsight();
+  }
   if (isHydrogenTab) {
     drawBohrAtom();
     drawEnergyLevels();
@@ -1134,6 +1455,9 @@ function render() {
     clearSvg(energySvg);
   }
   drawSpectrum();
+  if (isHydrogenTab) {
+    drawSeriesMicroscope();
+  }
 }
 
 const HYDROGEN_SEQUENCE: Array<{ nUpper: number; nLower: number }> = [
@@ -1158,6 +1482,8 @@ function stepSequence(direction: -1 | 1, announce = true) {
     setLiveRegionText(statusEl, "Finish or end the mystery challenge before stepping sequence playback.");
     return;
   }
+  state.inferenceMode = "forward";
+  state.inverse.lastInference = null;
 
   if (state.viewTab === "hydrogen") {
     const currentIndex = HYDROGEN_SEQUENCE.findIndex(
@@ -1296,6 +1622,11 @@ function exportResults(): ExportPayloadV1 {
     throw new Error("Copy Results is locked while the mystery spectrum is unrevealed.");
   }
   const context = currentReadoutContext();
+  const includeHydrogenInferenceFields = isHydrogenInferenceContext({
+    viewTab: state.viewTab,
+    inferenceMode: state.inferenceMode,
+    hasInference: state.inverse.lastInference !== null,
+  });
   return buildSpectralExportPayload({
     mode: state.mode,
     viewTab: state.viewTab,
@@ -1309,6 +1640,12 @@ function exportResults(): ExportPayloadV1 {
     seriesName: context.series,
     band: context.band,
     representativeLineLabel: context.representativeLineLabel,
+    inferenceMode: includeHydrogenInferenceFields ? state.inferenceMode : undefined,
+    observedWavelengthNm: includeHydrogenInferenceFields ? state.inverse.observedWavelengthNm : undefined,
+    inferredTransitionLabel: includeHydrogenInferenceFields ? context.transitionText : undefined,
+    inverseResidualNm: includeHydrogenInferenceFields ? context.inverseResidualNm : undefined,
+    includeHydrogenInferenceFields,
+    mysteryReflectionEvidence: state.mystery.reflectionEvidence,
   });
 }
 
@@ -1316,6 +1653,8 @@ function exportResults(): ExportPayloadV1 {
 
 nUpperSlider.addEventListener("input", () => {
   stopSequencePlayback();
+  state.inferenceMode = "forward";
+  state.inverse.lastInference = null;
   state.nUpper = clamp(Number(nUpperSlider.value), 2, N_MAX);
   if (state.nUpper <= state.nLower) state.nLower = state.nUpper - 1;
   if (state.seriesFilter !== "all" && state.nLower !== state.seriesFilter) {
@@ -1327,6 +1666,8 @@ nUpperSlider.addEventListener("input", () => {
 
 nLowerSlider.addEventListener("input", () => {
   stopSequencePlayback();
+  state.inferenceMode = "forward";
+  state.inverse.lastInference = null;
   state.nLower = clamp(Number(nLowerSlider.value), 1, N_MAX - 1);
   if (state.nUpper <= state.nLower) state.nUpper = state.nLower + 1;
   if (state.seriesFilter !== "all" && state.nLower !== state.seriesFilter) {
@@ -1335,6 +1676,40 @@ nLowerSlider.addEventListener("input", () => {
   render();
   announceCurrentTransition();
 });
+
+inferenceForward?.addEventListener("click", () => {
+  stopSequencePlayback();
+  setInferenceMode("forward");
+});
+
+inferenceInverse?.addEventListener("click", () => {
+  stopSequencePlayback();
+  setInferenceMode("inverse");
+});
+
+inverseObservedWavelength?.addEventListener("input", () => {
+  const next = Number(inverseObservedWavelength.value);
+  if (!Number.isFinite(next)) return;
+  state.inverse.observedWavelengthNm = clamp(next, 50, 5000);
+  state.inverse.lastInference = null;
+  render();
+});
+
+solveInverseBtn?.addEventListener("click", () => {
+  stopSequencePlayback();
+  state.inferenceMode = "inverse";
+  solveInverseTransition();
+});
+
+for (const chip of inverseScopeChips) {
+  chip.addEventListener("click", () => {
+    const scope = chip.getAttribute("data-scope");
+    if (!scope) return;
+    state.inverse.seriesScope = scope === "all" ? "all" : (Number(scope) as SeriesFilter);
+    state.inverse.lastInference = null;
+    render();
+  });
+}
 
 modeEmission.addEventListener("click", () => setMode("emission"));
 modeAbsorption.addEventListener("click", () => setMode("absorption"));
@@ -1351,6 +1726,8 @@ playTransitionBtn.addEventListener("click", () => {
 for (const btn of presetButtons) {
   btn.addEventListener("click", () => {
     stopSequencePlayback();
+    state.inferenceMode = "forward";
+    state.inverse.lastInference = null;
     const nU = Number(btn.getAttribute("data-n-upper"));
     const nL = Number(btn.getAttribute("data-n-lower"));
     if (Number.isFinite(nU) && Number.isFinite(nL) && nU > nL) {
@@ -1367,6 +1744,8 @@ for (const btn of presetButtons) {
 for (const chip of seriesChips) {
   chip.addEventListener("click", () => {
     stopSequencePlayback();
+    state.inferenceMode = "forward";
+    state.inverse.lastInference = null;
     const series = chip.getAttribute("data-series");
     if (!series) return;
     if (series === "all") {
@@ -1392,9 +1771,17 @@ for (const chip of elementChips) {
     stopSequencePlayback();
     const elem = chip.getAttribute("data-element");
     if (elem) {
+      const comparisonWasEnabled = state.showHComparison;
       state.selectedElement = elem;
+      if (state.showHComparison && elem === "H") {
+        state.showHComparison = false;
+        if (showHComparison) showHComparison.checked = false;
+      }
       render();
       announceCurrentTransition(`Element ${elem} selected.`);
+      if (comparisonWasEnabled && elem === "H") {
+        setLiveRegionText(statusEl, "Hydrogen comparison turned off. Select a non-hydrogen element to compare against H Balmer.");
+      }
     }
   });
 }
@@ -1410,6 +1797,16 @@ guessModeAbsorption?.addEventListener("click", () => {
   state.mystery.guessMode = "absorption";
   render();
 });
+
+for (const chip of reflectionChips) {
+  chip.addEventListener("click", () => {
+    const evidence = chip.getAttribute("data-reflection");
+    if (!evidence) return;
+    state.mystery.reflectionEvidence = evidence as ReflectionEvidenceKey;
+    render();
+    setLiveRegionText(statusEl, `Mystery evidence noted: ${evidence}.`);
+  });
+}
 
 mysterySpectrumBtn?.addEventListener("click", () => {
   stopSequencePlayback();
@@ -1442,9 +1839,33 @@ exitMysteryBtn?.addEventListener("click", () => {
 // H comparison checkbox
 showHComparison?.addEventListener("change", () => {
   stopSequencePlayback();
+  if (showHComparison.checked && state.selectedElement === "H") {
+    state.showHComparison = false;
+    showHComparison.checked = false;
+    render();
+    setLiveRegionText(statusEl, "Select a non-hydrogen element to compare against H Balmer.");
+    return;
+  }
   state.showHComparison = showHComparison.checked;
   render();
   setLiveRegionText(statusEl, showHComparison.checked ? "Hydrogen Balmer comparison enabled." : "Hydrogen Balmer comparison disabled.");
+});
+
+microscopeProbeSlider?.addEventListener("input", () => {
+  const next = Number(microscopeProbeSlider.value);
+  state.microscope.probeNUpper = clamp(Math.round(next), 6, 80);
+  render();
+});
+
+microscopeInfinity?.addEventListener("change", () => {
+  state.microscope.includeInfinity = microscopeInfinity.checked;
+  render();
+});
+
+temperatureSlider?.addEventListener("input", () => {
+  const next = Number(temperatureSlider.value);
+  state.temperatureK = clamp(next, 4000, 20000);
+  render();
 });
 
 // Sidebar tab switching
@@ -1490,6 +1911,8 @@ stepForwardBtn.addEventListener("click", () => {
 resetBtn.addEventListener("click", () => {
   stopSequencePlayback();
   state.sequenceDirection = 1;
+  state.inferenceMode = "forward";
+  state.inverse.lastInference = null;
   state.nUpper = 3;
   state.nLower = 2;
   state.seriesFilter = 2;
@@ -1542,10 +1965,11 @@ const demoModes = createDemoModes({
         heading: "How to use this instrument",
         type: "bullets",
         items: [
-          "Use the sliders to choose upper and lower quantum numbers, then watch the Bohr atom, energy diagram, and spectrum update.",
+          "Use Forward mode on the Hydrogen tab to choose upper and lower quantum numbers, then watch the Bohr atom, energy diagram, and spectrum update.",
+          "Switch to Inverse mode on the Hydrogen tab to infer a transition from an observed wavelength.",
           "Switch between Emission and Absorption to see bright lines vs. dark dips.",
-          "Click named line presets (H-alpha, H-beta, etc.) to jump to famous transitions.",
-          "Switch to the Elements tab to compare spectral fingerprints of different atoms.",
+          "Use the Hydrogen-only Series Limit Microscope to inspect convergence near the series limit.",
+          "Switch to the Elements tab for empirical fingerprint matching across atoms.",
         ]
       }
     ]

@@ -249,5 +249,40 @@ describe("Spectral Lines — Design System Contracts", () => {
     it("includes a misconception-callout panel", () => {
       expect(html).toContain("misconception-callout");
     });
+
+    it("includes inverse inference controls", () => {
+      expect(html).toContain('id="inferenceForward"');
+      expect(html).toContain('id="inferenceInverse"');
+      expect(html).toContain('id="inverseObservedWavelength"');
+      expect(html).toContain('id="solveInverse"');
+      expect(html).toContain('id="inverseResult"');
+    });
+
+    it("includes series microscope controls", () => {
+      expect(html).toContain('id="microscopePanel"');
+      expect(html).toContain('data-hydrogen-only="true"');
+      expect(html).toContain('id="seriesMicroscopeCanvas"');
+      expect(html).toContain('id="microscopeProbeSlider"');
+      expect(html).toContain('id="microscopeInfinity"');
+      expect(html).toContain('id="scalingInsight"');
+    });
+
+    it("includes temperature thought-experiment panel controls", () => {
+      expect(html).toContain('id="temperaturePanel"');
+      expect(html).toContain('id="temperatureSlider"');
+      expect(html).toContain('id="tempBalmerProxy"');
+      expect(html).toContain("temperature-proxy-note");
+    });
+
+    it("includes comparison hint for non-hydrogen element requirement", () => {
+      expect(html).toContain('id="showHComparison"');
+      expect(html).toContain('id="hComparisonHint"');
+    });
+
+    it("includes mystery reflection gate controls", () => {
+      expect(html).toContain("mystery-reflection");
+      expect(html).toContain('id="reflection-spacing-pattern"');
+      expect(html).toContain('id="mysteryReflectionHint"');
+    });
   });
 });

@@ -89,6 +89,19 @@ describe("SpectralLineModel", () => {
       // At 1 K, essentially zero (exp(-157,000))
       expect(ratio).toBe(0);
     });
+
+    it("inverse inference finds Balmer Hα near 656 nm", () => {
+      const inference = SpectralLineModel.inferHydrogenTransitionFromObservedWavelength({
+        wavelengthNm: 656,
+        seriesFilter: "all",
+        nUpperMax: 40,
+      });
+      expect(inference).not.toBeNull();
+      expect(inference?.nUpper).toBe(3);
+      expect(inference?.nLower).toBe(2);
+      expect(inference?.seriesName).toBe("Balmer");
+      expect(inference?.quality).toBe("exact");
+    });
   });
 
   // ── Sanity invariants ────────────────────────────────────
@@ -196,6 +209,33 @@ describe("SpectralLineModel", () => {
         expect(curr).toBeLessThan(prev);
         prev = curr;
       }
+    });
+
+    it("large-n adjacent spacing shrinks with n as ~1/n^3", () => {
+      const d10 = SpectralLineModel.largeNAdjacentSpacingEv({ n: 10 });
+      const d20 = SpectralLineModel.largeNAdjacentSpacingEv({ n: 20 });
+      expect(d20).toBeLessThan(d10);
+      expect(d10 / d20).toBeGreaterThan(7);
+    });
+  });
+
+  describe("hydrogen population proxy", () => {
+    it("returns bounded fractional populations and proxies", () => {
+      const proxy = SpectralLineModel.hydrogenPopulationProxy({ temperatureK: 9000 });
+      const sum = proxy.n1Fraction + proxy.n2Fraction + proxy.n3Fraction;
+      expect(sum).toBeCloseTo(1, 8);
+      expect(proxy.neutralHydrogenFractionProxy).toBeGreaterThanOrEqual(0);
+      expect(proxy.neutralHydrogenFractionProxy).toBeLessThanOrEqual(1);
+      expect(proxy.balmerStrengthProxy).toBeGreaterThanOrEqual(0);
+      expect(proxy.balmerStrengthProxy).toBeLessThanOrEqual(1);
+    });
+
+    it("qualitative Balmer proxy peaks near A-star temperatures", () => {
+      const cool = SpectralLineModel.hydrogenPopulationProxy({ temperatureK: 5000 }).balmerStrengthProxy;
+      const aStar = SpectralLineModel.hydrogenPopulationProxy({ temperatureK: 9000 }).balmerStrengthProxy;
+      const hot = SpectralLineModel.hydrogenPopulationProxy({ temperatureK: 18000 }).balmerStrengthProxy;
+      expect(aStar).toBeGreaterThan(cool);
+      expect(aStar).toBeGreaterThan(hot);
     });
   });
 

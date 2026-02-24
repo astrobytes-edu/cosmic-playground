@@ -16,11 +16,17 @@ import {
   nextSequenceIndex,
   spectrumDomainForSeries,
   selectRepresentativeElementLine,
+  classifyInverseMatchQuality,
+  inferHydrogenTransitionFromObservedWavelength,
+  computeSeriesPileupDensity,
+  computeLargeNSpacingApproximation,
   transitionAnnouncement,
   buildSpectralExportPayload,
   createSeededRandom,
   pickMysteryTarget,
   isMysteryCopyLocked,
+  isMysteryReflectionReady,
+  isHydrogenInferenceContext,
 } from "./logic";
 
 describe("Spectral Lines -- UI Logic", () => {
@@ -240,6 +246,48 @@ describe("Spectral Lines -- UI Logic", () => {
     });
   });
 
+  describe("inverse inference helpers", () => {
+    it("classifies residual quality thresholds", () => {
+      expect(classifyInverseMatchQuality(0.3)).toBe("exact");
+      expect(classifyInverseMatchQuality(1.2)).toBe("near");
+      expect(classifyInverseMatchQuality(3.1)).toBe("low-confidence");
+    });
+
+    it("finds nearest transition candidate", () => {
+      const result = inferHydrogenTransitionFromObservedWavelength({
+        observedWavelengthNm: 656,
+        candidates: [
+          { nUpper: 4, nLower: 2, wavelengthNm: 486.1, energyEv: 2.55, seriesName: "Balmer" },
+          { nUpper: 3, nLower: 2, wavelengthNm: 656.3, energyEv: 1.89, seriesName: "Balmer" },
+          { nUpper: 2, nLower: 1, wavelengthNm: 121.6, energyEv: 10.2, seriesName: "Lyman" },
+        ],
+      });
+      expect(result).not.toBeNull();
+      expect(result?.nUpper).toBe(3);
+      expect(result?.nLower).toBe(2);
+      expect(result?.quality).toBe("exact");
+    });
+
+    it("computes pile-up density bins", () => {
+      const bins = computeSeriesPileupDensity({
+        wavelengthsNm: [364.8, 365.2, 366.0, 380],
+        minNm: 364.6,
+        maxNm: 384.6,
+        bins: 4,
+      });
+      expect(bins).toHaveLength(4);
+      expect(bins.some((bin) => bin.count > 0)).toBe(true);
+      expect(bins.every((bin) => bin.density >= 0 && bin.density <= 1)).toBe(true);
+    });
+
+    it("large-n spacing approximation falls as 1/n^3", () => {
+      const d10 = computeLargeNSpacingApproximation({ nUpper: 10 });
+      const d20 = computeLargeNSpacingApproximation({ nUpper: 20 });
+      expect(d20).toBeLessThan(d10);
+      expect(d10 / d20).toBeGreaterThan(7);
+    });
+  });
+
   describe("sequence helpers", () => {
     it("wraps sequence index forward and backward", () => {
       expect(nextSequenceIndex({ currentIndex: 5, length: 6, direction: 1 })).toBe(0);
@@ -334,6 +382,67 @@ describe("Spectral Lines -- UI Logic", () => {
       expect(readoutNames).toContain("Series");
       expect(readoutNames).toContain("Representative line");
     });
+
+    it("includes optional inverse and reflection fields when provided", () => {
+      const payload = buildSpectralExportPayload({
+        timestampIso: "2026-02-24T00:00:00.000Z",
+        mode: "emission",
+        viewTab: "hydrogen",
+        selectedElement: "H",
+        nUpper: 3,
+        nLower: 2,
+        seriesFilter: 2,
+        wavelengthNm: 656.3,
+        energyEv: 1.889,
+        frequencyHz: 4.57e14,
+        seriesName: "Balmer",
+        band: "Visible (red)",
+        inferenceMode: "inverse",
+        observedWavelengthNm: 656,
+        inferredTransitionLabel: "n = 3 → n = 2",
+        inverseResidualNm: 0.3,
+        includeHydrogenInferenceFields: true,
+        mysteryReflectionEvidence: "spacing-pattern",
+      });
+
+      const parameterNames = payload.parameters.map((item) => item.name);
+      expect(parameterNames).toContain("Inference mode");
+      expect(parameterNames).toContain("Observed wavelength input (nm)");
+      expect(parameterNames).toContain("Mystery evidence choice");
+
+      const readoutNames = payload.readouts.map((item) => item.name);
+      expect(readoutNames).toContain("Inferred transition");
+      expect(readoutNames).toContain("Inverse residual (nm)");
+    });
+
+    it("omits inverse export rows outside hydrogen inverse context", () => {
+      const payload = buildSpectralExportPayload({
+        timestampIso: "2026-02-24T00:00:00.000Z",
+        mode: "absorption",
+        viewTab: "elements",
+        selectedElement: "Fe",
+        nUpper: 3,
+        nLower: 2,
+        seriesFilter: 2,
+        wavelengthNm: 438.4,
+        energyEv: 2.828,
+        frequencyHz: 6.84e14,
+        seriesName: "Element catalog",
+        band: "Visible (blue)",
+        inferenceMode: "inverse",
+        observedWavelengthNm: 656,
+        inferredTransitionLabel: "n = 3 -> n = 2",
+        inverseResidualNm: 0.3,
+      });
+
+      const parameterNames = payload.parameters.map((item) => item.name);
+      expect(parameterNames).not.toContain("Inference mode");
+      expect(parameterNames).not.toContain("Observed wavelength input (nm)");
+
+      const readoutNames = payload.readouts.map((item) => item.name);
+      expect(readoutNames).not.toContain("Inferred transition");
+      expect(readoutNames).not.toContain("Inverse residual (nm)");
+    });
   });
 
   describe("mystery challenge helpers", () => {
@@ -373,6 +482,40 @@ describe("Spectral Lines -- UI Logic", () => {
         viewTab: "hydrogen",
         mysteryActive: true,
         mysteryRevealed: false,
+      })).toBe(false);
+    });
+
+    it("reflection must be selected before mystery check", () => {
+      expect(isMysteryReflectionReady({
+        mysteryActive: true,
+        selectedEvidence: null,
+      })).toBe(false);
+      expect(isMysteryReflectionReady({
+        mysteryActive: true,
+        selectedEvidence: "line-strengths",
+      })).toBe(true);
+    });
+
+    it("hydrogen inference context helper requires hydrogen tab + inverse mode + solved inference", () => {
+      expect(isHydrogenInferenceContext({
+        viewTab: "hydrogen",
+        inferenceMode: "inverse",
+        hasInference: true,
+      })).toBe(true);
+      expect(isHydrogenInferenceContext({
+        viewTab: "elements",
+        inferenceMode: "inverse",
+        hasInference: true,
+      })).toBe(false);
+      expect(isHydrogenInferenceContext({
+        viewTab: "hydrogen",
+        inferenceMode: "forward",
+        hasInference: true,
+      })).toBe(false);
+      expect(isHydrogenInferenceContext({
+        viewTab: "hydrogen",
+        inferenceMode: "inverse",
+        hasInference: false,
       })).toBe(false);
     });
   });

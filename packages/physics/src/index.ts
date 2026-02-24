@@ -2,6 +2,7 @@ export { AstroConstants } from "./astroConstants";
 export { AstroUnits } from "./units";
 export { AngularSizeModel } from "./angularSizeModel";
 export { BlackbodyRadiationModel } from "./blackbodyRadiationModel";
+export { BinaryOrbitModel } from "./binaryOrbitModel";
 export { ConservationLawsModel } from "./conservationLawsModel";
 export { DopplerShiftModel } from "./dopplerShiftModel";
 export type { DopplerRegimeLabel, ShiftLineInput, ShiftLineResult } from "./dopplerShiftModel";
@@ -25,6 +26,9 @@ export type {
   ElementLineData,
   ElementLineDetail,
   ElementLineEntry,
+  HydrogenPopulationProxy,
+  HydrogenTransitionInference,
+  InferenceQuality,
   TransitionRecord
 } from "./spectralLineModel";
 export { StellarEosModel } from "./stellarEosModel";
