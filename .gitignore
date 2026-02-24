@@ -23,3 +23,6 @@ output/
 
 # Temporary debug screenshots (root-level)
 /*.png
+
+# Vite temporary bundled config artifacts
+**/vite.config.*.timestamp-*.mjs
