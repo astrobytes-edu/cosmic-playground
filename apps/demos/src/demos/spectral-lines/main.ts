@@ -14,6 +14,7 @@ import {
   type ViewTab,
   type SeriesFilter,
   type MysteryTarget,
+  nextSequenceIndex,
   filterHydrogenTransitionsBySeries,
   spectrumDomainForSeries,
   shouldRenderEmission,
@@ -42,6 +43,13 @@ const elemModeEmission = $<HTMLButtonElement>("#elemModeEmission")!;
 const elemModeAbsorption = $<HTMLButtonElement>("#elemModeAbsorption")!;
 
 const playTransitionBtn = $<HTMLButtonElement>("#playTransition")!;
+const playBtn = $<HTMLButtonElement>("#btn-play")!;
+const pauseBtn = $<HTMLButtonElement>("#btn-pause")!;
+const stepBackBtn = $<HTMLButtonElement>("#btn-step-back")!;
+const stepForwardBtn = $<HTMLButtonElement>("#btn-step-forward")!;
+const resetBtn = $<HTMLButtonElement>("#btn-reset")!;
+const speedSelect = $<HTMLSelectElement>("#speed-select")!;
+const playbarState = $<HTMLSpanElement>("#playbarState")!;
 
 const readoutTransitionLabel = $<HTMLDivElement>("#readoutTransitionLabel")!;
 const readoutTransition = $<HTMLSpanElement>("#readoutTransition")!;
@@ -118,6 +126,8 @@ const state = {
   selectedElement: "H",
   showHComparison: false,
   animating: false,
+  sequencePlaying: false,
+  sequenceDirection: 1 as -1 | 1,
   mystery: {
     active: false,
     targetElement: "H",
@@ -139,6 +149,10 @@ const MYSTERY_TARGETS: MysteryTarget[] = MYSTERY_ELEMENTS.flatMap((element) => [
 ]);
 const mysterySeed = demoUrl.searchParams.get("mysterySeed");
 const seededMysteryRandom = mysterySeed ? createSeededRandom(mysterySeed) : null;
+let sequenceFrame = 0;
+let sequenceLastTimestamp = 0;
+
+const SEQUENCE_STEP_INTERVAL_MS = 520;
 
 interface CurrentReadoutContext {
   transitionLabel: string;
@@ -276,38 +290,80 @@ type MysteryCheckState = {
   targetMode: TransitionMode;
 };
 
-const mysteryChallenge: Challenge = {
-  type: "custom",
-  prompt: "Identify the hidden element and mode from the spectrum pattern.",
-  hints: [
-    "Compare the strongest line position first, then check nearby line spacing.",
-    "Sodium often centers near 589 nm; calcium has a strong pair near 393-397 nm.",
-  ],
-  check: (rawState: unknown) => {
-    const values = rawState as MysteryCheckState;
-    const guessedElement = values.guessedElement;
-    const guessedMode = values.guessedMode;
-    const correct = guessedElement === values.targetElement && guessedMode === values.targetMode;
-    const targetModeLabel = values.targetMode === "emission" ? "Emission" : "Absorption";
-    const guessedModeLabel = guessedMode === "emission" ? "Emission" : "Absorption";
-    if (correct) {
+const challenges: Challenge[] = [
+  {
+    type: "custom",
+    prompt: "Scenario 1: Identify the hidden element and mode from the spectrum pattern.",
+    hints: [
+      "Compare the strongest line position first, then check nearby line spacing.",
+      "Sodium often centers near 589 nm; calcium has a strong pair near 393-397 nm.",
+    ],
+    check: (rawState: unknown) => {
+      const values = rawState as MysteryCheckState;
+      const guessedElement = values.guessedElement;
+      const guessedMode = values.guessedMode;
+      const correct = guessedElement === values.targetElement && guessedMode === values.targetMode;
+      const targetModeLabel = values.targetMode === "emission" ? "Emission" : "Absorption";
+      const guessedModeLabel = guessedMode === "emission" ? "Emission" : "Absorption";
+      if (correct) {
+        return {
+          correct: true,
+          close: true,
+          message: `Correct. Mystery spectrum is ${values.targetElement} in ${targetModeLabel} mode.`,
+        };
+      }
       return {
-        correct: true,
-        close: true,
-        message: `Correct. Mystery spectrum is ${values.targetElement} in ${targetModeLabel} mode.`,
+        correct: false,
+        close: false,
+        message: `Not yet. You guessed ${guessedElement} (${guessedModeLabel}); target is ${values.targetElement} (${targetModeLabel}).`,
       };
-    }
-    return {
-      correct: false,
-      close: false,
-      message: `Not yet. You guessed ${guessedElement} (${guessedModeLabel}); target is ${values.targetElement} (${targetModeLabel}).`,
-    };
+    },
   },
-};
+  {
+    type: "custom",
+    prompt: "Scenario 2: Infer emission versus absorption first, then match the element fingerprint.",
+    hints: [
+      "Emission is bright-line dominated; absorption is dark-line dominated.",
+      "After mode, compare line spacing patterns to identify the element.",
+    ],
+    check: (rawState: unknown) => {
+      const values = rawState as MysteryCheckState;
+      const correct = values.guessedElement === values.targetElement && values.guessedMode === values.targetMode;
+      return {
+        correct,
+        close: correct,
+        message: correct
+          ? "Correct. Mode and element both match the hidden spectrum."
+          : "Re-check mode first, then compare the strongest two line clusters.",
+      };
+    },
+  },
+  {
+    type: "custom",
+    prompt: "Scenario 3: Transition inference. Use representative line and spacing to justify your choice.",
+    hints: [
+      "Representative lines anchor the wavelength estimate; nearby spacing confirms identity.",
+      "Use one quantitative readout value to support your final claim.",
+    ],
+    check: (rawState: unknown) => {
+      const values = rawState as MysteryCheckState;
+      const correct = values.guessedElement === values.targetElement && values.guessedMode === values.targetMode;
+      return {
+        correct,
+        close: correct,
+        message: correct
+          ? "Correct. Evidence supports your transition inference."
+          : "Not yet. Use representative wavelength plus neighboring spacing before checking again.",
+      };
+    },
+  },
+];
 
-const mysteryChallengeEngine = new ChallengeEngine([mysteryChallenge], {
+const mysteryChallengeEngine = new ChallengeEngine(challenges, {
   showUI: false,
   onProgress: () => {
+    const prompt = mysteryChallengeEngine.getCurrentChallenge()?.prompt;
+    if (prompt && mysteryPrompt) mysteryPrompt.textContent = prompt;
     setLiveRegionText(statusEl, "Mystery spectrum ready. Guess the element and mode, then choose Check answer.");
   },
   onStop: () => {
@@ -1045,9 +1101,10 @@ function render() {
   if (hydrogenVizTop) hydrogenVizTop.hidden = !isHydrogenTab;
   if (elementsGuidance) elementsGuidance.hidden = isHydrogenTab;
   if (mysteryPrompt && mysteryPanelVisible) {
+    const activePrompt = mysteryChallengeEngine.getCurrentChallenge()?.prompt;
     mysteryPrompt.textContent = state.mystery.revealed
       ? "Answer revealed. Start another mystery to try a new hidden target."
-      : "Mystery challenge: identify the hidden element and mode from the spectrum pattern.";
+      : activePrompt ?? "Mystery challenge: identify the hidden element and mode from the spectrum pattern.";
   }
   if (guessModeEmission) {
     guessModeEmission.setAttribute("aria-checked", String(state.mystery.guessMode === "emission"));
@@ -1058,6 +1115,7 @@ function render() {
   if (checkMysteryAnswerBtn) checkMysteryAnswerBtn.disabled = !state.mystery.active;
   if (mysteryHintBtn) mysteryHintBtn.disabled = !state.mystery.active;
   syncCopyLockState();
+  syncPlaybarState();
 
   const spectrumLabel = state.viewTab === "hydrogen"
     ? `Spectrum strip showing ${state.mode} hydrogen lines (${state.seriesFilter === "all" ? "all series" : SpectralLineModel.seriesName({ nLower: state.seriesFilter })}).`
@@ -1076,6 +1134,109 @@ function render() {
     clearSvg(energySvg);
   }
   drawSpectrum();
+}
+
+const HYDROGEN_SEQUENCE: Array<{ nUpper: number; nLower: number }> = [
+  { nUpper: 3, nLower: 2 },
+  { nUpper: 4, nLower: 2 },
+  { nUpper: 5, nLower: 2 },
+  { nUpper: 6, nLower: 2 },
+  { nUpper: 2, nLower: 1 },
+  { nUpper: 4, nLower: 3 },
+];
+
+function syncPlaybarState() {
+  playBtn.disabled = state.sequencePlaying || prefersReducedMotion;
+  pauseBtn.disabled = !state.sequencePlaying;
+  playbarState.textContent = state.sequencePlaying
+    ? `Sequence running (${state.sequenceDirection > 0 ? "forward" : "backward"})`
+    : "Sequence paused";
+}
+
+function stepSequence(direction: -1 | 1, announce = true) {
+  if (state.mystery.active && !state.mystery.revealed) {
+    setLiveRegionText(statusEl, "Finish or end the mystery challenge before stepping sequence playback.");
+    return;
+  }
+
+  if (state.viewTab === "hydrogen") {
+    const currentIndex = HYDROGEN_SEQUENCE.findIndex(
+      (step) => step.nUpper === state.nUpper && step.nLower === state.nLower,
+    );
+    const startIndex = currentIndex >= 0 ? currentIndex : 0;
+    const nextIndex = nextSequenceIndex({
+      currentIndex: startIndex,
+      length: HYDROGEN_SEQUENCE.length,
+      direction,
+    });
+    const next = HYDROGEN_SEQUENCE[nextIndex];
+    state.nUpper = next.nUpper;
+    state.nLower = next.nLower;
+    state.seriesFilter = next.nLower <= 4 ? (next.nLower as SeriesFilter) : "all";
+  } else {
+    const order = ["H", "He", "Na", "Ca", "Fe"] as const;
+    const currentIndex = order.findIndex((element) => element === state.selectedElement);
+    const startIndex = currentIndex >= 0 ? currentIndex : 0;
+    const nextIndex = nextSequenceIndex({
+      currentIndex: startIndex,
+      length: order.length,
+      direction,
+    });
+    state.selectedElement = order[nextIndex];
+  }
+
+  render();
+  if (announce) {
+    announceCurrentTransition(direction > 0 ? "Stepped forward." : "Stepped backward.");
+  }
+}
+
+function stopSequencePlayback() {
+  if (sequenceFrame !== 0) {
+    window.cancelAnimationFrame(sequenceFrame);
+    sequenceFrame = 0;
+  }
+  sequenceLastTimestamp = 0;
+  state.sequencePlaying = false;
+  syncPlaybarState();
+}
+
+function startSequencePlayback() {
+  if (prefersReducedMotion) {
+    setLiveRegionText(statusEl, "Reduced motion enabled; autoplay sequence is disabled.");
+    return;
+  }
+  if (state.sequencePlaying) return;
+  if (state.mystery.active && !state.mystery.revealed) {
+    setLiveRegionText(statusEl, "Finish or end the mystery challenge before starting sequence playback.");
+    return;
+  }
+
+  state.sequencePlaying = true;
+  sequenceLastTimestamp = 0;
+  let carryMs = 0;
+
+  const tick = (now: number) => {
+    if (!state.sequencePlaying) return;
+    if (sequenceLastTimestamp === 0) {
+      sequenceLastTimestamp = now;
+      sequenceFrame = window.requestAnimationFrame(tick);
+      return;
+    }
+    const deltaMs = Math.min(120, now - sequenceLastTimestamp);
+    sequenceLastTimestamp = now;
+    const speed = Number(speedSelect.value) || 1;
+    const thresholdMs = Math.max(110, SEQUENCE_STEP_INTERVAL_MS / speed);
+    carryMs += deltaMs;
+    if (carryMs >= thresholdMs) {
+      carryMs = 0;
+      stepSequence(state.sequenceDirection, false);
+    }
+    sequenceFrame = window.requestAnimationFrame(tick);
+  };
+
+  syncPlaybarState();
+  sequenceFrame = window.requestAnimationFrame(tick);
 }
 
 // ── Transition animation ────────────────────────────────────
@@ -1154,6 +1315,7 @@ function exportResults(): ExportPayloadV1 {
 // ── Event bindings ──────────────────────────────────────────
 
 nUpperSlider.addEventListener("input", () => {
+  stopSequencePlayback();
   state.nUpper = clamp(Number(nUpperSlider.value), 2, N_MAX);
   if (state.nUpper <= state.nLower) state.nLower = state.nUpper - 1;
   if (state.seriesFilter !== "all" && state.nLower !== state.seriesFilter) {
@@ -1164,6 +1326,7 @@ nUpperSlider.addEventListener("input", () => {
 });
 
 nLowerSlider.addEventListener("input", () => {
+  stopSequencePlayback();
   state.nLower = clamp(Number(nLowerSlider.value), 1, N_MAX - 1);
   if (state.nUpper <= state.nLower) state.nUpper = state.nLower + 1;
   if (state.seriesFilter !== "all" && state.nLower !== state.seriesFilter) {
@@ -1179,6 +1342,7 @@ elemModeEmission?.addEventListener("click", () => setMode("emission"));
 elemModeAbsorption?.addEventListener("click", () => setMode("absorption"));
 
 playTransitionBtn.addEventListener("click", () => {
+  stopSequencePlayback();
   animateTransition();
   announceCurrentTransition("Transition replayed.");
 });
@@ -1186,6 +1350,7 @@ playTransitionBtn.addEventListener("click", () => {
 // Preset buttons
 for (const btn of presetButtons) {
   btn.addEventListener("click", () => {
+    stopSequencePlayback();
     const nU = Number(btn.getAttribute("data-n-upper"));
     const nL = Number(btn.getAttribute("data-n-lower"));
     if (Number.isFinite(nU) && Number.isFinite(nL) && nU > nL) {
@@ -1201,6 +1366,7 @@ for (const btn of presetButtons) {
 // Series filter chips
 for (const chip of seriesChips) {
   chip.addEventListener("click", () => {
+    stopSequencePlayback();
     const series = chip.getAttribute("data-series");
     if (!series) return;
     if (series === "all") {
@@ -1223,6 +1389,7 @@ for (const chip of seriesChips) {
 // Element chips
 for (const chip of elementChips) {
   chip.addEventListener("click", () => {
+    stopSequencePlayback();
     const elem = chip.getAttribute("data-element");
     if (elem) {
       state.selectedElement = elem;
@@ -1233,20 +1400,24 @@ for (const chip of elementChips) {
 }
 
 guessModeEmission?.addEventListener("click", () => {
+  stopSequencePlayback();
   state.mystery.guessMode = "emission";
   render();
 });
 
 guessModeAbsorption?.addEventListener("click", () => {
+  stopSequencePlayback();
   state.mystery.guessMode = "absorption";
   render();
 });
 
 mysterySpectrumBtn?.addEventListener("click", () => {
+  stopSequencePlayback();
   startMysterySpectrum();
 });
 
 checkMysteryAnswerBtn?.addEventListener("click", () => {
+  stopSequencePlayback();
   checkMysteryAnswer();
 });
 
@@ -1264,11 +1435,13 @@ mysteryHintBtn?.addEventListener("click", () => {
 });
 
 exitMysteryBtn?.addEventListener("click", () => {
+  stopSequencePlayback();
   stopMysterySpectrum();
 });
 
 // H comparison checkbox
 showHComparison?.addEventListener("change", () => {
+  stopSequencePlayback();
   state.showHComparison = showHComparison.checked;
   render();
   setLiveRegionText(statusEl, showHComparison.checked ? "Hydrogen Balmer comparison enabled." : "Hydrogen Balmer comparison disabled.");
@@ -1279,6 +1452,7 @@ const sidebarTabH = document.getElementById("sidebar-tab-H") as HTMLButtonElemen
 const sidebarTabElem = document.getElementById("sidebar-tab-elem") as HTMLButtonElement | null;
 
 sidebarTabH?.addEventListener("click", () => {
+  stopSequencePlayback();
   if (state.mystery.active || state.mystery.revealed) stopMysterySpectrum();
   setSidebarView("hydrogen");
   render();
@@ -1286,9 +1460,47 @@ sidebarTabH?.addEventListener("click", () => {
 });
 
 sidebarTabElem?.addEventListener("click", () => {
+  stopSequencePlayback();
   setSidebarView("elements");
   render();
   announceCurrentTransition("Elements tab active.");
+});
+
+playBtn.addEventListener("click", () => {
+  state.sequenceDirection = 1;
+  startSequencePlayback();
+});
+
+pauseBtn.addEventListener("click", () => {
+  stopSequencePlayback();
+});
+
+stepBackBtn.addEventListener("click", () => {
+  stopSequencePlayback();
+  state.sequenceDirection = -1;
+  stepSequence(-1);
+});
+
+stepForwardBtn.addEventListener("click", () => {
+  stopSequencePlayback();
+  state.sequenceDirection = 1;
+  stepSequence(1);
+});
+
+resetBtn.addEventListener("click", () => {
+  stopSequencePlayback();
+  state.sequenceDirection = 1;
+  state.nUpper = 3;
+  state.nLower = 2;
+  state.seriesFilter = 2;
+  render();
+  announceCurrentTransition("Transition sequence reset.");
+});
+
+speedSelect.addEventListener("change", () => {
+  syncPlaybarState();
+  const speed = Number(speedSelect.value) || 1;
+  setLiveRegionText(statusEl, `Sequence speed set to ${formatNumber(speed, 0)}x.`);
 });
 
 // Copy results
@@ -1390,7 +1602,29 @@ const demoModes = createDemoModes({
             };
           });
         }
-      }
+      },
+      {
+        label: "Add element fingerprint snapshots (H/He/Na/Fe)",
+        getRows() {
+          const elementOrder = ["H", "He", "Na", "Fe"] as const;
+          return elementOrder.map((element) => {
+            const catalog = SpectralLineModel.elementLines({ element });
+            const representative = selectRepresentativeElementLine(catalog.lines);
+            const wavelengthNm = representative?.wavelengthNm ?? NaN;
+            const energyEv = Number.isFinite(wavelengthNm) && wavelengthNm > 0
+              ? SpectralLineModel.BOHR.HC_EV_NM / wavelengthNm
+              : NaN;
+            return {
+              case: `${element} representative`,
+              transition: representative?.label ?? `${element} strongest line`,
+              wavelength: Number.isFinite(wavelengthNm) ? wavelengthNm.toFixed(1) : "\u2014",
+              energy: Number.isFinite(energyEv) ? formatNumber(energyEv, 4) : "\u2014",
+              series: "Empirical catalog",
+              band: SpectralLineModel.wavelengthBand({ wavelengthNm }),
+            };
+          });
+        }
+      },
     ]
   }
 });
@@ -1400,7 +1634,13 @@ demoModes.bindButtons({ helpButton: helpBtn, stationButton: stationModeBtn });
 // Keyboard shortcut for play
 document.addEventListener("keydown", (e) => {
   if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-  if (e.key === "p") animateTransition();
+  if (e.key === "p") {
+    if (state.sequencePlaying) {
+      stopSequencePlayback();
+    } else {
+      startSequencePlayback();
+    }
+  }
 });
 
 // ── Init ────────────────────────────────────────────────────

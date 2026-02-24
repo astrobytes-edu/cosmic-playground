@@ -41,6 +41,7 @@
                 type="range"
                 min="2" max="8" step="1" value="3"
                 aria-label="Upper quantum number"
+                data-tooltip-source="#nUpperValue"
               />
               <span class="control__value"><span id="nUpperValue">3</span></span>
             </label>
@@ -52,6 +53,7 @@
                 type="range"
                 min="1" max="7" step="1" value="2"
                 aria-label="Lower quantum number"
+                data-tooltip-source="#nLowerValue"
               />
               <span class="control__value"><span id="nLowerValue">2</span></span>
             </label>
@@ -317,7 +319,7 @@
             </article>
           </div>
 
-          <div class="cp-notice understand-callout" role="note" aria-label="Bohr model caveat">
+          <div class="cp-notice understand-callout misconception-callout" role="note" aria-label="Bohr model caveat">
             <strong>Do electrons really orbit like planets?</strong>
             The Bohr model gives correct <em>energies</em> for hydrogen but incorrect spatial pictures.
             Real electrons exist in probability clouds (orbitals), not circular paths.
@@ -325,6 +327,34 @@
           </div>
         </div>
       </section>
+
+      <div class="cp-playbar" role="region" aria-label="Transition transport controls">
+        <button class="cp-playbar__btn" id="btn-play" type="button" aria-label="Play transition sequence">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6z" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-pause" type="button" aria-label="Pause transition sequence" disabled>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" /><rect x="9.5" y="2" width="3.5" height="12" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-step-back" type="button" aria-label="Step backward">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="2" height="12" /><path d="M14 2L6 8l8 6z" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-step-forward" type="button" aria-label="Step forward">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="12" y="2" width="2" height="12" /><path d="M2 2l8 6-8 6z" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-reset" type="button" aria-label="Reset transition sequence">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1 1 1.8 4.3" /><path d="M2 13V8h5" /></svg>
+        </button>
+        <label class="speed-control" for="speed-select">
+          Speed
+          <select id="speed-select" class="cp-select">
+            <option value="1">1x</option>
+            <option value="2" selected>2x</option>
+            <option value="5">5x</option>
+            <option value="10">10x</option>
+          </select>
+        </label>
+        <span class="cp-playbar__phase" id="playbarState">Sequence paused</span>
+      </div>
 
       <!-- ─── Readouts ───────────────────────────────────────── -->
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
@@ -351,8 +381,8 @@
           <div class="cp-readout">
             <div class="cp-readout__label">Frequency $\nu$</div>
             <div class="cp-readout__value">
-              <span id="readoutFrequency">4.57e14</span>
-              <span class="cp-readout__unit">Hz</span>
+              <span id="readoutFrequency">4.57</span>
+              <span class="cp-readout__unit">x10^14 Hz</span>
             </div>
           </div>
           <div class="cp-readout">

@@ -13,6 +13,7 @@ import {
   transitionLabel,
   shouldRenderEmission,
   filterHydrogenTransitionsBySeries,
+  nextSequenceIndex,
   spectrumDomainForSeries,
   selectRepresentativeElementLine,
   transitionAnnouncement,
@@ -236,6 +237,13 @@ describe("Spectral Lines -- UI Logic", () => {
       expect(domain.minNm).toBe(50);
       expect(domain.maxNm).toBe(5000);
       expect(domain.ticksNm).toContain(2000);
+    });
+  });
+
+  describe("sequence helpers", () => {
+    it("wraps sequence index forward and backward", () => {
+      expect(nextSequenceIndex({ currentIndex: 5, length: 6, direction: 1 })).toBe(0);
+      expect(nextSequenceIndex({ currentIndex: 0, length: 6, direction: -1 })).toBe(5);
     });
   });
 

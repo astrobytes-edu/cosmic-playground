@@ -53,6 +53,22 @@
   margin: var(--cp-space-1) 0 0;
 }
 
+.cp-playbar {
+  animation: cp-fade-in 0.8s var(--cp-ease-out) 0.2s backwards;
+}
+
+.speed-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  color: var(--cp-muted);
+  font-size: var(--cp-text-sm);
+}
+
+.speed-control .cp-select {
+  min-width: 84px;
+}
+
 .presets {
   display: grid;
   gap: var(--cp-space-2);
@@ -263,6 +279,12 @@
 
 .photon-glow--emission {
   animation: cp-glow-pulse 1.2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photon-glow--emission {
+    animation: none;
+  }
 }
 
 /* ── Active transition highlight ─────────────────────────── */

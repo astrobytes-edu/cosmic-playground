@@ -82,6 +82,16 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+export function nextSequenceIndex(args: {
+  currentIndex: number;
+  length: number;
+  direction: -1 | 1;
+}): number {
+  const length = Math.max(1, Math.floor(args.length));
+  const currentIndex = clamp(Math.floor(args.currentIndex), 0, length - 1);
+  return (currentIndex + args.direction + length) % length;
+}
+
 /**
  * Format a number for display: scientific notation for very large/small,
  * fixed-point otherwise. Returns em-dash for non-finite values.

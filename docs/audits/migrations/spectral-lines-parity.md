@@ -1,8 +1,21 @@
 # spectral-lines Migration Parity Audit
 
-Date: 2026-02-23
+Date: 2026-02-24
 
 Scope: compare the `spectral-lines` implementation against the v1 contract in `docs/specs/spectral-lines-spec.md` and record promotion blockers.
+
+## 2026-02-24 SoTA uplift addendum
+
+Completed:
+- Added full `cp-playbar` transport (`play/pause/step/reset/speed`) for guided transition-sequence exploration.
+- Added tooltip hooks for `n_upper` and `n_lower` sliders.
+- Expanded challenge deck from one scenario to three scenario prompts.
+- Added explicit misconception-callout class to Bohr caveat panel for contract-aligned misconception framing.
+- Improved default frequency readout placeholder from e-notation to high-legibility `x10^14 Hz`.
+- Extended station-mode row sets with element fingerprint snapshots (`H/He/Na/Fe`) for quantitative comparison.
+
+Verification:
+- `corepack pnpm -C apps/demos test -- src/demos/spectral-lines/design-contracts.test.ts src/demos/spectral-lines/logic.test.ts`
 
 ## References (source of truth)
 

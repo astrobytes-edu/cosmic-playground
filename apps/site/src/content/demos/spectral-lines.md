@@ -8,9 +8,9 @@ time_minutes: 12
 has_math_mode: false
 tags: ["spectral lines", "Bohr atom", "emission", "absorption", "hydrogen", "energy levels"]
 readiness: candidate
-readinessReason: "P1/P2 contract and regression gates are passing; launch-ready promotion now depends on classroom + screen-reader validation logs."
+readinessReason: "SoTA UX/pedagogy uplift is complete (playbar transport, deeper challenge deck, tooltip affordances, misconception framing, expanded station snapshots) and regression gates are passing; launch-ready promotion now depends on classroom + screen-reader validation logs."
 parityAuditPath: "docs/audits/migrations/spectral-lines-parity.md"
-lastVerifiedAt: "2026-02-23"
+lastVerifiedAt: "2026-02-24"
 learning_goals:
   - "Explain why atoms emit and absorb light only at specific wavelengths using the Bohr model."
   - "Connect energy-level transitions to the Rydberg formula and predict transition wavelengths."
@@ -43,7 +43,7 @@ model_notes:
 demo_path: "/play/spectral-lines/"
 station_path: "/stations/spectral-lines/"
 instructor_path: "/instructor/spectral-lines/"
-last_updated: "2026-02-23"
+last_updated: "2026-02-24"
 ---
 
 Explore how atoms produce light at specific wavelengths. Adjust quantum numbers to see transitions in the Bohr atom, energy-level diagram, and spectrum strip simultaneously.

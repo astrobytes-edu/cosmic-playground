@@ -23,8 +23,10 @@ import path from "node:path";
 describe("Spectral Lines — Design System Contracts", () => {
   const htmlPath = path.resolve(__dirname, "index.html");
   const cssPath = path.resolve(__dirname, "style.css");
+  const mainPath = path.resolve(__dirname, "main.ts");
   const html = fs.readFileSync(htmlPath, "utf-8");
   const css = fs.readFileSync(cssPath, "utf-8");
+  const main = fs.readFileSync(mainPath, "utf-8");
 
   describe("Starfield invariant", () => {
     it("demo HTML contains a starfield canvas element", () => {
@@ -212,6 +214,40 @@ describe("Spectral Lines — Design System Contracts", () => {
       expect(html).toContain("Explore further");
       expect(html).toContain('href="../doppler-shift/"');
       expect(html).toContain('href="../galaxy-rotation/"');
+    });
+  });
+
+  describe("SoTA interaction contracts", () => {
+    it("includes playbar transport controls", () => {
+      expect(html).toContain("cp-playbar");
+      expect(html).toContain('id="btn-play"');
+      expect(html).toContain('id="btn-pause"');
+      expect(html).toContain('id="btn-step-back"');
+      expect(html).toContain('id="btn-step-forward"');
+      expect(html).toContain('id="btn-reset"');
+      expect(html).toContain('id="speed-select"');
+    });
+
+    it("primary sliders expose tooltip readout hooks", () => {
+      expect(html).toContain('id="nUpperSlider"');
+      expect(html).toContain('id="nLowerSlider"');
+      expect(html).toContain('data-tooltip-source="#nUpperValue"');
+      expect(html).toContain('data-tooltip-source="#nLowerValue"');
+    });
+
+    it("defines at least three challenge scenarios", () => {
+      const challengeArrays = Array.from(
+        main.matchAll(/const\s+\w+\s*:\s*Challenge\[\]\s*=\s*\[(.*?)\];/gs),
+      );
+      const promptCount = challengeArrays.reduce((count, section) => {
+        const prompts = section[1].match(/prompt:\s*"/g) || [];
+        return count + prompts.length;
+      }, 0);
+      expect(promptCount).toBeGreaterThanOrEqual(3);
+    });
+
+    it("includes a misconception-callout panel", () => {
+      expect(html).toContain("misconception-callout");
     });
   });
 });
