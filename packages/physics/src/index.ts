@@ -44,5 +44,8 @@ export { TelescopeResolutionModel } from "./telescopeResolutionModel";
 export { TwoBodyAnalytic } from "./twoBodyAnalytic";
 export { ZamsTout1996Model } from "./zamsTout1996Model";
 export type { ZamsValidity } from "./zamsTout1996Model";
+export { HrInferencePopulationModel } from "./hrInferencePopulationModel";
+export { generatePopulation } from "./hrInferencePopulationModel";
+export type { HrStarStage, PopulationOptions, PopulationStar } from "./hrInferencePopulationModel";
 export { solarDeclinationDegFromDayOfYear } from "./riseSetModel";
 export { solarRiseSetLocalTimeHours, moonRiseSetLocalTimeHours } from "./riseSetModel";

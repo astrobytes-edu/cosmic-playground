@@ -3,18 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stars (ZAMS + HR) - Cosmic Playground</title>
+    <title>HR Diagram Inference Lab - Cosmic Playground</title>
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
   </head>
   <body>
     <canvas class="cp-starfield" aria-hidden="true"></canvas>
-    <div id="cp-demo" class="cp-layer-instrument cp-demo" aria-label="Stars ZAMS and HR instrument">
-      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
-        <div class="cp-panel-header">Stars: ZAMS (Tout 1996) to H-R Position</div>
-        <div class="cp-panel-body cp-scroll-shadow">
-          <p class="cp-muted">Explore how mass and metallicity shift ZAMS luminosity, radius, effective temperature, and H-R placement.</p>
 
+    <div id="cp-demo" class="cp-layer-instrument cp-demo hr-lab" aria-label="HR Diagram Inference Lab instrument">
+      <section class="cp-demo__stage cp-stage" aria-label="Plot stage">
+        <header class="plot-header">
+          <div>
+            <p class="plot-kicker">Cosmic Playground</p>
+            <h1>HR Diagram Inference Lab</h1>
+            <p class="cp-muted">Measurement-built map: observer CMD versus theorist HR coordinates.</p>
+          </div>
+          <span id="modeBadge" class="plot-mode-badge">Observer CMD</span>
+        </header>
+
+        <div class="hr-plot" aria-label="HR and CMD plot area">
+          <canvas id="hrCanvas" role="img" aria-label="Stellar population plot"></canvas>
+          <div class="axis-badges" aria-hidden="true">
+            <span class="axis-badge">Brighter ↑</span>
+            <span class="axis-badge">Hotter ←</span>
+          </div>
+          <div id="massLegend" class="mass-legend" hidden>
+            <div class="mass-legend__title">Mass colors</div>
+            <div id="massLegendBar" class="mass-legend__bar"></div>
+            <div class="mass-legend__labels">
+              <span>0.1 M_sun</span>
+              <span>50 M_sun</span>
+            </div>
+          </div>
+        </div>
+        <p id="plotCaption" class="cp-muted stage-note"></p>
+      </section>
+
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Controls, Inference, and Assessment</div>
+        <div class="cp-panel-body cp-scroll-shadow">
           <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
             <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -55,179 +82,140 @@
             </div>
           </div>
 
-          <div class="cp-chip-group" role="group" aria-label="Source mode">
-            <button id="modeZams" class="cp-chip" type="button" aria-pressed="true">ZAMS mode</button>
-            <button id="modeStefan" class="cp-chip" type="button" aria-pressed="false">Stefan mode</button>
-          </div>
-
-          <label class="control">
-            <span>Mass $M$ [$M_{\odot}$]</span>
-            <input id="massSlider" type="range" min="0" max="1000" step="1" value="333" data-tooltip-source="#massValue" aria-label="Mass slider" />
-            <span class="control__value"><span id="massValue"></span></span>
-          </label>
-
-          <label class="control">
-            <span>Metallicity $Z$</span>
-            <input id="metallicitySlider" type="range" min="0" max="1000" step="1" value="767" data-tooltip-source="#metallicityValue" aria-label="Metallicity slider" />
-            <span class="control__value"><span id="metallicityValue"></span></span>
-          </label>
-
-          <label class="control">
-            <span>Effective temperature $T_{\rm eff}$ [K]</span>
-            <input id="teffSlider" type="range" min="0" max="1000" step="1" value="381" data-tooltip-source="#teffSliderValue" aria-label="Effective temperature slider" />
-            <span class="control__value"><span id="teffSliderValue"></span></span>
-          </label>
-
-          <label class="control">
-            <span>Radius $R$ [$R_{\odot}$]</span>
-            <input id="radiusSlider" type="range" min="0" max="1000" step="1" value="500" data-tooltip-source="#radiusSliderValue" aria-label="Radius slider" />
-            <span class="control__value"><span id="radiusSliderValue"></span></span>
-          </label>
-
-          <label class="check">
-            <input id="showRadiusGuides" type="checkbox" />
-            Show constant-$R$ guide lines
-          </label>
-
-          <div class="presets">
-            <div class="presets__label">ZAMS presets</div>
-            <div class="cp-chip-group--grid presets__row presets__row--2col" role="group" aria-label="ZAMS presets">
-              <button class="cp-chip preset" data-preset-id="sun" data-mode="zams" data-mass-msun="1" data-metallicity-z="0.02" type="button" aria-pressed="false">Sun</button>
-              <button class="cp-chip preset" data-preset-id="metal-poor-dwarf" data-mode="zams" data-mass-msun="0.6" data-metallicity-z="0.0005" type="button" aria-pressed="false">Metal-poor dwarf</button>
-              <button class="cp-chip preset" data-preset-id="a-star" data-mode="zams" data-mass-msun="2.2" data-metallicity-z="0.02" type="button" aria-pressed="false">A star</button>
-              <button class="cp-chip preset" data-preset-id="b-star" data-mode="zams" data-mass-msun="8" data-metallicity-z="0.02" type="button" aria-pressed="false">B star</button>
-              <button class="cp-chip preset" data-preset-id="o-star" data-mode="zams" data-mass-msun="30" data-metallicity-z="0.02" type="button" aria-pressed="false">O star</button>
+          <section class="control-block">
+            <h2>Plot mode</h2>
+            <div class="cp-chip-group" role="group" aria-label="Plot mode">
+              <button id="modeObserver" class="cp-chip" type="button" aria-pressed="true">Observer CMD</button>
+              <button id="modeTheorist" class="cp-chip" type="button" aria-pressed="false">Theorist HR</button>
             </div>
+            <label class="check"><input id="showRadiusLines" type="checkbox" /> Show radius lines</label>
+            <label class="check"><input id="revealMassColors" type="checkbox" /> Reveal mass colors</label>
+          </section>
 
-            <div class="presets__label">Override presets (non-ZAMS)</div>
-            <div class="cp-chip-group--grid presets__row presets__row--2col" role="group" aria-label="Override presets">
-              <button class="cp-chip preset" data-preset-id="red-supergiant" data-mode="override" data-mass-msun="18" data-metallicity-z="0.02" data-teff-k="3600" data-radius-rsun="700" type="button" aria-pressed="false">Red supergiant</button>
-              <button class="cp-chip preset" data-preset-id="blue-supergiant" data-mode="override" data-mass-msun="25" data-metallicity-z="0.02" data-teff-k="20000" data-radius-rsun="40" type="button" aria-pressed="false">Blue supergiant</button>
-              <button class="cp-chip preset" data-preset-id="white-dwarf" data-mode="override" data-mass-msun="0.8" data-metallicity-z="0.02" data-teff-k="25000" data-radius-rsun="0.013" type="button" aria-pressed="false">White dwarf</button>
+          <section class="control-block">
+            <h2>Synthetic population</h2>
+            <label class="control">
+              <span>Seed</span>
+              <input id="seedInput" type="text" value="hr-lab-42" />
+            </label>
+            <label class="control">
+              <span>Population size N</span>
+              <input id="populationSize" type="number" min="40" max="1200" step="10" value="320" />
+            </label>
+            <label class="control">
+              <span>Distance [pc]</span>
+              <input id="distancePc" type="number" min="1" max="10000" step="1" value="140" />
+            </label>
+            <label class="control">
+              <span>Photometric error sigma [mag]</span>
+              <input id="photErr" type="number" min="0" max="0.5" step="0.005" value="0.03" />
+            </label>
+            <label class="control">
+              <span>Metallicity Z</span>
+              <input id="metallicityZ" type="number" min="0.0001" max="0.03" step="0.0001" value="0.02" />
+            </label>
+            <label class="check"><input id="clusterMode" type="checkbox" checked /> Cluster mode</label>
+            <label class="control">
+              <span>Cluster age: <strong id="clusterAgeValue">0.70 Gyr</strong></span>
+              <input id="clusterAge" type="range" min="0" max="1400" step="1" value="70" />
+            </label>
+            <label class="control">
+              <span>Binary fraction: <strong id="binaryFracValue">28%</strong></span>
+              <input id="binaryFrac" type="range" min="0" max="100" step="1" value="28" />
+            </label>
+            <button id="regeneratePopulation" class="cp-button cp-button--outline" type="button">Regenerate population</button>
+          </section>
+
+          <section class="control-block">
+            <h2>Evolve a star</h2>
+            <label class="control">
+              <span>Mass [M_sun]</span>
+              <select id="evolveMass"></select>
+            </label>
+            <label class="control">
+              <span>Time: <strong id="evolveTimeValue">0.000 Gyr</strong></span>
+              <input id="evolveTime" type="range" min="0" max="12" step="0.001" value="0" />
+            </label>
+            <p class="cp-muted">Main-sequence lifetime estimate: <strong id="evolveMsLifetime">10.000 Gyr</strong></p>
+            <p class="cp-muted">Current stage: <strong id="evolveStage">Main sequence</strong></p>
+            <p id="evolveMessage" class="cp-muted">Mass determines both the path and the timescale.</p>
+          </section>
+
+          <section class="control-block">
+            <h2>Selected star readout</h2>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Stage</div>
+              <div class="cp-readout__value" id="selectedStage">-</div>
             </div>
-          </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Luminosity</div>
+              <div class="cp-readout__value" id="selectedLuminosity">-</div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Effective temperature</div>
+              <div class="cp-readout__value" id="selectedTeff">-</div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Inferred radius (from L and Teff)</div>
+              <div class="cp-readout__value" id="selectedRadius">-</div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Mass</div>
+              <div class="cp-readout__value" id="selectedMass">-</div>
+            </div>
+          </section>
 
-          <div class="cp-readout">
-            <div class="cp-readout__label">Effective temperature $T_{\rm eff}$</div>
-            <div class="cp-readout__value"><span id="teffValue"></span> <span class="cp-readout__unit">K</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Luminosity $L/L_{\odot}$</div>
-            <div class="cp-readout__value"><span id="luminosityValue"></span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Radius $R/R_{\odot}$</div>
-            <div class="cp-readout__value"><span id="radiusValue"></span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Mass $M/M_{\odot}$</div>
-            <div class="cp-readout__value"><span id="massReadout"></span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Surface flux ratio $F/F_{\odot}$</div>
-            <div class="cp-readout__value"><span id="fluxRatioValue"></span></div>
-          </div>
-          <p id="modeAssumptionText" class="cp-muted"></p>
+          <section class="control-block">
+            <h2>Inference log</h2>
+            <label class="control">
+              <span>Add one-sentence claim</span>
+              <input id="claimInput" type="text" placeholder="Example: Hot, faint stars must be very small in radius." />
+            </label>
+            <div class="claim-actions">
+              <button id="addClaim" class="cp-button cp-button--outline" type="button">Add claim</button>
+              <button id="exportClaims" class="cp-button cp-button--outline" type="button">Export JSON</button>
+              <button id="clearClaims" class="cp-button cp-button--outline" type="button">Clear</button>
+            </div>
+            <ul id="claimList" class="claim-list" aria-label="Inference claim list"></ul>
+          </section>
 
-          <p id="validityBadge" class="cp-muted" role="note"></p>
-          <p id="overrideModeHint" class="cp-muted" role="note" hidden>
-            Metallicity is not applied in override mode.
-          </p>
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
       </aside>
 
-      <section class="cp-demo__stage cp-stage stage" aria-label="H-R diagram stage">
-        <div class="cp-tabs stage-tabs" role="tablist" aria-label="View mode">
-          <button class="cp-tab" role="tab" aria-selected="true"
-                  aria-controls="panel-explore" id="tab-explore">Explore</button>
-          <button class="cp-tab" role="tab" aria-selected="false"
-                  aria-controls="panel-understand" id="tab-understand">Understand</button>
-        </div>
-
-        <div class="cp-tab-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
-          <div class="hr-plot" aria-label="Log-log H-R plot">
-            <canvas id="hrCanvas" role="img" aria-label="H-R diagram with current stellar point"></canvas>
-            <div id="hrTickOverlay" class="hr-tick-overlay" aria-hidden="true">
-              <div id="hrXTicks" class="hr-ticks hr-ticks--x"></div>
-              <div id="hrYTicks" class="hr-ticks hr-ticks--y"></div>
-              <p id="hrTempDirectionLeft" class="hr-direction hr-direction--left">hotter &lt;-</p>
-              <p id="hrTempDirectionRight" class="hr-direction hr-direction--right">-&gt; cooler</p>
-            </div>
-            <p class="hr-axis hr-axis--x">$T_{\rm eff}\;[\mathrm{K}]$</p>
-            <p class="hr-axis hr-axis--y">$L/L_{\odot}$</p>
-          </div>
-          <p class="cp-muted stage-note">Both axes use base-10 logarithmic scaling with real numeric values; hotter stars are on the left.</p>
-        </div>
-
-        <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
-          <div class="cp-notice">
-            <h3>How the H-R diagram connects to blackbody radiation</h3>
-            <p>
-              The H-R diagram maps thermal state ($T_{\rm eff}$) against total luminosity ($L$).
-              This demo uses log-log axes because stars span many orders of magnitude in both quantities.
-            </p>
-          </div>
-          <div class="cp-notice">
-            <h3>Surface flux vs total luminosity</h3>
-            <p>Use these as linked, not interchangeable, statements:</p>
-            <p>
-              $$F=\sigma T^4$$
-            </p>
-            <p>
-              $$L=4\pi R^2\sigma T^4$$
-            </p>
-            <p>
-              $$\frac{L}{L_{\odot}}=\left(\frac{R}{R_{\odot}}\right)^2\left(\frac{T_{\rm eff}}{T_{\odot}}\right)^4$$
-            </p>
-            <ul>
-              <li>At fixed $T_{\rm eff}$, larger $R$ means larger $L$ (vertical offset in H-R space).</li>
-              <li>At fixed $R$, hotter $T_{\rm eff}$ means much larger $L$.</li>
-            </ul>
-          </div>
-          <div class="cp-notice">
-            <h3>Why constant-$R$ lines help</h3>
-            <p>
-              Turning on constant-$R$ guides shows families of stars with the same radius.
-              This makes the geometric factor in $L=4\pi R^2\sigma T^4$ visible directly on the plot.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+      <section class="cp-demo__drawer cp-drawer" aria-label="Step guide and model notes">
         <div class="cp-panels">
           <details class="cp-accordion" open>
             <summary>
-              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__title">Step Guide</span>
               <span class="cp-accordion__meta">3 prompts</span>
             </summary>
             <div class="cp-accordion__body">
-              <ul>
-                <li>Increasing mass usually pushes stars toward hotter and more luminous parts of the ZAMS track.</li>
-                <li>Changing metallicity shifts $L$, $R$, and $T_{\rm eff}$ even at fixed mass.</li>
-                <li>Stefan mode isolates radius and temperature effects; ZAMS mode constrains stars to Tout-1996 fits.</li>
-              </ul>
+              <ol>
+                <li>Identify the main sequence, giant branch, and white dwarf region from the synthetic population map.</li>
+                <li>Pick one hot-faint star and infer its radius using Stefan-Boltzmann scaling.</li>
+                <li>Reveal mass colors and infer the mass-gradient direction along the main sequence.</li>
+              </ol>
             </div>
           </details>
 
           <details class="cp-accordion">
             <summary>
-              <span class="cp-accordion__title">Model notes</span>
-              <span class="cp-accordion__meta">Tout 1996 + units</span>
+              <span class="cp-accordion__title">Model Notes</span>
+              <span class="cp-accordion__meta">Tout + CMD calibration</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>ZAMS relations use Tout et al. (1996) analytic fits for $L(M,Z)$ and $R(M,Z)$.</li>
-                <li>Validity range: $0.1\le M/M_{\odot}\le100$ and $10^{-4}\le Z\le0.03$.</li>
-                <li>H-R axes are logarithmic: $T_{\rm eff}$ axis in K and $L/L_{\odot}$ axis in powers of ten.</li>
-                <li>Effective temperature closure: $$T_{\rm eff}=T_{\odot}\left[(L/L_{\odot})/(R/R_{\odot})^2\right]^{1/4}$$</li>
+                <li>Main sequence properties use Tout et al. (1996) ZAMS fits for L(M,Z) and R(M,Z), with Teff from Stefan-Boltzmann closure.</li>
+                <li>Observer CMD mapping uses empirical bolometric correction and Teff-color calibration, plus deterministic Gaussian photometric scatter.</li>
+                <li>Radius guides follow L/L_sun = (R/R_sun)^2 (T/T_sun)^4.</li>
               </ul>
             </div>
           </details>
         </div>
       </section>
     </div>
+
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

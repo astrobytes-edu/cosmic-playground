@@ -1,54 +1,38 @@
-export function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
+export type PlotMode = "observer" | "theorist";
 
-export const HR_AXIS_LIMITS = {
-  teffMinK: 1_000,
-  teffMaxK: 100_000,
-  logLumMin: -4,
-  logLumMax: 6,
+export const THEORIST_AXIS_LIMITS = {
+  teffMinK: 2500,
+  teffMaxK: 50000,
+  logLumMin: -5,
+  logLumMax: 6
 } as const;
 
-export function logSliderToValue(sliderVal: number, minVal: number, maxVal: number): number {
-  const minLog = Math.log10(minVal);
-  const maxLog = Math.log10(maxVal);
-  const fraction = sliderVal / 1000;
-  const logVal = minLog + fraction * (maxLog - minLog);
-  return 10 ** logVal;
-}
+export const OBSERVER_AXIS_LIMITS = {
+  colorMin: -0.4,
+  colorMax: 2.2,
+  mvBright: -10,
+  mvFaint: 16
+} as const;
 
-export function valueToLogSlider(value: number, minVal: number, maxVal: number): number {
-  if (!Number.isFinite(value) || value <= 0) return 0;
-  const minLog = Math.log10(minVal);
-  const maxLog = Math.log10(maxVal);
-  const logVal = Math.log10(value);
-  const frac = (logVal - minLog) / (maxLog - minLog);
-  return clamp(Math.round(frac * 1000), 0, 1000);
+export const RADIUS_GUIDE_VALUES_RSUN = [0.01, 0.1, 1, 10, 100, 1000] as const;
+
+export function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 export function formatNumber(value: number, digits = 3): string {
   if (!Number.isFinite(value)) return "-";
   if (value === 0) return "0";
   const abs = Math.abs(value);
-  if (abs >= 1e6 || abs < 1e-3) return value.toExponential(Math.max(0, digits - 1));
+  if (abs >= 1e5 || abs < 1e-3) return value.toExponential(Math.max(0, digits - 1));
   return value.toFixed(digits);
 }
 
-function asPowerOfTenString(value: number, digits = 2): string {
-  if (!Number.isFinite(value) || value <= 0) return "-";
-  const exponent = Math.floor(Math.log10(value));
-  const coefficient = value / 10 ** exponent;
-  if (Math.abs(coefficient - 1) < 1e-10) return `10^{${exponent}}`;
-  return `${coefficient.toFixed(digits)}x10^{${exponent}}`;
+export function formatWithUnit(value: number, unit: string, digits = 2): string {
+  return `${formatNumber(value, digits)} ${unit}`;
 }
 
-export function formatMetallicity(value: number): string {
-  if (!Number.isFinite(value) || value <= 0) return "-";
-  if (value < 1e-3) return asPowerOfTenString(value, 2);
-  return value.toFixed(4);
-}
-
-export function hrDiagramCoordinates(args: {
+export function hrCoordinates(args: {
   teffK: number;
   luminosityLsun: number;
   teffMinK?: number;
@@ -59,24 +43,49 @@ export function hrDiagramCoordinates(args: {
   const {
     teffK,
     luminosityLsun,
-    teffMinK = HR_AXIS_LIMITS.teffMinK,
-    teffMaxK = HR_AXIS_LIMITS.teffMaxK,
-    logLumMin = HR_AXIS_LIMITS.logLumMin,
-    logLumMax = HR_AXIS_LIMITS.logLumMax,
+    teffMinK = THEORIST_AXIS_LIMITS.teffMinK,
+    teffMaxK = THEORIST_AXIS_LIMITS.teffMaxK,
+    logLumMin = THEORIST_AXIS_LIMITS.logLumMin,
+    logLumMax = THEORIST_AXIS_LIMITS.logLumMax
   } = args;
 
-  if (!Number.isFinite(teffK) || teffK <= 0) return { xNorm: 0, yNorm: 0 };
-  if (!Number.isFinite(luminosityLsun) || luminosityLsun <= 0) return { xNorm: 0, yNorm: 0 };
+  if (!(teffK > 0) || !(luminosityLsun > 0)) return { xNorm: 0, yNorm: 0 };
 
-  const logTeff = Math.log10(teffK);
-  const logTeffMin = Math.log10(teffMinK);
-  const logTeffMax = Math.log10(teffMaxK);
-  const xNorm = clamp((logTeffMax - logTeff) / (logTeffMax - logTeffMin), 0, 1);
+  const xLogMin = Math.log10(teffMinK);
+  const xLogMax = Math.log10(teffMaxK);
+  const xLog = Math.log10(teffK);
 
-  const logLum = Math.log10(luminosityLsun);
-  const yNorm = clamp((logLum - logLumMin) / (logLumMax - logLumMin), 0, 1);
+  const yLog = Math.log10(luminosityLsun);
 
-  return { xNorm, yNorm };
+  return {
+    xNorm: clamp((xLogMax - xLog) / (xLogMax - xLogMin), 0, 1),
+    yNorm: clamp((yLog - logLumMin) / (logLumMax - logLumMin), 0, 1)
+  };
+}
+
+export function cmdCoordinates(args: {
+  bMinusV: number;
+  absoluteMv: number;
+  colorMin?: number;
+  colorMax?: number;
+  mvBright?: number;
+  mvFaint?: number;
+}): { xNorm: number; yNorm: number } {
+  const {
+    bMinusV,
+    absoluteMv,
+    colorMin = OBSERVER_AXIS_LIMITS.colorMin,
+    colorMax = OBSERVER_AXIS_LIMITS.colorMax,
+    mvBright = OBSERVER_AXIS_LIMITS.mvBright,
+    mvFaint = OBSERVER_AXIS_LIMITS.mvFaint
+  } = args;
+
+  if (!Number.isFinite(bMinusV) || !Number.isFinite(absoluteMv)) return { xNorm: 0, yNorm: 0 };
+
+  return {
+    xNorm: clamp((bMinusV - colorMin) / (colorMax - colorMin), 0, 1),
+    yNorm: clamp((mvFaint - absoluteMv) / (mvFaint - mvBright), 0, 1)
+  };
 }
 
 export function luminosityLsunFromRadiusTemperature(args: {
@@ -85,38 +94,44 @@ export function luminosityLsunFromRadiusTemperature(args: {
   tSunK: number;
 }): number {
   const { radiusRsun, teffK, tSunK } = args;
-  if (!Number.isFinite(radiusRsun) || radiusRsun <= 0) return Number.NaN;
-  if (!Number.isFinite(teffK) || teffK <= 0) return Number.NaN;
-  if (!Number.isFinite(tSunK) || tSunK <= 0) return Number.NaN;
+  if (!(radiusRsun > 0) || !(teffK > 0) || !(tSunK > 0)) return Number.NaN;
   const tempRatio = teffK / tSunK;
   return radiusRsun * radiusRsun * tempRatio ** 4;
 }
 
-export function decadeTicks(minExponent: number, maxExponent: number): number[] {
+export function radiusRsunFromLuminosityTemperature(args: {
+  luminosityLsun: number;
+  teffK: number;
+  tSunK: number;
+}): number {
+  const { luminosityLsun, teffK, tSunK } = args;
+  if (!(luminosityLsun > 0) || !(teffK > 0) || !(tSunK > 0)) return Number.NaN;
+  const tempRatio = teffK / tSunK;
+  return Math.sqrt(luminosityLsun / (tempRatio ** 4));
+}
+
+export function logTicks(minExp: number, maxExp: number): number[] {
   const ticks: number[] = [];
-  for (let exponent = minExponent; exponent <= maxExponent; exponent += 1) {
-    ticks.push(Number((10 ** exponent).toPrecision(12)));
+  for (let exp = minExp; exp <= maxExp; exp += 1) {
+    ticks.push(10 ** exp);
   }
   return ticks;
 }
 
-export function minorLogTicks(minExponent: number, maxExponent: number): number[] {
+export function linearTicks(min: number, max: number, step: number): number[] {
   const ticks: number[] = [];
-  for (let exponent = minExponent; exponent < maxExponent; exponent += 1) {
-    const base = 10 ** exponent;
-    for (let coefficient = 2; coefficient <= 9; coefficient += 1) {
-      ticks.push(Number((coefficient * base).toPrecision(12)));
-    }
+  for (let x = min; x <= max + 1e-9; x += step) {
+    ticks.push(Number(x.toFixed(6)));
   }
   return ticks;
 }
 
-export function superscript(value: number): string {
-  return `^{${value}}`;
-}
-
-export function logTickPowersOfTenLabel(value: number): string {
-  if (!Number.isFinite(value) || value <= 0) return "-";
-  const exponent = Math.round(Math.log10(value));
-  return `10${superscript(exponent)}`;
+export function massColorHex(massMsun: number): string {
+  const logMin = Math.log10(0.1);
+  const logMax = Math.log10(50);
+  const t = clamp((Math.log10(Math.max(massMsun, 0.1)) - logMin) / (logMax - logMin), 0, 1);
+  const hue = 220 - 200 * t;
+  const sat = 78;
+  const light = 56;
+  return `hsl(${hue.toFixed(0)}deg ${sat}% ${light}%)`;
 }

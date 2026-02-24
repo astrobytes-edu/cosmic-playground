@@ -1,109 +1,72 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  HR_AXIS_LIMITS,
+  OBSERVER_AXIS_LIMITS,
+  RADIUS_GUIDE_VALUES_RSUN,
+  THEORIST_AXIS_LIMITS,
   clamp,
-  decadeTicks,
-  formatMetallicity,
-  formatNumber,
-  hrDiagramCoordinates,
+  cmdCoordinates,
+  hrCoordinates,
+  linearTicks,
+  logTicks,
   luminosityLsunFromRadiusTemperature,
-  minorLogTicks,
-  logSliderToValue,
-  logTickPowersOfTenLabel,
-  superscript,
-  valueToLogSlider,
+  massColorHex,
+  radiusRsunFromLuminosityTemperature
 } from "./logic";
 
-describe("Stars ZAMS HR -- logic", () => {
+describe("HR Inference Lab logic", () => {
   it("clamps values", () => {
     expect(clamp(5, 0, 10)).toBe(5);
-    expect(clamp(-1, 0, 10)).toBe(0);
-    expect(clamp(99, 0, 10)).toBe(10);
+    expect(clamp(-2, 0, 10)).toBe(0);
+    expect(clamp(20, 0, 10)).toBe(10);
   });
 
-  it("round-trips log slider conversions", () => {
-    const min = 0.1;
-    const max = 100;
-    for (const sliderVal of [0, 125, 500, 875, 1000]) {
-      const value = logSliderToValue(sliderVal, min, max);
-      const back = valueToLogSlider(value, min, max);
-      expect(back).toBe(sliderVal);
-    }
-  });
-
-  it("formats numbers with fixed and scientific notation", () => {
-    expect(formatNumber(42.1234, 2)).toBe("42.12");
-    expect(formatNumber(1.2e7, 3)).toBe("1.20e+7");
-    expect(formatNumber(NaN)).toBe("-");
-  });
-
-  it("formats metallicity readouts", () => {
-    expect(formatMetallicity(0.02)).toBe("0.0200");
-    expect(formatMetallicity(1e-4)).toBe("10^{-4}");
-    expect(formatMetallicity(NaN)).toBe("-");
-  });
-
-  it("maps HR coordinates with hot stars on the left", () => {
-    const cool = hrDiagramCoordinates({ teffK: 3000, luminosityLsun: 1 });
-    const hot = hrDiagramCoordinates({ teffK: 30000, luminosityLsun: 1 });
+  it("maps hotter stars to the left in theorist mode", () => {
+    const cool = hrCoordinates({ teffK: 3500, luminosityLsun: 1 });
+    const hot = hrCoordinates({ teffK: 25000, luminosityLsun: 1 });
     expect(hot.xNorm).toBeLessThan(cool.xNorm);
   });
 
-  it("maps HR coordinates with luminous stars toward top", () => {
-    const dim = hrDiagramCoordinates({ teffK: 6000, luminosityLsun: 1e-2 });
-    const bright = hrDiagramCoordinates({ teffK: 6000, luminosityLsun: 1e4 });
-    expect(bright.yNorm).toBeGreaterThan(dim.yNorm);
+  it("maps brighter stars up in observer mode (inverted magnitude axis)", () => {
+    const bright = cmdCoordinates({ bMinusV: 0.3, absoluteMv: -2 });
+    const faint = cmdCoordinates({ bMinusV: 0.3, absoluteMv: 12 });
+    expect(bright.yNorm).toBeGreaterThan(faint.yNorm);
   });
 
-  it("computes luminosity ratio from radius and temperature in solar units", () => {
-    const solarLike = luminosityLsunFromRadiusTemperature({
-      radiusRsun: 1,
-      teffK: 5772,
-      tSunK: 5772,
-    });
-    expect(solarLike).toBeCloseTo(1, 12);
-
-    const doubledRadius = luminosityLsunFromRadiusTemperature({
+  it("supports SB forward/inverse consistency", () => {
+    const l = luminosityLsunFromRadiusTemperature({
       radiusRsun: 2,
       teffK: 5772,
-      tSunK: 5772,
+      tSunK: 5772
     });
-    expect(doubledRadius).toBeCloseTo(4, 12);
+    expect(l).toBeCloseTo(4, 12);
+
+    const r = radiusRsunFromLuminosityTemperature({
+      luminosityLsun: l,
+      teffK: 5772,
+      tSunK: 5772
+    });
+    expect(r).toBeCloseTo(2, 12);
   });
 
-  it("exposes decade ticks for log-log HR axes", () => {
-    expect(decadeTicks(0, 2)).toEqual([1, 10, 100]);
-    expect(decadeTicks(-4, 2)).toEqual([1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100]);
+  it("provides expected axis domains", () => {
+    expect(THEORIST_AXIS_LIMITS.teffMinK).toBe(2500);
+    expect(THEORIST_AXIS_LIMITS.teffMaxK).toBe(50000);
+    expect(OBSERVER_AXIS_LIMITS.mvBright).toBe(-10);
+    expect(OBSERVER_AXIS_LIMITS.mvFaint).toBe(16);
   });
 
-  it("formats decade labels using LaTeX-style powers of ten", () => {
-    expect(logTickPowersOfTenLabel(1e-2)).toBe("10^{-2}");
-    expect(logTickPowersOfTenLabel(10)).toBe("10^{1}");
-    expect(logTickPowersOfTenLabel(10)).not.toContain("e");
+  it("provides log and linear tick helpers", () => {
+    expect(logTicks(-2, 1)).toEqual([0.01, 0.1, 1, 10]);
+    expect(linearTicks(-0.4, 0.4, 0.2)).toEqual([-0.4, -0.2, 0, 0.2, 0.4]);
   });
 
-  it("formats exponents in LaTeX-style superscript wrappers", () => {
-    expect(superscript(12)).toBe("^{12}");
-    expect(superscript(-3)).toBe("^{-3}");
+  it("keeps required radius guides", () => {
+    expect(RADIUS_GUIDE_VALUES_RSUN).toEqual([0.01, 0.1, 1, 10, 100, 1000]);
   });
 
-  it("creates minor log ticks at 2..9 within each decade", () => {
-    expect(minorLogTicks(0, 1)).toEqual([2, 3, 4, 5, 6, 7, 8, 9]);
-    expect(minorLogTicks(-1, 1)).toEqual([
-      0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
-      2, 3, 4, 5, 6, 7, 8, 9,
-    ]);
-  });
-
-  it("uses Kelvin-based Teff axis domain limits", () => {
-    expect(HR_AXIS_LIMITS.teffMinK).toBe(1000);
-    expect(HR_AXIS_LIMITS.teffMaxK).toBe(100000);
-  });
-
-  it("derives Teff major ticks in Kelvin decades", () => {
-    expect(
-      decadeTicks(Math.log10(HR_AXIS_LIMITS.teffMinK), Math.log10(HR_AXIS_LIMITS.teffMaxK))
-    ).toEqual([1000, 10000, 100000]);
+  it("maps mass to an hsl color", () => {
+    const c = massColorHex(1);
+    expect(c.startsWith("hsl(")).toBe(true);
   });
 });
