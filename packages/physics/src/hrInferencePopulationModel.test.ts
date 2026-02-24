@@ -29,6 +29,49 @@ describe("HrInferencePopulationModel", () => {
     expect(a).toEqual(b);
   });
 
+  it("keeps physical population invariant when only photErr changes", () => {
+    const base = {
+      N: 180,
+      seed: "photerr-invariance",
+      distancePc: 320,
+      modeCluster: false,
+      clusterAge: undefined,
+      binaryFrac: 0.31,
+      metallicityZ: 0.02
+    } as const;
+
+    const noiseless = HrInferencePopulationModel.generatePopulation({
+      ...base,
+      photErr: 0
+    });
+
+    const noisy = HrInferencePopulationModel.generatePopulation({
+      ...base,
+      photErr: 0.08
+    });
+
+    expect(noiseless.length).toBe(noisy.length);
+
+    for (let i = 0; i < noiseless.length; i += 1) {
+      const a = noiseless[i];
+      const b = noisy[i];
+
+      expect(a.id).toBe(b.id);
+      expect(a.stage).toBe(b.stage);
+      expect(a.mass).toBeCloseTo(b.mass, 12);
+      expect(a.Teff).toBeCloseTo(b.Teff, 12);
+      expect(a.L).toBeCloseTo(b.L, 12);
+      expect(a.R).toBeCloseTo(b.R, 12);
+    }
+
+    const observerChanged = noiseless.some((star, i) => {
+      const other = noisy[i];
+      return Math.abs(star.Mv - other.Mv) > 1e-9 || Math.abs(star.BminusV - other.BminusV) > 1e-9;
+    });
+
+    expect(observerChanged).toBe(true);
+  });
+
   it("uses Tout relations for main-sequence stars", () => {
     const stars = HrInferencePopulationModel.generatePopulation({
       N: 40,
@@ -141,5 +184,30 @@ describe("HrInferencePopulationModel", () => {
     })[0];
 
     expect(binary.Mv).toBeLessThan(single.Mv);
+  });
+
+  it("high-mass old-cluster populations include finite compact-remnant endpoints", () => {
+    const stars = HrInferencePopulationModel.generatePopulation({
+      N: 5000,
+      seed: "compact-remnant-sanity",
+      distancePc: 1000,
+      photErr: 0.02,
+      modeCluster: true,
+      clusterAge: 12.5,
+      binaryFrac: 0.2,
+      metallicityZ: 0.02
+    });
+
+    const remnants = stars.filter((star) => star.stage === "compact_remnant");
+    expect(remnants.length).toBeGreaterThan(0);
+
+    for (const remnant of remnants) {
+      expect(Number.isFinite(remnant.L)).toBe(true);
+      expect(Number.isFinite(remnant.R)).toBe(true);
+      expect(Number.isFinite(remnant.Teff)).toBe(true);
+      expect(remnant.L).toBeGreaterThan(0);
+      expect(remnant.R).toBeGreaterThan(0);
+      expect(remnant.Teff).toBeGreaterThan(0);
+    }
   });
 });

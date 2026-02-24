@@ -34,6 +34,10 @@ corepack pnpm -C apps/demos dev
 Open the built demo route used by the site shell:
 - `/play/stars-zams-hr/`
 
+## Accessibility and mode-invariance guarantees
+- Plot mode switching preserves the same underlying synthetic stars for fixed seed/settings; only plotted coordinates differ between CMD and HR views.
+- The plot is keyboard-focusable (`Tab`), with directional selection (`Arrow` keys) and boundary jumps (`Home`/`End`) for star readouts without a mouse.
+
 ## Manual staged-reveal verification
 1. Switch Observer CMD <-> Theorist HR and verify axis behavior and persistent badges.
 2. Toggle radius lines in each mode; confirm overlays render only in theorist mode.

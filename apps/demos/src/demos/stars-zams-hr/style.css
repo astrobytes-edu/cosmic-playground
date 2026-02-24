@@ -70,6 +70,14 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cp-border) 28%, transparent);
 }
 
+#hrCanvas:focus-visible {
+  outline: 2px solid var(--cp-accent);
+  outline-offset: 2px;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--cp-border) 28%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--cp-accent) 28%, transparent);
+}
+
 .axis-badges {
   position: absolute;
   left: 10px;
@@ -122,6 +130,10 @@
 
 .stage-note {
   margin: 0;
+}
+
+.stage-note--hint {
+  font-size: 0.85rem;
 }
 
 .control-block {

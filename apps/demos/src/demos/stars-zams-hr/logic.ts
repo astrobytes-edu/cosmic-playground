@@ -16,6 +16,12 @@ export const OBSERVER_AXIS_LIMITS = {
 
 export const RADIUS_GUIDE_VALUES_RSUN = [0.01, 0.1, 1, 10, 100, 1000] as const;
 
+export type PlotPoint = {
+  starId: string;
+  x: number;
+  y: number;
+};
+
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
@@ -134,4 +140,55 @@ export function massColorHex(massMsun: number): string {
   const sat = 78;
   const light = 56;
   return `hsl(${hue.toFixed(0)}deg ${sat}% ${light}%)`;
+}
+
+export function selectNextStarByDirection(args: {
+  points: PlotPoint[];
+  currentStarId: string | null;
+  direction: "left" | "right" | "up" | "down";
+}): string | null {
+  const { points, currentStarId, direction } = args;
+  if (points.length === 0) return null;
+
+  const current = points.find((point) => point.starId === currentStarId) ?? points[0];
+  let best: PlotPoint | null = null;
+  let bestScore = Number.POSITIVE_INFINITY;
+  let bestOrth = Number.POSITIVE_INFINITY;
+
+  for (const point of points) {
+    if (point.starId === current.starId) continue;
+    const dx = point.x - current.x;
+    const dy = point.y - current.y;
+    const inDirection =
+      (direction === "right" && dx > 0) ||
+      (direction === "left" && dx < 0) ||
+      (direction === "up" && dy < 0) ||
+      (direction === "down" && dy > 0);
+    if (!inDirection) continue;
+
+    const along = direction === "left" || direction === "right" ? Math.abs(dx) : Math.abs(dy);
+    const orth = direction === "left" || direction === "right" ? Math.abs(dy) : Math.abs(dx);
+    const euclidean = Math.hypot(dx, dy);
+    const score = euclidean + orth * 0.65 + 1 / Math.max(along, 1e-6);
+
+    if (score < bestScore || (Math.abs(score - bestScore) < 1e-9 && orth < bestOrth)) {
+      best = point;
+      bestScore = score;
+      bestOrth = orth;
+    }
+  }
+
+  return best?.starId ?? current.starId;
+}
+
+export function selectBoundaryStar(args: { points: PlotPoint[]; boundary: "home" | "end" }): string | null {
+  const { points, boundary } = args;
+  if (points.length === 0) return null;
+
+  const sorted = [...points].sort((a, b) => {
+    if (a.x !== b.x) return a.x - b.x;
+    if (a.y !== b.y) return a.y - b.y;
+    return a.starId.localeCompare(b.starId);
+  });
+  return boundary === "home" ? sorted[0].starId : sorted[sorted.length - 1].starId;
 }

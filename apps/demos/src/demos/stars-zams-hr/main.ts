@@ -16,6 +16,7 @@ import {
 } from "@cosmic/physics";
 import {
   OBSERVER_AXIS_LIMITS,
+  type PlotPoint,
   RADIUS_GUIDE_VALUES_RSUN,
   THEORIST_AXIS_LIMITS,
   clamp,
@@ -27,7 +28,9 @@ import {
   logTicks,
   luminosityLsunFromRadiusTemperature,
   massColorHex,
-  radiusRsunFromLuminosityTemperature
+  radiusRsunFromLuminosityTemperature,
+  selectBoundaryStar,
+  selectNextStarByDirection
 } from "./logic";
 
 type PlotMode = "observer" | "theorist";
@@ -51,10 +54,7 @@ type DemoState = {
   claims: string[];
 };
 
-type CanvasPoint = {
-  starId: string;
-  x: number;
-  y: number;
+type CanvasPoint = PlotPoint & {
   radiusPx: number;
 };
 
@@ -230,28 +230,8 @@ function selectedStar(): PopulationStar | null {
   return state.population.find((star) => star.id === state.selectedStarId) ?? null;
 }
 
-function normalizeTrackPointForMode(point: TrackPoint): { xNorm: number; yNorm: number } {
-  if (state.plotMode === "theorist") {
-    return hrCoordinates({ teffK: point.teffK, luminosityLsun: point.luminosityLsun });
-  }
-
-  // Observer-space approximation for track overlay uses the same population generator relation:
-  // use nearest synthetic point in population with matching stage trend for visual guidance.
-  const observerProxy = HrInferencePopulationModel.generatePopulation({
-    N: 1,
-    seed: `track-${point.stage}-${point.teffK.toFixed(1)}-${point.luminosityLsun.toFixed(4)}`,
-    distancePc: state.distancePc,
-    photErr: 0,
-    modeCluster: true,
-    clusterAge: 0,
-    binaryFrac: 0,
-    metallicityZ: state.metallicityZ
-  })[0];
-
-  return cmdCoordinates({
-    bMinusV: observerProxy.BminusV,
-    absoluteMv: observerProxy.Mv
-  });
+function normalizeTrackPointForHr(point: TrackPoint): { xNorm: number; yNorm: number } {
+  return hrCoordinates({ teffK: point.teffK, luminosityLsun: point.luminosityLsun });
 }
 
 function buildEvolutionTrack(massMsun: number): TrackPoint[] {
@@ -375,12 +355,11 @@ function nearestTrackPoint(track: TrackPoint[]): TrackPoint {
 }
 
 function regeneratePopulation(): void {
-  const effectivePhotErr = state.plotMode === "observer" ? state.photErr : 0;
   state.population = HrInferencePopulationModel.generatePopulation({
     N: state.populationSize,
     seed: state.seed,
     distancePc: state.distancePc,
-    photErr: effectivePhotErr,
+    photErr: state.photErr,
     modeCluster: state.modeCluster,
     clusterAge: state.modeCluster ? state.clusterAgeGyr : undefined,
     binaryFrac: state.binaryFrac,
@@ -578,7 +557,7 @@ function drawPlot(): void {
     ctx.beginPath();
     let started = false;
     for (const point of track) {
-      const norm = normalizeTrackPointForMode(point);
+      const norm = normalizeTrackPointForHr(point);
       const x = xPx(norm.xNorm);
       const y = yPx(norm.yNorm);
       if (!started) {
@@ -590,7 +569,7 @@ function drawPlot(): void {
     }
     ctx.stroke();
 
-    const current = normalizeTrackPointForMode(currentTrackPoint);
+    const current = normalizeTrackPointForHr(currentTrackPoint);
     ctx.beginPath();
     ctx.arc(xPx(current.xNorm), yPx(current.yNorm), 5.2, 0, Math.PI * 2);
     ctx.fillStyle = trackColor;
@@ -763,6 +742,16 @@ function starFromCanvasHit(x: number, y: number): string | null {
   return bestId;
 }
 
+function applyStarSelection(nextId: string, announce = false): void {
+  state.selectedStarId = nextId;
+  renderSelectionCard();
+  drawPlot();
+  if (!announce) return;
+  const star = selectedStar();
+  if (!star) return;
+  setLiveRegionText(status, `Selected ${star.id}: ${stageLabels[star.stage]}.`);
+}
+
 function addClaimFromInput(): void {
   const raw = claimInput.value.trim();
   if (!raw) return;
@@ -931,10 +920,49 @@ hrCanvas.addEventListener("click", (event) => {
   const y = event.clientY - rect.top;
   const id = starFromCanvasHit(x, y);
   if (id) {
-    state.selectedStarId = id;
-    renderSelectionCard();
-    drawPlot();
+    applyStarSelection(id);
   }
+});
+
+hrCanvas.addEventListener("keydown", (event) => {
+  let nextId: string | null = null;
+
+  if (event.key === "ArrowLeft") {
+    nextId = selectNextStarByDirection({
+      points: plottedPoints,
+      currentStarId: state.selectedStarId,
+      direction: "left"
+    });
+  } else if (event.key === "ArrowRight") {
+    nextId = selectNextStarByDirection({
+      points: plottedPoints,
+      currentStarId: state.selectedStarId,
+      direction: "right"
+    });
+  } else if (event.key === "ArrowUp") {
+    nextId = selectNextStarByDirection({
+      points: plottedPoints,
+      currentStarId: state.selectedStarId,
+      direction: "up"
+    });
+  } else if (event.key === "ArrowDown") {
+    nextId = selectNextStarByDirection({
+      points: plottedPoints,
+      currentStarId: state.selectedStarId,
+      direction: "down"
+    });
+  } else if (event.key === "Home") {
+    nextId = selectBoundaryStar({ points: plottedPoints, boundary: "home" });
+  } else if (event.key === "End") {
+    nextId = selectBoundaryStar({ points: plottedPoints, boundary: "end" });
+  } else {
+    return;
+  }
+
+  if (!nextId) return;
+  event.preventDefault();
+  if (nextId === state.selectedStarId) return;
+  applyStarSelection(nextId, true);
 });
 
 addClaim.addEventListener("click", () => {

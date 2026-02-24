@@ -22,7 +22,13 @@
         </header>
 
         <div class="hr-plot" aria-label="HR and CMD plot area">
-          <canvas id="hrCanvas" role="img" aria-label="Stellar population plot"></canvas>
+          <canvas
+            id="hrCanvas"
+            role="img"
+            tabindex="0"
+            aria-label="Stellar population plot"
+            aria-describedby="hrCanvasKeyboardHelp"
+          ></canvas>
           <div class="axis-badges" aria-hidden="true">
             <span class="axis-badge">Brighter ↑</span>
             <span class="axis-badge">Hotter ←</span>
@@ -37,6 +43,9 @@
           </div>
         </div>
         <p id="plotCaption" class="cp-muted stage-note"></p>
+        <p id="hrCanvasKeyboardHelp" class="cp-muted stage-note stage-note--hint">
+          Use arrow keys to move selection on the plot. Press Home/End to jump to boundary stars.
+        </p>
       </section>
 
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
@@ -143,6 +152,7 @@
 
           <section class="control-block">
             <h2>Selected star readout</h2>
+            <p class="cp-muted">Use arrow keys to move selection on the plot.</p>
             <div class="cp-readout">
               <div class="cp-readout__label">Stage</div>
               <div class="cp-readout__value" id="selectedStage">-</div>

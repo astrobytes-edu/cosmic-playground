@@ -11,7 +11,9 @@ import {
   logTicks,
   luminosityLsunFromRadiusTemperature,
   massColorHex,
-  radiusRsunFromLuminosityTemperature
+  radiusRsunFromLuminosityTemperature,
+  selectBoundaryStar,
+  selectNextStarByDirection
 } from "./logic";
 
 describe("HR Inference Lab logic", () => {
@@ -68,5 +70,42 @@ describe("HR Inference Lab logic", () => {
   it("maps mass to an hsl color", () => {
     const c = massColorHex(1);
     expect(c.startsWith("hsl(")).toBe(true);
+  });
+
+  it("selects nearest stars by directional arrow intent", () => {
+    const points = [
+      { starId: "center", x: 50, y: 50 },
+      { starId: "right", x: 66, y: 51 },
+      { starId: "left", x: 34, y: 49 },
+      { starId: "up", x: 49, y: 34 },
+      { starId: "down", x: 51, y: 67 }
+    ];
+
+    expect(selectNextStarByDirection({ points, currentStarId: "center", direction: "right" })).toBe("right");
+    expect(selectNextStarByDirection({ points, currentStarId: "center", direction: "left" })).toBe("left");
+    expect(selectNextStarByDirection({ points, currentStarId: "center", direction: "up" })).toBe("up");
+    expect(selectNextStarByDirection({ points, currentStarId: "center", direction: "down" })).toBe("down");
+  });
+
+  it("keeps current selection when no candidate exists in that direction", () => {
+    const points = [
+      { starId: "a", x: 5, y: 10 },
+      { starId: "b", x: 16, y: 10 },
+      { starId: "c", x: 24, y: 11 }
+    ];
+
+    expect(selectNextStarByDirection({ points, currentStarId: "a", direction: "left" })).toBe("a");
+    expect(selectNextStarByDirection({ points, currentStarId: "b", direction: "up" })).toBe("b");
+  });
+
+  it("supports Home and End boundary selection on the plot", () => {
+    const points = [
+      { starId: "mid", x: 40, y: 30 },
+      { starId: "leftmost", x: 7, y: 90 },
+      { starId: "rightmost", x: 92, y: 4 }
+    ];
+
+    expect(selectBoundaryStar({ points, boundary: "home" })).toBe("leftmost");
+    expect(selectBoundaryStar({ points, boundary: "end" })).toBe("rightmost");
   });
 });

@@ -200,22 +200,21 @@ function noisyObserverQuantities(args: {
 }): { Mv: number; BminusV: number } {
   const { Mv, BminusV, photErr, distancePc, random } = args;
   const safePhotErr = Math.max(0, photErr);
-  if (!(safePhotErr > 0)) return { Mv, BminusV };
-
   const dm = 5 * Math.log10(Math.max(distancePc, 1e-3)) - 5;
   const apparentMv = Mv + dm;
   const depthScale = clamp(1 + Math.max(0, apparentMv - 10) * 0.08, 1, 4);
 
   const sigmaMag = safePhotErr * depthScale;
   const sigmaColor = safePhotErr * 0.65 * depthScale;
-
-  const noisyAppMv = apparentMv + gaussianUnit(random) * sigmaMag;
+  const magDraw = gaussianUnit(random);
+  const colorDraw = gaussianUnit(random);
+  const noisyAppMv = apparentMv + magDraw * sigmaMag;
   const noisyMv = noisyAppMv - dm;
-  const noisyColor = BminusV + gaussianUnit(random) * sigmaColor;
+  const noisyColor = BminusV + colorDraw * sigmaColor;
 
   return {
     Mv: noisyMv,
-    BminusV: clamp(noisyColor, -0.45, 2.4)
+    BminusV: safePhotErr > 0 ? clamp(noisyColor, -0.45, 2.4) : BminusV
   };
 }
 
@@ -303,23 +302,13 @@ function stageProperties(args: {
     };
   }
 
-  const remnantFlavor = random() < 0.6 ? "compact_remnant" : "compact_remnant";
-  if (remnantFlavor === "compact_remnant") {
-    const R = 2.0e-5;
-    const Teff = 2.2e5;
-    return {
-      stage: "compact_remnant",
-      L: luminosityFromRadiusTeff(R, Teff),
-      R,
-      Teff
-    };
-  }
-
+  const R = 2.0e-5;
+  const Teff = 2.2e5;
   return {
     stage: "compact_remnant",
-    L: 1e-4,
-    R: 1e-4,
-    Teff: 5000
+    L: luminosityFromRadiusTeff(R, Teff),
+    R,
+    Teff
   };
 }
 

@@ -45,6 +45,13 @@ describe("HR Diagram Inference Lab -- Design System Contracts", () => {
     expect(html).toContain("Hotter ←");
   });
 
+  it("keeps plot canvas keyboard-focusable with guidance text", () => {
+    expect(html).toMatch(/id="hrCanvas"[^>]*tabindex="0"/);
+    expect(html).toMatch(/id="hrCanvas"[^>]*aria-describedby="hrCanvasKeyboardHelp"/);
+    expect(html).toContain('id="hrCanvasKeyboardHelp"');
+    expect(html).toContain("Use arrow keys to move selection on the plot.");
+  });
+
   it("wires shared runtime hooks", () => {
     expect(mainTs).toContain("createInstrumentRuntime");
     expect(mainTs).toContain("createDemoModes");
@@ -57,6 +64,11 @@ describe("HR Diagram Inference Lab -- Design System Contracts", () => {
     expect(mainTs).toContain('from "@cosmic/physics"');
     expect(mainTs).toContain("HrInferencePopulationModel");
     expect(mainTs).toContain("ZamsTout1996Model");
+  });
+
+  it("does not use synthetic population generation to project evolve-track coordinates", () => {
+    expect(mainTs).not.toContain("seed: `track-");
+    expect(mainTs).not.toContain("N: 1");
   });
 
   it("keeps token-first styling and avoids hardcoded hex colors", () => {
