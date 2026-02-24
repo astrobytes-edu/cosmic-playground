@@ -84,7 +84,6 @@
 }
 
 .readout-grid {
-  margin-top: 0.9rem;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
@@ -139,16 +138,8 @@
   overflow-x: auto;
 }
 
-.cp-demo__drawer {
-  padding: 0.85rem 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--cp-border) 80%, transparent);
-  background: color-mix(in srgb, var(--cp-bg1) 90%, transparent);
-}
-
-.cp-demo__drawer h2 {
-  margin: 0 0 0.3rem;
-  font-size: 0.95rem;
-}
+/* Drawer uses cp-drawer (transparent container) + cp-accordion cards.
+   Shell demo-shell.css handles the surface styles. */
 
 .sr-only {
   position: absolute;

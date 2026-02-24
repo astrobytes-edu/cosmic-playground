@@ -187,4 +187,31 @@ describe("Spectral Lines — Design System Contracts", () => {
       expect(hexColors.length).toBe(0);
     });
   });
+
+  // ── Structural contracts (aligned with golden reference) ──
+
+  describe("Readout placement", () => {
+    it("readouts live in cp-demo__readouts region", () => {
+      expect(html).toContain("cp-demo__readouts");
+    });
+
+    it("readouts are not inside the controls sidebar", () => {
+      // readout-group was the old sidebar-embedded class
+      expect(html).not.toContain("readout-group");
+    });
+  });
+
+  describe("Shell grid compatibility", () => {
+    it("CSS does not override grid-template-areas", () => {
+      expect(css).not.toContain("grid-template-areas");
+    });
+  });
+
+  describe("Cross-reference links", () => {
+    it("has Explore further accordion with links to related demos", () => {
+      expect(html).toContain("Explore further");
+      expect(html).toContain('href="../doppler-shift/"');
+      expect(html).toContain('href="../galaxy-rotation/"');
+    });
+  });
 });

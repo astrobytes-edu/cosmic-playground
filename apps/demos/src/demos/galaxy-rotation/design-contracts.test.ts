@@ -90,4 +90,56 @@ describe("Galaxy Rotation -- Design System Contracts", () => {
     expect(main).toContain("case \"1\"");
     expect(main).toContain("case \"4\"");
   });
+
+  // ── Structural contracts (aligned with golden reference) ──
+
+  describe("Drawer accordion structure", () => {
+    it("drawer uses cp-drawer class, not cp-panel", () => {
+      expect(html).toContain("cp-demo__drawer cp-drawer");
+      expect(html).not.toMatch(/cp-demo__drawer[^"]*cp-panel/);
+    });
+
+    it("drawer contains What to notice accordion", () => {
+      expect(html).toContain("What to notice");
+    });
+
+    it("drawer contains Model notes accordion", () => {
+      expect(html).toContain("Model notes");
+    });
+
+    it("has cross-reference links in Explore further accordion", () => {
+      expect(html).toContain("Explore further");
+      expect(html).toContain('href="../doppler-shift/"');
+      expect(html).toContain('href="../spectral-lines/"');
+    });
+  });
+
+  describe("Readout markup normalization", () => {
+    it("readouts use cp-readout__value wrapper divs", () => {
+      const valueWrappers = html.match(/class="cp-readout__value"/g) || [];
+      expect(valueWrappers.length).toBeGreaterThanOrEqual(11);
+    });
+
+    it("readouts live in cp-demo__readouts region", () => {
+      expect(html).toContain("cp-demo__readouts");
+    });
+
+    it("readouts have unit spans", () => {
+      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
+      expect(unitSpans.length).toBeGreaterThanOrEqual(11);
+    });
+  });
+
+  describe("Misconception callout", () => {
+    it("has dark matter vs dark energy misconception callout", () => {
+      expect(html).toContain("misconception-callout");
+      expect(html).toContain("dark energy");
+    });
+  });
+
+  describe("CSS does not use custom drawer overrides", () => {
+    it("CSS does not contain .cp-demo__drawer with border-top", () => {
+      expect(css).not.toMatch(/\.cp-demo__drawer[\s\S]*?border-top/);
+    });
+  });
 });

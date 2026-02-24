@@ -77,9 +77,11 @@
   margin-bottom: var(--cp-space-1);
 }
 
-.readout-group {
+/* Readouts now live in cp-demo__readouts region (below viz).
+   The shell auto-fit grid handles the column layout. */
+.readout-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--cp-space-2);
 }
 
@@ -286,13 +288,8 @@
   stroke-width: 2.5;
 }
 
-/* ── Grid override: include readouts alongside sidebar ──── */
-
-.cp-demo {
-  grid-template-areas:
-    "sidebar viz"
-    "sidebar shelf";
-}
+/* Shell default grid layout handles sidebar + viz + readouts + shelf.
+   No override needed. */
 
 /* ── Entry animations ────────────────────────────────────── */
 
@@ -312,7 +309,7 @@
   .viz-top {
     grid-template-columns: 1fr;
   }
-  .readout-group {
+  .readout-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -139,43 +139,6 @@
             </div>
           </div>
 
-          <!-- ── Readouts (always visible) ── -->
-          <div class="readout-group">
-            <div class="cp-readout">
-              <div id="readoutTransitionLabel" class="cp-readout__label">Transition</div>
-              <div class="cp-readout__value"><span id="readoutTransition">$n = 3 \to n = 2$</span></div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Wavelength $\lambda$</div>
-              <div class="cp-readout__value">
-                <span id="readoutWavelength">656.1</span>
-                <span class="cp-readout__unit">nm</span>
-              </div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Energy $E_\gamma$</div>
-              <div class="cp-readout__value">
-                <span id="readoutEnergy">1.89</span>
-                <span class="cp-readout__unit">eV</span>
-              </div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Frequency $\nu$</div>
-              <div class="cp-readout__value">
-                <span id="readoutFrequency">4.57e14</span>
-                <span class="cp-readout__unit">Hz</span>
-              </div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Series</div>
-              <div class="cp-readout__value"><span id="readoutSeries">Balmer</span></div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Band</div>
-              <div class="cp-readout__value"><span id="readoutBand">Visible (red)</span></div>
-            </div>
-          </div>
-
           <!-- ── Utility toolbar ── -->
           <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
             <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
@@ -363,6 +326,46 @@
         </div>
       </section>
 
+      <!-- ─── Readouts ───────────────────────────────────────── -->
+      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
+        <div class="cp-panel-header">Readouts</div>
+        <div class="cp-panel-body readout-grid">
+          <div class="cp-readout">
+            <div id="readoutTransitionLabel" class="cp-readout__label">Transition</div>
+            <div class="cp-readout__value"><span id="readoutTransition">$n = 3 \to n = 2$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Wavelength $\lambda$</div>
+            <div class="cp-readout__value">
+              <span id="readoutWavelength">656.1</span>
+              <span class="cp-readout__unit">nm</span>
+            </div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Energy $E_\gamma$</div>
+            <div class="cp-readout__value">
+              <span id="readoutEnergy">1.89</span>
+              <span class="cp-readout__unit">eV</span>
+            </div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Frequency $\nu$</div>
+            <div class="cp-readout__value">
+              <span id="readoutFrequency">4.57e14</span>
+              <span class="cp-readout__unit">Hz</span>
+            </div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Series</div>
+            <div class="cp-readout__value"><span id="readoutSeries">Balmer</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Band</div>
+            <div class="cp-readout__value"><span id="readoutBand">Visible (red)</span></div>
+          </div>
+        </div>
+      </aside>
+
       <!-- ─── Drawer ────────────────────────────────────────── -->
       <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
         <div class="cp-panels">
@@ -394,6 +397,18 @@
                 <li>Multi-element line data from the NIST Atomic Spectra Database (strongest lines only).</li>
                 <li>Bohr atom radii in the visualization use a compressed display scale (labeled "not to scale").</li>
                 <li>Line widths in the spectrum strip are for display only (fixed Gaussian, not physical broadening).</li>
+              </ul>
+            </div>
+          </details>
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Explore further</span>
+              <span class="cp-accordion__meta">connections</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li><strong>Doppler Shift:</strong> See how these same spectral lines shift when the source moves toward or away from you. <a href="../doppler-shift/">Open Doppler Shift →</a></li>
+                <li><strong>Galaxy Rotation:</strong> Astronomers measure galaxy rotation using the Doppler shift of the 21-cm hydrogen line. <a href="../galaxy-rotation/">Open Galaxy Rotation →</a></li>
               </ul>
             </div>
           </details>

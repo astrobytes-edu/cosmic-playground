@@ -199,19 +199,6 @@
             </article>
           </div>
 
-          <section class="readout-grid" aria-label="Readouts">
-            <div class="cp-readout"><span class="cp-readout__label">Radius</span><span id="radiusValue">10.0</span><span class="cp-readout__unit">kpc</span></div>
-            <div class="cp-readout"><span class="cp-readout__label">Total velocity $V(R)$</span><span id="vTotalValue">0.0</span><span class="cp-readout__unit">km/s</span></div>
-            <div class="cp-readout"><span class="cp-readout__label">Keplerian velocity</span><span id="vKeplerianValue">0.0</span><span class="cp-readout__unit">km/s</span></div>
-            <div class="cp-readout"><span class="cp-readout__label">Enclosed mass $M(&lt;R)$</span><span id="mEnclosedValue">0.0</span><span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
-            <div class="cp-readout"><span class="cp-readout__label">Visible mass $M_{\rm vis}$</span><span id="mVisibleValue">0.0</span><span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
-            <div class="cp-readout"><span class="cp-readout__label">Dark mass $M_{\rm dark}$</span><span id="mDarkValue">0.0</span><span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
-            <div class="cp-readout"><span class="cp-readout__label">Dark-to-visible ratio</span><span id="darkVisRatioValue">0.0</span><span class="cp-readout__unit">1</span></div>
-            <div class="cp-readout"><span class="cp-readout__label">Baryon fraction $f_b$</span><span id="baryonFracValue">0.0</span><span class="cp-readout__unit">1</span></div>
-            <div class="cp-readout"><span class="cp-readout__label">21-cm Doppler shift</span><span id="deltaLambda21Value">0.0</span><span class="cp-readout__unit">mm</span></div>
-            <div class="cp-readout"><span class="cp-readout__label">Concentration $c$</span><span id="concValue">0.0</span><span class="cp-readout__unit">1</span></div>
-            <div class="cp-readout"><span class="cp-readout__label">Virial radius $R_{\rm vir}$</span><span id="rVirValue">0.0</span><span class="cp-readout__unit">kpc</span></div>
-          </section>
         </div>
 
         <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
@@ -237,14 +224,112 @@
               <p class="understand-equation">$$V_{\rm MOND}\approx\left(G\,M_{\rm vis}\,a_0\right)^{1/4}$$</p>
             </article>
           </div>
+
+          <details class="cp-notice misconception-callout">
+            <summary>Dark matter ≠ dark energy</summary>
+            <p>
+              Dark matter is non-luminous mass that clumps in galaxy halos and clusters.
+              Dark energy is a separate phenomenon — it drives the accelerating expansion of the universe.
+              They share the word "dark" but are unrelated physics.
+            </p>
+          </details>
         </div>
       </section>
 
-      <section class="cp-demo__drawer cp-panel" aria-label="Understand panel">
-        <h2>Dark Matter Across Scales</h2>
-        <p>
-          Rotation curves are one line of evidence. Cluster dynamics, lensing offsets (Bullet Cluster), and CMB structure all indicate that most matter is non-luminous.
-        </p>
+      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
+        <div class="cp-panel-header">Readouts</div>
+        <div class="cp-panel-body readout-grid">
+          <div class="cp-readout">
+            <div class="cp-readout__label">Radius</div>
+            <div class="cp-readout__value"><span id="radiusValue">10.0</span> <span class="cp-readout__unit">kpc</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Total velocity $V(R)$</div>
+            <div class="cp-readout__value"><span id="vTotalValue">0.0</span> <span class="cp-readout__unit">km/s</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Keplerian velocity</div>
+            <div class="cp-readout__value"><span id="vKeplerianValue">0.0</span> <span class="cp-readout__unit">km/s</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Enclosed mass $M(&lt;R)$</div>
+            <div class="cp-readout__value"><span id="mEnclosedValue">0.0</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Visible mass $M_{\rm vis}$</div>
+            <div class="cp-readout__value"><span id="mVisibleValue">0.0</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Dark mass $M_{\rm dark}$</div>
+            <div class="cp-readout__value"><span id="mDarkValue">0.0</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Dark-to-visible ratio</div>
+            <div class="cp-readout__value"><span id="darkVisRatioValue">0.0</span> <span class="cp-readout__unit">1</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Baryon fraction $f_b$</div>
+            <div class="cp-readout__value"><span id="baryonFracValue">0.0</span> <span class="cp-readout__unit">1</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">21-cm Doppler shift</div>
+            <div class="cp-readout__value"><span id="deltaLambda21Value">0.0</span> <span class="cp-readout__unit">mm</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Concentration $c$</div>
+            <div class="cp-readout__value"><span id="concValue">0.0</span> <span class="cp-readout__unit">1</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Virial radius $R_{\rm vir}$</div>
+            <div class="cp-readout__value"><span id="rVirValue">0.0</span> <span class="cp-readout__unit">kpc</span></div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">3 bullets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>When dark halo mass is removed, the rotation curve drops as $R^{-1/2}$ at large radii — matching the Keplerian prediction from visible matter alone.</li>
+                <li>Flat rotation curves at large $R$ require extra mass beyond what we see — the dark halo component supplies this.</li>
+                <li>The dark-to-visible mass ratio grows with radius: dark matter dominates the outskirts of galaxies.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">NFW + disk + bulge</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>The halo uses an NFW (Navarro-Frenk-White) density profile; the disk uses an exponential surface density; the bulge uses a Hernquist profile.</li>
+                <li>Component velocities add in quadrature because the gravitational potentials are independent and spherically averaged.</li>
+                <li>The MOND curve shows the deep-MOND asymptotic limit ($a \ll a_0$) where $V^4 \approx G\,M\,a_0$. The full MOND interpolating function transitions smoothly from Newtonian at small $R$ to this flat regime.</li>
+                <li>Rotation curves are one line of evidence for dark matter. Cluster dynamics, gravitational lensing (Bullet Cluster), and CMB anisotropies all indicate most matter is non-luminous.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Explore further</span>
+              <span class="cp-accordion__meta">connections</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li><strong>Doppler Shift:</strong> The 21-cm readout in this demo uses the same Doppler formula. <a href="../doppler-shift/">Open Doppler Shift →</a></li>
+                <li><strong>Spectral Lines:</strong> See why hydrogen emits at specific wavelengths, including the 21-cm spin-flip line. <a href="../spectral-lines/">Open Spectral Lines →</a></li>
+              </ul>
+            </div>
+          </details>
+        </div>
       </section>
     </div>
 
