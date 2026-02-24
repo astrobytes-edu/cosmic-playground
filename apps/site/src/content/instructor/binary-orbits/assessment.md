@@ -3,7 +3,7 @@ title: "Binary Orbits — Assessment Bank"
 bundle: "binary-orbits"
 section: "assessment"
 demo_slug: "binary-orbits"
-last_updated: "2026-02-02"
+last_updated: "2026-02-24"
 has_math: true
 ---
 > **Navigation**
@@ -31,7 +31,7 @@ has_math: true
 >
 > **Common misconception:** Option A (the "stationary star" misconception). Students often think the more massive body doesn't move.
 >
-> **Demo setup (current instrument):** Set a small mass ratio (try $m_2/m_1 = 0.2$) so the barycenter sits close to $m_1$, then point out that $m_1$ still moves.
+> **Demo setup (current instrument):** Set a small secondary ratio (try $M_2/M_1 = 0.2$) so the barycenter sits close to $M_1$, then point out that $M_1$ still moves.
 
 > **Clicker 2: Mass ratio and orbit size**
 > **Prompt:** In a binary star system, star A has twice the mass of star B ($M_A = 2 M_B$). How do their orbital radii compare?
@@ -47,7 +47,7 @@ has_math: true
 >
 > **Common misconception:** Option A (heavier = larger orbit). Students may confuse orbit size with gravitational influence.
 >
-> **Demo setup (current instrument):** Set $m_2/m_1 = 0.5$ (so $m_1$ is heavier) and compare orbit sizes about the barycenter.
+> **Demo setup (current instrument):** Set $M_2/M_1 = 0.5$ (so $M_1$ is heavier) and compare orbit sizes about the barycenter.
 
 > **Clicker 3: Barycenter position**
 > **Prompt:** For the Sun-Jupiter system, the barycenter is located...
@@ -61,7 +61,7 @@ has_math: true
 >
 > **Reasoning:** Jupiter's mass is about $10^{-3} M_\odot$, so the barycenter is about $10^{-3}$ of the way from the Sun to Jupiter. At 5.2 AU separation, that's about 0.005 AU = 750,000 km, just outside the Sun's radius (696,000 km).
 >
-> **Demo note:** The Sun–Jupiter barycenter example is a real-world application. The current slider range is a simplified teaching sandbox; use the mass-ratio control to show how the barycenter shifts as the ratio changes.
+> **Demo note:** The Sun–Jupiter barycenter example is a real-world application. The current slider range is a teaching sandbox ($M_2/M_1 \le 1$, $a$ on a $0.1\rightarrow100$ AU log scale); use the ratio control to show how the barycenter shifts.
 
 > **Clicker 4: Orbital period relationship**
 > **Prompt:** In a binary system, how do the two bodies' orbital periods compare?
@@ -77,7 +77,7 @@ has_math: true
 >
 > **Common misconception:** Options A or B (different periods for different masses). Students may confuse orbital speed with orbital period.
 >
-> **Demo setup:** Set $m_2/m_1 = 1$ and show both bodies completing orbits together.
+> **Demo setup:** Set $M_2/M_1 = 1$ and show both bodies completing orbits together.
 
 ## Short answer
 
@@ -96,7 +96,7 @@ has_math: true
 >
 > **Expected:** $P^2 = 1^3/(2 + 1) = 1/3$, so $P = \sqrt{1/3} = 0.577$ years $\approx$ 211 days.
 >
-> **Demo verification (current instrument):** Use $m_1=1\,M_\odot$ and set $m_2/m_1$ to match the desired $M_2$ value (within the slider range), then compare to the period readout.
+> **Demo verification (current instrument):** Use $M_1=1\,M_\odot$ and set $M_2/M_1$ to match the desired $M_2$ value (within the slider range), then compare to the period readout.
 
 ## Exit ticket (1 minute)
 
@@ -115,9 +115,9 @@ has_math: true
 > **Diagnosis: Where is the barycenter?**
 > **Prompt:** A student says, "The barycenter is always at the center of the larger body." How would you use the demo to address this misconception?
 >
-> **Suggested approach:** Show $m_2/m_1 = 1$ where the barycenter sits between the two bodies, then show a small mass ratio (e.g. $m_2/m_1 = 0.2$) where the barycenter shifts close to $m_1$.
+> **Suggested approach:** Show $M_2/M_1 = 1$ where the barycenter sits between the two bodies, then show a small ratio (e.g. $M_2/M_1 = 0.2$) where the barycenter shifts close to $M_1$.
 
 > **Diagnosis: Different periods?**
 > **Prompt:** A student predicts that in a binary system, the lighter star will have a shorter period because it moves faster. Use the demo and physics reasoning to address this.
 >
-> **Suggested approach:** Show $m_2/m_1 = 1$ and point out that both bodies complete orbits together. Explain that both bodies must stay on opposite sides of the barycenter, so they must share the same period.
+> **Suggested approach:** Show $M_2/M_1 = 1$ and point out that both bodies complete orbits together. Explain that both bodies must stay on opposite sides of the barycenter, so they must share the same period.

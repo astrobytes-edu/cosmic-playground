@@ -3,7 +3,7 @@ title: "Binary Orbits — Model & Math (Instructor Deep Dive)"
 bundle: "binary-orbits"
 section: "model"
 demo_slug: "binary-orbits"
-last_updated: "2026-02-02"
+last_updated: "2026-02-24"
 has_math: true
 ---
 > **Navigation**
@@ -27,15 +27,18 @@ This instrument is a **circular, coplanar two-body** teaching model. It exists t
 
 ## What the student controls (current instrument)
 
-- Mass ratio $m_2/m_1$ (dimensionless)
-- Separation $a$ (AU)
+- Secondary mass ratio $M_2/M_1$ (dimensionless, constrained to $\le 1$)
+- Separation $a$ (AU, log scale $0.1\rightarrow100$)
+- Motion mode (normalized 20 s cycle vs physical Kepler rate)
 
-In this demo, we hold $m_1 = 1\,M_\odot$ fixed and set $m_2$ via the mass ratio slider.
+In this demo, we hold $M_1 = 1\,M_\odot$ fixed and set $M_2$ via the secondary-ratio slider.
 
 ## What the demo reads out
 
-- Barycenter offset from $m_1$ (AU)
+- Barycenter offsets $a_1$ and $a_2$ (AU)
+- Orbital speeds $v_1$ and $v_2$ (AU/yr)
 - Orbital period $P$ (yr)
+- Shared-period cue ($P_1=P_2$)
 
 ## Core relationships (units explicit)
 

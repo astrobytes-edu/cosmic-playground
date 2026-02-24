@@ -3,7 +3,7 @@ title: "Binary Orbits — In-Class Activities"
 bundle: "binary-orbits"
 section: "activities"
 demo_slug: "binary-orbits"
-last_updated: "2026-02-02"
+last_updated: "2026-02-24"
 has_math: true
 ---
 > **Navigation**
@@ -22,11 +22,11 @@ has_math: true
 > **TPS: Does the heavier body move?**
 > **Think (30 s):** “If one body is much more massive, does the heavy one still move?”
 >
-> **Pair (60 s):** Predict what happens to the barycenter as $m_2/m_1$ increases.
+> **Pair (60 s):** Predict what happens to the barycenter as $M_2/M_1$ decreases below 1.
 >
 > **Share (1–2 min):** Use the demo:
-> 1) Set $m_2/m_1 = 1$ and note the barycenter offset from $m_1$.
-> 2) Set $m_2/m_1 = 5$ and compare.
+> 1) Set $M_2/M_1 = 1$ and note the barycenter offsets.
+> 2) Set $M_2/M_1 = 0.2$ and compare.
 >
 > **Debrief:** Both bodies move. The barycenter shifts toward the heavier body, and the heavier body’s orbit shrinks.
 
@@ -34,16 +34,16 @@ has_math: true
 
 > **Investigation: mass ratio vs orbit size**
 >
-> **Setup:** Fix separation at $a = 4$ AU.
+> **Setup:** Fix separation at $a = 4$ AU (log slider still active over $0.1\rightarrow100$ AU).
 >
 > **Task A (barycenter):**
-> 1) Record a snapshot for $m_2/m_1 = 1$.
-> 2) Record a snapshot for $m_2/m_1 = 5$.
+> 1) Record a snapshot for $M_2/M_1 = 1$.
+> 2) Record a snapshot for $M_2/M_1 = 0.2$.
 > 3) Write a sentence explaining the trend using the idea “center of mass.”
 >
 > **Task B (period scaling):**
-> 1) Fix $m_2/m_1 = 1$.
-> 2) Compare $a = 2$ AU vs $a = 8$ AU.
+> 1) Fix $M_2/M_1 = 1$.
+> 2) Compare $a = 0.5$ AU vs $a = 8$ AU.
 > 3) Use the readout to test the idea that period grows quickly with separation.
 >
 > **Key relationship (for discussion):**
@@ -57,4 +57,4 @@ Use the printable station card:
 ## Quick Demonstration (projector)
 
 > **Demo: inverse relationship**
-> Set $m_2/m_1=1$ then $m_2/m_1=5$ (same $a$). Script: “The heavier body’s orbit is smaller, but it still moves.”
+> Set $M_2/M_1=1$ then $M_2/M_1=0.2$ (same $a$). Script: “The lighter body gets the larger/faster orbit, but both bodies still share one period.”

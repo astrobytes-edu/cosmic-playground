@@ -12,6 +12,13 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+export const MASS_RATIO_MIN = 0.1;
+export const MASS_RATIO_MAX = 1.0;
+export const SEPARATION_MIN_AU = 0.1;
+export const SEPARATION_MAX_AU = 100;
+export const LOG_SLIDER_MIN = 0;
+export const LOG_SLIDER_MAX = 1000;
+
 // ---------------------------------------------------------------------------
 // Number formatting
 // ---------------------------------------------------------------------------
@@ -23,6 +30,38 @@ export function clamp(value: number, min: number, max: number): number {
 export function formatNumber(value: number, digits = 2): string {
   if (!Number.isFinite(value)) return "\u2014";
   return value.toFixed(digits);
+}
+
+/**
+ * Convert a 0-1000 slider position to a value on a base-10 log scale.
+ */
+export function logSliderToValue(
+  sliderVal: number,
+  minVal: number,
+  maxVal: number,
+): number {
+  const bounded = clamp(sliderVal, LOG_SLIDER_MIN, LOG_SLIDER_MAX);
+  const minLog = Math.log10(minVal);
+  const maxLog = Math.log10(maxVal);
+  const fraction = bounded / LOG_SLIDER_MAX;
+  const logVal = minLog + fraction * (maxLog - minLog);
+  return Math.pow(10, logVal);
+}
+
+/**
+ * Convert a physical value to a 0-1000 slider position on a base-10 log scale.
+ */
+export function valueToLogSlider(
+  value: number,
+  minVal: number,
+  maxVal: number,
+): number {
+  if (!Number.isFinite(value) || value <= 0) return LOG_SLIDER_MIN;
+  const minLog = Math.log10(minVal);
+  const maxLog = Math.log10(maxVal);
+  const logVal = Math.log10(value);
+  const fraction = (logVal - minLog) / (maxLog - minLog);
+  return clamp(Math.round(fraction * LOG_SLIDER_MAX), LOG_SLIDER_MIN, LOG_SLIDER_MAX);
 }
 
 // ---------------------------------------------------------------------------
@@ -41,6 +80,10 @@ export interface BinaryModel {
   r1: number;
   /** Distance from barycenter to m2 (AU) */
   r2: number;
+  /** Orbital speed of m1 around barycenter (AU/yr) */
+  v1AuPerYr: number;
+  /** Orbital speed of m2 around barycenter (AU/yr) */
+  v2AuPerYr: number;
 }
 
 /**
@@ -62,8 +105,8 @@ export function computeModel(
   separationAu: number,
   periodFn: PeriodCallback,
 ): BinaryModel {
-  const mr = clamp(massRatio, 0.2, 5);
-  const sep = clamp(separationAu, 1, 8);
+  const mr = clamp(massRatio, MASS_RATIO_MIN, MASS_RATIO_MAX);
+  const sep = clamp(separationAu, SEPARATION_MIN_AU, SEPARATION_MAX_AU);
 
   const m1 = 1;
   const m2 = mr;
@@ -77,6 +120,8 @@ export function computeModel(
   // Distances from barycenter
   const r1 = sep * (m2 / total);
   const r2 = sep * (m1 / total);
+  const v1AuPerYr = omegaRadPerYr * r1;
+  const v2AuPerYr = omegaRadPerYr * r2;
 
   return {
     massRatio: mr,
@@ -88,6 +133,8 @@ export function computeModel(
     omegaRadPerYr,
     r1,
     r2,
+    v1AuPerYr,
+    v2AuPerYr,
   };
 }
 
@@ -97,7 +144,7 @@ export function computeModel(
 
 /**
  * Compute the visual radius of a body for Canvas rendering.
- * Uses a log scale so large mass ratios are visible but not overwhelming.
+ * Uses a log scale so size differences remain visible but not overwhelming.
  *
  * @param mass - Stellar mass in solar masses (> 0)
  * @param base - Base radius in pixels (depends on canvas size)

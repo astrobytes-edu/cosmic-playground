@@ -3,7 +3,7 @@ title: "Binary Orbits Sandbox"
 bundle: "binary-orbits"
 section: "index"
 demo_slug: "binary-orbits"
-last_updated: "2026-02-02"
+last_updated: "2026-02-24"
 has_math: true
 ---
 > **Navigation**
@@ -52,12 +52,12 @@ Students should also be able to:
 
 1. **Start at equal masses.** Set $m_2/m_1 = 1$. Ask: *“Where is the barycenter?”* It should sit halfway between the bodies, and the two orbits should be the same size.
 
-2. **Make the system unequal.** Set $m_2/m_1 = 5$. Ask: *“What changes, and what stays the same?”* Emphasize that **both bodies still move**, but the barycenter shifts toward the heavier body and the heavier body’s orbit shrinks.
+2. **Make the system unequal.** Set $M_2/M_1 = 0.2$. Ask: *“What changes, and what stays the same?”* Emphasize that **both bodies still move**, but the secondary takes the larger/faster orbit while both bodies keep the same period.
 
-3. **Connect to the inverse relationship.** Ask students to predict whether $a_1/a_2$ increases or decreases when $m_2/m_1$ increases. Connect to:
+3. **Connect to the inverse relationship.** Ask students to predict whether $a_1/a_2$ increases or decreases when $M_2/M_1$ decreases. Connect to:
    $$\frac{a_1}{a_2}=\frac{M_2}{M_1}.$$
 
-4. **Period scaling.** Change separation $a$ (AU) and observe the period readout. Emphasize that in AU/yr/$M_\odot$ teaching units:
+4. **Period scaling.** Change separation $a$ (AU) with the log slider ($0.1\rightarrow100$ AU) and observe the period readout. Emphasize that in AU/yr/$M_\odot$ teaching units:
    $$P^2=\frac{a^3}{M_1+M_2}.$$
 
 5. **Exoplanet connection (conceptual).** Ask: *“If a star wobbles, how could we detect it?”* Tie barycentric motion to the radial-velocity idea, even though this simplified instrument does not model Doppler spectra directly.

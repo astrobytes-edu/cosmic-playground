@@ -169,11 +169,11 @@ where:
 K1 / K2 = m2 / m1 = q (mass ratio)
 ```
 
-Wait — careful with conventions. The existing demo defines mass ratio as m2/m1. In spectroscopic binary convention:
-- K1/K2 = r1/r2 = m2/m1
-- So if m2 > m1 (mass ratio > 1), then K1 > K2: the lighter star moves faster.
+The binary-orbits demo defines the slider as secondary-to-primary mass ratio $q=m_2/m_1$ with $q \le 1$.
 
-Actually: r1 = a * m2/(m1+m2), so v1 = 2*pi*r1/P is proportional to m2. Hence K1 is proportional to m2, K2 is proportional to m1. So K1/K2 = m2/m1. This means the primary (m1) has semi-amplitude K1 proportional to the companion mass m2. This is correct and pedagogically important: the heavier the companion, the bigger the primary wobbles.
+- $K_1/K_2 = r_1/r_2 = m_2/m_1 = q$
+- Therefore, with $q \le 1$, we expect $K_1 \le K_2$
+- Intuition: the lighter secondary usually has the larger/faster orbit
 
 ### Mass function (SB1 observable)
 
@@ -236,7 +236,7 @@ minimumMasses(args: {
 |-----------|-------|----------|-------|
 | Equal masses, edge-on | m1=m2=1 Msun, a=4 AU, i=90 | K1 = K2, both nonzero | Symmetry check |
 | Equal masses, face-on | same, i=0 | K1 = K2 = 0 | No RV signal |
-| Unequal 5:1, edge-on | m1=1, m2=5, a=4, i=90 | K1 = 5 * K2 | K ratio = mass ratio |
+| Unequal 1:0.2, edge-on | m1=1, m2=0.2, a=4, i=90 | K1 = 0.2 * K2 | K ratio = mass ratio |
 | Earth-Sun analog | m1=1 Msun, m2 = 3e-6 Msun, a=1 AU, i=90 | K1 ≈ 0.03 km/s (9 m/s) | Exoplanet-scale signal |
 | Mass function identity | Compute f(m) from K1, P; compare to analytic m2^3 sin^3 i / (m1+m2)^2 | Should match | Self-consistency |
 | inclination scaling | K at i=30 should be K(90) * sin(30) = K(90) * 0.5 | Linearity in sin(i) | |
@@ -343,7 +343,7 @@ When spectroscopy is ON, the station mode table expands with additional columns:
 | Key | Label |
 |-----|-------|
 | `case` | Case |
-| `massRatio` | m2/m1 |
+| `massRatio` | m2/m1 (secondary/primary, <=1) |
 | `separationAu` | Separation a (AU) |
 | `inclinationDeg` | Inclination i (deg) |
 | `periodYr` | Period P (yr) |
@@ -370,7 +370,7 @@ Generate rows at i = 15, 30, 45, 60, 75, 90 for the current mass ratio and separ
 1. Set mass ratio to **1.0**, separation to **4 AU**, inclination to **90 deg**. Verify K1 = K2.
 2. Change inclination to **30 deg**. Both K values drop by a factor of sin(30) = 0.5. Check the readouts.
 3. Change inclination to **0 deg**. The RV curve flatlines — zero signal! This is why face-on binaries are undetectable spectroscopically.
-4. Set mass ratio to **5.0** (very unequal). Notice K1 >> K2. Toggle SB1 mode — now you only see the primary's wobble. Can you still infer the companion's mass?
+4. Set mass ratio to **0.2** (very unequal). Notice K1 << K2. Toggle SB1 mode — now you only see the primary's wobble. Can you still infer the companion's mass?
 5. Watch the spectrum strip in SB2 mode. At what orbital phase do the two sets of lines cross each other?
 
 ### Explain prompt

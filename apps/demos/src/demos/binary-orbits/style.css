@@ -10,6 +10,11 @@
   font-size: 0.95rem;
 }
 
+.control__hint {
+  color: var(--cp-muted);
+  font-size: var(--cp-text-xs);
+}
+
 .stage {
   display: grid;
   place-items: center;

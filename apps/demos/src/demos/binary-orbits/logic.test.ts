@@ -5,7 +5,9 @@ import {
   computeModel,
   bodyRadius,
   bodyPositions,
+  logSliderToValue,
   pixelsPerUnit,
+  valueToLogSlider,
 } from "./logic";
 import type { PeriodCallback } from "./logic";
 
@@ -79,13 +81,13 @@ describe("Binary Orbits -- UI Logic", () => {
       expect(m.r2).toBeCloseTo(2, 10);
     });
 
-    it("extreme ratio (q=5): barycenter near heavier body", () => {
-      const m = computeModel(5, 6, keplerPeriod);
-      // m2 = 5, total = 6
-      // r1 = 6 * 5/6 = 5 (far from heavier)
-      // r2 = 6 * 1/6 = 1 (near heavier)
-      expect(m.r1).toBeCloseTo(5, 10);
-      expect(m.r2).toBeCloseTo(1, 10);
+    it("unequal ratio (q=0.2): barycenter closer to primary", () => {
+      const m = computeModel(0.2, 6, keplerPeriod);
+      // m2 = 0.2, total = 1.2
+      // r1 = 6 * 0.2/1.2 = 1
+      // r2 = 6 * 1/1.2 = 5
+      expect(m.r1).toBeCloseTo(1, 10);
+      expect(m.r2).toBeCloseTo(5, 10);
     });
 
     it("period follows Kepler's third law", () => {
@@ -97,22 +99,22 @@ describe("Binary Orbits -- UI Logic", () => {
       expect(m2.periodYr).toBeCloseTo(Math.sqrt(32), 8);
     });
 
-    it("clamps massRatio to [0.2, 5]", () => {
+    it("clamps massRatio to [0.1, 1.0]", () => {
       const low = computeModel(0.01, 4, keplerPeriod);
-      expect(low.massRatio).toBe(0.2);
+      expect(low.massRatio).toBe(0.1);
       const high = computeModel(100, 4, keplerPeriod);
-      expect(high.massRatio).toBe(5);
+      expect(high.massRatio).toBe(1);
     });
 
-    it("clamps separation to [1, 8]", () => {
-      const low = computeModel(1, 0.1, keplerPeriod);
-      expect(low.separation).toBe(1);
+    it("clamps separation to [0.1, 100]", () => {
+      const low = computeModel(1, 0.001, keplerPeriod);
+      expect(low.separation).toBe(0.1);
       const high = computeModel(1, 100, keplerPeriod);
-      expect(high.separation).toBe(8);
+      expect(high.separation).toBe(100);
     });
 
     it("r1 + r2 equals separation", () => {
-      const m = computeModel(2.5, 5, keplerPeriod);
+      const m = computeModel(0.2, 5, keplerPeriod);
       expect(m.r1 + m.r2).toBeCloseTo(m.separation, 10);
     });
 
@@ -122,8 +124,20 @@ describe("Binary Orbits -- UI Logic", () => {
     });
 
     it("total mass is m1 + m2", () => {
-      const m = computeModel(3, 4, keplerPeriod);
-      expect(m.total).toBe(1 + 3);
+      const m = computeModel(0.5, 4, keplerPeriod);
+      expect(m.total).toBe(1.5);
+    });
+
+    it("includes consistent orbital speeds", () => {
+      const m = computeModel(0.2, 4, keplerPeriod);
+      expect(m.v1AuPerYr).toBeCloseTo(m.omegaRadPerYr * m.r1, 10);
+      expect(m.v2AuPerYr).toBeCloseTo(m.omegaRadPerYr * m.r2, 10);
+    });
+
+    it("speed and orbit-size ratios match mass ratio", () => {
+      const m = computeModel(0.2, 4, keplerPeriod);
+      expect(m.r1 / m.r2).toBeCloseTo(m.massRatio, 10);
+      expect(m.v1AuPerYr / m.v2AuPerYr).toBeCloseTo(m.massRatio, 10);
     });
 
     it("handles period callback returning NaN gracefully", () => {
@@ -136,6 +150,25 @@ describe("Binary Orbits -- UI Logic", () => {
       const zeroPeriod: PeriodCallback = () => 0;
       const m = computeModel(1, 4, zeroPeriod);
       expect(m.omegaRadPerYr).toBe(0);
+    });
+  });
+
+  describe("log slider conversion", () => {
+    const MIN = 0.1;
+    const MAX = 100;
+
+    it("maps slider endpoints to min/max", () => {
+      expect(logSliderToValue(0, MIN, MAX)).toBeCloseTo(MIN, 10);
+      expect(logSliderToValue(1000, MIN, MAX)).toBeCloseTo(MAX, 10);
+    });
+
+    it("valueToLogSlider round-trips with logSliderToValue", () => {
+      for (const value of [0.1, 0.5, 1, 4, 10, 25, 100]) {
+        const slider = valueToLogSlider(value, MIN, MAX);
+        const back = logSliderToValue(slider, MIN, MAX);
+        expect(back / value).toBeGreaterThan(0.97);
+        expect(back / value).toBeLessThan(1.03);
+      }
     });
   });
 

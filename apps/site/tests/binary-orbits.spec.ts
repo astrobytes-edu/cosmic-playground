@@ -45,33 +45,35 @@ test.describe("Binary Orbits -- E2E", () => {
   test("mass ratio slider changes displayed value", async ({ page }) => {
     const slider = page.locator("#massRatio");
     await slider.evaluate((el: HTMLInputElement) => {
-      el.value = "3";
+      el.value = "0.3";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
     const value = await page.locator("#massRatioValue").textContent();
-    expect(value).toContain("3.0");
+    expect(value).toContain("0.30");
   });
 
   test("separation slider changes displayed value", async ({ page }) => {
     const slider = page.locator("#separation");
     await slider.evaluate((el: HTMLInputElement) => {
-      el.value = "6";
+      el.value = "700";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    const value = await page.locator("#separationValue").textContent();
-    expect(value).toContain("6.0");
+    const value = parseFloat(
+      (await page.locator("#separationValue").textContent()) || "NaN",
+    );
+    expect(value).toBeGreaterThan(10);
   });
 
   test("mass ratio slider has correct min and max", async ({ page }) => {
     const slider = page.locator("#massRatio");
-    await expect(slider).toHaveAttribute("min", "0.2");
-    await expect(slider).toHaveAttribute("max", "5");
+    await expect(slider).toHaveAttribute("min", "0.1");
+    await expect(slider).toHaveAttribute("max", "1");
   });
 
   test("separation slider has correct min and max", async ({ page }) => {
     const slider = page.locator("#separation");
-    await expect(slider).toHaveAttribute("min", "1");
-    await expect(slider).toHaveAttribute("max", "8");
+    await expect(slider).toHaveAttribute("min", "0");
+    await expect(slider).toHaveAttribute("max", "1000");
   });
 
   // --- Readouts ---
@@ -104,7 +106,7 @@ test.describe("Binary Orbits -- E2E", () => {
     const before = await page.locator("#baryOffsetValue").textContent();
     const slider = page.locator("#massRatio");
     await slider.evaluate((el: HTMLInputElement) => {
-      el.value = "4";
+      el.value = "0.2";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
     const after = await page.locator("#baryOffsetValue").textContent();
@@ -115,11 +117,48 @@ test.describe("Binary Orbits -- E2E", () => {
     const before = await page.locator("#periodValue").textContent();
     const slider = page.locator("#separation");
     await slider.evaluate((el: HTMLInputElement) => {
-      el.value = "7";
+      el.value = "900";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
     const after = await page.locator("#periodValue").textContent();
     expect(after).not.toBe(before);
+  });
+
+  test("secondary barycenter and speed readouts are numeric", async ({ page }) => {
+    const a2 = await page.locator("#baryOffsetSecondaryValue").textContent();
+    const v1 = await page.locator("#speedPrimaryValue").textContent();
+    const v2 = await page.locator("#speedSecondaryValue").textContent();
+    expect(parseFloat(a2 || "NaN")).not.toBeNaN();
+    expect(parseFloat(v1 || "NaN")).not.toBeNaN();
+    expect(parseFloat(v2 || "NaN")).not.toBeNaN();
+  });
+
+  test("shared-period cue states P1 equals P2", async ({ page }) => {
+    await expect(page.locator("#periodSharedCue")).toContainText("P1 = P2");
+  });
+
+  test("motion mode toggle is available", async ({ page }) => {
+    const motionMode = page.locator("#motionMode");
+    await expect(motionMode).toBeVisible();
+    await motionMode.selectOption("physical");
+    await expect(motionMode).toHaveValue("physical");
+  });
+
+  test("motion mode toggle preserves physical readouts", async ({ page }) => {
+    const periodBefore = await page.locator("#periodValue").textContent();
+    const a1Before = await page.locator("#baryOffsetValue").textContent();
+    const mode = page.locator("#motionMode");
+    await mode.selectOption("physical");
+    const periodPhysical = await page.locator("#periodValue").textContent();
+    const a1Physical = await page.locator("#baryOffsetValue").textContent();
+    await mode.selectOption("normalized");
+    const periodNormalized = await page.locator("#periodValue").textContent();
+    const a1Normalized = await page.locator("#baryOffsetValue").textContent();
+
+    expect(periodPhysical).toBe(periodBefore);
+    expect(a1Physical).toBe(a1Before);
+    expect(periodNormalized).toBe(periodBefore);
+    expect(a1Normalized).toBe(a1Before);
   });
 
   // --- Canvas Rendering ---
@@ -237,14 +276,14 @@ test.describe("Binary Orbits -- E2E", () => {
     });
   });
 
-  test.skip("screenshot: high mass ratio q=5", async ({ page }) => {
+  test.skip("screenshot: low mass ratio q=0.2", async ({ page }) => {
     const slider = page.locator("#massRatio");
     await slider.evaluate((el: HTMLInputElement) => {
-      el.value = "5";
+      el.value = "0.2";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
     await page.waitForTimeout(500);
-    await expect(page).toHaveScreenshot("binary-orbits-q5.png", {
+    await expect(page).toHaveScreenshot("binary-orbits-q0p2.png", {
       maxDiffPixelRatio: 0.05,
     });
   });

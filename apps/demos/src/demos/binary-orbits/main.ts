@@ -1,7 +1,19 @@
 import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { TwoBodyAnalytic } from "@cosmic/physics";
-import { computeModel, formatNumber, bodyRadius, bodyPositions, pixelsPerUnit } from "./logic";
+import {
+  MASS_RATIO_MAX,
+  MASS_RATIO_MIN,
+  SEPARATION_MAX_AU,
+  SEPARATION_MIN_AU,
+  bodyPositions,
+  bodyRadius,
+  computeModel,
+  formatNumber,
+  logSliderToValue,
+  pixelsPerUnit,
+  valueToLogSlider,
+} from "./logic";
 
 const massRatioInputEl = document.querySelector<HTMLInputElement>("#massRatio");
 const massRatioValueEl =
@@ -11,7 +23,13 @@ const separationValueEl =
   document.querySelector<HTMLSpanElement>("#separationValue");
 const baryOffsetValueEl =
   document.querySelector<HTMLSpanElement>("#baryOffsetValue");
+const baryOffsetSecondaryValueEl =
+  document.querySelector<HTMLSpanElement>("#baryOffsetSecondaryValue");
+const speedPrimaryValueEl = document.querySelector<HTMLSpanElement>("#speedPrimaryValue");
+const speedSecondaryValueEl = document.querySelector<HTMLSpanElement>("#speedSecondaryValue");
 const periodValueEl = document.querySelector<HTMLSpanElement>("#periodValue");
+const periodSharedCueEl = document.querySelector<HTMLSpanElement>("#periodSharedCue");
+const motionModeEl = document.querySelector<HTMLSelectElement>("#motionMode");
 const canvasEl = document.querySelector<HTMLCanvasElement>("#orbitCanvas");
 const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
 const helpEl = document.querySelector<HTMLButtonElement>("#help");
@@ -24,7 +42,12 @@ if (
   !separationInputEl ||
   !separationValueEl ||
   !baryOffsetValueEl ||
+  !baryOffsetSecondaryValueEl ||
+  !speedPrimaryValueEl ||
+  !speedSecondaryValueEl ||
   !periodValueEl ||
+  !periodSharedCueEl ||
+  !motionModeEl ||
   !canvasEl ||
   !stationModeEl ||
   !helpEl ||
@@ -44,7 +67,12 @@ const massRatioValue = massRatioValueEl;
 const separationInput = separationInputEl;
 const separationValue = separationValueEl;
 const baryOffsetValue = baryOffsetValueEl;
+const baryOffsetSecondaryValue = baryOffsetSecondaryValueEl;
+const speedPrimaryValue = speedPrimaryValueEl;
+const speedSecondaryValue = speedSecondaryValueEl;
 const periodValue = periodValueEl;
+const periodSharedCue = periodSharedCueEl;
+const motionMode = motionModeEl;
 const canvas = canvasEl;
 const ctx = ctxEl;
 const stationModeButton = stationModeEl;
@@ -98,17 +126,47 @@ const prefersReducedMotion =
   typeof window.matchMedia !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const yearsPerSecond = 0.06; // mapping from real seconds -> model years (teaching speed)
+type MotionMode = "normalized" | "physical";
+
+const YEARS_PER_SECOND_PHYSICAL = 0.06;
+const NORMALIZED_ORBIT_SECONDS = 20;
+const DEFAULT_MASS_RATIO = 1;
+const DEFAULT_SEPARATION_AU = 4;
 
 /** Period callback wired to the physics package. */
 const periodFn = TwoBodyAnalytic.orbitalPeriodYrFromAuSolar;
 
+function getMotionMode(): MotionMode {
+  return motionMode.value === "physical" ? "physical" : "normalized";
+}
+
+function getSeparationAuFromSlider(): number {
+  return logSliderToValue(
+    Number(separationInput.value),
+    SEPARATION_MIN_AU,
+    SEPARATION_MAX_AU,
+  );
+}
+
 function getModel() {
   return computeModel(
     Number(massRatioInput.value),
-    Number(separationInput.value),
+    getSeparationAuFromSlider(),
     periodFn
   );
+}
+
+massRatioInput.value = String(DEFAULT_MASS_RATIO);
+separationInput.value = String(
+  valueToLogSlider(DEFAULT_SEPARATION_AU, SEPARATION_MIN_AU, SEPARATION_MAX_AU),
+);
+
+function phaseFromElapsedSeconds(elapsedSec: number, model: ReturnType<typeof getModel>): number {
+  if (getMotionMode() === "normalized") {
+    return (elapsedSec / NORMALIZED_ORBIT_SECONDS) * (2 * Math.PI);
+  }
+  const elapsedYears = elapsedSec * YEARS_PER_SECOND_PHYSICAL;
+  return model.omegaRadPerYr * elapsedYears;
 }
 
 function draw(model: ReturnType<typeof getModel>, phaseRad: number) {
@@ -171,15 +229,19 @@ function draw(model: ReturnType<typeof getModel>, phaseRad: number) {
   ctx.fill();
 }
 
-function renderAtPhase(phaseRad: number) {
-  const model = getModel();
+function renderAtPhase(phaseRad: number, modelArg?: ReturnType<typeof getModel>) {
+  const model = modelArg ?? getModel();
 
-  massRatioValue.textContent = `${formatNumber(model.massRatio, 1)}`;
-  separationValue.textContent = `${formatNumber(model.separation, 1)}`;
+  massRatioValue.textContent = `${formatNumber(model.massRatio, 2)}`;
+  separationValue.textContent = `${formatNumber(model.separation, 2)}`;
 
-  // Units are in separate .cp-readout__unit spans in HTML
+  // Units are in separate .cp-readout__unit spans in HTML.
   baryOffsetValue.textContent = formatNumber(model.r1, 3);
+  baryOffsetSecondaryValue.textContent = formatNumber(model.r2, 3);
+  speedPrimaryValue.textContent = formatNumber(model.v1AuPerYr, 3);
+  speedSecondaryValue.textContent = formatNumber(model.v2AuPerYr, 3);
   periodValue.textContent = formatNumber(model.periodYr, 3);
+  periodSharedCue.textContent = "P1 = P2 (shared period)";
 
   draw(model, phaseRad);
 }
@@ -193,6 +255,11 @@ massRatioInput.addEventListener("input", () => {
 });
 separationInput.addEventListener("input", () => {
   renderStatic();
+});
+motionMode.addEventListener("change", () => {
+  renderStatic();
+  const modeLabel = getMotionMode() === "normalized" ? "Normalized motion mode enabled." : "Physical Kepler motion mode enabled.";
+  setLiveRegionText(status, modeLabel);
 });
 
 if (prefersReducedMotion) {
@@ -211,9 +278,8 @@ if (prefersReducedMotion) {
   function frame(now: number) {
     const model = getModel();
     const elapsed = (now - start) / 1000;
-    const elapsedYears = elapsed * yearsPerSecond;
-    const phase = model.omegaRadPerYr * elapsedYears;
-    renderAtPhase(phase);
+    const phase = phaseFromElapsedSeconds(elapsed, model);
+    renderAtPhase(phase, model);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
@@ -243,7 +309,8 @@ const demoModes = createDemoModes({
         type: "bullets",
         items: [
           "This is a circular, two-body visualization in teaching units (AU / yr / $M_{\\odot}$).",
-          "We hold $m_1 = 1\\,M_{\\odot}$ fixed and set $m_2$ via the mass-ratio slider.",
+          "We hold $M_1 = 1\\,M_{\\odot}$ fixed and set $M_2$ with the secondary ratio slider ($M_2/M_1 \\le 1$).",
+          "Both bodies always share one period ($P_1 = P_2$), but their orbit sizes and speeds differ.",
           "Period uses the Kepler teaching normalization: $P^2 = \\frac{a^3}{M_1 + M_2}$."
         ]
       }
@@ -253,15 +320,18 @@ const demoModes = createDemoModes({
     title: "Station Mode: Binary Orbits",
     subtitle: "Add snapshot rows, then copy CSV or print.",
     steps: [
-      "Set a mass ratio and separation.",
-      "Record the barycenter offset and orbital period.",
-      "Compare an equal-mass system to an unequal-mass system."
+      "Set a secondary ratio and separation.",
+      "Record $a_1$, $a_2$, $v_1$, $v_2$, and period $P$.",
+      "Compare equal masses to an unequal case and identify what changes versus what stays the same."
     ],
     columns: [
       { key: "case", label: "Case" },
-      { key: "massRatio", label: "$m_2/m_1$" },
+      { key: "massRatio", label: "$M_2/M_1$" },
       { key: "separationAu", label: "Separation $a$ (AU)" },
-      { key: "baryOffsetAu", label: "Barycenter offset from $m_1$ (AU)" },
+      { key: "a1Au", label: "$a_1$ from $M_1$ (AU)" },
+      { key: "a2Au", label: "$a_2$ from $M_2$ (AU)" },
+      { key: "v1AuPerYr", label: "$v_1$ (AU/yr)" },
+      { key: "v2AuPerYr", label: "$v_2$ (AU/yr)" },
       { key: "periodYr", label: "Period $P$ (yr)" }
     ],
     getSnapshotRow() {
@@ -270,7 +340,10 @@ const demoModes = createDemoModes({
         case: "Snapshot",
         massRatio: formatNumber(model.massRatio, 2),
         separationAu: formatNumber(model.separation, 2),
-        baryOffsetAu: formatNumber(model.r1, 3),
+        a1Au: formatNumber(model.r1, 3),
+        a2Au: formatNumber(model.r2, 3),
+        v1AuPerYr: formatNumber(model.v1AuPerYr, 3),
+        v2AuPerYr: formatNumber(model.v2AuPerYr, 3),
         periodYr: formatNumber(model.periodYr, 3)
       };
     },
@@ -281,7 +354,7 @@ const demoModes = createDemoModes({
         getRows() {
           const cases = [
             { label: "Equal masses", massRatio: 1, separation: 4 },
-            { label: "Unequal masses", massRatio: 5, separation: 4 }
+            { label: "Unequal masses", massRatio: 0.2, separation: 4 }
           ];
           return cases.map((c) => {
             const model = computeModel(c.massRatio, c.separation, periodFn);
@@ -289,7 +362,10 @@ const demoModes = createDemoModes({
               case: c.label,
               massRatio: formatNumber(model.massRatio, 2),
               separationAu: formatNumber(model.separation, 2),
-              baryOffsetAu: formatNumber(model.r1, 3),
+              a1Au: formatNumber(model.r1, 3),
+              a2Au: formatNumber(model.r2, 3),
+              v1AuPerYr: formatNumber(model.v1AuPerYr, 3),
+              v2AuPerYr: formatNumber(model.v2AuPerYr, 3),
               periodYr: formatNumber(model.periodYr, 3)
             };
           });
@@ -297,7 +373,7 @@ const demoModes = createDemoModes({
       }
     ],
     synthesisPrompt:
-      "<p><strong>Synthesis:</strong> In one sentence, explain why the heavier body's orbit is smaller, even though both bodies move.</p>"
+      "<p><strong>Synthesis:</strong> In one sentence, explain why $P_1=P_2$ even though $a_1$, $a_2$, $v_1$, and $v_2$ are different.</p>"
   }
 });
 
@@ -312,19 +388,24 @@ function exportResults(): ExportPayloadV1 {
     version: 1,
     timestamp: new Date().toISOString(),
     parameters: [
-      { name: "Mass ratio (m2/m1)", value: formatNumber(model.massRatio, 2) },
-      { name: "Separation a (AU)", value: formatNumber(model.separation, 2) }
+      { name: "Secondary mass ratio (M2/M1)", value: formatNumber(model.massRatio, 2) },
+      { name: "Separation a (AU)", value: formatNumber(model.separation, 2) },
+      { name: "Motion mode", value: getMotionMode() === "normalized" ? "normalized-20s-cycle" : "physical-kepler" }
     ],
     readouts: [
       {
-        name: "Barycenter offset from m1 (AU)",
+        name: "Barycenter offset from M1 (a1, AU)",
         value: formatNumber(model.r1, 3)
       },
+      { name: "Barycenter offset from M2 (a2, AU)", value: formatNumber(model.r2, 3) },
+      { name: "Orbital speed of M1 (AU/yr)", value: formatNumber(model.v1AuPerYr, 3) },
+      { name: "Orbital speed of M2 (AU/yr)", value: formatNumber(model.v2AuPerYr, 3) },
       { name: "Orbital period P (yr)", value: formatNumber(model.periodYr, 3) }
     ],
     notes: [
       "Assumes perfectly circular, coplanar two-body motion with point masses.",
-      "Uses AU/yr/Msun teaching units where G = 4*pi^2, so P^2 = a^3/(M1+M2)."
+      "Uses AU/yr/Msun teaching units where G = 4*pi^2, so P^2 = a^3/(M1+M2).",
+      "Mass-ratio slider uses secondary-over-primary convention M2/M1 <= 1."
     ]
   };
 }
