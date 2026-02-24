@@ -1,12 +1,5 @@
 @import "../../shared/stub-demo.css";
 
-.cp-demo {
-  grid-template-areas:
-    "sidebar viz"
-    "sidebar readouts"
-    "shelf shelf";
-}
-
 .cp-demo__controls {
   animation: cp-slide-up 0.6s var(--cp-ease-out);
 }
@@ -305,10 +298,17 @@
 .understand-card {
   display: grid;
   gap: var(--cp-space-2);
+  min-width: 0;
 }
 
 .understand-card h3 {
   margin: 0;
+}
+
+.understand-equation {
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .understand-card ul {
