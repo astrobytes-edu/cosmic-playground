@@ -55,6 +55,34 @@ describe("Doppler Shift -- Design System Contracts", () => {
     expect(main).toContain("ChallengeEngine");
   });
 
+  it("includes playbar transport controls", () => {
+    expect(html).toContain("cp-playbar");
+    expect(html).toContain('id="btn-play"');
+    expect(html).toContain('id="btn-pause"');
+    expect(html).toContain('id="btn-step-back"');
+    expect(html).toContain('id="btn-step-forward"');
+    expect(html).toContain('id="btn-reset"');
+    expect(html).toContain('id="speed-select"');
+  });
+
+  it("primary sliders expose tooltip readout hooks", () => {
+    expect(html).toContain('id="velocitySlider"');
+    expect(html).toContain('id="redshiftSlider"');
+    expect(html).toContain('data-tooltip-source="#velocityValue"');
+    expect(html).toContain('data-tooltip-source="#redshiftValue"');
+  });
+
+  it("defines at least three challenge scenarios", () => {
+    const challengeArrays = Array.from(
+      main.matchAll(/const\s+\w+\s*:\s*Challenge\[\]\s*=\s*\[(.*?)\];/gs),
+    );
+    const promptCount = challengeArrays.reduce((count, section) => {
+      const prompts = section[1].match(/prompt:\s*"/g) || [];
+      return count + prompts.length;
+    }, 0);
+    expect(promptCount).toBeGreaterThanOrEqual(3);
+  });
+
   it("contains redshift regime markers and representative-line helper affordances", () => {
     expect(html).toContain('id="redshiftRegimeTrack"');
     expect(html).toContain('id="regimeMarkerBlue"');

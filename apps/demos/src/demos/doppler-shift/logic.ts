@@ -37,6 +37,25 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+export function advanceSweepValue(args: {
+  value: number;
+  min: number;
+  max: number;
+  direction: -1 | 1;
+  delta: number;
+}): { value: number; direction: -1 | 1 } {
+  let nextValue = args.value + args.delta * args.direction;
+  let nextDirection: -1 | 1 = args.direction;
+  if (nextValue >= args.max) {
+    nextValue = args.max;
+    nextDirection = -1;
+  } else if (nextValue <= args.min) {
+    nextValue = args.min;
+    nextDirection = 1;
+  }
+  return { value: nextValue, direction: nextDirection };
+}
+
 export function formatNumber(value: number, digits = 3): string {
   if (!Number.isFinite(value)) return "\u2014";
   if (Math.abs(value) >= 1e4 || (Math.abs(value) > 0 && Math.abs(value) < 1e-3)) {

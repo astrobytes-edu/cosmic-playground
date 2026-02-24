@@ -119,6 +119,10 @@
   accent-color: var(--cp-accent);
 }
 
+.check[aria-disabled="true"] {
+  opacity: 0.6;
+}
+
 .presets {
   display: grid;
   gap: var(--cp-space-2);
@@ -174,6 +178,22 @@
 
 .copy-lock-hint {
   margin: 0;
+}
+
+.cp-playbar {
+  animation: cp-fade-in 0.8s var(--cp-ease-out) 0.2s backwards;
+}
+
+.speed-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  color: var(--cp-muted);
+  font-size: var(--cp-text-sm);
+}
+
+.speed-control .cp-select {
+  min-width: 84px;
 }
 
 .stage-tabs {

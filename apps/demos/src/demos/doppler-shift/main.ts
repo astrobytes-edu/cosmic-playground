@@ -23,6 +23,7 @@ import {
   buildChallengeEvidenceText,
   buildDopplerExportPayload,
   buildRepresentativeLineRuleText,
+  advanceSweepValue,
   centerDomainOnLines,
   clamp,
   computeRegimeThresholdMarkers,
@@ -120,6 +121,13 @@ const zCompareValue = $<HTMLSpanElement>("#zCompareValue");
 const stationModeBtn = $<HTMLButtonElement>("#stationMode");
 const helpBtn = $<HTMLButtonElement>("#help");
 const copyResultsBtn = $<HTMLButtonElement>("#copyResults");
+const playBtn = $<HTMLButtonElement>("#btn-play");
+const pauseBtn = $<HTMLButtonElement>("#btn-pause");
+const stepBackBtn = $<HTMLButtonElement>("#btn-step-back");
+const stepForwardBtn = $<HTMLButtonElement>("#btn-step-forward");
+const resetBtn = $<HTMLButtonElement>("#btn-reset");
+const speedSelect = $<HTMLSelectElement>("#speed-select");
+const playbarState = $<HTMLSpanElement>("#playbarState");
 
 const ctxOrNull = spectrumCanvas.getContext("2d");
 if (!ctxOrNull) {
@@ -207,6 +215,11 @@ const regimeThresholds = computeRegimeThresholdMarkers({
 
 let wavePhasePx = 0;
 let waveFrame = 0;
+let sweepFrame = 0;
+let sweepLastTimestamp = 0;
+let sweepDirection: -1 | 1 = 1;
+
+const SWEEP_RATE_KM_S_PER_SEC = 18_000;
 
 const challengeTargets: ChallengeTarget[] = CHALLENGE_ELEMENTS.flatMap((element) => {
   return CHALLENGE_PRESET_IDS.flatMap((presetId) => {
@@ -432,6 +445,63 @@ function setPhysicalRedshift(z: number, announce = true) {
   state.z = synced.z;
   render();
   if (announce) announceShift();
+}
+
+function syncPlaybarState() {
+  const sweepRunning = sweepFrame !== 0;
+  playBtn.disabled = sweepRunning || prefersReducedMotion;
+  pauseBtn.disabled = !sweepRunning;
+  playbarState.textContent = sweepRunning
+    ? `Sweeping ${sweepDirection > 0 ? "toward redshift" : "toward blueshift"}`
+    : "Sweep paused";
+}
+
+function startVelocitySweep() {
+  if (prefersReducedMotion) {
+    setLiveRegionText(statusEl, "Reduced motion enabled; autoplay sweep is disabled.");
+    return;
+  }
+  if (sweepFrame !== 0) return;
+
+  sweepLastTimestamp = 0;
+  const tick = (timestamp: number) => {
+    if (sweepFrame === 0) return;
+    if (sweepLastTimestamp === 0) {
+      sweepLastTimestamp = timestamp;
+      sweepFrame = window.requestAnimationFrame(tick);
+      return;
+    }
+
+    const dtSec = Math.min(0.12, (timestamp - sweepLastTimestamp) / 1000);
+    sweepLastTimestamp = timestamp;
+    const speed = Number(speedSelect.value) || 1;
+    const delta = SWEEP_RATE_KM_S_PER_SEC * speed * dtSec;
+    const nextSweep = advanceSweepValue({
+      value: state.velocityKmS,
+      min: VELOCITY_SLIDER_MIN_KM_S,
+      max: VELOCITY_SLIDER_MAX_KM_S,
+      direction: sweepDirection,
+      delta,
+    });
+    sweepDirection = nextSweep.direction;
+
+    state.activePresetId = "";
+    setPhysicalVelocity(nextSweep.value, false);
+    syncPlaybarState();
+    sweepFrame = window.requestAnimationFrame(tick);
+  };
+
+  sweepFrame = window.requestAnimationFrame(tick);
+  syncPlaybarState();
+}
+
+function stopVelocitySweep() {
+  if (sweepFrame !== 0) {
+    window.cancelAnimationFrame(sweepFrame);
+    sweepFrame = 0;
+  }
+  sweepLastTimestamp = 0;
+  syncPlaybarState();
 }
 
 function applyPresetById(presetId: string, announce = true) {
@@ -931,14 +1001,26 @@ function render() {
   repLineRuleNote.hidden = hideTarget || !state.repLineRuleExpanded;
 
   const denseAvailable = state.selectedElement === "Fe" && lineCatalog().length > 10;
-  lineDensityWrap.hidden = !denseAvailable;
-  showAllLines.checked = state.lineDensityMode === "all";
+  lineDensityWrap.hidden = false;
+  if (!denseAvailable && state.lineDensityMode === "all") {
+    state.lineDensityMode = "strongest-8";
+  }
+  showAllLines.disabled = !denseAvailable;
+  showAllLines.checked = denseAvailable && state.lineDensityMode === "all";
+  lineDensityWrap.setAttribute(
+    "aria-disabled",
+    String(!denseAvailable),
+  );
+  lineDensityWrap.title = denseAvailable
+    ? ""
+    : "Dense line catalog unlocks when Fe is selected.";
 
   mysteryPanel.hidden = !(state.mystery.active || state.mystery.revealed);
   if (!mysteryPanel.hidden) {
+    const activePrompt = mysteryEngine.getCurrentChallenge()?.prompt;
     mysteryPrompt.textContent = state.mystery.revealed
       ? "Answer revealed. Start another mystery to try a new hidden target."
-      : "Mystery challenge: identify the hidden element and spectrum mode.";
+      : activePrompt ?? "Mystery challenge: identify the hidden element and spectrum mode.";
   }
 
   guessModeEmission.setAttribute("aria-checked", String(state.mystery.guessMode === "emission"));
@@ -947,6 +1029,7 @@ function render() {
   mysteryHintBtn.disabled = !state.mystery.active;
 
   syncCopyLockState();
+  syncPlaybarState();
 
   updateReadouts();
   drawWaveDiagram();
@@ -980,38 +1063,78 @@ type MysteryCheckState = {
   targetMode: SpectrumMode;
 };
 
-const mysteryChallenge: Challenge = {
-  type: "custom",
-  prompt: "Identify the hidden element and whether the spectrum is emission or absorption.",
-  hints: [
-    "Use the strongest shifted line first, then compare nearby spacing.",
-    "Sodium tends to cluster near 589 nm; calcium has a strong pair near 393-397 nm.",
-  ],
-  check(rawState: unknown) {
-    const payload = rawState as MysteryCheckState;
-    const correct = payload.guessedElement === payload.targetElement && payload.guessedMode === payload.targetMode;
-    const targetModeLabel = payload.targetMode === "emission" ? "Emission" : "Absorption";
-    const guessedModeLabel = payload.guessedMode === "emission" ? "Emission" : "Absorption";
-
-    if (correct) {
+const challenges: Challenge[] = [
+  {
+    type: "custom",
+    prompt: "Scenario 1: Identify the hidden element and whether the spectrum is emission or absorption.",
+    hints: [
+      "Use the strongest shifted line first, then compare nearby spacing.",
+      "Sodium tends to cluster near 589 nm; calcium has a strong pair near 393-397 nm.",
+    ],
+    check(rawState: unknown) {
+      const payload = rawState as MysteryCheckState;
+      const correct = payload.guessedElement === payload.targetElement && payload.guessedMode === payload.targetMode;
+      const targetModeLabel = payload.targetMode === "emission" ? "Emission" : "Absorption";
+      const guessedModeLabel = payload.guessedMode === "emission" ? "Emission" : "Absorption";
+      if (correct) {
+        return {
+          correct: true,
+          close: true,
+          message: `Correct. Mystery spectrum is ${payload.targetElement} in ${targetModeLabel} mode.`,
+        };
+      }
       return {
-        correct: true,
-        close: true,
-        message: `Correct. Mystery spectrum is ${payload.targetElement} in ${targetModeLabel} mode.`,
+        correct: false,
+        close: false,
+        message: `Not yet. You guessed ${payload.guessedElement} (${guessedModeLabel}); target is ${payload.targetElement} (${targetModeLabel}).`,
       };
-    }
-
-    return {
-      correct: false,
-      close: false,
-      message: `Not yet. You guessed ${payload.guessedElement} (${guessedModeLabel}); target is ${payload.targetElement} (${targetModeLabel}).`,
-    };
+    },
   },
-};
+  {
+    type: "custom",
+    prompt: "Scenario 2: Determine the sign and regime of radial velocity from the shifted pattern.",
+    hints: [
+      "If lines shift toward shorter wavelength the source is approaching; longer wavelength means receding.",
+      "Use NR divergence readout to classify non-relativistic versus relativistic regime.",
+    ],
+    check(rawState: unknown) {
+      const payload = rawState as MysteryCheckState;
+      const correct = payload.guessedElement === payload.targetElement && payload.guessedMode === payload.targetMode;
+      return {
+        correct,
+        close: correct,
+        message: correct
+          ? "Correct. Your mode/element inference is consistent with the measured shift direction."
+          : "Re-check direction and spacing: classify shift sign first, then match the element fingerprint.",
+      };
+    },
+  },
+  {
+    type: "custom",
+    prompt: "Scenario 3: High-z case. Compare non-rel and relativistic predictions before deciding.",
+    hints: [
+      "At large |z|, compare lambda_obs in both formulas before committing to your explanation.",
+      "Use the representative line and Delta-lambda evidence row to justify your claim.",
+    ],
+    check(rawState: unknown) {
+      const payload = rawState as MysteryCheckState;
+      const correct = payload.guessedElement === payload.targetElement && payload.guessedMode === payload.targetMode;
+      return {
+        correct,
+        close: correct,
+        message: correct
+          ? "Correct. Challenge solved with high-z evidence."
+          : "Not yet. In high-z cases, anchor on representative-line displacement and line spacing consistency.",
+      };
+    },
+  },
+];
 
-const mysteryEngine = new ChallengeEngine([mysteryChallenge], {
+const mysteryEngine = new ChallengeEngine(challenges, {
   showUI: false,
   onProgress: () => {
+    const prompt = mysteryEngine.getCurrentChallenge()?.prompt ?? "Mystery spectrum ready.";
+    mysteryPrompt.textContent = prompt;
     setLiveRegionText(statusEl, "Mystery spectrum ready. Make a guess and check your answer.");
   },
   onStop: () => {
@@ -1103,11 +1226,13 @@ function checkMysteryAnswer() {
 }
 
 velocitySlider.addEventListener("input", () => {
+  stopVelocitySweep();
   state.activePresetId = "";
   setPhysicalVelocity(Number(velocitySlider.value));
 });
 
 redshiftSlider.addEventListener("input", () => {
+  stopVelocitySweep();
   state.activePresetId = "";
   setPhysicalRedshift(Number(redshiftSlider.value));
 });
@@ -1138,6 +1263,7 @@ showAllLines.addEventListener("change", () => {
 
 for (const preset of presetChips) {
   preset.addEventListener("click", () => {
+    stopVelocitySweep();
     const id = preset.getAttribute("data-preset");
     if (!id) return;
     applyPresetById(id);
@@ -1145,6 +1271,7 @@ for (const preset of presetChips) {
 }
 
 zoomVisibleBtn.addEventListener("click", () => {
+  stopVelocitySweep();
   state.domain = { ...VISIBLE_SPECTRUM_DOMAIN };
   render();
   setLiveRegionText(statusEl, "Zoomed to visible range (300-900 nm).");
@@ -1167,6 +1294,7 @@ centerLinesBtn.addEventListener("click", () => {
 });
 
 zoomResetBtn.addEventListener("click", () => {
+  stopVelocitySweep();
   state.domain = { ...DEFAULT_SPECTRUM_DOMAIN };
   render();
   setLiveRegionText(statusEl, "Spectrum range reset to 80-2200 nm.");
@@ -1261,6 +1389,41 @@ copyResultsBtn.addEventListener("click", () => {
       const message = error instanceof Error ? error.message : "Copy failed.";
       setLiveRegionText(statusEl, `Copy failed: ${message}`);
     });
+});
+
+playBtn.addEventListener("click", () => {
+  startVelocitySweep();
+});
+
+pauseBtn.addEventListener("click", () => {
+  stopVelocitySweep();
+});
+
+stepBackBtn.addEventListener("click", () => {
+  stopVelocitySweep();
+  state.activePresetId = "";
+  sweepDirection = -1;
+  setPhysicalVelocity(state.velocityKmS - 1_500);
+});
+
+stepForwardBtn.addEventListener("click", () => {
+  stopVelocitySweep();
+  state.activePresetId = "";
+  sweepDirection = 1;
+  setPhysicalVelocity(state.velocityKmS + 1_500);
+});
+
+resetBtn.addEventListener("click", () => {
+  stopVelocitySweep();
+  state.activePresetId = "1";
+  sweepDirection = 1;
+  setPhysicalVelocity(0);
+});
+
+speedSelect.addEventListener("change", () => {
+  syncPlaybarState();
+  const speed = Number(speedSelect.value) || 1;
+  setLiveRegionText(statusEl, `Sweep speed set to ${formatNumber(speed, 0)}x.`);
 });
 
 window.addEventListener("resize", () => {
@@ -1403,36 +1566,42 @@ document.addEventListener("keydown", (event) => {
     }
     case "[": {
       event.preventDefault();
+      stopVelocitySweep();
       state.activePresetId = "";
       setPhysicalVelocity(state.velocityKmS - 100);
       break;
     }
     case "]": {
       event.preventDefault();
+      stopVelocitySweep();
       state.activePresetId = "";
       setPhysicalVelocity(state.velocityKmS + 100);
       break;
     }
     case "{": {
       event.preventDefault();
+      stopVelocitySweep();
       state.activePresetId = "";
       setPhysicalVelocity(state.velocityKmS - 10_000);
       break;
     }
     case "}": {
       event.preventDefault();
+      stopVelocitySweep();
       state.activePresetId = "";
       setPhysicalVelocity(state.velocityKmS + 10_000);
       break;
     }
     case "z": {
       event.preventDefault();
+      stopVelocitySweep();
       state.activePresetId = "";
       setPhysicalRedshift(state.z - 0.1);
       break;
     }
     case "Z": {
       event.preventDefault();
+      stopVelocitySweep();
       state.activePresetId = "";
       setPhysicalRedshift(state.z + 0.1);
       break;
@@ -1446,6 +1615,7 @@ document.addEventListener("keydown", (event) => {
     case "7":
     case "8": {
       event.preventDefault();
+      stopVelocitySweep();
       applyPresetById(event.key);
       break;
     }

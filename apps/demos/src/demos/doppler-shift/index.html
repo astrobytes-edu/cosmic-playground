@@ -58,13 +58,30 @@
 
           <label class="control" for="velocitySlider">
             <span>Radial velocity $v_r$ (km/s)</span>
-            <input id="velocitySlider" type="range" min="-100000" max="100000" step="10" value="0" />
+            <input
+              id="velocitySlider"
+              type="range"
+              min="-100000"
+              max="100000"
+              step="10"
+              value="0"
+              data-tooltip-source="#velocityValue"
+            />
             <span class="control__value"><span id="velocityValue">0</span></span>
           </label>
 
           <label class="control" for="redshiftSlider">
             <span>Physical redshift $z_{\rm rel}$</span>
-            <input id="redshiftSlider" type="range" min="-0.8" max="10" step="0.001" value="0" aria-describedby="regimeMarkerCaption" />
+            <input
+              id="redshiftSlider"
+              type="range"
+              min="-0.8"
+              max="10"
+              step="0.001"
+              value="0"
+              aria-describedby="regimeMarkerCaption"
+              data-tooltip-source="#redshiftValue"
+            />
             <div id="redshiftRegimeTrack" class="regime-track" aria-hidden="true">
               <span id="regimeMarkerBlue" class="regime-track__marker regime-track__marker--blue"></span>
               <span id="regimeMarkerRed" class="regime-track__marker regime-track__marker--red"></span>
@@ -109,9 +126,9 @@
             </div>
           </div>
 
-          <label id="lineDensityWrap" class="check" hidden>
+          <label id="lineDensityWrap" class="check">
             <input id="showAllLines" type="checkbox" />
-            Show all element lines
+            Show all element lines (dense Fe catalog)
           </label>
 
           <div class="presets">
@@ -271,6 +288,34 @@
         </div>
       </section>
 
+      <div class="cp-playbar" role="region" aria-label="Velocity sweep transport">
+        <button class="cp-playbar__btn" id="btn-play" type="button" aria-label="Play velocity sweep">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6z" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-pause" type="button" aria-label="Pause velocity sweep" disabled>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" /><rect x="9.5" y="2" width="3.5" height="12" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-step-back" type="button" aria-label="Step velocity backward">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="2" height="12" /><path d="M14 2L6 8l8 6z" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-step-forward" type="button" aria-label="Step velocity forward">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="12" y="2" width="2" height="12" /><path d="M2 2l8 6-8 6z" /></svg>
+        </button>
+        <button class="cp-playbar__btn" id="btn-reset" type="button" aria-label="Reset velocity sweep">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a6 6 0 1 1 1.8 4.3" /><path d="M2 13V8h5" /></svg>
+        </button>
+        <label class="speed-control" for="speed-select">
+          Speed
+          <select id="speed-select" class="cp-select">
+            <option value="1">1x</option>
+            <option value="2" selected>2x</option>
+            <option value="5">5x</option>
+            <option value="10">10x</option>
+          </select>
+        </label>
+        <span class="cp-playbar__phase" id="playbarState">Sweep paused</span>
+      </div>
+
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body readout-grid">
@@ -366,6 +411,19 @@
                 <li>The physical state couples $v_r$ and $z$ through the relativistic inverse relation.</li>
                 <li>Vacuum wavelengths are used throughout.</li>
                 <li>This instrument models kinematic Doppler shift, not cosmological expansion or gravitational redshift.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Explore further</span>
+              <span class="cp-accordion__meta">connections</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li><strong>Spectral Lines:</strong> Review how rest wavelengths are set by atomic transitions. <a href="../spectral-lines/">Open Spectral Lines →</a></li>
+                <li><strong>Galaxy Rotation:</strong> Apply Doppler readouts to rotation curves and dark-matter inference. <a href="../galaxy-rotation/">Open Galaxy Rotation →</a></li>
               </ul>
             </div>
           </details>

@@ -4,6 +4,7 @@ import {
   DEFAULT_SPECTRUM_DOMAIN,
   REDSHIFT_SLIDER_MIN,
   VELOCITY_SLIDER_MAX_KM_S,
+  advanceSweepValue,
   buildChallengeEvidenceText,
   buildDopplerExportPayload,
   buildRepresentativeLineRuleText,
@@ -137,6 +138,32 @@ describe("Doppler Shift demo logic", () => {
         DEFAULT_SPECTRUM_DOMAIN.maxNm - DEFAULT_SPECTRUM_DOMAIN.minNm,
         6,
       );
+    });
+  });
+
+  describe("sweep helpers", () => {
+    it("advances sweep value and flips direction at upper bound", () => {
+      const next = advanceSweepValue({
+        value: 99_500,
+        min: -100_000,
+        max: 100_000,
+        direction: 1,
+        delta: 1_000,
+      });
+      expect(next.value).toBe(100_000);
+      expect(next.direction).toBe(-1);
+    });
+
+    it("advances sweep value and flips direction at lower bound", () => {
+      const next = advanceSweepValue({
+        value: -99_500,
+        min: -100_000,
+        max: 100_000,
+        direction: -1,
+        delta: 1_000,
+      });
+      expect(next.value).toBe(-100_000);
+      expect(next.direction).toBe(1);
     });
   });
 

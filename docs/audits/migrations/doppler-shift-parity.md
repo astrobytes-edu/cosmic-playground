@@ -1,8 +1,20 @@
 # doppler-shift Migration Parity Audit
 
-Date: 2026-02-23
+Date: 2026-02-24
 
 Scope: compare `doppler-shift` implementation against `docs/specs/doppler-shift-spec.md` and launch-gate contracts.
+
+## 2026-02-24 SoTA uplift addendum
+
+Completed:
+- Added full `cp-playbar` transport (`play/pause/step/reset/speed`) with velocity sweep and reduced-motion-safe behavior.
+- Added slider tooltip hooks for `v_r` and `z` controls.
+- Expanded challenge deck from one scenario to three scenario prompts (mode/element identification, sign+regime inference, high-z comparison framing).
+- Kept dense-line control visible with explicit disabled affordance outside dense Fe catalog context.
+- Added `Explore further` drawer links to Spectral Lines and Galaxy Rotation for cross-demo transfer.
+
+Verification:
+- `corepack pnpm -C apps/demos test -- src/demos/doppler-shift/design-contracts.test.ts src/demos/doppler-shift/logic.test.ts`
 
 ## References (source of truth)
 

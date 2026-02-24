@@ -8,9 +8,9 @@ time_minutes: 14
 has_math_mode: false
 tags: ["doppler shift", "redshift", "blueshift", "spectral lines", "radial velocity"]
 readiness: candidate
-readinessReason: "Automated contract gates are passing (physics + demo + build + targeted and full e2e); launch-ready now depends on classroom and screen-reader validation artifacts."
+readinessReason: "SoTA UX/pedagogy uplift is complete (playbar transport, deeper challenge deck, tooltip affordances, cross-demo scaffolding) and automated gates are passing; launch-ready now depends on classroom and screen-reader validation artifacts."
 parityAuditPath: "docs/audits/migrations/doppler-shift-parity.md"
-lastVerifiedAt: "2026-02-23"
+lastVerifiedAt: "2026-02-24"
 learning_goals:
   - "Relate radial motion to observed wavelength and frequency shifts in spectral lines."
   - "Interpret redshift z and convert between z and radial velocity with the correct formula."
@@ -47,7 +47,7 @@ model_notes:
 demo_path: "/play/doppler-shift/"
 station_path: "/stations/doppler-shift/"
 instructor_path: "/instructor/doppler-shift/"
-last_updated: "2026-02-23"
+last_updated: "2026-02-24"
 ---
 
 Explore how relative motion shifts spectral lines and why astronomers can measure radial velocity from light alone.
