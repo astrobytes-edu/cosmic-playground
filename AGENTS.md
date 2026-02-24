@@ -6,11 +6,10 @@
 <EXTREMELY_IMPORTANT>
 You have superpowers. Superpowers teach you new skills and capabilities.
 
-Before starting work, run:
-`~/.codex/superpowers/.codex/superpowers-codex bootstrap`
-
-When a relevant skill exists for the task, you must load it via:
-`~/.codex/superpowers/.codex/superpowers-codex use-skill <skill-name>`
+Superpowers are discovered via native skill discovery at startup from `~/.agents/skills/`.
+Ensure this symlink exists: `~/.agents/skills/superpowers -> ~/.codex/superpowers/skills/`.
+Do not call `superpowers-codex bootstrap` or `use-skill` (removed upstream).
+When a relevant skill exists, activate by mentioning its name in the prompt or by matching task intent.
 </EXTREMELY_IMPORTANT>
 
 ### Skill catalog (recommended for this repo)
@@ -18,7 +17,7 @@ When a relevant skill exists for the task, you must load it via:
 Skills are stored in `~/.codex/skills/` (personal) and `~/.codex/superpowers/skills/` (process).
 
 Load a skill:
-`~/.codex/superpowers/.codex/superpowers-codex use-skill <skill-name>`
+Mention the skill by name in prompt context (for example: `use cosmic-frontend`), relying on native discovery.
 
 Process skills (how to work):
 - `superpowers:writing-plans` — write a falsifiable plan before coding.
