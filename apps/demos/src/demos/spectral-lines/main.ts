@@ -193,6 +193,8 @@ const state = {
 
 const N_MAX = 8;
 const INVERSE_N_UPPER_MAX = 40;
+const INVERSE_WAVELENGTH_MIN_NM = 80;
+const INVERSE_WAVELENGTH_MAX_NM = 5000;
 const MICROSCOPE_BIN_COUNT = 32;
 const BOHR_VIEW_SIZE = 400;
 const ENERGY_SVG_W = 220;
@@ -230,6 +232,11 @@ function activeHydrogenSeriesForMicroscope(): number {
 }
 
 function solveInverseTransition() {
+  state.inverse.observedWavelengthNm = clamp(
+    state.inverse.observedWavelengthNm,
+    INVERSE_WAVELENGTH_MIN_NM,
+    INVERSE_WAVELENGTH_MAX_NM,
+  );
   const scope = state.inverse.seriesScope;
   const inference = SpectralLineModel.inferHydrogenTransitionFromObservedWavelength({
     wavelengthNm: state.inverse.observedWavelengthNm,
@@ -251,7 +258,7 @@ function solveInverseTransition() {
   state.seriesFilter = inference.nLower <= 4 ? (inference.nLower as SeriesFilter) : "all";
 
   if (inverseResult) {
-    inverseResult.textContent = `Inferred ${transitionLabel(inference.nUpper, inference.nLower)} (${inference.seriesName}), DeltaE=${inference.energyEv.toFixed(3)} eV, residual=${inference.residualNm.toFixed(2)} nm (${inference.quality}).`;
+    inverseResult.textContent = `Inferred ${transitionLabel(inference.nUpper, inference.nLower)} (${inference.seriesName}), Delta E=${inference.energyEv.toFixed(3)} eV, residual=${inference.residualNm.toFixed(2)} nm (${inference.quality}).`;
   }
   render();
   setLiveRegionText(
@@ -386,6 +393,8 @@ function setSidebarView(tab: ViewTab) {
   const isHydrogen = tab === "hydrogen";
   sidebarTabH?.setAttribute("aria-selected", String(isHydrogen));
   sidebarTabElem?.setAttribute("aria-selected", String(!isHydrogen));
+  sidebarTabH?.setAttribute("tabindex", isHydrogen ? "0" : "-1");
+  sidebarTabElem?.setAttribute("tabindex", isHydrogen ? "-1" : "0");
   if (sidebarHydrogen) sidebarHydrogen.hidden = !isHydrogen;
   if (sidebarElements) sidebarElements.hidden = isHydrogen;
 }
@@ -709,7 +718,7 @@ function updateScalingInsight() {
   if (!scalingInsight) return;
   const nUpper = Math.max(2, state.microscope.probeNUpper);
   const approx = computeLargeNSpacingApproximation({ nUpper, rydbergEv: SpectralLineModel.BOHR.RYDBERG_EV });
-  scalingInsight.textContent = `DeltaE ~ 27.2 eV / n^3 (large n). At n=${nUpper}, adjacent spacing ~ ${approx.toFixed(4)} eV.`;
+  scalingInsight.textContent = `Delta E ~ 27.2 eV / n^3 (large n). At n=${nUpper}, adjacent spacing ~ ${approx.toFixed(4)} eV.`;
 }
 
 function updateTemperaturePanel() {
@@ -1316,7 +1325,7 @@ function drawSpectrum() {
     ctx.fillStyle = cssVar("--cp-text2") || "#d6dbe6";
     ctx.font = "11px system-ui, sans-serif";
     ctx.textAlign = "right";
-    ctx.fillText("Same DeltaE. Different boundary conditions.", mL + plotW - 4, mT + 12);
+    ctx.fillText("Same Delta E. Different boundary conditions.", mL + plotW - 4, mT + 12);
   }
 }
 
@@ -1737,7 +1746,7 @@ inferenceInverse?.addEventListener("click", () => {
 inverseObservedWavelength?.addEventListener("input", () => {
   const next = Number(inverseObservedWavelength.value);
   if (!Number.isFinite(next)) return;
-  state.inverse.observedWavelengthNm = clamp(next, 50, 5000);
+  state.inverse.observedWavelengthNm = clamp(next, INVERSE_WAVELENGTH_MIN_NM, INVERSE_WAVELENGTH_MAX_NM);
   state.inverse.lastInference = null;
   render();
 });

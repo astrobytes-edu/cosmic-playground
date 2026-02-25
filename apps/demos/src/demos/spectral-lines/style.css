@@ -30,6 +30,15 @@
   gap: var(--cp-space-2);
 }
 
+.workflow-rail > [role="tabpanel"][hidden] {
+  display: none;
+}
+
+.workflow-rail--elements {
+  border-color: color-mix(in srgb, var(--cp-border) 82%, var(--cp-accent-ice) 18%);
+  background: color-mix(in srgb, var(--cp-bg2) 44%, var(--cp-accent-ice) 8%);
+}
+
 .advanced-block {
   border: 1px solid color-mix(in srgb, var(--cp-border) 72%, transparent);
   border-radius: var(--cp-r-2);

@@ -61,6 +61,33 @@ test.describe("Spectral Lines -- E2E", () => {
     await expect(page.locator("#forwardControls")).toBeVisible();
   });
 
+  test("programmatic mystery start synchronizes sidebar tab semantics", async ({ page }) => {
+    await expect(page.locator("#sidebar-tab-H")).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#sidebar-tab-H")).toHaveAttribute("tabindex", "0");
+    await expect(page.locator("#sidebar-tab-elem")).toHaveAttribute("aria-selected", "false");
+    await expect(page.locator("#sidebar-tab-elem")).toHaveAttribute("tabindex", "-1");
+
+    await page.evaluate(() => {
+      const mysteryBtn = document.getElementById("mysterySpectrumBtn") as HTMLButtonElement | null;
+      mysteryBtn?.click();
+    });
+
+    await expect(page.locator("#sidebar-tab-elem")).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#sidebar-tab-elem")).toHaveAttribute("tabindex", "0");
+    await expect(page.locator("#sidebar-tab-H")).toHaveAttribute("aria-selected", "false");
+    await expect(page.locator("#sidebar-tab-H")).toHaveAttribute("tabindex", "-1");
+    await expect(page.locator("#sidebar-elements")).toBeVisible();
+    await expect(page.locator("#sidebar-hydrogen")).toBeHidden();
+  });
+
+  test("workflow rail context style toggles for elements tab", async ({ page }) => {
+    await expect(page.locator("#coreWorkflowRail")).not.toHaveClass(/workflow-rail--elements/);
+    await page.locator("#sidebar-tab-elem").click();
+    await expect(page.locator("#coreWorkflowRail")).toHaveClass(/workflow-rail--elements/);
+    await page.locator("#sidebar-tab-H").click();
+    await expect(page.locator("#coreWorkflowRail")).not.toHaveClass(/workflow-rail--elements/);
+  });
+
   test("advanced details controls expand on demand", async ({ page }) => {
     await page.locator("#advancedHydrogenControls > summary").click();
     await expect(page.locator("#advancedHydrogenControls")).toHaveAttribute("open", "");
@@ -119,6 +146,16 @@ test.describe("Spectral Lines -- E2E", () => {
     await expect(page.locator("#readoutTransition")).toContainText("n = 2");
     await expect(page.locator("#readoutSeries")).toHaveText("Balmer");
     await expect(page.locator("#inverseResult")).toContainText("Inferred");
+  });
+
+  test("inverse observed wavelength input clamps to 80..5000 nm", async ({ page }) => {
+    await page.locator("#inferenceInverse").click();
+
+    await page.locator("#inverseObservedWavelength").fill("60");
+    await expect(page.locator("#inverseObservedWavelength")).toHaveValue(/80(\.0)?/);
+
+    await page.locator("#inverseObservedWavelength").fill("5200");
+    await expect(page.locator("#inverseObservedWavelength")).toHaveValue(/5000(\.0)?/);
   });
 
   test("copy results includes inverse fields only for solved hydrogen inverse context", async ({ page }) => {

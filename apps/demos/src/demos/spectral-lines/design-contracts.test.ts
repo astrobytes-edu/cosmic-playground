@@ -92,6 +92,10 @@ describe("Spectral Lines — Design System Contracts", () => {
       expect(html).toContain('role="tabpanel"');
     });
 
+    it("preserves hidden semantics for sidebar tab panels", () => {
+      expect(css).toContain('.workflow-rail > [role="tabpanel"][hidden]');
+    });
+
     it("uses cp-utility-toolbar for icon actions", () => {
       expect(html).toContain("cp-utility-toolbar");
     });
@@ -262,6 +266,10 @@ describe("Spectral Lines — Design System Contracts", () => {
       expect(html).toContain('id="coreWorkflowRail"');
       expect(html).toContain('id="workflowStepHint"');
       expect(html).toContain('id="inferenceShiftCue"');
+    });
+
+    it("defines elements workflow-rail styling hook", () => {
+      expect(css).toContain(".workflow-rail--elements");
     });
 
     it("uses collapsed details blocks for advanced controls", () => {
