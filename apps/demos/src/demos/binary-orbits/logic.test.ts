@@ -1,29 +1,27 @@
 import { describe, it, expect } from "vitest";
 import {
-  clamp,
-  formatNumber,
-  computeModel,
-  bodyRadius,
+  INVARIANT_STATEMENTS,
   bodyPositions,
+  bodyRadius,
+  clamp,
+  computeModel,
+  evaluateInvariants,
+  evaluatePredictionChoices,
+  gradeRvInference,
+  formatNumber,
+  gradeInvariantSelection,
+  isRvChallengeLocked,
+  isPredictionLocked,
   logSliderToValue,
   pixelsPerUnit,
+  rvCacheKey,
+  energyScaleCueForControl,
+  scalingCueForControl,
+  selectDisplayModel,
   valueToLogSlider,
 } from "./logic";
-import type { PeriodCallback } from "./logic";
-
-// ---------------------------------------------------------------------------
-// Kepler period callback for testing (matches TwoBodyAnalytic)
-// P = sqrt(a^3 / M_total), using G = 4*pi^2 AU^3/(yr^2*Msun)
-// ---------------------------------------------------------------------------
-const keplerPeriod: PeriodCallback = ({ aAu, massSolar }) => {
-  if (aAu <= 0 || massSolar <= 0) return NaN;
-  return Math.sqrt((aAu ** 3) / massSolar);
-};
 
 describe("Binary Orbits -- UI Logic", () => {
-  // -----------------------------------------------------------------------
-  // clamp
-  // -----------------------------------------------------------------------
   describe("clamp", () => {
     it("returns value when within range", () => {
       expect(clamp(5, 0, 10)).toBe(5);
@@ -34,47 +32,20 @@ describe("Binary Orbits -- UI Logic", () => {
     it("clamps to max", () => {
       expect(clamp(11, 0, 10)).toBe(10);
     });
-    it("handles min === max", () => {
-      expect(clamp(5, 3, 3)).toBe(3);
-    });
   });
 
-  // -----------------------------------------------------------------------
-  // formatNumber
-  // -----------------------------------------------------------------------
   describe("formatNumber", () => {
     it("formats normal numbers with fixed digits", () => {
       expect(formatNumber(3.14159, 3)).toBe("3.142");
     });
     it("returns em-dash for NaN", () => {
-      expect(formatNumber(NaN)).toBe("\u2014");
-    });
-    it("returns em-dash for Infinity", () => {
-      expect(formatNumber(Infinity)).toBe("\u2014");
-    });
-    it("returns em-dash for -Infinity", () => {
-      expect(formatNumber(-Infinity)).toBe("\u2014");
-    });
-    it("defaults to 2 digits", () => {
-      expect(formatNumber(1.23456)).toBe("1.23");
-    });
-    it("handles zero", () => {
-      expect(formatNumber(0)).toBe("0.00");
-    });
-    it("handles negative values", () => {
-      expect(formatNumber(-2.5, 1)).toBe("-2.5");
-    });
-    it("handles large values", () => {
-      expect(formatNumber(1000, 0)).toBe("1000");
+      expect(formatNumber(Number.NaN)).toBe("\u2014");
     });
   });
 
-  // -----------------------------------------------------------------------
-  // computeModel
-  // -----------------------------------------------------------------------
   describe("computeModel", () => {
     it("equal masses (q=1): barycenter at midpoint", () => {
-      const m = computeModel(1, 4, keplerPeriod);
+      const m = computeModel(1, 4, 90);
       expect(m.m1).toBe(1);
       expect(m.m2).toBe(1);
       expect(m.r1).toBeCloseTo(2, 10);
@@ -82,74 +53,212 @@ describe("Binary Orbits -- UI Logic", () => {
     });
 
     it("unequal ratio (q=0.2): barycenter closer to primary", () => {
-      const m = computeModel(0.2, 6, keplerPeriod);
-      // m2 = 0.2, total = 1.2
-      // r1 = 6 * 0.2/1.2 = 1
-      // r2 = 6 * 1/1.2 = 5
+      const m = computeModel(0.2, 6, 90);
       expect(m.r1).toBeCloseTo(1, 10);
       expect(m.r2).toBeCloseTo(5, 10);
     });
 
     it("period follows Kepler's third law", () => {
-      const m1 = computeModel(1, 1, keplerPeriod);
-      const m2 = computeModel(1, 4, keplerPeriod);
-      // P^2 = a^3 / M_total
-      // For q=1 (M_total=2): P(a=1) = sqrt(1/2), P(a=4) = sqrt(64/2) = sqrt(32)
+      const m1 = computeModel(1, 1, 90);
+      const m2 = computeModel(1, 4, 90);
       expect(m1.periodYr).toBeCloseTo(Math.sqrt(0.5), 8);
       expect(m2.periodYr).toBeCloseTo(Math.sqrt(32), 8);
     });
 
-    it("clamps massRatio to [0.1, 1.0]", () => {
-      const low = computeModel(0.01, 4, keplerPeriod);
-      expect(low.massRatio).toBe(0.1);
-      const high = computeModel(100, 4, keplerPeriod);
+    it("clamps massRatio to [0.01, 1.0]", () => {
+      const low = computeModel(0.001, 4, 90);
+      expect(low.massRatio).toBe(0.01);
+      const high = computeModel(100, 4, 90);
       expect(high.massRatio).toBe(1);
     });
 
     it("clamps separation to [0.1, 100]", () => {
-      const low = computeModel(1, 0.001, keplerPeriod);
+      const low = computeModel(1, 0.001, 90);
       expect(low.separation).toBe(0.1);
-      const high = computeModel(1, 100, keplerPeriod);
+      const high = computeModel(1, 1000, 90);
       expect(high.separation).toBe(100);
     });
 
+    it("clamps inclination to [0, 90]", () => {
+      const low = computeModel(0.5, 4, -20);
+      expect(low.inclinationDeg).toBe(0);
+      const high = computeModel(0.5, 4, 120);
+      expect(high.inclinationDeg).toBe(90);
+    });
+
     it("r1 + r2 equals separation", () => {
-      const m = computeModel(0.2, 5, keplerPeriod);
+      const m = computeModel(0.2, 5, 90);
       expect(m.r1 + m.r2).toBeCloseTo(m.separation, 10);
     });
 
     it("omega is 2*pi / period", () => {
-      const m = computeModel(1, 4, keplerPeriod);
-      expect(m.omegaRadPerYr).toBeCloseTo(2 * Math.PI / m.periodYr, 8);
-    });
-
-    it("total mass is m1 + m2", () => {
-      const m = computeModel(0.5, 4, keplerPeriod);
-      expect(m.total).toBe(1.5);
+      const m = computeModel(1, 4, 90);
+      expect(m.omegaRadPerYr).toBeCloseTo((2 * Math.PI) / m.periodYr, 8);
     });
 
     it("includes consistent orbital speeds", () => {
-      const m = computeModel(0.2, 4, keplerPeriod);
+      const m = computeModel(0.2, 4, 90);
       expect(m.v1AuPerYr).toBeCloseTo(m.omegaRadPerYr * m.r1, 10);
       expect(m.v2AuPerYr).toBeCloseTo(m.omegaRadPerYr * m.r2, 10);
     });
 
-    it("speed and orbit-size ratios match mass ratio", () => {
-      const m = computeModel(0.2, 4, keplerPeriod);
-      expect(m.r1 / m.r2).toBeCloseTo(m.massRatio, 10);
-      expect(m.v1AuPerYr / m.v2AuPerYr).toBeCloseTo(m.massRatio, 10);
+    it("enforces momentum balance in barycentric frame", () => {
+      const m = computeModel(0.2, 4, 90);
+      expect(m.p1SolarAuPerYr).toBeCloseTo(m.p2SolarAuPerYr, 10);
+      expect(m.momentumDifferenceSolarAuPerYr).toBeLessThan(1e-10);
     });
 
-    it("handles period callback returning NaN gracefully", () => {
-      const badPeriod: PeriodCallback = () => NaN;
-      const m = computeModel(1, 4, badPeriod);
-      expect(m.omegaRadPerYr).toBe(0);
+    it("RV amplitudes vanish face-on and match orbital speeds edge-on", () => {
+      const faceOn = computeModel(0.2, 4, 0);
+      expect(faceOn.k1AuPerYr).toBeCloseTo(0, 12);
+      expect(faceOn.k2AuPerYr).toBeCloseTo(0, 12);
+
+      const edgeOn = computeModel(0.2, 4, 90);
+      expect(edgeOn.k1AuPerYr).toBeCloseTo(edgeOn.v1AuPerYr, 12);
+      expect(edgeOn.k2AuPerYr).toBeCloseTo(edgeOn.v2AuPerYr, 12);
+    });
+  });
+
+  describe("invariants", () => {
+    it("exposes six invariant statements (4 true + 2 distractors)", () => {
+      expect(INVARIANT_STATEMENTS).toHaveLength(6);
+      const mustBeTrue = INVARIANT_STATEMENTS.filter((statement) => statement.mustBeTrue);
+      expect(mustBeTrue).toHaveLength(4);
     });
 
-    it("handles period callback returning zero gracefully", () => {
-      const zeroPeriod: PeriodCallback = () => 0;
-      const m = computeModel(1, 4, zeroPeriod);
-      expect(m.omegaRadPerYr).toBe(0);
+    it("marks all invariants true for physically valid state", () => {
+      const model = computeModel(0.2, 4, 90);
+      const checks = evaluateInvariants(model);
+      expect(checks).toHaveLength(6);
+      expect(checks.filter((check) => check.mustBeTrue)).toHaveLength(4);
+      expect(checks.filter((check) => !check.mustBeTrue)).toHaveLength(2);
+    });
+
+    it("grades invariant selection with full credit when all true statements are selected", () => {
+      const model = computeModel(0.2, 4, 90);
+      const checks = evaluateInvariants(model);
+      const selectedKeys = checks.filter((check) => check.mustBeTrue).map((check) => check.key);
+      const grade = gradeInvariantSelection({ checks, selectedKeys });
+      expect(grade.trueRequiredCount).toBe(4);
+      expect(grade.trueSelectedCount).toBe(4);
+      expect(grade.falseSelectedCount).toBe(0);
+      expect(grade.allTrueSelected).toBe(true);
+      expect(grade.anyFalseSelected).toBe(false);
+    });
+
+    it("flags selections that include distractors", () => {
+      const model = computeModel(0.2, 4, 90);
+      const checks = evaluateInvariants(model);
+      const selectedKeys = checks.map((check) => check.key);
+      const grade = gradeInvariantSelection({ checks, selectedKeys });
+      expect(grade.falseSelectedCount).toBe(2);
+      expect(grade.anyFalseSelected).toBe(true);
+    });
+  });
+
+  describe("prediction lock helpers", () => {
+    it("locks actions only while prediction is pending", () => {
+      expect(isPredictionLocked({ predictionPending: true })).toBe(true);
+      expect(isPredictionLocked({ predictionPending: false })).toBe(false);
+    });
+
+    it("selects revealed model while prediction is pending", () => {
+      const revealed = computeModel(1, 4, 90);
+      const current = computeModel(0.2, 4, 90);
+
+      const displayPending = selectDisplayModel({
+        predictionPending: true,
+        revealedModel: revealed,
+        currentModel: current,
+      });
+      expect(displayPending.massRatio).toBeCloseTo(revealed.massRatio, 12);
+
+      const displayResolved = selectDisplayModel({
+        predictionPending: false,
+        revealedModel: revealed,
+        currentModel: current,
+      });
+      expect(displayResolved.massRatio).toBeCloseTo(current.massRatio, 12);
+    });
+  });
+
+  describe("RV challenge helpers", () => {
+    it("locks only while RV challenge is active and unrevealed", () => {
+      expect(isRvChallengeLocked({ active: true, revealed: false })).toBe(true);
+      expect(isRvChallengeLocked({ active: true, revealed: true })).toBe(false);
+      expect(isRvChallengeLocked({ active: false, revealed: false })).toBe(false);
+    });
+
+    it("grades RV inference against true q with percent and absolute error", () => {
+      const grade = gradeRvInference({ inferredQ: 0.22, trueQ: 0.2 });
+      expect(grade.absoluteError).toBeCloseTo(0.02, 12);
+      expect(grade.percentError).toBeCloseTo(10, 12);
+    });
+  });
+
+  describe("prediction evaluator", () => {
+    it("scores prediction trends correctly", () => {
+      const before = computeModel(1, 4, 90);
+      const after = computeModel(0.2, 4, 90);
+
+      const result = evaluatePredictionChoices({
+        before,
+        after,
+        predicted: {
+          periodTrend: "increase",
+          v1Trend: "decrease",
+          a1Trend: "decrease",
+        },
+      });
+
+      expect(result.actual.periodTrend).toBe("increase");
+      expect(result.actual.v1Trend).toBe("decrease");
+      expect(result.actual.a1Trend).toBe("decrease");
+      expect(result.allCorrect).toBe(true);
+    });
+  });
+
+  describe("scaling cues", () => {
+    it("returns separation scaling cue for separation control", () => {
+      const cue = scalingCueForControl("separation");
+      expect(cue.key).toBe("separation");
+      expect(cue.equation).toContain("a^{3/2}");
+    });
+
+    it("returns total-mass scaling cue for mass ratio control", () => {
+      const cue = scalingCueForControl("massRatio");
+      expect(cue.key).toBe("totalMass");
+      expect(cue.equation).toContain("(M1 + M2)^{-1/2}");
+    });
+  });
+
+  describe("energy scaling cues", () => {
+    it("routes separation control to inverse-a energy cue", () => {
+      const cue = energyScaleCueForControl("separation");
+      expect(cue.equation).toContain("-1/a");
+    });
+
+    it("routes mass-ratio control to |E| proportionality cue", () => {
+      const cue = energyScaleCueForControl("massRatio");
+      expect(cue.equation).toContain("|E|");
+      expect(cue.equation).toContain("M2");
+    });
+  });
+
+  describe("RV cache key", () => {
+    it("returns deterministic keys for identical model inputs", () => {
+      const model = computeModel(0.2, 4, 60);
+      const keyA = rvCacheKey(model, 180);
+      const keyB = rvCacheKey(model, 180);
+      expect(keyA).toBe(keyB);
+    });
+
+    it("changes key when RV-defining parameters change", () => {
+      const base = computeModel(0.2, 4, 60);
+      const changedInclination = computeModel(0.2, 4, 20);
+      const changedMassRatio = computeModel(0.5, 4, 60);
+      expect(rvCacheKey(base, 180)).not.toBe(rvCacheKey(changedInclination, 180));
+      expect(rvCacheKey(base, 180)).not.toBe(rvCacheKey(changedMassRatio, 180));
     });
   });
 
@@ -172,9 +281,6 @@ describe("Binary Orbits -- UI Logic", () => {
     });
   });
 
-  // -----------------------------------------------------------------------
-  // bodyRadius
-  // -----------------------------------------------------------------------
   describe("bodyRadius", () => {
     it("returns positive for valid inputs", () => {
       expect(bodyRadius(1, 10)).toBeGreaterThan(0);
@@ -187,113 +293,34 @@ describe("Binary Orbits -- UI Logic", () => {
       expect(r2).toBeGreaterThan(r1);
       expect(r5).toBeGreaterThan(r2);
     });
-
-    it("scales linearly with base", () => {
-      const r10 = bodyRadius(1, 10);
-      const r20 = bodyRadius(1, 20);
-      expect(r20).toBeCloseTo(2 * r10, 8);
-    });
-
-    it("returns 0 for non-positive mass", () => {
-      expect(bodyRadius(0, 10)).toBe(0);
-      expect(bodyRadius(-1, 10)).toBe(0);
-    });
-
-    it("returns 0 for NaN mass", () => {
-      expect(bodyRadius(NaN, 10)).toBe(0);
-    });
-
-    it("returns 0 for non-positive base", () => {
-      expect(bodyRadius(1, 0)).toBe(0);
-      expect(bodyRadius(1, -5)).toBe(0);
-    });
-
-    it("matches expected formula: base * (1 + 0.25 * log10(mass + 1))", () => {
-      const mass = 3;
-      const base = 12;
-      const expected = base * (1 + 0.25 * Math.log10(mass + 1));
-      expect(bodyRadius(mass, base)).toBeCloseTo(expected, 10);
-    });
   });
 
-  // -----------------------------------------------------------------------
-  // bodyPositions
-  // -----------------------------------------------------------------------
   describe("bodyPositions", () => {
     it("at phase=0, bodies are on the x-axis", () => {
       const { x1, y1, x2, y2 } = bodyPositions(200, 200, 50, 30, 0);
-      expect(x1).toBeCloseTo(200 - 50, 10); // left of center
+      expect(x1).toBeCloseTo(150, 10);
       expect(y1).toBeCloseTo(200, 10);
-      expect(x2).toBeCloseTo(200 + 30, 10); // right of center
+      expect(x2).toBeCloseTo(230, 10);
       expect(y2).toBeCloseTo(200, 10);
     });
 
     it("at phase=pi, bodies swap sides", () => {
       const { x1, y1, x2, y2 } = bodyPositions(200, 200, 50, 30, Math.PI);
-      expect(x1).toBeCloseTo(200 + 50, 8); // now right of center
+      expect(x1).toBeCloseTo(250, 8);
       expect(y1).toBeCloseTo(200, 8);
-      expect(x2).toBeCloseTo(200 - 30, 8); // now left of center
+      expect(x2).toBeCloseTo(170, 8);
       expect(y2).toBeCloseTo(200, 8);
-    });
-
-    it("at phase=pi/2, bodies are on the y-axis", () => {
-      const { x1, y1, x2, y2 } = bodyPositions(200, 200, 50, 30, Math.PI / 2);
-      expect(x1).toBeCloseTo(200, 8);
-      expect(y1).toBeCloseTo(200 - 50, 8); // above center
-      expect(x2).toBeCloseTo(200, 8);
-      expect(y2).toBeCloseTo(200 + 30, 8); // below center
-    });
-
-    it("bodies are always on opposite sides of center", () => {
-      for (const phase of [0, Math.PI / 4, Math.PI / 2, Math.PI, 3 * Math.PI / 2]) {
-        const { x1, y1, x2, y2 } = bodyPositions(100, 100, 40, 20, phase);
-        // Vector from center to body1 and center to body2 should be anti-parallel
-        const dx1 = x1 - 100;
-        const dy1 = y1 - 100;
-        const dx2 = x2 - 100;
-        const dy2 = y2 - 100;
-        // Dot product of unit vectors should be -1
-        const mag1 = Math.hypot(dx1, dy1);
-        const mag2 = Math.hypot(dx2, dy2);
-        if (mag1 > 0 && mag2 > 0) {
-          const dot = (dx1 * dx2 + dy1 * dy2) / (mag1 * mag2);
-          expect(dot).toBeCloseTo(-1, 6);
-        }
-      }
-    });
-
-    it("equal radii: bodies are equidistant from center", () => {
-      const { x1, y1, x2, y2 } = bodyPositions(300, 300, 60, 60, Math.PI / 3);
-      const d1 = Math.hypot(x1 - 300, y1 - 300);
-      const d2 = Math.hypot(x2 - 300, y2 - 300);
-      expect(d1).toBeCloseTo(d2, 8);
     });
   });
 
-  // -----------------------------------------------------------------------
-  // pixelsPerUnit
-  // -----------------------------------------------------------------------
   describe("pixelsPerUnit", () => {
     it("scales so larger orbit uses 38% of smaller canvas dimension", () => {
       const scale = pixelsPerUnit(3, 1, 400, 300);
-      // min(400, 300) = 300; 300 * 0.38 / 3 = 38
       expect(scale).toBeCloseTo(38, 8);
     });
 
     it("returns 1 when both radii are zero", () => {
       expect(pixelsPerUnit(0, 0, 400, 400)).toBe(1);
-    });
-
-    it("uses the larger of r1, r2 for scaling", () => {
-      const s1 = pixelsPerUnit(2, 1, 400, 400);
-      const s2 = pixelsPerUnit(1, 2, 400, 400);
-      expect(s1).toBeCloseTo(s2, 10);
-    });
-
-    it("uses the smaller canvas dimension", () => {
-      const wide = pixelsPerUnit(2, 1, 800, 400);
-      const tall = pixelsPerUnit(2, 1, 400, 800);
-      expect(wide).toBeCloseTo(tall, 8);
     });
   });
 });

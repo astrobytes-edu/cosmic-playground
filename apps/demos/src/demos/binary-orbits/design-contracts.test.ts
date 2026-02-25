@@ -36,8 +36,7 @@ describe("Binary Orbits -- Design System Contracts", () => {
   describe("Readout unit separation", () => {
     it("readout values with units use .cp-readout__unit spans", () => {
       const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      // Barycenter offset (AU) + orbital period (yr)
-      expect(unitSpans.length).toBeGreaterThanOrEqual(2);
+      expect(unitSpans.length).toBeGreaterThanOrEqual(6);
     });
 
     it("readout labels do not contain parenthesized units", () => {
@@ -135,6 +134,27 @@ describe("Binary Orbits -- Design System Contracts", () => {
       expect(html).toMatch(/class="[^"]*cp-demo__readouts/);
       expect(html).toMatch(/aria-label="Readouts panel"/);
     });
+
+    it("contains prediction gate, persistent outcome, invariant check, and RV panel", () => {
+      expect(html).toContain("id=\"predictPanel\"");
+      expect(html).toContain("id=\"predictionOutcome\"");
+      expect(html).toContain("id=\"invariantCheck\"");
+      expect(html).toContain("id=\"rvPanel\"");
+      expect(html).toContain("id=\"rvCanvas\"");
+      expect(html).toContain("id=\"energyPanel\"");
+      expect(html).toContain("id=\"energyCanvas\"");
+      expect(html).toContain("id=\"rvChallengePanel\"");
+    });
+
+    it("stage view uses radiogroup + radio semantics", () => {
+      expect(html).toContain("aria-label=\"Stage view\"");
+      expect(html).toContain("id=\"viewOrbit\"");
+      expect(html).toContain("id=\"viewRv\"");
+      expect(html).toContain("id=\"viewEnergy\"");
+      expect(html).toMatch(/id="viewOrbit"[^>]*role="radio"/);
+      expect(html).toMatch(/id="viewRv"[^>]*role="radio"/);
+      expect(html).toMatch(/id="viewEnergy"[^>]*role="radio"/);
+    });
   });
 
   // -- Component contracts ------------------------------------------------
@@ -162,6 +182,31 @@ describe("Binary Orbits -- Design System Contracts", () => {
 
     it("CSS does not override panel backgrounds with opaque colors", () => {
       expect(css).not.toMatch(/background:\s*(#|rgb|hsl)/);
+    });
+  });
+
+  describe("SoTA hardening contracts", () => {
+    it("includes reduced-motion media override", () => {
+      expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+    });
+
+    it("includes invariant distractor controls", () => {
+      expect(html).toContain("id=\"invariantEqualOffsets\"");
+      expect(html).toContain("id=\"invariantEqualRv\"");
+    });
+
+    it("uses vector-explicit momentum language", () => {
+      expect(html).toContain("Linear momentum magnitude check");
+      expect(main).toContain("Net momentum vector = 0 in barycentric frame (equal and opposite momenta).");
+    });
+
+    it("contains RV challenge controls and lock hint text", () => {
+      expect(html).toContain("id=\"rvChallengeStart\"");
+      expect(html).toContain("id=\"rvChallengeClear\"");
+      expect(html).toContain("id=\"rvChallengeReveal\"");
+      expect(html).toContain("id=\"rvChallengeEnd\"");
+      expect(html).toContain("id=\"rvChallengeLockHint\"");
+      expect(html).toContain("Copy Results and station snapshots are locked");
     });
   });
 });

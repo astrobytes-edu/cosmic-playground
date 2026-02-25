@@ -258,6 +258,21 @@ describe("Spectral Lines — Design System Contracts", () => {
       expect(html).toContain('id="inverseResult"');
     });
 
+    it("defines core workflow rail and compact step hint hooks", () => {
+      expect(html).toContain('id="coreWorkflowRail"');
+      expect(html).toContain('id="workflowStepHint"');
+      expect(html).toContain('id="inferenceShiftCue"');
+    });
+
+    it("uses collapsed details blocks for advanced controls", () => {
+      expect(html).toContain('id="advancedHydrogenControls"');
+      expect(html).toContain('id="advancedStageTools"');
+      expect(html).toContain('id="advancedElementsControls"');
+
+      expect(html).toMatch(/<details[^>]*id="advancedHydrogenControls"(?![^>]*\sopen\b)[^>]*>/);
+      expect(html).toMatch(/<details[^>]*id="advancedStageTools"(?![^>]*\sopen\b)[^>]*>/);
+    });
+
     it("includes series microscope controls", () => {
       expect(html).toContain('id="microscopePanel"');
       expect(html).toContain('data-hydrogen-only="true"');

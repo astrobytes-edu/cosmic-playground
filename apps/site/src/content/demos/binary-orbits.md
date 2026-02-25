@@ -1,43 +1,57 @@
 ---
-title: "Binary Orbits: Two-Body Dance"
+title: "Binary Orbits: Dynamical Reasoning Lab"
 status: draft
 content_verified: true
 levels: [Both]
 topics: [Orbits]
-time_minutes: 12
+time_minutes: 16
 has_math_mode: false
-tags: ["binaries", "center of mass", "gravity"]
+tags: ["binaries", "center of mass", "radial velocity", "conservation laws"]
 readiness: experimental
-readinessReason: "Core demo behavior is implemented with secondary-mass-ratio and realistic-separation controls; parity and launch-gate signoff are still pending."
+readinessReason: "Core dynamics and RV-observable workflows are now implemented; parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/binary-orbits-parity.md"
-lastVerifiedAt: "2026-02-24"
+lastVerifiedAt: "2026-02-25"
 featured: true
 learning_goals:
-  - "Describe how two masses orbit a shared center of mass."
-  - "Predict how changing mass ratio affects orbital motion."
-  - "Connect orbital behavior to the idea of gravitational interaction."
+  - "Use momentum conservation to explain why the lighter body moves faster around the barycenter."
+  - "Explain shared period through shared angular frequency $\\omega = 2\\pi/P$."
+  - "Connect barycentric motion to spectroscopic observables through RV amplitudes $K_1$ and $K_2$."
+  - "Relate circular-orbit energies ($K$, $U$, $E$) to separation scaling and virial balance."
+  - "Infer mass ratio from measured RV amplitudes using $q = K_1/K_2$ and compare to model truth."
 misconceptions:
   - "The larger object stays fixed while the smaller one orbits it."
-predict_prompt: "If one star is much more massive than the other, where is the center of mass located?"
+  - "If one object moves faster, it must have a shorter period."
+predict_prompt: "When $M_2/M_1$ decreases at fixed separation, predict how $P$, $v_1$, and $a_1$ change before revealing readouts."
 play_steps:
-  - "Adjust $M_2/M_1$ and watch the barycenter shift (while both bodies keep the same period)."
-  - "Change separation $a$ on the log-scale slider and observe how period $P$ changes."
-  - "Compare an equal-mass case to an unequal-mass case using Station Mode snapshot rows ($a_1$, $a_2$, $v_1$, $v_2$, $P$)."
+  - "Change $M_2/M_1$, complete the prediction checkpoint, then compare your prediction to revealed trends in $P$, $v_1$, and $a_1$."
+  - "Prediction gating is enforced for snapshots and Copy Results while a reveal is pending."
+  - "Use the linear momentum check to verify $M_1v_1 = M_2v_2$ in the barycentric frame."
+  - "Use the invariant panel as a discrimination task: select all must-hold statements and avoid distractors."
+  - "Toggle angular frequency view and verify $v_1 = \\omega a_1$ and $v_2 = \\omega a_2$."
+  - "Switch to RV view, vary inclination $i$, and compare amplitudes $K_1$ and $K_2$."
+  - "Switch to Energy view and track how $K$, $U$, and $E$ scale when changing separation and mass ratio."
+  - "Start the RV inversion challenge, click both RV curves to measure amplitudes, infer $q$, then reveal and compare error."
 station_params:
   - parameter: 'Secondary mass ratio ($M_2/M_1$)'
     value: "________"
-    notice: "Lower $M_2/M_1$ moves the barycenter closer to $M_1$ and gives the secondary the larger/faster orbit."
+    notice: "Lower $M_2/M_1$ shifts the barycenter toward $M_1$ and increases the secondary's speed/amplitude."
   - parameter: 'Separation ($a$, AU)'
     value: "________"
-    notice: 'The slider spans $0.1\rightarrow100$ AU on a log scale; in this circular Kepler model, $P^2 = \frac{a^3}{M_1+M_2}$ (with $P$ in $\mathrm{yr}$, $a$ in $\mathrm{AU}$, masses in $M_{\odot}$).'
-explain_prompt: "Explain how the center of mass helps you understand the motion of both bodies."
+    notice: 'At fixed masses, period follows $P \\propto a^{3/2}$.'
+  - parameter: 'Inclination ($i$, deg)'
+    value: "________"
+    notice: 'RV amplitudes scale as $K \\propto \\sin i$ and vanish for face-on systems ($i=0^\\circ$).'
+explain_prompt: "Explain, using one invariant, one observable, and one energy statement, how this model links conservation laws to stellar mass inference."
 model_notes:
-  - "This pilot assumes perfectly circular orbits and point masses (no eccentricity, tides, or relativity)."
-  - 'Units: distance in $\mathrm{AU}$, time in $\mathrm{yr}$, and masses in $M_{\odot}$. This instrument takes $M_1 = 1\,M_{\odot}$ and sets $M_2$ via the secondary-ratio slider ($M_2/M_1 \le 1$); it uses the teaching normalization $G = 4\pi^2\,\mathrm{AU}^3/(\mathrm{yr}^2\,M_{\odot})$.'
+  - "This model enforces Newton's laws for two point masses in circular orbit about a shared barycenter."
+  - 'It conserves total linear momentum in the barycentric frame: $M_1v_1 = M_2v_2$.'
+  - 'Units: distance in $\\mathrm{AU}$, time in $\\mathrm{yr}$, and masses in $M_{\\odot}$ with $G = 4\\pi^2\\,\\mathrm{AU}^3/(\\mathrm{yr}^2 M_{\\odot})$. '
+  - "Excluded physics: eccentricity, tides, relativity, and mass transfer."
+  - "RV inversion challenge in this pass assumes a circular, double-lined case where $q = K_1/K_2$."
 demo_path: "/play/binary-orbits/"
 station_path: "/stations/binary-orbits/"
 instructor_path: "/instructor/binary-orbits/"
-last_updated: "2026-02-24"
+last_updated: "2026-02-25"
 ---
 
-This pilot demo visualizes two masses orbiting a shared barycenter. It emphasizes both qualitative and quantitative relationships: how the barycenter shifts, how orbit size/speed split between bodies, and why both bodies still share one period.
+This instrument turns binary motion into a reasoning workflow: predict first, test conservation constraints, connect orbital dynamics to radial-velocity observables, then use energy decomposition and RV inversion to close the inference loop.

@@ -10,7 +10,7 @@
   <body>
     <div id="cp-demo" class="cp-layer-instrument cp-demo" data-shell="viz-first" aria-label="Binary Orbits instrument">
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
-        <div class="cp-panel-header">Binary Orbits: Two-Body Dance</div>
+        <div class="cp-panel-header">Binary Orbits: Dynamical Reasoning Lab</div>
         <div class="cp-panel-body">
           <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
             <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
@@ -53,7 +53,7 @@
           </div>
 
           <p class="cp-muted">
-            Adjust the secondary mass ratio and separation to compare what changes (orbit size and speed) and what stays the same (shared period).
+            Use conservation laws and observables to reason from orbit geometry to spectroscopic binary signatures.
           </p>
 
           <label class="control">
@@ -61,7 +61,7 @@
             <input
               id="massRatio"
               type="range"
-              min="0.1"
+              min="0.01"
               max="1"
               value="1"
               step="0.01"
@@ -70,8 +70,14 @@
             <span class="control__value"><span id="massRatioValue"></span></span>
           </label>
 
+          <div class="cp-chip-group" role="group" aria-label="Mass-ratio presets">
+            <button id="presetEqual" class="cp-chip" type="button">Equal masses</button>
+            <button id="presetPlanet" class="cp-chip" type="button">Planet limit</button>
+            <button id="presetHalf" class="cp-chip" type="button">$M_2 = 0.5 M_1$</button>
+          </div>
+
           <label class="control">
-            <span>Separation ($a$, AU)</span>
+            <span>Separation ($a$)</span>
             <input
               id="separation"
               type="range"
@@ -85,6 +91,20 @@
             <span class="control__hint cp-muted">Log scale: $0.1 \rightarrow 100$ AU</span>
           </label>
 
+          <label class="control">
+            <span>Observer inclination ($i$)</span>
+            <input
+              id="inclination"
+              type="range"
+              min="0"
+              max="90"
+              value="60"
+              step="1"
+              data-tooltip-source="#inclinationValue"
+            />
+            <span class="control__value"><span id="inclinationValue"></span> <span class="cp-readout__unit">deg</span></span>
+          </label>
+
           <label class="control" for="motionMode">
             <span>Motion mode</span>
             <select id="motionMode" class="cp-select">
@@ -93,6 +113,83 @@
             </select>
           </label>
 
+          <div class="cp-chip-group" role="radiogroup" aria-label="Stage view">
+            <button id="viewOrbit" class="cp-chip" role="radio" aria-checked="true" type="button">Orbit view</button>
+            <button id="viewRv" class="cp-chip" role="radio" aria-checked="false" type="button">RV view</button>
+            <button id="viewEnergy" class="cp-chip" role="radio" aria-checked="false" type="button">Energy view</button>
+          </div>
+
+          <label class="check">
+            <input id="showOmega" type="checkbox" />
+            Show angular frequency $\omega$
+          </label>
+
+          <p id="scalingCue" class="cp-scaling-cue" aria-live="polite"></p>
+          <p id="energyScalingCue" class="cp-scaling-cue" aria-live="polite"></p>
+
+          <div id="predictPanel" class="cp-notice" hidden>
+            <h3>Predict before reveal</h3>
+            <p class="cp-muted">After changing $M_2/M_1$, predict how these quantities respond before revealing updated readouts.</p>
+            <label class="control" for="predictPeriod">
+              <span>Does period change?</span>
+              <select id="predictPeriod" class="cp-select">
+                <option value="increase">Increase</option>
+                <option value="decrease">Decrease</option>
+                <option value="same">Stay about the same</option>
+              </select>
+            </label>
+            <label class="control" for="predictV1">
+              <span>Does $v_1$ change?</span>
+              <select id="predictV1" class="cp-select">
+                <option value="increase">Increase</option>
+                <option value="decrease">Decrease</option>
+                <option value="same">Stay about the same</option>
+              </select>
+            </label>
+            <label class="control" for="predictA1">
+              <span>Does $a_1$ change?</span>
+              <select id="predictA1" class="cp-select">
+                <option value="increase">Increase</option>
+                <option value="decrease">Decrease</option>
+                <option value="same">Stay about the same</option>
+              </select>
+            </label>
+            <button id="revealPrediction" class="cp-button cp-button--outline" type="button">Reveal and check</button>
+            <p id="predictionFeedback" class="cp-muted"></p>
+          </div>
+          <p id="predictionOutcome" class="cp-prediction-outcome cp-muted" aria-live="polite"></p>
+
+          <div id="rvChallengePanel" class="cp-notice rv-challenge-panel" hidden>
+            <h3>RV inversion challenge</h3>
+            <p class="cp-muted">Measure $K_1$ and $K_2$ from the RV curves, infer $q=K_1/K_2$, then compare to the model.</p>
+            <div class="challenge-actions">
+              <button id="rvChallengeStart" class="cp-button cp-button--outline" type="button">Start challenge</button>
+              <button id="rvChallengeClear" class="cp-button cp-button--outline" type="button">Clear measurements</button>
+              <button id="rvChallengeReveal" class="cp-button cp-button--outline" type="button">Check / reveal</button>
+              <button id="rvChallengeEnd" class="cp-button cp-button--ghost" type="button" hidden>End challenge</button>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Measured $K_1$</div>
+              <div class="cp-readout__value"><span id="rvMeasuredK1Value">—</span> <span class="cp-readout__unit">km/s</span></div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Measured $K_2$</div>
+              <div class="cp-readout__value"><span id="rvMeasuredK2Value">—</span> <span class="cp-readout__unit">km/s</span></div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Inferred $q = K_1/K_2$</div>
+              <div class="cp-readout__value"><span id="rvInferredQValue">—</span></div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">True model $q$</div>
+              <div class="cp-readout__value"><span id="rvTargetQValue">hidden</span></div>
+            </div>
+            <p id="rvChallengeFeedback" class="cp-muted">Start challenge to infer q from measured RV amplitudes.</p>
+            <p id="rvChallengeLockHint" class="cp-muted" hidden>
+              Copy Results and station snapshots are locked while the challenge is active and unrevealed.
+            </p>
+          </div>
+
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
       </aside>
@@ -100,6 +197,16 @@
       <section class="cp-demo__stage cp-stage stage" aria-label="Binary orbit visualization">
         <canvas class="cp-starfield" aria-hidden="true"></canvas>
         <canvas id="orbitCanvas" width="520" height="520"></canvas>
+        <div id="rvPanel" class="rv-panel" hidden>
+          <h3>Radial velocity curves</h3>
+          <p class="cp-muted">Curves are projected along the line of sight for inclination $i$.</p>
+          <canvas id="rvCanvas" width="520" height="260" aria-label="Radial velocity versus phase"></canvas>
+        </div>
+        <div id="energyPanel" class="rv-panel" hidden>
+          <h3>Energy decomposition</h3>
+          <p class="cp-muted">Circular-orbit energies in teaching units ($M_{\odot}$ AU$^2$/yr$^2$).</p>
+          <canvas id="energyCanvas" width="520" height="260" aria-label="Energy decomposition view"></canvas>
+        </div>
       </section>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
@@ -129,6 +236,61 @@
             <div class="cp-readout__label">Shared-period check</div>
             <div class="cp-readout__value"><span id="periodSharedCue"></span></div>
           </div>
+          <div id="omegaReadout" class="cp-readout" hidden>
+            <div class="cp-readout__label">Angular frequency $\omega$</div>
+            <div class="cp-readout__value"><span id="omegaValue"></span> <span class="cp-readout__unit">rad/yr</span></div>
+            <div class="cp-muted">$v_1 = \omega a_1, \quad v_2 = \omega a_2$</div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Linear momentum magnitude check</div>
+            <div class="cp-readout__value"><span id="momentumPrimaryValue"></span> vs <span id="momentumSecondaryValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU/yr</span></div>
+            <div id="momentumBadge" class="momentum-badge"></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">RV semi-amplitude of $M_1$ ($K_1$)</div>
+            <div class="cp-readout__value"><span id="k1Value"></span> <span class="cp-readout__unit">km/s</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">RV semi-amplitude of $M_2$ ($K_2$)</div>
+            <div class="cp-readout__value"><span id="k2Value"></span> <span class="cp-readout__unit">km/s</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Kinetic energy of $M_1$ ($K_1$)</div>
+            <div class="cp-readout__value"><span id="energyK1Value"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Kinetic energy of $M_2$ ($K_2$)</div>
+            <div class="cp-readout__value"><span id="energyK2Value"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Total kinetic energy ($K$)</div>
+            <div class="cp-readout__value"><span id="energyKTotalValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Potential energy ($U$)</div>
+            <div class="cp-readout__value"><span id="energyPotentialValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Total orbital energy ($E$)</div>
+            <div class="cp-readout__value"><span id="energyTotalValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Virial residual ($2K+U$)</div>
+            <div class="cp-readout__value"><span id="energyVirialValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
+          </div>
+
+          <div class="cp-notice invariant-mode">
+            <h3>What must be true?</h3>
+            <p class="cp-muted">Choose all statements that must hold for this model, then check.</p>
+            <label id="invariantLabelSum" class="invariant-item"><input id="invariantSum" type="checkbox" /> $a_1 + a_2 = a$</label>
+            <label id="invariantLabelBary" class="invariant-item"><input id="invariantBary" type="checkbox" /> $M_1 a_1 = M_2 a_2$</label>
+            <label id="invariantLabelSpeed" class="invariant-item"><input id="invariantSpeed" type="checkbox" /> $v_1/v_2 = M_2/M_1$</label>
+            <label id="invariantLabelPeriod" class="invariant-item"><input id="invariantPeriod" type="checkbox" /> $P_1 = P_2$</label>
+            <label id="invariantLabelEqualOffsets" class="invariant-item"><input id="invariantEqualOffsets" type="checkbox" /> $a_1 = a_2$ for any mass ratio</label>
+            <label id="invariantLabelEqualRv" class="invariant-item"><input id="invariantEqualRv" type="checkbox" /> $K_1 = K_2$ at fixed inclination for any mass ratio</label>
+            <button id="invariantCheck" class="cp-button cp-button--outline" type="button">Check statements</button>
+            <p id="invariantFeedback" class="cp-muted"></p>
+          </div>
         </div>
       </aside>
 
@@ -137,13 +299,13 @@
           <details class="cp-accordion" open>
             <summary>
               <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">3 bullets</span>
+              <span class="cp-accordion__meta">dynamics first</span>
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>Both bodies orbit the barycenter and always share one orbital period: $P_1 = P_2$.</li>
-                <li>The lighter body has the larger orbit and higher speed, even though both periods match.</li>
-                <li>Increasing separation $a$ strongly increases period $P$ in this circular Kepler model.</li>
+                <li>If the masses are unequal, the lighter body must move faster so that linear momentum remains zero in the barycentric frame.</li>
+                <li>Both stars share one angular frequency $\omega$. Period equality follows from shared rotation about the same center.</li>
+                <li>The total mass determines the period; the mass ratio determines how the motion is partitioned.</li>
               </ul>
             </div>
           </details>
@@ -155,16 +317,29 @@
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>We assume perfectly circular orbits and point masses (no size, no tides, no relativity).</li>
+                <li>This model enforces Newton's laws exactly for two point masses in circular orbit.</li>
+                <li>It conserves total momentum and uses the barycentric frame (center of mass at rest).</li>
+                <li>It does not include eccentricity, tides, relativity, or mass transfer.</li>
                 <li>
-                  Units: distance in $\mathrm{AU}$, time in $\mathrm{yr}$, and masses in $M_{\odot}$. We use the teaching normalization
+                  Units: distance in $\mathrm{AU}$, time in $\mathrm{yr}$, and masses in $M_{\odot}$. We use
                   $$G = 4\pi^2\,\frac{\mathrm{AU}^3}{\mathrm{yr}^2\,M_{\odot}}.$$
-                  In this instrument we take $M_1 = 1\,M_{\odot}$ and set $M_2$ with the slider ($M_2/M_1 \le 1$), so
-                  $$P^2 = \frac{a^3}{M_1 + M_2}$$
-                  in this circular Keplerian model.
                 </li>
-                <li>This is a visualization aid, not a full N-body integrator or a measured astrophysical binary.</li>
               </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Derive it</span>
+              <span class="cp-accordion__meta">why $P^2 = a^3/(M_1+M_2)$</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p>Start from gravitational force and circular motion in the barycentric frame:</p>
+              <p>$$F = \frac{G M_1 M_2}{a^2}, \qquad F = M_1\omega^2 a_1.$$</p>
+              <p>Using $a_1 = a\,M_2/(M_1+M_2)$ gives:</p>
+              <p>$$\omega^2 = \frac{G(M_1 + M_2)}{a^3}.$$</p>
+              <p>Then with $\omega = 2\pi/P$ and the teaching normalization for $G$:</p>
+              <p>$$P^2 = \frac{a^3}{M_1 + M_2}.$$</p>
             </div>
           </details>
         </div>

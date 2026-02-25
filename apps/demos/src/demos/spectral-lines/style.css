@@ -7,6 +7,55 @@
   gap: 8px;
 }
 
+.demo-intro {
+  margin: 0;
+}
+
+.workflow-step-hint {
+  margin: var(--cp-space-1) 0 var(--cp-space-2);
+  font-size: var(--cp-text-xs);
+}
+
+.workflow-rail {
+  display: grid;
+  gap: var(--cp-space-2);
+  border: 1px solid color-mix(in srgb, var(--cp-border) 88%, transparent);
+  border-radius: var(--cp-r-3);
+  padding: var(--cp-space-2);
+  background: color-mix(in srgb, var(--cp-bg2) 52%, transparent);
+}
+
+.workflow-rail > [role="tabpanel"] {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.advanced-block {
+  border: 1px solid color-mix(in srgb, var(--cp-border) 72%, transparent);
+  border-radius: var(--cp-r-2);
+  background: color-mix(in srgb, var(--cp-bg2) 36%, transparent);
+}
+
+.advanced-block summary {
+  cursor: pointer;
+  padding: 0.55rem 0.65rem;
+  color: var(--cp-text2);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.advanced-block__body {
+  display: grid;
+  gap: var(--cp-space-2);
+  padding: 0 var(--cp-space-2) var(--cp-space-2);
+}
+
+.advanced-elements-controls {
+  display: grid;
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-2);
+}
+
 .control__value {
   color: var(--cp-muted);
   font-size: 0.95rem;
@@ -36,6 +85,7 @@
 
 .mystery-loop {
   margin: 0;
+  font-size: var(--cp-text-sm);
 }
 
 .mystery-panel select {
@@ -117,7 +167,7 @@
 }
 
 .sidebar-tabs {
-  margin-bottom: var(--cp-space-1);
+  margin-bottom: 0;
 }
 
 /* Readouts now live in cp-demo__readouts region (below viz).
@@ -222,6 +272,30 @@
 
 .spectrum-container {
   width: 100%;
+  border-radius: var(--cp-r-2);
+  border: 1px solid color-mix(in srgb, var(--cp-border) 78%, transparent);
+  background: color-mix(in srgb, var(--cp-bg1) 45%, transparent);
+  padding: 0.35rem;
+}
+
+.inference-shift-active {
+  border-color: color-mix(in srgb, var(--cp-accent-ice) 75%, var(--cp-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cp-accent-ice) 35%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .inference-shift-active {
+    animation: inference-shift-pulse 700ms ease-out;
+  }
+}
+
+@keyframes inference-shift-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--cp-accent-ice) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--cp-accent-ice) 0%, transparent);
+  }
 }
 
 .microscope-panel {
@@ -314,6 +388,8 @@
 .temperature-panel {
   display: grid;
   gap: var(--cp-space-2);
+  border-top: 1px solid color-mix(in srgb, var(--cp-border) 72%, transparent);
+  padding-top: var(--cp-space-2);
 }
 
 .temperature-equation {
@@ -396,11 +472,44 @@
   animation: cp-fade-in 0.8s var(--cp-ease-out) 0.3s backwards;
 }
 
+@media (max-width: 1366px) {
+  .workflow-rail {
+    gap: var(--cp-space-1);
+    padding: var(--cp-space-1) var(--cp-space-2);
+  }
+
+  .cp-panel-body .cp-chip-group {
+    gap: var(--cp-space-1);
+  }
+
+  .presets__row {
+    gap: 0.35rem;
+  }
+}
+
+@media (max-height: 768px) {
+  .cp-panel-body {
+    gap: var(--cp-space-2);
+  }
+
+  .workflow-step-hint {
+    margin-bottom: var(--cp-space-1);
+  }
+
+  .advanced-block summary {
+    padding: 0.45rem 0.6rem;
+  }
+}
+
 @media (max-width: 700px) {
   .viz-top {
     grid-template-columns: 1fr;
   }
   .readout-grid {
     grid-template-columns: 1fr;
+  }
+
+  .advanced-block summary {
+    padding: 0.55rem 0.6rem;
   }
 }

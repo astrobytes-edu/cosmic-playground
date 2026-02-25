@@ -98,6 +98,12 @@ const showHComparison = $<HTMLInputElement>("#showHComparison")!;
 const hComparisonHint = $<HTMLParagraphElement>("#hComparisonHint");
 const tabExploreEl = $<HTMLButtonElement>("#tab-explore");
 const exploreLayout = document.querySelector<HTMLElement>(".explore-layout");
+const coreWorkflowRail = $<HTMLElement>("#coreWorkflowRail");
+const advancedHydrogenControls = $<HTMLDetailsElement>("#advancedHydrogenControls");
+const advancedElementsControls = $<HTMLElement>("#advancedElementsControls");
+const advancedStageTools = $<HTMLDetailsElement>("#advancedStageTools");
+const workflowStepHint = $<HTMLParagraphElement>("#workflowStepHint");
+const inferenceShiftCue = $<HTMLDivElement>("#inferenceShiftCue");
 
 const mysterySpectrumBtn = $<HTMLButtonElement>("#mysterySpectrumBtn");
 const mysteryPanel = $<HTMLDivElement>("#mysteryPanel");
@@ -158,6 +164,9 @@ const state = {
   seriesFilter: "all" as SeriesFilter,
   selectedElement: "Na",
   showHComparison: false,
+  advancedHydrogenOpen: false,
+  advancedStageToolsOpen: false,
+  inferenceShiftPulseUntilMs: 0,
   inverse: {
     observedWavelengthNm: 656,
     seriesScope: "all" as SeriesFilter,
@@ -349,6 +358,7 @@ function setMode(nextMode: TransitionMode) {
 }
 
 function setInferenceMode(nextMode: InferenceMode) {
+  const modeChanged = state.inferenceMode !== nextMode;
   state.inferenceMode = nextMode;
   if (nextMode === "forward") {
     state.inverse.lastInference = null;
@@ -356,7 +366,13 @@ function setInferenceMode(nextMode: InferenceMode) {
       inverseResult.textContent = "Forward mode: choose quantum levels to predict wavelength.";
     }
   }
+  if (modeChanged) {
+    state.inferenceShiftPulseUntilMs = performance.now() + 700;
+  }
   render();
+  if (modeChanged) {
+    window.setTimeout(() => render(), 720);
+  }
   setLiveRegionText(statusEl, nextMode === "inverse" ? "Inverse mode enabled: observed wavelength to inferred transition." : "Forward mode enabled: quantum levels to predicted wavelength.");
 }
 
@@ -1198,10 +1214,16 @@ function drawSpectrum() {
   for (const row of rows) {
     drawLineRow(row);
     if (rows.length > 1) {
-      ctx.fillStyle = cssVar("--cp-muted") || "rgba(190, 205, 220, 0.8)";
-      ctx.font = "10px system-ui, sans-serif";
+      ctx.font = "600 10px system-ui, sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText(row.label, mL + 4, row.top + 12);
+      const labelX = mL + 4;
+      const labelY = row.top + 12;
+      const metrics = ctx.measureText(row.label);
+      const backgroundWidth = Math.ceil(metrics.width + 8);
+      ctx.fillStyle = "rgba(5, 10, 18, 0.62)";
+      ctx.fillRect(labelX - 2, row.top + 2, backgroundWidth, 12);
+      ctx.fillStyle = cssVar("--cp-text2") || "rgba(225, 234, 248, 0.9)";
+      ctx.fillText(row.label, labelX, labelY);
     }
   }
 
@@ -1280,8 +1302,8 @@ function drawSpectrum() {
   ctx.fillText("Wavelength (nm)", mL + plotW / 2, h - 4);
 
   // Band labels
-  ctx.font = "9px system-ui, sans-serif";
-  ctx.globalAlpha = 0.5;
+  ctx.font = "600 9px system-ui, sans-serif";
+  ctx.globalAlpha = 0.72;
   for (const band of bandLabels) {
     const frac = wavelengthToFraction(band.wavelengthNm, activeDomain);
     if (frac > 0 && frac < 1) {
@@ -1352,6 +1374,12 @@ function render() {
   if (microscopeProbeValue) microscopeProbeValue.textContent = String(state.microscope.probeNUpper);
   if (microscopeInfinity) microscopeInfinity.checked = state.microscope.includeInfinity;
   if (temperatureSlider) temperatureSlider.value = String(state.temperatureK);
+  if (advancedHydrogenControls && advancedHydrogenControls.open !== state.advancedHydrogenOpen) {
+    advancedHydrogenControls.open = state.advancedHydrogenOpen;
+  }
+  if (advancedStageTools && advancedStageTools.open !== state.advancedStageToolsOpen) {
+    advancedStageTools.open = state.advancedStageToolsOpen;
+  }
   const hydrogenComparisonAllowed = state.selectedElement !== "H";
   if (!hydrogenComparisonAllowed) {
     state.showHComparison = false;
@@ -1385,6 +1413,17 @@ function render() {
 
   const isHydrogenTab = state.viewTab === "hydrogen";
   const mysteryPanelVisible = state.viewTab === "elements" && (state.mystery.active || state.mystery.revealed);
+  if (workflowStepHint) {
+    workflowStepHint.textContent = isHydrogenTab
+      ? "1) choose context 2) set mode 3) infer/observe 4) explain pattern"
+      : "1) choose element 2) set mode 3) compare fingerprints 4) explain pattern";
+  }
+  if (coreWorkflowRail) {
+    coreWorkflowRail.classList.toggle("workflow-rail--elements", !isHydrogenTab);
+  }
+  if (advancedElementsControls) {
+    advancedElementsControls.setAttribute("aria-hidden", String(isHydrogenTab));
+  }
   if (elementsStandardControls) elementsStandardControls.hidden = mysteryPanelVisible;
   if (mysteryPanel) mysteryPanel.hidden = !mysteryPanelVisible;
   if (exploreLayout) {
@@ -1399,6 +1438,10 @@ function render() {
   if (temperaturePanel) {
     temperaturePanel.hidden = !isHydrogenTab;
     temperaturePanel.setAttribute("aria-hidden", String(!isHydrogenTab));
+  }
+  if (advancedStageTools) {
+    advancedStageTools.hidden = !isHydrogenTab;
+    advancedStageTools.setAttribute("aria-hidden", String(!isHydrogenTab));
   }
   if (elementsGuidance) elementsGuidance.hidden = isHydrogenTab;
   if (mysteryPrompt && mysteryPanelVisible) {
@@ -1440,9 +1483,13 @@ function render() {
         ? `Spectrum strip comparing ${state.selectedElement} with hydrogen Balmer fingerprints in ${state.mode} mode.`
         : `Spectrum strip showing ${state.mode} lines for element ${state.selectedElement}.`);
   spectrumCanvas.setAttribute("aria-label", spectrumLabel);
+  if (inferenceShiftCue) {
+    const pulseActive = performance.now() < state.inferenceShiftPulseUntilMs;
+    inferenceShiftCue.classList.toggle("inference-shift-active", pulseActive);
+  }
 
   updateReadouts();
-  if (isHydrogenTab) {
+  if (isHydrogenTab && state.advancedStageToolsOpen) {
     updateTemperaturePanel();
     updateScalingInsight();
   }
@@ -1455,7 +1502,7 @@ function render() {
     clearSvg(energySvg);
   }
   drawSpectrum();
-  if (isHydrogenTab) {
+  if (isHydrogenTab && state.advancedStageToolsOpen) {
     drawSeriesMicroscope();
   }
 }
@@ -1851,6 +1898,15 @@ showHComparison?.addEventListener("change", () => {
   setLiveRegionText(statusEl, showHComparison.checked ? "Hydrogen Balmer comparison enabled." : "Hydrogen Balmer comparison disabled.");
 });
 
+advancedHydrogenControls?.addEventListener("toggle", () => {
+  state.advancedHydrogenOpen = advancedHydrogenControls.open;
+});
+
+advancedStageTools?.addEventListener("toggle", () => {
+  state.advancedStageToolsOpen = advancedStageTools.open;
+  render();
+});
+
 microscopeProbeSlider?.addEventListener("input", () => {
   const next = Number(microscopeProbeSlider.value);
   state.microscope.probeNUpper = clamp(Math.round(next), 6, 80);
@@ -1965,11 +2021,11 @@ const demoModes = createDemoModes({
         heading: "How to use this instrument",
         type: "bullets",
         items: [
-          "Use Forward mode on the Hydrogen tab to choose upper and lower quantum numbers, then watch the Bohr atom, energy diagram, and spectrum update.",
-          "Switch to Inverse mode on the Hydrogen tab to infer a transition from an observed wavelength.",
-          "Switch between Emission and Absorption to see bright lines vs. dark dips.",
-          "Use the Hydrogen-only Series Limit Microscope to inspect convergence near the series limit.",
-          "Switch to the Elements tab for empirical fingerprint matching across atoms.",
+          "Hydrogen tab: choose Emission or Absorption, then Forward (n->lambda) or Inverse (lambda->n).",
+          "Forward mode: set n_upper and n_lower; read lambda, E_gamma, and series.",
+          "Inverse mode: enter observed lambda (nm), solve, then check residual and inferred transition.",
+          "Open Advanced Hydrogen Tools for microscope convergence and temperature proxy trends.",
+          "Elements tab: treat lines as empirical fingerprints; compare against H Balmer when helpful.",
         ]
       }
     ]

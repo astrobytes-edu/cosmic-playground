@@ -34,7 +34,11 @@ test.describe("Spectral Lines -- E2E", () => {
       // Retry once to avoid occasional first-request 404 while preview server routes warm.
       await page.goto("play/spectral-lines/", { waitUntil: "domcontentloaded" });
     }
-    await expect(page.locator("#cp-demo")).toBeVisible();
+    const demoRoot = page.locator("#cp-demo");
+    if (!(await demoRoot.isVisible().catch(() => false))) {
+      await page.goto("play/spectral-lines/", { waitUntil: "domcontentloaded" });
+    }
+    await expect(demoRoot).toBeVisible();
   });
 
   test("shared mode state stays synchronized across hydrogen and elements controls", async ({ page }) => {
@@ -49,6 +53,25 @@ test.describe("Spectral Lines -- E2E", () => {
     await expect(page.locator("#modeEmission")).toHaveAttribute("aria-checked", "true");
   });
 
+  test("core workflow rail is visible and advanced controls are collapsed by default", async ({ page }) => {
+    await expect(page.locator("#coreWorkflowRail")).toBeVisible();
+    await expect(page.locator("#workflowStepHint")).toBeVisible();
+    await expect(page.locator("#advancedHydrogenControls")).not.toHaveAttribute("open", "");
+    await expect(page.locator("#advancedStageTools")).not.toHaveAttribute("open", "");
+    await expect(page.locator("#forwardControls")).toBeVisible();
+  });
+
+  test("advanced details controls expand on demand", async ({ page }) => {
+    await page.locator("#advancedHydrogenControls > summary").click();
+    await expect(page.locator("#advancedHydrogenControls")).toHaveAttribute("open", "");
+    await expect(page.locator('button.series-chip[data-series="2"]')).toBeVisible();
+
+    await page.locator("#advancedStageTools > summary").click();
+    await expect(page.locator("#advancedStageTools")).toHaveAttribute("open", "");
+    await expect(page.locator("#temperatureSlider")).toBeVisible();
+    await expect(page.locator("#microscopeProbeSlider")).toBeVisible();
+  });
+
   test("elements tab applies selected mode and element without depending on hydrogen tab controls", async ({ page }) => {
     await page.locator("#sidebar-tab-elem").click();
     await page.locator('button.element-chip[data-element="Na"]').click();
@@ -61,19 +84,23 @@ test.describe("Spectral Lines -- E2E", () => {
   });
 
   test("hydrogen-only microscope and temperature panels toggle with tab context", async ({ page }) => {
+    await expect(page.locator("#advancedStageTools")).toHaveAttribute("aria-hidden", "false");
     await expect(page.locator("#microscopePanel")).toHaveAttribute("aria-hidden", "false");
     await expect(page.locator("#temperaturePanel")).toHaveAttribute("aria-hidden", "false");
 
     await page.locator("#sidebar-tab-elem").click();
+    await expect(page.locator("#advancedStageTools")).toHaveAttribute("aria-hidden", "true");
     await expect(page.locator("#microscopePanel")).toHaveAttribute("aria-hidden", "true");
     await expect(page.locator("#temperaturePanel")).toHaveAttribute("aria-hidden", "true");
 
     await page.locator("#sidebar-tab-H").click();
+    await expect(page.locator("#advancedStageTools")).toHaveAttribute("aria-hidden", "false");
     await expect(page.locator("#microscopePanel")).toHaveAttribute("aria-hidden", "false");
     await expect(page.locator("#temperaturePanel")).toHaveAttribute("aria-hidden", "false");
   });
 
   test("series filter chips change hydrogen context and spectrum label", async ({ page }) => {
+    await page.locator("#advancedHydrogenControls > summary").click();
     await page.locator('button.series-chip[data-series="1"]').click();
     await expect(page.locator("#readoutSeries")).toHaveText("Lyman");
     await expect(page.locator("#spectrumCanvas")).toHaveAttribute("aria-label", /\(Lyman\)\./i);
@@ -133,8 +160,13 @@ test.describe("Spectral Lines -- E2E", () => {
   });
 
   test("temperature slider updates proxy readouts", async ({ page }) => {
+    await page.locator("#advancedStageTools > summary").click();
     const before = await page.locator("#tempBalmerProxy").innerText();
-    await page.locator("#temperatureSlider").fill("12000");
+    await page.locator("#temperatureSlider").evaluate((node) => {
+      const slider = node as HTMLInputElement;
+      slider.value = "12000";
+      slider.dispatchEvent(new Event("input", { bubbles: true }));
+    });
     await expect(page.locator("#temperatureValue")).toHaveText("12000");
     const after = await page.locator("#tempBalmerProxy").innerText();
     expect(after).not.toBe(before);
@@ -162,6 +194,7 @@ test.describe("Spectral Lines -- E2E", () => {
   });
 
   test("copy results includes required mode/tab/element/series export context fields", async ({ page }) => {
+    await page.locator("#advancedHydrogenControls > summary").click();
     await page.locator('button.series-chip[data-series="2"]').click();
     await page.locator("#sidebar-tab-elem").click();
     await page.locator('button.element-chip[data-element="Fe"]').click();

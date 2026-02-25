@@ -66,7 +66,7 @@ test.describe("Binary Orbits -- E2E", () => {
 
   test("mass ratio slider has correct min and max", async ({ page }) => {
     const slider = page.locator("#massRatio");
-    await expect(slider).toHaveAttribute("min", "0.1");
+    await expect(slider).toHaveAttribute("min", "0.01");
     await expect(slider).toHaveAttribute("max", "1");
   });
 
@@ -102,15 +102,26 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(unit).toBeVisible();
   });
 
-  test("changing mass ratio updates barycenter offset", async ({ page }) => {
+  test("mass-ratio changes are gated until reveal, then update barycenter offset", async ({ page }) => {
     const before = await page.locator("#baryOffsetValue").textContent();
     const slider = page.locator("#massRatio");
     await slider.evaluate((el: HTMLInputElement) => {
       el.value = "0.2";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
+
+    await expect(page.locator("#predictPanel")).toBeVisible();
+
+    const frozen = await page.locator("#baryOffsetValue").textContent();
+    expect(frozen).toBe(before);
+
+    await page.locator("#revealPrediction").click();
     const after = await page.locator("#baryOffsetValue").textContent();
     expect(after).not.toBe(before);
+    await expect(page.locator("#predictPanel")).toBeHidden();
+    await expect(page.locator("#predictionOutcome")).toBeVisible();
+    await expect(page.locator("#predictionOutcome")).toContainText("Actual changes:");
+    await expect(page.locator("#predictionOutcome")).toContainText(/P .*v1 .*a1/);
   });
 
   test("changing separation updates period", async ({ page }) => {
@@ -159,6 +170,17 @@ test.describe("Binary Orbits -- E2E", () => {
     expect(a1Physical).toBe(a1Before);
     expect(periodNormalized).toBe(periodBefore);
     expect(a1Normalized).toBe(a1Before);
+  });
+
+  test("copy results is blocked while prediction is pending", async ({ page }) => {
+    const slider = page.locator("#massRatio");
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "0.2";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await expect(page.locator("#predictPanel")).toBeVisible();
+    await page.locator("#copyResults").click();
+    await expect(page.locator("#status")).toContainText("Reveal prediction before copying results.");
   });
 
   // --- Canvas Rendering ---
@@ -224,6 +246,37 @@ test.describe("Binary Orbits -- E2E", () => {
     expect(focused).toBe("massRatio");
   });
 
+  test("stage view radio group supports Arrow/Home/End keyboard navigation", async ({ page }) => {
+    await page.locator("#viewOrbit").focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator("#viewRv")).toHaveAttribute("aria-checked", "true");
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator("#viewEnergy")).toHaveAttribute("aria-checked", "true");
+    await page.keyboard.press("Home");
+    await expect(page.locator("#viewOrbit")).toHaveAttribute("aria-checked", "true");
+    await page.keyboard.press("End");
+    await expect(page.locator("#viewEnergy")).toHaveAttribute("aria-checked", "true");
+  });
+
+  test("energy view can be reached and readouts remain finite after separation change", async ({ page }) => {
+    await page.locator("#viewEnergy").click();
+    await expect(page.locator("#energyPanel")).toBeVisible();
+    await expect(page.locator("#energyTotalValue")).toBeVisible();
+
+    const before = parseFloat((await page.locator("#energyTotalValue").textContent()) || "NaN");
+    expect(Number.isFinite(before)).toBe(true);
+
+    const slider = page.locator("#separation");
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "780";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    const after = parseFloat((await page.locator("#energyTotalValue").textContent()) || "NaN");
+    expect(Number.isFinite(after)).toBe(true);
+    expect(after).not.toBe(before);
+  });
+
   // --- Station Mode ---
 
   test("station mode button is visible", async ({ page }) => {
@@ -253,6 +306,71 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(addBtn).toBeVisible();
   });
 
+  test("station snapshot is blocked while prediction is pending", async ({ page }) => {
+    const slider = page.locator("#massRatio");
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "0.2";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    await page.locator("#stationMode").click();
+    const stationDialog = page.getByRole("dialog", {
+      name: "Station Mode: Binary Orbits",
+    });
+    await expect(stationDialog).toBeVisible();
+    await stationDialog.getByRole("button", { name: "Add row (snapshot)" }).click();
+    await expect(page.locator("#status")).toContainText("Reveal prediction before adding snapshot row.");
+    await expect(stationDialog.locator(".cp-station-table")).toContainText("No rows yet.");
+  });
+
+  test("invariant discrimination flags selected distractors", async ({ page }) => {
+    await page.locator("#invariantSum").check();
+    await page.locator("#invariantBary").check();
+    await page.locator("#invariantSpeed").check();
+    await page.locator("#invariantPeriod").check();
+    await page.locator("#invariantEqualOffsets").check();
+    await page.locator("#invariantEqualRv").check();
+    await page.locator("#invariantCheck").click();
+    await expect(page.locator("#invariantFeedback")).toContainText("distractor");
+  });
+
+  test("RV challenge workflow: start, measure, reveal, and compare inferred q", async ({ page }) => {
+    await page.locator("#viewRv").click();
+    await page.locator("#rvChallengeStart").click();
+    await expect(page.locator("#rvChallengeFeedback")).toContainText("Challenge active");
+
+    const rvCanvas = page.locator("#rvCanvas");
+    const box = await rvCanvas.boundingBox();
+    if (!box) throw new Error("RV canvas has no bounding box.");
+
+    await rvCanvas.click({ position: { x: box.width * 0.22, y: box.height * 0.28 } });
+    await rvCanvas.click({ position: { x: box.width * 0.72, y: box.height * 0.75 } });
+
+    await expect(page.locator("#rvMeasuredK1Value")).not.toHaveText("—");
+    await expect(page.locator("#rvMeasuredK2Value")).not.toHaveText("—");
+    await expect(page.locator("#rvInferredQValue")).not.toHaveText("—");
+
+    await page.locator("#rvChallengeReveal").click();
+    await expect(page.locator("#rvChallengeFeedback")).toContainText("Inferred q");
+    await expect(page.locator("#rvChallengeFeedback")).toContainText("true q");
+    await expect(page.locator("#rvChallengeFeedback")).toContainText("error");
+  });
+
+  test("copy and snapshot are locked while RV challenge is active and unrevealed", async ({ page }) => {
+    await page.locator("#viewRv").click();
+    await page.locator("#rvChallengeStart").click();
+    await page.locator("#copyResults").click();
+    await expect(page.locator("#status")).toContainText("Finish or reveal the RV challenge before copying results.");
+
+    await page.locator("#stationMode").click();
+    const stationDialog = page.getByRole("dialog", {
+      name: "Station Mode: Binary Orbits",
+    });
+    await expect(stationDialog).toBeVisible();
+    await stationDialog.getByRole("button", { name: "Add row (snapshot)" }).click();
+    await expect(page.locator("#status")).toContainText("Finish or reveal the RV challenge before adding snapshot row.");
+  });
+
   // --- Export ---
 
   test("copy results button is visible", async ({ page }) => {
@@ -265,6 +383,24 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(status).toContainText(/Copied|Copy failed/, {
       timeout: 3000,
     });
+  });
+
+  test("export payload includes energy and RV challenge state fields", async ({ page }) => {
+    const payload = await page.evaluate(() => {
+      const cp = (window as Window & { __cp?: { exportResults?: () => unknown } }).__cp;
+      if (!cp || typeof cp.exportResults !== "function") return null;
+      return cp.exportResults() as {
+        parameters: Array<{ name: string; value: string }>;
+        readouts: Array<{ name: string; value: string }>;
+      };
+    });
+
+    expect(payload).toBeTruthy();
+    const parameterNames = payload!.parameters.map((entry) => entry.name);
+    const readoutNames = payload!.readouts.map((entry) => entry.name);
+
+    expect(parameterNames).toContain("RV challenge state");
+    expect(readoutNames).toContain("Total orbital energy E (M_sun AU^2/yr^2)");
   });
 
   // --- Visual Regression (skipped -- re-enable when baselines are generated) ---

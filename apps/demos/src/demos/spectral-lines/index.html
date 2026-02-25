@@ -17,172 +17,184 @@
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Spectral Lines &amp; the Bohr Atom</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Explore how atoms produce light at specific wavelengths through quantum energy-level transitions.</p>
+          <p class="cp-muted demo-intro">Infer atomic structure from line wavelengths.</p>
+          <p id="workflowStepHint" class="cp-muted workflow-step-hint">
+            1) choose context 2) set mode 3) infer/observe 4) explain pattern
+          </p>
 
-          <!-- Sidebar tabs: Hydrogen / Elements -->
-          <div class="cp-chip-group sidebar-tabs" role="tablist" aria-label="Element mode">
-            <button class="cp-chip" role="tab" aria-selected="true"
-                    aria-controls="sidebar-hydrogen" id="sidebar-tab-H" type="button">Hydrogen</button>
-            <button class="cp-chip" role="tab" aria-selected="false"
-                    aria-controls="sidebar-elements" id="sidebar-tab-elem" type="button">Elements</button>
-          </div>
-
-          <!-- ── Hydrogen controls ── -->
-          <div id="sidebar-hydrogen" role="tabpanel" aria-labelledby="sidebar-tab-H">
-            <div class="cp-chip-group" role="radiogroup" aria-label="Transition mode">
-              <button id="modeEmission" class="cp-chip" role="radio" aria-checked="true" type="button">Emission</button>
-              <button id="modeAbsorption" class="cp-chip" role="radio" aria-checked="false" type="button">Absorption</button>
+          <section id="coreWorkflowRail" class="workflow-rail" aria-label="Core workflow rail">
+            <!-- Sidebar tabs: Hydrogen / Elements -->
+            <div class="cp-chip-group sidebar-tabs" role="tablist" aria-label="Element mode">
+              <button class="cp-chip" role="tab" aria-selected="true"
+                      aria-controls="sidebar-hydrogen" id="sidebar-tab-H" type="button">Hydrogen</button>
+              <button class="cp-chip" role="tab" aria-selected="false"
+                      aria-controls="sidebar-elements" id="sidebar-tab-elem" type="button">Elements</button>
             </div>
 
-            <div class="presets">
-              <div class="presets__label">Inference direction</div>
-              <div class="cp-chip-group" role="radiogroup" aria-label="Inference direction">
-                <button id="inferenceForward" class="cp-chip" role="radio" aria-checked="true" type="button">Forward ($n\to\lambda$)</button>
-                <button id="inferenceInverse" class="cp-chip" role="radio" aria-checked="false" type="button">Inverse ($\lambda\to n$)</button>
+            <!-- ── Hydrogen controls ── -->
+            <div id="sidebar-hydrogen" role="tabpanel" aria-labelledby="sidebar-tab-H">
+              <div class="cp-chip-group" role="radiogroup" aria-label="Transition mode">
+                <button id="modeEmission" class="cp-chip" role="radio" aria-checked="true" type="button">Emission</button>
+                <button id="modeAbsorption" class="cp-chip" role="radio" aria-checked="false" type="button">Absorption</button>
               </div>
-            </div>
 
-            <div id="forwardControls">
-              <label class="control">
-                <span>Upper level $n_{\text{upper}}$</span>
-                <input
-                  id="nUpperSlider"
-                  type="range"
-                  min="2" max="8" step="1" value="3"
-                  aria-label="Upper quantum number"
-                  data-tooltip-source="#nUpperValue"
-                />
-                <span class="control__value"><span id="nUpperValue">3</span></span>
-              </label>
-
-              <label class="control">
-                <span>Lower level $n_{\text{lower}}$</span>
-                <input
-                  id="nLowerSlider"
-                  type="range"
-                  min="1" max="7" step="1" value="2"
-                  aria-label="Lower quantum number"
-                  data-tooltip-source="#nLowerValue"
-                />
-                <span class="control__value"><span id="nLowerValue">2</span></span>
-              </label>
-            </div>
-
-            <div id="inverseControls" class="cp-notice inverse-panel" hidden>
-              <h3>Observed wavelength → what transition?</h3>
-              <label class="control" for="inverseObservedWavelength">
-                <span>Observed wavelength (nm)</span>
-                <input id="inverseObservedWavelength" class="cp-input" type="number" min="80" max="5000" step="0.1" value="656.0" />
-              </label>
               <div class="presets">
-                <div class="presets__label">Series scope</div>
-                <div class="cp-chip-group--grid presets__row" role="group" aria-label="Inverse series scope">
-                  <button class="cp-chip inverse-scope-chip" data-scope="all" type="button" aria-pressed="true">Any</button>
-                  <button class="cp-chip inverse-scope-chip" data-scope="1" type="button" aria-pressed="false">Lyman</button>
-                  <button class="cp-chip inverse-scope-chip" data-scope="2" type="button" aria-pressed="false">Balmer</button>
-                  <button class="cp-chip inverse-scope-chip" data-scope="3" type="button" aria-pressed="false">Paschen</button>
-                  <button class="cp-chip inverse-scope-chip" data-scope="4" type="button" aria-pressed="false">Brackett</button>
+                <div class="presets__label">Inference direction</div>
+                <div class="cp-chip-group" role="radiogroup" aria-label="Inference direction">
+                  <button id="inferenceForward" class="cp-chip" role="radio" aria-checked="true" type="button">Forward ($n\to\lambda$)</button>
+                  <button id="inferenceInverse" class="cp-chip" role="radio" aria-checked="false" type="button">Inverse ($\lambda\to n$)</button>
                 </div>
               </div>
-              <button id="solveInverse" class="cp-button cp-button--outline" type="button">Solve transition</button>
-              <p id="inverseResult" class="cp-muted">Enter an observed wavelength and solve to infer the best hydrogen transition.</p>
-            </div>
 
-            <div class="presets">
-              <div class="presets__label">Series</div>
-              <div class="cp-chip-group--grid presets__row" role="group" aria-label="Series filter">
-                <button class="cp-chip series-chip" data-series="all" type="button" aria-pressed="true">All</button>
-                <button class="cp-chip series-chip" data-series="1" type="button" aria-pressed="false">Lyman</button>
-                <button class="cp-chip series-chip" data-series="2" type="button" aria-pressed="false">Balmer</button>
-                <button class="cp-chip series-chip" data-series="3" type="button" aria-pressed="false">Paschen</button>
-                <button class="cp-chip series-chip" data-series="4" type="button" aria-pressed="false">Brackett</button>
-              </div>
-            </div>
+              <div id="forwardControls">
+                <label class="control">
+                  <span>Upper level $n_{\text{upper}}$</span>
+                  <input
+                    id="nUpperSlider"
+                    type="range"
+                    min="2" max="8" step="1" value="3"
+                    aria-label="Upper quantum number"
+                    data-tooltip-source="#nUpperValue"
+                  />
+                  <span class="control__value"><span id="nUpperValue">3</span></span>
+                </label>
 
-            <div class="presets">
-              <div class="presets__label">Named lines</div>
-              <div class="cp-chip-group--grid presets__row presets__row--3col" role="group" aria-label="Named line presets">
-                <button class="cp-chip preset" data-n-upper="3" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\alpha$</button>
-                <button class="cp-chip preset" data-n-upper="4" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\beta$</button>
-                <button class="cp-chip preset" data-n-upper="5" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\gamma$</button>
-                <button class="cp-chip preset" data-n-upper="6" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\delta$</button>
-                <button class="cp-chip preset" data-n-upper="2" data-n-lower="1" type="button" aria-pressed="false">$\text{Ly}\alpha$</button>
-                <button class="cp-chip preset" data-n-upper="4" data-n-lower="3" type="button" aria-pressed="false">$\text{Pa}\alpha$</button>
-              </div>
-            </div>
-
-            <button id="playTransition" class="cp-button cp-button--outline" type="button" aria-label="Replay transition animation">
-              ▶ Play transition
-            </button>
-          </div>
-
-          <!-- ── Elements controls ── -->
-          <div id="sidebar-elements" role="tabpanel" aria-labelledby="sidebar-tab-elem" hidden>
-            <div id="elementsStandardControls">
-              <div class="cp-chip-group--grid presets__row" role="group" aria-label="Element selector">
-                <button class="cp-chip element-chip" data-element="H" type="button" aria-pressed="true">H</button>
-                <button class="cp-chip element-chip" data-element="He" type="button" aria-pressed="false">He</button>
-                <button class="cp-chip element-chip" data-element="Na" type="button" aria-pressed="false">Na</button>
-                <button class="cp-chip element-chip" data-element="Ca" type="button" aria-pressed="false">Ca</button>
-                <button class="cp-chip element-chip" data-element="Fe" type="button" aria-pressed="false">Fe</button>
+                <label class="control">
+                  <span>Lower level $n_{\text{lower}}$</span>
+                  <input
+                    id="nLowerSlider"
+                    type="range"
+                    min="1" max="7" step="1" value="2"
+                    aria-label="Lower quantum number"
+                    data-tooltip-source="#nLowerValue"
+                  />
+                  <span class="control__value"><span id="nLowerValue">2</span></span>
+                </label>
               </div>
 
-              <div class="cp-chip-group" role="radiogroup" aria-label="Transition mode (elements)">
-                <button id="elemModeEmission" class="cp-chip" role="radio" aria-checked="true" type="button">Emission</button>
-                <button id="elemModeAbsorption" class="cp-chip" role="radio" aria-checked="false" type="button">Absorption</button>
-              </div>
-
-              <label class="check">
-                <input id="showHComparison" type="checkbox" />
-                Compare with H Balmer fingerprint
-              </label>
-              <p id="hComparisonHint" class="cp-muted compare-hint" hidden>
-                Select a non-hydrogen element to compare against H Balmer.
-              </p>
-            </div>
-
-            <button id="mysterySpectrumBtn" class="cp-button cp-button--outline" type="button">
-              Mystery Spectrum
-            </button>
-
-            <div id="mysteryPanel" class="mystery-panel cp-notice" hidden>
-              <p id="mysteryPrompt" class="cp-muted">
-                Mystery challenge: identify the hidden element and mode from the spectrum pattern.
-              </p>
-              <p class="cp-muted mystery-loop">
-                Predict -> check -> explain: commit to a guess, check it, then explain which line pattern convinced you.
-              </p>
-              <label class="control" for="mysteryGuessElement">
-                <span>Element guess</span>
-                <select id="mysteryGuessElement">
-                  <option value="H">H</option>
-                  <option value="He">He</option>
-                  <option value="Na">Na</option>
-                  <option value="Ca">Ca</option>
-                  <option value="Fe">Fe</option>
-                </select>
-              </label>
-              <div class="cp-chip-group" role="radiogroup" aria-label="Mystery mode guess">
-                <button id="guessModeEmission" class="cp-chip" role="radio" aria-checked="true" type="button">Guess emission</button>
-                <button id="guessModeAbsorption" class="cp-chip" role="radio" aria-checked="false" type="button">Guess absorption</button>
-              </div>
-              <div class="mystery-reflection">
-                <p><strong>What pattern convinced you?</strong></p>
-                <div class="cp-chip-group mystery-reflection-group" role="radiogroup" aria-label="Evidence reflection">
-                  <button id="reflection-spacing-pattern" class="cp-chip reflection-chip" data-reflection="spacing-pattern" role="radio" aria-checked="false" type="button">Spacing pattern</button>
-                  <button id="reflection-line-strengths" class="cp-chip reflection-chip" data-reflection="line-strengths" role="radio" aria-checked="false" type="button">Line strengths</button>
-                  <button id="reflection-series-location" class="cp-chip reflection-chip" data-reflection="series-location" role="radio" aria-checked="false" type="button">Series location</button>
-                  <button id="reflection-element-complexity" class="cp-chip reflection-chip" data-reflection="element-complexity" role="radio" aria-checked="false" type="button">Element complexity</button>
+              <div id="inverseControls" class="cp-notice inverse-panel" hidden>
+                <h3>Observed $\lambda$ (nm) -&gt; best H transition</h3>
+                <label class="control" for="inverseObservedWavelength">
+                  <span>Observed $\lambda$ (nm)</span>
+                  <input id="inverseObservedWavelength" class="cp-input" type="number" min="80" max="5000" step="0.1" value="656.0" />
+                </label>
+                <div class="presets">
+                  <div class="presets__label">Scope</div>
+                  <div class="cp-chip-group--grid presets__row" role="group" aria-label="Inverse series scope">
+                    <button class="cp-chip inverse-scope-chip" data-scope="all" type="button" aria-pressed="true">Any</button>
+                    <button class="cp-chip inverse-scope-chip" data-scope="1" type="button" aria-pressed="false">Lyman</button>
+                    <button class="cp-chip inverse-scope-chip" data-scope="2" type="button" aria-pressed="false">Balmer</button>
+                    <button class="cp-chip inverse-scope-chip" data-scope="3" type="button" aria-pressed="false">Paschen</button>
+                    <button class="cp-chip inverse-scope-chip" data-scope="4" type="button" aria-pressed="false">Brackett</button>
+                  </div>
                 </div>
-                <p id="mysteryReflectionHint" class="cp-muted">Pick one evidence pattern before checking your answer.</p>
+                <button id="solveInverse" class="cp-button cp-button--outline" type="button">Solve transition</button>
+                <p id="inverseResult" class="cp-muted">Solve for inferred transition and residual.</p>
               </div>
-              <div class="mystery-actions">
-                <button id="checkMysteryAnswer" class="cp-button cp-button--outline" type="button">Check answer</button>
-                <button id="mysteryHint" class="cp-button cp-button--outline" type="button">Hint</button>
-                <button id="exitMystery" class="cp-button cp-button--ghost" type="button">End mystery</button>
+
+              <details id="advancedHydrogenControls" class="advanced-block">
+                <summary>Advanced Hydrogen Controls</summary>
+                <div class="advanced-block__body">
+                  <div class="presets">
+                    <div class="presets__label">Series</div>
+                    <div class="cp-chip-group--grid presets__row" role="group" aria-label="Series filter">
+                      <button class="cp-chip series-chip" data-series="all" type="button" aria-pressed="true">All</button>
+                      <button class="cp-chip series-chip" data-series="1" type="button" aria-pressed="false">Lyman</button>
+                      <button class="cp-chip series-chip" data-series="2" type="button" aria-pressed="false">Balmer</button>
+                      <button class="cp-chip series-chip" data-series="3" type="button" aria-pressed="false">Paschen</button>
+                      <button class="cp-chip series-chip" data-series="4" type="button" aria-pressed="false">Brackett</button>
+                    </div>
+                  </div>
+
+                  <div class="presets">
+                    <div class="presets__label">Named lines</div>
+                    <div class="cp-chip-group--grid presets__row presets__row--3col" role="group" aria-label="Named line presets">
+                      <button class="cp-chip preset" data-n-upper="3" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\alpha$</button>
+                      <button class="cp-chip preset" data-n-upper="4" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\beta$</button>
+                      <button class="cp-chip preset" data-n-upper="5" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\gamma$</button>
+                      <button class="cp-chip preset" data-n-upper="6" data-n-lower="2" type="button" aria-pressed="false">$\text{H}\delta$</button>
+                      <button class="cp-chip preset" data-n-upper="2" data-n-lower="1" type="button" aria-pressed="false">$\text{Ly}\alpha$</button>
+                      <button class="cp-chip preset" data-n-upper="4" data-n-lower="3" type="button" aria-pressed="false">$\text{Pa}\alpha$</button>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <button id="playTransition" class="cp-button cp-button--outline" type="button" aria-label="Replay transition animation">
+                ▶ Play transition
+              </button>
+            </div>
+
+            <!-- ── Elements controls ── -->
+            <div id="sidebar-elements" role="tabpanel" aria-labelledby="sidebar-tab-elem" hidden>
+              <div id="elementsStandardControls">
+                <div class="cp-chip-group--grid presets__row" role="group" aria-label="Element selector">
+                  <button class="cp-chip element-chip" data-element="H" type="button" aria-pressed="true">H</button>
+                  <button class="cp-chip element-chip" data-element="He" type="button" aria-pressed="false">He</button>
+                  <button class="cp-chip element-chip" data-element="Na" type="button" aria-pressed="false">Na</button>
+                  <button class="cp-chip element-chip" data-element="Ca" type="button" aria-pressed="false">Ca</button>
+                  <button class="cp-chip element-chip" data-element="Fe" type="button" aria-pressed="false">Fe</button>
+                </div>
+
+                <div class="cp-chip-group" role="radiogroup" aria-label="Transition mode (elements)">
+                  <button id="elemModeEmission" class="cp-chip" role="radio" aria-checked="true" type="button">Emission</button>
+                  <button id="elemModeAbsorption" class="cp-chip" role="radio" aria-checked="false" type="button">Absorption</button>
+                </div>
+
+                <label class="check">
+                  <input id="showHComparison" type="checkbox" />
+                  Compare with H Balmer fingerprint
+                </label>
+                <p id="hComparisonHint" class="cp-muted compare-hint" hidden>
+                  Choose non-H element for H-Balmer overlay.
+                </p>
+              </div>
+
+              <div id="advancedElementsControls" class="advanced-block advanced-elements-controls">
+                <p class="cp-muted mystery-loop">
+                  Predict -&gt; Commit evidence -&gt; Check -&gt; Explain
+                </p>
+                <button id="mysterySpectrumBtn" class="cp-button cp-button--outline" type="button">
+                  Mystery Spectrum
+                </button>
+
+                <div id="mysteryPanel" class="mystery-panel cp-notice" hidden>
+                  <p id="mysteryPrompt" class="cp-muted">
+                    Mystery challenge: identify the hidden element and mode from the spectrum pattern.
+                  </p>
+                  <label class="control" for="mysteryGuessElement">
+                    <span>Element guess</span>
+                    <select id="mysteryGuessElement">
+                      <option value="H">H</option>
+                      <option value="He">He</option>
+                      <option value="Na">Na</option>
+                      <option value="Ca">Ca</option>
+                      <option value="Fe">Fe</option>
+                    </select>
+                  </label>
+                  <div class="cp-chip-group" role="radiogroup" aria-label="Mystery mode guess">
+                    <button id="guessModeEmission" class="cp-chip" role="radio" aria-checked="true" type="button">Guess emission</button>
+                    <button id="guessModeAbsorption" class="cp-chip" role="radio" aria-checked="false" type="button">Guess absorption</button>
+                  </div>
+                  <div class="mystery-reflection">
+                    <p><strong>What pattern convinced you?</strong></p>
+                    <div class="cp-chip-group mystery-reflection-group" role="radiogroup" aria-label="Evidence reflection">
+                      <button id="reflection-spacing-pattern" class="cp-chip reflection-chip" data-reflection="spacing-pattern" role="radio" aria-checked="false" type="button">Spacing pattern</button>
+                      <button id="reflection-line-strengths" class="cp-chip reflection-chip" data-reflection="line-strengths" role="radio" aria-checked="false" type="button">Line strengths</button>
+                      <button id="reflection-series-location" class="cp-chip reflection-chip" data-reflection="series-location" role="radio" aria-checked="false" type="button">Series location</button>
+                      <button id="reflection-element-complexity" class="cp-chip reflection-chip" data-reflection="element-complexity" role="radio" aria-checked="false" type="button">Element complexity</button>
+                    </div>
+                    <p id="mysteryReflectionHint" class="cp-muted">Pick one evidence pattern before checking your answer.</p>
+                  </div>
+                  <div class="mystery-actions">
+                    <button id="checkMysteryAnswer" class="cp-button cp-button--outline" type="button">Check answer</button>
+                    <button id="mysteryHint" class="cp-button cp-button--outline" type="button">Hint</button>
+                    <button id="exitMystery" class="cp-button cp-button--ghost" type="button">End mystery</button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </section>
 
           <!-- ── Utility toolbar ── -->
           <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
@@ -259,28 +271,11 @@
               </div>
             </div>
             <!-- Spectrum strip -->
-            <div class="spectrum-container">
+            <div id="inferenceShiftCue" class="spectrum-container">
               <canvas id="spectrumCanvas"
                       role="img"
                       aria-label="Spectrum strip showing emission or absorption lines at specific wavelengths">
               </canvas>
-            </div>
-            <div id="microscopePanel" class="cp-notice microscope-panel" data-hydrogen-only="true">
-              <h3>Series Limit Microscope</h3>
-              <p class="cp-muted">Zoom near the series limit to watch line spacing collapse as $n_{\text{upper}} \rightarrow \infty$.</p>
-              <canvas id="seriesMicroscopeCanvas" role="img" aria-label="Microscope view near the selected series limit showing line pile-up density"></canvas>
-              <label class="control" for="microscopeProbeSlider">
-                <span>Probe upper level $n_{\text{upper}}$</span>
-                <input id="microscopeProbeSlider" type="range" min="6" max="80" step="1" value="20" />
-                <span class="control__value"><span id="microscopeProbeValue">20</span></span>
-              </label>
-              <label class="check">
-                <input id="microscopeInfinity" type="checkbox" />
-                Include $n_{\text{upper}}=\infty$ limit marker
-              </label>
-              <p id="scalingInsight" class="cp-muted">
-                $\Delta E \approx \frac{27.2\ \text{eV}}{n^3}$ (large $n$) &mdash; adjacent levels compress as $1/n^3$.
-              </p>
             </div>
             <div id="elementsGuidance" class="cp-notice elements-guidance" hidden>
               <h3>Elements tab uses empirical spectra</h3>
@@ -291,29 +286,51 @@
                 Use pattern matching: compare strongest lines and spacing to identify element fingerprints.
               </p>
             </div>
-            <div id="temperaturePanel" class="cp-notice temperature-panel" data-hydrogen-only="true">
-              <h3>Why Hydrogen Dominates A Stars</h3>
-              <p class="temperature-equation">$\frac{n_2}{n_1} \propto e^{-\Delta E/kT}$</p>
-              <label class="control" for="temperatureSlider">
-                <span>Temperature (K)</span>
-                <input id="temperatureSlider" type="range" min="4000" max="20000" step="100" value="9000" />
-                <span class="control__value"><span id="temperatureValue">9000</span> K</span>
-              </label>
-              <p class="cp-muted temperature-proxy-note">These are normalized proxy populations over $n=1,2,3$ only.</p>
-              <div class="temperature-readouts">
-                <p>$n_1$ relative population proxy: <span id="tempN1">0.000</span></p>
-                <p>$n_2$ relative population proxy: <span id="tempN2">0.000</span></p>
-                <p>$n_3$ relative population proxy: <span id="tempN3">0.000</span></p>
-                <p>Neutral-H proxy: <span id="tempNeutralProxy">0.000</span></p>
-                <p>Balmer strength proxy: <span id="tempBalmerProxy">0.000</span></p>
+            <details id="advancedStageTools" class="cp-notice advanced-block advanced-stage-tools" data-hydrogen-only="true">
+              <summary>Advanced Hydrogen Tools</summary>
+              <div class="advanced-block__body">
+                <div id="microscopePanel" class="microscope-panel" data-hydrogen-only="true">
+                  <h3>Series Limit Microscope</h3>
+                  <p class="cp-muted">Zoom near the series limit to watch line spacing collapse as $n_{\text{upper}} \rightarrow \infty$.</p>
+                  <canvas id="seriesMicroscopeCanvas" role="img" aria-label="Microscope view near the selected series limit showing line pile-up density"></canvas>
+                  <label class="control" for="microscopeProbeSlider">
+                    <span>Probe upper level $n_{\text{upper}}$</span>
+                    <input id="microscopeProbeSlider" type="range" min="6" max="80" step="1" value="20" />
+                    <span class="control__value"><span id="microscopeProbeValue">20</span></span>
+                  </label>
+                  <label class="check">
+                    <input id="microscopeInfinity" type="checkbox" />
+                    Include $n_{\text{upper}}=\infty$ limit marker
+                  </label>
+                  <p id="scalingInsight" class="cp-muted">
+                    $\Delta E \approx \frac{27.2\ \text{eV}}{n^3}$ (large $n$) &mdash; adjacent levels compress as $1/n^3$.
+                  </p>
+                </div>
+                <div id="temperaturePanel" class="temperature-panel" data-hydrogen-only="true">
+                  <h3>Why Hydrogen Dominates A Stars</h3>
+                  <p class="temperature-equation">$\frac{n_2}{n_1} \propto e^{-\Delta E/kT}$</p>
+                  <label class="control" for="temperatureSlider">
+                    <span>Temperature (K)</span>
+                    <input id="temperatureSlider" type="range" min="4000" max="20000" step="100" value="9000" />
+                    <span class="control__value"><span id="temperatureValue">9000</span> K</span>
+                  </label>
+                  <p class="cp-muted temperature-proxy-note">These are normalized proxy populations over $n=1,2,3$ only.</p>
+                  <div class="temperature-readouts">
+                    <p>$n_1$ relative population proxy: <span id="tempN1">0.000</span></p>
+                    <p>$n_2$ relative population proxy: <span id="tempN2">0.000</span></p>
+                    <p>$n_3$ relative population proxy: <span id="tempN3">0.000</span></p>
+                    <p>Neutral-H proxy: <span id="tempNeutralProxy">0.000</span></p>
+                    <p>Balmer strength proxy: <span id="tempBalmerProxy">0.000</span></p>
+                  </div>
+                  <p class="cp-muted">Simplified single-slice proxy for excitation + ionization balance (qualitative, not full radiative transfer).</p>
+                  <ul>
+                    <li>Hydrogen Balmer lines diagnose A-type stars.</li>
+                    <li>Lyman lines dominate UV spectra of hot stars and quasars.</li>
+                    <li>Paschen lines probe embedded star-forming regions in IR.</li>
+                  </ul>
+                </div>
               </div>
-              <p class="cp-muted">Simplified single-slice proxy for excitation + ionization balance (qualitative, not full radiative transfer).</p>
-              <ul>
-                <li>Hydrogen Balmer lines diagnose A-type stars.</li>
-                <li>Lyman lines dominate UV spectra of hot stars and quasars.</li>
-                <li>Paschen lines probe embedded star-forming regions in IR.</li>
-              </ul>
-            </div>
+            </details>
           </div>
         </div>
 

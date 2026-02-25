@@ -18,13 +18,14 @@
 .stage {
   display: grid;
   place-items: center;
+  gap: var(--cp-space-3);
   padding: var(--cp-space-4);
 }
 
-#orbitCanvas {
+#orbitCanvas,
+#rvCanvas,
+#energyCanvas {
   width: 100%;
-  height: auto;
-  aspect-ratio: 1 / 1;
   display: block;
   border-radius: 18px;
   border: 1px solid var(--cp-border);
@@ -33,6 +34,126 @@
     var(--cp-glow-blue),
     color-mix(in srgb, var(--cp-bg0) 75%, transparent)
   );
+}
+
+#orbitCanvas {
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+
+#rvCanvas {
+  height: auto;
+  aspect-ratio: 2 / 1;
+}
+
+#energyCanvas {
+  height: auto;
+  aspect-ratio: 2 / 1;
+}
+
+.rv-panel {
+  width: min(100%, 760px);
+  display: grid;
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-3);
+  border-radius: 14px;
+  border: 1px solid var(--cp-border);
+  background: color-mix(in srgb, var(--cp-bg1) 92%, transparent);
+}
+
+.rv-panel h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.rv-challenge-panel {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.challenge-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-2);
+}
+
+.cp-scaling-cue {
+  margin: 0;
+  min-height: 1.3em;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  color: var(--cp-muted);
+  transition: border-color 180ms var(--cp-ease-out), background-color 180ms var(--cp-ease-out), color 180ms var(--cp-ease-out);
+}
+
+.cp-scaling-cue.is-active {
+  border-color: color-mix(in srgb, var(--cp-accent) 48%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-accent) 16%, transparent);
+  color: var(--cp-text);
+}
+
+.momentum-badge {
+  margin-top: 0.4rem;
+  font-size: 0.88rem;
+  color: var(--cp-muted);
+}
+
+.momentum-badge.is-balanced {
+  color: var(--cp-text);
+}
+
+.invariant-mode {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.invariant-mode h3 {
+  margin: 0;
+}
+
+.invariant-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--cp-space-2);
+  align-items: center;
+  padding: 0.3rem 0.45rem;
+  border-radius: 8px;
+}
+
+.invariant-item.is-true {
+  background: color-mix(in srgb, var(--cp-accent) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cp-accent) 50%, var(--cp-border));
+}
+
+.invariant-item.is-false-selected {
+  background: color-mix(in srgb, var(--cp-chart-2) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cp-chart-2) 45%, var(--cp-border));
+}
+
+#predictPanel {
+  margin-top: 0;
+}
+
+.cp-prediction-outcome {
+  margin: 0;
+  min-height: 2.2em;
+}
+
+.cp-readout__value .split-vs {
+  color: var(--cp-muted);
+  margin: 0 0.35rem;
+}
+
+.cp-chip[aria-checked="true"] {
+  border-color: var(--cp-accent);
+  background: color-mix(in srgb, var(--cp-accent) 22%, transparent);
+}
+
+.cp-chip:focus-visible,
+.cp-button:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 2px;
 }
 
 /* Entry animations */
@@ -50,4 +171,17 @@
 
 .cp-demo__drawer {
   animation: cp-fade-in 0.8s var(--cp-ease-out) 0.3s backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-demo__controls,
+  .cp-demo__stage,
+  .cp-demo__readouts,
+  .cp-demo__drawer {
+    animation: none;
+  }
+
+  .cp-scaling-cue {
+    transition: none;
+  }
 }

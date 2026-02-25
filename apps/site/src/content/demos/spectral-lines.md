@@ -22,6 +22,7 @@ misconceptions:
   - "All hydrogen lines are visible — only the Balmer series falls primarily in visible light."
 predict_prompt: "If an electron drops from n = 3 to n = 2 in hydrogen, will the photon be in the UV, visible, or infrared?"
 play_steps:
+  - "Use the core workflow rail: choose context -> set mode -> infer or observe -> explain the pattern."
   - "Set upper level to n = 3 and lower to n = 2 (H-alpha). Note the wavelength and color."
   - "Switch to Inverse mode, enter 656 nm, and solve for the transition; verify it infers Balmer n=3->2."
   - "Increase the upper level: watch the lines converge toward the series limit."
@@ -52,4 +53,4 @@ instructor_path: "/instructor/spectral-lines/"
 last_updated: "2026-02-24"
 ---
 
-Explore how atoms produce light at specific wavelengths, then invert the problem: observed wavelength to inferred transition. The instrument links Bohr structure, series scaling, and stellar-spectrum inference in one loop.
+Infer atomic structure from line wavelengths, then invert the task: observed $\lambda$ to inferred transition. The instrument links Bohr structure, series scaling, and stellar-spectrum inference in one loop.

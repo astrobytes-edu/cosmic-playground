@@ -38,6 +38,7 @@ $$
 
 ## Instructional clarifications
 
+- Core workflow rail framing for class: context $\rightarrow$ mode $\rightarrow$ infer/observe $\rightarrow$ explain pattern.
 - Epistemic split to say explicitly in class: Hydrogen tab is a computed model ($E_n$, $\Delta E$, $\lambda$), while Elements tab is empirical line-catalog behavior used for fingerprint matching.
 - Inverse mode makes this explicit: students enter observed $\lambda$ and infer the best hydrogen transition, which reframes spectroscopy as model-constrained inference.
 - Bohr gives correct hydrogen energy eigenvalues at this level; it does not provide the modern spatial interpretation.
