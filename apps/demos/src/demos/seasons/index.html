@@ -64,11 +64,25 @@
               min="-90"
               max="90"
               value="40"
-              step="1"
+              step="0.1"
               data-tooltip-source="#latitudeValue"
             />
             <span class="control__value"><span id="latitudeValue"></span></span>
           </label>
+
+          <div class="latitude-presets" role="group" aria-label="Latitude presets">
+            <div class="latitude-presets__title cp-muted">Latitude presets</div>
+            <div class="cp-chip-group latitude-presets__grid">
+              <button class="cp-chip" type="button" data-lat-preset="32.7" aria-pressed="false" title="San Diego (32.7 deg N)">San Diego</button>
+              <button class="cp-chip" type="button" data-lat-preset="42.4" aria-pressed="false" title="Boston (42.4 deg N)">Boston</button>
+              <button class="cp-chip" type="button" data-lat-preset="0" aria-pressed="false" title="Quito (0 deg)">Quito</button>
+              <button class="cp-chip" type="button" data-lat-preset="69.7" aria-pressed="false" title="Tromso (69.7 deg N)">Tromso</button>
+              <button class="cp-chip" type="button" data-lat-preset="-54.8" aria-pressed="false" title="Ushuaia (54.8 deg S)">Ushuaia</button>
+              <button class="cp-chip" type="button" data-lat-preset="-77.8" aria-pressed="false" title="McMurdo (77.8 deg S)">McMurdo</button>
+              <button class="cp-chip" type="button" data-lat-preset="90" aria-pressed="false" title="North Pole (90 deg N)">N. Pole</button>
+              <button class="cp-chip" type="button" data-lat-preset="-90" aria-pressed="false" title="South Pole (90 deg S)">S. Pole</button>
+            </div>
+          </div>
 
           <div class="animate-row">
             <button id="animateYear" class="cp-button cp-button--ghost" type="button">
@@ -167,7 +181,20 @@
               <circle class="stage__sun" cx="0" cy="0" r="26" />
               <text class="stage__label" x="0" y="40" text-anchor="middle">Sun</text>
 
-              <circle id="earthOrbitDot" class="stage__earth" cx="140" cy="0" r="12" />
+              <circle
+                id="earthOrbitDot"
+                class="stage__earth"
+                cx="140"
+                cy="0"
+                r="12"
+                role="button"
+                aria-label="Earth marker. Drag along orbit to set day of year."
+                tabindex="0"
+              />
+              <g id="orbitDragLabel" class="stage__dragLabel" hidden>
+                <rect id="orbitDragLabelBg" class="stage__dragLabelBg" x="0" y="0" width="10" height="10" rx="6" />
+                <text id="orbitDragLabelText" class="stage__dragLabelText" x="0" y="0"></text>
+              </g>
 
               <!-- Polaris axis indicator from Earth [S2] -->
               <g id="polarisGroup">
@@ -261,6 +288,12 @@
             <span class="cp-muted">Year scrub bar</span>
             <span id="yearScrubValue" class="seasons-year-scrub__value">Day 80 (Mar 21)</span>
             <span id="dayControlFocusBadge" class="seasons-focus-badge" hidden>Keyboard active</span>
+            <button
+              id="showYearScrubHint"
+              class="cp-button cp-button--ghost seasons-year-scrub__tips"
+              type="button"
+              title="Show year scrub tip"
+            >Show tips</button>
           </div>
           <input
             id="dayOfYearScrub"
@@ -279,6 +312,10 @@
             <span class="seasons-year-scrub__tick" style="--tick-pos: 72.80%">Sep</span>
             <span class="seasons-year-scrub__tick" style="--tick-pos: 97.53%">Dec</span>
           </div>
+          <label class="seasons-snap-toggle" for="snapToAnchors">
+            <input id="snapToAnchors" type="checkbox" checked />
+            <span>Snap to anchors</span>
+          </label>
           <div id="yearScrubHint" class="seasons-scrub-hint" hidden>
             <span>Drag the day slider (or use ←/→) to scrub the year; Space plays.</span>
             <button id="dismissYearScrubHint" class="cp-button cp-button--ghost" type="button">Dismiss</button>
@@ -305,7 +342,7 @@
             <span id="causalDayLengthChip" class="cp-chip seasons-value-chip"></span>
             <span id="polarLatitudeBadge" class="seasons-inline-badge" hidden>Polar day/night possible at this latitude.</span>
           </div>
-          <span id="noSeasonsBadge" class="seasons-inline-badge" hidden>No seasons: $\delta$ stays near 0 deg in this toy model.</span>
+          <span id="noSeasonsBadge" class="seasons-inline-badge" hidden>No seasons: $\delta$ stays near $0^\circ$ in this toy model.</span>
         </div>
       </section>
 

@@ -24,6 +24,30 @@
   gap: 8px;
 }
 
+.latitude-presets {
+  display: grid;
+  gap: var(--cp-space-1);
+  margin-top: calc(var(--cp-space-1) * -1);
+}
+
+.latitude-presets__title {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.latitude-presets__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.latitude-presets__grid .cp-chip[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--cp-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--cp-accent) 16%, transparent);
+  color: var(--cp-text);
+}
+
 .stage {
   position: relative;
   display: grid;
@@ -53,11 +77,9 @@
   height: auto;
   border-radius: 18px;
   border: 1px solid var(--cp-border);
-  background: radial-gradient(
-    circle at 20% 20%,
-    var(--cp-glow-teal),
-    color-mix(in srgb, var(--cp-bg0) 70%, transparent)
-  );
+  background: color-mix(in srgb, var(--cp-bg1) 58%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 .stage__title {
@@ -96,6 +118,35 @@
   stroke: color-mix(in srgb, var(--cp-celestial-earth) 58%, transparent);
   stroke-width: 2px;
   filter: drop-shadow(var(--cp-glow-planet));
+  cursor: grab;
+  transition: filter 120ms var(--cp-ease-out), stroke-width 120ms var(--cp-ease-out);
+}
+
+.stage__earth:hover {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--cp-celestial-earth) 55%, transparent));
+  stroke-width: 2.6px;
+}
+
+.stage__earth--dragging {
+  cursor: grabbing;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--cp-celestial-earth) 65%, transparent));
+  stroke-width: 2.8px;
+}
+
+.stage__dragLabel {
+  pointer-events: none;
+}
+
+.stage__dragLabelBg {
+  fill: color-mix(in srgb, var(--cp-bg1) 86%, transparent);
+  stroke: color-mix(in srgb, var(--cp-border) 80%, transparent);
+  stroke-width: 1;
+}
+
+.stage__dragLabelText {
+  fill: var(--cp-text);
+  font-size: 10px;
+  font-family: var(--cp-font-mono);
 }
 
 .stage__ray {
@@ -154,11 +205,13 @@
   stroke: var(--cp-accent-rose);
   stroke-width: 2;
   stroke-linecap: round;
+  pointer-events: none;
 }
 
 .stage__polarisLabel {
   fill: var(--cp-accent-rose);
   font-size: 10px;
+  pointer-events: none;
 }
 
 /* -- Orbit panel: season labels [S4] ------------- */
@@ -294,6 +347,12 @@
   flex-wrap: wrap;
 }
 
+.seasons-year-scrub__tips {
+  margin-left: auto;
+  padding: 0.22rem 0.5rem;
+  font-size: 0.72rem;
+}
+
 .seasons-year-scrub__value {
   font-family: var(--cp-font-mono);
   font-size: 0.85rem;
@@ -334,7 +393,23 @@
   background: color-mix(in srgb, var(--cp-border) 70%, transparent);
 }
 
+.seasons-snap-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  font-size: 0.72rem;
+  color: var(--cp-muted);
+}
+
+.seasons-snap-toggle input {
+  margin: 0;
+}
+
 .seasons-scrub-hint {
+  position: relative;
+  z-index: 3;
+  pointer-events: auto;
   margin-top: var(--cp-space-1);
   display: flex;
   align-items: center;
@@ -345,6 +420,24 @@
   border: 1px solid color-mix(in srgb, var(--cp-accent-ice) 45%, transparent);
   background: color-mix(in srgb, var(--cp-accent-ice) 8%, transparent);
   font-size: 0.78rem;
+  transition: opacity 150ms var(--cp-ease-out), transform 150ms var(--cp-ease-out);
+}
+
+.seasons-scrub-hint::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 40px;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--cp-accent-ice) 45%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--cp-accent-ice) 45%, transparent);
+  background: color-mix(in srgb, var(--cp-accent-ice) 8%, transparent);
+  transform: rotate(45deg);
+}
+
+.seasons-scrub-hint[hidden] {
+  display: none;
 }
 
 .seasons-scrub-hint .cp-button {

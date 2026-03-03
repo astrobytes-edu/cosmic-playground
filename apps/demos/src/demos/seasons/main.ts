@@ -14,12 +14,16 @@ const dayControlFocusBadgeEl =
 const yearScrubHintEl = document.querySelector<HTMLDivElement>("#yearScrubHint");
 const dismissYearScrubHintEl =
   document.querySelector<HTMLButtonElement>("#dismissYearScrubHint");
+const showYearScrubHintEl =
+  document.querySelector<HTMLButtonElement>("#showYearScrubHint");
+const snapToAnchorsEl = document.querySelector<HTMLInputElement>("#snapToAnchors");
 
 const tiltEl = document.querySelector<HTMLInputElement>("#tilt");
 const tiltValueEl = document.querySelector<HTMLSpanElement>("#tiltValue");
 const latitudeEl = document.querySelector<HTMLInputElement>("#latitude");
 const latitudeValueEl =
   document.querySelector<HTMLSpanElement>("#latitudeValue");
+const latitudePresetEls = document.querySelectorAll<HTMLButtonElement>("[data-lat-preset]");
 
 const anchorMarEqxEl = document.querySelector<HTMLButtonElement>("#anchorMarEqx");
 const anchorJunSolEl = document.querySelector<HTMLButtonElement>("#anchorJunSol");
@@ -61,6 +65,10 @@ const earthOrbitDotEl = document.querySelector<SVGCircleElement>("#earthOrbitDot
 const orbitLabelEl = document.querySelector<SVGTextElement>("#orbitLabel");
 const periJanCalloutEl = document.querySelector<SVGTextElement>("#periJanCallout");
 const tabNoticeEl = document.querySelector<HTMLElement>("#tab-notice");
+const orbitDragLabelEl = document.querySelector<SVGGElement>("#orbitDragLabel");
+const orbitDragLabelBgEl = document.querySelector<SVGRectElement>("#orbitDragLabelBg");
+const orbitDragLabelTextEl =
+  document.querySelector<SVGTextElement>("#orbitDragLabelText");
 
 // Globe elements
 const terminatorEl = document.querySelector<SVGEllipseElement>("#terminator");
@@ -94,6 +102,8 @@ if (
   !dayControlFocusBadgeEl ||
   !yearScrubHintEl ||
   !dismissYearScrubHintEl ||
+  !showYearScrubHintEl ||
+  !snapToAnchorsEl ||
   !tiltEl ||
   !tiltValueEl ||
   !latitudeEl ||
@@ -125,6 +135,9 @@ if (
   !orbitLabelEl ||
   !periJanCalloutEl ||
   !tabNoticeEl ||
+  !orbitDragLabelEl ||
+  !orbitDragLabelBgEl ||
+  !orbitDragLabelTextEl ||
   !terminatorEl ||
   !equatorBandEl ||
   !tropicNEl ||
@@ -156,6 +169,8 @@ const yearScrubValue = yearScrubValueEl;
 const dayControlFocusBadge = dayControlFocusBadgeEl;
 const yearScrubHint = yearScrubHintEl;
 const dismissYearScrubHint = dismissYearScrubHintEl;
+const showYearScrubHint = showYearScrubHintEl;
+const snapToAnchors = snapToAnchorsEl;
 
 const tilt = tiltEl;
 const tiltValue = tiltValueEl;
@@ -193,6 +208,9 @@ const earthOrbitDot = earthOrbitDotEl;
 const orbitLabel = orbitLabelEl;
 const periJanCallout = periJanCalloutEl;
 const tabNotice = tabNoticeEl;
+const orbitDragLabel = orbitDragLabelEl;
+const orbitDragLabelBg = orbitDragLabelBgEl;
+const orbitDragLabelText = orbitDragLabelTextEl;
 
 const terminator = terminatorEl;
 const equatorBand = equatorBandEl;
@@ -249,6 +267,14 @@ const demoModes = createDemoModes({
           "Try equinox vs solstice anchor dates and compare North/South seasons.",
           "Set $\\varepsilon$ to $0^\\circ$ to see that $\\delta$ stays near $0^\\circ$ all year in this toy model."
         ]
+      },
+      {
+        heading: "Guide",
+        type: "html",
+        html: `
+          <p>Need the year-scrub tip again?</p>
+          <button id="showYearScrubHintAgain" type="button">Show tips</button>
+        `
       }
     ]
   },
@@ -291,7 +317,7 @@ const demoModes = createDemoModes({
       return {
         date: formatDateFromDayOfYear(day),
         day: String(day),
-        latitude: String(Math.round(latitudeDeg)),
+        latitude: formatLatitudeTableValue(latitudeDeg),
         tilt: formatNumber(axialTiltDeg, 1),
         declination: formatNumber(declinationDegValue, 1),
         dayLength: formatNumber(dayLengthHoursValue, 2),
@@ -335,7 +361,7 @@ const demoModes = createDemoModes({
             return {
               date: `${formatDateFromDayOfYear(a.day)} (${a.label})`,
               day: String(a.day),
-              latitude: String(Math.round(latitudeDeg)),
+              latitude: formatLatitudeTableValue(latitudeDeg),
               tilt: formatNumber(axialTiltDeg, 1),
               declination: formatNumber(declinationDegValue, 1),
               dayLength: formatNumber(dayLengthHoursValue, 2),
@@ -370,7 +396,22 @@ const state: State = {
   latitudeDeg: 40
 };
 
-const SCRUB_HINT_STORAGE_KEY = "cp:seasons:scrub-hint:v1";
+const latitudePresetButtons = Array.from(latitudePresetEls)
+  .map((button) => {
+    const value = Number(button.dataset.latPreset);
+    if (!Number.isFinite(value)) return null;
+    return { button, value };
+  })
+  .filter((entry): entry is { button: HTMLButtonElement; value: number } => entry !== null);
+
+const SCRUB_HINT_STORAGE_KEY = "cp.seasons.coachmark.yearScrub.dismissed";
+const ORBIT_ANCHOR_DAYS = [80, 172, 266, 356] as const;
+const ORBIT_YEAR_DAYS = 365.2422;
+const ORBIT_PERIHELION_DAY = 3;
+const ORBIT_SNAP_THRESHOLD_DAYS = 2;
+const ORBIT_TAU = Math.PI * 2;
+const ORBIT_LABEL_OFFSET_X = 14;
+const ORBIT_LABEL_OFFSET_Y = -18;
 
 const prefersReducedMotion =
   typeof window !== "undefined" &&
@@ -383,7 +424,7 @@ if (prefersReducedMotion) {
 }
 
 function updatePeriJanCalloutVisibility(): void {
-  periJanCallout.hidden = tabNotice.hidden;
+  periJanCallout.toggleAttribute("hidden", tabNotice.hidden);
 }
 
 function setDayControlFocusState(isFocused: boolean): void {
@@ -396,13 +437,22 @@ function syncDayControlFocusState() {
   setDayControlFocusState(focusedOnDayControls);
 }
 
-function dismissYearScrubHintPersisted() {
-  yearScrubHint.hidden = true;
+function setYearScrubHintDismissed(dismissed: boolean) {
   try {
-    window.localStorage.setItem(SCRUB_HINT_STORAGE_KEY, "1");
+    window.localStorage.setItem(SCRUB_HINT_STORAGE_KEY, dismissed ? "1" : "0");
   } catch {
     // ignore localStorage issues
   }
+}
+
+function dismissYearScrubHintPersisted() {
+  yearScrubHint.hidden = true;
+  setYearScrubHintDismissed(true);
+}
+
+function showYearScrubHintPersisted() {
+  yearScrubHint.hidden = false;
+  setYearScrubHintDismissed(false);
 }
 
 function initYearScrubHint() {
@@ -598,6 +648,51 @@ function initHourGrid() {
   }
 }
 
+let orbitDragActive = false;
+
+function formatDegreeValue(value: number): string {
+  const rounded = Math.round(value * 10) / 10;
+  if (Math.abs(rounded - Math.round(rounded)) < 0.05) {
+    return `${Math.round(rounded)}\u00B0`;
+  }
+  return `${formatNumber(rounded, 1)}\u00B0`;
+}
+
+function formatLatitudeTableValue(value: number): string {
+  const rounded = Math.round(value * 10) / 10;
+  return Math.abs(rounded - Math.round(rounded)) < 0.05
+    ? String(Math.round(rounded))
+    : formatNumber(rounded, 1);
+}
+
+function syncLatitudePresetButtons(latitudeDeg: number) {
+  for (const preset of latitudePresetButtons) {
+    const isActive = Math.abs(latitudeDeg - preset.value) < 0.05;
+    preset.button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  }
+}
+
+function updateOrbitDragLabel(x: number, y: number, dayOfYear: number, visible: boolean) {
+  orbitDragLabel.toggleAttribute("hidden", !visible);
+  if (!visible) return;
+
+  orbitDragLabelText.textContent = `Day ${dayOfYear} (${formatDateFromDayOfYear(dayOfYear)})`;
+  orbitDragLabelText.setAttribute("x", formatNumber(x + ORBIT_LABEL_OFFSET_X + 8, 2));
+  orbitDragLabelText.setAttribute("y", formatNumber(y + ORBIT_LABEL_OFFSET_Y, 2));
+
+  try {
+    const textBox = orbitDragLabelText.getBBox();
+    const padX = 6;
+    const padY = 4;
+    orbitDragLabelBg.setAttribute("x", formatNumber(textBox.x - padX, 2));
+    orbitDragLabelBg.setAttribute("y", formatNumber(textBox.y - padY, 2));
+    orbitDragLabelBg.setAttribute("width", formatNumber(textBox.width + padX * 2, 2));
+    orbitDragLabelBg.setAttribute("height", formatNumber(textBox.height + padY * 2, 2));
+  } catch {
+    // Ignore transient layout errors if SVG is not yet measurable.
+  }
+}
+
 function renderStage(args: {
   dayOfYear: number;
   axialTiltDeg: number;
@@ -627,6 +722,7 @@ function renderStage(args: {
   polarisAxis.setAttribute("y2", formatNumber(polaris.y2, 2));
   polarisLabel.setAttribute("x", formatNumber(polaris.x2 + 5, 2));
   polarisLabel.setAttribute("y", formatNumber(polaris.y2 - 5, 2));
+  updateOrbitDragLabel(x, y, args.dayOfYear, orbitDragActive);
 
   // Globe panel
   renderGlobe({
@@ -672,11 +768,12 @@ function render() {
   latitude.value = String(latitudeDeg);
 
   dayOfYearValue.textContent = `Day ${day}`;
-  dateValue.textContent = `(${formatDateFromDayOfYear(day)})`;
+  dateValue.textContent = formatDateFromDayOfYear(day);
   yearScrubValue.textContent = `Day ${day} (${formatDateFromDayOfYear(day)})`;
 
-  tiltValue.textContent = `${formatNumber(axialTiltDeg, 1)} deg`;
-  latitudeValue.textContent = formatLatitude(Math.round(latitudeDeg));
+  tiltValue.textContent = formatDegreeValue(axialTiltDeg);
+  latitudeValue.textContent = formatLatitude(latitudeDeg);
+  syncLatitudePresetButtons(latitudeDeg);
 
   const declinationText = formatNumber(declinationDegValue, 1);
   const dayLengthText = formatDayLength(dayLengthHoursValue);
@@ -689,9 +786,9 @@ function render() {
   seasonNorthValue.textContent = north;
   seasonSouthValue.textContent = south;
 
-  causalTiltChip.textContent = `\u03B5 ${formatNumber(axialTiltDeg, 1)} deg`;
-  causalDeclinationChip.textContent = `\u03B4 ${declinationText} deg`;
-  causalNoonChip.textContent = `${noonAltitudeText} deg`;
+  causalTiltChip.textContent = `\u03B5 ${formatDegreeValue(axialTiltDeg)}`;
+  causalDeclinationChip.textContent = `\u03B4 ${formatDegreeValue(Number(declinationText))}`;
+  causalNoonChip.textContent = formatDegreeValue(Number(noonAltitudeText));
   causalDayLengthChip.textContent = dayLengthText;
   noSeasonsBadge.hidden = axialTiltDeg >= 0.5;
   polarLatitudeBadge.hidden = Math.abs(latitudeDeg) < 66.5;
@@ -804,7 +901,7 @@ function exportResults(st: SeasonsDemoState): ExportPayloadV1 {
     timestamp: new Date().toISOString(),
     parameters: [
       { name: "Day-of-year", value: `${day} (${dateLabel})` },
-      { name: "Latitude phi (deg)", value: String(Math.round(latitudeDeg)) },
+      { name: "Latitude phi (deg)", value: formatLatitudeTableValue(latitudeDeg) },
       { name: "Axial tilt epsilon (deg)", value: formatNumber(axialTiltDeg, 1) }
     ],
     readouts: [
@@ -945,11 +1042,53 @@ challengeMode.addEventListener("click", () => {
 });
 
 const anchorButtons: HTMLButtonElement[] = [anchorMarEqx, anchorJunSol, anchorSepEqx, anchorDecSol];
+const anchorButtonByDay = new Map<number, HTMLButtonElement>([
+  [80, anchorMarEqx],
+  [172, anchorJunSol],
+  [266, anchorSepEqx],
+  [356, anchorDecSol]
+]);
 
 function setAnchorPressed(active: HTMLButtonElement | null) {
   for (const btn of anchorButtons) {
     btn.setAttribute("aria-pressed", btn === active ? "true" : "false");
   }
+}
+
+function anchorButtonForDay(day: number): HTMLButtonElement | null {
+  for (const [anchorDay, button] of anchorButtonByDay.entries()) {
+    if (Math.abs(shortestDayDelta(day, anchorDay)) <= 0.25) return button;
+  }
+  return null;
+}
+
+function maybeSnapToAnchorDay(day: number): number {
+  if (!snapToAnchors.checked) return day;
+  let nearestDay = day;
+  let nearestDelta = Number.POSITIVE_INFINITY;
+  for (const anchorDay of ORBIT_ANCHOR_DAYS) {
+    const delta = Math.abs(shortestDayDelta(day, anchorDay));
+    if (delta < nearestDelta) {
+      nearestDelta = delta;
+      nearestDay = anchorDay;
+    }
+  }
+  return nearestDelta <= ORBIT_SNAP_THRESHOLD_DAYS ? nearestDay : day;
+}
+
+function dayFromOrbitAngleRad(angleRad: number): number {
+  const wrapped = ((angleRad % ORBIT_TAU) + ORBIT_TAU) % ORBIT_TAU;
+  const day =
+    ((ORBIT_PERIHELION_DAY - 1 + (wrapped / ORBIT_TAU) * ORBIT_YEAR_DAYS) % ORBIT_YEAR_DAYS) + 1;
+  return clamp(day, 1, 365);
+}
+
+function updateDayFromOrbitAngle(angleRad: number) {
+  const rawDay = dayFromOrbitAngleRad(angleRad);
+  const day = maybeSnapToAnchorDay(rawDay);
+  state.dayOfYear = day;
+  setAnchorPressed(anchorButtonForDay(day));
+  render();
 }
 
 function setDay(day: number, activeButton: HTMLButtonElement | null = null) {
@@ -1005,10 +1144,63 @@ function animateToDay(targetDay: number, activeButton: HTMLButtonElement | null 
   presetRafId = window.requestAnimationFrame(presetStep);
 }
 
+let orbitDragPointerId: number | null = null;
+
+function orbitAngleFromPointer(event: PointerEvent): number | null {
+  const orbitFrame = earthOrbitDot.parentElement as SVGGraphicsElement | null;
+  const svg = earthOrbitDot.ownerSVGElement;
+  if (!orbitFrame || !svg) return null;
+  const ctm = orbitFrame.getScreenCTM();
+  if (!ctm) return null;
+  const point = svg.createSVGPoint();
+  point.x = event.clientX;
+  point.y = event.clientY;
+  const local = point.matrixTransform(ctm.inverse());
+  return Math.atan2(local.y, local.x);
+}
+
+function stopOrbitDrag(pointerId?: number) {
+  if (pointerId !== undefined && orbitDragPointerId !== pointerId) return;
+  orbitDragPointerId = null;
+  orbitDragActive = false;
+  earthOrbitDot.classList.remove("stage__earth--dragging");
+  render();
+}
+
+function onOrbitDragMove(event: PointerEvent) {
+  if (orbitDragPointerId !== event.pointerId) return;
+  const angle = orbitAngleFromPointer(event);
+  if (angle === null) return;
+  updateDayFromOrbitAngle(angle);
+}
+
+function startOrbitDrag(event: PointerEvent) {
+  if (event.button !== 0) return;
+  stopAnimation();
+  cancelPresetTransition();
+  orbitDragPointerId = event.pointerId;
+  orbitDragActive = true;
+  earthOrbitDot.classList.add("stage__earth--dragging");
+  earthOrbitDot.setPointerCapture(event.pointerId);
+  const angle = orbitAngleFromPointer(event);
+  if (angle !== null) {
+    updateDayFromOrbitAngle(angle);
+  }
+  event.preventDefault();
+}
+
 anchorMarEqx.addEventListener("click", () => animateToDay(80, anchorMarEqx));
 anchorJunSol.addEventListener("click", () => animateToDay(172, anchorJunSol));
 anchorSepEqx.addEventListener("click", () => animateToDay(266, anchorSepEqx));
 anchorDecSol.addEventListener("click", () => animateToDay(356, anchorDecSol));
+
+for (const preset of latitudePresetButtons) {
+  preset.button.addEventListener("click", () => {
+    stopAnimation();
+    state.latitudeDeg = clamp(preset.value, -90, 90);
+    render();
+  });
+}
 
 dayOfYear.addEventListener("input", () => {
   stopAnimation();
@@ -1036,6 +1228,18 @@ latitude.addEventListener("input", () => {
   render();
 });
 
+earthOrbitDot.addEventListener("pointerdown", startOrbitDrag);
+earthOrbitDot.addEventListener("pointermove", onOrbitDragMove);
+earthOrbitDot.addEventListener("pointerup", (event) => {
+  stopOrbitDrag(event.pointerId);
+});
+earthOrbitDot.addEventListener("pointercancel", (event) => {
+  stopOrbitDrag(event.pointerId);
+});
+earthOrbitDot.addEventListener("lostpointercapture", (event) => {
+  stopOrbitDrag(event.pointerId);
+});
+
 animateYear.addEventListener("click", () => {
   cancelPresetTransition();
   if (isAnimating) stopAnimation();
@@ -1058,6 +1262,12 @@ copyResults.addEventListener("click", () => {
 });
 
 dismissYearScrubHint.addEventListener("click", dismissYearScrubHintPersisted);
+showYearScrubHint.addEventListener("click", showYearScrubHintPersisted);
+snapToAnchors.addEventListener("change", () => {
+  state.dayOfYear = maybeSnapToAnchorDay(state.dayOfYear);
+  setAnchorPressed(anchorButtonForDay(state.dayOfYear));
+  render();
+});
 
 dayOfYear.addEventListener("focus", () => setDayControlFocusState(true));
 dayOfYearScrub.addEventListener("focus", () => setDayControlFocusState(true));
@@ -1196,5 +1406,14 @@ if (demoRoot) {
     });
   }
 }
+
+document.addEventListener("click", (event) => {
+  const targetEl = event.target as HTMLElement | null;
+  if (!targetEl) return;
+  if (targetEl.closest("#showYearScrubHintAgain")) {
+    showYearScrubHintPersisted();
+    setLiveRegionText(status, "Year scrub tip shown.");
+  }
+});
 
 updatePeriJanCalloutVisibility();

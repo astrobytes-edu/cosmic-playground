@@ -216,10 +216,13 @@ export function easeInOutCubic(t: number): number {
  * E.g. 45 -> "45 deg N", -30 -> "30 deg S", 0 -> "0 deg (Equator)"
  */
 export function formatLatitude(latDeg: number): string {
-  if (latDeg === 0) return "0\u00B0 (Equator)";
-  const abs = Math.abs(latDeg);
+  const rounded = Math.round(latDeg * 10) / 10;
+  if (Math.abs(rounded) < 0.05) return "0\u00B0 (Equator)";
+  const abs = Math.abs(rounded);
+  const absText =
+    Math.abs(abs - Math.round(abs)) < 0.05 ? String(Math.round(abs)) : formatNumber(abs, 1);
   const dir = latDeg > 0 ? "N" : "S";
-  return `${abs}\u00B0${dir}`;
+  return `${absText}\u00B0${dir}`;
 }
 
 /**
