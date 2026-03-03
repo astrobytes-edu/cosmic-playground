@@ -2,8 +2,8 @@
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
-import JourneyStep from "../../components/JourneyStep.astro";
 import TagPill from "../../components/TagPill.astro";
+import { normalizeBasePathPath } from "../../lib/catalog";
 
 export async function getStaticPaths() {
   const playlists = await getCollection("playlists");
@@ -15,26 +15,17 @@ export async function getStaticPaths() {
 
 const { playlist } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const withBase = (path: string) => {
-  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
-  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
-  return `${normalizedBase}${normalizedPath}`;
-};
+const withBase = (path: string) => normalizeBasePathPath(path, base);
 
 const demos = await getCollection("demos");
-const demoBySlug = new Map<string, (typeof demos)[number]>(
-  demos.map((d) => [d.slug, d])
-);
+const demoBySlug = new Map<string, (typeof demos)[number]>(demos.map((d) => [d.slug, d]));
 
 const resolved = playlist.data.demos
-  .map((d) => ({ ...d, entry: demoBySlug.get(d.slug) }))
-  .filter((d) => d.entry);
+  .map((item) => ({ item, entry: demoBySlug.get(item.slug) }))
+  .filter((row) => row.entry);
 
-const totalMinutes = resolved.reduce(
-  (sum, d) => sum + (d.entry?.data.time_minutes ?? 0),
-  0
-);
-const requiredCount = resolved.filter((d) => d.required).length;
+const requiredCount = resolved.filter((row) => row.item.required).length;
+const optionalCount = resolved.length - requiredCount;
 
 const { Content } = await playlist.render();
 ---
@@ -50,8 +41,10 @@ const { Content } = await playlist.render();
 
   <header class="playlist-header cp-hero">
     <h1>{playlist.data.title}</h1>
+    <p class="playlist-header__goal">{playlist.data.learning_goal}</p>
     <div class="playlist-header__meta">
       <TagPill label={playlist.data.audience} tone="blue" />
+      <TagPill label={`Level ${playlist.data.intended_level.toUpperCase()}`} tone="violet" />
       <span class="playlist-header__stat">
         <span class="playlist-header__stat-value">{resolved.length}</span>
         <span class="playlist-header__stat-unit">demos</span>
@@ -64,8 +57,18 @@ const { Content } = await playlist.render();
         <span class="playlist-header__stat-value">{requiredCount}</span>
         <span class="playlist-header__stat-unit">required</span>
       </span>
+      {optionalCount > 0 && (
+        <span class="playlist-header__stat">
+          <span class="playlist-header__stat-value">{optionalCount}</span>
+          <span class="playlist-header__stat-unit">optional</span>
+        </span>
+      )}
     </div>
     <p class="playlist-header__overview">{playlist.data.overview}</p>
+    <div class="playlist-header__actions">
+      <a class="cp-button cp-button--ghost" href={withBase("playlists/")}>Browse all playlists</a>
+      <a class="cp-button cp-button--ghost" href={withBase("explore/")}>Back to Explore</a>
+    </div>
   </header>
 
   <section class="playlist-instructions" aria-label="Instructions">
@@ -73,33 +76,44 @@ const { Content } = await playlist.render();
     <pre class="playlist-instructions__text">{playlist.data.instructions}</pre>
   </section>
 
-  <section class="journey" aria-label="Journey steps">
-    <h2 class="journey__heading">Journey</h2>
-    <div class="journey__steps">
-      {resolved.map(({ entry, required, note }, i) => (
-        <JourneyStep
-          step={i + 1}
-          title={entry!.data.title}
-          slug={entry!.slug}
-          href={withBase(`exhibits/${entry!.slug}/`)}
-          topics={entry!.data.topics}
-          timeMinutes={entry!.data.time_minutes}
-          required={required}
-          note={note}
-          isLast={i === resolved.length - 1}
-        />
-      ))}
-    </div>
+  <section class="playlist-journey" aria-label="Journey steps">
+    <h2>Journey steps</h2>
+    <ol class="playlist-journey__list">
+      {resolved.map(({ item, entry }) => {
+        const stationSlug = item.station_slug ?? entry!.slug;
+        const stationHref = withBase(`stations/${stationSlug}/`);
+        return (
+          <li class="playlist-journey__item cp-card">
+            <div class="playlist-journey__header">
+              <h3>{entry!.data.title}</h3>
+              <TagPill label={item.required ? "Required" : "Optional"} tone={item.required ? "teal" : "default"} />
+            </div>
+            <p class="playlist-journey__meta">{entry!.data.time_minutes} min</p>
+            <p class="playlist-journey__goal">{item.goal}</p>
+            {item.note && <p class="playlist-journey__note">{item.note}</p>}
+            <div class="playlist-journey__actions">
+              <a class="cp-button cp-button--primary" href={normalizeBasePathPath(entry!.data.demo_path, base)}>
+                Play
+              </a>
+              {entry!.data.station_path ? (
+                <a class="cp-button cp-button--ghost" href={stationHref}>
+                  Station
+                </a>
+              ) : null}
+              <a class="cp-button cp-button--ghost" href={withBase(`exhibits/${entry!.slug}/`)}>
+                Exhibit page
+              </a>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
   </section>
 
-  <details class="collapsible">
-    <summary class="collapsible__trigger">
-      <h2 class="collapsible__heading">Notes</h2>
-    </summary>
-    <div class="collapsible__body cp-prose">
-      <Content />
-    </div>
-  </details>
+  <section class="playlist-why cp-prose" aria-label="Why this sequence">
+    <h2>Why this sequence?</h2>
+    <Content />
+  </section>
 </Layout>
 
 <style>
@@ -111,6 +125,12 @@ const { Content } = await playlist.render();
   .playlist-header h1 {
     margin: 0;
     font-size: 1.9rem;
+  }
+
+  .playlist-header__goal {
+    margin: 0;
+    color: var(--cp-title-strong);
+    font-size: var(--cp-text-lg);
   }
 
   .playlist-header__meta {
@@ -145,13 +165,27 @@ const { Content } = await playlist.render();
     max-width: 72ch;
   }
 
-  .playlist-instructions {
+  .playlist-header__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .playlist-header__actions .cp-button {
+    font-size: var(--cp-text-sm);
+    padding: 6px 10px;
+  }
+
+  .playlist-instructions,
+  .playlist-journey,
+  .playlist-why {
     margin-top: var(--cp-space-5);
   }
 
-  .playlist-instructions h2 {
+  .playlist-instructions h2,
+  .playlist-journey h2,
+  .playlist-why h2 {
     margin: 0 0 var(--cp-space-3);
-    font-size: var(--cp-text-lg);
   }
 
   .playlist-instructions__text {
@@ -167,62 +201,53 @@ const { Content } = await playlist.render();
     line-height: 1.6;
   }
 
-  .journey {
-    margin-top: var(--cp-space-5);
-  }
-
-  .journey__heading {
-    margin: 0 0 var(--cp-space-4);
-  }
-
-  .journey__steps {
-    display: grid;
-    gap: 0;
-  }
-
-  /* Collapsible section (same as exhibit page pattern) */
-  .collapsible {
-    margin-top: var(--cp-space-5);
-    border: 1px solid var(--cp-border);
-    border-radius: var(--cp-r-2);
-    overflow: hidden;
-  }
-
-  .collapsible__trigger {
-    display: flex;
-    align-items: center;
-    gap: var(--cp-space-2);
-    padding: var(--cp-space-3) var(--cp-space-4);
-    cursor: pointer;
-    list-style: none;
-    transition: background var(--cp-transition-fast) var(--cp-ease-out);
-  }
-
-  .collapsible__trigger::-webkit-details-marker {
-    display: none;
-  }
-
-  .collapsible__trigger::before {
-    content: "\25B6";
-    font-size: 0.65em;
-    color: var(--cp-muted);
-    transition: transform var(--cp-transition-fast) var(--cp-ease-out);
-  }
-
-  .collapsible[open] > .collapsible__trigger::before {
-    transform: rotate(90deg);
-  }
-
-  .collapsible__trigger:hover {
-    background: color-mix(in srgb, var(--cp-text) 4%, transparent);
-  }
-
-  .collapsible__heading {
+  .playlist-journey__list {
     margin: 0;
-    font-size: var(--cp-text-lg);
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--cp-space-3);
   }
 
-  .collapsible__body {
-    padding: 0 var(--cp-space-4) var(--cp-space-4);
+  .playlist-journey__item {
+    padding: var(--cp-space-4);
+    display: grid;
+    gap: var(--cp-space-2);
+  }
+
+  .playlist-journey__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--cp-space-2);
+  }
+
+  .playlist-journey__header h3 {
+    margin: 0;
+  }
+
+  .playlist-journey__meta,
+  .playlist-journey__note {
+    margin: 0;
+    color: var(--cp-text2);
+    font-size: var(--cp-text-sm);
+  }
+
+  .playlist-journey__goal {
+    margin: 0;
+    color: var(--cp-text);
+    font-size: var(--cp-text-sm);
+  }
+
+  .playlist-journey__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .playlist-journey__actions .cp-button {
+    font-size: var(--cp-text-sm);
+    padding: 6px 10px;
   }
 </style>

@@ -32,6 +32,7 @@ const demos = defineCollection({
     plotContractVersion: z.number().int().positive().optional(),
     plotParityAudit: z.enum(["pass", "fail", "n/a"]).optional(),
     learning_goals: z.array(z.string().min(1)).min(1),
+    short_key_idea: z.string().min(1).optional(),
     misconceptions: z.array(z.string().min(1)).min(1),
     predict_prompt: z.string().min(1),
     play_steps: z.array(z.string().min(1)).min(1),
@@ -89,13 +90,19 @@ const playlists = defineCollection({
   type: "content",
   schema: z.object({
     title: z.string().min(1),
+    use_case: z.enum(["lecture", "lab", "self-study", "instructor"]),
+    intended_level: z.enum(["101", "201", "mixed"]),
+    learning_goal: z.string().min(1),
     audience: z.string().min(1),
+    anchor: z.string().min(1).optional(),
     estimated_minutes: z.number().int().positive(),
     demos: z
       .array(
         z.object({
           slug: z.string().min(1),
           required: z.boolean(),
+          goal: z.string().min(1),
+          station_slug: z.string().min(1).optional(),
           note: z.string().optional()
         })
       )

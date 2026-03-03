@@ -6,10 +6,25 @@ import FilterBar from "../../components/FilterBar.astro";
 import EmptyState from "../../components/EmptyState.astro";
 import TopicIcon from "../../components/TopicIcon.astro";
 import { topicColor } from "../../lib/topicColors";
+import {
+  demoKeyIdea,
+  demoLevelRank,
+  demoTimeBucket,
+  hasAstr101Level,
+  hasNoMathMode,
+  hasStationPath,
+  isRecentlyUpdated,
+  normalizeBasePathPath,
+  parseIsoDate,
+  playlistMembershipMap
+} from "../../lib/catalog";
 
 const demos = await getCollection("demos");
+const playlists = await getCollection("playlists");
+
 const base = import.meta.env.BASE_URL;
-const exploreHref = `${base}explore/`;
+const withBase = (path: string) => normalizeBasePathPath(path, base);
+const exploreHref = withBase("explore/");
 
 const q = Astro.url.searchParams.get("q")?.trim() ?? "";
 const topic = Astro.url.searchParams.get("topic")?.trim() ?? "";
@@ -17,15 +32,13 @@ const level = Astro.url.searchParams.get("level")?.trim() ?? "";
 const time = Astro.url.searchParams.get("time")?.trim() ?? "";
 const status = Astro.url.searchParams.get("status")?.trim() ?? "";
 const math = Astro.url.searchParams.get("math")?.trim() ?? "";
+const quick = Astro.url.searchParams.get("quick")?.trim() ?? "";
 const sort = Astro.url.searchParams.get("sort")?.trim() || "recommended";
 
-const topics = Array.from(
-  new Set(demos.flatMap((d) => d.data.topics))
-).sort();
-const levels = Array.from(
-  new Set(demos.flatMap((d) => d.data.levels))
-).sort();
+const topics = Array.from(new Set(demos.flatMap((d) => d.data.topics))).sort();
+const levels = Array.from(new Set(demos.flatMap((d) => d.data.levels))).sort();
 const statuses = Array.from(new Set(demos.map((d) => d.data.status))).sort();
+
 const topicOrder = [
   "EarthSky",
   "Orbits",
@@ -36,6 +49,7 @@ const topicOrder = [
   "Galaxies",
   "Cosmology"
 ];
+
 const topicLabel: Record<string, string> = {
   EarthSky: "Earth & Sky",
   Orbits: "Orbits",
@@ -46,6 +60,12 @@ const topicLabel: Record<string, string> = {
   Galaxies: "Galaxies",
   Cosmology: "Cosmology"
 };
+
+const playlistBySlug = new Map<string, (typeof playlists)[number]>(
+  playlists.map((playlist) => [playlist.slug, playlist] as [string, (typeof playlists)[number]])
+);
+const playlistCounts = playlistMembershipMap(playlists);
+
 const featuredOrder = ["keplers-laws", "retrograde-motion", "binary-orbits"];
 const featured = demos
   .filter((d) => d.data.featured)
@@ -60,19 +80,23 @@ function excerptFromBody(body: string) {
     .split("\n")
     .map((l) => l.trim())
     .find((l) => l.length > 0 && !l.startsWith("---"));
-  if (!firstLine) return "—";
+  if (!firstLine) return "\u2014";
   return firstLine.replace(/^#+\s*/, "").slice(0, 140);
 }
 
-function timeBucket(minutes: number) {
-  if (minutes <= 10) return "lt10";
-  if (minutes <= 20) return "10to20";
-  return "gt20";
+type QuickFilterKey = "astr101" | "lt10" | "noMath" | "labs" | "updated";
+
+function matchQuickFilter(slug: QuickFilterKey, demo: (typeof demos)[number]) {
+  if (slug === "astr101") return hasAstr101Level(demo.data.levels);
+  if (slug === "lt10") return demo.data.time_minutes <= 10;
+  if (slug === "noMath") return hasNoMathMode(demo);
+  if (slug === "labs") return hasStationPath(demo);
+  return isRecentlyUpdated(demo.data.last_updated);
 }
 
 const filtered = demos
   .filter((d) => {
-    const hay = `${d.data.title} ${d.data.tags.join(" ")}`
+    const hay = `${d.data.title} ${d.data.tags.join(" ")} ${d.data.learning_goals.join(" ")}`
       .toLowerCase()
       .trim();
     const needle = q.toLowerCase().trim();
@@ -82,20 +106,26 @@ const filtered = demos
   .filter((d) => (level ? d.data.levels.includes(level as any) : true))
   .filter((d) => (status ? d.data.status === status : true))
   .filter((d) => (math ? d.data.has_math_mode === (math === "yes") : true))
-  .filter((d) => (time ? timeBucket(d.data.time_minutes) === time : true));
-
-function parseIsoDate(iso: string) {
-  const t = Date.parse(iso);
-  return Number.isNaN(t) ? 0 : t;
-}
+  .filter((d) => (time ? demoTimeBucket(d.data.time_minutes) === time : true))
+  .filter((d) => {
+    if (!quick) return true;
+    return matchQuickFilter(quick as QuickFilterKey, d);
+  });
 
 const statusRank: Record<string, number> = { stable: 0, beta: 1, draft: 2 };
 
 const sorted = [...filtered].sort((a, b) => {
-  if (sort === "shortest") return a.data.time_minutes - b.data.time_minutes;
-  if (sort === "newest")
+  if (sort === "duration") return a.data.time_minutes - b.data.time_minutes;
+  if (sort === "level") {
+    return (
+      demoLevelRank(a.data.levels) - demoLevelRank(b.data.levels) ||
+      a.data.title.localeCompare(b.data.title)
+    );
+  }
+  if (sort === "updated") {
     return parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated);
-  // recommended: stable > beta > draft, then newest, then title
+  }
+
   return (
     (statusRank[a.data.status] ?? 99) - (statusRank[b.data.status] ?? 99) ||
     parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated) ||
@@ -108,30 +138,56 @@ const buildHref = (next: URLSearchParams) => {
   const qs = next.toString();
   return qs ? `${exploreHref}?${qs}` : exploreHref;
 };
+
 const chips: { label: string; href: string }[] = [];
 const addChip = (key: string, label: string) => {
   const next = new URLSearchParams(params);
   next.delete(key);
   chips.push({ label, href: buildHref(next) });
 };
+
 const timeLabels: Record<string, string> = {
-  lt10: "≤10 min",
-  "10to20": "10–20 min",
+  lt10: "\u226410 min",
+  "10to20": "10\u201320 min",
   gt20: "20+ min"
 };
+
 const sortLabels: Record<string, string> = {
   recommended: "Recommended",
-  shortest: "Shortest",
-  newest: "Newest"
+  duration: "Duration",
+  level: "Level",
+  updated: "Recently updated"
+};
+
+const quickLabels: Record<QuickFilterKey, string> = {
+  astr101: "ASTR 101",
+  lt10: "<10 min",
+  noMath: "No math",
+  labs: "Labs (Station mode)",
+  updated: "New / Updated"
 };
 
 if (q) addChip("q", `Search: ${q}`);
-if (topic) addChip("topic", `Topic: ${topic}`);
+if (topic) addChip("topic", `Topic: ${topicLabel[topic] ?? topic}`);
 if (level) addChip("level", `Course level: ${level}`);
 if (time) addChip("time", `Time budget: ${timeLabels[time] ?? time}`);
 if (status) addChip("status", `Status: ${status}`);
 if (math) addChip("math", `Math required: ${math === "yes" ? "Yes" : "No"}`);
+if (quick && quick in quickLabels) addChip("quick", `Quick: ${quickLabels[quick as QuickFilterKey]}`);
 if (sort && sort !== "recommended") addChip("sort", `Sort: ${sortLabels[sort] ?? sort}`);
+
+const quickFilterItems: Array<{ key: QuickFilterKey; label: string; href: string; active: boolean }> =
+  (["astr101", "lt10", "noMath", "labs", "updated"] as const).map((key) => {
+    const next = new URLSearchParams(params);
+    if (quick === key) next.delete("quick");
+    else next.set("quick", key);
+    return {
+      key,
+      label: quickLabels[key],
+      href: buildHref(next),
+      active: quick === key
+    };
+  });
 
 const topicDescription: Record<string, string> = {
   EarthSky: "Moon phases, seasons, and the view from Earth.",
@@ -150,27 +206,103 @@ const randomSlug = allSlugs[Math.floor(Math.random() * allSlugs.length)];
 const noFilters = chips.length === 0;
 const showFeatured = noFilters && featured.length > 0;
 const featuredSlugs = new Set(featured.map((d) => d.slug));
+
 const topicSections = noFilters
   ? topicOrder
       .map((key) => ({
         key,
         label: topicLabel[key],
         demos: sorted.filter(
-          (d) =>
-            d.data.topics.includes(key as any) && !featuredSlugs.has(d.slug)
+          (d) => d.data.topics.includes(key as any) && !featuredSlugs.has(d.slug)
         )
       }))
       .filter((section) => section.demos.length > 0)
   : [];
+
+type StartHereTile = {
+  title: string;
+  playlistSlug?: string;
+  topicKey?: string;
+  fallbackHref: string;
+};
+
+const startHereTiles: StartHereTile[] = [
+  {
+    title: "Astro 101 Core",
+    playlistSlug: "astro-101-core-concepts",
+    fallbackHref: withBase("playlists/")
+  },
+  {
+    title: "Solar System Geometry",
+    playlistSlug: "solar-system-geometry",
+    fallbackHref: `${exploreHref}?topic=EarthSky`
+  },
+  {
+    title: "Orbits & Gravity",
+    playlistSlug: "orbits-and-gravity",
+    fallbackHref: `${exploreHref}?topic=Orbits`
+  },
+  {
+    title: "Light & Telescopes",
+    playlistSlug: "light-and-measuring-the-universe",
+    fallbackHref: `${exploreHref}?topic=LightSpectra`
+  },
+  {
+    title: "Measurement & Distance",
+    topicKey: "DataInference",
+    fallbackHref: `${exploreHref}?topic=DataInference`
+  }
+];
+
+const startHere = startHereTiles.map((tile) => {
+  const playlist = tile.playlistSlug ? playlistBySlug.get(tile.playlistSlug) : null;
+  if (playlist) {
+    return {
+      ...tile,
+      href: withBase(`playlists/${playlist.slug}/`),
+      minutes: playlist.data.estimated_minutes,
+      demoCount: playlist.data.demos.length
+    };
+  }
+
+  const related = demos.filter((demo) =>
+    tile.topicKey ? demo.data.topics.includes(tile.topicKey as any) : false
+  );
+  const minutes = related.reduce((sum, demo) => sum + demo.data.time_minutes, 0);
+  return {
+    ...tile,
+    href: tile.fallbackHref,
+    minutes,
+    demoCount: related.length
+  };
+});
 ---
 
 <Layout title="Explore — Cosmic Playground" hasMath={false}>
   <section class="explore-hero cp-hero">
     <h1>Explore</h1>
+    <p class="explore-hero__identity">An interactive museum of astronomy reasoning instruments.</p>
+    <p class="explore-hero__identity-sub">
+      Explore observables, models, and inferences—like doing experiments on ideas.
+    </p>
     <p class="explore-hero__tagline">Play with the universe. Learn the physics.</p>
-    <p class="lede">Interactive exhibits for seeing how astronomy actually works.</p>
     <div class="site-state-note cp-card" role="note" aria-label="Project state">
       Cosmic Playground is in active beta. Use status and readiness badges to judge classroom readiness.
+    </div>
+  </section>
+
+  <section class="start-here" aria-label="Start here playlists and entry points">
+    <div class="start-here__header">
+      <h2>Start here</h2>
+      <a href={withBase("playlists/")}>Looking for a guided path?</a>
+    </div>
+    <div class="start-here__grid">
+      {startHere.map((tile) => (
+        <a class="start-here__tile cp-card" href={tile.href}>
+          <h3>{tile.title}</h3>
+          <p class="start-here__meta">~{tile.minutes} min · {tile.demoCount} demos</p>
+        </a>
+      ))}
     </div>
   </section>
 
@@ -187,6 +319,17 @@ const topicSections = noFilters
     statuses={statuses}
   />
 
+  <nav class="quick-filters" aria-label="Quick filters">
+    {quickFilterItems.map((item) => (
+      <a
+        class:list={["cp-chip", "quick-filters__chip", { "quick-filters__chip--active": item.active }]}
+        href={item.href}
+      >
+        {item.label}
+      </a>
+    ))}
+  </nav>
+
   {chips.length > 0 ? (
     <div class="filter-chips" aria-label="Active filters">
       {chips.map((chip) => (
@@ -199,9 +342,9 @@ const topicSections = noFilters
   ) : null}
 
   {showFeatured && featured.length > 0 ? (
-    <section class="featured" aria-label="Start here: Gravity and Orbits">
+    <section class="featured" aria-label="Featured sequence">
       <div class="featured__header">
-        <h2>Start here: Gravity &amp; Orbits</h2>
+        <h2>Featured sequence</h2>
         <p class="featured__lede">Begin with the core orbit ideas before branching out.</p>
       </div>
       <div class="results__grid">
@@ -209,7 +352,7 @@ const topicSections = noFilters
           <DemoCard
             title={d.data.title}
             slug={d.slug}
-            href={`${base}exhibits/${d.slug}/`}
+            href={withBase(`exhibits/${d.slug}/`)}
             description={excerptFromBody(d.body)}
             status={d.data.status}
             readiness={d.data.readiness}
@@ -217,6 +360,12 @@ const topicSections = noFilters
             levels={d.data.levels}
             timeMinutes={d.data.time_minutes}
             hasMathMode={d.data.has_math_mode}
+            keyIdea={demoKeyIdea(d)}
+            playHref={normalizeBasePathPath(d.data.demo_path, base)}
+            stationHref={normalizeBasePathPath(d.data.station_path, base)}
+            instructorHref={normalizeBasePathPath(d.data.instructor_path, base)}
+            playlistCount={playlistCounts.get(d.slug) ?? 0}
+            playlistHref={`${withBase("playlists/")}?demo=${encodeURIComponent(d.slug)}`}
           />
         ))}
       </div>
@@ -239,7 +388,7 @@ const topicSections = noFilters
     <span class="results__count-unit">interactive exhibit{sorted.length === 1 ? "" : "s"}</span>
     <a
       class="cp-button cp-button--ghost results__surprise"
-      href={`${base}exhibits/${randomSlug}/`}
+      href={withBase(`exhibits/${randomSlug}/`)}
       data-all-slugs={JSON.stringify(allSlugs)}
     >
       Surprise me
@@ -249,10 +398,7 @@ const topicSections = noFilters
   {noFilters ? (
     <nav class="topic-index" aria-label="Jump to topic">
       {topicSections.map((section) => (
-        <a
-          class="cp-chip topic-index__link"
-          href={`#topic-${section.key.toLowerCase()}`}
-        >
+        <a class="cp-chip topic-index__link" href={`#topic-${section.key.toLowerCase()}`}>
           {section.label}
         </a>
       ))}
@@ -263,10 +409,7 @@ const topicSections = noFilters
     {noFilters ? (
       <div class="cp-section">
         {topicSections.map((section) => (
-          <div
-            class="topic-section"
-            id={`topic-${section.key.toLowerCase()}`}
-          >
+          <div class="topic-section" id={`topic-${section.key.toLowerCase()}`}>
             <div class="topic-section__header" style={`--topic-color: ${topicColor(section.key)}`}>
               <TopicIcon topic={section.key} size={28} />
               <div>
@@ -281,7 +424,7 @@ const topicSections = noFilters
                 <DemoCard
                   title={d.data.title}
                   slug={d.slug}
-                  href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
+                  href={withBase(`exhibits/${d.slug}/`)}
                   description={excerptFromBody(d.body)}
                   status={d.data.status}
                   readiness={d.data.readiness}
@@ -289,6 +432,12 @@ const topicSections = noFilters
                   levels={d.data.levels}
                   timeMinutes={d.data.time_minutes}
                   hasMathMode={d.data.has_math_mode}
+                  keyIdea={demoKeyIdea(d)}
+                  playHref={normalizeBasePathPath(d.data.demo_path, base)}
+                  stationHref={normalizeBasePathPath(d.data.station_path, base)}
+                  instructorHref={normalizeBasePathPath(d.data.instructor_path, base)}
+                  playlistCount={playlistCounts.get(d.slug) ?? 0}
+                  playlistHref={`${withBase("playlists/")}?demo=${encodeURIComponent(d.slug)}`}
                 />
               ))}
             </div>
@@ -303,7 +452,7 @@ const topicSections = noFilters
               <DemoCard
                 title={d.data.title}
                 slug={d.slug}
-                href={`${import.meta.env.BASE_URL}exhibits/${d.slug}/`}
+                href={withBase(`exhibits/${d.slug}/`)}
                 description={excerptFromBody(d.body)}
                 status={d.data.status}
                 readiness={d.data.readiness}
@@ -311,6 +460,12 @@ const topicSections = noFilters
                 levels={d.data.levels}
                 timeMinutes={d.data.time_minutes}
                 hasMathMode={d.data.has_math_mode}
+                keyIdea={demoKeyIdea(d)}
+                playHref={normalizeBasePathPath(d.data.demo_path, base)}
+                stationHref={normalizeBasePathPath(d.data.station_path, base)}
+                instructorHref={normalizeBasePathPath(d.data.instructor_path, base)}
+                playlistCount={playlistCounts.get(d.slug) ?? 0}
+                playlistHref={`${withBase("playlists/")}?demo=${encodeURIComponent(d.slug)}`}
               />
             ))}
           </div>
@@ -328,13 +483,13 @@ const topicSections = noFilters
     form.classList.add("is-enhanced");
     const search = form.querySelector("input[name='q']");
     const selects = form.querySelectorAll("select");
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let timer = 0;
     const submit = () => (form.requestSubmit ? form.requestSubmit() : form.submit());
 
     if (search) {
       search.addEventListener("input", () => {
         clearTimeout(timer);
-        timer = setTimeout(submit, 300);
+        timer = window.setTimeout(submit, 300);
       });
     }
 
@@ -349,8 +504,8 @@ const topicSections = noFilters
     surpriseBtn.addEventListener("click", (e) => {
       e.preventDefault();
       const slug = slugs[Math.floor(Math.random() * slugs.length)];
-      const base = document.querySelector("base")?.href || "/";
-      window.location.href = `${base}exhibits/${slug}/`;
+      const baseHref = document.querySelector("base")?.href || "/";
+      window.location.href = `${baseHref}exhibits/${slug}/`;
     });
   }
 </script>
@@ -362,9 +517,17 @@ const topicSections = noFilters
     gap: var(--cp-space-2);
   }
 
-  .lede {
-    margin: 6px 0 0;
-    color: var(--cp-muted);
+  .explore-hero__identity {
+    margin: 0;
+    color: var(--cp-title-strong);
+    font-weight: var(--cp-font-semibold);
+    font-size: var(--cp-text-lg);
+    max-width: 72ch;
+  }
+
+  .explore-hero__identity-sub {
+    margin: 0;
+    color: var(--cp-text2);
     max-width: 72ch;
   }
 
@@ -383,6 +546,67 @@ const topicSections = noFilters
     background: color-mix(in srgb, var(--cp-status-beta-bg) 55%, transparent);
     padding: var(--cp-space-2) var(--cp-space-3);
     max-width: 52ch;
+  }
+
+  .start-here {
+    margin-bottom: var(--cp-space-5);
+    display: grid;
+    gap: var(--cp-space-3);
+  }
+
+  .start-here__header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--cp-space-2);
+    align-items: baseline;
+  }
+
+  .start-here__header h2 {
+    margin: 0;
+  }
+
+  .start-here__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--cp-space-3);
+  }
+
+  .start-here__tile {
+    text-decoration: none;
+    padding: var(--cp-space-3);
+    display: grid;
+    gap: var(--cp-space-1);
+  }
+
+  .start-here__tile h3 {
+    margin: 0;
+    font-size: var(--cp-text-base);
+    color: var(--cp-title);
+  }
+
+  .start-here__tile:hover h3 {
+    color: var(--cp-title-strong);
+  }
+
+  .start-here__meta {
+    margin: 0;
+    font-family: var(--cp-font-mono);
+    font-size: var(--cp-text-sm);
+    color: var(--cp-accent-ice);
+  }
+
+  .quick-filters {
+    margin-top: var(--cp-space-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .quick-filters__chip--active {
+    border-color: var(--cp-accent);
+    background: color-mix(in srgb, var(--cp-accent) 20%, transparent);
+    color: var(--cp-title-strong);
   }
 
   .filter-chips {
@@ -476,8 +700,8 @@ const topicSections = noFilters
 
   .results__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--cp-space-6);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--cp-space-5);
   }
 
   .topic-index {

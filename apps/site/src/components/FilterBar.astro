@@ -39,7 +39,7 @@ const {
           name="q"
           type="search"
           value={query}
-          placeholder="Title, topic, or idea…"
+          placeholder="Search demos…"
           autocomplete="off"
         />
       </div>
@@ -73,8 +73,9 @@ const {
         <option value="recommended" selected={sort === "recommended"}>
           Recommended
         </option>
-        <option value="shortest" selected={sort === "shortest"}>Shortest</option>
-        <option value="newest" selected={sort === "newest"}>Newest</option>
+        <option value="duration" selected={sort === "duration"}>Duration</option>
+        <option value="level" selected={sort === "level"}>Level</option>
+        <option value="updated" selected={sort === "updated"}>Recently updated</option>
       </select>
     </label>
   </div>

@@ -83,9 +83,33 @@ test.describe("Cosmic Playground smoke", () => {
   test("Explore filter uses invitational microcopy", async ({ page }) => {
     await page.goto("explore/");
     const search = page.locator("input[name='q']");
-    await expect(search).toHaveAttribute("placeholder", "Title, topic, or idea…");
+    await expect(search).toHaveAttribute("placeholder", "Search demos…");
     const summary = page.locator(".filter-bar__details summary");
     await expect(summary).toHaveText("More ways to filter");
+  });
+
+  test("Explore shows start-here tiles and quick filters", async ({ page }) => {
+    await page.goto("explore/");
+
+    await expect(page.locator(".start-here__tile")).toHaveCount(5);
+    await expect(page.locator(".quick-filters .cp-chip")).toHaveCount(5);
+    await expect(page.getByText("Looking for a guided path?")).toBeVisible();
+  });
+
+  test("Explore quick filter links use expected query params", async ({ page }) => {
+    await page.goto("explore/");
+
+    await expect(page.getByRole("link", { name: "ASTR 101" })).toHaveAttribute(
+      "href",
+      /quick=astr101/
+    );
+    await expect(page.getByRole("link", { name: "<10 min" })).toHaveAttribute(
+      "href",
+      /quick=lt10/
+    );
+    await expect(
+      page.getByRole("link", { name: "Labs (Station mode)" })
+    ).toHaveAttribute("href", /quick=labs/);
   });
 
   test("Explore featured row shows lead text", async ({ page }) => {
@@ -163,6 +187,10 @@ test.describe("Cosmic Playground smoke", () => {
     await expect(page.locator("#cp-demo")).toHaveAttribute("data-shell", "viz-first");
     await expect(page.locator('label[for="aAu"] .katex')).toBeVisible();
     await expect(page.locator('label[for="ecc"] .katex')).toBeVisible();
+
+    // Units toggle is inside advanced readouts; open it first.
+    await page.locator("#readoutAdvanced").click();
+    await expect(page.locator("#advancedReadoutControls")).toBeVisible();
 
     // Units toggle should switch to CGS in 201 mode.
     await page.locator("#unit201").click();
@@ -284,7 +312,7 @@ test.describe("Cosmic Playground smoke", () => {
     },
     {
       slug: "binary-orbits",
-      expects: ["Mass ratio", "Separation a (AU)", "Orbital period P (yr)"]
+      expects: ["Secondary mass ratio (M2/M1)", "Separation a (AU)", "Orbital period P (yr)"]
     },
     {
       slug: "conservation-laws",
@@ -464,7 +492,7 @@ test.describe("Cosmic Playground smoke", () => {
   test("Cards have transition on hover", async ({ page }) => {
     await page.goto("explore/");
 
-    const card = page.locator(".cp-card").first();
+    const card = page.locator(".demo-card").first();
     const transition = await card.evaluate((el) =>
       window.getComputedStyle(el).transition
     );
@@ -654,5 +682,22 @@ test.describe("Cosmic Playground smoke", () => {
     const emptyState = page.locator(".empty-state");
     await expect(emptyState).toBeVisible();
     await expect(emptyState).toContainText("No demos found");
+  });
+
+  test("Playlists page groups journeys and exposes required concept playlists", async ({
+    page
+  }) => {
+    await page.goto("playlists/");
+    await expect(page.getByRole("heading", { name: "For Astro 101 lectures" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "For inquiry labs (Station mode)" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "For self-study" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "For instructors (modules)" })).toBeVisible();
+
+    await expect(page.getByRole("heading", { name: "Astro 101 Core Concepts" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Solar System Geometry" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Orbits & Gravity" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Light & Measuring the Universe" })
+    ).toBeVisible();
   });
 });
