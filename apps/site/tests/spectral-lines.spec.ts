@@ -197,14 +197,23 @@ test.describe("Spectral Lines -- E2E", () => {
   });
 
   test("temperature slider updates proxy readouts", async ({ page }) => {
+    await page.locator("#sidebar-tab-H").click();
     await page.locator("#advancedStageTools > summary").click();
+    await expect(page.locator("#advancedStageTools")).toHaveAttribute("open", "");
     const before = await page.locator("#tempBalmerProxy").innerText();
-    await page.locator("#temperatureSlider").evaluate((node) => {
-      const slider = node as HTMLInputElement;
-      slider.value = "12000";
-      slider.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    await expect(page.locator("#temperatureValue")).toHaveText("12000");
+    const slider = page.locator("#temperatureSlider");
+    await expect(slider).toHaveValue("9000");
+    const setTemperature = async () => {
+      await slider.evaluate((node) => {
+        const slider = node as HTMLInputElement;
+        slider.value = "12000";
+        slider.dispatchEvent(new Event("input", { bubbles: true }));
+        slider.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      return page.locator("#temperatureValue").innerText();
+    };
+    await expect.poll(setTemperature).toBe("12000");
+    await expect(slider).toHaveValue("12000");
     const after = await page.locator("#tempBalmerProxy").innerText();
     expect(after).not.toBe(before);
   });
