@@ -129,6 +129,7 @@
            STAGE — orbit + globe SVGs
            ═══════════════════════════════════════════ -->
       <section class="cp-demo__stage cp-stage stage" aria-label="Visualization stage">
+        <div class="seasons-stage-plaque" aria-hidden="true">Cosmic Playground</div>
         <svg
           id="seasonStage"
           class="stage__svg"
@@ -149,7 +150,13 @@
 
           <!-- Orbit panel -->
           <g id="orbitPanel" transform="translate(40, 40)">
-            <text class="stage__title" x="0" y="0">Orbit (exaggerated distance)</text>
+            <text
+              class="stage__title"
+              id="orbitTitle"
+              x="0"
+              y="0"
+              title="Distance is exaggerated to show geometry; real variation is small."
+            >Orbit (exaggerated distance)</text>
 
             <g transform="translate(180, 170)">
               <circle class="stage__orbit" cx="0" cy="0" r="140" />
@@ -179,6 +186,9 @@
               <!-- Perihelion + Aphelion markers [S9] -->
               <circle class="stage__marker" cx="140" cy="0" r="4" />
               <text class="stage__markerLabel" x="140" y="-12" text-anchor="middle">Peri</text>
+              <text id="periJanCallout" class="stage__periCallout" x="154" y="-26" text-anchor="start">
+                Perihelion ~ early Jan
+              </text>
               <circle class="stage__marker" cx="-140" cy="0" r="4" />
               <text class="stage__markerLabel" x="-140" y="-12" text-anchor="middle">Aph</text>
             </g>
@@ -195,7 +205,7 @@
             </defs>
 
             <!-- Sunlight rays from left [S3] -->
-            <g id="sunlightRays" class="stage__sunlightRays">
+            <g id="sunlightRays" class="stage__sunlightRays stage__overlay">
               <line x1="-250" y1="-120" x2="-160" y2="-120" class="stage__ray" />
               <line x1="-250" y1="-60" x2="-160" y2="-60" class="stage__ray" />
               <line x1="-250" y1="0" x2="-160" y2="0" class="stage__ray" />
@@ -209,9 +219,9 @@
             <!-- Clipped group for internal features -->
             <g clip-path="url(#globe-clip)">
               <!-- Night-side terminator (drawn first so latitude bands show through) -->
-              <ellipse id="terminator" class="stage__terminator"/>
+              <ellipse id="terminator" class="stage__terminator stage__overlay"/>
               <!-- Latitude bands -->
-              <g id="latitude-bands-group">
+              <g id="latitude-bands-group" class="stage__overlay">
                 <ellipse id="equator-band" class="stage__lat-band stage__lat-band--equator"/>
                 <ellipse id="tropic-n" class="stage__lat-band stage__lat-band--tropic"/>
                 <ellipse id="tropic-s" class="stage__lat-band stage__lat-band--tropic"/>
@@ -219,14 +229,14 @@
                 <ellipse id="arctic-s" class="stage__lat-band stage__lat-band--arctic"/>
               </g>
               <!-- Day-length arc at observer's latitude -->
-              <path id="dayArc" class="stage__dayArc stage__dayArc--day" />
-              <path id="nightArc" class="stage__dayArc stage__dayArc--night" />
+              <path id="dayArc" class="stage__dayArc stage__dayArc--day stage__overlay" />
+              <path id="nightArc" class="stage__dayArc stage__dayArc--night stage__overlay" />
               <!-- Ecliptic plane (horizontal line through globe center) -->
-              <line id="globe-ecliptic" class="stage__ecliptic" x1="-160" y1="0" x2="160" y2="0" style="display:none"/>
+              <line id="globe-ecliptic" class="stage__ecliptic stage__overlay stage__overlay--hidden" x1="-160" y1="0" x2="160" y2="0"/>
               <!-- Celestial equator (tilted with axis) -->
-              <ellipse id="globe-equator" class="stage__cel-equator" style="display:none"/>
+              <ellipse id="globe-equator" class="stage__cel-equator stage__overlay stage__overlay--hidden"/>
               <!-- Hour grid (meridian lines) [S8] -->
-              <g id="hourGrid" class="stage__hourGrid" style="display:none"></g>
+              <g id="hourGrid" class="stage__hourGrid stage__overlay stage__overlay--hidden"></g>
             </g>
             <!-- Axis line (extends beyond globe) -->
             <line id="globe-axis" class="stage__globe-axis"/>
@@ -240,6 +250,63 @@
             Note: This visualization is schematic; readouts use the toy model in the panel and are the authoritative values.
           </text>
         </svg>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           YEAR SCRUB + CAUSAL LADDER
+           ═══════════════════════════════════════════ -->
+      <section class="cp-playbar seasons-instrument-bar" aria-label="Year scrub and causal ladder">
+        <div class="seasons-year-scrub" aria-label="Year scrub bar">
+          <div class="seasons-year-scrub__header">
+            <span class="cp-muted">Year scrub bar</span>
+            <span id="yearScrubValue" class="seasons-year-scrub__value">Day 80 (Mar 21)</span>
+            <span id="dayControlFocusBadge" class="seasons-focus-badge" hidden>Keyboard active</span>
+          </div>
+          <input
+            id="dayOfYearScrub"
+            class="cp-range seasons-year-scrub__range"
+            type="range"
+            min="1"
+            max="365"
+            value="80"
+            step="1"
+            data-tooltip-source="#yearScrubValue"
+            aria-label="Year scrub"
+          />
+          <div class="seasons-year-scrub__ticks" aria-hidden="true">
+            <span class="seasons-year-scrub__tick" style="--tick-pos: 21.70%">Mar</span>
+            <span class="seasons-year-scrub__tick" style="--tick-pos: 46.98%">Jun</span>
+            <span class="seasons-year-scrub__tick" style="--tick-pos: 72.80%">Sep</span>
+            <span class="seasons-year-scrub__tick" style="--tick-pos: 97.53%">Dec</span>
+          </div>
+          <div id="yearScrubHint" class="seasons-scrub-hint" hidden>
+            <span>Drag the day slider (or use ←/→) to scrub the year; Space plays.</span>
+            <button id="dismissYearScrubHint" class="cp-button cp-button--ghost" type="button">Dismiss</button>
+          </div>
+        </div>
+        <div class="seasons-causal-ladder" aria-label="Causal ladder">
+          <div
+            class="seasons-causal-ladder__title"
+            title="This toy model ties tilt to declination; declination + latitude sets sun height and day length."
+          >
+            Causal ladder
+          </div>
+          <div class="seasons-causal-ladder__row">
+            <span>Tilt $\varepsilon$ -> Declination $\delta$</span>
+            <span id="causalTiltChip" class="cp-chip seasons-value-chip"></span>
+            <span id="causalDeclinationChip" class="cp-chip seasons-value-chip"></span>
+          </div>
+          <div class="seasons-causal-ladder__row">
+            <span>($\delta$, latitude $\phi$) -> Noon altitude</span>
+            <span id="causalNoonChip" class="cp-chip seasons-value-chip"></span>
+          </div>
+          <div class="seasons-causal-ladder__row">
+            <span>($\delta$, $\phi$) -> Day length</span>
+            <span id="causalDayLengthChip" class="cp-chip seasons-value-chip"></span>
+            <span id="polarLatitudeBadge" class="seasons-inline-badge" hidden>Polar day/night possible at this latitude.</span>
+          </div>
+          <span id="noSeasonsBadge" class="seasons-inline-badge" hidden>No seasons: $\delta$ stays near 0 deg in this toy model.</span>
+        </div>
       </section>
 
       <!-- ═══════════════════════════════════════════
@@ -268,7 +335,10 @@
         </div>
         <div class="cp-readout">
           <span class="cp-readout__label">Distance</span>
-          <span class="cp-readout__value"><span id="distanceAuValue"></span> <span class="cp-readout__unit">AU</span></span>
+          <span class="cp-readout__value">
+            <span id="distanceAuValue"></span> <span class="cp-readout__unit">AU</span>
+            <span class="seasons-distance-badge">Distance varies a little (not the cause)</span>
+          </span>
         </div>
       </div>
 
@@ -320,15 +390,75 @@
             </ul>
           </div>
           <div class="cp-tab-panel" role="tabpanel" id="tab-overlays" aria-labelledby="tab-btn-overlays" hidden>
-            <fieldset class="cp-chip-group overlay-row" role="group" aria-label="Overlays">
-              <legend class="cp-muted">Globe overlays</legend>
-              <button class="cp-chip" type="button" aria-pressed="true" data-overlay="latitude-bands">Lat. Bands</button>
-              <button class="cp-chip" type="button" aria-pressed="true" data-overlay="terminator">Terminator</button>
-              <button class="cp-chip" type="button" aria-pressed="true" data-overlay="sunlight-rays">Sunlight</button>
-              <button class="cp-chip" type="button" aria-pressed="true" data-overlay="day-arc">Day arc</button>
-              <button class="cp-chip" type="button" aria-pressed="false" data-overlay="ecliptic">Ecliptic</button>
-              <button class="cp-chip" type="button" aria-pressed="false" data-overlay="equator">Cel. Equator</button>
-              <button class="cp-chip" type="button" aria-pressed="false" data-overlay="hour-grid">Hour Grid</button>
+            <fieldset class="overlay-groups" role="group" aria-label="Overlays">
+              <legend class="cp-muted">Overlays</legend>
+              <div class="overlay-group">
+                <div class="overlay-group__title">Where is the Sun?</div>
+                <p class="cp-muted overlay-group__hint">Use these to track sunlight geometry.</p>
+                <div class="cp-chip-group overlay-row">
+                  <button
+                    class="cp-chip"
+                    type="button"
+                    aria-pressed="true"
+                    data-overlay="sunlight-rays"
+                    title="Shows incoming parallel rays."
+                  >Sunlight</button>
+                  <button
+                    class="cp-chip"
+                    type="button"
+                    aria-pressed="true"
+                    data-overlay="terminator"
+                    title="Boundary between day/night."
+                  >Terminator</button>
+                </div>
+              </div>
+              <div class="overlay-group">
+                <div class="overlay-group__title">What changes for you?</div>
+                <p class="cp-muted overlay-group__hint">Compare daylight path and duration cues.</p>
+                <div class="cp-chip-group overlay-row">
+                  <button
+                    class="cp-chip"
+                    type="button"
+                    aria-pressed="true"
+                    data-overlay="day-arc"
+                    title="Path of the Sun across the sky for your latitude."
+                  >Day arc</button>
+                  <button
+                    class="cp-chip"
+                    type="button"
+                    aria-pressed="false"
+                    data-overlay="hour-grid"
+                    title="Reference hour lines for reading daylight span."
+                  >Hour grid</button>
+                </div>
+              </div>
+              <div class="overlay-group">
+                <div class="overlay-group__title">Reference frames</div>
+                <p class="cp-muted overlay-group__hint">Reveal sky-geometry guide circles.</p>
+                <div class="cp-chip-group overlay-row">
+                  <button
+                    class="cp-chip"
+                    type="button"
+                    aria-pressed="true"
+                    data-overlay="latitude-bands"
+                    title="Latitude reference bands on the globe."
+                  >Lat. Bands</button>
+                  <button
+                    class="cp-chip"
+                    type="button"
+                    aria-pressed="false"
+                    data-overlay="equator"
+                    title="Reference circles used in sky geometry."
+                  >Cel. Equator</button>
+                  <button
+                    class="cp-chip"
+                    type="button"
+                    aria-pressed="false"
+                    data-overlay="ecliptic"
+                    title="Reference circles used in sky geometry."
+                  >Ecliptic</button>
+                </div>
+              </div>
             </fieldset>
           </div>
         </div>

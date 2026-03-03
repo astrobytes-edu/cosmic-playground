@@ -7,6 +7,13 @@ import type { Season } from "./logic";
 const dayOfYearEl = document.querySelector<HTMLInputElement>("#dayOfYear");
 const dayOfYearValueEl = document.querySelector<HTMLSpanElement>("#dayOfYearValue");
 const dateValueEl = document.querySelector<HTMLSpanElement>("#dateValue");
+const dayOfYearScrubEl = document.querySelector<HTMLInputElement>("#dayOfYearScrub");
+const yearScrubValueEl = document.querySelector<HTMLSpanElement>("#yearScrubValue");
+const dayControlFocusBadgeEl =
+  document.querySelector<HTMLSpanElement>("#dayControlFocusBadge");
+const yearScrubHintEl = document.querySelector<HTMLDivElement>("#yearScrubHint");
+const dismissYearScrubHintEl =
+  document.querySelector<HTMLButtonElement>("#dismissYearScrubHint");
 
 const tiltEl = document.querySelector<HTMLInputElement>("#tilt");
 const tiltValueEl = document.querySelector<HTMLSpanElement>("#tiltValue");
@@ -40,9 +47,20 @@ const seasonNorthValueEl =
   document.querySelector<HTMLSpanElement>("#seasonNorthValue");
 const seasonSouthValueEl =
   document.querySelector<HTMLSpanElement>("#seasonSouthValue");
+const causalTiltChipEl = document.querySelector<HTMLSpanElement>("#causalTiltChip");
+const causalDeclinationChipEl =
+  document.querySelector<HTMLSpanElement>("#causalDeclinationChip");
+const causalNoonChipEl = document.querySelector<HTMLSpanElement>("#causalNoonChip");
+const causalDayLengthChipEl =
+  document.querySelector<HTMLSpanElement>("#causalDayLengthChip");
+const noSeasonsBadgeEl = document.querySelector<HTMLSpanElement>("#noSeasonsBadge");
+const polarLatitudeBadgeEl =
+  document.querySelector<HTMLSpanElement>("#polarLatitudeBadge");
 
 const earthOrbitDotEl = document.querySelector<SVGCircleElement>("#earthOrbitDot");
 const orbitLabelEl = document.querySelector<SVGTextElement>("#orbitLabel");
+const periJanCalloutEl = document.querySelector<SVGTextElement>("#periJanCallout");
+const tabNoticeEl = document.querySelector<HTMLElement>("#tab-notice");
 
 // Globe elements
 const terminatorEl = document.querySelector<SVGEllipseElement>("#terminator");
@@ -71,6 +89,11 @@ if (
   !dayOfYearEl ||
   !dayOfYearValueEl ||
   !dateValueEl ||
+  !dayOfYearScrubEl ||
+  !yearScrubValueEl ||
+  !dayControlFocusBadgeEl ||
+  !yearScrubHintEl ||
+  !dismissYearScrubHintEl ||
   !tiltEl ||
   !tiltValueEl ||
   !latitudeEl ||
@@ -92,8 +115,16 @@ if (
   !distanceAuValueEl ||
   !seasonNorthValueEl ||
   !seasonSouthValueEl ||
+  !causalTiltChipEl ||
+  !causalDeclinationChipEl ||
+  !causalNoonChipEl ||
+  !causalDayLengthChipEl ||
+  !noSeasonsBadgeEl ||
+  !polarLatitudeBadgeEl ||
   !earthOrbitDotEl ||
   !orbitLabelEl ||
+  !periJanCalloutEl ||
+  !tabNoticeEl ||
   !terminatorEl ||
   !equatorBandEl ||
   !tropicNEl ||
@@ -120,6 +151,11 @@ if (
 const dayOfYear = dayOfYearEl;
 const dayOfYearValue = dayOfYearValueEl;
 const dateValue = dateValueEl;
+const dayOfYearScrub = dayOfYearScrubEl;
+const yearScrubValue = yearScrubValueEl;
+const dayControlFocusBadge = dayControlFocusBadgeEl;
+const yearScrubHint = yearScrubHintEl;
+const dismissYearScrubHint = dismissYearScrubHintEl;
 
 const tilt = tiltEl;
 const tiltValue = tiltValueEl;
@@ -146,9 +182,17 @@ const noonAltitudeValue = noonAltitudeValueEl;
 const distanceAuValue = distanceAuValueEl;
 const seasonNorthValue = seasonNorthValueEl;
 const seasonSouthValue = seasonSouthValueEl;
+const causalTiltChip = causalTiltChipEl;
+const causalDeclinationChip = causalDeclinationChipEl;
+const causalNoonChip = causalNoonChipEl;
+const causalDayLengthChip = causalDayLengthChipEl;
+const noSeasonsBadge = noSeasonsBadgeEl;
+const polarLatitudeBadge = polarLatitudeBadgeEl;
 
 const earthOrbitDot = earthOrbitDotEl;
 const orbitLabel = orbitLabelEl;
+const periJanCallout = periJanCalloutEl;
+const tabNotice = tabNoticeEl;
 
 const terminator = terminatorEl;
 const equatorBand = equatorBandEl;
@@ -326,6 +370,8 @@ const state: State = {
   latitudeDeg: 40
 };
 
+const SCRUB_HINT_STORAGE_KEY = "cp:seasons:scrub-hint:v1";
+
 const prefersReducedMotion =
   typeof window !== "undefined" &&
   typeof window.matchMedia !== "undefined" &&
@@ -334,6 +380,39 @@ const prefersReducedMotion =
 if (prefersReducedMotion) {
   motionNote.hidden = false;
   motionNote.textContent = "Animation uses discrete steps due to reduced-motion preference.";
+}
+
+function updatePeriJanCalloutVisibility(): void {
+  periJanCallout.hidden = tabNotice.hidden;
+}
+
+function setDayControlFocusState(isFocused: boolean): void {
+  dayControlFocusBadge.hidden = !isFocused;
+}
+
+function syncDayControlFocusState() {
+  const active = document.activeElement;
+  const focusedOnDayControls = active === dayOfYear || active === dayOfYearScrub;
+  setDayControlFocusState(focusedOnDayControls);
+}
+
+function dismissYearScrubHintPersisted() {
+  yearScrubHint.hidden = true;
+  try {
+    window.localStorage.setItem(SCRUB_HINT_STORAGE_KEY, "1");
+  } catch {
+    // ignore localStorage issues
+  }
+}
+
+function initYearScrubHint() {
+  let hasDismissedHint = false;
+  try {
+    hasDismissedHint = window.localStorage.getItem(SCRUB_HINT_STORAGE_KEY) === "1";
+  } catch {
+    hasDismissedHint = false;
+  }
+  yearScrubHint.hidden = hasDismissedHint;
 }
 
 let isAnimating = false;
@@ -588,21 +667,34 @@ function render() {
   const south = oppositeSeason(north);
 
   dayOfYear.value = String(day);
+  dayOfYearScrub.value = String(day);
   tilt.value = String(axialTiltDeg);
   latitude.value = String(latitudeDeg);
 
   dayOfYearValue.textContent = `Day ${day}`;
   dateValue.textContent = `(${formatDateFromDayOfYear(day)})`;
+  yearScrubValue.textContent = `Day ${day} (${formatDateFromDayOfYear(day)})`;
 
   tiltValue.textContent = `${formatNumber(axialTiltDeg, 1)} deg`;
   latitudeValue.textContent = formatLatitude(Math.round(latitudeDeg));
 
-  declinationValue.textContent = formatNumber(declinationDegValue, 1);
-  dayLengthValue.textContent = formatDayLength(dayLengthHoursValue);
-  noonAltitudeValue.textContent = formatNumber(noonAltitudeDegValue, 1);
+  const declinationText = formatNumber(declinationDegValue, 1);
+  const dayLengthText = formatDayLength(dayLengthHoursValue);
+  const noonAltitudeText = formatNumber(noonAltitudeDegValue, 1);
+
+  declinationValue.textContent = declinationText;
+  dayLengthValue.textContent = dayLengthText;
+  noonAltitudeValue.textContent = noonAltitudeText;
   distanceAuValue.textContent = formatNumber(distanceAu, 3);
   seasonNorthValue.textContent = north;
   seasonSouthValue.textContent = south;
+
+  causalTiltChip.textContent = `\u03B5 ${formatNumber(axialTiltDeg, 1)} deg`;
+  causalDeclinationChip.textContent = `\u03B4 ${declinationText} deg`;
+  causalNoonChip.textContent = `${noonAltitudeText} deg`;
+  causalDayLengthChip.textContent = dayLengthText;
+  noSeasonsBadge.hidden = axialTiltDeg >= 0.5;
+  polarLatitudeBadge.hidden = Math.abs(latitudeDeg) < 66.5;
 
   // Season readout color coding [S1]
   seasonNorthValue.className = seasonColorClass(north);
@@ -616,6 +708,7 @@ function render() {
     distanceAu,
   });
   contextMessage.textContent = msg;
+  updatePeriJanCalloutVisibility();
 
   renderStage({
     dayOfYear: day,
@@ -924,6 +1017,13 @@ dayOfYear.addEventListener("input", () => {
   render();
 });
 
+dayOfYearScrub.addEventListener("input", () => {
+  stopAnimation();
+  setAnchorPressed(null);
+  state.dayOfYear = Number(dayOfYearScrub.value);
+  render();
+});
+
 tilt.addEventListener("input", () => {
   stopAnimation();
   state.axialTiltDeg = Number(tilt.value);
@@ -957,6 +1057,15 @@ copyResults.addEventListener("click", () => {
     });
 });
 
+dismissYearScrubHint.addEventListener("click", dismissYearScrubHintPersisted);
+
+dayOfYear.addEventListener("focus", () => setDayControlFocusState(true));
+dayOfYearScrub.addEventListener("focus", () => setDayControlFocusState(true));
+dayOfYear.addEventListener("blur", () => window.requestAnimationFrame(syncDayControlFocusState));
+dayOfYearScrub.addEventListener("blur", () =>
+  window.requestAnimationFrame(syncDayControlFocusState)
+);
+
 // --- Overlay toggles ---
 const overlayTargets: Record<string, (SVGElement | HTMLElement)[]> = {
   "latitude-bands": [latBandsGroup],
@@ -968,21 +1077,34 @@ const overlayTargets: Record<string, (SVGElement | HTMLElement)[]> = {
   "hour-grid": [hourGrid],
 };
 
-const overlayButtons = document.querySelectorAll<HTMLButtonElement>("[data-overlay]");
+const overlayButtons = document.querySelectorAll<HTMLButtonElement>("button[data-overlay]");
+
+function setOverlayVisibility(el: SVGElement | HTMLElement, visible: boolean) {
+  el.classList.toggle("stage__overlay--hidden", !visible);
+}
+
+function applyOverlayButtonState(btn: HTMLButtonElement, visible: boolean) {
+  btn.setAttribute("aria-pressed", String(visible));
+  const key = btn.dataset.overlay;
+  if (!key) return;
+  const targets = overlayTargets[key];
+  if (!targets) return;
+  for (const target of targets) {
+    setOverlayVisibility(target, visible);
+  }
+}
+
+function syncOverlayVisibilityFromButtons() {
+  for (const btn of overlayButtons) {
+    const visible = btn.getAttribute("aria-pressed") === "true";
+    applyOverlayButtonState(btn, visible);
+  }
+}
 
 for (const btn of overlayButtons) {
   btn.addEventListener("click", () => {
-    const key = btn.dataset.overlay;
-    if (!key) return;
     const pressed = btn.getAttribute("aria-pressed") === "true";
-    const next = !pressed;
-    btn.setAttribute("aria-pressed", String(next));
-    const targets = overlayTargets[key];
-    if (targets) {
-      for (const el of targets) {
-        (el as HTMLElement).style.display = next ? "" : "none";
-      }
-    }
+    applyOverlayButtonState(btn, !pressed);
   });
 }
 
@@ -1051,6 +1173,9 @@ document.addEventListener("keydown", (e) => {
 // --- Initialize ---
 initSeasonLabels();
 initHourGrid();
+initYearScrubHint();
+syncOverlayVisibilityFromButtons();
+syncDayControlFocusState();
 render();
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
@@ -1064,4 +1189,12 @@ const demoRoot = document.getElementById("cp-demo");
 if (demoRoot) {
   initPopovers(demoRoot);
   initTabs(demoRoot);
+  const tabButtons = demoRoot.querySelectorAll<HTMLButtonElement>(".cp-tab");
+  for (const tabButton of tabButtons) {
+    tabButton.addEventListener("click", () => {
+      window.requestAnimationFrame(updatePeriJanCalloutVisibility);
+    });
+  }
 }
+
+updatePeriJanCalloutVisibility();
