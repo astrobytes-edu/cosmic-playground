@@ -28,6 +28,7 @@ import {
   isPredictionLocked,
   isRvChallengeLocked,
   logSliderToValue,
+  orbitAutoScaleLogFactor,
   pixelsPerUnit,
   rvCacheKey,
   scalingCueForControl,
@@ -63,6 +64,7 @@ const motionMode = $<HTMLSelectElement>("#motionMode");
 const viewOrbit = $<HTMLButtonElement>("#viewOrbit");
 const viewRv = $<HTMLButtonElement>("#viewRv");
 const viewEnergy = $<HTMLButtonElement>("#viewEnergy");
+const autoScaleLog = $<HTMLInputElement>("#autoScaleLog");
 const showOmega = $<HTMLInputElement>("#showOmega");
 
 const scalingCue = $<HTMLParagraphElement>("#scalingCue");
@@ -211,6 +213,7 @@ type EnergyCacheEntry = {
 
 const state: {
   view: StageView;
+  autoScaleLog: boolean;
   showOmega: boolean;
   scalingCue: ScalingCue | null;
   scalingCueActive: boolean;
@@ -235,6 +238,7 @@ const state: {
   phaseRad: number;
 } = {
   view: "orbit",
+  autoScaleLog: true,
   showOmega: false,
   scalingCue: null,
   scalingCueActive: false,
@@ -319,7 +323,10 @@ function drawOrbit(model: BinaryModel, phaseRad: number): void {
   orbitCtx.fillStyle = glow;
   orbitCtx.fillRect(0, 0, w, h);
 
-  const ppu = pixelsPerUnit(model.r1, model.r2, w, h);
+  const ppuBase = pixelsPerUnit(model.r1, model.r2, w, h);
+  const ppu = state.autoScaleLog
+    ? ppuBase * orbitAutoScaleLogFactor(model.separation, SEPARATION_MIN_AU, SEPARATION_MAX_AU)
+    : ppuBase;
   const r1px = model.r1 * ppu;
   const r2px = model.r2 * ppu;
 
@@ -713,7 +720,7 @@ function markInvariantTruths(model: BinaryModel): void {
 }
 
 function updateReadouts(controlModel: BinaryModel, displayModel: BinaryModel): void {
-  massRatioValue.textContent = formatNumber(controlModel.massRatio, 2);
+  massRatioValue.textContent = formatNumber(controlModel.massRatio, 3);
   separationValue.textContent = formatNumber(controlModel.separation, 2);
   inclinationValue.textContent = formatNumber(controlModel.inclinationDeg, 0);
 
@@ -935,14 +942,14 @@ function handleMassRatioChange(): void {
 
 function setMassRatio(value: number): void {
   const clamped = Math.min(MASS_RATIO_MAX, Math.max(MASS_RATIO_MIN, value));
-  massRatioInput.value = formatNumber(clamped, 2);
+  massRatioInput.value = formatNumber(clamped, 3);
   handleMassRatioChange();
 }
 
 massRatioInput.min = String(MASS_RATIO_MIN);
 massRatioInput.max = String(MASS_RATIO_MAX);
-massRatioInput.step = "0.01";
-massRatioInput.value = formatNumber(DEFAULT_MASS_RATIO, 2);
+massRatioInput.step = "0.001";
+massRatioInput.value = formatNumber(DEFAULT_MASS_RATIO, 3);
 
 separationInput.value = String(
   valueToLogSlider(DEFAULT_SEPARATION_AU, SEPARATION_MIN_AU, SEPARATION_MAX_AU),
@@ -952,6 +959,7 @@ inclinationInput.max = String(INCLINATION_MAX_DEG);
 inclinationInput.value = String(DEFAULT_INCLINATION_DEG);
 
 state.revealedModel = getStageModel();
+state.autoScaleLog = autoScaleLog.checked;
 
 massRatioInput.addEventListener("input", handleMassRatioChange);
 
@@ -967,6 +975,17 @@ inclinationInput.addEventListener("input", () => {
 showOmega.addEventListener("change", () => {
   state.showOmega = showOmega.checked;
   renderStatic();
+});
+
+autoScaleLog.addEventListener("change", () => {
+  state.autoScaleLog = autoScaleLog.checked;
+  renderStatic();
+  setLiveRegionText(
+    status,
+    state.autoScaleLog
+      ? "Auto-scale enabled: orbit camera uses logarithmic visual scaling."
+      : "Auto-scale disabled: orbit camera uses fixed visual scaling.",
+  );
 });
 
 viewOrbit.addEventListener("click", () => {
@@ -1007,7 +1026,7 @@ presetEqual.addEventListener("click", () => {
 });
 
 presetPlanet.addEventListener("click", () => {
-  setMassRatio(0.01);
+  setMassRatio(0.001);
 });
 
 presetHalf.addEventListener("click", () => {
@@ -1140,7 +1159,7 @@ const demoModes = createDemoModes({
       });
       return {
         case: "Snapshot",
-        massRatio: formatNumber(model.massRatio, 2),
+        massRatio: formatNumber(model.massRatio, 3),
         separationAu: formatNumber(model.separation, 2),
         inclinationDeg: formatNumber(model.inclinationDeg, 0),
         a1Au: formatNumber(model.r1, 3),
@@ -1162,7 +1181,7 @@ const demoModes = createDemoModes({
         getRows() {
           const cases = [
             { label: "Equal masses", massRatio: 1, separation: 4, inclinationDeg: 60 },
-            { label: "Planet limit", massRatio: 0.01, separation: 4, inclinationDeg: 60 },
+            { label: "Planet limit", massRatio: 0.001, separation: 4, inclinationDeg: 60 },
             { label: "Half ratio", massRatio: 0.5, separation: 4, inclinationDeg: 60 },
           ];
 
@@ -1170,7 +1189,7 @@ const demoModes = createDemoModes({
             const model = computeModel(c.massRatio, c.separation, c.inclinationDeg);
             return {
               case: c.label,
-              massRatio: formatNumber(model.massRatio, 2),
+              massRatio: formatNumber(model.massRatio, 3),
               separationAu: formatNumber(model.separation, 2),
               inclinationDeg: formatNumber(model.inclinationDeg, 0),
               a1Au: formatNumber(model.r1, 3),
@@ -1209,13 +1228,14 @@ function exportResults(): ExportPayloadV1 {
     version: 1,
     timestamp: new Date().toISOString(),
     parameters: [
-      { name: "Secondary mass ratio (M2/M1)", value: formatNumber(model.massRatio, 2) },
+      { name: "Secondary mass ratio (M2/M1)", value: formatNumber(model.massRatio, 3) },
       { name: "Separation a (AU)", value: formatNumber(model.separation, 2) },
       { name: "Inclination i (deg)", value: formatNumber(model.inclinationDeg, 0) },
       {
         name: "Motion mode",
         value: getMotionMode() === "normalized" ? "normalized-20s-cycle" : "physical-kepler",
       },
+      { name: "Auto-scale (log)", value: state.autoScaleLog ? "on" : "off" },
       { name: "View", value: state.view },
       { name: "RV challenge state", value: rvChallengeStateLabel() },
     ],

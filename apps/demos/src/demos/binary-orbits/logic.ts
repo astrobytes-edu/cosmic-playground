@@ -15,7 +15,7 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-export const MASS_RATIO_MIN = 0.01;
+export const MASS_RATIO_MIN = 0.001;
 export const MASS_RATIO_MAX = 1.0;
 export const SEPARATION_MIN_AU = 0.1;
 export const SEPARATION_MAX_AU = 100;
@@ -462,6 +462,33 @@ export function bodyPositions(
     x2: cx + r2px * cos,
     y2: cy + r2px * sin,
   };
+}
+
+/**
+ * Logarithmic visual scaling factor for orbit rendering.
+ *
+ * Returns a smooth, bounded multiplier in [0.68, 1.22], decreasing as
+ * separation increases from min to max.
+ */
+export function orbitAutoScaleLogFactor(
+  separationAu: number,
+  minSeparationAu = SEPARATION_MIN_AU,
+  maxSeparationAu = SEPARATION_MAX_AU,
+): number {
+  if (!Number.isFinite(separationAu) || !Number.isFinite(minSeparationAu) || !Number.isFinite(maxSeparationAu)) {
+    return 1;
+  }
+  if (!(minSeparationAu > 0) || !(maxSeparationAu > minSeparationAu)) return 1;
+
+  const clampedSeparation = clamp(separationAu, minSeparationAu, maxSeparationAu);
+  const minLog = Math.log10(minSeparationAu);
+  const maxLog = Math.log10(maxSeparationAu);
+  const t = clamp((Math.log10(clampedSeparation) - minLog) / (maxLog - minLog), 0, 1);
+  const smoothT = t * t * (3 - (2 * t));
+
+  const nearScale = 1.22;
+  const farScale = 0.68;
+  return nearScale + ((farScale - nearScale) * smoothT);
 }
 
 /**

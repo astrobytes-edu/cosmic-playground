@@ -61,13 +61,16 @@
             <input
               id="massRatio"
               type="range"
-              min="0.01"
+              min="0.001"
               max="1"
               value="1"
-              step="0.01"
+              step="0.001"
               data-tooltip-source="#massRatioValue"
             />
             <span class="control__value"><span id="massRatioValue"></span></span>
+            <span class="control__ticks" aria-hidden="true">
+              <span>0.001</span><span>0.010</span><span>0.100</span><span>1.000</span>
+            </span>
           </label>
 
           <div class="cp-chip-group" role="group" aria-label="Mass-ratio presets">
@@ -118,6 +121,12 @@
             <button id="viewRv" class="cp-chip" role="radio" aria-checked="false" type="button">RV view</button>
             <button id="viewEnergy" class="cp-chip" role="radio" aria-checked="false" type="button">Energy view</button>
           </div>
+
+          <label class="cp-toggle" title="Auto-scale changes the camera/visual scale only; it does not change the physics.">
+            <input id="autoScaleLog" type="checkbox" checked />
+            <span>Auto-scale (log)</span>
+          </label>
+          <p class="cp-muted control__hint">Auto-scale changes the camera/visual scale only; it does not change the physics.</p>
 
           <label class="check">
             <input id="showOmega" type="checkbox" />
@@ -204,7 +213,7 @@
         </div>
         <div id="energyPanel" class="rv-panel" hidden>
           <h3>Energy decomposition</h3>
-          <p class="cp-muted">Circular-orbit energies in teaching units ($M_{\odot}$ AU$^2$/yr$^2$).</p>
+          <p class="cp-muted">Circular-orbit energies in teaching units: $M_{\odot}\,\mathrm{AU}^2/\mathrm{yr}^2$.</p>
           <canvas id="energyCanvas" width="520" height="260" aria-label="Energy decomposition view"></canvas>
         </div>
       </section>

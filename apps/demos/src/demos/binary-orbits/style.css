@@ -15,6 +15,18 @@
   font-size: var(--cp-text-xs);
 }
 
+.control__ticks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2px;
+  color: var(--cp-muted);
+  font-size: 0.75rem;
+}
+
+.cp-demo__stage {
+  min-height: clamp(300px, 52svh, 520px);
+}
+
 .stage {
   display: grid;
   place-items: center;
@@ -38,7 +50,10 @@
 
 #orbitCanvas {
   height: auto;
-  aspect-ratio: 1 / 1;
+  width: min(100%, 694px);
+  max-height: min(52svh, 520px);
+  margin-inline: auto;
+  aspect-ratio: 4 / 3;
 }
 
 #rvCanvas {
@@ -52,7 +67,7 @@
 }
 
 .rv-panel {
-  width: min(100%, 760px);
+  width: min(100%, 720px);
   display: grid;
   gap: var(--cp-space-2);
   padding: var(--cp-space-3);
@@ -183,5 +198,16 @@
 
   .cp-scaling-cue {
     transition: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .cp-demo__stage {
+    min-height: clamp(260px, 46svh, 420px);
+  }
+
+  #orbitCanvas {
+    width: min(100%, 560px);
+    max-height: min(46svh, 420px);
   }
 }
