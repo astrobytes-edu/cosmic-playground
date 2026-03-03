@@ -3,6 +3,9 @@ import { AstroUnits } from "@cosmic/physics";
 
 const TAU = 2 * Math.PI;
 
+export type ReadoutProfile = "friendly" | "advanced";
+export type NotationMode = "auto" | "sci" | "decimal";
+
 export function logSliderToValue(slider: number, min: number, max: number): number {
   const minLog = Math.log10(min);
   const maxLog = Math.log10(max);
@@ -38,6 +41,82 @@ function au2PerYrToCm2PerS(valueAu2Yr: number): number {
   return (valueAu2Yr * cmPerAu * cmPerAu) / secPerYr;
 }
 
+export function formatReadoutNumber(value: number, digits: number, notation: NotationMode): string {
+  if (!Number.isFinite(value)) return "—";
+  if (value === 0) return "0";
+
+  const abs = Math.abs(value);
+  const useSci = notation === "sci" || (notation === "auto" && (abs >= 1e6 || abs < 1e-3));
+  if (useSci) {
+    return value.toExponential(Math.max(0, digits - 1));
+  }
+
+  return value.toFixed(Math.max(0, digits));
+}
+
+export function formatSignedPercent(valuePercent: number | null, notation: NotationMode): string {
+  if (valuePercent === null || !Number.isFinite(valuePercent)) return "—";
+  const sign = valuePercent > 0 ? "+" : "";
+  return `${sign}${formatReadoutNumber(valuePercent, 3, notation)}%`;
+}
+
+export function buildPeriodScalingHint(args: {
+  currentPeriodYr: number;
+  previousPeriodYr: number;
+  aAu: number;
+}): string {
+  const base = "$P \\propto a^{3/2}$ (for fixed $M$).";
+  if (!Number.isFinite(args.currentPeriodYr) || !Number.isFinite(args.previousPeriodYr) || args.previousPeriodYr <= 0) {
+    return base;
+  }
+
+  const ratio = args.currentPeriodYr / args.previousPeriodYr;
+  if (!Number.isFinite(ratio) || Math.abs(ratio - 1) < 1e-6) return `${base} $\\Delta P$: $\\times 1.00$.`;
+
+  return `${base} $\\Delta P$: $\\times ${ratio.toFixed(2)}$ vs previous.`;
+}
+
+export function computeRelativeDriftPercent(current: number, baseline: number): number | null {
+  if (!Number.isFinite(current) || !Number.isFinite(baseline)) return null;
+  const denom = Math.abs(baseline);
+  if (denom < 1e-12) return null;
+  return ((current - baseline) / denom) * 100;
+}
+
+export function buildConservationDrift(args: {
+  mode: "kepler" | "newton";
+  currentEnergy: number;
+  currentAngularMomentum: number;
+  baselineEnergy: number | null;
+  baselineAngularMomentum: number | null;
+  notation: NotationMode;
+}) {
+  if (args.mode === "kepler") {
+    return {
+      energyPercent: null,
+      angularMomentumPercent: null,
+      energyText: "~0 (analytic)",
+      angularMomentumText: "~0 (analytic)",
+      isAnalytic: true
+    };
+  }
+
+  const energyPercent =
+    args.baselineEnergy === null ? null : computeRelativeDriftPercent(args.currentEnergy, args.baselineEnergy);
+  const angularMomentumPercent =
+    args.baselineAngularMomentum === null
+      ? null
+      : computeRelativeDriftPercent(args.currentAngularMomentum, args.baselineAngularMomentum);
+
+  return {
+    energyPercent,
+    angularMomentumPercent,
+    energyText: formatSignedPercent(energyPercent, args.notation),
+    angularMomentumText: formatSignedPercent(angularMomentumPercent, args.notation),
+    isAnalytic: false
+  };
+}
+
 export function buildReadouts(args: {
   rAu: number;
   speedAuPerYr: number;
@@ -47,8 +126,10 @@ export function buildReadouts(args: {
   specificAngularMomentumAu2Yr: number;
   arealVelocityAu2Yr: number;
   units: "101" | "201";
+  profile?: ReadoutProfile;
+  notation?: NotationMode;
 }) {
-  const { units } = args;
+  const { units, profile = "advanced", notation = "auto" } = args;
 
   const velocity =
     units === "201"
@@ -86,7 +167,22 @@ export function buildReadouts(args: {
     acceleration,
     period: { value: args.periodYr, unit: "yr" },
     distance: { value: args.rAu, unit: "AU" },
-    conservation
+    conservation,
+    visibility: {
+      showAcceleration: profile === "advanced",
+      showConservation: profile === "advanced"
+    },
+    display: {
+      distance: formatReadoutNumber(args.rAu, 3, notation),
+      velocity: formatReadoutNumber(velocity.value, profile === "friendly" ? 2 : 3, notation),
+      acceleration: formatReadoutNumber(acceleration.value, 3, notation),
+      period: formatReadoutNumber(args.periodYr, 3, notation),
+      kinetic: formatReadoutNumber(conservation.kinetic.value, 4, notation),
+      potential: formatReadoutNumber(conservation.potential.value, 4, notation),
+      total: formatReadoutNumber(conservation.total.value, 4, notation),
+      h: formatReadoutNumber(conservation.h.value, 4, notation),
+      areal: formatReadoutNumber(conservation.areal.value, 4, notation)
+    }
   };
 }
 

@@ -12,6 +12,7 @@
       id="cp-demo"
       class="cp-layer-instrument cp-demo kepler-demo"
       data-shell="viz-first"
+      data-concept-focus="law2"
       aria-label="Kepler's Laws instrument"
     >
       <canvas class="cp-starfield" aria-hidden="true"></canvas>
@@ -23,7 +24,7 @@
           </div>
           <div class="kepler-stage-actions"></div>
         </div>
-        <div class="stage-surface">
+        <div class="stage-surface" data-focus-group="law2">
           <canvas id="orbitCanvas" class="orbit-canvas" aria-hidden="true"></canvas>
           <svg id="orbitSvg" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet">
             <defs>
@@ -65,9 +66,9 @@
               <path
                 id="equalAreasWedge"
                 fill="var(--cp-accent-teal)"
-                fill-opacity="0.2"
+                fill-opacity="0.28"
                 stroke="var(--cp-accent-teal)"
-                stroke-width="1"
+                stroke-width="1.2"
               />
               <g id="equalTimeMarkers"></g>
             </g>
@@ -167,6 +168,32 @@
             <button id="modeNewton" class="cp-button cp-button--outline" type="button">Newton mode</button>
           </div>
 
+          <p class="kepler-mode-note">
+            Kepler mode follows an analytic ellipse at fixed period. Newton mode emphasizes force vectors and conservation readouts.
+            <span class="kepler-tip">
+              <button
+                type="button"
+                class="kepler-tip__trigger"
+                aria-label="Mode difference"
+                aria-describedby="modeDifferenceTip"
+              >
+                ?
+              </button>
+              <span id="modeDifferenceTip" class="kepler-tip__content" role="tooltip">
+                Kepler mode computes position directly from Kepler's equation; Newton mode emphasizes force and invariant checks at the same orbit state.
+              </span>
+            </span>
+          </p>
+
+          <div class="cp-field" data-focus-group="focus-selector">
+            <div class="cp-label">Concept focus</div>
+            <div class="cp-chip-group" role="group" aria-label="Concept focus selector">
+              <button id="focusLaw2" class="cp-chip is-active" type="button" aria-pressed="true">Kepler 2: Equal Areas</button>
+              <button id="focusEnergy" class="cp-chip" type="button" aria-pressed="false">Energy</button>
+              <button id="focusLaw3" class="cp-chip" type="button" aria-pressed="false">Kepler 3: Period Scaling</button>
+            </div>
+          </div>
+
           <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">Keyboard shortcuts</span>
@@ -183,7 +210,7 @@
             </div>
           </details>
 
-          <div class="cp-field">
+          <div class="cp-field" data-focus-group="law3">
             <label class="cp-label" for="aAu">Semi-major axis $a$</label>
             <div class="cp-field__value" id="aDisplay">1.00 AU</div>
             <input
@@ -196,7 +223,15 @@
               step="1"
               data-tooltip-source="#aDisplay"
             />
-            <div class="cp-field__hint">0.3 AU $\rightarrow$ 40 AU (log scale)</div>
+            <div class="kepler-log-ticks" aria-hidden="true">
+              <span>0.3</span>
+              <span>1</span>
+              <span>3</span>
+              <span>10</span>
+              <span>40 AU</span>
+            </div>
+            <div class="cp-field__hint">Log scale from 0.3 AU to 40 AU.</div>
+            <div class="cp-field__hint" id="periodScalingHint">$P \propto a^{3/2}$ (for fixed $M$).</div>
           </div>
 
           <div class="cp-field">
@@ -212,7 +247,7 @@
               step="1"
               data-tooltip-source="#eDisplay"
             />
-            <div class="cp-field__hint">0 (circle) $\rightarrow$ 0.99</div>
+            <div class="cp-field__hint">0 (circle) to 0.99.</div>
           </div>
 
           <div class="cp-field" id="massField" hidden>
@@ -228,11 +263,26 @@
               step="1"
               data-tooltip-source="#massDisplay"
             />
-            <div class="cp-field__hint">0.1 M_sun $\rightarrow$ 10 M_sun</div>
+            <div class="cp-field__hint">0.1 M_sun to 10 M_sun.</div>
           </div>
 
           <div class="cp-field">
-            <label class="cp-label" for="timelineScrub">Orbital phase</label>
+            <label class="cp-label kepler-label-with-tip" for="timelineScrub">
+              <span>Mean anomaly $M$ (time proxy)</span>
+              <span class="kepler-tip">
+                <button
+                  type="button"
+                  class="kepler-tip__trigger"
+                  aria-label="Mean anomaly explanation"
+                  aria-describedby="meanAnomalyTip"
+                >
+                  ?
+                </button>
+                <span id="meanAnomalyTip" class="kepler-tip__content" role="tooltip">
+                  The slider advances mean anomaly uniformly in time. True anomaly (orbital angle) is solved from Kepler's equation.
+                </span>
+              </span>
+            </label>
             <div class="cp-field__value" id="phaseDisplay">0.00 / 1.00 yr</div>
             <input
               id="timelineScrub"
@@ -289,16 +339,21 @@
             </div>
           </div>
 
-          <div class="cp-field">
-            <div class="cp-label">Overlays</div>
+          <div class="cp-field kepler-law2-callout" data-focus-group="law2">
+            <div class="cp-label">Kepler 2: Equal areas</div>
+            <label class="cp-check cp-check--prominent">
+              <input id="toggleEqualAreas" type="checkbox" /> Show equal-area slices
+            </label>
+            <div class="cp-field__hint">Hypothesis: arc length changes, but area swept in equal times stays nearly constant.</div>
+          </div>
+
+          <div class="cp-field" data-focus-group="overlay">
+            <div class="cp-label">Other overlays</div>
             <label class="cp-check">
               <input id="toggleFoci" type="checkbox" checked /> Foci
             </label>
             <label class="cp-check">
               <input id="toggleApsides" type="checkbox" checked /> Apsides
-            </label>
-            <label class="cp-check">
-              <input id="toggleEqualAreas" type="checkbox" /> Equal areas
             </label>
             <label class="cp-check" id="toggleVectorsLabel" hidden>
               <input id="toggleVectors" type="checkbox" /> Vectors
@@ -350,36 +405,54 @@
         </div>
       </aside>
 
-      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
+      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel" data-focus-group="readouts-primary">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <div class="kepler-unit-toggle" role="group" aria-label="Unit system">
-            <button id="unit101" class="cp-button cp-button--active" type="button">101</button>
-            <button id="unit201" class="cp-button cp-button--outline" type="button">201</button>
+          <div class="kepler-readout-mode" role="group" aria-label="Readout detail level">
+            <button id="readoutFriendly" class="cp-button cp-button--active" type="button">Friendly</button>
+            <button id="readoutAdvanced" class="cp-button cp-button--outline" type="button">Advanced</button>
           </div>
 
-          <div class="cp-readout">
+          <div id="advancedReadoutControls" hidden>
+            <div class="kepler-unit-toggle" role="group" aria-label="Unit system">
+              <button id="unit101" class="cp-button cp-button--active" type="button">101</button>
+              <button id="unit201" class="cp-button cp-button--outline" type="button">201</button>
+            </div>
+            <div class="kepler-notation-toggle" role="group" aria-label="Number notation">
+              <button id="notationAuto" class="cp-chip is-active" type="button" aria-pressed="true">Auto</button>
+              <button id="notationSci" class="cp-chip" type="button" aria-pressed="false">Sci</button>
+              <button id="notationDecimal" class="cp-chip" type="button" aria-pressed="false">Decimal</button>
+            </div>
+          </div>
+
+          <div class="cp-readout" data-focus-group="readouts-primary law2">
             <div class="cp-readout__label">Distance $r$</div>
             <div class="cp-readout__value" id="distanceValue">1.00</div>
             <div class="cp-readout__unit" id="distanceUnit">AU</div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" data-focus-group="readouts-primary law2">
             <div class="cp-readout__label">Speed $v$</div>
             <div class="cp-readout__value" id="velocityValue">29.8</div>
             <div class="cp-readout__unit" id="velocityUnit">km/s</div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" id="accelReadout" data-focus-group="readouts-primary energy">
             <div class="cp-readout__label">Acceleration</div>
             <div class="cp-readout__value" id="accelValue">5.93</div>
             <div class="cp-readout__unit" id="accelUnit">mm/s^2</div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" data-focus-group="readouts-primary law3">
             <div class="cp-readout__label">Period $P$</div>
             <div class="cp-readout__value" id="periodValue">1.00</div>
-            <div class="cp-readout__unit">yr</div>
+            <div class="cp-readout__unit" id="periodUnit">yr</div>
           </div>
 
-          <details class="cp-accordion">
+          <div class="cp-readout kepler-drift" id="driftPanel" data-focus-group="energy">
+            <div class="cp-readout__label">Conservation drift (relative to reset)</div>
+            <div class="kepler-drift__row"><span>$\Delta\varepsilon$</span><span id="energyDriftValue">~0 (analytic)</span></div>
+            <div class="kepler-drift__row"><span>$\Delta h$</span><span id="angmomDriftValue">~0 (analytic)</span></div>
+          </div>
+
+          <details class="cp-accordion" id="conservationDetails">
             <summary>
               <span class="cp-accordion__title">Conservation laws</span>
               <span class="cp-accordion__meta">energy + angular momentum</span>
@@ -420,7 +493,7 @@
           <details class="cp-accordion" open>
             <summary>
               <span class="cp-accordion__title">What to notice</span>
-              <span class="cp-accordion__meta">3 bullets</span>
+              <span class="cp-accordion__meta">3 prompts</span>
             </summary>
             <div class="cp-accordion__body">
               <ul class="cp-list">
