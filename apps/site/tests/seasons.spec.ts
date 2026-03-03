@@ -78,6 +78,28 @@ test.describe("Seasons -- E2E", () => {
     expect(after).not.toBe(before);
   });
 
+  test("year scrub hint dismiss persists, and Show tips restores it", async ({ page }) => {
+    const hint = page.locator("#yearScrubHint");
+    const dismiss = page.locator("#dismissYearScrubHint");
+    const showTips = page.locator("#showYearScrubHint");
+
+    await expect(hint).toBeVisible();
+    await dismiss.click();
+    await expect(hint).toBeHidden();
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator("#yearScrubHint")).toBeHidden();
+
+    await showTips.click();
+    await expect(page.locator("#yearScrubHint")).toBeVisible();
+  });
+
+  test("latitude presets update slider and readouts", async ({ page }) => {
+    await page.locator('button[data-lat-preset="32.7"]').click();
+    await expect(page.locator("#latitude")).toHaveValue("32.7");
+    await expect(page.locator("#latitudeValue")).toHaveText("32.7°N");
+  });
+
   // --- Anchor Buttons ---
 
   test("anchor buttons set day-of-year to expected values", async ({ page }) => {

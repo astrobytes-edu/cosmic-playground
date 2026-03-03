@@ -234,6 +234,12 @@ describe("Seasons -- UI Logic", () => {
     it("formats -90 as 90S", () => {
       expect(formatLatitude(-90)).toBe("90\u00B0S");
     });
+    it("formats decimal latitude with one decimal place", () => {
+      expect(formatLatitude(32.7)).toBe("32.7\u00B0N");
+    });
+    it("treats tiny values near zero as equator", () => {
+      expect(formatLatitude(-0.01)).toBe("0\u00B0 (Equator)");
+    });
   });
 
   // -----------------------------------------------------------------------
