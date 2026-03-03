@@ -316,30 +316,30 @@ test.describe("Seasons -- E2E", () => {
     await page.evaluate(() => document.getElementById("tab-btn-overlays")?.click());
 
     const terminator = page.locator("#terminator");
-    // Terminator starts visible (aria-pressed="true")
-    await expect(terminator).toBeVisible();
+    // Terminator starts active (no hidden class)
+    await expect(terminator).not.toHaveClass(/stage__overlay--hidden/);
 
     const chip = page.locator('button[data-overlay="terminator"]');
     await chip.click({ force: true });
-    // After toggle, terminator should be hidden
-    await expect(terminator).toBeHidden();
+    // After toggle, hidden class should be applied
+    await expect(terminator).toHaveClass(/stage__overlay--hidden/);
 
     // Click again to restore
     await chip.click({ force: true });
-    await expect(terminator).toBeVisible();
+    await expect(terminator).not.toHaveClass(/stage__overlay--hidden/);
   });
 
   test("clicking Ecliptic overlay chip shows the ecliptic line", async ({ page }) => {
     await page.evaluate(() => document.getElementById("tab-btn-overlays")?.click());
 
     const ecliptic = page.locator("#globe-ecliptic");
-    // Ecliptic starts hidden via inline style="display:none"
-    await expect(ecliptic).toHaveCSS("display", "none");
+    // Ecliptic starts hidden via overlay hidden class
+    await expect(ecliptic).toHaveClass(/stage__overlay--hidden/);
 
     const chip = page.locator('button[data-overlay="ecliptic"]');
     await chip.click({ force: true });
-    // After toggle, display:none is removed
-    await expect(ecliptic).not.toHaveCSS("display", "none");
+    // After toggle, hidden class is removed
+    await expect(ecliptic).not.toHaveClass(/stage__overlay--hidden/);
     // Verify the chip aria-pressed flipped
     await expect(chip).toHaveAttribute("aria-pressed", "true");
   });
@@ -348,13 +348,13 @@ test.describe("Seasons -- E2E", () => {
     await page.evaluate(() => document.getElementById("tab-btn-overlays")?.click());
 
     const celEquator = page.locator("#globe-equator");
-    // Starts hidden via inline style="display:none"
-    await expect(celEquator).toHaveCSS("display", "none");
+    // Starts hidden via overlay hidden class
+    await expect(celEquator).toHaveClass(/stage__overlay--hidden/);
 
     const chip = page.locator('button[data-overlay="equator"]');
     await chip.click({ force: true });
-    // After toggle, display:none is removed
-    await expect(celEquator).not.toHaveCSS("display", "none");
+    // After toggle, hidden class is removed
+    await expect(celEquator).not.toHaveClass(/stage__overlay--hidden/);
     await expect(chip).toHaveAttribute("aria-pressed", "true");
   });
 
