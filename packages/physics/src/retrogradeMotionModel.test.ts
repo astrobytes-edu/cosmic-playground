@@ -69,6 +69,27 @@ describe("RetrogradeMotionModel.unwrapDeg180", () => {
     const unwrapped = RetrogradeMotionModel.unwrapDeg180(wrapped);
     expect(unwrapped).toEqual([350, 355, 362, 365]);
   });
+
+  test("keeps tie-case continuity near 180-degree jumps", () => {
+    const wrapped = [10, 170, 350, 170];
+    const unwrapped = RetrogradeMotionModel.unwrapDeg180(wrapped);
+    for (let i = 1; i < unwrapped.length; i++) {
+      expect(Math.abs(unwrapped[i] - unwrapped[i - 1])).toBeLessThanOrEqual(180);
+    }
+  });
+
+  test("window-shifted samples stay locally continuous", () => {
+    const wrappedA = [359, 1, 3, 5, 7, 9];
+    const wrappedB = [1, 3, 5, 7, 9, 11];
+    const unwrapA = RetrogradeMotionModel.unwrapDeg180(wrappedA);
+    const unwrapB = RetrogradeMotionModel.unwrapDeg180(wrappedB);
+    for (let i = 1; i < unwrapA.length; i++) {
+      expect(Math.abs(unwrapA[i] - unwrapA[i - 1])).toBeLessThan(30);
+    }
+    for (let i = 1; i < unwrapB.length; i++) {
+      expect(Math.abs(unwrapB[i] - unwrapB[i - 1])).toBeLessThan(30);
+    }
+  });
 });
 
 describe("RetrogradeMotionModel.centralDifferenceDegPerDay", () => {

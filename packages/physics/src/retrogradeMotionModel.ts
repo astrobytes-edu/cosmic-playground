@@ -179,7 +179,13 @@ export const RetrogradeMotionModel = {
     for (let i = 1; i < wrappedDeg.length; i++) {
       const prev = wrappedDeg[i - 1];
       const cur = wrappedDeg[i];
-      const delta = wrapDeltaDeg180(cur - prev);
+      let delta = wrapDeltaDeg180(cur - prev);
+      // Tie-break exactly 180-degree jumps to follow the prior local trend.
+      if (Math.abs(Math.abs(delta) - 180) < 1e-12 && i >= 2) {
+        const priorDelta = out[i - 1] - out[i - 2];
+        if (priorDelta > 0) delta = 180;
+        else if (priorDelta < 0) delta = -180;
+      }
       out[i] = out[i - 1] + delta;
     }
     return out;
