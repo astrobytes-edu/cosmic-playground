@@ -172,6 +172,50 @@ describe("Kepler's Laws -- Design System Contracts", () => {
     it("readouts panel has accessible label", () => {
       expect(html).toMatch(/cp-demo__readouts[^>]*aria-label="Readouts panel"/);
     });
+
+    it("includes friendly/advanced readout controls", () => {
+      expect(html).toContain('id="readoutFriendly"');
+      expect(html).toContain('id="readoutAdvanced"');
+      expect(html).toContain('id="advancedReadoutControls"');
+    });
+
+    it("includes notation controls for advanced mode", () => {
+      expect(html).toContain('id="notationAuto"');
+      expect(html).toContain('id="notationSci"');
+      expect(html).toContain('id="notationDecimal"');
+    });
+
+    it("includes drift indicator readouts", () => {
+      expect(html).toContain('id="energyDriftValue"');
+      expect(html).toContain('id="angmomDriftValue"');
+    });
+
+    it("conservation details are collapsed by default", () => {
+      expect(html).toMatch(/<details[^>]*id="conservationDetails"(?![^>]*\sopen\b)[^>]*>/);
+    });
+  });
+
+  describe("Concept scaffolding controls", () => {
+    it("includes concept focus selector buttons", () => {
+      expect(html).toContain('id="focusLaw2"');
+      expect(html).toContain('id="focusEnergy"');
+      expect(html).toContain('id="focusLaw3"');
+    });
+
+    it("includes dedicated Kepler 2 callout and toggle", () => {
+      expect(html).toContain("Kepler 2: Equal areas");
+      expect(html).toContain('id="toggleEqualAreas"');
+    });
+
+    it("includes period scaling hint element", () => {
+      expect(html).toContain('id="periodScalingHint"');
+    });
+
+    it("mode and mean-anomaly tooltips include accessible tooltip roles", () => {
+      expect(html).toContain('id="modeDifferenceTip"');
+      expect(html).toContain('id="meanAnomalyTip"');
+      expect(html).toMatch(/role="tooltip"/);
+    });
   });
 
   describe("Component migration: cp-chip presets", () => {

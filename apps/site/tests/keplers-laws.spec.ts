@@ -87,14 +87,19 @@ test.describe("Kepler's Laws -- E2E", () => {
     await expect(page.locator("#toggleVectorsLabel")).toBeVisible();
   });
 
-  // --- Unit Toggle ---
+  // --- Readout Modes + Unit Toggle ---
 
-  test("101 units are active by default", async ({ page }) => {
+  test("friendly mode is default and keeps advanced controls hidden", async ({ page }) => {
+    await expect(page.locator("#readoutFriendly")).toHaveClass(/cp-button--active/);
+    await expect(page.locator("#advancedReadoutControls")).toBeHidden();
+    await expect(page.locator("#accelReadout")).toBeHidden();
     await expect(page.locator("#unit101")).toHaveClass(/cp-button--active/);
     await expect(page.locator("#unit201")).not.toHaveClass(/cp-button--active/);
   });
 
   test("switching to 201 units activates 201 button", async ({ page }) => {
+    await page.locator("#readoutAdvanced").click();
+    await expect(page.locator("#advancedReadoutControls")).toBeVisible();
     await page.locator("#unit201").click();
     await expect(page.locator("#unit201")).toHaveClass(/cp-button--active/);
     await expect(page.locator("#unit101")).not.toHaveClass(/cp-button--active/);
@@ -105,12 +110,21 @@ test.describe("Kepler's Laws -- E2E", () => {
     const unit101 = await page.locator("#velocityUnit").textContent();
     expect(unit101).toContain("km");
 
+    await page.locator("#readoutAdvanced").click();
     // Switch to 201
     await page.locator("#unit201").click();
     // Wait for KaTeX render
     await page.waitForTimeout(300);
     const unit201 = await page.locator("#velocityUnit").textContent();
     expect(unit201).toContain("cm");
+  });
+
+  test("advanced mode reveals acceleration and notation controls", async ({ page }) => {
+    await page.locator("#readoutAdvanced").click();
+    await expect(page.locator("#accelReadout")).toBeVisible();
+    await expect(page.locator("#notationAuto")).toBeVisible();
+    await expect(page.locator("#notationSci")).toBeVisible();
+    await expect(page.locator("#notationDecimal")).toBeVisible();
   });
 
   // --- Sliders ---
@@ -212,6 +226,22 @@ test.describe("Kepler's Laws -- E2E", () => {
     expect(count).toBe(6);
   });
 
+  test("Newton mode remains finite while animating at 10x", async ({ page }) => {
+    await page.locator("#modeNewton").click();
+    await page.selectOption("#speedSelect", "10");
+    await page.locator("#readoutAdvanced").click();
+    await page.locator("#play").click();
+    await page.waitForTimeout(1500);
+    await page.locator("#pause").click();
+
+    const readoutIds = ["#distanceValue", "#velocityValue", "#periodValue", "#energyValue", "#angmomValue"];
+    for (const id of readoutIds) {
+      const text = (await page.locator(id).textContent()) ?? "";
+      expect(text).not.toContain("NaN");
+      expect(text.trim().length).toBeGreaterThan(0);
+    }
+  });
+
   // --- Timeline ---
 
   test("timeline scrub updates phase display", async ({ page }) => {
@@ -248,6 +278,11 @@ test.describe("Kepler's Laws -- E2E", () => {
     expect(display).toBe("block");
   });
 
+  test("equal-areas control is prominently visible in Kepler 2 section", async ({ page }) => {
+    await expect(page.locator(".kepler-law2-callout")).toBeVisible();
+    await expect(page.locator(".kepler-law2-callout")).toContainText("Kepler 2");
+  });
+
   // --- Readouts ---
 
   test("all four primary readouts display non-empty values", async ({ page }) => {
@@ -274,6 +309,7 @@ test.describe("Kepler's Laws -- E2E", () => {
   });
 
   test("conservation readouts appear in accordion", async ({ page }) => {
+    await page.locator("#readoutAdvanced").click();
     // Open the conservation accordion
     const accordion = page.locator("details.cp-accordion", { hasText: "Conservation laws" });
     await accordion.locator("summary").click();
@@ -285,6 +321,17 @@ test.describe("Kepler's Laws -- E2E", () => {
     expect(energy).toBeTruthy();
     const angmom = await page.locator("#angmomValue").textContent();
     expect(angmom).toBeTruthy();
+  });
+
+  test("conservation drift is explicit in Kepler mode and numeric in Newton mode", async ({ page }) => {
+    await page.locator("#readoutAdvanced").click();
+    await expect(page.locator("#energyDriftValue")).toContainText("analytic");
+    await page.locator("#modeNewton").click();
+    await page.locator("#play").click();
+    await page.waitForTimeout(400);
+    await page.locator("#pause").click();
+    const driftText = (await page.locator("#energyDriftValue").textContent()) ?? "";
+    expect(driftText).toContain("%");
   });
 
   // --- Accordion Panels ---
@@ -352,6 +399,33 @@ test.describe("Kepler's Laws -- E2E", () => {
   test("mode buttons group has aria-label", async ({ page }) => {
     const group = page.locator('[role="group"][aria-label="Mode"]');
     await expect(group).toBeAttached();
+  });
+
+  test("mode and mean anomaly tooltips are keyboard-focusable", async ({ page }) => {
+    const tips = page.locator(".kepler-tip__trigger");
+    await expect(tips).toHaveCount(2);
+    await tips.first().focus();
+    await expect(tips.first()).toBeFocused();
+  });
+
+  test("mean anomaly label is explicit", async ({ page }) => {
+    await expect(page.locator('label[for="timelineScrub"]')).toContainText("Mean anomaly");
+  });
+
+  test("concept focus selector updates root focus state", async ({ page }) => {
+    const root = page.locator("#cp-demo");
+    await expect(root).toHaveAttribute("data-concept-focus", "law2");
+    await page.locator("#focusEnergy").click();
+    await expect(root).toHaveAttribute("data-concept-focus", "energy");
+  });
+
+  test("period scaling hint updates after semi-major axis change", async ({ page }) => {
+    const slider = page.locator("#aAu");
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "650";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await expect(page.locator("#periodScalingHint")).toContainText("x");
   });
 
   test("animation controls group has aria-label", async ({ page }) => {

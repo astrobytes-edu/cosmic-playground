@@ -1,7 +1,12 @@
 import { describe, expect, it, test } from "vitest";
 import {
+  buildConservationDrift,
   buildExportPayload,
+  buildPeriodScalingHint,
   buildReadouts,
+  computeRelativeDriftPercent,
+  formatReadoutNumber,
+  formatSignedPercent,
   logSliderToValue,
   meanAnomalyRadFromTime,
   timeFromMeanAnomalyRad,
@@ -146,6 +151,18 @@ describe("buildReadouts", () => {
     expect(r.source.rAu).toBe(1);
     expect(r.source.units).toBe("101");
   });
+
+  it("friendly profile hides acceleration/conservation in visibility hints", () => {
+    const r = buildReadouts({ ...earthArgs, units: "101", profile: "friendly" });
+    expect(r.visibility.showAcceleration).toBe(false);
+    expect(r.visibility.showConservation).toBe(false);
+  });
+
+  it("advanced profile keeps acceleration/conservation visible", () => {
+    const r = buildReadouts({ ...earthArgs, units: "101", profile: "advanced" });
+    expect(r.visibility.showAcceleration).toBe(true);
+    expect(r.visibility.showConservation).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -221,5 +238,78 @@ describe("buildExportPayload", () => {
     const p = buildExportPayload(baseArgs);
     expect(p.version).toBe(1);
     expect(p.timestamp).toBeTruthy();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Formatting / drift helpers
+// ---------------------------------------------------------------------------
+
+describe("formatReadoutNumber", () => {
+  it("uses scientific notation in auto mode for large values", () => {
+    expect(formatReadoutNumber(1.2e7, 3, "auto")).toContain("e");
+  });
+
+  it("uses decimal notation in auto mode for moderate values", () => {
+    expect(formatReadoutNumber(12.3456, 2, "auto")).toBe("12.35");
+  });
+
+  it("forces scientific notation in sci mode", () => {
+    expect(formatReadoutNumber(42, 3, "sci")).toContain("e");
+  });
+
+  it("forces decimal notation in decimal mode", () => {
+    expect(formatReadoutNumber(0.0002, 5, "decimal")).toBe("0.00020");
+  });
+});
+
+describe("drift helpers", () => {
+  it("computes signed relative drift percent", () => {
+    const drift = computeRelativeDriftPercent(1.2, 1.0);
+    expect(drift).toBeCloseTo(20, 6);
+  });
+
+  it("returns null drift when baseline is too small", () => {
+    expect(computeRelativeDriftPercent(0.1, 1e-15)).toBeNull();
+  });
+
+  it("formats signed percent with plus sign", () => {
+    expect(formatSignedPercent(2.5, "decimal")).toBe("+2.500%");
+  });
+
+  it("kepler mode drift is explicit analytic near-zero text", () => {
+    const drift = buildConservationDrift({
+      mode: "kepler",
+      currentEnergy: -1,
+      currentAngularMomentum: 1,
+      baselineEnergy: -1,
+      baselineAngularMomentum: 1,
+      notation: "auto"
+    });
+    expect(drift.energyText).toContain("analytic");
+    expect(drift.angularMomentumText).toContain("analytic");
+    expect(drift.isAnalytic).toBe(true);
+  });
+
+  it("newton mode drift reports numeric percent", () => {
+    const drift = buildConservationDrift({
+      mode: "newton",
+      currentEnergy: -0.99,
+      currentAngularMomentum: 1.01,
+      baselineEnergy: -1,
+      baselineAngularMomentum: 1,
+      notation: "auto"
+    });
+    expect(drift.energyText).toContain("%");
+    expect(drift.angularMomentumText).toContain("%");
+    expect(drift.isAnalytic).toBe(false);
+  });
+});
+
+describe("buildPeriodScalingHint", () => {
+  it("includes proportionality statement and multiplier", () => {
+    const text = buildPeriodScalingHint({ currentPeriodYr: 8, previousPeriodYr: 1, aAu: 4 });
+    expect(text).toContain("P");
+    expect(text).toContain("\\times 8.00");
   });
 });
