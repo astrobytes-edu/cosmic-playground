@@ -28,6 +28,7 @@ Each review documents:
 | [eclipse-geometry](eclipse-geometry.md) | Physics review | 2026-02-07 |
 | [em-spectrum](em-spectrum.md) | Physics review | 2026-02-07 |
 | [keplers-laws](keplers-laws.md) | Physics review | 2026-02-07 |
+| [2026-03-03-keplers-laws-ux-hardening](2026-03-03-keplers-laws-ux-hardening.md) | UX hardening summary | 2026-03-03 |
 | [moon-phases](moon-phases.md) | Physics review | 2026-02-07 |
 | [parallax-distance](parallax-distance.md) | Physics review | 2026-02-07 |
 | [planetary-conjunctions](planetary-conjunctions.md) | Physics review | 2026-02-07 |
