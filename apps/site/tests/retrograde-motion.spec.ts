@@ -26,6 +26,18 @@ test.describe("Retrograde Motion -- E2E", () => {
     await expect(page.locator("#skySvg")).toBeVisible();
   });
 
+  test("plot axis label uses continuous longitude wording", async ({ page }) => {
+    await expect(
+      page.locator("#plotSvg text").filter({ hasText: "Apparent longitude (deg, continuous)" }),
+    ).toHaveCount(1);
+  });
+
+  test("plot legend shows line, retrograde band, and cursor semantics", async ({ page }) => {
+    await expect(page.locator(".retro__plot-legend")).toContainText("Line");
+    await expect(page.locator(".retro__plot-legend")).toContainText("Retrograde band");
+    await expect(page.locator(".retro__plot-legend")).toContainText("Cursor");
+  });
+
   test("readouts strip is visible", async ({ page }) => {
     await expect(page.locator(".cp-demo__readouts")).toBeVisible();
   });
@@ -177,6 +189,20 @@ test.describe("Retrograde Motion -- E2E", () => {
     await expect(page.locator(".retro__timeline-row #nextStationary")).toBeVisible();
   });
 
+  test("stationary navigation buttons show approximate day labels", async ({ page }) => {
+    await expect(page.locator("#centerRetrograde")).toContainText("Retrograde midpoint");
+    await expect(page.locator("#nextStationary")).toContainText("stationary");
+    await expect(page.locator("#prevStationary")).toContainText("stationary");
+    const nextButton = page.locator("#nextStationary");
+    if (!(await nextButton.isDisabled())) {
+      await expect(nextButton).toContainText("Day");
+      await nextButton.click();
+      if (!(await page.locator("#prevStationary").isDisabled())) {
+        await expect(page.locator("#prevStationary")).toContainText("Day");
+      }
+    }
+  });
+
   test("step forward button advances cursor", async ({ page }) => {
     const before = await page.locator("#readoutDay").textContent();
     await page.locator(".cp-demo__sidebar #btn-step-forward").click();
@@ -207,8 +233,18 @@ test.describe("Retrograde Motion -- E2E", () => {
   });
 
   test("previous stationary button works after advancing cursor", async ({ page }) => {
-    await page.locator("#nextStationary").click();
-    await page.locator("#prevStationary").click();
+    const nextButton = page.locator("#nextStationary");
+    if (await nextButton.isDisabled()) {
+      await expect(page.locator("#prevStationary")).toBeDisabled();
+      return;
+    }
+    await nextButton.click();
+    const prevButton = page.locator("#prevStationary");
+    if (await prevButton.isDisabled()) {
+      await expect(prevButton).toBeDisabled();
+      return;
+    }
+    await prevButton.click();
     const afterPrev = await page.locator("#readoutDay").textContent();
     expect(afterPrev).toBeTruthy();
     expect(parseFloat(afterPrev || "NaN")).not.toBeNaN();
@@ -233,7 +269,10 @@ test.describe("Retrograde Motion -- E2E", () => {
       el.value = el.max;
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    await page.locator("#nextStationary").click();
+    const nextButton = page.locator("#nextStationary");
+    if (!(await nextButton.isDisabled())) {
+      await nextButton.click();
+    }
     const dayText = await page.locator("#readoutDay").textContent();
     expect(parseFloat(dayText || "NaN")).not.toBeNaN();
   });
@@ -311,6 +350,11 @@ test.describe("Retrograde Motion -- E2E", () => {
     expect(text).toContain("Direct");
   });
 
+  test("state formula helper text is shown near badge", async ({ page }) => {
+    await expect(page.locator("#stateFormula")).toContainText("Stationary");
+    await expect(page.locator("#stateFormula")).toContainText("eps");
+  });
+
   // --- Keyboard & Accessibility ---
 
   test("arrow keys step cursor when plot is focused", async ({ page }) => {
@@ -328,6 +372,13 @@ test.describe("Retrograde Motion -- E2E", () => {
     await page.locator("#preset").focus();
     const focused = await page.evaluate(() => document.activeElement?.id);
     expect(focused).toBe("preset");
+  });
+
+  test("focus plot button focuses plot and updates focus status label", async ({ page }) => {
+    await page.locator("#focusPlotBtn").click();
+    await expect(page.locator("#plotFocusStatus")).toContainText("Plot focused");
+    const focusedId = await page.evaluate(() => document.activeElement?.id);
+    expect(focusedId).toBe("plotFocus");
   });
 
   test("copy results button triggers status message", async ({ page }) => {
@@ -508,6 +559,49 @@ test.describe("Retrograde Motion -- E2E", () => {
     expect(label).toContain("Longitude plot");
   });
 
+  test("same observer-target pair shows warning and disables retrograde controls", async ({ page }) => {
+    await page.locator(".cp-accordion summary").click();
+    await page.locator("#observer").selectOption("Earth");
+    await page.locator("#target").selectOption("Earth");
+    await expect(page.locator("#samePairWarning")).toBeVisible();
+    await expect(page.locator("#stateBadge")).toContainText("Undefined");
+    await expect(page.locator("#prevStationary")).toBeDisabled();
+    await expect(page.locator("#nextStationary")).toBeDisabled();
+    await expect(page.locator("#centerRetrograde")).toBeDisabled();
+  });
+
+  test("orbit overlay toggles default off and render elements when enabled", async ({ page }) => {
+    await expect(page.locator("#showLineOfSight")).not.toBeChecked();
+    await expect(page.locator("#showReferenceAxis")).not.toBeChecked();
+    await expect(page.locator("#showLambdaArc")).not.toBeChecked();
+
+    await page.locator("#showReferenceAxis").check();
+    await page.locator("#showLineOfSight").check();
+    await page.locator("#showLambdaArc").check();
+    await expect(page.locator("#orbitSvg text").filter({ hasText: "0 deg" })).toHaveCount(1);
+    const lineCount = await page.locator("#orbitSvg line").count();
+    expect(lineCount).toBeGreaterThanOrEqual(2);
+    await expect(page.locator("#orbitSvg text").filter({ hasText: "\u03bb_app" })).toHaveCount(1);
+  });
+
+  test("plot step warning appears for coarse sampling", async ({ page }) => {
+    await page.locator(".cp-accordion summary").click();
+    await page.locator("#plotStepDay").selectOption("2");
+    await expect(page.locator("#plotStepWarning")).toBeVisible();
+  });
+
+  test("onboarding appears on first load and can be reopened from Help", async ({ page }) => {
+    await page.evaluate(() => window.localStorage.removeItem("cp:retrograde-motion:onboarding:v1"));
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator("#onboardingCard")).toBeVisible();
+    await page.locator("#onboardingDismiss").click();
+    await expect(page.locator("#onboardingCard")).toBeHidden();
+
+    await page.locator("#btn-help").click();
+    await page.locator("#showOnboardingAgain").click();
+    await expect(page.locator("#onboardingCard")).toBeVisible();
+  });
+
   test("copy results button is present", async ({ page }) => {
     const btn = page.locator("#copyResults");
     await expect(btn).toBeVisible();
@@ -544,6 +638,38 @@ test.describe("Retrograde Motion -- E2E", () => {
     const rects = page.locator("#skySvg rect");
     const count = await rects.count();
     expect(count).toBeGreaterThanOrEqual(1);
+  });
+
+  test("no console errors during 60s high-speed run across preset/window changes", async ({ page }) => {
+    test.setTimeout(110_000);
+    const consoleErrors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.locator(".cp-accordion summary").click();
+    await page.locator("#windowMonths").evaluate((el: HTMLInputElement) => {
+      el.value = "72";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await page.locator("#speed-select").selectOption("20");
+    await page.locator("#btn-play").click();
+    await page.waitForTimeout(30_000);
+
+    await page.locator("#preset").selectOption("earth-venus");
+    await page.locator("#windowMonths").evaluate((el: HTMLInputElement) => {
+      el.value = "12";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await page.waitForTimeout(30_000);
+
+    const pauseButton = page.locator("#btn-pause");
+    if (!(await pauseButton.isDisabled())) {
+      await pauseButton.click();
+    }
+    expect(consoleErrors).toEqual([]);
   });
 
   // --- Visual Regression Screenshots (skipped) ---

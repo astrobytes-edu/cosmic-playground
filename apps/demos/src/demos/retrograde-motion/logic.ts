@@ -8,6 +8,10 @@
 // ── Utilities ───────────────────────────────────────────────
 
 const EM_DASH = "\u2014";
+const DEFAULT_EPS_LO_DEG_PER_DAY = 0.005;
+const DEFAULT_EPS_HI_DEG_PER_DAY = 0.01;
+
+export type RetrogradeState = "Direct" | "Stationary" | "Retrograde" | "Undefined";
 
 export function formatNumber(value: number, digits: number): string {
   if (!Number.isFinite(value)) return EM_DASH;
@@ -29,11 +33,48 @@ export function geometryHintLabel(
   return "";
 }
 
-export function formatRetrogradeState(dLambdaDt: number): string {
-  if (!Number.isFinite(dLambdaDt)) return EM_DASH;
+export function formatRetrogradeState(dLambdaDt: number): RetrogradeState {
+  if (!Number.isFinite(dLambdaDt)) return "Undefined";
   if (dLambdaDt > 0) return "Direct";
   if (dLambdaDt < 0) return "Retrograde";
   return "Stationary";
+}
+
+export function classifyRetrogradeStateWithHysteresis(args: {
+  dLambdaDtDegPerDay: number;
+  previousState?: RetrogradeState;
+  epsLoDegPerDay?: number;
+  epsHiDegPerDay?: number;
+  forceUndefined?: boolean;
+}): RetrogradeState {
+  if (args.forceUndefined) return "Undefined";
+  const slope = args.dLambdaDtDegPerDay;
+  if (!Number.isFinite(slope)) return "Undefined";
+
+  const epsLo = Math.max(0, args.epsLoDegPerDay ?? DEFAULT_EPS_LO_DEG_PER_DAY);
+  const epsHiRaw = Math.max(0, args.epsHiDegPerDay ?? DEFAULT_EPS_HI_DEG_PER_DAY);
+  const epsHi = Math.max(epsHiRaw, epsLo);
+
+  const absSlope = Math.abs(slope);
+  const previous = args.previousState;
+
+  if (previous === "Stationary") {
+    if (absSlope < epsHi) return "Stationary";
+    return slope > 0 ? "Direct" : "Retrograde";
+  }
+
+  if (previous === "Direct") {
+    if (absSlope <= epsLo) return "Stationary";
+    return slope > 0 ? "Direct" : "Retrograde";
+  }
+
+  if (previous === "Retrograde") {
+    if (absSlope <= epsLo) return "Stationary";
+    return slope < 0 ? "Retrograde" : "Direct";
+  }
+
+  if (absSlope <= epsLo) return "Stationary";
+  return slope > 0 ? "Direct" : "Retrograde";
 }
 
 export function formatDuration(startDay: number, endDay: number): string {
@@ -269,12 +310,11 @@ export function resolveDistinctPair(
   observer: string,
   target: string,
 ): DistinctPairResult {
-  if (observer !== target) {
-    return { observer, target, adjusted: false };
-  }
+  return { observer, target, adjusted: false };
+}
 
-  const fallbackTarget = observer === "Earth" ? "Mars" : "Earth";
-  return { observer, target: fallbackTarget, adjusted: true };
+export function isObserverTargetSame(observer: string, target: string): boolean {
+  return observer === target;
 }
 
 export function isRetrogradeDurationComparisonComplete(
@@ -297,6 +337,57 @@ export function retrogradeDurationIfActiveAtCursor(
   return activeInterval.endDay - activeInterval.startDay;
 }
 
+export function buildStationaryNavigationLabels(args: {
+  stationaryDays: number[];
+  intervals: { startDay: number; endDay: number }[];
+  cursorDay: number;
+}): {
+  prevDay: number;
+  nextDay: number;
+  midpointDay: number;
+  prevLabel: string;
+  nextLabel: string;
+  midpointLabel: string;
+} {
+  const { prev, next } = findPrevNextStationary(args.stationaryDays, args.cursorDay);
+  const nearest = nearestRetrogradeInterval(args.intervals, args.cursorDay);
+  const midpointDay = nearest ? 0.5 * (nearest.startDay + nearest.endDay) : Number.NaN;
+
+  return {
+    prevDay: prev,
+    nextDay: next,
+    midpointDay,
+    prevLabel: Number.isFinite(prev)
+      ? `\u00ab Prev stationary \u2248 Day ${formatNumber(prev, 1)}`
+      : "\u00ab Prev stationary",
+    nextLabel: Number.isFinite(next)
+      ? `Next stationary \u2248 Day ${formatNumber(next, 1)} \u00bb`
+      : "Next stationary \u00bb",
+    midpointLabel: Number.isFinite(midpointDay)
+      ? `\u2022 Retrograde midpoint \u2248 Day ${formatNumber(midpointDay, 1)}`
+      : "\u2022 Retrograde midpoint",
+  };
+}
+
+export function relativeAngularSpeedProxyDegPerDay(args: {
+  observerAAu: number;
+  targetAAu: number;
+  modelYearDays?: number;
+}): number {
+  const modelYearDays = args.modelYearDays ?? 365.25;
+  if (!Number.isFinite(modelYearDays) || modelYearDays <= 0) return Number.NaN;
+  if (!Number.isFinite(args.observerAAu) || args.observerAAu <= 0) return Number.NaN;
+  if (!Number.isFinite(args.targetAAu) || args.targetAAu <= 0) return Number.NaN;
+
+  const periodObserverDays = modelYearDays * Math.pow(args.observerAAu, 1.5);
+  const periodTargetDays = modelYearDays * Math.pow(args.targetAAu, 1.5);
+  if (periodObserverDays <= 0 || periodTargetDays <= 0) return Number.NaN;
+
+  const nObserver = 360 / periodObserverDays;
+  const nTarget = 360 / periodTargetDays;
+  return nObserver - nTarget;
+}
+
 // ── Display state (DI pattern) ──────────────────────────────
 
 export type RetroModelCallbacks = {
@@ -308,7 +399,7 @@ export type DisplayState = {
   lambdaDeg: number;
   lambdaUnwrappedDeg: number;
   dLambdaDt: number;
-  stateLabel: string;
+  stateLabel: RetrogradeState;
   geometryHint: string;
   prevStationary: number;
   nextStationary: number;
@@ -331,6 +422,12 @@ export function computeDisplayState(
   },
   cursorDay: number,
   model: RetroModelCallbacks,
+  options?: {
+    previousState?: RetrogradeState;
+    epsLoDegPerDay?: number;
+    epsHiDegPerDay?: number;
+    forceUndefined?: boolean;
+  },
 ): DisplayState {
   const idx = seriesIndexAtDay(cursorDay, series.windowStartDay, series.dtInternalDay);
   const safeIdx = clamp(idx, 0, series.timesDay.length - 1);
@@ -342,15 +439,26 @@ export function computeDisplayState(
   const observerEl = model.planetElements(series.observer);
   const targetEl = model.planetElements(series.target);
 
-  const { prev, next } = findPrevNextStationary(series.stationaryDays, cursorDay);
-  const retroInterval = nearestRetrogradeInterval(series.retrogradeIntervals, cursorDay);
+  const isUndefined = Boolean(options?.forceUndefined);
+  const { prev, next } = isUndefined
+    ? { prev: Number.NaN, next: Number.NaN }
+    : findPrevNextStationary(series.stationaryDays, cursorDay);
+  const retroInterval = isUndefined
+    ? null
+    : nearestRetrogradeInterval(series.retrogradeIntervals, cursorDay);
 
   return {
     cursorDay,
-    lambdaDeg,
-    lambdaUnwrappedDeg,
-    dLambdaDt,
-    stateLabel: formatRetrogradeState(dLambdaDt),
+    lambdaDeg: isUndefined ? Number.NaN : lambdaDeg,
+    lambdaUnwrappedDeg: isUndefined ? Number.NaN : lambdaUnwrappedDeg,
+    dLambdaDt: isUndefined ? Number.NaN : dLambdaDt,
+    stateLabel: classifyRetrogradeStateWithHysteresis({
+      dLambdaDtDegPerDay: dLambdaDt,
+      previousState: options?.previousState,
+      epsLoDegPerDay: options?.epsLoDegPerDay,
+      epsHiDegPerDay: options?.epsHiDegPerDay,
+      forceUndefined: isUndefined,
+    }),
     geometryHint: geometryHintLabel(observerEl.aAu, targetEl.aAu),
     prevStationary: prev,
     nextStationary: next,

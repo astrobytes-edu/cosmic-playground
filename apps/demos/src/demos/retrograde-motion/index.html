@@ -135,6 +135,11 @@
                 </select>
               </div>
 
+              <div id="samePairWarning" class="cp-callout retro__inline-warning" data-kind="warning" hidden>
+                <strong>Retrograde undefined</strong>
+                <div>Observer and target are the same; retrograde is undefined.</div>
+              </div>
+
               <label class="cp-field">
                 <span class="cp-label">Window length</span>
                 <input
@@ -157,6 +162,10 @@
                   <option value="1" selected>1 day</option>
                   <option value="2">2 days</option>
                 </select>
+                <p id="plotStepWarning" class="retro__step-warning" hidden>
+                  Stationary detection may be less precise at this step. Event detection still uses the internal
+                  0.25-day model grid.
+                </p>
               </div>
 
               <label class="cp-field">
@@ -168,6 +177,29 @@
                 <input id="showOtherPlanets" type="checkbox" />
                 <span>Show other planets</span>
               </label>
+
+              <div class="cp-field">
+                <span class="cp-label">
+                  Relative angular speed proxy
+                  <span class="retro-tip">
+                    <button
+                      type="button"
+                      class="retro-tip__trigger"
+                      aria-label="Relative angular speed proxy help"
+                      aria-describedby="deltaNHelp"
+                    >
+                      ?
+                    </button>
+                    <span id="deltaNHelp" class="retro-tip__content" role="tooltip">
+                      Retrograde duration depends on relative angular motion near conjunction.
+                    </span>
+                  </span>
+                </span>
+                <div class="cp-muted">
+                  <span id="deltaNValue">&mdash;</span>
+                  <span class="cp-readout__unit">deg/day</span>
+                </div>
+              </div>
             </div>
           </details>
 
@@ -181,17 +213,62 @@
       <section class="cp-demo__stage cp-stage" aria-label="Visualization stage">
         <div class="viz-layout">
           <div class="viz-panel retro__plot-panel">
-            <div class="panel-title">Apparent Longitude $\lambda_{\mathrm{app}}$</div>
+            <div class="retro__plot-header">
+              <div class="panel-title">
+                Apparent Longitude $\lambda_{\mathrm{app}}$
+                <span class="retro-tip">
+                  <button
+                    type="button"
+                    class="retro-tip__trigger"
+                    aria-label="Continuous longitude help"
+                    aria-describedby="continuousLongitudeTip"
+                  >
+                    ?
+                  </button>
+                  <span id="continuousLongitudeTip" class="retro-tip__content" role="tooltip">
+                    Continuous means the plotted longitude is unwrapped, so there are no 0 deg / 360 deg jumps.
+                  </span>
+                </span>
+              </div>
+              <button id="focusPlotBtn" class="cp-button cp-button--outline retro__focus-btn" type="button">
+                Focus plot (keyboard)
+              </button>
+            </div>
             <span class="retro__state-badge" id="stateBadge">Direct</span>
+            <div class="retro__state-formula" id="stateFormula">
+              Direct: $d\tilde{\lambda}/dt &gt; 0$ | Stationary: $|d\tilde{\lambda}/dt| \le \epsilon$ | Retrograde: $d\tilde{\lambda}/dt &lt; 0$
+            </div>
+            <div class="retro__plot-legend" aria-label="Plot legend">
+              <span class="retro__legend-item"><span class="retro__legend-swatch retro__legend-swatch--line"></span>Line</span>
+              <span class="retro__legend-item"><span class="retro__legend-swatch retro__legend-swatch--band"></span>Retrograde band</span>
+              <span class="retro__legend-item"><span class="retro__legend-swatch retro__legend-swatch--cursor"></span>Cursor</span>
+            </div>
             <div id="plotFocus" class="retro__plot-focus" tabindex="0" aria-label="Longitude plot — click or drag to scrub time">
               <svg id="plotSvg" class="retro__svg" viewBox="0 0 1000 400"></svg>
             </div>
-            <div class="retro__hint">Click or drag the plot to scrub time; arrow keys when focused.</div>
+            <div class="retro__plot-footer">
+              <div id="plotFocusStatus" class="retro__plot-focus-status" aria-live="polite">Plot not focused</div>
+              <div class="retro__hint">Click or drag the plot to scrub time; arrow keys when focused.</div>
+            </div>
           </div>
 
           <div class="retro__right-col">
             <div class="viz-panel retro__orbit-panel">
               <div class="panel-title">Orbit View (top-down)</div>
+              <div class="retro__orbit-overlays" role="group" aria-label="Orbit overlays">
+                <label class="cp-check cp-check--inline">
+                  <input id="showLineOfSight" type="checkbox" />
+                  <span>Show line-of-sight</span>
+                </label>
+                <label class="cp-check cp-check--inline">
+                  <input id="showReferenceAxis" type="checkbox" />
+                  <span>Show 0 deg reference axis</span>
+                </label>
+                <label class="cp-check cp-check--inline">
+                  <input id="showLambdaArc" type="checkbox" />
+                  <span>Show lambda angle arc</span>
+                </label>
+              </div>
               <svg id="orbitSvg" class="retro__svg" viewBox="0 0 420 420"></svg>
             </div>
             <div class="viz-panel retro__sky-panel">
@@ -225,7 +302,7 @@
             &laquo; Prev stationary
           </button>
           <button id="centerRetrograde" class="cp-button cp-button--outline" type="button">
-            &bull; Retrograde
+            &bull; Retrograde midpoint
           </button>
           <button id="nextStationary" class="cp-button cp-button--outline" type="button">
             Next stationary &raquo;
@@ -237,19 +314,19 @@
            READOUT STRIP — pinned readouts
            ═══════════════════════════════════════════ -->
       <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
-        <div class="cp-readout">
+        <div class="cp-readout retro__readout-primary">
           <span class="cp-readout__label">Day $t$</span>
           <span class="cp-readout__value"><span id="readoutDay">0.00</span><span class="cp-readout__unit">days</span></span>
         </div>
-        <div class="cp-readout">
+        <div class="cp-readout retro__readout-primary">
           <span class="cp-readout__label">$\lambda_{\mathrm{app}}$</span>
           <span class="cp-readout__value"><span id="readoutLambda">&mdash;</span><span class="cp-readout__unit">deg</span></span>
         </div>
-        <div class="cp-readout">
+        <div class="cp-readout retro__readout-primary">
           <span class="cp-readout__label">$d\tilde{\lambda}/dt$</span>
           <span class="cp-readout__value"><span id="readoutSlope">&mdash;</span><span class="cp-readout__unit">deg/day</span></span>
         </div>
-        <div class="cp-readout">
+        <div class="cp-readout retro__readout-primary">
           <span class="cp-readout__label">State</span>
           <span class="cp-readout__value"><span id="readoutState">&mdash;</span></span>
         </div>
@@ -306,6 +383,17 @@
       <div class="retro__annotation" id="retroAnnotation" hidden>
         <span>The planet appears to reverse! This is <strong>retrograde motion</strong> &mdash; an illusion caused by the difference in orbital speeds between observer and target.</span>
         <button class="retro__annotation-close" id="retroAnnotationClose" type="button" aria-label="Dismiss">&times;</button>
+      </div>
+
+      <div class="retro__onboarding" id="onboardingCard" hidden>
+        <div class="retro__onboarding-title">Quick guide</div>
+        <p id="onboardingText" class="retro__onboarding-text">Drag the plot to scrub time.</p>
+        <div id="onboardingStep" class="retro__onboarding-step">Step 1 of 3</div>
+        <div class="retro__onboarding-actions">
+          <button id="onboardingPrev" class="cp-button cp-button--outline" type="button">Prev</button>
+          <button id="onboardingNext" class="cp-button" type="button">Next</button>
+          <button id="onboardingDismiss" class="cp-button cp-button--ghost" type="button">Dismiss</button>
+        </div>
       </div>
     </div>
 

@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
+  buildStationaryNavigationLabels,
+  classifyRetrogradeStateWithHysteresis,
   formatNumber,
   clamp,
   geometryHintLabel,
@@ -17,10 +19,13 @@ import {
   projectToSkyView,
   zodiacLabelPositions,
   presetToConfig,
+  isObserverTargetSame,
+  relativeAngularSpeedProxyDegPerDay,
   resolveDistinctPair,
   isRetrogradeDurationComparisonComplete,
   retrogradeDurationIfActiveAtCursor,
   computeDisplayState,
+  type RetrogradeState,
   type RetroModelCallbacks,
 } from "./logic";
 
@@ -79,8 +84,47 @@ describe("formatRetrogradeState", () => {
   it("returns Stationary for zero slope", () => {
     expect(formatRetrogradeState(0)).toBe("Stationary");
   });
-  it("returns dash for NaN", () => {
-    expect(formatRetrogradeState(NaN)).toBe("\u2014");
+  it("returns Undefined for NaN", () => {
+    expect(formatRetrogradeState(NaN)).toBe("Undefined");
+  });
+});
+
+describe("classifyRetrogradeStateWithHysteresis", () => {
+  it("enters stationary only inside epsLo", () => {
+    const s = classifyRetrogradeStateWithHysteresis({
+      dLambdaDtDegPerDay: 0.004,
+      previousState: "Direct",
+      epsLoDegPerDay: 0.005,
+      epsHiDegPerDay: 0.01,
+    });
+    expect(s).toBe("Stationary");
+  });
+
+  it("keeps stationary until abs slope exits epsHi", () => {
+    const s1 = classifyRetrogradeStateWithHysteresis({
+      dLambdaDtDegPerDay: 0.008,
+      previousState: "Stationary",
+      epsLoDegPerDay: 0.005,
+      epsHiDegPerDay: 0.01,
+    });
+    expect(s1).toBe("Stationary");
+
+    const s2 = classifyRetrogradeStateWithHysteresis({
+      dLambdaDtDegPerDay: -0.012,
+      previousState: "Stationary",
+      epsLoDegPerDay: 0.005,
+      epsHiDegPerDay: 0.01,
+    });
+    expect(s2).toBe("Retrograde");
+  });
+
+  it("returns Undefined when forceUndefined is true", () => {
+    const s = classifyRetrogradeStateWithHysteresis({
+      dLambdaDtDegPerDay: -0.4,
+      previousState: "Direct",
+      forceUndefined: true,
+    });
+    expect(s).toBe("Undefined");
   });
 });
 
@@ -298,6 +342,30 @@ describe("computeDisplayState", () => {
     const state = computeDisplayState(noRetro, 0, stubCallbacks);
     expect(state.retroDuration).toBe("\u2014");
   });
+
+  it("returns Undefined state when forced undefined", () => {
+    const state = computeDisplayState(mockSeries, 0.5, stubCallbacks, {
+      forceUndefined: true,
+      previousState: "Direct",
+    });
+    expect(state.stateLabel).toBe("Undefined");
+    expect(state.retroInterval).toBeNull();
+    expect(state.prevStationary).toBeNaN();
+    expect(state.nextStationary).toBeNaN();
+  });
+
+  it("uses hysteresis state memory in computeDisplayState", () => {
+    const customSeries = {
+      ...mockSeries,
+      dLambdaDtDegPerDay: [0.004, 0.004, 0.004, 0.004, 0.004],
+    };
+    const state = computeDisplayState(customSeries, 0.5, stubCallbacks, {
+      previousState: "Direct" as RetrogradeState,
+      epsLoDegPerDay: 0.005,
+      epsHiDegPerDay: 0.01,
+    });
+    expect(state.stateLabel).toBe("Stationary");
+  });
 });
 
 describe("resolveDistinctPair", () => {
@@ -309,20 +377,30 @@ describe("resolveDistinctPair", () => {
     });
   });
 
-  it("re-targets Earth observer away from Earth", () => {
+  it("does not auto-adjust when observer and target are equal (guard handled in UI)", () => {
     expect(resolveDistinctPair("Earth", "Earth")).toEqual({
       observer: "Earth",
-      target: "Mars",
-      adjusted: true,
+      target: "Earth",
+      adjusted: false,
     });
   });
 
-  it("re-targets non-Earth observer to Earth when duplicated", () => {
+  it("keeps non-Earth duplicated pair unchanged", () => {
     expect(resolveDistinctPair("Venus", "Venus")).toEqual({
       observer: "Venus",
-      target: "Earth",
-      adjusted: true,
+      target: "Venus",
+      adjusted: false,
     });
+  });
+});
+
+describe("isObserverTargetSame", () => {
+  it("returns true for identical planet keys", () => {
+    expect(isObserverTargetSame("Earth", "Earth")).toBe(true);
+  });
+
+  it("returns false for distinct planet keys", () => {
+    expect(isObserverTargetSame("Earth", "Mars")).toBe(false);
   });
 });
 
@@ -356,6 +434,55 @@ describe("retrogradeDurationIfActiveAtCursor", () => {
 
   it("returns null when cursor is outside all retrograde intervals", () => {
     expect(retrogradeDurationIfActiveAtCursor(intervals, 250)).toBeNull();
+  });
+});
+
+describe("buildStationaryNavigationLabels", () => {
+  const intervals = [{ startDay: 100, endDay: 170 }];
+  const stationaryDays = [100, 170];
+
+  it("returns approximate labels with days when events exist", () => {
+    const labels = buildStationaryNavigationLabels({
+      stationaryDays,
+      intervals,
+      cursorDay: 130,
+    });
+    expect(labels.prevLabel).toContain("Day 100.0");
+    expect(labels.nextLabel).toContain("Day 170.0");
+    expect(labels.midpointLabel).toContain("Day 135.0");
+  });
+
+  it("returns fallback labels when events do not exist", () => {
+    const labels = buildStationaryNavigationLabels({
+      stationaryDays: [],
+      intervals: [],
+      cursorDay: 50,
+    });
+    expect(labels.prevLabel).toBe("\u00ab Prev stationary");
+    expect(labels.nextLabel).toBe("Next stationary \u00bb");
+    expect(labels.midpointLabel).toBe("\u2022 Retrograde midpoint");
+    expect(labels.prevDay).toBeNaN();
+    expect(labels.nextDay).toBeNaN();
+    expect(labels.midpointDay).toBeNaN();
+  });
+});
+
+describe("relativeAngularSpeedProxyDegPerDay", () => {
+  it("returns positive delta-n when observer orbit is smaller", () => {
+    const delta = relativeAngularSpeedProxyDegPerDay({
+      observerAAu: 1.0,
+      targetAAu: 1.52,
+      modelYearDays: 365.256,
+    });
+    expect(delta).toBeGreaterThan(0);
+  });
+
+  it("returns NaN for invalid inputs", () => {
+    const delta = relativeAngularSpeedProxyDegPerDay({
+      observerAAu: Number.NaN,
+      targetAAu: 1.0,
+    });
+    expect(delta).toBeNaN();
   });
 });
 

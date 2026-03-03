@@ -13,22 +13,24 @@ import { RetrogradeMotionModel } from "@cosmic/physics";
 import {
   advanceCursor,
   buildOrbitPath,
+  buildStationaryNavigationLabels,
+  classifyRetrogradeStateWithHysteresis,
   clamp,
   computeDisplayState,
   dayFromPlotX,
-  findPrevNextStationary,
   formatNumber,
+  isObserverTargetSame,
   isRetrogradeDurationComparisonComplete,
-  nearestRetrogradeInterval,
   orbitEllipsePoints,
   plotXFromDay,
   plotYFromDeg,
   presetToConfig,
   projectToSkyView,
+  relativeAngularSpeedProxyDegPerDay,
   retrogradeDurationIfActiveAtCursor,
-  resolveDistinctPair,
   seriesIndexAtDay,
   zodiacLabelPositions,
+  type RetrogradeState,
   type RetroModelCallbacks,
 } from "./logic";
 
@@ -67,15 +69,32 @@ const windowMonthsValue = requireEl(document.querySelector<HTMLSpanElement>("#wi
 const plotStepDay = requireEl(document.querySelector<HTMLSelectElement>("#plotStepDay"), "#plotStepDay");
 const showOtherPlanets = requireEl(document.querySelector<HTMLInputElement>("#showOtherPlanets"), "#showOtherPlanets");
 const showZodiac = requireEl(document.querySelector<HTMLInputElement>("#showZodiac"), "#showZodiac");
+const samePairWarning = requireEl(document.querySelector<HTMLDivElement>("#samePairWarning"), "#samePairWarning");
+const plotStepWarning = requireEl(document.querySelector<HTMLParagraphElement>("#plotStepWarning"), "#plotStepWarning");
+const deltaNValue = requireEl(document.querySelector<HTMLSpanElement>("#deltaNValue"), "#deltaNValue");
 
 const plotFocus = requireEl(document.querySelector<HTMLDivElement>("#plotFocus"), "#plotFocus");
 const plotSvgEl = requireEl(document.querySelector<SVGSVGElement>("#plotSvg"), "#plotSvg");
 const orbitSvgEl = requireEl(document.querySelector<SVGSVGElement>("#orbitSvg"), "#orbitSvg");
 const skySvgEl = requireEl(document.querySelector<SVGSVGElement>("#skySvg"), "#skySvg");
+const focusPlotBtn = requireEl(document.querySelector<HTMLButtonElement>("#focusPlotBtn"), "#focusPlotBtn");
+const plotFocusStatus = requireEl(document.querySelector<HTMLDivElement>("#plotFocusStatus"), "#plotFocusStatus");
+const stateFormula = requireEl(document.querySelector<HTMLDivElement>("#stateFormula"), "#stateFormula");
+
+const showLineOfSight = requireEl(document.querySelector<HTMLInputElement>("#showLineOfSight"), "#showLineOfSight");
+const showReferenceAxis = requireEl(document.querySelector<HTMLInputElement>("#showReferenceAxis"), "#showReferenceAxis");
+const showLambdaArc = requireEl(document.querySelector<HTMLInputElement>("#showLambdaArc"), "#showLambdaArc");
 
 const stateBadge = requireEl(document.querySelector<HTMLSpanElement>("#stateBadge"), "#stateBadge");
 const retroAnnotation = requireEl(document.querySelector<HTMLDivElement>("#retroAnnotation"), "#retroAnnotation");
 const retroAnnotationClose = requireEl(document.querySelector<HTMLButtonElement>("#retroAnnotationClose"), "#retroAnnotationClose");
+
+const onboardingCard = requireEl(document.querySelector<HTMLDivElement>("#onboardingCard"), "#onboardingCard");
+const onboardingText = requireEl(document.querySelector<HTMLParagraphElement>("#onboardingText"), "#onboardingText");
+const onboardingStep = requireEl(document.querySelector<HTMLDivElement>("#onboardingStep"), "#onboardingStep");
+const onboardingPrev = requireEl(document.querySelector<HTMLButtonElement>("#onboardingPrev"), "#onboardingPrev");
+const onboardingNext = requireEl(document.querySelector<HTMLButtonElement>("#onboardingNext"), "#onboardingNext");
+const onboardingDismiss = requireEl(document.querySelector<HTMLButtonElement>("#onboardingDismiss"), "#onboardingDismiss");
 
 const playBtn = requireEl(document.querySelector<HTMLButtonElement>("#btn-play"), "#btn-play");
 const pauseBtn = requireEl(document.querySelector<HTMLButtonElement>("#btn-pause"), "#btn-pause");
@@ -151,6 +170,9 @@ type State = {
   cursorDay: number;
   showOtherPlanets: boolean;
   showZodiac: boolean;
+  showLineOfSight: boolean;
+  showReferenceAxis: boolean;
+  showLambdaArc: boolean;
   playing: boolean;
   speed: number;
 };
@@ -170,6 +192,9 @@ const state: State = {
   cursorDay: 0,
   showOtherPlanets: Boolean(showOtherPlanets.checked),
   showZodiac: Boolean(showZodiac.checked),
+  showLineOfSight: Boolean(showLineOfSight.checked),
+  showReferenceAxis: Boolean(showReferenceAxis.checked),
+  showLambdaArc: Boolean(showLambdaArc.checked),
   playing: false,
   speed: Number(speedSelect.value) || 5,
 };
@@ -178,6 +203,18 @@ let series: Series | null = null;
 let animationId: number | null = null;
 let lastTimestamp = 0;
 let hasShownRetroAnnotation = false;
+let currentMotionState: RetrogradeState = "Direct";
+let currentDisplayState: ReturnType<typeof computeDisplayState> | null = null;
+
+const STATIONARY_EPS_LO_DEG_PER_DAY = 0.005;
+const STATIONARY_EPS_HI_DEG_PER_DAY = 0.01;
+const ONBOARDING_STORAGE_KEY = "cp:retrograde-motion:onboarding:v1";
+const ONBOARDING_STEPS = [
+  "Drag the plot to scrub time.",
+  "Pink band = retrograde (d(lambda~)/dt < 0).",
+  "Orbit view shows the overtaking geometry.",
+] as const;
+let onboardingStepIndex = 0;
 
 type PlotRenderContext = {
   staticLayer: SVGGElement;
@@ -225,19 +262,74 @@ const modelCallbacks: RetroModelCallbacks = {
 function applyObserverTargetPair(
   nextObserver: PlanetKey,
   nextTarget: PlanetKey,
-  announceAdjustment = false,
+  announceChange = false,
 ) {
-  const resolved = resolveDistinctPair(nextObserver, nextTarget);
-  state.observer = resolved.observer as PlanetKey;
-  state.target = resolved.target as PlanetKey;
+  state.observer = nextObserver;
+  state.target = nextTarget;
   observer.value = state.observer;
   target.value = state.target;
 
-  if (announceAdjustment && resolved.adjusted) {
+  if (announceChange) {
     setLiveRegionText(
       statusEl,
-      `Observer and target must be different. Target reset to ${state.target}.`,
+      isObserverTargetSame(state.observer, state.target)
+        ? "Observer and target are the same; retrograde is undefined."
+        : `Observer ${state.observer}; target ${state.target}.`,
     );
+  }
+}
+
+function isUndefinedPair(): boolean {
+  return isObserverTargetSame(state.observer, state.target);
+}
+
+function updatePlotStepWarning() {
+  plotStepWarning.hidden = state.plotStepDay < 2;
+}
+
+function updatePairWarning() {
+  samePairWarning.hidden = !isUndefinedPair();
+}
+
+function updateDeltaNProxy() {
+  const observerElements = RetrogradeMotionModel.planetElements(state.observer);
+  const targetElements = RetrogradeMotionModel.planetElements(state.target);
+  const deltaN = relativeAngularSpeedProxyDegPerDay({
+    observerAAu: observerElements.aAu,
+    targetAAu: targetElements.aAu,
+    modelYearDays: RetrogradeMotionModel.modelYearDays(),
+  });
+  deltaNValue.textContent = isUndefinedPair() || !Number.isFinite(deltaN)
+    ? "\u2014"
+    : formatNumber(deltaN, 3);
+}
+
+function updateNavigationButtons(ds: ReturnType<typeof computeDisplayState>) {
+  if (!series) return;
+  const hints = buildStationaryNavigationLabels({
+    stationaryDays: series.stationaryDays,
+    intervals: series.retrogradeIntervals,
+    cursorDay: state.cursorDay,
+  });
+
+  prevStationaryBtn.textContent = hints.prevLabel;
+  nextStationaryBtn.textContent = hints.nextLabel;
+  centerRetrogradeBtn.textContent = hints.midpointLabel;
+
+  const disableRetroControls = isUndefinedPair();
+  if (disableRetroControls) {
+    prevStationaryBtn.textContent = "\u00ab Prev stationary";
+    nextStationaryBtn.textContent = "Next stationary \u00bb";
+    centerRetrogradeBtn.textContent = "\u2022 Retrograde midpoint";
+  }
+  prevStationaryBtn.disabled = disableRetroControls || !Number.isFinite(hints.prevDay);
+  nextStationaryBtn.disabled = disableRetroControls || !Number.isFinite(hints.nextDay);
+  centerRetrogradeBtn.disabled = disableRetroControls || !Number.isFinite(hints.midpointDay);
+
+  if (disableRetroControls) {
+    readoutRetroDuration.textContent = "\u2014";
+  } else {
+    readoutRetroDuration.textContent = ds.retroDuration;
   }
 }
 
@@ -252,8 +344,11 @@ function snapToInternalGrid(tDay: number): number {
 
 function setCursorDay(next: number) {
   if (!series) return;
+  const prevDay = state.cursorDay;
   const clamped = clamp(next, series.windowStartDay, series.windowEndDay);
   state.cursorDay = snapToInternalGrid(clamped);
+  const jumped = Math.abs(state.cursorDay - prevDay) > series.dtInternalDay * 2;
+  if (jumped && !isUndefinedPair()) currentMotionState = "Undefined";
   scrubSlider.value = String(state.cursorDay);
   const endDay = series.windowEndDay;
   playbarDayEl.textContent = `Day ${formatNumber(state.cursorDay, 1)} of ${formatNumber(endDay, 0)}`;
@@ -274,6 +369,10 @@ function recomputeSeries() {
   scrubSlider.max = String(series.windowEndDay);
   scrubSlider.step = String(series.dtInternalDay);
   hasShownRetroAnnotation = false;
+  currentMotionState = isUndefinedPair() ? "Undefined" : "Direct";
+  updatePairWarning();
+  updateDeltaNProxy();
+  updatePlotStepWarning();
   buildPlotLayers();
   buildOrbitLayers();
   buildSkyLayers();
@@ -354,34 +453,84 @@ function dismissRetroAnnotation() {
   retroAnnotation.hidden = true;
 }
 
+function renderOnboarding() {
+  onboardingText.textContent = ONBOARDING_STEPS[onboardingStepIndex];
+  onboardingStep.textContent = `Step ${onboardingStepIndex + 1} of ${ONBOARDING_STEPS.length}`;
+  onboardingPrev.disabled = onboardingStepIndex === 0;
+  onboardingNext.textContent =
+    onboardingStepIndex >= ONBOARDING_STEPS.length - 1 ? "Done" : "Next";
+}
+
+function showOnboarding(resetToStart = false) {
+  if (resetToStart) onboardingStepIndex = 0;
+  renderOnboarding();
+  onboardingCard.hidden = false;
+}
+
+function dismissOnboarding({ persist }: { persist: boolean }) {
+  onboardingCard.hidden = true;
+  if (persist) {
+    try {
+      window.localStorage.setItem(ONBOARDING_STORAGE_KEY, "1");
+    } catch {
+      // ignore
+    }
+  }
+}
+
 // ── Readouts ─────────────────────────────────────────────────
 
 function renderReadouts() {
   if (!series) return;
 
-  const ds = computeDisplayState(series, state.cursorDay, modelCallbacks);
+  const ds = computeDisplayState(series, state.cursorDay, modelCallbacks, {
+    previousState: currentMotionState,
+    epsLoDegPerDay: STATIONARY_EPS_LO_DEG_PER_DAY,
+    epsHiDegPerDay: STATIONARY_EPS_HI_DEG_PER_DAY,
+    forceUndefined: isUndefinedPair(),
+  });
+  currentMotionState = classifyRetrogradeStateWithHysteresis({
+    dLambdaDtDegPerDay: ds.dLambdaDt,
+    previousState: currentMotionState,
+    epsLoDegPerDay: STATIONARY_EPS_LO_DEG_PER_DAY,
+    epsHiDegPerDay: STATIONARY_EPS_HI_DEG_PER_DAY,
+    forceUndefined: isUndefinedPair(),
+  });
+  ds.stateLabel = currentMotionState;
+  currentDisplayState = ds;
 
   readoutDay.textContent = formatNumber(ds.cursorDay, 1);
   readoutLambda.textContent = formatNumber(ds.lambdaDeg, 1);
   readoutSlope.textContent = formatNumber(ds.dLambdaDt, 3);
   readoutState.textContent = ds.stateLabel;
   readoutGeometryHint.textContent = ds.geometryHint || "\u2014";
-  readoutRetroDuration.textContent = ds.retroDuration;
+  readoutRetroDuration.textContent = isUndefinedPair() ? "\u2014" : ds.retroDuration;
+  updateNavigationButtons(ds);
 
   // State badge
-  stateBadge.classList.remove("retro__state-badge--retrograde", "retro__state-badge--stationary");
+  stateBadge.classList.remove(
+    "retro__state-badge--retrograde",
+    "retro__state-badge--stationary",
+    "retro__state-badge--undefined",
+  );
   if (ds.stateLabel === "Retrograde") {
     stateBadge.textContent = "Retrograde";
     stateBadge.classList.add("retro__state-badge--retrograde");
   } else if (ds.stateLabel === "Stationary") {
     stateBadge.textContent = "Stationary";
     stateBadge.classList.add("retro__state-badge--stationary");
+  } else if (ds.stateLabel === "Undefined") {
+    stateBadge.textContent = "Undefined";
+    stateBadge.classList.add("retro__state-badge--undefined");
   } else {
     stateBadge.textContent = "Direct";
   }
+  stateFormula.textContent = ds.stateLabel === "Undefined"
+    ? "Direct/retrograde classification is undefined when observer and target are the same planet."
+    : "Direct: d(lambda~)/dt > 0 | Stationary: |d(lambda~)/dt| <= eps | Retrograde: d(lambda~)/dt < 0";
 
   // First-retrograde annotation
-  if (ds.stateLabel === "Retrograde" && !hasShownRetroAnnotation && state.playing) {
+  if (ds.stateLabel === "Retrograde" && !hasShownRetroAnnotation && state.playing && !isUndefinedPair()) {
     hasShownRetroAnnotation = true;
     retroAnnotation.hidden = false;
   }
@@ -392,6 +541,7 @@ function renderReadouts() {
 function buildPlotLayers() {
   if (!series) return;
   clear(plotSvgEl);
+  const undefinedPair = isUndefinedPair();
 
   const staticLayer = createLayerGroup("static");
   const dynamicLayer = createLayerGroup("dynamic");
@@ -514,7 +664,7 @@ function buildPlotLayers() {
   staticLayer.appendChild(xAxisLabel);
 
   const yAxisLabel = svgEl("text");
-  yAxisLabel.textContent = "Unwrapped longitude (deg)";
+  yAxisLabel.textContent = "Apparent longitude (deg, continuous)";
   yAxisLabel.setAttribute("x", String(14));
   yAxisLabel.setAttribute("y", String((mainTop + mainBottom) / 2));
   yAxisLabel.setAttribute("fill", "var(--cp-text2)");
@@ -523,37 +673,39 @@ function buildPlotLayers() {
   yAxisLabel.setAttribute("transform", `rotate(-90 14 ${(mainTop + mainBottom) / 2})`);
   staticLayer.appendChild(yAxisLabel);
 
-  for (const interval of series.retrogradeIntervals) {
-    const bx = xScale(interval.startDay);
-    const bw = xScale(interval.endDay) - bx;
+  if (!undefinedPair) {
+    for (const interval of series.retrogradeIntervals) {
+      const bx = xScale(interval.startDay);
+      const bw = xScale(interval.endDay) - bx;
 
-    const base = svgEl("rect");
-    base.setAttribute("x", String(bx));
-    base.setAttribute("y", String(mainTop));
-    base.setAttribute("width", String(bw));
-    base.setAttribute("height", String(mainH));
-    base.setAttribute("fill", "var(--cp-pink)");
-    base.setAttribute("fill-opacity", "0.10");
-    staticLayer.appendChild(base);
+      const base = svgEl("rect");
+      base.setAttribute("x", String(bx));
+      base.setAttribute("y", String(mainTop));
+      base.setAttribute("width", String(bw));
+      base.setAttribute("height", String(mainH));
+      base.setAttribute("fill", "var(--cp-pink)");
+      base.setAttribute("fill-opacity", "0.10");
+      staticLayer.appendChild(base);
 
-    const band = svgEl("rect");
-    band.setAttribute("x", String(bx));
-    band.setAttribute("y", String(mainTop));
-    band.setAttribute("width", String(bw));
-    band.setAttribute("height", String(mainH));
-    band.setAttribute("fill", "url(#retroHatch)");
-    band.setAttribute("opacity", "0.95");
-    staticLayer.appendChild(band);
+      const band = svgEl("rect");
+      band.setAttribute("x", String(bx));
+      band.setAttribute("y", String(mainTop));
+      band.setAttribute("width", String(bw));
+      band.setAttribute("height", String(mainH));
+      band.setAttribute("fill", "url(#retroHatch)");
+      band.setAttribute("opacity", "0.95");
+      staticLayer.appendChild(band);
 
-    const bandLabel = svgEl("text");
-    bandLabel.textContent = "retrograde";
-    bandLabel.setAttribute("x", String(bx + bw / 2));
-    bandLabel.setAttribute("y", String(mainTop + 16));
-    bandLabel.setAttribute("fill", "var(--cp-muted)");
-    bandLabel.setAttribute("font-size", "11");
-    bandLabel.setAttribute("text-anchor", "middle");
-    bandLabel.setAttribute("opacity", "0.6");
-    staticLayer.appendChild(bandLabel);
+      const bandLabel = svgEl("text");
+      bandLabel.textContent = "retrograde";
+      bandLabel.setAttribute("x", String(bx + bw / 2));
+      bandLabel.setAttribute("y", String(mainTop + 16));
+      bandLabel.setAttribute("fill", "var(--cp-muted)");
+      bandLabel.setAttribute("font-size", "11");
+      bandLabel.setAttribute("text-anchor", "middle");
+      bandLabel.setAttribute("opacity", "0.6");
+      staticLayer.appendChild(bandLabel);
+    }
   }
 
   let d = "";
@@ -576,21 +728,23 @@ function buildPlotLayers() {
   mainPath.setAttribute("stroke-linejoin", "round");
   staticLayer.appendChild(mainPath);
 
-  for (const tStat of series.stationaryDays) {
-    const px = xScale(tStat);
-    const idx = seriesIndexAtDay(tStat, series.windowStartDay, series.dtInternalDay);
-    const yi = clamp(idx, 0, unwrapped.length - 1);
-    const py = yScale(unwrapped[yi]);
+  if (!undefinedPair) {
+    for (const tStat of series.stationaryDays) {
+      const px = xScale(tStat);
+      const idx = seriesIndexAtDay(tStat, series.windowStartDay, series.dtInternalDay);
+      const yi = clamp(idx, 0, unwrapped.length - 1);
+      const py = yScale(unwrapped[yi]);
 
-    const marker = svgEl("circle");
-    marker.setAttribute("cx", String(px));
-    marker.setAttribute("cy", String(py));
-    marker.setAttribute("r", "5");
-    marker.setAttribute("fill", "var(--cp-accent-ice)");
-    marker.setAttribute("stroke", "var(--cp-bg0)");
-    marker.setAttribute("stroke-width", "2");
-    marker.setAttribute("aria-label", `stationary at t=${formatNumber(tStat, 1)} day`);
-    staticLayer.appendChild(marker);
+      const marker = svgEl("circle");
+      marker.setAttribute("cx", String(px));
+      marker.setAttribute("cy", String(py));
+      marker.setAttribute("r", "5");
+      marker.setAttribute("fill", "var(--cp-accent-ice)");
+      marker.setAttribute("stroke", "var(--cp-bg0)");
+      marker.setAttribute("stroke-width", "2");
+      marker.setAttribute("aria-label", `stationary at t=${formatNumber(tStat, 1)} day`);
+      staticLayer.appendChild(marker);
+    }
   }
 
   const axisPath = svgEl("path");
@@ -627,8 +781,9 @@ function renderPlotDynamic() {
   cursorLine.setAttribute("y1", String(ctx.mainTop));
   cursorLine.setAttribute("y2", String(ctx.mainBottom));
   cursorLine.setAttribute("stroke", "var(--cp-accent-ice)");
-  cursorLine.setAttribute("stroke-opacity", "0.7");
-  cursorLine.setAttribute("stroke-width", "2");
+  const focused = plotFocus.classList.contains("is-focused");
+  cursorLine.setAttribute("stroke-opacity", focused ? "0.95" : "0.7");
+  cursorLine.setAttribute("stroke-width", focused ? "3" : "2");
   ctx.dynamicLayer.appendChild(cursorLine);
 
   const curIdx = seriesIndexAtDay(state.cursorDay, series.windowStartDay, series.dtInternalDay);
@@ -654,6 +809,24 @@ function orbitToPx(context: OrbitRenderContext, xAu: number, yAu: number) {
     x: context.centerX + xAu * context.scale,
     y: context.centerY - yAu * context.scale,
   };
+}
+
+function arcPathFromAngles(args: {
+  cx: number;
+  cy: number;
+  radius: number;
+  startAngleRad: number;
+  endAngleRad: number;
+}): string {
+  const { cx, cy, radius, startAngleRad, endAngleRad } = args;
+  const startX = cx + radius * Math.cos(startAngleRad);
+  const startY = cy + radius * Math.sin(startAngleRad);
+  const endX = cx + radius * Math.cos(endAngleRad);
+  const endY = cy + radius * Math.sin(endAngleRad);
+  const delta = endAngleRad - startAngleRad;
+  const largeArcFlag = Math.abs(delta) > Math.PI ? 1 : 0;
+  const sweepFlag = delta >= 0 ? 1 : 0;
+  return `M${startX},${startY} A${radius},${radius} 0 ${largeArcFlag} ${sweepFlag} ${endX},${endY}`;
 }
 
 function buildOrbitLayers() {
@@ -687,6 +860,28 @@ function buildOrbitLayers() {
     scale: (Math.min(W, H) / 2 - padOrbit) / extent,
   };
   orbitRenderContext = context;
+
+  if (state.showReferenceAxis) {
+    const axis = svgEl("line");
+    axis.setAttribute("x1", String(context.centerX));
+    axis.setAttribute("y1", String(context.centerY));
+    axis.setAttribute("x2", String(context.centerX + Math.min(W, H) / 2 - 8));
+    axis.setAttribute("y2", String(context.centerY));
+    axis.setAttribute("stroke", "var(--cp-muted)");
+    axis.setAttribute("stroke-opacity", "0.45");
+    axis.setAttribute("stroke-width", "1.2");
+    axis.setAttribute("stroke-dasharray", "4 4");
+    staticLayer.appendChild(axis);
+
+    const axisLabel = svgEl("text");
+    axisLabel.textContent = "0 deg";
+    axisLabel.setAttribute("x", String(context.centerX + Math.min(W, H) / 2 - 6));
+    axisLabel.setAttribute("y", String(context.centerY - 6));
+    axisLabel.setAttribute("fill", "var(--cp-muted)");
+    axisLabel.setAttribute("font-size", "10");
+    axisLabel.setAttribute("text-anchor", "end");
+    staticLayer.appendChild(axisLabel);
+  }
 
   if (state.showZodiac) {
     const zodiacRadius = Math.min(W, H) / 2 - 6;
@@ -794,7 +989,7 @@ function renderOrbitDynamic() {
   const dx = targetPx.x - observerPx.x;
   const dy = targetPx.y - observerPx.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist > 0.01) {
+  if (state.showLineOfSight && dist > 0.01) {
     const extendFactor = 420 / dist;
     const los = svgEl("line");
     los.setAttribute("x1", String(observerPx.x));
@@ -806,6 +1001,37 @@ function renderOrbitDynamic() {
     los.setAttribute("stroke-opacity", "0.4");
     los.setAttribute("stroke-dasharray", "6 4");
     ctx.dynamicLayer.appendChild(los);
+  }
+
+  if (state.showLambdaArc && dist > 0.01) {
+    const angle = Math.atan2(dy, dx);
+    const arcRadius = 26;
+    const arc = svgEl("path");
+    arc.setAttribute(
+      "d",
+      arcPathFromAngles({
+        cx: observerPx.x,
+        cy: observerPx.y,
+        radius: arcRadius,
+        startAngleRad: 0,
+        endAngleRad: angle,
+      }),
+    );
+    arc.setAttribute("fill", "none");
+    arc.setAttribute("stroke", "var(--cp-accent-amber)");
+    arc.setAttribute("stroke-width", "1.5");
+    arc.setAttribute("stroke-opacity", "0.6");
+    ctx.dynamicLayer.appendChild(arc);
+
+    const midAngle = angle * 0.5;
+    const arcLabel = svgEl("text");
+    arcLabel.textContent = "\u03bb_app";
+    arcLabel.setAttribute("x", String(observerPx.x + (arcRadius + 10) * Math.cos(midAngle)));
+    arcLabel.setAttribute("y", String(observerPx.y + (arcRadius + 10) * Math.sin(midAngle)));
+    arcLabel.setAttribute("fill", "var(--cp-accent-amber)");
+    arcLabel.setAttribute("font-size", "10");
+    arcLabel.setAttribute("text-anchor", "middle");
+    ctx.dynamicLayer.appendChild(arcLabel);
   }
 
   const observerDot = svgEl("circle");
@@ -941,7 +1167,12 @@ function exportResults(): ExportPayloadV1 {
     };
   }
 
-  const ds = computeDisplayState(series, state.cursorDay, modelCallbacks);
+  const ds = currentDisplayState ?? computeDisplayState(series, state.cursorDay, modelCallbacks, {
+    previousState: currentMotionState,
+    epsLoDegPerDay: STATIONARY_EPS_LO_DEG_PER_DAY,
+    epsHiDegPerDay: STATIONARY_EPS_HI_DEG_PER_DAY,
+    forceUndefined: isUndefinedPair(),
+  });
 
   const nearest = ds.retroInterval;
   const retroBounds =
@@ -975,7 +1206,7 @@ function exportResults(): ExportPayloadV1 {
         value: Number.isNaN(ds.nextStationary) ? "\u2014" : formatNumber(ds.nextStationary, 1),
       },
       { name: "Nearest retrograde bounds (day)", value: retroBounds },
-      { name: "Nearest retrograde duration (day)", value: ds.retroDuration },
+      { name: "Nearest retrograde duration (day)", value: isUndefinedPair() ? "\u2014" : ds.retroDuration },
     ],
     notes: [
       "Retrograde is apparent: the planet never reverses orbit. The sign flip comes from relative motion and viewing geometry.",
@@ -1001,6 +1232,7 @@ let isDragging = false;
 plotSvgEl.addEventListener("pointerdown", (e) => {
   stopAnimation();
   isDragging = true;
+  plotFocus.focus();
   plotSvgEl.setPointerCapture?.(e.pointerId);
   handlePointerToDay(e.clientX);
 });
@@ -1044,6 +1276,7 @@ windowMonths.addEventListener("input", () => {
 
 plotStepDay.addEventListener("change", () => {
   state.plotStepDay = Number(plotStepDay.value);
+  updatePlotStepWarning();
   buildPlotLayers();
   render();
 });
@@ -1058,6 +1291,22 @@ showZodiac.addEventListener("change", () => {
   state.showZodiac = Boolean(showZodiac.checked);
   buildOrbitLayers();
   render();
+});
+
+showLineOfSight.addEventListener("change", () => {
+  state.showLineOfSight = Boolean(showLineOfSight.checked);
+  renderOrbitDynamic();
+});
+
+showReferenceAxis.addEventListener("change", () => {
+  state.showReferenceAxis = Boolean(showReferenceAxis.checked);
+  buildOrbitLayers();
+  renderOrbitDynamic();
+});
+
+showLambdaArc.addEventListener("change", () => {
+  state.showLambdaArc = Boolean(showLambdaArc.checked);
+  renderOrbitDynamic();
 });
 
 // Playbar controls
@@ -1078,24 +1327,40 @@ scrubSlider.addEventListener("input", () => {
 // Nav buttons
 prevStationaryBtn.addEventListener("click", () => {
   if (!series) return;
+  if (isUndefinedPair()) return;
   stopAnimation();
-  const { prev } = findPrevNextStationary(series.stationaryDays, state.cursorDay);
-  if (!Number.isNaN(prev)) setCursorDay(prev);
+  const { prevDay } = buildStationaryNavigationLabels({
+    stationaryDays: series.stationaryDays,
+    intervals: series.retrogradeIntervals,
+    cursorDay: state.cursorDay,
+  });
+  if (!Number.isNaN(prevDay)) setCursorDay(prevDay);
 });
 
 nextStationaryBtn.addEventListener("click", () => {
   if (!series) return;
+  if (isUndefinedPair()) return;
   stopAnimation();
-  const { next } = findPrevNextStationary(series.stationaryDays, state.cursorDay);
-  if (!Number.isNaN(next)) setCursorDay(next);
+  const { nextDay } = buildStationaryNavigationLabels({
+    stationaryDays: series.stationaryDays,
+    intervals: series.retrogradeIntervals,
+    cursorDay: state.cursorDay,
+  });
+  if (!Number.isNaN(nextDay)) setCursorDay(nextDay);
 });
 
 centerRetrogradeBtn.addEventListener("click", () => {
   if (!series) return;
+  if (isUndefinedPair()) return;
   stopAnimation();
-  const nearest = nearestRetrogradeInterval(series.retrogradeIntervals, state.cursorDay);
-  if (!nearest) return;
-  setCursorDay(0.5 * (nearest.startDay + nearest.endDay));
+  const hints = buildStationaryNavigationLabels({
+    stationaryDays: series.stationaryDays,
+    intervals: series.retrogradeIntervals,
+    cursorDay: state.cursorDay,
+  });
+  if (!Number.isFinite(hints.midpointDay)) return;
+  setCursorDay(hints.midpointDay);
+  setLiveRegionText(statusEl, "Jumped to retrograde midpoint.");
 });
 
 // Keyboard on plot
@@ -1116,6 +1381,22 @@ plotFocus.addEventListener("keydown", (e) => {
   }
 });
 
+plotFocus.addEventListener("focus", () => {
+  plotFocus.classList.add("is-focused");
+  plotFocusStatus.textContent = "Plot focused";
+  renderPlotDynamic();
+});
+
+plotFocus.addEventListener("blur", () => {
+  plotFocus.classList.remove("is-focused");
+  plotFocusStatus.textContent = "Plot not focused";
+  renderPlotDynamic();
+});
+
+focusPlotBtn.addEventListener("click", () => {
+  plotFocus.focus();
+});
+
 // Copy results
 copyResults.addEventListener("click", () => {
   setLiveRegionText(statusEl, "Copying\u2026");
@@ -1133,10 +1414,44 @@ retroAnnotationClose.addEventListener("click", () => {
   dismissRetroAnnotation();
 });
 
+onboardingPrev.addEventListener("click", () => {
+  onboardingStepIndex = Math.max(0, onboardingStepIndex - 1);
+  renderOnboarding();
+});
+
+onboardingNext.addEventListener("click", () => {
+  if (onboardingStepIndex >= ONBOARDING_STEPS.length - 1) {
+    dismissOnboarding({ persist: true });
+    return;
+  }
+  onboardingStepIndex += 1;
+  renderOnboarding();
+});
+
+onboardingDismiss.addEventListener("click", () => {
+  dismissOnboarding({ persist: true });
+});
+
 document.addEventListener("keydown", (e) => {
-  if (e.key !== "Escape" || retroAnnotation.hidden) return;
-  dismissRetroAnnotation();
-  e.preventDefault();
+  if (e.key === "Escape" && !retroAnnotation.hidden) {
+    dismissRetroAnnotation();
+    e.preventDefault();
+    return;
+  }
+  if (e.key === "Escape" && !onboardingCard.hidden) {
+    dismissOnboarding({ persist: true });
+    e.preventDefault();
+  }
+});
+
+document.addEventListener("click", (event) => {
+  const targetEl = event.target as HTMLElement | null;
+  if (!targetEl) return;
+  if (targetEl.closest("#showOnboardingAgain")) {
+    onboardingStepIndex = 0;
+    showOnboarding(true);
+    setLiveRegionText(statusEl, "Onboarding guide reopened.");
+  }
 });
 
 // ── Challenges ───────────────────────────────────────────────
@@ -1337,8 +1652,16 @@ function setupModes() {
           items: [
             "Planets follow coplanar Keplerian ellipses with JPL Table 1 elements.",
             "Apparent longitude $\\lambda_{\\mathrm{app}}(t) = \\operatorname{atan2}(y_t - y_o,\\, x_t - x_o)$.",
-            "Retrograde defined by $d\\tilde{\\lambda}/dt < 0$.",
+            "Retrograde defined by $d\\tilde{\\lambda}/dt < 0$, direct by $d\\tilde{\\lambda}/dt > 0$, and stationary via hysteresis around $|d\\tilde{\\lambda}/dt| \\le \\epsilon$.",
           ],
+        },
+        {
+          heading: "Guide",
+          type: "html",
+          html: `
+            <p>Need the quick 3-step onboarding again?</p>
+            <button id="showOnboardingAgain" type="button">Show onboarding again</button>
+          `,
         },
       ],
     },
@@ -1374,7 +1697,12 @@ function setupModes() {
             retroDuration: "\u2014",
           };
         }
-        const ds = computeDisplayState(series, state.cursorDay, modelCallbacks);
+        const ds = computeDisplayState(series, state.cursorDay, modelCallbacks, {
+          previousState: currentMotionState,
+          epsLoDegPerDay: STATIONARY_EPS_LO_DEG_PER_DAY,
+          epsHiDegPerDay: STATIONARY_EPS_HI_DEG_PER_DAY,
+          forceUndefined: isUndefinedPair(),
+        });
         return {
           observer: state.observer,
           target: state.target,
@@ -1408,4 +1736,13 @@ const demoRoot = document.getElementById("cp-demo");
 if (demoRoot) {
   initPopovers(demoRoot);
   initTabs(demoRoot);
+}
+
+try {
+  const hasSeenOnboarding = window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === "1";
+  if (!hasSeenOnboarding) {
+    window.setTimeout(() => showOnboarding(true), 450);
+  }
+} catch {
+  window.setTimeout(() => showOnboarding(true), 450);
 }
