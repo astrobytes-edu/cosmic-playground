@@ -94,6 +94,11 @@ describe("Moon Phases — Design System Contracts", () => {
       const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
       expect(unitSpans.length).toBeGreaterThanOrEqual(3);
     });
+
+    it("contains compact illumination equation readout", () => {
+      expect(html).toContain('id="illumination-equation-value"');
+      expect(html).toContain("f = (1 + cos");
+    });
   });
 
   describe("Panel translucency", () => {
@@ -142,6 +147,22 @@ describe("Moon Phases — Design System Contracts", () => {
 
     it("has waxing-waning-label in phase SVG", () => {
       expect(html).toContain('id="waxing-waning-label"');
+    });
+
+    it("has alpha helper controls and insight toggles", () => {
+      expect(html).toContain('id="snap-key-phases-toggle"');
+      expect(html).toContain('id="show-annotations-toggle"');
+      expect(html).toContain('id="shadow-misconception-note"');
+    });
+
+    it("has annotation overlay groups for both views", () => {
+      expect(html).toContain('id="orbit-annotation-group"');
+      expect(html).toContain('id="earth-annotation-group"');
+    });
+
+    it("has focus affordance controls", () => {
+      expect(html).toContain('id="focus-moon-btn"');
+      expect(html).toContain('id="moon-focus-chip"');
     });
 
     it("has rise-set-line under timeline", () => {

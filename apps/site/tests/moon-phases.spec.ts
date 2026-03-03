@@ -44,6 +44,19 @@ test.describe("Moon Phases -- E2E", () => {
 
   // --- Phase Angle Control ---
 
+  test("alpha slider includes point-of-use helper text", async ({ page }) => {
+    await expect(page.locator(".moon-angle-helper")).toHaveCount(2);
+    await expect(page.getByText("In this model: α = Sun–Moon–Earth angle")).toBeVisible();
+    await expect(page.getByText("0° = Full, 180° = New")).toBeVisible();
+  });
+
+  test("alpha slider includes tooltip help trigger", async ({ page }) => {
+    await expect(page.locator(".moon-tip__trigger")).toBeVisible();
+    await expect(page.locator("#alphaAngleTip")).toContainText(
+      "Sun–Moon–Earth phase angle"
+    );
+  });
+
   test("phase angle slider updates readouts", async ({ page }) => {
     const slider = page.locator("#angle");
     await slider.evaluate((el: HTMLInputElement) => {
@@ -54,6 +67,50 @@ test.describe("Moon Phases -- E2E", () => {
     expect(phaseName).toContain("New Moon");
     const illum = await page.locator("#illumination").textContent();
     expect(parseFloat(illum || "NaN")).toBeLessThanOrEqual(1);
+  });
+
+  test("snap-to-key-phases defaults on and snaps near quarter phases", async ({ page }) => {
+    const snapToggle = page.locator("#snap-key-phases-toggle");
+    await expect(snapToggle).toBeChecked();
+    const slider = page.locator("#angle");
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "88";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await expect(page.locator("#angleReadout")).toHaveText("90");
+  });
+
+  test("snap-to-key-phases off allows continuous angles", async ({ page }) => {
+    await page.locator("#snap-key-phases-toggle").evaluate((el: HTMLInputElement) => el.click());
+    const slider = page.locator("#angle");
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "88";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await expect(page.locator("#angleReadout")).toHaveText("88");
+  });
+
+  test("phase label remains stable near quarter boundary when snap is off", async ({ page }) => {
+    await page.locator("#snap-key-phases-toggle").evaluate((el: HTMLInputElement) => el.click());
+    const slider = page.locator("#angle");
+
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "90";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await expect(page.locator("#phase-name")).toHaveText("Third Quarter");
+
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "113";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await expect(page.locator("#phase-name")).toHaveText("Third Quarter");
+
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "115";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await expect(page.locator("#phase-name")).toHaveText("Waning Crescent");
   });
 
   test("preset button sets Full Moon", async ({ page }) => {
@@ -99,6 +156,20 @@ test.describe("Moon Phases -- E2E", () => {
     expect(parseFloat(value || "NaN")).not.toBeNaN();
   });
 
+  test("equation readout matches illumination percentage within rounding", async ({ page }) => {
+    await page.locator("#angle").evaluate((el: HTMLInputElement) => {
+      el.value = "60";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const equationValue = parseFloat(
+      (await page.locator("#illumination-equation-value").textContent()) || "NaN"
+    );
+    const percentValue = parseFloat((await page.locator("#illumination").textContent()) || "NaN");
+    expect(equationValue).not.toBeNaN();
+    expect(percentValue).not.toBeNaN();
+    expect(Math.abs(percentValue - equationValue * 100)).toBeLessThanOrEqual(1);
+  });
+
   // --- Advanced Controls ---
 
   test("advanced controls toggle shows latitude and day inputs", async ({ page }) => {
@@ -139,6 +210,11 @@ test.describe("Moon Phases -- E2E", () => {
 
   // --- Shadow Toggle ---
 
+  test("shadow toggle label clarifies eclipses-only scope", async ({ page }) => {
+    await page.locator(".cp-accordion summary").click();
+    await expect(page.getByText("Show Earth's shadow (eclipses only)")).toBeVisible();
+  });
+
   test("shadow toggle shows earth shadow group", async ({ page }) => {
     const toggle = page.locator("#show-shadow-toggle");
     await toggle.evaluate((el: HTMLInputElement) => el.click());
@@ -146,6 +222,39 @@ test.describe("Moon Phases -- E2E", () => {
       (el) => getComputedStyle(el).display
     );
     expect(display).not.toBe("none");
+  });
+
+  test("misconception note appears when shadow is enabled", async ({ page }) => {
+    await page.locator(".cp-accordion summary").click();
+    const note = page.locator("#shadow-misconception-note");
+    await expect(note).toHaveJSProperty("hidden", true);
+    await page.locator("#show-shadow-toggle").evaluate((el: HTMLInputElement) => el.click());
+    await expect(note).toHaveJSProperty("hidden", false);
+    await expect(note).toContainText("Phases are NOT Earth");
+  });
+
+  // --- Annotation Toggles ---
+
+  test("annotations are off by default and visible when enabled", async ({ page }) => {
+    await expect(page.locator("#show-annotations-toggle")).not.toBeChecked();
+    const orbitInitialDisplay = await page.locator("#orbit-annotation-group").evaluate(
+      (el) => getComputedStyle(el).display
+    );
+    const earthInitialDisplay = await page.locator("#earth-annotation-group").evaluate(
+      (el) => getComputedStyle(el).display
+    );
+    expect(orbitInitialDisplay).toBe("none");
+    expect(earthInitialDisplay).toBe("none");
+
+    await page.locator("#show-annotations-toggle").evaluate((el: HTMLInputElement) => el.click());
+    const orbitDisplay = await page.locator("#orbit-annotation-group").evaluate(
+      (el) => getComputedStyle(el).display
+    );
+    const earthDisplay = await page.locator("#earth-annotation-group").evaluate(
+      (el) => getComputedStyle(el).display
+    );
+    expect(orbitDisplay).not.toBe("none");
+    expect(earthDisplay).not.toBe("none");
   });
 
   // --- Animation Controls ---
@@ -234,6 +343,15 @@ test.describe("Moon Phases -- E2E", () => {
     await page.waitForTimeout(500); // tween
     const phaseName = await page.locator("#phase-name").textContent();
     expect(phaseName).toContain("New Moon");
+  });
+
+  test("focus moon button makes keyboard focus state visible", async ({ page }) => {
+    await page.locator("#focus-moon-btn").click();
+    await expect(page.locator("#moon-focus-chip")).toBeVisible();
+    const before = await page.locator("#angleReadout").textContent();
+    await page.locator("#moon-group").press("ArrowRight");
+    const after = await page.locator("#angleReadout").textContent();
+    expect(after).not.toBe(before);
   });
 
   // --- Moon Group ARIA ---

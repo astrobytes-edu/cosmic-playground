@@ -7,12 +7,14 @@ import {
   formatApproxTime,
   computeApproxRiseSet,
   snapToCardinalPhase,
+  computeStablePhaseName,
   computeOrbitalPosition,
   computePhaseViewPath,
   computeReadoutData,
   computeTimelineState,
   PHASE_ANGLES,
   SNAP_DEGREES,
+  PHASE_HYSTERESIS_DEGREES,
   ORBITAL_CENTER,
   ORBITAL_RADIUS,
   MOON_RADIUS,
@@ -70,8 +72,12 @@ describe("Moon Phases -- UI Logic", () => {
       expect(PHASE_ANGLES).toEqual([0, 45, 90, 135, 180, 225, 270, 315]);
     });
 
-    it("SNAP_DEGREES is 5", () => {
-      expect(SNAP_DEGREES).toBe(5);
+    it("SNAP_DEGREES is 2", () => {
+      expect(SNAP_DEGREES).toBe(2);
+    });
+
+    it("PHASE_HYSTERESIS_DEGREES is 1.5", () => {
+      expect(PHASE_HYSTERESIS_DEGREES).toBe(1.5);
     });
 
     it("ORBITAL_CENTER is (200, 200)", () => {
@@ -256,24 +262,66 @@ describe("Moon Phases -- UI Logic", () => {
   /* -------------------------------------------------------------- */
 
   describe("snapToCardinalPhase", () => {
-    it("3 deg snaps to 0 (within 5 deg of Full Moon)", () => {
-      expect(snapToCardinalPhase(3)).toBe(0);
+    it("2 deg snaps to 0 (within 2 deg of Full Moon)", () => {
+      expect(snapToCardinalPhase(2)).toBe(0);
     });
 
-    it("87 deg snaps to 90 (within 5 deg of Third Quarter)", () => {
-      expect(snapToCardinalPhase(87)).toBe(90);
+    it("88 deg snaps to 90 (within 2 deg of Third Quarter)", () => {
+      expect(snapToCardinalPhase(88)).toBe(90);
     });
 
-    it("183 deg snaps to 180 (within 5 deg of New Moon)", () => {
-      expect(snapToCardinalPhase(183)).toBe(180);
+    it("182 deg snaps to 180 (within 2 deg of New Moon)", () => {
+      expect(snapToCardinalPhase(182)).toBe(180);
     });
 
-    it("267 deg snaps to 270 (within 5 deg of First Quarter)", () => {
-      expect(snapToCardinalPhase(267)).toBe(270);
+    it("268 deg snaps to 270 (within 2 deg of First Quarter)", () => {
+      expect(snapToCardinalPhase(268)).toBe(270);
     });
 
     it("45 deg does not snap (too far from any cardinal)", () => {
       expect(snapToCardinalPhase(45)).toBe(45);
+    });
+
+    it("87 deg does not snap when outside tolerance", () => {
+      expect(snapToCardinalPhase(87)).toBe(87);
+    });
+  });
+
+  /* -------------------------------------------------------------- */
+  /*  computeStablePhaseName                                         */
+  /* -------------------------------------------------------------- */
+
+  describe("computeStablePhaseName", () => {
+    const cb = mockCallbacks();
+
+    it("uses nearest 8-phase anchor when snap is enabled", () => {
+      const name = computeStablePhaseName({
+        angleDeg: 92,
+        previousPhaseName: "Waning Gibbous",
+        snapEnabled: true,
+        model: cb
+      });
+      expect(name).toBe("Third Quarter");
+    });
+
+    it("holds previous label within hysteresis when snap is disabled", () => {
+      const name = computeStablePhaseName({
+        angleDeg: 113,
+        previousPhaseName: "Third Quarter",
+        snapEnabled: false,
+        model: cb
+      });
+      expect(name).toBe("Third Quarter");
+    });
+
+    it("switches after crossing the hysteresis band", () => {
+      const name = computeStablePhaseName({
+        angleDeg: 115,
+        previousPhaseName: "Third Quarter",
+        snapEnabled: false,
+        model: cb
+      });
+      expect(name).toBe("Waning Crescent");
     });
   });
 
@@ -364,6 +412,7 @@ describe("Moon Phases -- UI Logic", () => {
     it("Full Moon (0 deg): phaseName contains Full, illumPercent 100", () => {
       const data = computeReadoutData(0, cb);
       expect(data.phaseName).toContain("Full");
+      expect(data.illumFraction).toBe("1.000");
       expect(data.illumPercent).toBe("100");
     });
 
