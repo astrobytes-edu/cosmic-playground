@@ -104,8 +104,11 @@ export function diskMarkerY(angleDeg: number, diskR: number, scale = 0.85): numb
  * E.g. 14.53 -> "14h 32m"
  */
 export function formatDayLength(hours: number): string {
-  const h = Math.floor(hours);
-  const m = Math.round((hours - h) * 60);
+  if (!Number.isFinite(hours)) return "\u2014";
+  const clampedHours = clamp(hours, 0, 24);
+  const totalMinutes = clamp(Math.round(clampedHours * 60), 0, 24 * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
   return `${h}h ${String(m).padStart(2, "0")}m`;
 }
 

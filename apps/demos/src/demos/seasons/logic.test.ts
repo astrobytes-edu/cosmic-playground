@@ -200,6 +200,22 @@ describe("Seasons -- UI Logic", () => {
     it("formats small fractional hours", () => {
       expect(formatDayLength(1.25)).toBe("1h 15m");
     });
+
+    it("rounds near 24h to 24h 00m without overflow minutes", () => {
+      expect(formatDayLength(23.999)).toBe("24h 00m");
+    });
+
+    it("clamps negative values to 0h 00m", () => {
+      expect(formatDayLength(-0.01)).toBe("0h 00m");
+    });
+
+    it("clamps values above 24h to 24h 00m", () => {
+      expect(formatDayLength(24.2)).toBe("24h 00m");
+    });
+
+    it("returns em-dash for non-finite values", () => {
+      expect(formatDayLength(Number.NaN)).toBe("\u2014");
+    });
   });
 
   describe("formatLatitude", () => {
