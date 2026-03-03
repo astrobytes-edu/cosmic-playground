@@ -68,7 +68,23 @@
           <div id="challenge-container"></div>
 
           <label class="cp-field">
-            <span class="cp-label">Phase angle &#x03B1; (deg)</span>
+            <span class="cp-label moon-label-with-tip">
+              <span>Phase angle &#x03B1; (deg)</span>
+              <span class="moon-tip">
+                <button
+                  type="button"
+                  class="moon-tip__trigger"
+                  aria-label="Phase angle alpha help"
+                  aria-describedby="alphaAngleTip"
+                >
+                  ?
+                </button>
+                <span id="alphaAngleTip" class="moon-tip__content" role="tooltip">
+                  We use &#x03B1; as the Sun&ndash;Moon&ndash;Earth phase angle. It controls illumination via
+                  f=(1+cos&#x03B1;)/2.
+                </span>
+              </span>
+            </span>
             <input
               id="angle"
               class="cp-range"
@@ -79,6 +95,13 @@
               step="1"
               data-tooltip-source="#angleReadout"
             />
+            <div class="cp-muted moon-angle-helper">In this model: &#x03B1; = Sun&ndash;Moon&ndash;Earth angle</div>
+            <div class="cp-muted moon-angle-helper">0&deg; = Full, 180&deg; = New</div>
+          </label>
+
+          <label class="cp-toggle">
+            <input id="snap-key-phases-toggle" type="checkbox" checked />
+            <span>Snap to key phases</span>
           </label>
 
           <div class="cp-popover-anchor">
@@ -160,7 +183,14 @@
               </p>
               <label class="shadow-toggle">
                 <input type="checkbox" id="show-shadow-toggle" />
-                <span>Show Earth's Shadow (Eclipse insight)</span>
+                <span>Show Earth's shadow (eclipses only)</span>
+              </label>
+              <p id="shadow-misconception-note" class="cp-callout shadow-misconception-note" data-kind="misconception" hidden>
+                Phases are NOT Earth&rsquo;s shadow. Shadow matters only during eclipses.
+              </p>
+              <label class="shadow-toggle">
+                <input type="checkbox" id="show-annotations-toggle" />
+                <span>Show annotations (Sun direction / E-W / orbit motion)</span>
               </label>
               <p>
                 Want the full story? Try
@@ -178,7 +208,7 @@
            ═══════════════════════════════════════════ -->
       <section class="cp-demo__stage cp-stage" aria-label="Visualization stage">
         <div class="viz-layout">
-          <div class="viz-panel">
+          <div class="viz-panel" id="orbital-panel">
             <div class="panel-title">View from Above (North Pole)</div>
             <svg id="orbital-svg" viewBox="0 45 400 280" preserveAspectRatio="xMidYMid meet">
               <defs>
@@ -305,6 +335,24 @@
                   Your view
                 </text>
               </g>
+
+              <g id="orbit-annotation-group" class="annotation-group" style="display: none;">
+                <path
+                  d="M 278 108 A 116 116 0 0 1 328 174"
+                  fill="none"
+                  stroke="var(--cp-accent-ice)"
+                  stroke-width="1.3"
+                  stroke-linecap="round"
+                  stroke-dasharray="3 3"
+                />
+                <path
+                  d="M 325 171 L 329 179 L 320 179 Z"
+                  fill="var(--cp-accent-ice)"
+                />
+                <text x="293" y="98" fill="var(--cp-accent-ice)" font-size="10">
+                  Moon motion
+                </text>
+              </g>
             </svg>
             <div class="drag-hint">Drag the Moon around Earth's orbit</div>
           </div>
@@ -322,11 +370,56 @@
                   <stop offset="0%" stop-color="var(--cp-bg2)" />
                   <stop offset="100%" stop-color="var(--cp-bg3)" />
                 </radialGradient>
+
+                <marker
+                  id="earthViewArrowHead"
+                  markerWidth="6"
+                  markerHeight="6"
+                  refX="5"
+                  refY="3"
+                  orient="auto"
+                >
+                  <path d="M 0 0 L 6 3 L 0 6 z" fill="var(--cp-accent-ice)" />
+                </marker>
               </defs>
 
               <g transform="translate(100, 100)">
                 <circle r="60" fill="url(#earthshine)" />
                 <path id="lit-portion" d="" fill="url(#moonSurface)" />
+              </g>
+
+              <g id="earth-annotation-group" class="annotation-group" style="display: none;">
+                <line
+                  id="earth-sun-direction-line"
+                  x1="100"
+                  y1="34"
+                  x2="156"
+                  y2="34"
+                  stroke="var(--cp-accent-ice)"
+                  stroke-width="1.4"
+                  marker-end="url(#earthViewArrowHead)"
+                />
+                <text
+                  id="earth-sun-direction-label"
+                  x="128"
+                  y="24"
+                  text-anchor="middle"
+                  fill="var(--cp-accent-ice)"
+                  font-size="9.5"
+                >
+                  Sun is this way
+                </text>
+                <text x="31" y="106" fill="var(--cp-muted)" font-size="10">E</text>
+                <text x="164" y="106" fill="var(--cp-muted)" font-size="10">W</text>
+                <text
+                  x="100"
+                  y="170"
+                  text-anchor="middle"
+                  fill="var(--cp-muted)"
+                  font-size="9.5"
+                >
+                  Waxing = lit fraction increasing; Waning = decreasing.
+                </text>
               </g>
 
             </svg>
@@ -364,6 +457,10 @@
               <option value="10">10x</option>
             </select>
           </label>
+          <button class="cp-button cp-button--outline focus-moon-btn" id="focus-moon-btn" type="button">
+            Focus Moon
+          </button>
+          <span id="moon-focus-chip" class="moon-focus-chip" hidden>Moon controls focused</span>
         </div>
 
         <div class="playbar-timeline">
@@ -430,6 +527,12 @@
         <div class="cp-readout">
           <span class="cp-readout__label">Days since new</span>
           <span class="cp-readout__value"><span id="days-since-new">14.8</span><span class="cp-readout__unit">d</span></span>
+        </div>
+        <div class="cp-readout cp-readout--equation">
+          <span class="cp-readout__label">Illumination model</span>
+          <span class="cp-readout__value cp-readout__value--equation">
+            f = (1 + cos &#x03B1;)/2 = <span id="illumination-equation-value">1.000</span>
+          </span>
         </div>
       </div>
 

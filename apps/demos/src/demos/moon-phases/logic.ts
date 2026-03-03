@@ -5,11 +5,22 @@
 // ---- Constants ---------------------------------------------------
 
 export const PHASE_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315] as const;
-export const SNAP_DEGREES = 5;
+export const SNAP_DEGREES = 2;
+export const PHASE_HYSTERESIS_DEGREES = 1.5;
 export const ORBITAL_CENTER = { x: 200, y: 200 } as const;
 export const ORBITAL_RADIUS = 120;
 export const MOON_RADIUS = 15;
 export const PHASE_MOON_RADIUS = 60;
+const PHASE_ANCHORS = [
+  { angleDeg: 0, name: "Full Moon" },
+  { angleDeg: 45, name: "Waning Gibbous" },
+  { angleDeg: 90, name: "Third Quarter" },
+  { angleDeg: 135, name: "Waning Crescent" },
+  { angleDeg: 180, name: "New Moon" },
+  { angleDeg: 225, name: "Waxing Crescent" },
+  { angleDeg: 270, name: "First Quarter" },
+  { angleDeg: 315, name: "Waxing Gibbous" },
+] as const;
 
 // ---- Dependency-injection callback interface ---------------------
 
@@ -98,6 +109,66 @@ export function snapToCardinalPhase(angleDeg: number): number {
   return bestAbsDelta <= SNAP_DEGREES ? bestTarget : normalized;
 }
 
+export interface StablePhaseNameArgs {
+  angleDeg: number;
+  previousPhaseName: string | null;
+  snapEnabled: boolean;
+  model: Pick<MoonPhaseCallbacks, "phaseNameFromPhaseAngleDeg">;
+}
+
+function nearestPhaseAnchor(angleDeg: number): (typeof PHASE_ANCHORS)[number] {
+  const normalized = normalizeAngle(angleDeg);
+  let nearest = PHASE_ANCHORS[0];
+  let bestAbsDelta = Infinity;
+
+  for (const anchor of PHASE_ANCHORS) {
+    const delta = Math.abs(shortestAngleDelta(normalized, anchor.angleDeg));
+    if (delta < bestAbsDelta) {
+      bestAbsDelta = delta;
+      nearest = anchor;
+    }
+  }
+
+  return nearest;
+}
+
+function anchorForPhaseName(phaseName: string): (typeof PHASE_ANCHORS)[number] | null {
+  return PHASE_ANCHORS.find((anchor) => anchor.name === phaseName) ?? null;
+}
+
+/**
+ * Stabilize phase labels near boundaries so 1 deg stepping does not flicker.
+ * - Snap ON: nearest 8-phase anchor.
+ * - Snap OFF: keep previous label until outside anchor half-bin + hysteresis.
+ */
+export function computeStablePhaseName(args: StablePhaseNameArgs): string {
+  const { angleDeg, previousPhaseName, snapEnabled, model } = args;
+  const normalized = normalizeAngle(angleDeg);
+  const nearest = nearestPhaseAnchor(normalized);
+
+  if (snapEnabled) {
+    return nearest.name;
+  }
+
+  if (!previousPhaseName) {
+    return model.phaseNameFromPhaseAngleDeg(normalized);
+  }
+
+  const previousAnchor = anchorForPhaseName(previousPhaseName);
+  if (!previousAnchor) {
+    return nearest.name;
+  }
+
+  const distanceFromPrevious = Math.abs(
+    shortestAngleDelta(normalized, previousAnchor.angleDeg)
+  );
+  if (distanceFromPrevious <= 22.5 + PHASE_HYSTERESIS_DEGREES) {
+    return previousPhaseName;
+  }
+
+  return nearest.name;
+}
+
 // ---- Computed data (extracted from render methods) ----------------
 
 /** Position of the Moon on the orbital diagram SVG. */
@@ -154,6 +225,7 @@ export function computePhaseViewPath(
 
 export interface ReadoutData {
   phaseName: string;
+  illumFraction: string;
   angleStr: string;
   illumPercent: string;
   daysSinceNew: string;
@@ -164,16 +236,18 @@ export interface ReadoutData {
 /** Compute all readout values for a given phase angle. */
 export function computeReadoutData(
   angleDeg: number,
-  model: MoonPhaseCallbacks
+  model: MoonPhaseCallbacks,
+  phaseNameOverride?: string
 ): ReadoutData {
   const normalized = normalizeAngle(angleDeg);
   const illum = model.illuminationFractionFromPhaseAngleDeg(normalized);
-  const phaseName = model.phaseNameFromPhaseAngleDeg(normalized);
+  const phaseName = phaseNameOverride ?? model.phaseNameFromPhaseAngleDeg(normalized);
   const days = model.daysSinceNewFromPhaseAngleDeg(normalized);
   const waxingWaning = model.waxingWaningFromPhaseAngleDeg(normalized);
 
   return {
     phaseName,
+    illumFraction: formatFraction(illum),
     angleStr: String(Math.round(normalized)),
     illumPercent: String(Math.round(illum * 100)),
     daysSinceNew: formatDay(days),

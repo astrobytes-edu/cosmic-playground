@@ -19,6 +19,7 @@ import {
   formatApproxTime,
   computeApproxRiseSet,
   snapToCardinalPhase,
+  computeStablePhaseName,
   computeOrbitalPosition,
   computePhaseViewPath,
   computeReadoutData,
@@ -58,6 +59,10 @@ const daysSinceNewEl = requireEl(
   document.querySelector<HTMLElement>("#days-since-new"),
   "#days-since-new"
 );
+const illuminationEquationValueEl = requireEl(
+  document.querySelector<HTMLElement>("#illumination-equation-value"),
+  "#illumination-equation-value"
+);
 
 const orbitalSvgEl = requireEl(
   document.querySelector<SVGSVGElement>("#orbital-svg"),
@@ -87,10 +92,30 @@ const earthShadowGroupEl = requireEl(
   document.querySelector<SVGGElement>("#earth-shadow-group"),
   "#earth-shadow-group"
 );
+const orbitalPanelEl = requireEl(
+  document.querySelector<HTMLDivElement>("#orbital-panel"),
+  "#orbital-panel"
+);
+const orbitAnnotationGroupEl = requireEl(
+  document.querySelector<SVGGElement>("#orbit-annotation-group"),
+  "#orbit-annotation-group"
+);
 
 const litPortionEl = requireEl(
   document.querySelector<SVGPathElement>("#lit-portion"),
   "#lit-portion"
+);
+const earthAnnotationGroupEl = requireEl(
+  document.querySelector<SVGGElement>("#earth-annotation-group"),
+  "#earth-annotation-group"
+);
+const earthSunDirectionLineEl = requireEl(
+  document.querySelector<SVGLineElement>("#earth-sun-direction-line"),
+  "#earth-sun-direction-line"
+);
+const earthSunDirectionLabelEl = requireEl(
+  document.querySelector<SVGTextElement>("#earth-sun-direction-label"),
+  "#earth-sun-direction-label"
 );
 
 const waxingWaningLabelEl = requireEl(
@@ -137,6 +162,14 @@ const speedSelectEl = requireEl(
   document.querySelector<HTMLSelectElement>("#speed-select"),
   "#speed-select"
 );
+const focusMoonButtonEl = requireEl(
+  document.querySelector<HTMLButtonElement>("#focus-moon-btn"),
+  "#focus-moon-btn"
+);
+const moonFocusChipEl = requireEl(
+  document.querySelector<HTMLSpanElement>("#moon-focus-chip"),
+  "#moon-focus-chip"
+);
 
 const stationButtonEl = requireEl(
   document.querySelector<HTMLButtonElement>("#btn-station-mode"),
@@ -158,6 +191,18 @@ const challengeContainerEl = requireEl(
 const shadowToggleEl = requireEl(
   document.querySelector<HTMLInputElement>("#show-shadow-toggle"),
   "#show-shadow-toggle"
+);
+const shadowMisconceptionNoteEl = requireEl(
+  document.querySelector<HTMLElement>("#shadow-misconception-note"),
+  "#shadow-misconception-note"
+);
+const snapKeyPhasesToggleEl = requireEl(
+  document.querySelector<HTMLInputElement>("#snap-key-phases-toggle"),
+  "#snap-key-phases-toggle"
+);
+const showAnnotationsToggleEl = requireEl(
+  document.querySelector<HTMLInputElement>("#show-annotations-toggle"),
+  "#show-annotations-toggle"
 );
 const advancedToggleEl = requireEl(
   document.querySelector<HTMLInputElement>("#toggle-advanced"),
@@ -234,6 +279,9 @@ let advancedEnabled = advancedToggleEl.checked;
 let latitudeDeg = Number(latitudeInputEl.value) || 0;
 let dayOfYear = Number(dayOfYearInputEl.value) || 80;
 let riseSetEnabled = riseSetToggleEl.checked;
+let snapEnabled = snapKeyPhasesToggleEl.checked;
+let annotationsEnabled = showAnnotationsToggleEl.checked;
+let stablePhaseName: string | null = null;
 
 const runtime = createInstrumentRuntime({
   hasMathMode: false,
@@ -291,10 +339,40 @@ function updateAngleInput() {
   angleInputEl.value = String(Math.round(moonAngleDeg));
 }
 
+function maybeSnapAngle(angleDeg: number): number {
+  const normalized = normalizeAngle(angleDeg);
+  return snapEnabled ? snapToCardinalPhase(normalized) : normalized;
+}
+
 function setAngle(angleDeg: number) {
   moonAngleDeg = normalizeAngle(angleDeg);
   updateAngleInput();
   update();
+}
+
+function setMoonFocusUI(focused: boolean) {
+  orbitalPanelEl.classList.toggle("is-moon-focused", focused);
+  moonFocusChipEl.hidden = !focused;
+}
+
+function updateAnnotations() {
+  orbitAnnotationGroupEl.style.display = annotationsEnabled ? "block" : "none";
+  earthAnnotationGroupEl.style.display = annotationsEnabled ? "block" : "none";
+  if (!annotationsEnabled) {
+    return;
+  }
+
+  const waxing = MoonPhasesModel.waxingWaningFromPhaseAngleDeg(moonAngleDeg) === "Waxing";
+  const xEnd = waxing ? 156 : 44;
+  const labelX = waxing ? 128 : 72;
+  const labelText = waxing ? "Sun is this way \u2192" : "\u2190 Sun is this way";
+
+  earthSunDirectionLineEl.setAttribute("x1", "100");
+  earthSunDirectionLineEl.setAttribute("y1", "34");
+  earthSunDirectionLineEl.setAttribute("x2", String(xEnd));
+  earthSunDirectionLineEl.setAttribute("y2", "34");
+  earthSunDirectionLabelEl.setAttribute("x", String(labelX));
+  earthSunDirectionLabelEl.textContent = labelText;
 }
 
 function animateAngle(targetDeg: number, durationMs: number) {
@@ -355,12 +433,19 @@ function updatePhaseView() {
 }
 
 function updateReadouts() {
-  const data = computeReadoutData(moonAngleDeg, MoonPhasesModel);
+  stablePhaseName = computeStablePhaseName({
+    angleDeg: moonAngleDeg,
+    previousPhaseName: stablePhaseName,
+    snapEnabled,
+    model: MoonPhasesModel
+  });
+  const data = computeReadoutData(moonAngleDeg, MoonPhasesModel, stablePhaseName);
 
   phaseNameEl.textContent = data.phaseName;
   angleReadoutEl.textContent = data.angleStr;
   illumPercentEl.textContent = data.illumPercent;
   daysSinceNewEl.textContent = data.daysSinceNew;
+  illuminationEquationValueEl.textContent = data.illumFraction;
   waxingWaningLabelEl.textContent = data.waxingWaning;
 
   moonGroupEl.setAttribute("aria-valuenow", data.angleStr);
@@ -393,17 +478,19 @@ function update() {
   updatePhaseView();
   updateReadouts();
   updateRiseSetReadouts();
+  updateAnnotations();
   updateTimeline();
 }
 
 function applyShadowVisibility(showShadow: boolean, announce = false) {
   earthShadowGroupEl.style.display = showShadow ? "block" : "none";
   shadowToggleEl.checked = showShadow;
+  shadowMisconceptionNoteEl.hidden = !showShadow;
   if (announce) {
     setLiveRegionText(
       statusEl,
       showShadow
-        ? "Earth's shadow cone is now visible. Notice it points away from the Sun."
+        ? "Earth's shadow cone is now visible. Phases are not caused by Earth's shadow."
         : "Earth's shadow cone hidden."
     );
   }
@@ -442,7 +529,7 @@ function setupDrag() {
     const dy = ORBITAL_CENTER.y - svgY;
 
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-    moonAngleDeg = normalizeAngle(angle);
+    moonAngleDeg = maybeSnapAngle(angle);
     updateAngleInput();
     update();
   };
@@ -450,7 +537,7 @@ function setupDrag() {
   const endDrag = () => {
     if (!isDragging) return;
     isDragging = false;
-    setAngle(snapToCardinalPhase(moonAngleDeg));
+    setAngle(maybeSnapAngle(moonAngleDeg));
   };
 
   moonGroupEl.addEventListener("mousedown", startDrag);
@@ -544,6 +631,21 @@ function setupKeyboard() {
   });
 }
 
+function setupMoonFocusControls() {
+  moonGroupEl.addEventListener("focus", () => {
+    setMoonFocusUI(true);
+  });
+
+  moonGroupEl.addEventListener("blur", () => {
+    setMoonFocusUI(false);
+  });
+
+  focusMoonButtonEl.addEventListener("click", () => {
+    moonGroupEl.focus();
+    setLiveRegionText(statusEl, "Moon controls focused. Use arrow keys to move the Moon.");
+  });
+}
+
 function updateAnimationButtons() {
   playButtonEl.disabled = isAnimating || PREFERS_REDUCED_MOTION;
   pauseButtonEl.disabled = !isAnimating;
@@ -624,6 +726,17 @@ function setupAnimationControls() {
 function setupShadowToggle() {
   shadowToggleEl.addEventListener("change", () => {
     applyShadowVisibility(shadowToggleEl.checked, true);
+  });
+
+  showAnnotationsToggleEl.addEventListener("change", () => {
+    annotationsEnabled = showAnnotationsToggleEl.checked;
+    updateAnnotations();
+  });
+
+  snapKeyPhasesToggleEl.addEventListener("change", () => {
+    snapEnabled = snapKeyPhasesToggleEl.checked;
+    stablePhaseName = null;
+    setAngle(maybeSnapAngle(moonAngleDeg));
   });
 }
 
@@ -950,7 +1063,7 @@ async function handleCopyResults() {
 
 angleInputEl.addEventListener("input", () => {
   stopAnimation();
-  setAngle(Number(angleInputEl.value));
+  setAngle(maybeSnapAngle(Number(angleInputEl.value)));
 });
 
 copyResultsEl.addEventListener("click", () => {
@@ -961,6 +1074,7 @@ setupDrag();
 setupPresets();
 setupTimeline();
 setupKeyboard();
+setupMoonFocusControls();
 setupAnimationControls();
 setupShadowToggle();
 setupAdvancedControls();
@@ -969,6 +1083,7 @@ setupModes();
 
 setAngle(0);
 applyShadowVisibility(false);
+setMoonFocusUI(false);
 initMath(document);
 
 const demoRoot = document.getElementById("cp-demo");

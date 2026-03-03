@@ -24,6 +24,68 @@
   color: var(--cp-text2);
 }
 
+.moon-label-with-tip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cp-space-2);
+}
+
+.moon-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.moon-tip__trigger {
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 70%, transparent);
+  background: color-mix(in srgb, var(--cp-bg2) 80%, transparent);
+  color: var(--cp-text);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: help;
+  padding: 0;
+}
+
+.moon-tip__trigger:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 2px;
+}
+
+.moon-tip__content {
+  position: absolute;
+  z-index: var(--cp-z-tooltip, 400);
+  inset-inline-end: 0;
+  inset-block-start: calc(100% + var(--cp-space-1));
+  inline-size: clamp(180px, 28vw, 310px);
+  padding: var(--cp-space-2) var(--cp-space-3);
+  border-radius: var(--cp-r-2);
+  border: 1px solid color-mix(in srgb, var(--cp-border) 80%, transparent);
+  background: color-mix(in srgb, var(--cp-bg1) 88%, transparent);
+  color: var(--cp-text);
+  font-size: var(--cp-text-xs);
+  line-height: 1.4;
+  box-shadow: var(--cp-elevation-2);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition: opacity 120ms var(--cp-ease-out), transform 120ms var(--cp-ease-out);
+}
+
+.moon-tip:hover .moon-tip__content,
+.moon-tip:focus-within .moon-tip__content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.moon-angle-helper {
+  margin-top: var(--cp-space-1);
+  font-size: var(--cp-text-xs);
+}
+
 #orbital-svg,
 #phase-svg {
   width: 100%;
@@ -37,6 +99,11 @@
 
 .viz-panel {
   position: relative;
+}
+
+.viz-panel.is-moon-focused {
+  border-color: color-mix(in srgb, var(--cp-focus) 72%, var(--cp-instr-panel-border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cp-focus) 25%, transparent);
 }
 
 .waxing-waning-badge {
@@ -107,6 +174,17 @@
   font-size: 0.9rem;
 }
 
+.shadow-misconception-note {
+  margin: var(--cp-space-2) 0;
+  font-size: var(--cp-text-xs);
+  line-height: 1.4;
+}
+
+.annotation-group {
+  opacity: 0.75;
+  pointer-events: none;
+}
+
 .moon-draggable {
   cursor: grab;
 }
@@ -144,6 +222,24 @@
   margin-left: auto;
   font-size: 0.85rem;
   color: var(--cp-text2);
+}
+
+.focus-moon-btn {
+  font-size: 0.72rem;
+  padding: 0.3rem 0.6rem;
+  white-space: nowrap;
+}
+
+.moon-focus-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--cp-focus) 50%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-focus) 16%, transparent);
+  color: var(--cp-text2);
+  font-size: var(--cp-text-xs);
+  font-weight: var(--cp-font-semibold);
 }
 
 /* --- Timeline --- */
@@ -249,6 +345,15 @@
   text-align: center;
   padding-top: var(--cp-space-1);
   border-top: 1px solid var(--cp-border);
+}
+
+.cp-readout--equation {
+  background: color-mix(in srgb, var(--cp-bg2) 70%, transparent);
+}
+
+.cp-readout__value--equation {
+  font-size: 0.92rem;
+  color: var(--cp-muted);
 }
 
 /* --- Entry animations (staggered) --- */
