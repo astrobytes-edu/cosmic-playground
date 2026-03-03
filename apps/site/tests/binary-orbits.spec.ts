@@ -49,7 +49,7 @@ test.describe("Binary Orbits -- E2E", () => {
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
     const value = await page.locator("#massRatioValue").textContent();
-    expect(value).toContain("0.30");
+    expect(value).toContain("0.300");
   });
 
   test("separation slider changes displayed value", async ({ page }) => {
@@ -66,8 +66,49 @@ test.describe("Binary Orbits -- E2E", () => {
 
   test("mass ratio slider has correct min and max", async ({ page }) => {
     const slider = page.locator("#massRatio");
-    await expect(slider).toHaveAttribute("min", "0.01");
+    await expect(slider).toHaveAttribute("min", "0.001");
     await expect(slider).toHaveAttribute("max", "1");
+  });
+
+  test("planet limit preset sets q to 0.001", async ({ page }) => {
+    await page.locator("#presetPlanet").click();
+    await expect(page.locator("#massRatio")).toHaveValue("0.001");
+    await expect(page.locator("#massRatioValue")).toContainText("0.001");
+  });
+
+  test("auto-scale toggle is visible and defaults on", async ({ page }) => {
+    const toggle = page.locator("#autoScaleLog");
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toBeChecked();
+  });
+
+  test("auto-scale toggle does not change physics readouts", async ({ page }) => {
+    const before = {
+      a1: await page.locator("#baryOffsetValue").textContent(),
+      a2: await page.locator("#baryOffsetSecondaryValue").textContent(),
+      v1: await page.locator("#speedPrimaryValue").textContent(),
+      v2: await page.locator("#speedSecondaryValue").textContent(),
+      p: await page.locator("#periodValue").textContent(),
+      k1: await page.locator("#k1Value").textContent(),
+      k2: await page.locator("#k2Value").textContent(),
+      e: await page.locator("#energyTotalValue").textContent(),
+    };
+
+    await page.locator("#autoScaleLog").uncheck();
+    await page.waitForTimeout(80);
+
+    const after = {
+      a1: await page.locator("#baryOffsetValue").textContent(),
+      a2: await page.locator("#baryOffsetSecondaryValue").textContent(),
+      v1: await page.locator("#speedPrimaryValue").textContent(),
+      v2: await page.locator("#speedSecondaryValue").textContent(),
+      p: await page.locator("#periodValue").textContent(),
+      k1: await page.locator("#k1Value").textContent(),
+      k2: await page.locator("#k2Value").textContent(),
+      e: await page.locator("#energyTotalValue").textContent(),
+    };
+
+    expect(after).toEqual(before);
   });
 
   test("separation slider has correct min and max", async ({ page }) => {
@@ -262,6 +303,9 @@ test.describe("Binary Orbits -- E2E", () => {
     await page.locator("#viewEnergy").click();
     await expect(page.locator("#energyPanel")).toBeVisible();
     await expect(page.locator("#energyTotalValue")).toBeVisible();
+    await expect(page.locator("#energyPanel .cp-muted")).toContainText(
+      "Circular-orbit energies in teaching units:",
+    );
 
     const before = parseFloat((await page.locator("#energyTotalValue").textContent()) || "NaN");
     expect(Number.isFinite(before)).toBe(true);

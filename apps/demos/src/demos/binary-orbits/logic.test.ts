@@ -13,6 +13,7 @@ import {
   isRvChallengeLocked,
   isPredictionLocked,
   logSliderToValue,
+  orbitAutoScaleLogFactor,
   pixelsPerUnit,
   rvCacheKey,
   energyScaleCueForControl,
@@ -65,9 +66,9 @@ describe("Binary Orbits -- UI Logic", () => {
       expect(m2.periodYr).toBeCloseTo(Math.sqrt(32), 8);
     });
 
-    it("clamps massRatio to [0.01, 1.0]", () => {
-      const low = computeModel(0.001, 4, 90);
-      expect(low.massRatio).toBe(0.01);
+    it("clamps massRatio to [0.001, 1.0]", () => {
+      const low = computeModel(0.0001, 4, 90);
+      expect(low.massRatio).toBe(0.001);
       const high = computeModel(100, 4, 90);
       expect(high.massRatio).toBe(1);
     });
@@ -321,6 +322,27 @@ describe("Binary Orbits -- UI Logic", () => {
 
     it("returns 1 when both radii are zero", () => {
       expect(pixelsPerUnit(0, 0, 400, 400)).toBe(1);
+    });
+  });
+
+  describe("orbitAutoScaleLogFactor", () => {
+    it("returns finite bounded values across the supported separation range", () => {
+      for (const a of [0.1, 0.3, 1, 3, 10, 30, 100]) {
+        const factor = orbitAutoScaleLogFactor(a);
+        expect(Number.isFinite(factor)).toBe(true);
+        expect(factor).toBeGreaterThanOrEqual(0.68);
+        expect(factor).toBeLessThanOrEqual(1.22);
+      }
+    });
+
+    it("decreases smoothly as separation increases", () => {
+      const f1 = orbitAutoScaleLogFactor(0.1);
+      const f2 = orbitAutoScaleLogFactor(1);
+      const f3 = orbitAutoScaleLogFactor(10);
+      const f4 = orbitAutoScaleLogFactor(100);
+      expect(f1).toBeGreaterThan(f2);
+      expect(f2).toBeGreaterThan(f3);
+      expect(f3).toBeGreaterThan(f4);
     });
   });
 });
