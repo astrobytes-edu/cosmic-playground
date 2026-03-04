@@ -1,5 +1,29 @@
 @import "../../shared/stub-demo.css";
 
+@media (min-width: 1025px) {
+  .cp-demo {
+    grid-template-rows: minmax(0, 1fr) auto auto auto auto;
+    grid-template-areas:
+      "sidebar viz"
+      "sidebar playbar"
+      "sidebar readouts"
+      "sidebar context"
+      "sidebar shelf";
+  }
+}
+
+@media (max-width: 1024px) {
+  .cp-demo {
+    grid-template-areas:
+      "viz"
+      "playbar"
+      "readouts"
+      "context"
+      "sidebar"
+      "shelf";
+  }
+}
+
 .control {
   display: grid;
   gap: 8px;
@@ -533,6 +557,8 @@
 
 /* -- Context message ------------------------------------ */
 .cp-context-message {
+  grid-area: context;
+  margin: 0;
   text-align: center;
   padding: 0 var(--cp-space-4);
   min-height: 1.5em;
