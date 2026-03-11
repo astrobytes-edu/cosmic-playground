@@ -143,4 +143,81 @@ describe("BinaryOrbitModel", () => {
     expect(badNan.valid).toBe(false);
     expect(badNan.massRatioEstimate).toBeNaN();
   });
+
+  it("computes the SB1 mass function from observables", () => {
+    const state = BinaryOrbitModel.circularState({
+      primaryMassSolar: 1,
+      secondaryMassSolar: 0.2,
+      separationAu: 4,
+      inclinationDeg: 60,
+    });
+
+    const massFunction = BinaryOrbitModel.massFunctionSolar({
+      k1KmPerS: state.k1KmPerS,
+      periodYr: state.periodYr,
+    });
+
+    const sinI = Math.sin((state.inclinationDeg * Math.PI) / 180);
+    const expected = (Math.pow(state.secondaryMassSolar * sinI, 3))
+      / Math.pow(state.totalMassSolar, 2);
+    expect(massFunction).toBeCloseTo(expected, 12);
+  });
+
+  it("computes SB2 minimum masses from observables", () => {
+    const state = BinaryOrbitModel.circularState({
+      primaryMassSolar: 1,
+      secondaryMassSolar: 0.5,
+      separationAu: 4,
+      inclinationDeg: 30,
+    });
+
+    const masses = BinaryOrbitModel.minimumMassesSolar({
+      k1KmPerS: state.k1KmPerS,
+      k2KmPerS: state.k2KmPerS,
+      periodYr: state.periodYr,
+    });
+
+    const sinICubed = Math.pow(Math.sin((state.inclinationDeg * Math.PI) / 180), 3);
+    expect(masses.primaryMinimumMassSolar).toBeCloseTo(state.primaryMassSolar * sinICubed, 12);
+    expect(masses.secondaryMinimumMassSolar).toBeCloseTo(state.secondaryMassSolar * sinICubed, 12);
+  });
+
+  it("preserves inclination scaling in the mass function and minimum masses", () => {
+    const edgeOn = BinaryOrbitModel.circularState({
+      primaryMassSolar: 1,
+      secondaryMassSolar: 0.2,
+      separationAu: 4,
+      inclinationDeg: 90,
+    });
+    const tilted = BinaryOrbitModel.circularState({
+      primaryMassSolar: 1,
+      secondaryMassSolar: 0.2,
+      separationAu: 4,
+      inclinationDeg: 30,
+    });
+
+    const edgeOnMassFunction = BinaryOrbitModel.massFunctionSolar({
+      k1KmPerS: edgeOn.k1KmPerS,
+      periodYr: edgeOn.periodYr,
+    });
+    const tiltedMassFunction = BinaryOrbitModel.massFunctionSolar({
+      k1KmPerS: tilted.k1KmPerS,
+      periodYr: tilted.periodYr,
+    });
+    expect(tiltedMassFunction / edgeOnMassFunction).toBeCloseTo(Math.pow(Math.sin(Math.PI / 6), 3), 12);
+
+    const edgeOnMinimumMasses = BinaryOrbitModel.minimumMassesSolar({
+      k1KmPerS: edgeOn.k1KmPerS,
+      k2KmPerS: edgeOn.k2KmPerS,
+      periodYr: edgeOn.periodYr,
+    });
+    const tiltedMinimumMasses = BinaryOrbitModel.minimumMassesSolar({
+      k1KmPerS: tilted.k1KmPerS,
+      k2KmPerS: tilted.k2KmPerS,
+      periodYr: tilted.periodYr,
+    });
+    expect(
+      tiltedMinimumMasses.secondaryMinimumMassSolar / edgeOnMinimumMasses.secondaryMinimumMassSolar,
+    ).toBeCloseTo(Math.pow(Math.sin(Math.PI / 6), 3), 12);
+  });
 });

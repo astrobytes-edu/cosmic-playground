@@ -6,12 +6,12 @@
 }
 
 .control__value {
-  color: var(--cp-muted);
+  color: color-mix(in srgb, var(--cp-text) 76%, var(--cp-bg0));
   font-size: 0.95rem;
 }
 
 .control__hint {
-  color: var(--cp-muted);
+  color: color-mix(in srgb, var(--cp-text) 66%, var(--cp-bg0));
   font-size: var(--cp-text-xs);
 }
 
@@ -19,66 +19,149 @@
   display: flex;
   justify-content: space-between;
   padding: 0 2px;
-  color: var(--cp-muted);
+  color: color-mix(in srgb, var(--cp-text) 56%, var(--cp-bg0));
   font-size: 0.75rem;
 }
 
+.control-group {
+  display: grid;
+  gap: var(--cp-space-2);
+  padding: 0.75rem 0.85rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 86%, var(--cp-accent) 14%);
+  background: color-mix(in srgb, var(--cp-bg1) 94%, transparent);
+}
+
+.control-group__label {
+  color: color-mix(in srgb, var(--cp-text) 78%, var(--cp-bg0));
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .cp-demo__stage {
-  min-height: clamp(300px, 52svh, 520px);
+  min-height: clamp(440px, 72svh, 860px);
 }
 
 .stage {
   display: grid;
-  place-items: center;
   gap: var(--cp-space-3);
+  align-content: start;
+  justify-items: stretch;
   padding: var(--cp-space-4);
+}
+
+.stage-toolbar {
+  display: grid;
+  gap: var(--cp-space-3);
+  width: min(100%, 960px);
+  margin-inline: auto;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 82%, var(--cp-accent) 18%);
+  background: color-mix(in srgb, var(--cp-bg1) 97%, transparent);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--cp-bg0) 60%, transparent);
+}
+
+.stage-toolbar__copy {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.stage-toolbar__eyebrow {
+  margin: 0;
+  color: color-mix(in srgb, var(--cp-accent) 74%, var(--cp-text));
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stage-toolbar__title {
+  margin: 0;
+  font-size: clamp(1.15rem, 1rem + 0.9vw, 1.7rem);
+  line-height: 1.15;
+  color: color-mix(in srgb, var(--cp-text) 96%, var(--cp-bg0));
+}
+
+.stage-toolbar__prompt {
+  margin: 0;
+  max-width: 70ch;
+  color: color-mix(in srgb, var(--cp-text) 78%, var(--cp-bg0));
+}
+
+.stage-toolbar__views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-2);
 }
 
 #orbitCanvas,
 #rvCanvas,
-#energyCanvas {
+#energyCanvas,
+#spectrumCanvas {
   width: 100%;
   display: block;
   border-radius: 18px;
-  border: 1px solid var(--cp-border);
+  border: 1px solid color-mix(in srgb, var(--cp-border) 80%, var(--cp-accent) 20%);
   background: radial-gradient(
-    circle at 50% 50%,
-    var(--cp-glow-blue),
-    color-mix(in srgb, var(--cp-bg0) 75%, transparent)
+    circle at 50% 45%,
+    color-mix(in srgb, var(--cp-glow-blue) 60%, transparent),
+    color-mix(in srgb, var(--cp-bg0) 88%, transparent)
   );
 }
 
 #orbitCanvas {
   height: auto;
-  width: min(100%, 694px);
-  max-height: min(52svh, 520px);
+  width: min(100%, 860px);
   margin-inline: auto;
   aspect-ratio: 4 / 3;
 }
 
-#rvCanvas {
-  height: auto;
-  aspect-ratio: 2 / 1;
-}
-
+#rvCanvas,
 #energyCanvas {
   height: auto;
-  aspect-ratio: 2 / 1;
+  aspect-ratio: 3 / 1.55;
+}
+
+#spectrumCanvas {
+  height: auto;
+  aspect-ratio: 16 / 5;
 }
 
 .rv-panel {
-  width: min(100%, 720px);
+  width: min(100%, 960px);
   display: grid;
   gap: var(--cp-space-2);
+  margin-inline: auto;
   padding: var(--cp-space-3);
-  border-radius: 14px;
-  border: 1px solid var(--cp-border);
-  background: color-mix(in srgb, var(--cp-bg1) 92%, transparent);
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 82%, var(--cp-accent) 18%);
+  background: color-mix(in srgb, var(--cp-bg1) 97%, transparent);
+  box-shadow: 0 16px 42px color-mix(in srgb, var(--cp-bg0) 55%, transparent);
 }
 
 .rv-panel h3 {
   margin: 0;
   font-size: 1rem;
+}
+
+.rv-panel .cp-muted,
+.momentum-badge,
+#predictionOutcome {
+  color: color-mix(in srgb, var(--cp-text) 72%, var(--cp-bg0));
+}
+
+.rv-panel[hidden],
+#orbitCanvas[hidden],
+#rvCanvas[hidden],
+#energyCanvas[hidden],
+#spectrumCanvas[hidden],
+#predictPanel[hidden],
+#rvChallengePanel[hidden],
+#omegaReadout[hidden] {
+  display: none !important;
 }
 
 .rv-challenge-panel {
@@ -98,7 +181,7 @@
   padding: 0.45rem 0.6rem;
   border-radius: 10px;
   border: 1px solid transparent;
-  color: var(--cp-muted);
+  color: color-mix(in srgb, var(--cp-text) 68%, var(--cp-bg0));
   transition: border-color 180ms var(--cp-ease-out), background-color 180ms var(--cp-ease-out), color 180ms var(--cp-ease-out);
 }
 
@@ -111,7 +194,6 @@
 .momentum-badge {
   margin-top: 0.4rem;
   font-size: 0.88rem;
-  color: var(--cp-muted);
 }
 
 .momentum-badge.is-balanced {
@@ -171,7 +253,6 @@
   outline-offset: 2px;
 }
 
-/* Entry animations */
 .cp-demo__controls {
   animation: cp-slide-up 0.6s var(--cp-ease-out);
 }
@@ -203,11 +284,18 @@
 
 @media (max-width: 900px) {
   .cp-demo__stage {
-    min-height: clamp(260px, 46svh, 420px);
+    min-height: clamp(340px, 58svh, 620px);
+  }
+
+  .stage-toolbar {
+    padding: 0.85rem 0.9rem;
+  }
+
+  .stage-toolbar__title {
+    font-size: 1.2rem;
   }
 
   #orbitCanvas {
-    width: min(100%, 560px);
-    max-height: min(46svh, 420px);
+    width: min(100%, 680px);
   }
 }

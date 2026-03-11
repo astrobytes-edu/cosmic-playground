@@ -141,6 +141,8 @@ describe("Binary Orbits -- Design System Contracts", () => {
       expect(html).toContain("id=\"invariantCheck\"");
       expect(html).toContain("id=\"rvPanel\"");
       expect(html).toContain("id=\"rvCanvas\"");
+      expect(html).toContain("id=\"spectrumPanel\"");
+      expect(html).toContain("id=\"spectrumCanvas\"");
       expect(html).toContain("id=\"energyPanel\"");
       expect(html).toContain("id=\"energyCanvas\"");
       expect(html).toContain("id=\"rvChallengePanel\"");
@@ -150,10 +152,24 @@ describe("Binary Orbits -- Design System Contracts", () => {
       expect(html).toContain("aria-label=\"Stage view\"");
       expect(html).toContain("id=\"viewOrbit\"");
       expect(html).toContain("id=\"viewRv\"");
+      expect(html).toContain("id=\"viewSpectrum\"");
       expect(html).toContain("id=\"viewEnergy\"");
       expect(html).toMatch(/id="viewOrbit"[^>]*role="radio"/);
       expect(html).toMatch(/id="viewRv"[^>]*role="radio"/);
+      expect(html).toMatch(/id="viewSpectrum"[^>]*role="radio"/);
       expect(html).toMatch(/id="viewEnergy"[^>]*role="radio"/);
+    });
+
+    it("includes spectroscopy controls and mass-inference readouts", () => {
+      expect(html).toContain("id=\"spectroscopySb2\"");
+      expect(html).toContain("id=\"spectroscopySb1\"");
+      expect(html).toContain("id=\"elementH\"");
+      expect(html).toContain("id=\"elementNa\"");
+      expect(html).toContain("id=\"elementCa\"");
+      expect(html).toContain("id=\"m1SiniValue\"");
+      expect(html).toContain("id=\"m2SiniValue\"");
+      expect(html).toContain("id=\"massFuncValue\"");
+      expect(html).toContain("id=\"vsysValue\"");
     });
   });
 
@@ -207,6 +223,19 @@ describe("Binary Orbits -- Design System Contracts", () => {
       expect(html).toContain("id=\"rvChallengeEnd\"");
       expect(html).toContain("id=\"rvChallengeLockHint\"");
       expect(html).toContain("Copy Results and station snapshots are locked");
+    });
+
+    it("explicitly honors hidden state for stage panels", () => {
+      expect(css).toContain(".rv-panel[hidden]");
+      expect(css).toContain("#orbitCanvas[hidden]");
+      expect(css).toContain("#spectrumCanvas[hidden]");
+      expect(css).toContain("display: none !important;");
+    });
+
+    it("help and export pathways mention spectroscopy and minimum-mass inference", () => {
+      expect(main).toContain("Spectrum view maps those RVs onto Doppler-shifted absorption lines");
+      expect(main).toContain("BinaryOrbitModel.massFunctionSolar");
+      expect(main).toContain("BinaryOrbitModel.minimumMassesSolar");
     });
   });
 });

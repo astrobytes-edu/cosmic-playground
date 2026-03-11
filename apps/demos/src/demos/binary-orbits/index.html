@@ -116,10 +116,23 @@
             </select>
           </label>
 
-          <div class="cp-chip-group" role="radiogroup" aria-label="Stage view">
-            <button id="viewOrbit" class="cp-chip" role="radio" aria-checked="true" type="button">Orbit view</button>
-            <button id="viewRv" class="cp-chip" role="radio" aria-checked="false" type="button">RV view</button>
-            <button id="viewEnergy" class="cp-chip" role="radio" aria-checked="false" type="button">Energy view</button>
+          <div class="control-group">
+            <div class="control-group__label">Spectroscopy mode</div>
+            <div class="cp-chip-group" role="radiogroup" aria-label="Spectroscopy visibility mode">
+              <button id="spectroscopySb2" class="cp-chip" role="radio" aria-checked="true" type="button">SB2</button>
+              <button id="spectroscopySb1" class="cp-chip" role="radio" aria-checked="false" type="button">SB1</button>
+            </div>
+            <p class="control__hint">SB2 shows both stars' lines. SB1 hides the secondary spectrum to mimic a single-lined binary.</p>
+          </div>
+
+          <div class="control-group">
+            <div class="control-group__label">Spectrum element</div>
+            <div class="cp-chip-group" role="radiogroup" aria-label="Spectrum element">
+              <button id="elementH" class="cp-chip" role="radio" aria-checked="true" type="button">H</button>
+              <button id="elementNa" class="cp-chip" role="radio" aria-checked="false" type="button">Na</button>
+              <button id="elementCa" class="cp-chip" role="radio" aria-checked="false" type="button">Ca</button>
+            </div>
+            <p class="control__hint">Use a strong line set to compare the rest-frame lab spectrum with the observed Doppler-shifted spectrum.</p>
           </div>
 
           <label class="cp-toggle" title="Auto-scale changes the camera/visual scale only; it does not change the physics.">
@@ -205,15 +218,35 @@
 
       <section class="cp-demo__stage cp-stage stage" aria-label="Binary orbit visualization">
         <canvas class="cp-starfield" aria-hidden="true"></canvas>
+        <div class="stage-toolbar">
+          <div class="stage-toolbar__copy">
+            <p class="stage-toolbar__eyebrow">Observable-first binary lab</p>
+            <h2 class="stage-toolbar__title">Trace the same orbit through geometry, velocity, and spectra.</h2>
+            <p id="stagePrompt" class="stage-toolbar__prompt">
+              Start with the orbit to locate the barycenter, then switch views to see how the same motion becomes a measurable RV curve and shifting spectral lines.
+            </p>
+          </div>
+          <div class="cp-chip-group stage-toolbar__views" role="radiogroup" aria-label="Stage view">
+            <button id="viewOrbit" class="cp-chip" role="radio" aria-checked="true" type="button">Orbit</button>
+            <button id="viewRv" class="cp-chip" role="radio" aria-checked="false" type="button">RV</button>
+            <button id="viewSpectrum" class="cp-chip" role="radio" aria-checked="false" type="button">Spectrum</button>
+            <button id="viewEnergy" class="cp-chip" role="radio" aria-checked="false" type="button">Energy</button>
+          </div>
+        </div>
         <canvas id="orbitCanvas" width="520" height="520"></canvas>
         <div id="rvPanel" class="rv-panel" hidden>
           <h3>Radial velocity curves</h3>
-          <p class="cp-muted">Curves are projected along the line of sight for inclination $i$.</p>
+          <p class="cp-muted">Curves are projected along the line of sight for inclination $i$. During the challenge, click near the extrema; the largest $|v_r|$ you sample becomes your measured $K$.</p>
           <canvas id="rvCanvas" width="520" height="260" aria-label="Radial velocity versus phase"></canvas>
+        </div>
+        <div id="spectrumPanel" class="rv-panel" hidden>
+          <h3>Spectrum strip</h3>
+          <p class="cp-muted">Top strip shows rest-frame lab lines. Lower strip shows what the observer sees after Doppler shifting the selected element lines.</p>
+          <canvas id="spectrumCanvas" width="720" height="280" aria-label="Spectrum strip comparing lab and observed spectral lines"></canvas>
         </div>
         <div id="energyPanel" class="rv-panel" hidden>
           <h3>Energy decomposition</h3>
-          <p class="cp-muted">Circular-orbit energies in teaching units: $M_{\odot}\,\mathrm{AU}^2/\mathrm{yr}^2$.</p>
+          <p class="cp-muted">Signed circular-orbit energies in teaching units: $M_{\odot}\,\mathrm{AU}^2/\mathrm{yr}^2$. Positive bars are kinetic; negative bars are bound energy terms.</p>
           <canvas id="energyCanvas" width="520" height="260" aria-label="Energy decomposition view"></canvas>
         </div>
       </section>
@@ -262,6 +295,22 @@
           <div class="cp-readout">
             <div class="cp-readout__label">RV semi-amplitude of $M_2$ ($K_2$)</div>
             <div class="cp-readout__value"><span id="k2Value"></span> <span class="cp-readout__unit">km/s</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Primary minimum mass ($M_1 \sin^3 i$)</div>
+            <div class="cp-readout__value"><span id="m1SiniValue"></span> <span class="cp-readout__unit">$M_{\odot}$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Secondary minimum mass ($M_2 \sin^3 i$)</div>
+            <div class="cp-readout__value"><span id="m2SiniValue"></span> <span class="cp-readout__unit">$M_{\odot}$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Mass function ($f(m)$)</div>
+            <div class="cp-readout__value"><span id="massFuncValue"></span> <span class="cp-readout__unit">$M_{\odot}$</span></div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">System velocity ($v_{\rm sys}$)</div>
+            <div class="cp-readout__value"><span id="vsysValue"></span> <span class="cp-readout__unit">km/s</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Kinetic energy of $M_1$ ($K_1$)</div>
@@ -315,6 +364,7 @@
                 <li>If the masses are unequal, the lighter body must move faster so that linear momentum remains zero in the barycentric frame.</li>
                 <li>Both stars share one angular frequency $\omega$. Period equality follows from shared rotation about the same center.</li>
                 <li>The total mass determines the period; the mass ratio determines how the motion is partitioned.</li>
+                <li>Changing inclination leaves the orbit geometry alone but changes the projected radial-velocity signal and the amount of line wobble you can observe.</li>
               </ul>
             </div>
           </details>
@@ -349,6 +399,21 @@
               <p>$$\omega^2 = \frac{G(M_1 + M_2)}{a^3}.$$</p>
               <p>Then with $\omega = 2\pi/P$ and the teaching normalization for $G$:</p>
               <p>$$P^2 = \frac{a^3}{M_1 + M_2}.$$</p>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Spectroscopy link</span>
+              <span class="cp-accordion__meta">$K$, $f(m)$, and minimum masses</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p>Once orbital speeds are projected along the line of sight, the measurable quantities are the RV semi-amplitudes:</p>
+              <p>$$K_1 = \frac{2\pi a_1 \sin i}{P}, \qquad K_2 = \frac{2\pi a_2 \sin i}{P}.$$</p>
+              <p>For a double-lined binary, the ratio tells you the mass ratio directly:</p>
+              <p>$$\frac{K_1}{K_2} = \frac{M_2}{M_1} = q.$$</p>
+              <p>For mass inference, astronomers use the SB1 mass function and the SB2 minimum masses:</p>
+              <p>$$f(m) = \frac{P K_1^3}{2\pi G}, \qquad M_1\sin^3 i,\; M_2\sin^3 i.$$</p>
             </div>
           </details>
         </div>

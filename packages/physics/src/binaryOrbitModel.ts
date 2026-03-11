@@ -54,6 +54,22 @@ export interface BinaryRvMassRatioInferenceResult {
   reason?: string;
 }
 
+export interface BinaryMassFunctionInput {
+  k1KmPerS: number;
+  periodYr: number;
+}
+
+export interface BinaryMinimumMassesInput {
+  k1KmPerS: number;
+  k2KmPerS: number;
+  periodYr: number;
+}
+
+export interface BinaryMinimumMassesResult {
+  primaryMinimumMassSolar: number;
+  secondaryMinimumMassSolar: number;
+}
+
 export interface BinaryEnergyBreakdown {
   kinetic1SolarAu2PerYr2: number;
   kinetic2SolarAu2PerYr2: number;
@@ -242,6 +258,45 @@ function inferMassRatioFromRvAmplitudes(
   };
 }
 
+function massFunctionSolar(
+  input: BinaryMassFunctionInput,
+): number {
+  if (!isFinitePositive(input.k1KmPerS) || !isFinitePositive(input.periodYr)) return Number.NaN;
+
+  const k1AuPerYr = AstroUnits.kmPerSToAuPerYr(input.k1KmPerS);
+  return (
+    input.periodYr
+    * Math.pow(k1AuPerYr, 3)
+  ) / (2 * Math.PI * AstroConstants.GRAV.G_AU3_YR2_PER_SOLAR_MASS);
+}
+
+function minimumMassesSolar(
+  input: BinaryMinimumMassesInput,
+): BinaryMinimumMassesResult {
+  if (
+    !isFinitePositive(input.k1KmPerS)
+    || !isFinitePositive(input.k2KmPerS)
+    || !isFinitePositive(input.periodYr)
+  ) {
+    return {
+      primaryMinimumMassSolar: Number.NaN,
+      secondaryMinimumMassSolar: Number.NaN,
+    };
+  }
+
+  const k1AuPerYr = AstroUnits.kmPerSToAuPerYr(input.k1KmPerS);
+  const k2AuPerYr = AstroUnits.kmPerSToAuPerYr(input.k2KmPerS);
+  const velocitySumAuPerYr = k1AuPerYr + k2AuPerYr;
+  const denominator = 2 * Math.PI * AstroConstants.GRAV.G_AU3_YR2_PER_SOLAR_MASS;
+
+  return {
+    primaryMinimumMassSolar:
+      (input.periodYr * velocitySumAuPerYr * velocitySumAuPerYr * k2AuPerYr) / denominator,
+    secondaryMinimumMassSolar:
+      (input.periodYr * velocitySumAuPerYr * velocitySumAuPerYr * k1AuPerYr) / denominator,
+  };
+}
+
 function energyBreakdownForState(state: BinaryOrbitState): BinaryEnergyBreakdown {
   const potentialMagnitudeSolarAu2PerYr2 = Math.abs(state.potentialSolarAu2PerYr2);
   const maxMagnitudeSolarAu2PerYr2 = Math.max(
@@ -275,5 +330,7 @@ export const BinaryOrbitModel = {
   radialVelocityAtPhase,
   sampleRadialVelocityCurve,
   inferMassRatioFromRvAmplitudes,
+  massFunctionSolar,
+  minimumMassesSolar,
   energyBreakdownForState,
 };

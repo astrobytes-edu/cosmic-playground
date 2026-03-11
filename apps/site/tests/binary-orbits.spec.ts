@@ -1,5 +1,25 @@
 import { test, expect } from "@playwright/test";
 
+const RV_PLOT_MARGIN = { left: 62, right: 28, top: 22, bottom: 42 } as const;
+
+function rvPeakClickPosition(args: {
+  box: { width: number; height: number };
+  yMaxKmPerS: number;
+  phaseCycle: number;
+  velocityKmPerS: number;
+  verticalOffsetPx?: number;
+}) {
+  const { box, yMaxKmPerS, phaseCycle, velocityKmPerS, verticalOffsetPx = 0 } = args;
+  const plotWidth = box.width - RV_PLOT_MARGIN.left - RV_PLOT_MARGIN.right;
+  const plotHeight = box.height - RV_PLOT_MARGIN.top - RV_PLOT_MARGIN.bottom;
+  const x = RV_PLOT_MARGIN.left + (phaseCycle / 2) * plotWidth;
+  const y =
+    RV_PLOT_MARGIN.top
+    + ((yMaxKmPerS - velocityKmPerS) / (2 * yMaxKmPerS)) * plotHeight
+    + verticalOffsetPx;
+  return { x, y };
+}
+
 test.describe("Binary Orbits -- E2E", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("play/binary-orbits/", { waitUntil: "domcontentloaded" });
@@ -15,6 +35,31 @@ test.describe("Binary Orbits -- E2E", () => {
 
   test("orbit canvas is visible", async ({ page }) => {
     await expect(page.locator("#orbitCanvas")).toBeVisible();
+  });
+
+  test("stage shows exactly one primary panel at a time", async ({ page }) => {
+    await expect(page.locator("#orbitCanvas")).toBeVisible();
+    await expect(page.locator("#rvPanel")).toBeHidden();
+    await expect(page.locator("#spectrumPanel")).toBeHidden();
+    await expect(page.locator("#energyPanel")).toBeHidden();
+
+    await page.locator("#viewRv").click();
+    await expect(page.locator("#orbitCanvas")).toBeHidden();
+    await expect(page.locator("#rvPanel")).toBeVisible();
+    await expect(page.locator("#spectrumPanel")).toBeHidden();
+    await expect(page.locator("#energyPanel")).toBeHidden();
+
+    await page.locator("#viewSpectrum").click();
+    await expect(page.locator("#orbitCanvas")).toBeHidden();
+    await expect(page.locator("#rvPanel")).toBeHidden();
+    await expect(page.locator("#spectrumPanel")).toBeVisible();
+    await expect(page.locator("#energyPanel")).toBeHidden();
+
+    await page.locator("#viewEnergy").click();
+    await expect(page.locator("#orbitCanvas")).toBeHidden();
+    await expect(page.locator("#rvPanel")).toBeHidden();
+    await expect(page.locator("#spectrumPanel")).toBeHidden();
+    await expect(page.locator("#energyPanel")).toBeVisible();
   });
 
   test("controls panel is visible with header", async ({ page }) => {
@@ -165,6 +210,30 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(page.locator("#predictionOutcome")).toContainText(/P .*v1 .*a1/);
   });
 
+  test("prediction gate freezes the rendered stage until reveal under reduced motion", async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto("play/binary-orbits/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+
+    const before = await page.locator("#orbitCanvas").evaluate((el) => (el as HTMLCanvasElement).toDataURL());
+    const slider = page.locator("#massRatio");
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "0.2";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await expect(page.locator("#predictPanel")).toBeVisible();
+
+    const pending = await page.locator("#orbitCanvas").evaluate((el) => (el as HTMLCanvasElement).toDataURL());
+    expect(pending).toBe(before);
+
+    await page.locator("#revealPrediction").click();
+    const revealed = await page.locator("#orbitCanvas").evaluate((el) => (el as HTMLCanvasElement).toDataURL());
+    expect(revealed).not.toBe(before);
+
+    await context.close();
+  });
+
   test("changing separation updates period", async ({ page }) => {
     const before = await page.locator("#periodValue").textContent();
     const slider = page.locator("#separation");
@@ -292,6 +361,8 @@ test.describe("Binary Orbits -- E2E", () => {
     await page.keyboard.press("ArrowRight");
     await expect(page.locator("#viewRv")).toHaveAttribute("aria-checked", "true");
     await page.keyboard.press("ArrowRight");
+    await expect(page.locator("#viewSpectrum")).toHaveAttribute("aria-checked", "true");
+    await page.keyboard.press("ArrowRight");
     await expect(page.locator("#viewEnergy")).toHaveAttribute("aria-checked", "true");
     await page.keyboard.press("Home");
     await expect(page.locator("#viewOrbit")).toHaveAttribute("aria-checked", "true");
@@ -304,7 +375,7 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(page.locator("#energyPanel")).toBeVisible();
     await expect(page.locator("#energyTotalValue")).toBeVisible();
     await expect(page.locator("#energyPanel .cp-muted")).toContainText(
-      "Circular-orbit energies in teaching units:",
+      "Signed circular-orbit energies in teaching units:",
     );
 
     const before = parseFloat((await page.locator("#energyTotalValue").textContent()) || "NaN");
@@ -319,6 +390,22 @@ test.describe("Binary Orbits -- E2E", () => {
     const after = parseFloat((await page.locator("#energyTotalValue").textContent()) || "NaN");
     expect(Number.isFinite(after)).toBe(true);
     expect(after).not.toBe(before);
+  });
+
+  test("spectrum view exposes SB1/SB2 and element controls", async ({ page }) => {
+    await page.locator("#viewSpectrum").click();
+    await expect(page.locator("#spectrumPanel")).toBeVisible();
+    await expect(page.locator("#spectrumCanvas")).toBeVisible();
+    await expect(page.locator("#spectroscopySb2")).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator("#elementH")).toHaveAttribute("aria-checked", "true");
+
+    await page.locator("#spectroscopySb1").click();
+    await expect(page.locator("#spectroscopySb1")).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator("#spectroscopySb2")).toHaveAttribute("aria-checked", "false");
+
+    await page.locator("#elementNa").click();
+    await expect(page.locator("#elementNa")).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator("#elementH")).toHaveAttribute("aria-checked", "false");
   });
 
   // --- Station Mode ---
@@ -386,9 +473,26 @@ test.describe("Binary Orbits -- E2E", () => {
     const rvCanvas = page.locator("#rvCanvas");
     const box = await rvCanvas.boundingBox();
     if (!box) throw new Error("RV canvas has no bounding box.");
+    const trueK1 = parseFloat((await page.locator("#k1Value").textContent()) || "NaN");
+    const trueK2 = parseFloat((await page.locator("#k2Value").textContent()) || "NaN");
+    const yMaxKmPerS = Math.max(trueK1, trueK2) * 1.2;
 
-    await rvCanvas.click({ position: { x: box.width * 0.22, y: box.height * 0.28 } });
-    await rvCanvas.click({ position: { x: box.width * 0.72, y: box.height * 0.75 } });
+    await rvCanvas.click({
+      position: rvPeakClickPosition({
+        box,
+        yMaxKmPerS,
+        phaseCycle: 0.25,
+        velocityKmPerS: trueK1,
+      }),
+    });
+    await rvCanvas.click({
+      position: rvPeakClickPosition({
+        box,
+        yMaxKmPerS,
+        phaseCycle: 0.25,
+        velocityKmPerS: -trueK2,
+      }),
+    });
 
     await expect(page.locator("#rvMeasuredK1Value")).not.toHaveText("—");
     await expect(page.locator("#rvMeasuredK2Value")).not.toHaveText("—");
@@ -398,6 +502,44 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(page.locator("#rvChallengeFeedback")).toContainText("Inferred q");
     await expect(page.locator("#rvChallengeFeedback")).toContainText("true q");
     await expect(page.locator("#rvChallengeFeedback")).toContainText("error");
+  });
+
+  test("RV challenge measurements come from user clicks, not the exact hidden model amplitudes", async ({ page }) => {
+    await page.locator("#viewRv").click();
+    const trueK1 = parseFloat((await page.locator("#k1Value").textContent()) || "NaN");
+    const trueK2 = parseFloat((await page.locator("#k2Value").textContent()) || "NaN");
+
+    await page.locator("#rvChallengeStart").click();
+    const rvCanvas = page.locator("#rvCanvas");
+    const box = await rvCanvas.boundingBox();
+    if (!box) throw new Error("RV canvas has no bounding box.");
+    const yMaxKmPerS = Math.max(trueK1, trueK2) * 1.2;
+
+    await rvCanvas.click({
+      position: rvPeakClickPosition({
+        box,
+        yMaxKmPerS,
+        phaseCycle: 0.25,
+        velocityKmPerS: trueK1,
+        verticalOffsetPx: 7,
+      }),
+    });
+    await rvCanvas.click({
+      position: rvPeakClickPosition({
+        box,
+        yMaxKmPerS,
+        phaseCycle: 0.25,
+        velocityKmPerS: -trueK2,
+        verticalOffsetPx: -7,
+      }),
+    });
+
+    const measuredK1 = parseFloat((await page.locator("#rvMeasuredK1Value").textContent()) || "NaN");
+    const measuredK2 = parseFloat((await page.locator("#rvMeasuredK2Value").textContent()) || "NaN");
+    expect(Number.isFinite(measuredK1)).toBe(true);
+    expect(Number.isFinite(measuredK2)).toBe(true);
+    expect(Math.abs(measuredK1 - trueK1)).toBeGreaterThan(0.02);
+    expect(Math.abs(measuredK2 - trueK2)).toBeGreaterThan(0.02);
   });
 
   test("copy and snapshot are locked while RV challenge is active and unrevealed", async ({ page }) => {
@@ -444,24 +586,39 @@ test.describe("Binary Orbits -- E2E", () => {
     const readoutNames = payload!.readouts.map((entry) => entry.name);
 
     expect(parameterNames).toContain("RV challenge state");
+    expect(parameterNames).toContain("Spectroscopy mode");
+    expect(parameterNames).toContain("Spectrum element");
+    expect(readoutNames).toContain("Mass function f(m) (M_sun)");
+    expect(readoutNames).toContain("Primary minimum mass M1 sin^3(i) (M_sun)");
     expect(readoutNames).toContain("Total orbital energy E (M_sun AU^2/yr^2)");
   });
 
-  // --- Visual Regression (skipped -- re-enable when baselines are generated) ---
+  // --- Visual Regression ---
 
-  test.skip("screenshot: default view", async ({ page }) => {
+  test("screenshot: default view", async ({ page }) => {
     await page.waitForTimeout(500);
     await expect(page).toHaveScreenshot("binary-orbits-default.png", {
       maxDiffPixelRatio: 0.05,
     });
   });
 
-  test.skip("screenshot: low mass ratio q=0.2", async ({ page }) => {
+  test("screenshot: mobile default view", async ({ page }) => {
+    await page.setViewportSize({ width: 420, height: 1100 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+    await page.waitForTimeout(500);
+    await expect(page).toHaveScreenshot("binary-orbits-mobile-default.png", {
+      maxDiffPixelRatio: 0.05,
+    });
+  });
+
+  test("screenshot: low mass ratio q=0.2", async ({ page }) => {
     const slider = page.locator("#massRatio");
     await slider.evaluate((el: HTMLInputElement) => {
       el.value = "0.2";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
+    await page.locator("#revealPrediction").click();
     await page.waitForTimeout(500);
     await expect(page).toHaveScreenshot("binary-orbits-q0p2.png", {
       maxDiffPixelRatio: 0.05,

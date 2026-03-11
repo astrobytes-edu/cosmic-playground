@@ -117,7 +117,7 @@ export interface BinaryModel {
   momentumDifferenceSolarAuPerYr: number;
 }
 
-export type StageView = "orbit" | "rv" | "energy";
+export type StageView = "orbit" | "rv" | "spectrum" | "energy";
 
 /**
  * Compute the binary orbit model from input parameters.

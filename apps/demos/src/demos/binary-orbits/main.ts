@@ -7,7 +7,7 @@ import {
   setLiveRegionText,
 } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
-import { BinaryOrbitModel } from "@cosmic/physics";
+import { BinaryOrbitModel, DopplerShiftModel, SpectralLineModel } from "@cosmic/physics";
 import {
   INCLINATION_MAX_DEG,
   INCLINATION_MIN_DEG,
@@ -61,8 +61,14 @@ const presetPlanet = $<HTMLButtonElement>("#presetPlanet");
 const presetHalf = $<HTMLButtonElement>("#presetHalf");
 
 const motionMode = $<HTMLSelectElement>("#motionMode");
+const spectroscopySb2 = $<HTMLButtonElement>("#spectroscopySb2");
+const spectroscopySb1 = $<HTMLButtonElement>("#spectroscopySb1");
+const elementH = $<HTMLButtonElement>("#elementH");
+const elementNa = $<HTMLButtonElement>("#elementNa");
+const elementCa = $<HTMLButtonElement>("#elementCa");
 const viewOrbit = $<HTMLButtonElement>("#viewOrbit");
 const viewRv = $<HTMLButtonElement>("#viewRv");
+const viewSpectrum = $<HTMLButtonElement>("#viewSpectrum");
 const viewEnergy = $<HTMLButtonElement>("#viewEnergy");
 const autoScaleLog = $<HTMLInputElement>("#autoScaleLog");
 const showOmega = $<HTMLInputElement>("#showOmega");
@@ -103,6 +109,10 @@ const momentumSecondaryValue = $<HTMLSpanElement>("#momentumSecondaryValue");
 const momentumBadge = $<HTMLDivElement>("#momentumBadge");
 const k1Value = $<HTMLSpanElement>("#k1Value");
 const k2Value = $<HTMLSpanElement>("#k2Value");
+const m1SiniValue = $<HTMLSpanElement>("#m1SiniValue");
+const m2SiniValue = $<HTMLSpanElement>("#m2SiniValue");
+const massFuncValue = $<HTMLSpanElement>("#massFuncValue");
+const vsysValue = $<HTMLSpanElement>("#vsysValue");
 const energyK1Value = $<HTMLSpanElement>("#energyK1Value");
 const energyK2Value = $<HTMLSpanElement>("#energyK2Value");
 const energyKTotalValue = $<HTMLSpanElement>("#energyKTotalValue");
@@ -126,8 +136,11 @@ const invariantCheck = $<HTMLButtonElement>("#invariantCheck");
 const invariantFeedback = $<HTMLParagraphElement>("#invariantFeedback");
 
 const orbitCanvas = $<HTMLCanvasElement>("#orbitCanvas");
+const stagePrompt = $<HTMLParagraphElement>("#stagePrompt");
 const rvPanel = $<HTMLDivElement>("#rvPanel");
 const rvCanvas = $<HTMLCanvasElement>("#rvCanvas");
+const spectrumPanel = $<HTMLDivElement>("#spectrumPanel");
+const spectrumCanvas = $<HTMLCanvasElement>("#spectrumCanvas");
 const energyPanel = $<HTMLDivElement>("#energyPanel");
 const energyCanvas = $<HTMLCanvasElement>("#energyCanvas");
 
@@ -144,18 +157,35 @@ function get2dContext(canvas: HTMLCanvasElement, label: string): CanvasRendering
 
 const orbitCtx = get2dContext(orbitCanvas, "orbit view");
 const rvCtx = get2dContext(rvCanvas, "RV view");
+const spectrumCtx = get2dContext(spectrumCanvas, "spectrum view");
 const energyCtx = get2dContext(energyCanvas, "energy view");
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
 if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 
 type MotionMode = "normalized" | "physical";
+type SpectroscopyMode = "sb1" | "sb2";
+type SpectrumElementKey = "H" | "Na" | "Ca";
+type CurveMeasurementKey = "primary" | "secondary";
+
+type SpectrumDomain = {
+  minNm: number;
+  maxNm: number;
+};
+
+type CurveMeasurement = {
+  amplitudeKmPerS: number;
+  phaseCycle: number;
+  velocityKmPerS: number;
+};
 
 const YEARS_PER_SECOND_PHYSICAL = 0.06;
 const NORMALIZED_ORBIT_SECONDS = 20;
 const DEFAULT_MASS_RATIO = 1;
 const DEFAULT_SEPARATION_AU = 4;
 const DEFAULT_INCLINATION_DEG = 60;
+const SPECTRUM_DOMAIN: SpectrumDomain = { minNm: 380, maxNm: 700 };
+const RV_MEASUREMENT_DISTANCE_PX = 28;
 
 const prefersReducedMotion =
   typeof window !== "undefined"
@@ -166,6 +196,11 @@ function cssVar(name: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   if (value.length === 0) throw new Error(`Missing required CSS variable: ${name}`);
   return value;
+}
+
+function colorMix(primary: string, secondary: string, primaryFraction: number): string {
+  const primaryPercent = Math.round(clamp(primaryFraction, 0, 1) * 100);
+  return `color-mix(in srgb, ${primary} ${primaryPercent}%, ${secondary})`;
 }
 
 const canvasTheme = {
@@ -215,6 +250,8 @@ const state: {
   view: StageView;
   autoScaleLog: boolean;
   showOmega: boolean;
+  spectroscopyMode: SpectroscopyMode;
+  selectedElement: SpectrumElementKey;
   scalingCue: ScalingCue | null;
   scalingCueActive: boolean;
   scalingCueTimeoutId: number | null;
@@ -229,6 +266,8 @@ const state: {
     revealed: boolean;
     measuredK1KmPerS: number | null;
     measuredK2KmPerS: number | null;
+    primaryMeasurement: CurveMeasurement | null;
+    secondaryMeasurement: CurveMeasurement | null;
     inferredQ: number | null;
     targetQ: number | null;
     score: ReturnType<typeof gradeRvInference> | null;
@@ -240,6 +279,8 @@ const state: {
   view: "orbit",
   autoScaleLog: true,
   showOmega: false,
+  spectroscopyMode: "sb2",
+  selectedElement: "H",
   scalingCue: null,
   scalingCueActive: false,
   scalingCueTimeoutId: null,
@@ -254,6 +295,8 @@ const state: {
     revealed: false,
     measuredK1KmPerS: null,
     measuredK2KmPerS: null,
+    primaryMeasurement: null,
+    secondaryMeasurement: null,
     inferredQ: null,
     targetQ: null,
     score: null,
@@ -279,6 +322,41 @@ function rvChallengeStateLabel(): "inactive" | "active-hidden" | "revealed" {
   if (state.rvChallenge.active && !state.rvChallenge.revealed) return "active-hidden";
   if (state.rvChallenge.revealed) return "revealed";
   return "inactive";
+}
+
+function selectedElementLines() {
+  const catalog = SpectralLineModel.elementLines({ element: state.selectedElement });
+  return catalog.lines;
+}
+
+function wavelengthToFraction(wavelengthNm: number, domain: SpectrumDomain): number {
+  return (wavelengthNm - domain.minNm) / (domain.maxNm - domain.minNm);
+}
+
+function spectrumTicks(domain: SpectrumDomain): number[] {
+  const span = domain.maxNm - domain.minNm;
+  const step = span <= 180 ? 40 : 50;
+  const ticks: number[] = [];
+  for (let tick = Math.ceil(domain.minNm / step) * step; tick < domain.maxNm; tick += step) {
+    ticks.push(tick);
+  }
+  ticks.push(domain.maxNm);
+  return ticks;
+}
+
+function stagePromptText(view: StageView): string {
+  if (view === "orbit") {
+    return "Use the barycenter and observer sightline to relate the true geometry to what an astronomer can project along the line of sight.";
+  }
+  if (view === "rv") {
+    return state.rvChallenge.active && !state.rvChallenge.revealed
+      ? "Challenge active: click near the highest or lowest points on each curve. Your largest |v_r| sample becomes the measured K."
+      : "The RV plot shows the measurable line-of-sight velocity. Compare the projected amplitudes and read them directly from the graph.";
+  }
+  if (view === "spectrum") {
+    return "The lab strip stays fixed while the observed strip wobbles with the same orbital phase. Switch between SB2 and SB1 to see how detectability changes.";
+  }
+  return "Read the sign of each energy term directly: kinetic energy is positive, gravitational binding energy is negative, and the virial balance keeps 2K + U near zero.";
 }
 
 function resizeCanvasToCssPixels(
@@ -366,6 +444,37 @@ function drawOrbit(model: BinaryModel, phaseRad: number): void {
   orbitCtx.beginPath();
   orbitCtx.arc(x2, y2, radius2, 0, Math.PI * 2);
   orbitCtx.fill();
+
+  const sightlineInset = Math.min(w, h) * 0.12;
+  const sightlineStartX = sightlineInset;
+  const sightlineEndX = w - sightlineInset;
+  const sightlineY = cy + Math.min(h * 0.24, 110);
+  orbitCtx.save();
+  orbitCtx.setLineDash([8, 6]);
+  orbitCtx.strokeStyle = colorMix(canvasTheme.accent, canvasTheme.text, 0.65);
+  orbitCtx.lineWidth = 1.6;
+  orbitCtx.beginPath();
+  orbitCtx.moveTo(sightlineStartX, sightlineY);
+  orbitCtx.lineTo(sightlineEndX, sightlineY);
+  orbitCtx.stroke();
+  orbitCtx.restore();
+
+  orbitCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.accent, 0.76);
+  orbitCtx.beginPath();
+  orbitCtx.moveTo(sightlineEndX, sightlineY);
+  orbitCtx.lineTo(sightlineEndX - 12, sightlineY - 6);
+  orbitCtx.lineTo(sightlineEndX - 12, sightlineY + 6);
+  orbitCtx.closePath();
+  orbitCtx.fill();
+
+  orbitCtx.fillStyle = canvasTheme.text;
+  orbitCtx.font = "13px var(--cp-font-sans, ui-sans-serif)";
+  orbitCtx.fillText("observer line of sight", sightlineStartX, sightlineY - 10);
+  orbitCtx.fillText(`i = ${formatNumber(model.inclinationDeg, 0)} deg`, sightlineStartX, sightlineY + 18);
+  if (model.inclinationDeg <= 1) {
+    orbitCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.body2, 0.72);
+    orbitCtx.fillText("Face-on view: RV signal collapses toward zero.", sightlineStartX, sightlineY + 40);
+  }
 }
 
 function getOrBuildRvCurve(model: BinaryModel): RvCacheEntry {
@@ -411,7 +520,7 @@ function drawRadialVelocity(model: BinaryModel, phaseRad: number): void {
   const { width: w, height: h } = resizeCanvasToCssPixels(rvCanvas, rvCtx);
   rvCtx.clearRect(0, 0, w, h);
 
-  const margin = { left: 44, right: 14, top: 16, bottom: 32 };
+  const margin = { left: 62, right: 28, top: 22, bottom: 42 };
   const plotW = Math.max(1, w - margin.left - margin.right);
   const plotH = Math.max(1, h - margin.top - margin.bottom);
 
@@ -419,131 +528,360 @@ function drawRadialVelocity(model: BinaryModel, phaseRad: number): void {
   const { stateForRv, curve } = rvData;
 
   const yMaxKmS = Math.max(1, Math.abs(model.k1KmPerS), Math.abs(model.k2KmPerS)) * 1.2;
-
-  const xFromPhase = (phase: number) => margin.left + (phase / (2 * Math.PI)) * plotW;
+  const xFromPhaseCycle = (phaseCycle: number) => margin.left + (phaseCycle / 2) * plotW;
   const yFromVelocity = (velocityKmS: number) => margin.top + ((yMaxKmS - velocityKmS) / (2 * yMaxKmS)) * plotH;
 
   const yZero = yFromVelocity(0);
+  const velocityTicks = [-yMaxKmS, -yMaxKmS / 2, 0, yMaxKmS / 2, yMaxKmS];
+  const phaseTicks = [0, 0.5, 1, 1.5, 2];
 
-  rvCtx.strokeStyle = canvasTheme.border;
-  rvCtx.lineWidth = 1.5;
+  rvCtx.strokeStyle = colorMix(canvasTheme.border, canvasTheme.text, 0.86);
+  rvCtx.lineWidth = 1;
+  velocityTicks.forEach((tick) => {
+    const y = yFromVelocity(tick);
+    rvCtx.beginPath();
+    rvCtx.moveTo(margin.left, y);
+    rvCtx.lineTo(margin.left + plotW, y);
+    rvCtx.stroke();
+  });
+  phaseTicks.forEach((tick) => {
+    const x = xFromPhaseCycle(tick);
+    rvCtx.beginPath();
+    rvCtx.moveTo(x, margin.top);
+    rvCtx.lineTo(x, margin.top + plotH);
+    rvCtx.stroke();
+  });
+
+  rvCtx.strokeStyle = canvasTheme.text;
+  rvCtx.lineWidth = 1.6;
   rvCtx.beginPath();
   rvCtx.moveTo(margin.left, yZero);
   rvCtx.lineTo(margin.left + plotW, yZero);
   rvCtx.stroke();
 
-  rvCtx.beginPath();
-  rvCtx.moveTo(margin.left, margin.top);
-  rvCtx.lineTo(margin.left, margin.top + plotH);
-  rvCtx.stroke();
-
-  rvCtx.fillStyle = canvasTheme.muted;
-  rvCtx.font = "12px var(--cp-font-ui)";
-  rvCtx.fillText("0", margin.left - 12, yZero + 4);
-  rvCtx.fillText(`+${formatNumber(yMaxKmS, 1)}`, margin.left - 36, margin.top + 10);
-  rvCtx.fillText(`${formatNumber(-yMaxKmS, 1)}`, margin.left - 36, margin.top + plotH - 4);
-  rvCtx.fillText("phase", margin.left + plotW - 32, margin.top + plotH + 20);
-
-  rvCtx.strokeStyle = canvasTheme.body1;
-  rvCtx.lineWidth = 2.2;
-  rvCtx.beginPath();
-  curve.forEach((sample, idx) => {
-    const x = xFromPhase(sample.phaseRad);
-    const y = yFromVelocity(sample.rv1KmPerS);
-    if (idx === 0) rvCtx.moveTo(x, y);
-    else rvCtx.lineTo(x, y);
+  rvCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.muted, 0.82);
+  rvCtx.font = "12px var(--cp-font-sans, ui-sans-serif)";
+  velocityTicks.forEach((tick) => {
+    const y = yFromVelocity(tick);
+    rvCtx.fillText(`${tick > 0 ? "+" : ""}${formatNumber(tick, 1)}`, margin.left - 48, y + 4);
   });
-  rvCtx.stroke();
-
-  rvCtx.strokeStyle = canvasTheme.body2;
-  rvCtx.lineWidth = 2.2;
-  rvCtx.beginPath();
-  curve.forEach((sample, idx) => {
-    const x = xFromPhase(sample.phaseRad);
-    const y = yFromVelocity(sample.rv2KmPerS);
-    if (idx === 0) rvCtx.moveTo(x, y);
-    else rvCtx.lineTo(x, y);
+  phaseTicks.forEach((tick) => {
+    const x = xFromPhaseCycle(tick);
+    const label = tick === 2 ? "2" : formatNumber(tick, 1).replace(".0", "");
+    rvCtx.fillText(label, x - 8, margin.top + plotH + 20);
   });
-  rvCtx.stroke();
 
-  const phaseWrapped = ((phaseRad % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
-  const xPhase = xFromPhase(phaseWrapped);
-  const phaseSample = BinaryOrbitModel.radialVelocityAtPhase({ state: stateForRv, phaseRad: phaseWrapped });
+  rvCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.body1, 0.68);
+  rvCtx.fillText("receding", margin.left + 8, margin.top + 14);
+  rvCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.body2, 0.72);
+  rvCtx.fillText("approaching", margin.left + 8, margin.top + plotH - 8);
+  rvCtx.fillStyle = canvasTheme.text;
+  rvCtx.fillText("Orbital phase", margin.left + plotW - 78, margin.top + plotH + 20);
+  rvCtx.save();
+  rvCtx.translate(16, margin.top + plotH / 2);
+  rvCtx.rotate(-Math.PI / 2);
+  rvCtx.fillText("Radial velocity (km/s)", 0, 0);
+  rvCtx.restore();
 
+  const drawCurve = (target: CurveMeasurementKey, strokeStyle: string, dashed: boolean) => {
+    rvCtx.save();
+    rvCtx.strokeStyle = strokeStyle;
+    rvCtx.lineWidth = 2.6;
+    rvCtx.setLineDash(dashed ? [10, 8] : []);
+    rvCtx.beginPath();
+    [0, 1].forEach((cycleIndex) => {
+      curve.forEach((sample, idx) => {
+        const phaseCycle = cycleIndex + (sample.phaseRad / (2 * Math.PI));
+        const x = xFromPhaseCycle(phaseCycle);
+        const y = yFromVelocity(target === "primary" ? sample.rv1KmPerS : sample.rv2KmPerS);
+        if (cycleIndex === 0 && idx === 0) rvCtx.moveTo(x, y);
+        else rvCtx.lineTo(x, y);
+      });
+    });
+    rvCtx.stroke();
+    rvCtx.restore();
+  };
+
+  drawCurve("primary", canvasTheme.body1, false);
+  drawCurve("secondary", canvasTheme.body2, true);
+
+  const phaseCycle = (((phaseRad % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) / (2 * Math.PI);
+  const xPhase = xFromPhaseCycle(phaseCycle);
+  const phaseSample = BinaryOrbitModel.radialVelocityAtPhase({ state: stateForRv, phaseRad: phaseCycle * 2 * Math.PI });
+
+  rvCtx.save();
+  rvCtx.setLineDash([6, 6]);
   rvCtx.strokeStyle = canvasTheme.accent;
-  rvCtx.lineWidth = 1.5;
+  rvCtx.lineWidth = 1.4;
   rvCtx.beginPath();
   rvCtx.moveTo(xPhase, margin.top);
   rvCtx.lineTo(xPhase, margin.top + plotH);
   rvCtx.stroke();
+  rvCtx.restore();
 
   rvCtx.fillStyle = canvasTheme.body1;
   rvCtx.beginPath();
-  rvCtx.arc(xPhase, yFromVelocity(phaseSample.rv1KmPerS), 3.5, 0, Math.PI * 2);
+  rvCtx.arc(xPhase, yFromVelocity(phaseSample.rv1KmPerS), 4.2, 0, Math.PI * 2);
   rvCtx.fill();
 
   rvCtx.fillStyle = canvasTheme.body2;
   rvCtx.beginPath();
-  rvCtx.arc(xPhase, yFromVelocity(phaseSample.rv2KmPerS), 3.5, 0, Math.PI * 2);
+  rvCtx.arc(xPhase, yFromVelocity(phaseSample.rv2KmPerS), 4.2, 0, Math.PI * 2);
   rvCtx.fill();
+
+  const annotateAmplitude = (label: string, amplitudeKmPerS: number, strokeStyle: string, x: number) => {
+    const yPeak = yFromVelocity(amplitudeKmPerS);
+    rvCtx.strokeStyle = strokeStyle;
+    rvCtx.lineWidth = 1.4;
+    rvCtx.beginPath();
+    rvCtx.moveTo(x, yZero);
+    rvCtx.lineTo(x, yPeak);
+    rvCtx.stroke();
+    rvCtx.beginPath();
+    rvCtx.moveTo(x - 6, yZero);
+    rvCtx.lineTo(x + 6, yZero);
+    rvCtx.moveTo(x - 6, yPeak);
+    rvCtx.lineTo(x + 6, yPeak);
+    rvCtx.stroke();
+    rvCtx.fillStyle = strokeStyle;
+    rvCtx.fillText(label, x + 10, yPeak + (amplitudeKmPerS > 0 ? -4 : 14));
+  };
+
+  annotateAmplitude("K1", model.k1KmPerS, canvasTheme.body1, margin.left + plotW * 0.88);
+  annotateAmplitude("K2", model.k2KmPerS, canvasTheme.body2, margin.left + plotW * 0.95);
+
+  const drawMeasurementMarker = (measurement: CurveMeasurement | null, strokeStyle: string, label: string) => {
+    if (!measurement) return;
+    rvCtx.save();
+    rvCtx.strokeStyle = strokeStyle;
+    rvCtx.fillStyle = strokeStyle;
+    rvCtx.lineWidth = 2;
+    rvCtx.beginPath();
+    rvCtx.arc(
+      xFromPhaseCycle(measurement.phaseCycle),
+      yFromVelocity(measurement.velocityKmPerS),
+      6,
+      0,
+      Math.PI * 2,
+    );
+    rvCtx.stroke();
+    rvCtx.fillText(
+      `${label} ${formatNumber(measurement.amplitudeKmPerS, 2)} km/s`,
+      xFromPhaseCycle(measurement.phaseCycle) + 10,
+      yFromVelocity(measurement.velocityKmPerS) - 10,
+    );
+    rvCtx.restore();
+  };
+
+  drawMeasurementMarker(state.rvChallenge.primaryMeasurement, canvasTheme.body1, "Measured K1");
+  drawMeasurementMarker(state.rvChallenge.secondaryMeasurement, canvasTheme.body2, "Measured K2");
 }
 
 function drawEnergyView(model: BinaryModel): void {
   const { width: w, height: h } = resizeCanvasToCssPixels(energyCanvas, energyCtx);
   energyCtx.clearRect(0, 0, w, h);
 
-  const margin = { left: 60, right: 24, top: 20, bottom: 34 };
+  const margin = { left: 72, right: 24, top: 24, bottom: 44 };
   const plotW = Math.max(1, w - margin.left - margin.right);
   const plotH = Math.max(1, h - margin.top - margin.bottom);
-  const baselineY = margin.top + plotH;
-
   const breakdown = getOrBuildEnergyBreakdown(model);
+  const maxMagnitude = Math.max(1e-6, breakdown.maxMagnitudeSolarAu2PerYr2);
+  const baselineY = margin.top + (maxMagnitude / (2 * maxMagnitude)) * plotH;
+
   const bars = [
-    { label: "K1", normalized: breakdown.normalized.kinetic1, color: canvasTheme.body1 },
-    { label: "K2", normalized: breakdown.normalized.kinetic2, color: canvasTheme.body2 },
-    { label: "K", normalized: breakdown.normalized.kineticTotal, color: canvasTheme.accent },
-    { label: "|U|", normalized: breakdown.normalized.potentialMagnitude, color: canvasTheme.border },
+    { label: "K1", value: model.kinetic1SolarAu2PerYr2, color: canvasTheme.body1 },
+    { label: "K2", value: model.kinetic2SolarAu2PerYr2, color: canvasTheme.body2 },
+    { label: "K", value: model.kineticTotalSolarAu2PerYr2, color: canvasTheme.accent },
+    { label: "U", value: model.potentialSolarAu2PerYr2, color: colorMix(canvasTheme.text, canvasTheme.body2, 0.58) },
+    { label: "E", value: model.totalEnergySolarAu2PerYr2, color: colorMix(canvasTheme.text, canvasTheme.accent, 0.7) },
   ];
 
-  energyCtx.strokeStyle = canvasTheme.border;
-  energyCtx.lineWidth = 1.25;
+  const yFromEnergy = (value: number) => margin.top + ((maxMagnitude - value) / (2 * maxMagnitude)) * plotH;
+  const ticks = [maxMagnitude, maxMagnitude / 2, 0, -maxMagnitude / 2, -maxMagnitude];
+
+  energyCtx.strokeStyle = colorMix(canvasTheme.border, canvasTheme.text, 0.84);
+  energyCtx.lineWidth = 1;
+  ticks.forEach((tick) => {
+    const y = yFromEnergy(tick);
+    energyCtx.beginPath();
+    energyCtx.moveTo(margin.left, y);
+    energyCtx.lineTo(margin.left + plotW, y);
+    energyCtx.stroke();
+    energyCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.muted, 0.82);
+    energyCtx.font = "12px var(--cp-font-sans, ui-sans-serif)";
+    energyCtx.fillText(formatNumber(tick, 2), margin.left - 60, y + 4);
+  });
+
+  energyCtx.strokeStyle = canvasTheme.text;
+  energyCtx.lineWidth = 1.5;
   energyCtx.beginPath();
-  energyCtx.moveTo(margin.left, baselineY);
-  energyCtx.lineTo(margin.left + plotW, baselineY);
+  energyCtx.moveTo(margin.left, yFromEnergy(0));
+  energyCtx.lineTo(margin.left + plotW, yFromEnergy(0));
   energyCtx.stroke();
 
   const slotW = plotW / bars.length;
   const barW = slotW * 0.58;
   bars.forEach((bar, idx) => {
-    const barHeight = Math.max(2, bar.normalized * plotH);
     const x = margin.left + idx * slotW + (slotW - barW) / 2;
-    const y = baselineY - barHeight;
+    const y = yFromEnergy(Math.max(0, bar.value));
+    const zeroY = yFromEnergy(0);
+    const endY = yFromEnergy(bar.value);
     energyCtx.fillStyle = bar.color;
-    energyCtx.fillRect(x, y, barW, barHeight);
+    energyCtx.fillRect(x, Math.min(zeroY, endY), barW, Math.max(2, Math.abs(endY - zeroY)));
 
-    energyCtx.fillStyle = canvasTheme.muted;
-    energyCtx.font = "12px var(--cp-font-ui)";
+    energyCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.muted, 0.82);
+    energyCtx.font = "12px var(--cp-font-sans, ui-sans-serif)";
     energyCtx.textAlign = "center";
-    energyCtx.fillText(bar.label, x + barW / 2, baselineY + 18);
+    energyCtx.fillText(bar.label, x + barW / 2, yFromEnergy(-maxMagnitude) + plotH + 20);
+    energyCtx.fillText(formatNumber(bar.value, 2), x + barW / 2, endY + (bar.value >= 0 ? -8 : 18));
   });
 
-  const markerX = margin.left + plotW + 12;
-  const markerY = baselineY - ((breakdown.normalized.totalEnergySigned + 1) * 0.5) * plotH;
-  energyCtx.strokeStyle = canvasTheme.text;
-  energyCtx.lineWidth = 1.5;
-  energyCtx.beginPath();
-  energyCtx.moveTo(markerX - 10, markerY);
-  energyCtx.lineTo(markerX + 10, markerY);
-  energyCtx.stroke();
-
+  energyCtx.textAlign = "left";
   energyCtx.fillStyle = canvasTheme.text;
-  energyCtx.font = "12px var(--cp-font-ui)";
-  energyCtx.textAlign = "left";
-  energyCtx.fillText("E", markerX + 12, markerY + 4);
+  energyCtx.fillText("Signed orbital energy (M_sun AU^2/yr^2)", margin.left, margin.top - 6);
 
-  energyCtx.fillStyle = canvasTheme.muted;
-  energyCtx.textAlign = "left";
-  energyCtx.fillText("Decomposition in M_sun AU^2/yr^2", margin.left, margin.top - 4);
+  const virialNearZero = Math.abs(model.virialResidualSolarAu2PerYr2) < maxMagnitude * 0.04;
+  energyCtx.fillStyle = virialNearZero
+    ? colorMix(canvasTheme.text, canvasTheme.accent, 0.74)
+    : colorMix(canvasTheme.text, canvasTheme.body2, 0.72);
+  energyCtx.fillText(
+    `Virial check: 2K + U = ${formatNumber(model.virialResidualSolarAu2PerYr2, 3)}`,
+    margin.left,
+    h - 10,
+  );
+}
+
+function drawSpectrum(model: BinaryModel, phaseRad: number): void {
+  const { width: w, height: h } = resizeCanvasToCssPixels(spectrumCanvas, spectrumCtx);
+  spectrumCtx.clearRect(0, 0, w, h);
+
+  const margin = { left: 56, right: 24, top: 24, bottom: 36 };
+  const plotW = Math.max(1, w - margin.left - margin.right);
+  const stripHeight = Math.round((h - margin.top - margin.bottom - 34) * 0.28);
+  const topY = margin.top + 18;
+  const observedY = topY + stripHeight + 44;
+  const lines = selectedElementLines();
+  const domain = SPECTRUM_DOMAIN;
+  const curveState = BinaryOrbitModel.circularState({
+    primaryMassSolar: model.m1,
+    secondaryMassSolar: model.m2,
+    separationAu: model.separation,
+    inclinationDeg: model.inclinationDeg,
+  });
+  const phaseWrapped = ((phaseRad % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
+  const rvSample = BinaryOrbitModel.radialVelocityAtPhase({ state: curveState, phaseRad: phaseWrapped });
+  const shiftedPrimary = DopplerShiftModel.shiftLines({ lines, velocityKmS: rvSample.rv1KmPerS, relativistic: false });
+  const shiftedSecondary = DopplerShiftModel.shiftLines({ lines, velocityKmS: rvSample.rv2KmPerS, relativistic: false });
+
+  const drawStripBackground = (y: number, label: string, accentColor: string) => {
+    spectrumCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.glow, 0.18);
+    spectrumCtx.fillRect(margin.left, y, plotW, stripHeight);
+    spectrumCtx.strokeStyle = colorMix(canvasTheme.border, accentColor, 0.72);
+    spectrumCtx.lineWidth = 1;
+    spectrumCtx.strokeRect(margin.left, y, plotW, stripHeight);
+    spectrumCtx.fillStyle = colorMix(canvasTheme.text, accentColor, 0.74);
+    spectrumCtx.font = "12px var(--cp-font-sans, ui-sans-serif)";
+    spectrumCtx.fillText(label, 10, y + stripHeight / 2 + 4);
+  };
+
+  drawStripBackground(topY, "Lab", canvasTheme.text);
+  drawStripBackground(observedY, "Observed", canvasTheme.accent);
+
+  const drawLineSet = (
+    shiftedLines: Array<{ wavelengthNm: number; shiftedNm: number; relativeIntensity?: number; label?: string }>,
+    y: number,
+    strokeStyle: string,
+    dashed: boolean,
+  ) => {
+    spectrumCtx.save();
+    spectrumCtx.strokeStyle = strokeStyle;
+    spectrumCtx.setLineDash(dashed ? [6, 5] : []);
+    shiftedLines.forEach((line) => {
+      if (line.shiftedNm < domain.minNm || line.shiftedNm > domain.maxNm) return;
+      const x = margin.left + wavelengthToFraction(line.shiftedNm, domain) * plotW;
+      spectrumCtx.lineWidth = 1.6 + ((line.relativeIntensity ?? 0.4) * 2.1);
+      spectrumCtx.beginPath();
+      spectrumCtx.moveTo(x, y + 3);
+      spectrumCtx.lineTo(x, y + stripHeight - 3);
+      spectrumCtx.stroke();
+    });
+    spectrumCtx.restore();
+  };
+
+  lines.forEach((line) => {
+    if (line.wavelengthNm < domain.minNm || line.wavelengthNm > domain.maxNm) return;
+    const x = margin.left + wavelengthToFraction(line.wavelengthNm, domain) * plotW;
+    spectrumCtx.strokeStyle = colorMix(canvasTheme.text, canvasTheme.border, 0.86);
+    spectrumCtx.lineWidth = 1.5 + ((line.relativeIntensity ?? 0.4) * 2.1);
+    spectrumCtx.beginPath();
+    spectrumCtx.moveTo(x, topY + 3);
+    spectrumCtx.lineTo(x, topY + stripHeight - 3);
+    spectrumCtx.stroke();
+  });
+
+  drawLineSet(shiftedPrimary, observedY, canvasTheme.body1, false);
+  if (state.spectroscopyMode === "sb2") {
+    drawLineSet(shiftedSecondary, observedY, canvasTheme.body2, true);
+  }
+
+  const representative = shiftedPrimary.find(
+    (line) => line.wavelengthNm >= domain.minNm && line.wavelengthNm <= domain.maxNm
+      && line.shiftedNm >= domain.minNm && line.shiftedNm <= domain.maxNm,
+  );
+  if (representative) {
+    const restX = margin.left + wavelengthToFraction(representative.wavelengthNm, domain) * plotW;
+    const obsX = margin.left + wavelengthToFraction(representative.shiftedNm, domain) * plotW;
+    const arrowY = topY + stripHeight + 20;
+    spectrumCtx.strokeStyle = canvasTheme.body1;
+    spectrumCtx.fillStyle = canvasTheme.body1;
+    spectrumCtx.lineWidth = 1.2;
+    spectrumCtx.beginPath();
+    spectrumCtx.moveTo(restX, arrowY);
+    spectrumCtx.lineTo(obsX, arrowY);
+    spectrumCtx.stroke();
+    const dir = obsX >= restX ? 1 : -1;
+    spectrumCtx.beginPath();
+    spectrumCtx.moveTo(obsX, arrowY);
+    spectrumCtx.lineTo(obsX - (7 * dir), arrowY - 4);
+    spectrumCtx.lineTo(obsX - (7 * dir), arrowY + 4);
+    spectrumCtx.closePath();
+    spectrumCtx.fill();
+    spectrumCtx.fillText(
+      `Primary Delta lambda = ${formatNumber(representative.shiftedNm - representative.wavelengthNm, 3)} nm`,
+      Math.min(restX, obsX) + 8,
+      arrowY - 6,
+    );
+  }
+
+  const ticks = spectrumTicks(domain);
+  const axisY = observedY + stripHeight + 18;
+  spectrumCtx.strokeStyle = colorMix(canvasTheme.border, canvasTheme.text, 0.84);
+  spectrumCtx.lineWidth = 1;
+  spectrumCtx.beginPath();
+  spectrumCtx.moveTo(margin.left, axisY);
+  spectrumCtx.lineTo(margin.left + plotW, axisY);
+  spectrumCtx.stroke();
+  spectrumCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.muted, 0.82);
+  spectrumCtx.font = "11px var(--cp-font-sans, ui-sans-serif)";
+  ticks.forEach((tick) => {
+    const x = margin.left + wavelengthToFraction(tick, domain) * plotW;
+    spectrumCtx.beginPath();
+    spectrumCtx.moveTo(x, axisY - 4);
+    spectrumCtx.lineTo(x, axisY + 4);
+    spectrumCtx.stroke();
+    spectrumCtx.fillText(`${Math.round(tick)}`, x - 10, axisY + 14);
+  });
+  spectrumCtx.fillText("Wavelength (nm)", margin.left + plotW - 82, axisY + 14);
+
+  spectrumCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.body1, 0.72);
+  spectrumCtx.fillText(`Primary RV = ${formatNumber(rvSample.rv1KmPerS, 2)} km/s`, margin.left, h - 10);
+  if (state.spectroscopyMode === "sb2") {
+    spectrumCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.body2, 0.72);
+    spectrumCtx.fillText(`Secondary RV = ${formatNumber(rvSample.rv2KmPerS, 2)} km/s`, margin.left + 220, h - 10);
+  } else {
+    spectrumCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.muted, 0.8);
+    spectrumCtx.fillText("SB1 mode: secondary lines hidden from the observed strip.", margin.left + 220, h - 10);
+  }
 }
 
 function predictionChoicesFromInputs(): PredictionChoices {
@@ -568,7 +906,7 @@ function updateRvChallengeUi(currentModel: BinaryModel): void {
     active: state.rvChallenge.active,
     revealed: state.rvChallenge.revealed,
   });
-  rvChallengePanel.hidden = !(state.rvChallenge.active || state.rvChallenge.revealed);
+  rvChallengePanel.hidden = false;
   rvChallengeStart.hidden = state.rvChallenge.active || state.rvChallenge.revealed;
   rvChallengeClear.disabled = !state.rvChallenge.active;
   rvChallengeReveal.disabled = !state.rvChallenge.active;
@@ -595,7 +933,8 @@ function updateRvChallengeUi(currentModel: BinaryModel): void {
 
   if (state.rvChallenge.active && !state.rvChallenge.revealed) {
     state.rvChallenge.targetQ = currentModel.massRatio;
-    rvChallengeFeedback.textContent = "Challenge active: click each RV curve to measure K1 and K2, then reveal.";
+    rvChallengeFeedback.textContent =
+      "Challenge active: click near the highest or lowest point on each curve. The largest |v_r| sample on each curve becomes your measured K.";
     return;
   }
 
@@ -617,33 +956,53 @@ function captureRvAmplitudeFromCanvasClick(event: MouseEvent): void {
   const xPx = event.clientX - rect.left;
   const yPx = event.clientY - rect.top;
 
-  const margin = { left: 44, right: 14, top: 16, bottom: 32 };
+  const margin = { left: 62, right: 28, top: 22, bottom: 42 };
   const plotW = Math.max(1, w - margin.left - margin.right);
   const plotH = Math.max(1, h - margin.top - margin.bottom);
-  const phase = clamp(((xPx - margin.left) / plotW) * 2 * Math.PI, 0, 2 * Math.PI);
+  const phaseCycle = clamp(((xPx - margin.left) / plotW) * 2, 0, 2);
+  const phase = phaseCycle * 2 * Math.PI;
 
   const rvData = getOrBuildRvCurve(model);
   const sample = BinaryOrbitModel.radialVelocityAtPhase({ state: rvData.stateForRv, phaseRad: phase });
   const yMaxKmS = Math.max(1, Math.abs(model.k1KmPerS), Math.abs(model.k2KmPerS)) * 1.2;
   const yFromVelocity = (velocityKmS: number) => margin.top + ((yMaxKmS - velocityKmS) / (2 * yMaxKmS)) * plotH;
+  const velocityFromY = (pixelY: number) => {
+    const clampedY = clamp(pixelY, margin.top, margin.top + plotH);
+    const fraction = (clampedY - margin.top) / plotH;
+    return yMaxKmS - (fraction * 2 * yMaxKmS);
+  };
   const dist1 = Math.abs(yPx - yFromVelocity(sample.rv1KmPerS));
   const dist2 = Math.abs(yPx - yFromVelocity(sample.rv2KmPerS));
 
-  const preferK1 = dist1 <= dist2;
-  if (preferK1) {
-    if (state.rvChallenge.measuredK1KmPerS !== null && state.rvChallenge.measuredK2KmPerS === null) {
-      state.rvChallenge.measuredK2KmPerS = Math.abs(model.k2KmPerS);
-      setLiveRegionText(status, "Captured K2 from RV curve.");
-    } else {
-      state.rvChallenge.measuredK1KmPerS = Math.abs(model.k1KmPerS);
-      setLiveRegionText(status, "Captured K1 from RV curve.");
+  const clickedVelocityKmPerS = velocityFromY(yPx);
+  const target: CurveMeasurementKey = dist1 <= dist2 ? "primary" : "secondary";
+  const targetDistance = target === "primary" ? dist1 : dist2;
+  if (targetDistance > RV_MEASUREMENT_DISTANCE_PX) {
+    setLiveRegionText(status, "Click closer to one of the RV curves to sample a velocity.");
+    return;
+  }
+
+  const amplitudeKmPerS = Math.abs(clickedVelocityKmPerS);
+  if (target === "primary") {
+    if (state.rvChallenge.measuredK1KmPerS === null || amplitudeKmPerS >= state.rvChallenge.measuredK1KmPerS) {
+      state.rvChallenge.measuredK1KmPerS = amplitudeKmPerS;
+      state.rvChallenge.primaryMeasurement = {
+        amplitudeKmPerS,
+        phaseCycle,
+        velocityKmPerS: clickedVelocityKmPerS,
+      };
     }
-  } else if (state.rvChallenge.measuredK2KmPerS !== null && state.rvChallenge.measuredK1KmPerS === null) {
-    state.rvChallenge.measuredK1KmPerS = Math.abs(model.k1KmPerS);
-    setLiveRegionText(status, "Captured K1 from RV curve.");
+    setLiveRegionText(status, `Sampled primary curve at |v_r| = ${formatNumber(amplitudeKmPerS, 2)} km/s.`);
   } else {
-    state.rvChallenge.measuredK2KmPerS = Math.abs(model.k2KmPerS);
-    setLiveRegionText(status, "Captured K2 from RV curve.");
+    if (state.rvChallenge.measuredK2KmPerS === null || amplitudeKmPerS >= state.rvChallenge.measuredK2KmPerS) {
+      state.rvChallenge.measuredK2KmPerS = amplitudeKmPerS;
+      state.rvChallenge.secondaryMeasurement = {
+        amplitudeKmPerS,
+        phaseCycle,
+        velocityKmPerS: clickedVelocityKmPerS,
+      };
+    }
+    setLiveRegionText(status, `Sampled secondary curve at |v_r| = ${formatNumber(amplitudeKmPerS, 2)} km/s.`);
   }
 
   if (
@@ -720,6 +1079,16 @@ function markInvariantTruths(model: BinaryModel): void {
 }
 
 function updateReadouts(controlModel: BinaryModel, displayModel: BinaryModel): void {
+  const minimumMasses = BinaryOrbitModel.minimumMassesSolar({
+    k1KmPerS: displayModel.k1KmPerS,
+    k2KmPerS: displayModel.k2KmPerS,
+    periodYr: displayModel.periodYr,
+  });
+  const massFunction = BinaryOrbitModel.massFunctionSolar({
+    k1KmPerS: displayModel.k1KmPerS,
+    periodYr: displayModel.periodYr,
+  });
+
   massRatioValue.textContent = formatNumber(controlModel.massRatio, 3);
   separationValue.textContent = formatNumber(controlModel.separation, 2);
   inclinationValue.textContent = formatNumber(controlModel.inclinationDeg, 0);
@@ -743,6 +1112,10 @@ function updateReadouts(controlModel: BinaryModel, displayModel: BinaryModel): v
 
   k1Value.textContent = formatNumber(displayModel.k1KmPerS, 3);
   k2Value.textContent = formatNumber(displayModel.k2KmPerS, 3);
+  m1SiniValue.textContent = formatNumber(minimumMasses.primaryMinimumMassSolar, 3);
+  m2SiniValue.textContent = formatNumber(minimumMasses.secondaryMinimumMassSolar, 3);
+  massFuncValue.textContent = formatNumber(massFunction, 3);
+  vsysValue.textContent = formatNumber(0, 1);
   energyK1Value.textContent = formatNumber(displayModel.kinetic1SolarAu2PerYr2, 3);
   energyK2Value.textContent = formatNumber(displayModel.kinetic2SolarAu2PerYr2, 3);
   energyKTotalValue.textContent = formatNumber(displayModel.kineticTotalSolarAu2PerYr2, 3);
@@ -751,6 +1124,31 @@ function updateReadouts(controlModel: BinaryModel, displayModel: BinaryModel): v
   energyVirialValue.textContent = formatNumber(displayModel.virialResidualSolarAu2PerYr2, 3);
 
   omegaReadout.hidden = !state.showOmega;
+}
+
+function updateStagePrompt(): void {
+  stagePrompt.textContent = stagePromptText(state.view);
+}
+
+function updateSpectroscopyControls(): void {
+  const spectroscopyButtons = [
+    { button: spectroscopySb2, selected: state.spectroscopyMode === "sb2" },
+    { button: spectroscopySb1, selected: state.spectroscopyMode === "sb1" },
+  ];
+  spectroscopyButtons.forEach(({ button, selected }) => {
+    button.setAttribute("aria-checked", String(selected));
+    button.tabIndex = selected ? 0 : -1;
+  });
+
+  const elementButtons = [
+    { button: elementH, selected: state.selectedElement === "H" },
+    { button: elementNa, selected: state.selectedElement === "Na" },
+    { button: elementCa, selected: state.selectedElement === "Ca" },
+  ];
+  elementButtons.forEach(({ button, selected }) => {
+    button.setAttribute("aria-checked", String(selected));
+    button.tabIndex = selected ? 0 : -1;
+  });
 }
 
 function updateScalingCue(): void {
@@ -772,8 +1170,9 @@ function updateScalingCue(): void {
 }
 
 function updateViewControls(): void {
-  const selectedIndex = state.view === "orbit" ? 0 : state.view === "rv" ? 1 : 2;
-  const buttons = [viewOrbit, viewRv, viewEnergy];
+  const selectedIndex =
+    state.view === "orbit" ? 0 : state.view === "rv" ? 1 : state.view === "spectrum" ? 2 : 3;
+  const buttons = [viewOrbit, viewRv, viewSpectrum, viewEnergy];
   buttons.forEach((button, index) => {
     const selected = index === selectedIndex;
     button.setAttribute("aria-checked", String(selected));
@@ -782,6 +1181,7 @@ function updateViewControls(): void {
 
   orbitCanvas.hidden = state.view !== "orbit";
   rvPanel.hidden = state.view !== "rv";
+  spectrumPanel.hidden = state.view !== "spectrum";
   energyPanel.hidden = state.view !== "energy";
 }
 
@@ -796,16 +1196,20 @@ function renderAtPhase(phaseRad: number): void {
 
   updateReadouts(currentModel, displayModel);
   updateScalingCue();
+  updateStagePrompt();
+  updateSpectroscopyControls();
   updateViewControls();
   renderPredictionOutcome();
-  updateRvChallengeUi(currentModel);
+  updateRvChallengeUi(displayModel);
 
   if (state.view === "orbit") {
-    drawOrbit(currentModel, phaseRad);
+    drawOrbit(displayModel, phaseRad);
   } else if (state.view === "rv") {
-    drawRadialVelocity(currentModel, phaseRad);
+    drawRadialVelocity(displayModel, phaseRad);
+  } else if (state.view === "spectrum") {
+    drawSpectrum(displayModel, phaseRad);
   } else {
-    drawEnergyView(currentModel);
+    drawEnergyView(displayModel);
   }
 }
 
@@ -869,6 +1273,8 @@ function startRvChallenge(): void {
   state.rvChallenge.revealed = false;
   state.rvChallenge.measuredK1KmPerS = null;
   state.rvChallenge.measuredK2KmPerS = null;
+  state.rvChallenge.primaryMeasurement = null;
+  state.rvChallenge.secondaryMeasurement = null;
   state.rvChallenge.inferredQ = null;
   state.rvChallenge.targetQ = getStageModel().massRatio;
   state.rvChallenge.score = null;
@@ -881,6 +1287,8 @@ function clearRvMeasurements(): void {
   if (!state.rvChallenge.active) return;
   state.rvChallenge.measuredK1KmPerS = null;
   state.rvChallenge.measuredK2KmPerS = null;
+  state.rvChallenge.primaryMeasurement = null;
+  state.rvChallenge.secondaryMeasurement = null;
   state.rvChallenge.inferredQ = null;
   state.rvChallenge.score = null;
   setLiveRegionText(status, "Cleared RV amplitude measurements.");
@@ -920,6 +1328,8 @@ function endRvChallenge(): void {
   state.rvChallenge.revealed = false;
   state.rvChallenge.measuredK1KmPerS = null;
   state.rvChallenge.measuredK2KmPerS = null;
+  state.rvChallenge.primaryMeasurement = null;
+  state.rvChallenge.secondaryMeasurement = null;
   state.rvChallenge.inferredQ = null;
   state.rvChallenge.targetQ = null;
   state.rvChallenge.score = null;
@@ -998,16 +1408,64 @@ viewRv.addEventListener("click", () => {
   renderStatic();
 });
 
+viewSpectrum.addEventListener("click", () => {
+  state.view = "spectrum";
+  renderStatic();
+});
+
 viewEnergy.addEventListener("click", () => {
   state.view = "energy";
   renderStatic();
 });
 
 bindButtonRadioGroup({
-  buttons: [viewOrbit, viewRv, viewEnergy],
-  getSelectedIndex: () => (state.view === "orbit" ? 0 : state.view === "rv" ? 1 : 2),
+  buttons: [viewOrbit, viewRv, viewSpectrum, viewEnergy],
+  getSelectedIndex: () => (state.view === "orbit" ? 0 : state.view === "rv" ? 1 : state.view === "spectrum" ? 2 : 3),
   setSelectedIndex: (index) => {
-    state.view = index === 0 ? "orbit" : index === 1 ? "rv" : "energy";
+    state.view = index === 0 ? "orbit" : index === 1 ? "rv" : index === 2 ? "spectrum" : "energy";
+    renderStatic();
+  },
+});
+
+spectroscopySb2.addEventListener("click", () => {
+  state.spectroscopyMode = "sb2";
+  renderStatic();
+});
+
+spectroscopySb1.addEventListener("click", () => {
+  state.spectroscopyMode = "sb1";
+  renderStatic();
+});
+
+bindButtonRadioGroup({
+  buttons: [spectroscopySb2, spectroscopySb1],
+  getSelectedIndex: () => (state.spectroscopyMode === "sb2" ? 0 : 1),
+  setSelectedIndex: (index) => {
+    state.spectroscopyMode = index === 0 ? "sb2" : "sb1";
+    renderStatic();
+  },
+});
+
+elementH.addEventListener("click", () => {
+  state.selectedElement = "H";
+  renderStatic();
+});
+
+elementNa.addEventListener("click", () => {
+  state.selectedElement = "Na";
+  renderStatic();
+});
+
+elementCa.addEventListener("click", () => {
+  state.selectedElement = "Ca";
+  renderStatic();
+});
+
+bindButtonRadioGroup({
+  buttons: [elementH, elementNa, elementCa],
+  getSelectedIndex: () => (state.selectedElement === "H" ? 0 : state.selectedElement === "Na" ? 1 : 2),
+  setSelectedIndex: (index) => {
+    state.selectedElement = index === 0 ? "H" : index === 1 ? "Na" : "Ca";
     renderStatic();
   },
 });
@@ -1071,6 +1529,8 @@ if (prefersReducedMotion) {
     });
     ro.observe(orbitCanvas);
     ro.observe(rvCanvas);
+    ro.observe(spectrumCanvas);
+    ro.observe(energyCanvas);
   } else {
     window.addEventListener("resize", () => {
       renderStatic();
@@ -1113,7 +1573,8 @@ const demoModes = createDemoModes({
           "This is a circular two-body model in teaching units (AU / yr / $M_{\\odot}$).",
           "Both bodies share one angular frequency $\\omega = 2\\pi/P$ and satisfy momentum balance $M_1v_1 = M_2v_2$.",
           "RV amplitudes project as $K = v\\sin i$, linking barycentric motion to spectroscopic observables.",
-          "Energy view decomposes $K_1$, $K_2$, $K$, $U$, and $E$ in $M_{\\odot}\\,\\mathrm{AU}^2/\\mathrm{yr}^2$.",
+          "Spectrum view maps those RVs onto Doppler-shifted absorption lines for H, Na, and Ca in SB1 or SB2 mode.",
+          "Energy view uses signed bars so you can compare positive kinetic terms against negative bound-energy terms directly.",
           "Period uses the Kepler teaching normalization: $P^2 = \\frac{a^3}{M_1 + M_2}$.",
         ],
       },
@@ -1125,13 +1586,16 @@ const demoModes = createDemoModes({
     steps: [
       "Set a mass ratio, separation, and inclination.",
       "Predict trend changes before reveal, then compare to readouts.",
-      "Use invariants, energy decomposition, and RV amplitudes to explain why both periods match.",
+      "Use the stage tabs to compare the same system in orbit, RV, spectrum, and energy views.",
+      "Use invariants, spectroscopy, and energy decomposition to explain why both periods match while observables change.",
     ],
     columns: [
       { key: "case", label: "Case" },
       { key: "massRatio", label: "$M_2/M_1$" },
       { key: "separationAu", label: "Separation $a$ (AU)" },
       { key: "inclinationDeg", label: "Inclination $i$ (deg)" },
+      { key: "spectroscopyMode", label: "Mode" },
+      { key: "element", label: "Element" },
       { key: "a1Au", label: "$a_1$ (AU)" },
       { key: "a2Au", label: "$a_2$ (AU)" },
       { key: "omegaRadPerYr", label: "$\\omega$ (rad/yr)" },
@@ -1139,6 +1603,9 @@ const demoModes = createDemoModes({
       { key: "v2AuPerYr", label: "$v_2$ (AU/yr)" },
       { key: "k1KmPerS", label: "$K_1$ (km/s)" },
       { key: "k2KmPerS", label: "$K_2$ (km/s)" },
+      { key: "massFunctionSolar", label: "$f(m)$ ($M_{\\odot}$)" },
+      { key: "primaryMinimumMassSolar", label: "$M_1\\sin^3 i$" },
+      { key: "secondaryMinimumMassSolar", label: "$M_2\\sin^3 i$" },
       { key: "totalEnergy", label: "$E$ ($M_{\\odot}$ AU$^2$/yr$^2$)" },
       { key: "momentumDelta", label: "$|M_1v_1-M_2v_2|$" },
       { key: "periodYr", label: "Period $P$ (yr)" },
@@ -1157,11 +1624,18 @@ const demoModes = createDemoModes({
         revealedModel: state.revealedModel,
         currentModel: getStageModel(),
       });
+      const minimumMasses = BinaryOrbitModel.minimumMassesSolar({
+        k1KmPerS: model.k1KmPerS,
+        k2KmPerS: model.k2KmPerS,
+        periodYr: model.periodYr,
+      });
       return {
         case: "Snapshot",
         massRatio: formatNumber(model.massRatio, 3),
         separationAu: formatNumber(model.separation, 2),
         inclinationDeg: formatNumber(model.inclinationDeg, 0),
+        spectroscopyMode: state.spectroscopyMode.toUpperCase(),
+        element: state.selectedElement,
         a1Au: formatNumber(model.r1, 3),
         a2Au: formatNumber(model.r2, 3),
         omegaRadPerYr: formatNumber(model.omegaRadPerYr, 3),
@@ -1169,6 +1643,12 @@ const demoModes = createDemoModes({
         v2AuPerYr: formatNumber(model.v2AuPerYr, 3),
         k1KmPerS: formatNumber(model.k1KmPerS, 3),
         k2KmPerS: formatNumber(model.k2KmPerS, 3),
+        massFunctionSolar: formatNumber(BinaryOrbitModel.massFunctionSolar({
+          k1KmPerS: model.k1KmPerS,
+          periodYr: model.periodYr,
+        }), 3),
+        primaryMinimumMassSolar: formatNumber(minimumMasses.primaryMinimumMassSolar, 3),
+        secondaryMinimumMassSolar: formatNumber(minimumMasses.secondaryMinimumMassSolar, 3),
         totalEnergy: formatNumber(model.totalEnergySolarAu2PerYr2, 3),
         momentumDelta: formatNumber(model.momentumDifferenceSolarAuPerYr, 6),
         periodYr: formatNumber(model.periodYr, 3),
@@ -1187,11 +1667,18 @@ const demoModes = createDemoModes({
 
           return cases.map((c) => {
             const model = computeModel(c.massRatio, c.separation, c.inclinationDeg);
+            const minimumMasses = BinaryOrbitModel.minimumMassesSolar({
+              k1KmPerS: model.k1KmPerS,
+              k2KmPerS: model.k2KmPerS,
+              periodYr: model.periodYr,
+            });
             return {
               case: c.label,
               massRatio: formatNumber(model.massRatio, 3),
               separationAu: formatNumber(model.separation, 2),
               inclinationDeg: formatNumber(model.inclinationDeg, 0),
+              spectroscopyMode: "SB2",
+              element: state.selectedElement,
               a1Au: formatNumber(model.r1, 3),
               a2Au: formatNumber(model.r2, 3),
               omegaRadPerYr: formatNumber(model.omegaRadPerYr, 3),
@@ -1199,6 +1686,12 @@ const demoModes = createDemoModes({
               v2AuPerYr: formatNumber(model.v2AuPerYr, 3),
               k1KmPerS: formatNumber(model.k1KmPerS, 3),
               k2KmPerS: formatNumber(model.k2KmPerS, 3),
+              massFunctionSolar: formatNumber(BinaryOrbitModel.massFunctionSolar({
+                k1KmPerS: model.k1KmPerS,
+                periodYr: model.periodYr,
+              }), 3),
+              primaryMinimumMassSolar: formatNumber(minimumMasses.primaryMinimumMassSolar, 3),
+              secondaryMinimumMassSolar: formatNumber(minimumMasses.secondaryMinimumMassSolar, 3),
               totalEnergy: formatNumber(model.totalEnergySolarAu2PerYr2, 3),
               momentumDelta: formatNumber(model.momentumDifferenceSolarAuPerYr, 6),
               periodYr: formatNumber(model.periodYr, 3),
@@ -1224,6 +1717,15 @@ function exportResults(): ExportPayloadV1 {
     currentModel: getStageModel(),
   });
   const checks = evaluateInvariants(model);
+  const minimumMasses = BinaryOrbitModel.minimumMassesSolar({
+    k1KmPerS: model.k1KmPerS,
+    k2KmPerS: model.k2KmPerS,
+    periodYr: model.periodYr,
+  });
+  const massFunction = BinaryOrbitModel.massFunctionSolar({
+    k1KmPerS: model.k1KmPerS,
+    periodYr: model.periodYr,
+  });
   return {
     version: 1,
     timestamp: new Date().toISOString(),
@@ -1237,6 +1739,8 @@ function exportResults(): ExportPayloadV1 {
       },
       { name: "Auto-scale (log)", value: state.autoScaleLog ? "on" : "off" },
       { name: "View", value: state.view },
+      { name: "Spectroscopy mode", value: state.spectroscopyMode },
+      { name: "Spectrum element", value: state.selectedElement },
       { name: "RV challenge state", value: rvChallengeStateLabel() },
     ],
     readouts: [
@@ -1253,6 +1757,10 @@ function exportResults(): ExportPayloadV1 {
       },
       { name: "RV semi-amplitude K1 (km/s)", value: formatNumber(model.k1KmPerS, 3) },
       { name: "RV semi-amplitude K2 (km/s)", value: formatNumber(model.k2KmPerS, 3) },
+      { name: "Primary minimum mass M1 sin^3(i) (M_sun)", value: formatNumber(minimumMasses.primaryMinimumMassSolar, 3) },
+      { name: "Secondary minimum mass M2 sin^3(i) (M_sun)", value: formatNumber(minimumMasses.secondaryMinimumMassSolar, 3) },
+      { name: "Mass function f(m) (M_sun)", value: formatNumber(massFunction, 3) },
+      { name: "System velocity v_sys (km/s)", value: formatNumber(0, 1) },
       { name: "Kinetic energy K1 (M_sun AU^2/yr^2)", value: formatNumber(model.kinetic1SolarAu2PerYr2, 3) },
       { name: "Kinetic energy K2 (M_sun AU^2/yr^2)", value: formatNumber(model.kinetic2SolarAu2PerYr2, 3) },
       { name: "Total kinetic energy K (M_sun AU^2/yr^2)", value: formatNumber(model.kineticTotalSolarAu2PerYr2, 3) },
@@ -1265,6 +1773,7 @@ function exportResults(): ExportPayloadV1 {
       "Assumes circular, coplanar two-body motion with point masses in barycentric frame.",
       "Uses AU/yr/Msun teaching units with G = 4*pi^2, so P^2 = a^3/(M1+M2).",
       "RV amplitudes project with inclination through K = v sin(i).",
+      `Spectrum mode: ${state.spectroscopyMode.toUpperCase()} using ${state.selectedElement} absorption lines in a shared ${SPECTRUM_DOMAIN.minNm}-${SPECTRUM_DOMAIN.maxNm} nm window.`,
       `RV challenge inferred q: ${state.rvChallenge.inferredQ === null ? "n/a" : formatNumber(state.rvChallenge.inferredQ, 3)}, `
         + `target q: ${state.rvChallenge.targetQ === null ? "n/a" : formatNumber(state.rvChallenge.targetQ, 3)}.`,
       `Invariant truth flags: ${checks.map((check) => `${check.statement}:${check.isTrue ? "true" : "false"}`).join(", ")}`,
