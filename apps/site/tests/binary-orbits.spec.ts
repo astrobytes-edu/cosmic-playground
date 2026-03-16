@@ -1,6 +1,11 @@
 import { test, expect } from "@playwright/test";
 
-const RV_PLOT_MARGIN = { left: 62, right: 28, top: 22, bottom: 42 } as const;
+function rvPlotMargin(width: number) {
+  const compact = width < 720;
+  return compact
+    ? { left: 68, right: 56, top: 28, bottom: 48 }
+    : { left: 74, right: 74, top: 34, bottom: 52 };
+}
 
 function rvPeakClickPosition(args: {
   box: { width: number; height: number };
@@ -10,11 +15,12 @@ function rvPeakClickPosition(args: {
   verticalOffsetPx?: number;
 }) {
   const { box, yMaxKmPerS, phaseCycle, velocityKmPerS, verticalOffsetPx = 0 } = args;
-  const plotWidth = box.width - RV_PLOT_MARGIN.left - RV_PLOT_MARGIN.right;
-  const plotHeight = box.height - RV_PLOT_MARGIN.top - RV_PLOT_MARGIN.bottom;
-  const x = RV_PLOT_MARGIN.left + (phaseCycle / 2) * plotWidth;
+  const margin = rvPlotMargin(box.width);
+  const plotWidth = box.width - margin.left - margin.right;
+  const plotHeight = box.height - margin.top - margin.bottom;
+  const x = margin.left + (phaseCycle / 2) * plotWidth;
   const y =
-    RV_PLOT_MARGIN.top
+    margin.top
     + ((yMaxKmPerS - velocityKmPerS) / (2 * yMaxKmPerS)) * plotHeight
     + verticalOffsetPx;
   return { x, y };
@@ -105,6 +111,24 @@ test.describe("Binary Orbits -- E2E", () => {
     await page.locator('[data-ratio-anchor="1.000"]').click();
     await expect(page.locator("#massRatioValue")).toContainText("1.000");
     expect(Number(await page.locator("#massRatio").inputValue())).toBeCloseTo(1, 3);
+  });
+
+  test("sidebar orders separation and inclination above Live Response", async ({ page }) => {
+    const positions = await page.evaluate(() => {
+      const topOf = (selector: string) => {
+        const node = document.querySelector(selector);
+        return node ? node.getBoundingClientRect().top : Number.NaN;
+      };
+
+      return {
+        separation: topOf("#separation"),
+        inclination: topOf("#inclination"),
+        liveResponse: topOf("#massRatioInsight"),
+      };
+    });
+
+    expect(positions.separation).toBeLessThan(positions.liveResponse);
+    expect(positions.inclination).toBeLessThan(positions.liveResponse);
   });
 
   test("separation slider changes displayed value", async ({ page }) => {
@@ -248,6 +272,17 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(page.locator("#massRatioInsight .katex")).toHaveCount(3);
     await expect(page.locator("#massRatioInsight")).toContainText("a2");
     await expect(page.locator("#massRatioInsight")).toContainText("K2");
+  });
+
+  test("live response stays finite at face-on inclination", async ({ page }) => {
+    const slider = page.locator("#inclination");
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "0";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    await expect(page.locator("#massRatioInsight")).not.toContainText("NaN");
+    await expect(page.locator("#massRatioInsight")).not.toContainText("Infinity");
   });
 
   test("reduced-motion mode still rerenders immediately when mass ratio changes", async ({ browser }) => {
@@ -605,6 +640,36 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(stationDialog).toBeVisible();
     await stationDialog.getByRole("button", { name: "Add row (snapshot)" }).click();
     await expect(page.locator("#status")).toContainText("Finish or reveal the RV challenge before adding snapshot row.");
+  });
+
+  test("RV challenge resets measurements when the system changes", async ({ page }) => {
+    await page.locator("#viewRv").click();
+    await page.locator("#rvChallengeStart").click();
+
+    const rvCanvas = page.locator("#rvCanvas");
+    const box = await rvCanvas.boundingBox();
+    if (!box) throw new Error("RV canvas has no bounding box.");
+    const trueK1 = parseFloat((await page.locator("#k1Value").textContent()) || "NaN");
+    const yMaxKmPerS = trueK1 * 1.2;
+
+    await rvCanvas.click({
+      position: rvPeakClickPosition({
+        box,
+        yMaxKmPerS,
+        phaseCycle: 0.25,
+        velocityKmPerS: trueK1,
+      }),
+    });
+    await expect(page.locator("#rvMeasuredK1Value")).not.toHaveText("—");
+
+    await page.locator("#massRatio").evaluate((el: HTMLInputElement) => {
+      el.value = "0.500";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    await expect(page.locator("#rvMeasuredK1Value")).toHaveText("—");
+    await expect(page.locator("#rvMeasuredK2Value")).toHaveText("—");
+    await expect(page.locator("#rvInferredQValue")).toHaveText("—");
   });
 
   // --- Export ---

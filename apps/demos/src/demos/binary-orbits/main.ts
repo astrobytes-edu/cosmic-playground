@@ -278,6 +278,22 @@ type EnergyCacheEntry = {
   breakdown: BinaryEnergyBreakdown;
 };
 
+type RvChartLayout = {
+  margin: {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  };
+  plotW: number;
+  plotH: number;
+  yMaxKmS: number;
+  yZero: number;
+  xFromPhaseCycle: (phaseCycle: number) => number;
+  yFromVelocity: (velocityKmS: number) => number;
+  velocityFromY: (pixelY: number) => number;
+};
+
 const state: {
   system: BinarySystemState;
   view: StageView;
@@ -306,6 +322,7 @@ const state: {
   rvChallenge: {
     active: boolean;
     revealed: boolean;
+    notice: string;
     measuredK1KmPerS: number | null;
     measuredK2KmPerS: number | null;
     primaryMeasurement: CurveMeasurement | null;
@@ -349,6 +366,7 @@ const state: {
   rvChallenge: {
     active: false,
     revealed: false,
+    notice: "",
     measuredK1KmPerS: null,
     measuredK2KmPerS: null,
     primaryMeasurement: null,
@@ -699,22 +717,58 @@ function getOrBuildEnergyBreakdown(model: BinaryModel): BinaryEnergyBreakdown {
   return breakdown;
 }
 
+function getRvChartLayout(args: {
+  width: number;
+  height: number;
+  model: BinaryModel;
+}): RvChartLayout {
+  const compact = args.width < 720;
+  const margin = {
+    left: compact ? 68 : 74,
+    right: compact ? 56 : 74,
+    top: compact ? 28 : 34,
+    bottom: compact ? 48 : 52,
+  };
+  const plotW = Math.max(1, args.width - margin.left - margin.right);
+  const plotH = Math.max(1, args.height - margin.top - margin.bottom);
+  const yMaxKmS = Math.max(1, Math.abs(args.model.k1KmPerS), Math.abs(args.model.k2KmPerS)) * 1.2;
+  const xFromPhaseCycle = (phaseCycle: number) => margin.left + (phaseCycle / 2) * plotW;
+  const yFromVelocity = (velocityKmS: number) => margin.top + ((yMaxKmS - velocityKmS) / (2 * yMaxKmS)) * plotH;
+  const velocityFromY = (pixelY: number) => {
+    const clampedY = clamp(pixelY, margin.top, margin.top + plotH);
+    const fraction = (clampedY - margin.top) / plotH;
+    return yMaxKmS - (fraction * 2 * yMaxKmS);
+  };
+
+  return {
+    margin,
+    plotW,
+    plotH,
+    yMaxKmS,
+    yZero: yFromVelocity(0),
+    xFromPhaseCycle,
+    yFromVelocity,
+    velocityFromY,
+  };
+}
+
+function withRvPlotClip(layout: RvChartLayout, draw: () => void): void {
+  rvCtx.save();
+  rvCtx.beginPath();
+  rvCtx.rect(layout.margin.left, layout.margin.top, layout.plotW, layout.plotH);
+  rvCtx.clip();
+  draw();
+  rvCtx.restore();
+}
+
 function drawRadialVelocity(model: BinaryModel, phaseRad: number): void {
   const { width: w, height: h } = resizeCanvasToCssPixels(rvCanvas, rvCtx);
   rvCtx.clearRect(0, 0, w, h);
 
-  const margin = { left: 62, right: 28, top: 22, bottom: 42 };
-  const plotW = Math.max(1, w - margin.left - margin.right);
-  const plotH = Math.max(1, h - margin.top - margin.bottom);
-
   const rvData = getOrBuildRvCurve(model);
   const { stateForRv, curve } = rvData;
-
-  const yMaxKmS = Math.max(1, Math.abs(model.k1KmPerS), Math.abs(model.k2KmPerS)) * 1.2;
-  const xFromPhaseCycle = (phaseCycle: number) => margin.left + (phaseCycle / 2) * plotW;
-  const yFromVelocity = (velocityKmS: number) => margin.top + ((yMaxKmS - velocityKmS) / (2 * yMaxKmS)) * plotH;
-
-  const yZero = yFromVelocity(0);
+  const layout = getRvChartLayout({ width: w, height: h, model });
+  const { margin, plotW, plotH, xFromPhaseCycle, yFromVelocity, yMaxKmS, yZero, velocityFromY } = layout;
   const velocityTicks = [-yMaxKmS, -yMaxKmS / 2, 0, yMaxKmS / 2, yMaxKmS];
   const phaseTicks = [0, 0.5, 1, 1.5, 2];
 
@@ -767,22 +821,22 @@ function drawRadialVelocity(model: BinaryModel, phaseRad: number): void {
   rvCtx.restore();
 
   const drawCurve = (target: CurveMeasurementKey, strokeStyle: string, dashed: boolean) => {
-    rvCtx.save();
-    rvCtx.strokeStyle = strokeStyle;
-    rvCtx.lineWidth = 2.6;
-    rvCtx.setLineDash(dashed ? [10, 8] : []);
-    rvCtx.beginPath();
-    [0, 1].forEach((cycleIndex) => {
-      curve.forEach((sample, idx) => {
-        const phaseCycle = cycleIndex + (sample.phaseRad / (2 * Math.PI));
-        const x = xFromPhaseCycle(phaseCycle);
-        const y = yFromVelocity(target === "primary" ? sample.rv1KmPerS : sample.rv2KmPerS);
-        if (cycleIndex === 0 && idx === 0) rvCtx.moveTo(x, y);
-        else rvCtx.lineTo(x, y);
+    withRvPlotClip(layout, () => {
+      rvCtx.strokeStyle = strokeStyle;
+      rvCtx.lineWidth = 2.6;
+      rvCtx.setLineDash(dashed ? [10, 8] : []);
+      rvCtx.beginPath();
+      [0, 1].forEach((cycleIndex) => {
+        curve.forEach((sample, idx) => {
+          const phaseCycle = cycleIndex + (sample.phaseRad / (2 * Math.PI));
+          const x = xFromPhaseCycle(phaseCycle);
+          const y = yFromVelocity(target === "primary" ? sample.rv1KmPerS : sample.rv2KmPerS);
+          if (cycleIndex === 0 && idx === 0) rvCtx.moveTo(x, y);
+          else rvCtx.lineTo(x, y);
+        });
       });
+      rvCtx.stroke();
     });
-    rvCtx.stroke();
-    rvCtx.restore();
   };
 
   drawCurve("primary", canvasTheme.body1, false);
@@ -792,25 +846,27 @@ function drawRadialVelocity(model: BinaryModel, phaseRad: number): void {
   const xPhase = xFromPhaseCycle(phaseCycle);
   const phaseSample = BinaryOrbitModel.radialVelocityAtPhase({ state: stateForRv, phaseRad: phaseCycle * 2 * Math.PI });
 
-  rvCtx.save();
-  rvCtx.setLineDash([6, 6]);
-  rvCtx.strokeStyle = canvasTheme.accent;
-  rvCtx.lineWidth = 1.4;
-  rvCtx.beginPath();
-  rvCtx.moveTo(xPhase, margin.top);
-  rvCtx.lineTo(xPhase, margin.top + plotH);
-  rvCtx.stroke();
-  rvCtx.restore();
+  withRvPlotClip(layout, () => {
+    rvCtx.save();
+    rvCtx.setLineDash([6, 6]);
+    rvCtx.strokeStyle = canvasTheme.accent;
+    rvCtx.lineWidth = 1.4;
+    rvCtx.beginPath();
+    rvCtx.moveTo(xPhase, margin.top);
+    rvCtx.lineTo(xPhase, margin.top + plotH);
+    rvCtx.stroke();
+    rvCtx.restore();
 
-  rvCtx.fillStyle = canvasTheme.body1;
-  rvCtx.beginPath();
-  rvCtx.arc(xPhase, yFromVelocity(phaseSample.rv1KmPerS), 4.2, 0, Math.PI * 2);
-  rvCtx.fill();
+    rvCtx.fillStyle = canvasTheme.body1;
+    rvCtx.beginPath();
+    rvCtx.arc(xPhase, yFromVelocity(phaseSample.rv1KmPerS), 4.2, 0, Math.PI * 2);
+    rvCtx.fill();
 
-  rvCtx.fillStyle = canvasTheme.body2;
-  rvCtx.beginPath();
-  rvCtx.arc(xPhase, yFromVelocity(phaseSample.rv2KmPerS), 4.2, 0, Math.PI * 2);
-  rvCtx.fill();
+    rvCtx.fillStyle = canvasTheme.body2;
+    rvCtx.beginPath();
+    rvCtx.arc(xPhase, yFromVelocity(phaseSample.rv2KmPerS), 4.2, 0, Math.PI * 2);
+    rvCtx.fill();
+  });
 
   const annotateAmplitude = (label: string, amplitudeKmPerS: number, strokeStyle: string, x: number) => {
     const yPeak = yFromVelocity(amplitudeKmPerS);
@@ -827,31 +883,38 @@ function drawRadialVelocity(model: BinaryModel, phaseRad: number): void {
     rvCtx.lineTo(x + 6, yPeak);
     rvCtx.stroke();
     rvCtx.fillStyle = strokeStyle;
-    rvCtx.fillText(label, x + 10, yPeak + (amplitudeKmPerS > 0 ? -4 : 14));
+    const labelY = clamp(yPeak + (amplitudeKmPerS > 0 ? -8 : 18), margin.top + 12, margin.top + plotH - 10);
+    const isRightSide = x > margin.left + plotW * 0.82;
+    rvCtx.textAlign = isRightSide ? "right" : "left";
+    rvCtx.fillText(label, x + (isRightSide ? -10 : 10), labelY);
+    rvCtx.textAlign = "left";
   };
 
-  annotateAmplitude("K1", model.k1KmPerS, canvasTheme.body1, margin.left + plotW * 0.88);
-  annotateAmplitude("K2", model.k2KmPerS, canvasTheme.body2, margin.left + plotW * 0.95);
+  annotateAmplitude("K1", model.k1KmPerS, canvasTheme.body1, margin.left + plotW * 0.74);
+  annotateAmplitude("K2", model.k2KmPerS, canvasTheme.body2, margin.left + plotW * 0.88);
 
   const drawMeasurementMarker = (measurement: CurveMeasurement | null, strokeStyle: string, label: string) => {
     if (!measurement) return;
+    const markerX = xFromPhaseCycle(measurement.phaseCycle);
+    const markerY = yFromVelocity(measurement.velocityKmPerS);
+    withRvPlotClip(layout, () => {
+      rvCtx.save();
+      rvCtx.strokeStyle = strokeStyle;
+      rvCtx.fillStyle = strokeStyle;
+      rvCtx.lineWidth = 2;
+      rvCtx.beginPath();
+      rvCtx.arc(markerX, markerY, 6, 0, Math.PI * 2);
+      rvCtx.stroke();
+      rvCtx.restore();
+    });
+
     rvCtx.save();
-    rvCtx.strokeStyle = strokeStyle;
     rvCtx.fillStyle = strokeStyle;
-    rvCtx.lineWidth = 2;
-    rvCtx.beginPath();
-    rvCtx.arc(
-      xFromPhaseCycle(measurement.phaseCycle),
-      yFromVelocity(measurement.velocityKmPerS),
-      6,
-      0,
-      Math.PI * 2,
-    );
-    rvCtx.stroke();
+    rvCtx.textAlign = markerX > margin.left + plotW * 0.62 ? "right" : "left";
     rvCtx.fillText(
       `${label} ${formatNumber(measurement.amplitudeKmPerS, 2)} km/s`,
-      xFromPhaseCycle(measurement.phaseCycle) + 10,
-      yFromVelocity(measurement.velocityKmPerS) - 10,
+      markerX + (markerX > margin.left + plotW * 0.62 ? -12 : 12),
+      clamp(markerY - 12, margin.top + 12, margin.top + plotH - 10),
     );
     rvCtx.restore();
   };
@@ -1101,6 +1164,8 @@ function updatePredictionUi(model: BinaryModel): void {
 
 function updateMassRatioInsight(model: BinaryModel): void {
   const inverseMassRatio = model.massRatio > 0 ? 1 / model.massRatio : Number.POSITIVE_INFINITY;
+  const orbitRatio = model.r1 > 0 ? model.r2 / model.r1 : inverseMassRatio;
+  const rvRatio = model.k1KmPerS > 0 ? model.k2KmPerS / model.k1KmPerS : inverseMassRatio;
   let narrative = "At $q=1$, both stars sit the same distance from the barycenter and share equal speeds and RV amplitudes.";
   if (model.massRatio <= 0.01) {
     narrative =
@@ -1113,7 +1178,7 @@ function updateMassRatioInsight(model: BinaryModel): void {
   massRatioInsightTitle.innerHTML = "$\\textbf{Lighter body} \\rightarrow \\textbf{farther orbit, faster motion}$";
   massRatioInsightBody.innerHTML = [
     `<p>${narrative}</p>`,
-    `<p>$$\\frac{a_2}{a_1} = ${formatNumber(model.r2 / model.r1, 2)}, \\qquad \\frac{K_2}{K_1} = ${formatNumber(model.k2KmPerS / model.k1KmPerS, 2)}$$</p>`,
+    `<p>$$\\frac{a_2}{a_1} = ${formatNumber(orbitRatio, 2)}, \\qquad \\frac{K_2}{K_1} = ${formatNumber(rvRatio, 2)}$$</p>`,
     "<p>$$M_1 v_1 = M_2 v_2$$</p>",
   ].join("");
   initMath(massRatioInsightTitle);
@@ -1214,6 +1279,30 @@ function flashReadoutGroup(targets: HTMLElement[]): void {
   }, READOUT_PULSE_MS);
 }
 
+function resetRvChallengeMeasurementsOnSystemChange(control: "massRatio" | "separation" | "inclination"): void {
+  const shouldReset = state.rvChallenge.active
+    || state.rvChallenge.revealed
+    || state.rvChallenge.measuredK1KmPerS !== null
+    || state.rvChallenge.measuredK2KmPerS !== null;
+  if (!shouldReset) return;
+
+  state.rvChallenge.revealed = false;
+  state.rvChallenge.notice = `System changed: measurements reset after the ${control} update.`;
+  state.rvChallenge.measuredK1KmPerS = null;
+  state.rvChallenge.measuredK2KmPerS = null;
+  state.rvChallenge.primaryMeasurement = null;
+  state.rvChallenge.secondaryMeasurement = null;
+  state.rvChallenge.inferredQ = null;
+  state.rvChallenge.score = null;
+  state.rvChallenge.targetQ = state.rvChallenge.active ? getStageModel().massRatio : null;
+
+  const message = `RV challenge measurements reset after the ${control} change.`;
+  rvChallengeFeedback.textContent = state.rvChallenge.active
+    ? `${state.rvChallenge.notice} Measure the updated curves again.`
+    : "Start challenge to infer q from measured RV amplitudes.";
+  setLiveRegionText(status, message);
+}
+
 function pulseAutoFitIndicator(): void {
   autoFitToggleLabel.classList.add("is-live-changed");
   if (state.camera.pulseTimeoutId !== null) {
@@ -1226,6 +1315,7 @@ function pulseAutoFitIndicator(): void {
 }
 
 function handleLiveControlChange(control: "massRatio" | "separation" | "inclination"): void {
+  resetRvChallengeMeasurementsOnSystemChange(control);
   if (state.predictionBaseline) {
     predictionFeedback.textContent = "Baseline captured. The live model has updated; compare your prediction whenever you're ready.";
     clearPredictionOutcome();
@@ -1310,8 +1400,11 @@ function updateRvChallengeUi(currentModel: BinaryModel): void {
 
   if (state.rvChallenge.active && !state.rvChallenge.revealed) {
     state.rvChallenge.targetQ = currentModel.massRatio;
-    rvChallengeFeedback.textContent =
+    const baseMessage =
       "Challenge active: click near the highest or lowest point on each curve. The largest |v_r| sample on each curve becomes your measured K.";
+    rvChallengeFeedback.textContent = state.rvChallenge.notice
+      ? `${state.rvChallenge.notice} ${baseMessage}`
+      : baseMessage;
     return;
   }
 
@@ -1333,21 +1426,13 @@ function captureRvAmplitudeFromCanvasClick(event: MouseEvent): void {
   const xPx = event.clientX - rect.left;
   const yPx = event.clientY - rect.top;
 
-  const margin = { left: 62, right: 28, top: 22, bottom: 42 };
-  const plotW = Math.max(1, w - margin.left - margin.right);
-  const plotH = Math.max(1, h - margin.top - margin.bottom);
+  const layout = getRvChartLayout({ width: w, height: h, model });
+  const { margin, plotW, plotH, yFromVelocity, velocityFromY } = layout;
   const phaseCycle = clamp(((xPx - margin.left) / plotW) * 2, 0, 2);
   const phase = phaseCycle * 2 * Math.PI;
 
   const rvData = getOrBuildRvCurve(model);
   const sample = BinaryOrbitModel.radialVelocityAtPhase({ state: rvData.stateForRv, phaseRad: phase });
-  const yMaxKmS = Math.max(1, Math.abs(model.k1KmPerS), Math.abs(model.k2KmPerS)) * 1.2;
-  const yFromVelocity = (velocityKmS: number) => margin.top + ((yMaxKmS - velocityKmS) / (2 * yMaxKmS)) * plotH;
-  const velocityFromY = (pixelY: number) => {
-    const clampedY = clamp(pixelY, margin.top, margin.top + plotH);
-    const fraction = (clampedY - margin.top) / plotH;
-    return yMaxKmS - (fraction * 2 * yMaxKmS);
-  };
   const dist1 = Math.abs(yPx - yFromVelocity(sample.rv1KmPerS));
   const dist2 = Math.abs(yPx - yFromVelocity(sample.rv2KmPerS));
 
@@ -1360,6 +1445,7 @@ function captureRvAmplitudeFromCanvasClick(event: MouseEvent): void {
   }
 
   const amplitudeKmPerS = Math.abs(clickedVelocityKmPerS);
+  state.rvChallenge.notice = "";
   if (target === "primary") {
     if (state.rvChallenge.measuredK1KmPerS === null || amplitudeKmPerS >= state.rvChallenge.measuredK1KmPerS) {
       state.rvChallenge.measuredK1KmPerS = amplitudeKmPerS;
@@ -1619,6 +1705,7 @@ function setScalingCue(control: "separation" | "massRatio"): void {
 function startRvChallenge(): void {
   state.rvChallenge.active = true;
   state.rvChallenge.revealed = false;
+  state.rvChallenge.notice = "";
   state.rvChallenge.measuredK1KmPerS = null;
   state.rvChallenge.measuredK2KmPerS = null;
   state.rvChallenge.primaryMeasurement = null;
@@ -1633,6 +1720,7 @@ function startRvChallenge(): void {
 
 function clearRvMeasurements(): void {
   if (!state.rvChallenge.active) return;
+  state.rvChallenge.notice = "";
   state.rvChallenge.measuredK1KmPerS = null;
   state.rvChallenge.measuredK2KmPerS = null;
   state.rvChallenge.primaryMeasurement = null;
@@ -1666,6 +1754,7 @@ function revealRvChallenge(): void {
     inferredQ: inferred.massRatioEstimate,
     trueQ: targetQ,
   });
+  state.rvChallenge.notice = "";
   state.rvChallenge.revealed = true;
   setLiveRegionText(status, "RV challenge revealed. Compare inferred q with the model q.");
   renderStatic();
@@ -1674,6 +1763,7 @@ function revealRvChallenge(): void {
 function endRvChallenge(): void {
   state.rvChallenge.active = false;
   state.rvChallenge.revealed = false;
+  state.rvChallenge.notice = "";
   state.rvChallenge.measuredK1KmPerS = null;
   state.rvChallenge.measuredK2KmPerS = null;
   state.rvChallenge.primaryMeasurement = null;

@@ -94,19 +94,6 @@
             <button id="presetHalf" class="cp-chip" type="button">$M_2 = 0.5 M_1$</button>
           </div>
 
-          <div
-            id="massRatioInsight"
-            class="cp-live-insight"
-            aria-live="polite"
-            title="Ratios reflect conservation of momentum and shared angular frequency."
-          >
-            <div class="cp-live-insight__eyebrow">Live response</div>
-            <div id="massRatioInsightTitle" class="cp-live-insight__title">Equal masses keep the system balanced.</div>
-            <div id="massRatioInsightBody" class="cp-live-insight__body">
-              At $q=1$, both stars sit the same distance from the barycenter and share equal speeds and RV amplitudes.
-            </div>
-          </div>
-
           <label class="control">
             <span>Separation ($a$)</span>
             <input
@@ -135,6 +122,19 @@
             />
             <span class="control__value"><span id="inclinationValue"></span> <span class="cp-readout__unit">deg</span></span>
           </label>
+
+          <div
+            id="massRatioInsight"
+            class="cp-live-insight"
+            aria-live="polite"
+            title="Ratios reflect conservation of momentum and shared angular frequency."
+          >
+            <div class="cp-live-insight__eyebrow">Live response</div>
+            <div id="massRatioInsightTitle" class="cp-live-insight__title">Equal masses keep the system balanced.</div>
+            <div id="massRatioInsightBody" class="cp-live-insight__body">
+              At $q=1$, both stars sit the same distance from the barycenter and share equal speeds and RV amplitudes.
+            </div>
+          </div>
 
           <label class="control" for="motionMode">
             <span>Motion mode</span>
