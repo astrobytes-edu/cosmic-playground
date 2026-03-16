@@ -128,10 +128,26 @@ describe("Binary Orbits -- UI Logic", () => {
       const faceOn = computeModel(0.2, 4, 0);
       expect(faceOn.k1AuPerYr).toBeCloseTo(0, 12);
       expect(faceOn.k2AuPerYr).toBeCloseTo(0, 12);
+      expect(faceOn.sinInclination).toBeCloseTo(0, 12);
 
       const edgeOn = computeModel(0.2, 4, 90);
       expect(edgeOn.k1AuPerYr).toBeCloseTo(edgeOn.v1AuPerYr, 12);
       expect(edgeOn.k2AuPerYr).toBeCloseTo(edgeOn.v2AuPerYr, 12);
+      expect(edgeOn.sinInclination).toBeCloseTo(1, 12);
+    });
+
+    it("keeps intrinsic dynamics fixed while projection-dependent observables scale with sin(i)", () => {
+      const edgeOn = computeModel(1, 1, 90);
+      const tilted = computeModel(1, 1, 30);
+
+      expect(tilted.r1).toBeCloseTo(edgeOn.r1, 12);
+      expect(tilted.r2).toBeCloseTo(edgeOn.r2, 12);
+      expect(tilted.v1AuPerYr).toBeCloseTo(edgeOn.v1AuPerYr, 12);
+      expect(tilted.v2AuPerYr).toBeCloseTo(edgeOn.v2AuPerYr, 12);
+      expect(tilted.periodYr).toBeCloseTo(edgeOn.periodYr, 12);
+      expect(tilted.omegaRadPerYr).toBeCloseTo(edgeOn.omegaRadPerYr, 12);
+      expect(tilted.k1KmPerS / edgeOn.k1KmPerS).toBeCloseTo(0.5, 12);
+      expect(tilted.k2KmPerS / edgeOn.k2KmPerS).toBeCloseTo(0.5, 12);
     });
   });
 

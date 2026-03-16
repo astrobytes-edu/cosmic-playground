@@ -88,6 +88,7 @@ export interface BinaryModel {
   massRatio: number;
   separation: number;
   inclinationDeg: number;
+  sinInclination: number;
   m1: number;
   m2: number;
   total: number;
@@ -179,6 +180,7 @@ export function derivePhysics(
     massRatio: mr,
     separation: sep,
     inclinationDeg: incDeg,
+    sinInclination: orbitState.sinInclination,
     m1: primaryMassSolar,
     m2: secondaryMassSolar,
     total: orbitState.totalMassSolar,

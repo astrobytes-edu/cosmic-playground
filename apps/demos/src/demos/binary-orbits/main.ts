@@ -62,6 +62,7 @@ const separationInput = $<HTMLInputElement>("#separation");
 const separationValue = $<HTMLSpanElement>("#separationValue");
 const inclinationInput = $<HTMLInputElement>("#inclination");
 const inclinationValue = $<HTMLSpanElement>("#inclinationValue");
+const inclinationProjectionHint = $<HTMLSpanElement>("#inclinationProjectionHint");
 
 const presetEqual = $<HTMLButtonElement>("#presetEqual");
 const presetPlanet = $<HTMLButtonElement>("#presetPlanet");
@@ -147,6 +148,9 @@ const readoutV2 = $<HTMLDivElement>("#readoutV2");
 const readoutPeriod = $<HTMLDivElement>("#readoutPeriod");
 const readoutK1 = $<HTMLDivElement>("#readoutK1");
 const readoutK2 = $<HTMLDivElement>("#readoutK2");
+const readoutM1Sini = $<HTMLDivElement>("#readoutM1Sini");
+const readoutM2Sini = $<HTMLDivElement>("#readoutM2Sini");
+const readoutMassFunction = $<HTMLDivElement>("#readoutMassFunction");
 const debugPanel = $<HTMLDetailsElement>("#debugPanel");
 const debugSumRow = $<HTMLDivElement>("#debugSumRow");
 const debugBaryRow = $<HTMLDivElement>("#debugBaryRow");
@@ -175,8 +179,10 @@ const invariantFeedback = $<HTMLParagraphElement>("#invariantFeedback");
 const orbitCanvas = $<HTMLCanvasElement>("#orbitCanvas");
 const stagePrompt = $<HTMLParagraphElement>("#stagePrompt");
 const rvPanel = $<HTMLDivElement>("#rvPanel");
+const rvProjectionNote = $<HTMLParagraphElement>("#rvProjectionNote");
 const rvCanvas = $<HTMLCanvasElement>("#rvCanvas");
 const spectrumPanel = $<HTMLDivElement>("#spectrumPanel");
+const spectrumProjectionNote = $<HTMLParagraphElement>("#spectrumProjectionNote");
 const spectrumCanvas = $<HTMLCanvasElement>("#spectrumCanvas");
 const energyPanel = $<HTMLDivElement>("#energyPanel");
 const energyCanvas = $<HTMLCanvasElement>("#energyCanvas");
@@ -490,17 +496,21 @@ function currentTimeMs(): number {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
 }
 
-function stagePromptText(view: StageView): string {
+function projectionFactorLabel(model: BinaryModel): string {
+  return `${formatNumber(model.sinInclination, 3)} x edge-on`;
+}
+
+function stagePromptText(view: StageView, model: BinaryModel): string {
   if (view === "orbit") {
-    return "Use the barycenter and observer sightline to relate the true geometry to what an astronomer can project along the line of sight.";
+    return `Use the barycenter and observer sightline to separate the true orbit from what the observer measures. Inclination changes only the line-of-sight projection: right now RV amplitudes are ${projectionFactorLabel(model)}.`;
   }
   if (view === "rv") {
     return state.rvChallenge.active && !state.rvChallenge.revealed
       ? "Challenge active: click near the highest or lowest points on each curve. Your largest |v_r| sample becomes the measured K."
-      : "The RV plot shows the measurable line-of-sight velocity. Compare the projected amplitudes and read them directly from the graph.";
+      : `The RV plot shows the measurable line-of-sight velocity. At i = ${formatNumber(model.inclinationDeg, 0)} deg, amplitudes are ${projectionFactorLabel(model)} because K scales with sin(i).`;
   }
   if (view === "spectrum") {
-    return "The lab strip stays fixed while the observed strip wobbles with the same orbital phase. Switch between SB2 and SB1 to see how detectability changes.";
+    return `The lab strip stays fixed while the observed strip wobbles with the same orbital phase. At this inclination the Doppler shifts are ${projectionFactorLabel(model)}, so the observed line wobble shrinks as i approaches 0 deg.`;
   }
   return "Read the sign of each energy term directly: kinetic energy is positive, gravitational binding energy is negative, and the virial balance keeps 2K + U near zero.";
 }
@@ -672,9 +682,11 @@ function drawOrbit(model: BinaryModel, phaseRad: number, nowMs: number): void {
   orbitCtx.font = "13px var(--cp-font-sans, ui-sans-serif)";
   orbitCtx.fillText("observer line of sight", sightlineStartX, sightlineY - 10);
   orbitCtx.fillText(`i = ${formatNumber(model.inclinationDeg, 0)} deg`, sightlineStartX, sightlineY + 18);
+  orbitCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.accent, 0.74);
+  orbitCtx.fillText(`projected observables = ${projectionFactorLabel(model)}`, sightlineStartX, sightlineY + 40);
   if (model.inclinationDeg <= 1) {
     orbitCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.body2, 0.72);
-    orbitCtx.fillText("Face-on view: RV signal collapses toward zero.", sightlineStartX, sightlineY + 40);
+    orbitCtx.fillText("Face-on view: RV signal collapses toward zero.", sightlineStartX, sightlineY + 62);
   }
 }
 
@@ -1267,6 +1279,9 @@ function flashReadoutGroup(targets: HTMLElement[]): void {
     readoutPeriod,
     readoutK1,
     readoutK2,
+    readoutM1Sini,
+    readoutM2Sini,
+    readoutMassFunction,
   ];
   allPulseTargets.forEach((target) => target.classList.remove("is-live-changed"));
   targets.forEach((target) => target.classList.add("is-live-changed"));
@@ -1322,14 +1337,15 @@ function handleLiveControlChange(control: "massRatio" | "separation" | "inclinat
   }
   if (control === "massRatio") {
     state.orbitFocusUntilMs = currentTimeMs() + READOUT_PULSE_MS;
-    flashReadoutGroup([readoutA1, readoutA2, readoutV1, readoutV2, readoutK1, readoutK2]);
+    flashReadoutGroup([readoutA1, readoutA2, readoutV1, readoutV2, readoutK1, readoutK2, readoutM1Sini, readoutM2Sini, readoutMassFunction]);
     setScalingCue("massRatio");
   } else if (control === "separation") {
     state.orbitFocusUntilMs = currentTimeMs() + READOUT_PULSE_MS;
-    flashReadoutGroup([readoutA1, readoutA2, readoutV1, readoutV2, readoutPeriod]);
+    flashReadoutGroup([readoutA1, readoutA2, readoutV1, readoutV2, readoutPeriod, readoutK1, readoutK2, readoutM1Sini, readoutM2Sini, readoutMassFunction]);
     setScalingCue("separation");
   } else {
-    flashReadoutGroup([readoutK1, readoutK2]);
+    flashReadoutGroup([readoutK1, readoutK2, readoutM1Sini, readoutM2Sini, readoutMassFunction]);
+    setLiveRegionText(status, "Inclination updated. Projected observables rescaled with sin(i).");
   }
   if (state.system.autoScale && (control === "massRatio" || control === "separation")) {
     pulseAutoFitIndicator();
@@ -1589,8 +1605,18 @@ function updateReadouts(model: BinaryModel): void {
   omegaReadout.hidden = !state.showOmega;
 }
 
-function updateStagePrompt(): void {
-  stagePrompt.textContent = stagePromptText(state.view);
+function updateProjectionMessaging(model: BinaryModel): void {
+  const projectionLabel = projectionFactorLabel(model);
+  inclinationProjectionHint.textContent =
+    `Line-of-sight projection only: sin(i) = ${formatNumber(model.sinInclination, 3)}, so RV amplitudes are ${projectionLabel}.`;
+  rvProjectionNote.textContent =
+    `Curves are projected along the line of sight for inclination i. Right now sin(i) = ${formatNumber(model.sinInclination, 3)}, so K1 and K2 are ${projectionLabel}. During the challenge, click near the extrema; the largest |v_r| you sample becomes your measured K.`;
+  spectrumProjectionNote.textContent =
+    `Top strip shows rest-frame lab lines. Lower strip shows what the observer sees after Doppler shifting the selected element lines. At this inclination the line wobble is ${projectionLabel}.`;
+}
+
+function updateStagePrompt(model: BinaryModel): void {
+  stagePrompt.textContent = stagePromptText(state.view, model);
 }
 
 function updateSpectroscopyControls(): void {
@@ -1659,7 +1685,8 @@ function renderAtPhase(phaseRad: number, nowMs = currentTimeMs()): void {
   updateDebugPanel(targetModel);
   updatePredictionUi(targetModel);
   updateScalingCue();
-  updateStagePrompt();
+  updateProjectionMessaging(targetModel);
+  updateStagePrompt(targetModel);
   updateSpectroscopyControls();
   updateViewControls();
   renderPredictionOutcome();

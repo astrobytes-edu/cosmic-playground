@@ -19,6 +19,13 @@
   font-size: var(--cp-text-xs);
 }
 
+#inclinationProjectionHint {
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 84%, var(--cp-accent) 16%);
+  background: color-mix(in srgb, var(--cp-accent) 8%, transparent);
+}
+
 .control__anchors {
   display: flex;
   justify-content: space-between;

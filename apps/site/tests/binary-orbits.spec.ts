@@ -163,6 +163,9 @@ test.describe("Binary Orbits -- E2E", () => {
   });
 
   test("auto-fit toggle does not change physics readouts", async ({ page }) => {
+    await expect(page.locator("#baryOffsetValue")).not.toHaveText("");
+    await expect(page.locator("#k1Value")).not.toHaveText("");
+
     const before = {
       a1: await page.locator("#baryOffsetValue").textContent(),
       a2: await page.locator("#baryOffsetSecondaryValue").textContent(),
@@ -313,6 +316,65 @@ test.describe("Binary Orbits -- E2E", () => {
     });
     const after = await page.locator("#periodValue").textContent();
     expect(after).not.toBe(before);
+  });
+
+  test("inclination rescales only projected observables while intrinsic orbit quantities stay fixed", async ({ page }) => {
+    await page.locator("#massRatio").evaluate((el: HTMLInputElement) => {
+      el.value = "1.000";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    await page.locator("#inclination").evaluate((el: HTMLInputElement) => {
+      el.value = "90";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    const before = {
+      a1: parseFloat((await page.locator("#baryOffsetValue").textContent()) || "NaN"),
+      a2: parseFloat((await page.locator("#baryOffsetSecondaryValue").textContent()) || "NaN"),
+      v1: parseFloat((await page.locator("#speedPrimaryValue").textContent()) || "NaN"),
+      v2: parseFloat((await page.locator("#speedSecondaryValue").textContent()) || "NaN"),
+      k1: parseFloat((await page.locator("#k1Value").textContent()) || "NaN"),
+      k2: parseFloat((await page.locator("#k2Value").textContent()) || "NaN"),
+    };
+
+    await page.locator("#inclination").evaluate((el: HTMLInputElement) => {
+      el.value = "30";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    const after = {
+      a1: parseFloat((await page.locator("#baryOffsetValue").textContent()) || "NaN"),
+      a2: parseFloat((await page.locator("#baryOffsetSecondaryValue").textContent()) || "NaN"),
+      v1: parseFloat((await page.locator("#speedPrimaryValue").textContent()) || "NaN"),
+      v2: parseFloat((await page.locator("#speedSecondaryValue").textContent()) || "NaN"),
+      k1: parseFloat((await page.locator("#k1Value").textContent()) || "NaN"),
+      k2: parseFloat((await page.locator("#k2Value").textContent()) || "NaN"),
+    };
+
+    expect(after.a1).toBeCloseTo(before.a1, 3);
+    expect(after.a2).toBeCloseTo(before.a2, 3);
+    expect(after.v1).toBeCloseTo(before.v1, 3);
+    expect(after.v2).toBeCloseTo(before.v2, 3);
+    expect(after.k1 / before.k1).toBeCloseTo(0.5, 2);
+    expect(after.k2 / before.k2).toBeCloseTo(0.5, 2);
+    await expect(page.locator("#inclinationProjectionHint")).toContainText("0.500");
+  });
+
+  test("face-on inclination collapses projected RV and spectrum wobble toward zero", async ({ page }) => {
+    await page.locator("#inclination").evaluate((el: HTMLInputElement) => {
+      el.value = "0";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    const k1 = parseFloat((await page.locator("#k1Value").textContent()) || "NaN");
+    const k2 = parseFloat((await page.locator("#k2Value").textContent()) || "NaN");
+    expect(Math.abs(k1)).toBeLessThan(0.01);
+    expect(Math.abs(k2)).toBeLessThan(0.01);
+    await expect(page.locator("#inclinationProjectionHint")).toContainText("0.000");
+
+    await page.locator("#viewSpectrum").click();
+    await expect(page.locator("#spectrumProjectionNote")).toContainText("0.000");
   });
 
   test("secondary barycenter and speed readouts are numeric", async ({ page }) => {

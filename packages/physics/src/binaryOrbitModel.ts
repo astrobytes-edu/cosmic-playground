@@ -15,6 +15,7 @@ export interface BinaryOrbitState {
   totalMassSolar: number;
   separationAu: number;
   inclinationDeg: number;
+  sinInclination: number;
   periodYr: number;
   omegaRadPerYr: number;
   a1Au: number;
@@ -102,6 +103,7 @@ function emptyState(args: BinaryOrbitInputs): BinaryOrbitState {
     totalMassSolar: Number.NaN,
     separationAu: args.separationAu,
     inclinationDeg: args.inclinationDeg,
+    sinInclination: Number.NaN,
     periodYr: Number.NaN,
     omegaRadPerYr: Number.NaN,
     a1Au: Number.NaN,
@@ -121,6 +123,11 @@ function emptyState(args: BinaryOrbitInputs): BinaryOrbitState {
     totalEnergySolarAu2PerYr2: Number.NaN,
     virialResidualSolarAu2PerYr2: Number.NaN,
   };
+}
+
+function projectionFactorFromInclinationDeg(inclinationDeg: number): number {
+  const inclinationRad = (clamp(inclinationDeg, 0, 90) * Math.PI) / 180;
+  return Math.sin(inclinationRad);
 }
 
 function radialVelocityAtPhase(args: {
@@ -171,7 +178,6 @@ function circularState(inputs: BinaryOrbitInputs): BinaryOrbitState {
   }
 
   const inclinationDeg = clamp(inputs.inclinationDeg, 0, 90);
-  const inclinationRad = (inclinationDeg * Math.PI) / 180;
 
   const m1 = inputs.primaryMassSolar;
   const m2 = inputs.secondaryMassSolar;
@@ -194,9 +200,9 @@ function circularState(inputs: BinaryOrbitInputs): BinaryOrbitState {
   const p1SolarAuPerYr = m1 * v1AuPerYr;
   const p2SolarAuPerYr = m2 * v2AuPerYr;
 
-  const sinI = Math.sin(inclinationRad);
-  const k1AuPerYr = v1AuPerYr * sinI;
-  const k2AuPerYr = v2AuPerYr * sinI;
+  const sinInclination = projectionFactorFromInclinationDeg(inclinationDeg);
+  const k1AuPerYr = v1AuPerYr * sinInclination;
+  const k2AuPerYr = v2AuPerYr * sinInclination;
   const kinetic1SolarAu2PerYr2 = 0.5 * m1 * v1AuPerYr * v1AuPerYr;
   const kinetic2SolarAu2PerYr2 = 0.5 * m2 * v2AuPerYr * v2AuPerYr;
   const kineticTotalSolarAu2PerYr2 = kinetic1SolarAu2PerYr2 + kinetic2SolarAu2PerYr2;
@@ -211,6 +217,7 @@ function circularState(inputs: BinaryOrbitInputs): BinaryOrbitState {
     totalMassSolar,
     separationAu: inputs.separationAu,
     inclinationDeg,
+    sinInclination,
     periodYr,
     omegaRadPerYr,
     a1Au,
@@ -333,4 +340,5 @@ export const BinaryOrbitModel = {
   massFunctionSolar,
   minimumMassesSolar,
   energyBreakdownForState,
+  projectionFactorFromInclinationDeg,
 };

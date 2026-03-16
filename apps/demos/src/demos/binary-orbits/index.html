@@ -121,6 +121,7 @@
               data-tooltip-source="#inclinationValue"
             />
             <span class="control__value"><span id="inclinationValue"></span> <span class="cp-readout__unit">deg</span></span>
+            <span id="inclinationProjectionHint" class="control__hint">Line-of-sight projection only: RV amplitude scales as $\sin i$.</span>
           </label>
 
           <div
@@ -277,12 +278,12 @@
         <canvas id="orbitCanvas" width="520" height="520"></canvas>
         <div id="rvPanel" class="rv-panel" hidden>
           <h3>Radial velocity curves</h3>
-          <p class="cp-muted">Curves are projected along the line of sight for inclination $i$. During the challenge, click near the extrema; the largest $|v_r|$ you sample becomes your measured $K$.</p>
+          <p id="rvProjectionNote" class="cp-muted">Curves are projected along the line of sight for inclination $i$. During the challenge, click near the extrema; the largest $|v_r|$ you sample becomes your measured $K$.</p>
           <canvas id="rvCanvas" width="520" height="260" aria-label="Radial velocity versus phase"></canvas>
         </div>
         <div id="spectrumPanel" class="rv-panel" hidden>
           <h3>Spectrum strip</h3>
-          <p class="cp-muted">Top strip shows rest-frame lab lines. Lower strip shows what the observer sees after Doppler shifting the selected element lines.</p>
+          <p id="spectrumProjectionNote" class="cp-muted">Top strip shows rest-frame lab lines. Lower strip shows what the observer sees after Doppler shifting the selected element lines.</p>
           <canvas id="spectrumCanvas" width="720" height="280" aria-label="Spectrum strip comparing lab and observed spectral lines"></canvas>
         </div>
         <div id="energyPanel" class="rv-panel" hidden>
@@ -337,15 +338,15 @@
             <div class="cp-readout__label">RV semi-amplitude of $M_2$ ($K_2$)</div>
             <div class="cp-readout__value"><span id="k2Value"></span> <span class="cp-readout__unit">km/s</span></div>
           </div>
-          <div class="cp-readout">
+          <div id="readoutM1Sini" class="cp-readout cp-readout--focus">
             <div class="cp-readout__label">Primary minimum mass ($M_1 \sin^3 i$)</div>
             <div class="cp-readout__value"><span id="m1SiniValue"></span> <span class="cp-readout__unit">$M_{\odot}$</span></div>
           </div>
-          <div class="cp-readout">
+          <div id="readoutM2Sini" class="cp-readout cp-readout--focus">
             <div class="cp-readout__label">Secondary minimum mass ($M_2 \sin^3 i$)</div>
             <div class="cp-readout__value"><span id="m2SiniValue"></span> <span class="cp-readout__unit">$M_{\odot}$</span></div>
           </div>
-          <div class="cp-readout">
+          <div id="readoutMassFunction" class="cp-readout cp-readout--focus">
             <div class="cp-readout__label">Mass function ($f(m)$)</div>
             <div class="cp-readout__value"><span id="massFuncValue"></span> <span class="cp-readout__unit">$M_{\odot}$</span></div>
           </div>

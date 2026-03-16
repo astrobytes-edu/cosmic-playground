@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import { BinaryOrbitModel } from "./binaryOrbitModel";
 
 describe("BinaryOrbitModel", () => {
+  it("uses a single projection helper for inclination in degrees", () => {
+    expect(BinaryOrbitModel.projectionFactorFromInclinationDeg(0)).toBeCloseTo(0, 12);
+    expect(BinaryOrbitModel.projectionFactorFromInclinationDeg(30)).toBeCloseTo(0.5, 12);
+    expect(BinaryOrbitModel.projectionFactorFromInclinationDeg(90)).toBeCloseTo(1, 12);
+    expect(BinaryOrbitModel.projectionFactorFromInclinationDeg(120)).toBeCloseTo(1, 12);
+  });
+
   it("enforces a1 + a2 = separation", () => {
     const state = BinaryOrbitModel.circularState({
       primaryMassSolar: 1,
@@ -56,6 +63,7 @@ describe("BinaryOrbitModel", () => {
     });
     expect(state.k1AuPerYr).toBeCloseTo(0, 12);
     expect(state.k2AuPerYr).toBeCloseTo(0, 12);
+    expect(state.sinInclination).toBeCloseTo(0, 12);
   });
 
   it("sets RV amplitudes equal to orbital speeds for edge-on systems", () => {
@@ -67,6 +75,31 @@ describe("BinaryOrbitModel", () => {
     });
     expect(state.k1AuPerYr).toBeCloseTo(state.v1AuPerYr, 12);
     expect(state.k2AuPerYr).toBeCloseTo(state.v2AuPerYr, 12);
+    expect(state.sinInclination).toBeCloseTo(1, 12);
+  });
+
+  it("rescales only projected observables with sin(i)", () => {
+    const edgeOn = BinaryOrbitModel.circularState({
+      primaryMassSolar: 1,
+      secondaryMassSolar: 0.5,
+      separationAu: 1,
+      inclinationDeg: 90,
+    });
+    const tilted = BinaryOrbitModel.circularState({
+      primaryMassSolar: 1,
+      secondaryMassSolar: 0.5,
+      separationAu: 1,
+      inclinationDeg: 30,
+    });
+
+    expect(tilted.a1Au).toBeCloseTo(edgeOn.a1Au, 12);
+    expect(tilted.a2Au).toBeCloseTo(edgeOn.a2Au, 12);
+    expect(tilted.v1AuPerYr).toBeCloseTo(edgeOn.v1AuPerYr, 12);
+    expect(tilted.v2AuPerYr).toBeCloseTo(edgeOn.v2AuPerYr, 12);
+    expect(tilted.periodYr).toBeCloseTo(edgeOn.periodYr, 12);
+    expect(tilted.omegaRadPerYr).toBeCloseTo(edgeOn.omegaRadPerYr, 12);
+    expect(tilted.k1AuPerYr / edgeOn.k1AuPerYr).toBeCloseTo(0.5, 12);
+    expect(tilted.k2AuPerYr / edgeOn.k2AuPerYr).toBeCloseTo(0.5, 12);
   });
 
   it("planet limit produces tiny primary orbit", () => {
