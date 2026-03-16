@@ -189,6 +189,41 @@ export function selectDisplayModel(args: {
     : args.currentModel;
 }
 
+export interface IntegrityCheck {
+  key: "sum" | "barycenter" | "rvRatio";
+  label: string;
+  lhs: number;
+  rhs: number;
+  passed: boolean;
+}
+
+export function evaluateIntegrityChecks(model: BinaryModel): IntegrityCheck[] {
+  const rvRatio = model.k2KmPerS === 0 ? Number.NaN : model.k1KmPerS / model.k2KmPerS;
+  return [
+    {
+      key: "sum",
+      label: "a1 + a2 = a",
+      lhs: model.r1 + model.r2,
+      rhs: model.separation,
+      passed: nearEqual(model.r1 + model.r2, model.separation),
+    },
+    {
+      key: "barycenter",
+      label: "M1 a1 = M2 a2",
+      lhs: model.m1 * model.r1,
+      rhs: model.m2 * model.r2,
+      passed: nearEqual(model.m1 * model.r1, model.m2 * model.r2),
+    },
+    {
+      key: "rvRatio",
+      label: "K1 / K2 = q",
+      lhs: rvRatio,
+      rhs: model.massRatio,
+      passed: nearEqual(rvRatio, model.massRatio),
+    },
+  ];
+}
+
 export function rvCacheKey(
   model: Pick<BinaryModel, "m1" | "m2" | "separation" | "inclinationDeg">,
   sampleCount = 180,

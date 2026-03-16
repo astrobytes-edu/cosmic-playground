@@ -57,10 +57,12 @@ Students should also be able to:
 3. **Connect to the inverse relationship.** Ask students to predict whether $a_1/a_2$ increases or decreases when $M_2/M_1$ decreases. Connect to:
    $$\frac{a_1}{a_2}=\frac{M_2}{M_1}.$$
 
-4. **Period scaling.** Change separation $a$ (AU) with the log slider ($0.1\rightarrow100$ AU) and observe the period readout. Emphasize that in AU/yr/$M_\odot$ teaching units:
+4. **Use the non-blocking prediction tool.** Click **Capture current state**, ask students for a trend prediction, then drag the mass-ratio slider while the demo stays live. Use **Compare with current system** to reflect on which predictions matched without ever freezing the physics.
+
+5. **Period scaling.** Change separation $a$ (AU) with the log slider ($0.1\rightarrow100$ AU) and observe the period readout. Emphasize that in AU/yr/$M_\odot$ teaching units:
    $$P^2=\frac{a^3}{M_1+M_2}.$$
 
-5. **Exoplanet connection (conceptual).** Ask: *“If a star wobbles, how could we detect it?”* Tie barycentric motion to the radial-velocity idea, even though this simplified instrument does not model Doppler spectra directly.
+6. **Exoplanet connection (conceptual).** Ask: *“If a star wobbles, how could we detect it?”* Tie barycentric motion to the radial-velocity idea, using the RV and spectrum views to connect the geometry to observables.
 
 ## Suggested connections to other demos
 

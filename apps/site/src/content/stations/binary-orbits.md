@@ -15,14 +15,14 @@ has_math: true
 > **Readouts:** $a_1$, $a_2$, $v_1$, $v_2$, $\omega$, momentum check, $K_1$, $K_2$, $K$, $U$, $E$, period $P$
 >
 > **Your station artifact (fill in):**
-> 1) **Predict before reveal:** after lowering $M_2/M_1$, predict whether $P$, $v_1$, and $a_1$ increase/decrease/same.
-> 2) **Reveal + compare:** run the prediction checkpoint and record which trends matched.
+> 1) **Capture + predict:** click **Capture current state**, then lower $M_2/M_1$ and predict whether $P$, $v_1$, and $a_1$ increase/decrease/same.
+> 2) **Compare against the live update:** keep watching the live orbit/readouts, then use **Compare with current system** to record which trends matched.
 > 3) **Invariant check:** use “What must be true?” to select all must-hold statements and avoid distractors.
 > 4) **Observable link:** set two inclinations (e.g., $i=20^\circ$ and $i=80^\circ$) and compare $K_1$, $K_2$.
 > 5) **Energy check:** switch to Energy view, change separation, and describe how $E$ moves with $a$.
 > 6) **RV inversion challenge:** measure both amplitudes from the RV panel, compute inferred $q=K_1/K_2$, reveal, and record error.
 > 7) **Connection sentence:** “From this instrument, we can infer stellar masses from spectra because …”
-> 8) **Integrity check:** while prediction or unrevealed RV challenge is active, verify that snapshots/Copy Results are locked.
+> 8) **Integrity check:** use the live Physics integrity card to verify $a_1+a_2=a$, $M_1a_1=M_2a_2$, and $K_1/K_2=q$. Only the unrevealed RV challenge should lock snapshots/Copy Results.
 
 > **Word bank + sanity checks**
 > **Word bank:**

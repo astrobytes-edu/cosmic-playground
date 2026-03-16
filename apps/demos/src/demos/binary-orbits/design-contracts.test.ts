@@ -135,9 +135,14 @@ describe("Binary Orbits -- Design System Contracts", () => {
       expect(html).toMatch(/aria-label="Readouts panel"/);
     });
 
-    it("contains prediction gate, persistent outcome, invariant check, and RV panel", () => {
+    it("contains prediction workspace, integrity card, persistent outcome, invariant check, and RV panel", () => {
       expect(html).toContain("id=\"predictPanel\"");
+      expect(html).toContain("id=\"startPrediction\"");
       expect(html).toContain("id=\"predictionOutcome\"");
+      expect(html).toContain("id=\"integrityPanel\"");
+      expect(html).toContain("id=\"integritySumValue\"");
+      expect(html).toContain("id=\"integrityBaryValue\"");
+      expect(html).toContain("id=\"integrityRatioValue\"");
       expect(html).toContain("id=\"invariantCheck\"");
       expect(html).toContain("id=\"rvPanel\"");
       expect(html).toContain("id=\"rvCanvas\"");

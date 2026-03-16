@@ -188,29 +188,46 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(unit).toBeVisible();
   });
 
-  test("mass-ratio changes are gated until reveal, then update barycenter offset", async ({ page }) => {
-    const before = await page.locator("#baryOffsetValue").textContent();
+  test("mass-ratio changes immediately update synchronized live physics readouts", async ({ page }) => {
+    const before = {
+      q: await page.locator("#massRatioValue").textContent(),
+      a1: parseFloat((await page.locator("#baryOffsetValue").textContent()) || "NaN"),
+      a2: parseFloat((await page.locator("#baryOffsetSecondaryValue").textContent()) || "NaN"),
+      v1: parseFloat((await page.locator("#speedPrimaryValue").textContent()) || "NaN"),
+      v2: parseFloat((await page.locator("#speedSecondaryValue").textContent()) || "NaN"),
+      k1: parseFloat((await page.locator("#k1Value").textContent()) || "NaN"),
+      k2: parseFloat((await page.locator("#k2Value").textContent()) || "NaN"),
+    };
+
     const slider = page.locator("#massRatio");
     await slider.evaluate((el: HTMLInputElement) => {
-      el.value = "0.2";
+      el.value = "0.306";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
 
-    await expect(page.locator("#predictPanel")).toBeVisible();
+    await expect(page.locator("#massRatioValue")).toContainText("0.306");
 
-    const frozen = await page.locator("#baryOffsetValue").textContent();
-    expect(frozen).toBe(before);
+    const after = {
+      a1: parseFloat((await page.locator("#baryOffsetValue").textContent()) || "NaN"),
+      a2: parseFloat((await page.locator("#baryOffsetSecondaryValue").textContent()) || "NaN"),
+      v1: parseFloat((await page.locator("#speedPrimaryValue").textContent()) || "NaN"),
+      v2: parseFloat((await page.locator("#speedSecondaryValue").textContent()) || "NaN"),
+      k1: parseFloat((await page.locator("#k1Value").textContent()) || "NaN"),
+      k2: parseFloat((await page.locator("#k2Value").textContent()) || "NaN"),
+    };
 
-    await page.locator("#revealPrediction").click();
-    const after = await page.locator("#baryOffsetValue").textContent();
-    expect(after).not.toBe(before);
-    await expect(page.locator("#predictPanel")).toBeHidden();
-    await expect(page.locator("#predictionOutcome")).toBeVisible();
-    await expect(page.locator("#predictionOutcome")).toContainText("Actual changes:");
-    await expect(page.locator("#predictionOutcome")).toContainText(/P .*v1 .*a1/);
+    expect(after.a1).not.toBe(before.a1);
+    expect(after.a2).not.toBe(before.a2);
+    expect(after.v1).not.toBe(before.v1);
+    expect(after.v2).not.toBe(before.v2);
+    expect(after.k1).not.toBe(before.k1);
+    expect(after.k2).not.toBe(before.k2);
+    expect(after.a2).toBeGreaterThan(after.a1);
+    expect(after.v2).toBeGreaterThan(after.v1);
+    expect(after.k2).toBeGreaterThan(after.k1);
   });
 
-  test("prediction gate freezes the rendered stage until reveal under reduced motion", async ({ browser }) => {
+  test("reduced-motion mode still rerenders immediately when mass ratio changes", async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("play/binary-orbits/", { waitUntil: "domcontentloaded" });
@@ -219,17 +236,12 @@ test.describe("Binary Orbits -- E2E", () => {
     const before = await page.locator("#orbitCanvas").evaluate((el) => (el as HTMLCanvasElement).toDataURL());
     const slider = page.locator("#massRatio");
     await slider.evaluate((el: HTMLInputElement) => {
-      el.value = "0.2";
+      el.value = "0.306";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    await expect(page.locator("#predictPanel")).toBeVisible();
 
-    const pending = await page.locator("#orbitCanvas").evaluate((el) => (el as HTMLCanvasElement).toDataURL());
-    expect(pending).toBe(before);
-
-    await page.locator("#revealPrediction").click();
-    const revealed = await page.locator("#orbitCanvas").evaluate((el) => (el as HTMLCanvasElement).toDataURL());
-    expect(revealed).not.toBe(before);
+    const after = await page.locator("#orbitCanvas").evaluate((el) => (el as HTMLCanvasElement).toDataURL());
+    expect(after).not.toBe(before);
 
     await context.close();
   });
@@ -282,15 +294,14 @@ test.describe("Binary Orbits -- E2E", () => {
     expect(a1Normalized).toBe(a1Before);
   });
 
-  test("copy results is blocked while prediction is pending", async ({ page }) => {
-    const slider = page.locator("#massRatio");
-    await slider.evaluate((el: HTMLInputElement) => {
-      el.value = "0.2";
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    await expect(page.locator("#predictPanel")).toBeVisible();
+  test("copy results stays available during prediction compare workflow", async ({ page }) => {
+    await page.locator("#startPrediction").click();
+    await expect(page.locator("#predictionFeedback")).toContainText("Baseline captured");
     await page.locator("#copyResults").click();
-    await expect(page.locator("#status")).toContainText("Reveal prediction before copying results.");
+    const status = page.locator("#status");
+    await expect(status).toContainText(/Copied|Copy failed/, {
+      timeout: 3000,
+    });
   });
 
   // --- Canvas Rendering ---
@@ -437,21 +448,37 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(addBtn).toBeVisible();
   });
 
-  test("station snapshot is blocked while prediction is pending", async ({ page }) => {
-    const slider = page.locator("#massRatio");
-    await slider.evaluate((el: HTMLInputElement) => {
-      el.value = "0.2";
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-
+  test("station snapshot remains available during prediction compare workflow", async ({ page }) => {
+    await page.locator("#startPrediction").click();
     await page.locator("#stationMode").click();
     const stationDialog = page.getByRole("dialog", {
       name: "Station Mode: Binary Orbits",
     });
     await expect(stationDialog).toBeVisible();
     await stationDialog.getByRole("button", { name: "Add row (snapshot)" }).click();
-    await expect(page.locator("#status")).toContainText("Reveal prediction before adding snapshot row.");
-    await expect(stationDialog.locator(".cp-station-table")).toContainText("No rows yet.");
+    await expect(stationDialog.locator(".cp-station-table")).not.toContainText("No rows yet.");
+  });
+
+  test("prediction compare uses a captured baseline while the live demo keeps updating", async ({ page }) => {
+    await page.locator("#startPrediction").click();
+    await expect(page.locator("#predictionFeedback")).toContainText("Baseline captured");
+
+    const slider = page.locator("#massRatio");
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "0.306";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    await expect(page.locator("#massRatioValue")).toContainText("0.306");
+    await expect(page.locator("#baryOffsetSecondaryValue")).not.toContainText("2.000");
+
+    await page.locator("#predictPeriod").selectOption("increase");
+    await page.locator("#predictV1").selectOption("decrease");
+    await page.locator("#predictA1").selectOption("decrease");
+    await page.locator("#revealPrediction").click();
+
+    await expect(page.locator("#predictionOutcome")).toContainText("Actual changes:");
+    await expect(page.locator("#predictionOutcome")).toContainText(/P .*v1 .*a1/);
   });
 
   test("invariant discrimination flags selected distractors", async ({ page }) => {
@@ -593,6 +620,22 @@ test.describe("Binary Orbits -- E2E", () => {
     expect(readoutNames).toContain("Total orbital energy E (M_sun AU^2/yr^2)");
   });
 
+  test("export payload includes live integrity readouts", async ({ page }) => {
+    const payload = await page.evaluate(() => {
+      const cp = (window as Window & { __cp?: { exportResults?: () => unknown } }).__cp;
+      if (!cp || typeof cp.exportResults !== "function") return null;
+      return cp.exportResults() as {
+        readouts: Array<{ name: string; value: string }>;
+      };
+    });
+
+    expect(payload).toBeTruthy();
+    const readoutNames = payload!.readouts.map((entry) => entry.name);
+    expect(readoutNames).toContain("Integrity check a1 + a2 vs a");
+    expect(readoutNames).toContain("Integrity check M1 a1 vs M2 a2");
+    expect(readoutNames).toContain("Integrity check K1 / K2 vs q");
+  });
+
   // --- Visual Regression ---
 
   test("screenshot: default view", async ({ page }) => {
@@ -618,7 +661,6 @@ test.describe("Binary Orbits -- E2E", () => {
       el.value = "0.2";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    await page.locator("#revealPrediction").click();
     await page.waitForTimeout(500);
     await expect(page).toHaveScreenshot("binary-orbits-q0p2.png", {
       maxDiffPixelRatio: 0.05,

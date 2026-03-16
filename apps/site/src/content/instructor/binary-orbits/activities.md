@@ -40,6 +40,7 @@ has_math: true
 > 1) Record a snapshot for $M_2/M_1 = 1$.
 > 2) Record a snapshot for $M_2/M_1 = 0.2$.
 > 3) Write a sentence explaining the trend using the idea “center of mass.”
+> 4) Use the live Physics integrity card to confirm both snapshots satisfy $a_1+a_2=a$ and $M_1a_1=M_2a_2$.
 >
 > **Task B (period scaling):**
 > 1) Fix $M_2/M_1 = 1$.
@@ -57,4 +58,4 @@ Use the printable station card:
 ## Quick Demonstration (projector)
 
 > **Demo: inverse relationship**
-> Set $M_2/M_1=1$ then $M_2/M_1=0.2$ (same $a$). Script: “The lighter body gets the larger/faster orbit, but both bodies still share one period.”
+> Set $M_2/M_1=1$, click **Capture current state**, then move to $M_2/M_1=0.2$ (same $a$). Script: “The lighter body gets the larger/faster orbit, but both bodies still share one period.” Use **Compare with current system** after students commit to a trend prediction.

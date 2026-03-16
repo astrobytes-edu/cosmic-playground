@@ -31,7 +31,7 @@ has_math: true
 | Priority | Impact | Effort | Category | Notes | Code entrypoint |
 |---|---|---|---|---|---|
 | P1 | High | Medium | Physics | **DONE (2026-02-24):** Added RV view with dual-body radial-velocity curves, inclination control, and $K_1/K_2$ readouts. | `apps/demos/src/demos/binary-orbits/` |
-| P2 | Medium | Medium | Pedagogy | **DONE (2026-02-24):** Added prediction checkpoint workflow (predict before reveal) plus invariant-check panel. | `apps/demos/src/demos/binary-orbits/` |
+| P2 | Medium | Medium | Pedagogy | **DONE (2026-03-15):** Upgraded prediction into a non-blocking predict-and-compare workflow so the live physics always stays synchronized while students still capture and test predictions. | `apps/demos/src/demos/binary-orbits/` |
 | P1 | High | Medium | Physics + Pedagogy | **DONE (2026-02-25):** Added Energy view (decomposition + virial residual) and gated RV inversion challenge ($q=K_1/K_2$) with lock-safe export/snapshot semantics. | `apps/demos/src/demos/binary-orbits/` |
 | P1 | High | Medium | Physics | Add **light curve** overlay for edge-on systems (transit/eclipse dips). | `demos/binary-orbits/binary-orbits.js` |
 | P2 | Medium | Medium | Physics | Add **3D inclination** control to show projection effects (why RV gives minimum mass). | `demos/binary-orbits/binary-orbits.js` |

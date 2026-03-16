@@ -40,6 +40,44 @@
   text-transform: uppercase;
 }
 
+.cp-live-insight {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem 0.95rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--cp-accent) 42%, var(--cp-border));
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--cp-accent) 20%, transparent),
+      color-mix(in srgb, var(--cp-glow-blue) 18%, transparent)
+    ),
+    color-mix(in srgb, var(--cp-bg1) 96%, transparent);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--cp-bg0) 40%, transparent);
+}
+
+.cp-live-insight__eyebrow {
+  color: color-mix(in srgb, var(--cp-accent) 76%, var(--cp-text));
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cp-live-insight__title {
+  color: color-mix(in srgb, var(--cp-text) 96%, var(--cp-bg0));
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.cp-live-insight__body {
+  margin: 0;
+  color: color-mix(in srgb, var(--cp-text) 76%, var(--cp-bg0));
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
 .cp-demo__stage {
   min-height: clamp(440px, 72svh, 860px);
 }
@@ -158,7 +196,6 @@
 #rvCanvas[hidden],
 #energyCanvas[hidden],
 #spectrumCanvas[hidden],
-#predictPanel[hidden],
 #rvChallengePanel[hidden],
 #omegaReadout[hidden] {
   display: none !important;
@@ -189,6 +226,76 @@
   border-color: color-mix(in srgb, var(--cp-accent) 48%, var(--cp-border));
   background: color-mix(in srgb, var(--cp-accent) 16%, transparent);
   color: var(--cp-text);
+}
+
+.cp-predict-panel {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.cp-predict-panel h3,
+.integrity-panel h3 {
+  margin: 0;
+}
+
+.cp-readout--focus {
+  position: relative;
+  overflow: hidden;
+}
+
+.cp-readout--focus::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      120deg,
+      transparent,
+      color-mix(in srgb, var(--cp-accent) 22%, transparent),
+      transparent
+    );
+  transition: opacity 220ms var(--cp-ease-out);
+}
+
+.cp-readout--focus.is-live-changed {
+  border-color: color-mix(in srgb, var(--cp-accent) 56%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-accent) 12%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cp-accent) 18%, transparent);
+}
+
+.cp-readout--focus.is-live-changed::after {
+  opacity: 1;
+}
+
+.integrity-panel {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.integrity-item {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 84%, var(--cp-accent) 16%);
+  background: color-mix(in srgb, var(--cp-bg1) 94%, transparent);
+}
+
+.integrity-item.is-passed {
+  border-color: color-mix(in srgb, var(--cp-accent) 46%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-accent) 14%, transparent);
+}
+
+.integrity-item__label {
+  color: color-mix(in srgb, var(--cp-text) 82%, var(--cp-bg0));
+  font-weight: 600;
+}
+
+.integrity-item__value {
+  color: color-mix(in srgb, var(--cp-text) 72%, var(--cp-bg0));
+  font-size: 0.9rem;
 }
 
 .momentum-badge {

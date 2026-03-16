@@ -5,20 +5,19 @@ import {
   bodyRadius,
   clamp,
   computeModel,
+  evaluateIntegrityChecks,
   evaluateInvariants,
   evaluatePredictionChoices,
   gradeRvInference,
   formatNumber,
   gradeInvariantSelection,
   isRvChallengeLocked,
-  isPredictionLocked,
   logSliderToValue,
   orbitAutoScaleLogFactor,
   pixelsPerUnit,
   rvCacheKey,
   energyScaleCueForControl,
   scalingCueForControl,
-  selectDisplayModel,
   valueToLogSlider,
 } from "./logic";
 
@@ -57,6 +56,16 @@ describe("Binary Orbits -- UI Logic", () => {
       const m = computeModel(0.2, 6, 90);
       expect(m.r1).toBeCloseTo(1, 10);
       expect(m.r2).toBeCloseTo(5, 10);
+    });
+
+    it("reported bug case (q=0.306) gives unequal barycentric radii and speeds", () => {
+      const m = computeModel(0.306, 0.96, 90);
+      expect(m.r1).toBeCloseTo(0.22493, 4);
+      expect(m.r2).toBeCloseTo(0.73507, 4);
+      expect(m.r2).toBeGreaterThan(m.r1);
+      expect(m.v2AuPerYr).toBeGreaterThan(m.v1AuPerYr);
+      expect(m.k2KmPerS).toBeGreaterThan(m.k1KmPerS);
+      expect(m.m1 * m.r1).toBeCloseTo(m.m2 * m.r2, 10);
     });
 
     it("period follows Kepler's third law", () => {
@@ -157,32 +166,6 @@ describe("Binary Orbits -- UI Logic", () => {
     });
   });
 
-  describe("prediction lock helpers", () => {
-    it("locks actions only while prediction is pending", () => {
-      expect(isPredictionLocked({ predictionPending: true })).toBe(true);
-      expect(isPredictionLocked({ predictionPending: false })).toBe(false);
-    });
-
-    it("selects revealed model while prediction is pending", () => {
-      const revealed = computeModel(1, 4, 90);
-      const current = computeModel(0.2, 4, 90);
-
-      const displayPending = selectDisplayModel({
-        predictionPending: true,
-        revealedModel: revealed,
-        currentModel: current,
-      });
-      expect(displayPending.massRatio).toBeCloseTo(revealed.massRatio, 12);
-
-      const displayResolved = selectDisplayModel({
-        predictionPending: false,
-        revealedModel: revealed,
-        currentModel: current,
-      });
-      expect(displayResolved.massRatio).toBeCloseTo(current.massRatio, 12);
-    });
-  });
-
   describe("RV challenge helpers", () => {
     it("locks only while RV challenge is active and unrevealed", () => {
       expect(isRvChallengeLocked({ active: true, revealed: false })).toBe(true);
@@ -216,6 +199,42 @@ describe("Binary Orbits -- UI Logic", () => {
       expect(result.actual.v1Trend).toBe("decrease");
       expect(result.actual.a1Trend).toBe("decrease");
       expect(result.allCorrect).toBe(true);
+    });
+
+    it("compares against the captured baseline rather than freezing live physics", () => {
+      const baseline = computeModel(1, 4, 60);
+      const liveModel = computeModel(0.306, 4, 60);
+
+      const result = evaluatePredictionChoices({
+        before: baseline,
+        after: liveModel,
+        predicted: {
+          periodTrend: "increase",
+          v1Trend: "decrease",
+          a1Trend: "decrease",
+        },
+      });
+
+      expect(result.actual.periodTrend).toBe("increase");
+      expect(result.actual.v1Trend).toBe("decrease");
+      expect(result.actual.a1Trend).toBe("decrease");
+    });
+  });
+
+  describe("physics integrity checks", () => {
+    it("reports live barycenter, separation, and RV-ratio consistency", () => {
+      const model = computeModel(0.306, 0.96, 60);
+      const checks = evaluateIntegrityChecks(model);
+
+      expect(checks).toHaveLength(3);
+      expect(checks[0].label).toContain("a1 + a2");
+      expect(checks[0].passed).toBe(true);
+      expect(checks[1].label).toContain("M1 a1");
+      expect(checks[1].passed).toBe(true);
+      expect(checks[2].label).toContain("K1 / K2");
+      expect(checks[2].passed).toBe(true);
+      expect(checks[2].lhs).toBeCloseTo(model.k1KmPerS / model.k2KmPerS, 10);
+      expect(checks[2].rhs).toBeCloseTo(model.massRatio, 10);
     });
   });
 

@@ -20,21 +20,21 @@ import {
   clamp,
   computeModel,
   energyScaleCueForControl,
+  evaluateIntegrityChecks,
   evaluateInvariants,
   evaluatePredictionChoices,
   formatNumber,
   gradeRvInference,
   gradeInvariantSelection,
-  isPredictionLocked,
   isRvChallengeLocked,
   logSliderToValue,
   orbitAutoScaleLogFactor,
   pixelsPerUnit,
   rvCacheKey,
   scalingCueForControl,
-  selectDisplayModel,
   type BinaryModel,
   type EnergyScaleCue,
+  type IntegrityCheck,
   type InvariantKey,
   type PredictionChoices,
   type ScalingCue,
@@ -75,12 +75,16 @@ const showOmega = $<HTMLInputElement>("#showOmega");
 
 const scalingCue = $<HTMLParagraphElement>("#scalingCue");
 const energyScalingCue = $<HTMLParagraphElement>("#energyScalingCue");
+const massRatioInsightTitle = $<HTMLDivElement>("#massRatioInsightTitle");
+const massRatioInsightBody = $<HTMLParagraphElement>("#massRatioInsightBody");
 
 const predictPanel = $<HTMLDivElement>("#predictPanel");
+const startPrediction = $<HTMLButtonElement>("#startPrediction");
 const predictPeriod = $<HTMLSelectElement>("#predictPeriod");
 const predictV1 = $<HTMLSelectElement>("#predictV1");
 const predictA1 = $<HTMLSelectElement>("#predictA1");
 const revealPrediction = $<HTMLButtonElement>("#revealPrediction");
+const predictionBaselineSummary = $<HTMLSpanElement>("#predictionBaselineSummary");
 const predictionFeedback = $<HTMLParagraphElement>("#predictionFeedback");
 const predictionOutcome = $<HTMLParagraphElement>("#predictionOutcome");
 
@@ -119,6 +123,18 @@ const energyKTotalValue = $<HTMLSpanElement>("#energyKTotalValue");
 const energyPotentialValue = $<HTMLSpanElement>("#energyPotentialValue");
 const energyTotalValue = $<HTMLSpanElement>("#energyTotalValue");
 const energyVirialValue = $<HTMLSpanElement>("#energyVirialValue");
+const integritySumRow = $<HTMLDivElement>("#integritySumRow");
+const integrityBaryRow = $<HTMLDivElement>("#integrityBaryRow");
+const integrityRatioRow = $<HTMLDivElement>("#integrityRatioRow");
+const integritySumValue = $<HTMLDivElement>("#integritySumValue");
+const integrityBaryValue = $<HTMLDivElement>("#integrityBaryValue");
+const integrityRatioValue = $<HTMLDivElement>("#integrityRatioValue");
+const readoutA1 = $<HTMLDivElement>("#readoutA1");
+const readoutA2 = $<HTMLDivElement>("#readoutA2");
+const readoutV1 = $<HTMLDivElement>("#readoutV1");
+const readoutV2 = $<HTMLDivElement>("#readoutV2");
+const readoutK1 = $<HTMLDivElement>("#readoutK1");
+const readoutK2 = $<HTMLDivElement>("#readoutK2");
 
 const invariantSum = $<HTMLInputElement>("#invariantSum");
 const invariantBary = $<HTMLInputElement>("#invariantBary");
@@ -186,6 +202,7 @@ const DEFAULT_SEPARATION_AU = 4;
 const DEFAULT_INCLINATION_DEG = 60;
 const SPECTRUM_DOMAIN: SpectrumDomain = { minNm: 380, maxNm: 700 };
 const RV_MEASUREMENT_DISTANCE_PX = 28;
+const CONTROL_FLASH_MS = 1200;
 
 const prefersReducedMotion =
   typeof window !== "undefined"
@@ -258,9 +275,10 @@ const state: {
   energyScalingCue: EnergyScaleCue | null;
   energyScalingCueActive: boolean;
   energyScalingCueTimeoutId: number | null;
-  predictionPending: boolean;
-  revealedModel: BinaryModel;
+  predictionBaseline: BinaryModel | null;
   lastPredictionOutcome: string;
+  orbitFocusUntilMs: number;
+  readoutFlashTimeoutId: number | null;
   rvChallenge: {
     active: boolean;
     revealed: boolean;
@@ -287,9 +305,10 @@ const state: {
   energyScalingCue: null,
   energyScalingCueActive: false,
   energyScalingCueTimeoutId: null,
-  predictionPending: false,
-  revealedModel: computeModel(DEFAULT_MASS_RATIO, DEFAULT_SEPARATION_AU, DEFAULT_INCLINATION_DEG),
+  predictionBaseline: null,
   lastPredictionOutcome: "",
+  orbitFocusUntilMs: 0,
+  readoutFlashTimeoutId: null,
   rvChallenge: {
     active: false,
     revealed: false,
@@ -342,6 +361,10 @@ function spectrumTicks(domain: SpectrumDomain): number[] {
   }
   ticks.push(domain.maxNm);
   return ticks;
+}
+
+function currentTimeMs(): number {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
 }
 
 function stagePromptText(view: StageView): string {
@@ -419,6 +442,21 @@ function drawOrbit(model: BinaryModel, phaseRad: number): void {
 
   const { x1, y1, x2, y2 } = bodyPositions(cx, cy, r1px, r2px, phaseRad);
 
+  orbitCtx.save();
+  orbitCtx.setLineDash([7, 6]);
+  orbitCtx.lineWidth = 1.4;
+  orbitCtx.strokeStyle = colorMix(canvasTheme.text, canvasTheme.body1, 0.54);
+  orbitCtx.beginPath();
+  orbitCtx.moveTo(cx, cy);
+  orbitCtx.lineTo(x1, y1);
+  orbitCtx.stroke();
+  orbitCtx.strokeStyle = colorMix(canvasTheme.text, canvasTheme.body2, 0.54);
+  orbitCtx.beginPath();
+  orbitCtx.moveTo(cx, cy);
+  orbitCtx.lineTo(x2, y2);
+  orbitCtx.stroke();
+  orbitCtx.restore();
+
   orbitCtx.strokeStyle = canvasTheme.border;
   orbitCtx.lineWidth = 3;
   orbitCtx.beginPath();
@@ -430,6 +468,20 @@ function drawOrbit(model: BinaryModel, phaseRad: number): void {
   orbitCtx.beginPath();
   orbitCtx.arc(cx, cy, 3, 0, Math.PI * 2);
   orbitCtx.fill();
+
+  const emphasisRemaining = Math.max(0, state.orbitFocusUntilMs - currentTimeMs());
+  if (emphasisRemaining > 0) {
+    const pulseFraction = 1 - (emphasisRemaining / CONTROL_FLASH_MS);
+    const pulseRadius = 10 + (pulseFraction * 26);
+    orbitCtx.save();
+    orbitCtx.strokeStyle = colorMix(canvasTheme.accent, canvasTheme.text, 0.72);
+    orbitCtx.globalAlpha = 0.55 * (1 - pulseFraction);
+    orbitCtx.lineWidth = 2.2;
+    orbitCtx.beginPath();
+    orbitCtx.arc(cx, cy, pulseRadius, 0, Math.PI * 2);
+    orbitCtx.stroke();
+    orbitCtx.restore();
+  }
 
   const base = Math.min(w, h) * 0.018;
   const radius1 = bodyRadius(model.m1, base);
@@ -444,6 +496,18 @@ function drawOrbit(model: BinaryModel, phaseRad: number): void {
   orbitCtx.beginPath();
   orbitCtx.arc(x2, y2, radius2, 0, Math.PI * 2);
   orbitCtx.fill();
+
+  const midpoint = (ax: number, ay: number, bx: number, by: number) => ({
+    x: ax + ((bx - ax) * 0.54),
+    y: ay + ((by - ay) * 0.54),
+  });
+  const a1Label = midpoint(cx, cy, x1, y1);
+  const a2Label = midpoint(cx, cy, x2, y2);
+  orbitCtx.font = "12px var(--cp-font-sans, ui-sans-serif)";
+  orbitCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.body1, 0.72);
+  orbitCtx.fillText(`a1 = ${formatNumber(model.r1, 2)} AU`, a1Label.x - 42, a1Label.y - 6);
+  orbitCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.body2, 0.74);
+  orbitCtx.fillText(`a2 = ${formatNumber(model.r2, 2)} AU`, a2Label.x + 8, a2Label.y - 6);
 
   const sightlineInset = Math.min(w, h) * 0.12;
   const sightlineStartX = sightlineInset;
@@ -901,6 +965,131 @@ function clearPredictionOutcome(): void {
   renderPredictionOutcome();
 }
 
+function updatePredictionUi(model: BinaryModel): void {
+  predictPanel.hidden = false;
+  startPrediction.textContent = state.predictionBaseline ? "Recapture baseline" : "Capture current state";
+  revealPrediction.disabled = state.predictionBaseline === null;
+  if (!state.predictionBaseline) {
+    predictionBaselineSummary.textContent = "No baseline captured yet.";
+    return;
+  }
+  predictionBaselineSummary.textContent =
+    `q = ${formatNumber(state.predictionBaseline.massRatio, 3)}, `
+    + `a = ${formatNumber(state.predictionBaseline.separation, 2)} AU, `
+    + `i = ${formatNumber(state.predictionBaseline.inclinationDeg, 0)} deg, `
+    + `current q = ${formatNumber(model.massRatio, 3)}.`;
+}
+
+function updateMassRatioInsight(model: BinaryModel): void {
+  const inverseMassRatio = model.massRatio > 0 ? 1 / model.massRatio : Number.POSITIVE_INFINITY;
+  if (Math.abs(model.massRatio - 1) < 1e-3) {
+    massRatioInsightTitle.textContent = "Equal masses keep the system balanced.";
+    massRatioInsightBody.textContent =
+      "At q = 1, both stars sit the same distance from the barycenter and share equal speeds and RV amplitudes.";
+    return;
+  }
+
+  if (model.massRatio <= 0.01) {
+    massRatioInsightTitle.textContent = "Planet-limit regime: the primary barely budges.";
+    massRatioInsightBody.textContent =
+      `The lighter companion is about ${formatNumber(inverseMassRatio, 0)}x farther and faster about the barycenter, so the host star's wobble becomes the observable.`;
+    return;
+  }
+
+  massRatioInsightTitle.textContent = "Lighter body -> farther orbit, faster motion.";
+  massRatioInsightBody.textContent =
+    `Right now a2/a1 = ${formatNumber(model.r2 / model.r1, 2)} and K2/K1 = ${formatNumber(model.k2KmPerS / model.k1KmPerS, 2)}, `
+    + `so the lower-mass companion sweeps the larger, faster orbit while both bodies keep one shared period.`;
+}
+
+function setIntegrityRow(args: {
+  row: HTMLDivElement;
+  value: HTMLDivElement;
+  check: IntegrityCheck;
+  formatter: (check: IntegrityCheck) => string;
+}): void {
+  args.row.classList.toggle("is-passed", args.check.passed);
+  args.value.textContent = args.formatter(args.check);
+}
+
+function updateIntegrityPanel(model: BinaryModel): void {
+  const [sumCheck, barycenterCheck, ratioCheck] = evaluateIntegrityChecks(model);
+  setIntegrityRow({
+    row: integritySumRow,
+    value: integritySumValue,
+    check: sumCheck,
+    formatter: (check) => `${formatNumber(check.lhs, 3)} vs ${formatNumber(check.rhs, 3)} AU`,
+  });
+  setIntegrityRow({
+    row: integrityBaryRow,
+    value: integrityBaryValue,
+    check: barycenterCheck,
+    formatter: (check) => `${formatNumber(check.lhs, 3)} vs ${formatNumber(check.rhs, 3)} M_sun AU`,
+  });
+  setIntegrityRow({
+    row: integrityRatioRow,
+    value: integrityRatioValue,
+    check: ratioCheck,
+    formatter: (check) => `${formatNumber(check.lhs, 3)} vs ${formatNumber(check.rhs, 3)}`,
+  });
+}
+
+function flashReadoutGroup(targets: HTMLElement[]): void {
+  targets.forEach((target) => target.classList.add("is-live-changed"));
+  if (state.readoutFlashTimeoutId !== null) {
+    window.clearTimeout(state.readoutFlashTimeoutId);
+  }
+  state.readoutFlashTimeoutId = window.setTimeout(() => {
+    targets.forEach((target) => target.classList.remove("is-live-changed"));
+    state.readoutFlashTimeoutId = null;
+  }, CONTROL_FLASH_MS);
+}
+
+function handleLiveControlChange(control: "massRatio" | "separation" | "inclination"): void {
+  if (state.predictionBaseline) {
+    predictionFeedback.textContent = "Baseline captured. The live model has updated; compare your prediction whenever you're ready.";
+    clearPredictionOutcome();
+  }
+  if (control === "massRatio") {
+    state.orbitFocusUntilMs = currentTimeMs() + CONTROL_FLASH_MS;
+    flashReadoutGroup([readoutA1, readoutA2, readoutV1, readoutV2, readoutK1, readoutK2]);
+    setScalingCue("massRatio");
+  } else if (control === "separation") {
+    setScalingCue("separation");
+  }
+  renderStatic();
+}
+
+function capturePredictionBaseline(): void {
+  state.predictionBaseline = getStageModel();
+  predictionFeedback.textContent =
+    "Baseline captured. Change the controls, keep watching the live system, then compare your prediction.";
+  clearPredictionOutcome();
+  setLiveRegionText(status, "Prediction baseline captured.");
+  renderStatic();
+}
+
+function comparePredictionAgainstCurrent(): void {
+  if (!state.predictionBaseline) {
+    predictionFeedback.textContent = "Capture a baseline first so the comparison has a before-state.";
+    setLiveRegionText(status, "Capture a prediction baseline first.");
+    return;
+  }
+
+  const result = evaluatePredictionChoices({
+    before: state.predictionBaseline,
+    after: getStageModel(),
+    predicted: predictionChoicesFromInputs(),
+  });
+
+  const correctnessLabel = result.allCorrect ? "All predictions matched." : "Some predictions need revision.";
+  const outcome = `${correctnessLabel} Actual changes: P ${result.actual.periodTrend}, v1 ${result.actual.v1Trend}, a1 ${result.actual.a1Trend}.`;
+  predictionFeedback.textContent = outcome;
+  state.lastPredictionOutcome = outcome;
+  setLiveRegionText(status, correctnessLabel);
+  renderStatic();
+}
+
 function updateRvChallengeUi(currentModel: BinaryModel): void {
   const challengeLocked = isRvChallengeLocked({
     active: state.rvChallenge.active,
@@ -1078,50 +1267,50 @@ function markInvariantTruths(model: BinaryModel): void {
   invariantFeedback.textContent = `${grade.trueSelectedCount}/${grade.trueRequiredCount} must-hold statements selected. ${grade.falseSelectedCount} distractor statement(s) selected. (${selectedCount} selected)`;
 }
 
-function updateReadouts(controlModel: BinaryModel, displayModel: BinaryModel): void {
+function updateReadouts(model: BinaryModel): void {
   const minimumMasses = BinaryOrbitModel.minimumMassesSolar({
-    k1KmPerS: displayModel.k1KmPerS,
-    k2KmPerS: displayModel.k2KmPerS,
-    periodYr: displayModel.periodYr,
+    k1KmPerS: model.k1KmPerS,
+    k2KmPerS: model.k2KmPerS,
+    periodYr: model.periodYr,
   });
   const massFunction = BinaryOrbitModel.massFunctionSolar({
-    k1KmPerS: displayModel.k1KmPerS,
-    periodYr: displayModel.periodYr,
+    k1KmPerS: model.k1KmPerS,
+    periodYr: model.periodYr,
   });
 
-  massRatioValue.textContent = formatNumber(controlModel.massRatio, 3);
-  separationValue.textContent = formatNumber(controlModel.separation, 2);
-  inclinationValue.textContent = formatNumber(controlModel.inclinationDeg, 0);
+  massRatioValue.textContent = formatNumber(model.massRatio, 3);
+  separationValue.textContent = formatNumber(model.separation, 2);
+  inclinationValue.textContent = formatNumber(model.inclinationDeg, 0);
 
-  baryOffsetValue.textContent = formatNumber(displayModel.r1, 3);
-  baryOffsetSecondaryValue.textContent = formatNumber(displayModel.r2, 3);
-  speedPrimaryValue.textContent = formatNumber(displayModel.v1AuPerYr, 3);
-  speedSecondaryValue.textContent = formatNumber(displayModel.v2AuPerYr, 3);
-  periodValue.textContent = formatNumber(displayModel.periodYr, 3);
+  baryOffsetValue.textContent = formatNumber(model.r1, 3);
+  baryOffsetSecondaryValue.textContent = formatNumber(model.r2, 3);
+  speedPrimaryValue.textContent = formatNumber(model.v1AuPerYr, 3);
+  speedSecondaryValue.textContent = formatNumber(model.v2AuPerYr, 3);
+  periodValue.textContent = formatNumber(model.periodYr, 3);
   periodSharedCue.textContent = "P1 = P2 (shared period)";
 
-  omegaValue.textContent = formatNumber(displayModel.omegaRadPerYr, 3);
-  momentumPrimaryValue.textContent = formatNumber(displayModel.p1SolarAuPerYr, 4);
-  momentumSecondaryValue.textContent = formatNumber(displayModel.p2SolarAuPerYr, 4);
+  omegaValue.textContent = formatNumber(model.omegaRadPerYr, 3);
+  momentumPrimaryValue.textContent = formatNumber(model.p1SolarAuPerYr, 4);
+  momentumSecondaryValue.textContent = formatNumber(model.p2SolarAuPerYr, 4);
 
-  const balanced = displayModel.momentumDifferenceSolarAuPerYr < 1e-9;
+  const balanced = model.momentumDifferenceSolarAuPerYr < 1e-9;
   momentumBadge.textContent = balanced
     ? "Net momentum vector = 0 in barycentric frame (equal and opposite momenta)."
     : "Momentum mismatch detected (check rounding/inputs).";
   momentumBadge.classList.toggle("is-balanced", balanced);
 
-  k1Value.textContent = formatNumber(displayModel.k1KmPerS, 3);
-  k2Value.textContent = formatNumber(displayModel.k2KmPerS, 3);
+  k1Value.textContent = formatNumber(model.k1KmPerS, 3);
+  k2Value.textContent = formatNumber(model.k2KmPerS, 3);
   m1SiniValue.textContent = formatNumber(minimumMasses.primaryMinimumMassSolar, 3);
   m2SiniValue.textContent = formatNumber(minimumMasses.secondaryMinimumMassSolar, 3);
   massFuncValue.textContent = formatNumber(massFunction, 3);
   vsysValue.textContent = formatNumber(0, 1);
-  energyK1Value.textContent = formatNumber(displayModel.kinetic1SolarAu2PerYr2, 3);
-  energyK2Value.textContent = formatNumber(displayModel.kinetic2SolarAu2PerYr2, 3);
-  energyKTotalValue.textContent = formatNumber(displayModel.kineticTotalSolarAu2PerYr2, 3);
-  energyPotentialValue.textContent = formatNumber(displayModel.potentialSolarAu2PerYr2, 3);
-  energyTotalValue.textContent = formatNumber(displayModel.totalEnergySolarAu2PerYr2, 3);
-  energyVirialValue.textContent = formatNumber(displayModel.virialResidualSolarAu2PerYr2, 3);
+  energyK1Value.textContent = formatNumber(model.kinetic1SolarAu2PerYr2, 3);
+  energyK2Value.textContent = formatNumber(model.kinetic2SolarAu2PerYr2, 3);
+  energyKTotalValue.textContent = formatNumber(model.kineticTotalSolarAu2PerYr2, 3);
+  energyPotentialValue.textContent = formatNumber(model.potentialSolarAu2PerYr2, 3);
+  energyTotalValue.textContent = formatNumber(model.totalEnergySolarAu2PerYr2, 3);
+  energyVirialValue.textContent = formatNumber(model.virialResidualSolarAu2PerYr2, 3);
 
   omegaReadout.hidden = !state.showOmega;
 }
@@ -1187,29 +1376,27 @@ function updateViewControls(): void {
 
 function renderAtPhase(phaseRad: number): void {
   state.phaseRad = phaseRad;
-  const currentModel = getStageModel();
-  const displayModel = selectDisplayModel({
-    predictionPending: state.predictionPending,
-    revealedModel: state.revealedModel,
-    currentModel,
-  });
+  const model = getStageModel();
 
-  updateReadouts(currentModel, displayModel);
+  updateReadouts(model);
+  updateMassRatioInsight(model);
+  updateIntegrityPanel(model);
+  updatePredictionUi(model);
   updateScalingCue();
   updateStagePrompt();
   updateSpectroscopyControls();
   updateViewControls();
   renderPredictionOutcome();
-  updateRvChallengeUi(displayModel);
+  updateRvChallengeUi(model);
 
   if (state.view === "orbit") {
-    drawOrbit(displayModel, phaseRad);
+    drawOrbit(model, phaseRad);
   } else if (state.view === "rv") {
-    drawRadialVelocity(displayModel, phaseRad);
+    drawRadialVelocity(model, phaseRad);
   } else if (state.view === "spectrum") {
-    drawSpectrum(displayModel, phaseRad);
+    drawSpectrum(model, phaseRad);
   } else {
-    drawEnergyView(displayModel);
+    drawEnergyView(model);
   }
 }
 
@@ -1237,35 +1424,6 @@ function setScalingCue(control: "separation" | "massRatio"): void {
     state.energyScalingCueActive = false;
     renderStatic();
   }, 1200);
-}
-
-function beginPredictionGate(): void {
-  state.predictionPending = true;
-  predictPanel.hidden = false;
-  predictionFeedback.textContent = "Make your predictions, then click reveal to update readouts.";
-  clearPredictionOutcome();
-}
-
-function resolvePredictionGate(): void {
-  const before = state.revealedModel;
-  const after = getStageModel();
-  const result = evaluatePredictionChoices({
-    before,
-    after,
-    predicted: predictionChoicesFromInputs(),
-  });
-
-  const correctnessLabel = result.allCorrect ? "All predictions matched." : "Some predictions need revision.";
-  const outcome = `${correctnessLabel} Actual changes: P ${result.actual.periodTrend}, v1 ${result.actual.v1Trend}, a1 ${result.actual.a1Trend}.`;
-  predictionFeedback.textContent = outcome;
-
-  state.revealedModel = after;
-  state.predictionPending = false;
-  state.lastPredictionOutcome = outcome;
-  predictPanel.hidden = true;
-
-  setLiveRegionText(status, correctnessLabel);
-  renderStatic();
 }
 
 function startRvChallenge(): void {
@@ -1338,16 +1496,7 @@ function endRvChallenge(): void {
 }
 
 function handleMassRatioChange(): void {
-  const currentModel = getStageModel();
-  const changedSinceReveal = Math.abs(currentModel.massRatio - state.revealedModel.massRatio) > 1e-9;
-
-  if (changedSinceReveal) {
-    beginPredictionGate();
-    setLiveRegionText(status, "Prediction checkpoint: choose trends, then reveal readouts.");
-  }
-
-  setScalingCue("massRatio");
-  renderStatic();
+  handleLiveControlChange("massRatio");
 }
 
 function setMassRatio(value: number): void {
@@ -1368,18 +1517,17 @@ inclinationInput.min = String(INCLINATION_MIN_DEG);
 inclinationInput.max = String(INCLINATION_MAX_DEG);
 inclinationInput.value = String(DEFAULT_INCLINATION_DEG);
 
-state.revealedModel = getStageModel();
 state.autoScaleLog = autoScaleLog.checked;
+predictionFeedback.textContent = "Capture a baseline before you change controls if you want to run a prediction check.";
 
 massRatioInput.addEventListener("input", handleMassRatioChange);
 
 separationInput.addEventListener("input", () => {
-  setScalingCue("separation");
-  renderStatic();
+  handleLiveControlChange("separation");
 });
 
 inclinationInput.addEventListener("input", () => {
-  renderStatic();
+  handleLiveControlChange("inclination");
 });
 
 showOmega.addEventListener("change", () => {
@@ -1492,8 +1640,11 @@ presetHalf.addEventListener("click", () => {
 });
 
 revealPrediction.addEventListener("click", () => {
-  if (!state.predictionPending) return;
-  resolvePredictionGate();
+  comparePredictionAgainstCurrent();
+});
+
+startPrediction.addEventListener("click", () => {
+  capturePredictionBaseline();
 });
 
 rvChallengeStart.addEventListener("click", () => {
@@ -1585,7 +1736,7 @@ const demoModes = createDemoModes({
     subtitle: "Add snapshot rows, then copy CSV or print.",
     steps: [
       "Set a mass ratio, separation, and inclination.",
-      "Predict trend changes before reveal, then compare to readouts.",
+      "Optionally capture a baseline, predict trend changes, then compare against the live readouts.",
       "Use the stage tabs to compare the same system in orbit, RV, spectrum, and energy views.",
       "Use invariants, spectroscopy, and energy decomposition to explain why both periods match while observables change.",
     ],
@@ -1611,19 +1762,11 @@ const demoModes = createDemoModes({
       { key: "periodYr", label: "Period $P$ (yr)" },
     ],
     getSnapshotRow() {
-      if (isPredictionLocked({ predictionPending: state.predictionPending })) {
-        setLiveRegionText(status, "Reveal prediction before adding snapshot row.");
-        return null;
-      }
       if (isRvChallengeLocked({ active: state.rvChallenge.active, revealed: state.rvChallenge.revealed })) {
         setLiveRegionText(status, "Finish or reveal the RV challenge before adding snapshot row.");
         return null;
       }
-      const model = selectDisplayModel({
-        predictionPending: state.predictionPending,
-        revealedModel: state.revealedModel,
-        currentModel: getStageModel(),
-      });
+      const model = getStageModel();
       const minimumMasses = BinaryOrbitModel.minimumMassesSolar({
         k1KmPerS: model.k1KmPerS,
         k2KmPerS: model.k2KmPerS,
@@ -1711,12 +1854,9 @@ demoModes.bindButtons({
 });
 
 function exportResults(): ExportPayloadV1 {
-  const model = selectDisplayModel({
-    predictionPending: state.predictionPending,
-    revealedModel: state.revealedModel,
-    currentModel: getStageModel(),
-  });
+  const model = getStageModel();
   const checks = evaluateInvariants(model);
+  const integrityChecks = evaluateIntegrityChecks(model);
   const minimumMasses = BinaryOrbitModel.minimumMassesSolar({
     k1KmPerS: model.k1KmPerS,
     k2KmPerS: model.k2KmPerS,
@@ -1768,6 +1908,18 @@ function exportResults(): ExportPayloadV1 {
       { name: "Total orbital energy E (M_sun AU^2/yr^2)", value: formatNumber(model.totalEnergySolarAu2PerYr2, 3) },
       { name: "Virial residual 2K+U (M_sun AU^2/yr^2)", value: formatNumber(model.virialResidualSolarAu2PerYr2, 3) },
       { name: "Orbital period P (yr)", value: formatNumber(model.periodYr, 3) },
+      {
+        name: "Integrity check a1 + a2 vs a",
+        value: `${formatNumber(integrityChecks[0].lhs, 3)} vs ${formatNumber(integrityChecks[0].rhs, 3)}`,
+      },
+      {
+        name: "Integrity check M1 a1 vs M2 a2",
+        value: `${formatNumber(integrityChecks[1].lhs, 3)} vs ${formatNumber(integrityChecks[1].rhs, 3)}`,
+      },
+      {
+        name: "Integrity check K1 / K2 vs q",
+        value: `${formatNumber(integrityChecks[2].lhs, 3)} vs ${formatNumber(integrityChecks[2].rhs, 3)}`,
+      },
     ],
     notes: [
       "Assumes circular, coplanar two-body motion with point masses in barycentric frame.",
@@ -1788,10 +1940,6 @@ function exportResults(): ExportPayloadV1 {
 };
 
 copyResults.addEventListener("click", () => {
-  if (isPredictionLocked({ predictionPending: state.predictionPending })) {
-    setLiveRegionText(status, "Reveal prediction before copying results.");
-    return;
-  }
   if (isRvChallengeLocked({ active: state.rvChallenge.active, revealed: state.rvChallenge.revealed })) {
     setLiveRegionText(status, "Finish or reveal the RV challenge before copying results.");
     return;

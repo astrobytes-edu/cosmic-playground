@@ -79,6 +79,14 @@
             <button id="presetHalf" class="cp-chip" type="button">$M_2 = 0.5 M_1$</button>
           </div>
 
+          <div id="massRatioInsight" class="cp-live-insight" aria-live="polite">
+            <div class="cp-live-insight__eyebrow">Live response</div>
+            <div id="massRatioInsightTitle" class="cp-live-insight__title">Equal masses keep the system balanced.</div>
+            <p id="massRatioInsightBody" class="cp-live-insight__body">
+              At $q=1$, both stars sit the same distance from the barycenter and share equal speeds and RV amplitudes.
+            </p>
+          </div>
+
           <label class="control">
             <span>Separation ($a$)</span>
             <input
@@ -149,9 +157,18 @@
           <p id="scalingCue" class="cp-scaling-cue" aria-live="polite"></p>
           <p id="energyScalingCue" class="cp-scaling-cue" aria-live="polite"></p>
 
-          <div id="predictPanel" class="cp-notice" hidden>
-            <h3>Predict before reveal</h3>
-            <p class="cp-muted">After changing $M_2/M_1$, predict how these quantities respond before revealing updated readouts.</p>
+          <div id="predictPanel" class="cp-notice cp-predict-panel">
+            <h3>Predict and compare</h3>
+            <p class="cp-muted">
+              Capture the current system, then change controls. The demo stays live while you compare your prediction to the measured trend.
+            </p>
+            <div class="challenge-actions">
+              <button id="startPrediction" class="cp-button cp-button--outline" type="button">Capture current state</button>
+              <button id="revealPrediction" class="cp-button cp-button--outline" type="button">Compare with current system</button>
+            </div>
+            <p class="cp-muted">
+              Baseline snapshot: <span id="predictionBaselineSummary">No baseline captured yet.</span>
+            </p>
             <label class="control" for="predictPeriod">
               <span>Does period change?</span>
               <select id="predictPeriod" class="cp-select">
@@ -176,7 +193,6 @@
                 <option value="same">Stay about the same</option>
               </select>
             </label>
-            <button id="revealPrediction" class="cp-button cp-button--outline" type="button">Reveal and check</button>
             <p id="predictionFeedback" class="cp-muted"></p>
           </div>
           <p id="predictionOutcome" class="cp-prediction-outcome cp-muted" aria-live="polite"></p>
@@ -254,19 +270,19 @@
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <div class="cp-readout">
+          <div id="readoutA1" class="cp-readout cp-readout--focus">
             <div class="cp-readout__label">Barycenter offset from $M_1$ ($a_1$)</div>
             <div class="cp-readout__value"><span id="baryOffsetValue"></span> <span class="cp-readout__unit">AU</span></div>
           </div>
-          <div class="cp-readout">
+          <div id="readoutA2" class="cp-readout cp-readout--focus">
             <div class="cp-readout__label">Barycenter offset from $M_2$ ($a_2$)</div>
             <div class="cp-readout__value"><span id="baryOffsetSecondaryValue"></span> <span class="cp-readout__unit">AU</span></div>
           </div>
-          <div class="cp-readout">
+          <div id="readoutV1" class="cp-readout cp-readout--focus">
             <div class="cp-readout__label">Orbital speed of $M_1$ ($v_1$)</div>
             <div class="cp-readout__value"><span id="speedPrimaryValue"></span> <span class="cp-readout__unit">AU/yr</span></div>
           </div>
-          <div class="cp-readout">
+          <div id="readoutV2" class="cp-readout cp-readout--focus">
             <div class="cp-readout__label">Orbital speed of $M_2$ ($v_2$)</div>
             <div class="cp-readout__value"><span id="speedSecondaryValue"></span> <span class="cp-readout__unit">AU/yr</span></div>
           </div>
@@ -288,11 +304,11 @@
             <div class="cp-readout__value"><span id="momentumPrimaryValue"></span> vs <span id="momentumSecondaryValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU/yr</span></div>
             <div id="momentumBadge" class="momentum-badge"></div>
           </div>
-          <div class="cp-readout">
+          <div id="readoutK1" class="cp-readout cp-readout--focus">
             <div class="cp-readout__label">RV semi-amplitude of $M_1$ ($K_1$)</div>
             <div class="cp-readout__value"><span id="k1Value"></span> <span class="cp-readout__unit">km/s</span></div>
           </div>
-          <div class="cp-readout">
+          <div id="readoutK2" class="cp-readout cp-readout--focus">
             <div class="cp-readout__label">RV semi-amplitude of $M_2$ ($K_2$)</div>
             <div class="cp-readout__value"><span id="k2Value"></span> <span class="cp-readout__unit">km/s</span></div>
           </div>
@@ -335,6 +351,23 @@
           <div class="cp-readout">
             <div class="cp-readout__label">Virial residual ($2K+U$)</div>
             <div class="cp-readout__value"><span id="energyVirialValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
+          </div>
+
+          <div id="integrityPanel" class="cp-notice integrity-panel">
+            <h3>Physics integrity</h3>
+            <p class="cp-muted">These live checks should stay true as you drag controls.</p>
+            <div id="integritySumRow" class="integrity-item">
+              <div class="integrity-item__label">$a_1 + a_2 = a$</div>
+              <div id="integritySumValue" class="integrity-item__value"></div>
+            </div>
+            <div id="integrityBaryRow" class="integrity-item">
+              <div class="integrity-item__label">$M_1 a_1 = M_2 a_2$</div>
+              <div id="integrityBaryValue" class="integrity-item__value"></div>
+            </div>
+            <div id="integrityRatioRow" class="integrity-item">
+              <div class="integrity-item__label">$K_1 / K_2 = q$</div>
+              <div id="integrityRatioValue" class="integrity-item__value"></div>
+            </div>
           </div>
 
           <div class="cp-notice invariant-mode">
