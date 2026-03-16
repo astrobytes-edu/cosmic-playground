@@ -23,6 +23,17 @@ export const INCLINATION_MIN_DEG = 0;
 export const INCLINATION_MAX_DEG = 90;
 export const LOG_SLIDER_MIN = 0;
 export const LOG_SLIDER_MAX = 1000;
+export const ORBIT_TRANSITION_MS = 500;
+export const CAMERA_TRANSITION_MS = 300;
+export const READOUT_PULSE_MS = 450;
+
+const DEFAULT_PRIMARY_MASS_SOLAR = 1;
+const DEFAULT_SEPARATION_AU = 4;
+const DEFAULT_INCLINATION_DEG = 60;
+const AUTO_FIT_TARGET_RADIUS_FRACTION = 0.28;
+const FIXED_VIEW_SCALE_AU_PER_PX = 1 / 84;
+const MIN_VIEW_SCALE_AU_PER_PX = 1 / 240;
+const MAX_VIEW_SCALE_AU_PER_PX = 1.4;
 
 // ---------------------------------------------------------------------------
 // Number formatting
@@ -117,7 +128,83 @@ export interface BinaryModel {
   momentumDifferenceSolarAuPerYr: number;
 }
 
+export interface BinarySystemState {
+  massRatio: number;
+  M1: number;
+  separation: number;
+  inclination: number;
+  motionMode: "normalized" | "physical";
+  spectroscopyMode: "SB1" | "SB2";
+  element: "H" | "Na" | "Ca";
+  autoScale: boolean;
+}
+
 export type StageView = "orbit" | "rv" | "spectrum" | "energy";
+
+export function createBinarySystemState(
+  overrides: Partial<BinarySystemState> = {},
+): BinarySystemState {
+  return {
+    massRatio: DEFAULT_PRIMARY_MASS_SOLAR,
+    M1: DEFAULT_PRIMARY_MASS_SOLAR,
+    separation: DEFAULT_SEPARATION_AU,
+    inclination: DEFAULT_INCLINATION_DEG,
+    motionMode: "normalized",
+    spectroscopyMode: "SB2",
+    element: "H",
+    autoScale: true,
+    ...overrides,
+  };
+}
+
+export function derivePhysics(
+  state: Pick<BinarySystemState, "massRatio" | "M1" | "separation" | "inclination">,
+): BinaryModel {
+  const mr = clamp(state.massRatio, MASS_RATIO_MIN, MASS_RATIO_MAX);
+  const primaryMassSolar = Number.isFinite(state.M1) && state.M1 > 0
+    ? state.M1
+    : DEFAULT_PRIMARY_MASS_SOLAR;
+  const sep = clamp(state.separation, SEPARATION_MIN_AU, SEPARATION_MAX_AU);
+  const incDeg = clamp(state.inclination, INCLINATION_MIN_DEG, INCLINATION_MAX_DEG);
+  const secondaryMassSolar = primaryMassSolar * mr;
+
+  const orbitState = BinaryOrbitModel.circularState({
+    primaryMassSolar,
+    secondaryMassSolar,
+    separationAu: sep,
+    inclinationDeg: incDeg,
+  });
+
+  return {
+    massRatio: mr,
+    separation: sep,
+    inclinationDeg: incDeg,
+    m1: primaryMassSolar,
+    m2: secondaryMassSolar,
+    total: orbitState.totalMassSolar,
+    periodYr: orbitState.periodYr,
+    omegaRadPerYr: orbitState.omegaRadPerYr,
+    r1: orbitState.a1Au,
+    r2: orbitState.a2Au,
+    v1AuPerYr: orbitState.v1AuPerYr,
+    v2AuPerYr: orbitState.v2AuPerYr,
+    p1SolarAuPerYr: orbitState.p1SolarAuPerYr,
+    p2SolarAuPerYr: orbitState.p2SolarAuPerYr,
+    k1AuPerYr: orbitState.k1AuPerYr,
+    k2AuPerYr: orbitState.k2AuPerYr,
+    k1KmPerS: orbitState.k1KmPerS,
+    k2KmPerS: orbitState.k2KmPerS,
+    kinetic1SolarAu2PerYr2: orbitState.kinetic1SolarAu2PerYr2,
+    kinetic2SolarAu2PerYr2: orbitState.kinetic2SolarAu2PerYr2,
+    kineticTotalSolarAu2PerYr2: orbitState.kineticTotalSolarAu2PerYr2,
+    potentialSolarAu2PerYr2: orbitState.potentialSolarAu2PerYr2,
+    totalEnergySolarAu2PerYr2: orbitState.totalEnergySolarAu2PerYr2,
+    virialResidualSolarAu2PerYr2: orbitState.virialResidualSolarAu2PerYr2,
+    momentumDifferenceSolarAuPerYr: Math.abs(
+      orbitState.p1SolarAuPerYr - orbitState.p2SolarAuPerYr,
+    ),
+  };
+}
 
 /**
  * Compute the binary orbit model from input parameters.
@@ -132,47 +219,12 @@ export function computeModel(
   separationAu: number,
   inclinationDeg: number,
 ): BinaryModel {
-  const mr = clamp(massRatio, MASS_RATIO_MIN, MASS_RATIO_MAX);
-  const sep = clamp(separationAu, SEPARATION_MIN_AU, SEPARATION_MAX_AU);
-  const incDeg = clamp(inclinationDeg, INCLINATION_MIN_DEG, INCLINATION_MAX_DEG);
-
-  const m1 = 1;
-  const m2 = mr;
-
-  const state = BinaryOrbitModel.circularState({
-    primaryMassSolar: m1,
-    secondaryMassSolar: m2,
-    separationAu: sep,
-    inclinationDeg: incDeg,
+  return derivePhysics({
+    massRatio,
+    M1: DEFAULT_PRIMARY_MASS_SOLAR,
+    separation: separationAu,
+    inclination: inclinationDeg,
   });
-
-  return {
-    massRatio: mr,
-    separation: sep,
-    inclinationDeg: incDeg,
-    m1,
-    m2,
-    total: state.totalMassSolar,
-    periodYr: state.periodYr,
-    omegaRadPerYr: state.omegaRadPerYr,
-    r1: state.a1Au,
-    r2: state.a2Au,
-    v1AuPerYr: state.v1AuPerYr,
-    v2AuPerYr: state.v2AuPerYr,
-    p1SolarAuPerYr: state.p1SolarAuPerYr,
-    p2SolarAuPerYr: state.p2SolarAuPerYr,
-    k1AuPerYr: state.k1AuPerYr,
-    k2AuPerYr: state.k2AuPerYr,
-    k1KmPerS: state.k1KmPerS,
-    k2KmPerS: state.k2KmPerS,
-    kinetic1SolarAu2PerYr2: state.kinetic1SolarAu2PerYr2,
-    kinetic2SolarAu2PerYr2: state.kinetic2SolarAu2PerYr2,
-    kineticTotalSolarAu2PerYr2: state.kineticTotalSolarAu2PerYr2,
-    potentialSolarAu2PerYr2: state.potentialSolarAu2PerYr2,
-    totalEnergySolarAu2PerYr2: state.totalEnergySolarAu2PerYr2,
-    virialResidualSolarAu2PerYr2: state.virialResidualSolarAu2PerYr2,
-    momentumDifferenceSolarAuPerYr: Math.abs(state.p1SolarAuPerYr - state.p2SolarAuPerYr),
-  };
 }
 
 export function isPredictionLocked(args: { predictionPending: boolean }): boolean {
@@ -462,6 +514,50 @@ export function energyScaleCueForControl(control: "separation" | "massRatio"): E
   };
 }
 
+export function computeTargetViewScale(args: {
+  autoScale: boolean;
+  physicsRadiusAu: number;
+  canvasMinDimensionPx: number;
+}): number {
+  if (!args.autoScale) return FIXED_VIEW_SCALE_AU_PER_PX;
+
+  const safeRadiusAu = Math.max(SEPARATION_MIN_AU * 0.5, args.physicsRadiusAu);
+  const safeCanvasMin = Math.max(120, args.canvasMinDimensionPx);
+  const targetRadiusPx = Math.max(36, safeCanvasMin * AUTO_FIT_TARGET_RADIUS_FRACTION);
+  return clamp(
+    safeRadiusAu / targetRadiusPx,
+    MIN_VIEW_SCALE_AU_PER_PX,
+    MAX_VIEW_SCALE_AU_PER_PX,
+  );
+}
+
+export function stepViewScale(args: {
+  current: number;
+  target: number;
+  deltaMs: number;
+}): number {
+  if (!Number.isFinite(args.current) || args.current <= 0) return args.target;
+  if (!Number.isFinite(args.target) || args.target <= 0) return args.current;
+  const safeDeltaMs = Math.max(0, args.deltaMs);
+  if (safeDeltaMs === 0) return args.current;
+  const alpha = 1 - Math.exp(-safeDeltaMs / CAMERA_TRANSITION_MS);
+  return args.current + ((args.target - args.current) * alpha);
+}
+
+export function computeOrbitScreenRadii(args: {
+  r1Au: number;
+  r2Au: number;
+  viewScale: number;
+}): { r1Px: number; r2Px: number } {
+  const safeViewScale = Number.isFinite(args.viewScale) && args.viewScale > 0
+    ? args.viewScale
+    : FIXED_VIEW_SCALE_AU_PER_PX;
+  return {
+    r1Px: args.r1Au / safeViewScale,
+    r2Px: args.r2Au / safeViewScale,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Visual helpers
 // ---------------------------------------------------------------------------
@@ -505,37 +601,3 @@ export function bodyPositions(
  * Returns a smooth, bounded multiplier in [0.68, 1.22], decreasing as
  * separation increases from min to max.
  */
-export function orbitAutoScaleLogFactor(
-  separationAu: number,
-  minSeparationAu = SEPARATION_MIN_AU,
-  maxSeparationAu = SEPARATION_MAX_AU,
-): number {
-  if (!Number.isFinite(separationAu) || !Number.isFinite(minSeparationAu) || !Number.isFinite(maxSeparationAu)) {
-    return 1;
-  }
-  if (!(minSeparationAu > 0) || !(maxSeparationAu > minSeparationAu)) return 1;
-
-  const clampedSeparation = clamp(separationAu, minSeparationAu, maxSeparationAu);
-  const minLog = Math.log10(minSeparationAu);
-  const maxLog = Math.log10(maxSeparationAu);
-  const t = clamp((Math.log10(clampedSeparation) - minLog) / (maxLog - minLog), 0, 1);
-  const smoothT = t * t * (3 - (2 * t));
-
-  const nearScale = 1.22;
-  const farScale = 0.68;
-  return nearScale + ((farScale - nearScale) * smoothT);
-}
-
-/**
- * Compute the pixel scale so that the larger orbit fits within the canvas.
- * Uses 38% of the smaller dimension as the maximum radius.
- */
-export function pixelsPerUnit(
-  r1: number,
-  r2: number,
-  canvasW: number,
-  canvasH: number,
-): number {
-  const maxR = Math.max(r1, r2);
-  return maxR > 0 ? (Math.min(canvasW, canvasH) * 0.38) / maxR : 1;
-}

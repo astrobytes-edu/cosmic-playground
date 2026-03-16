@@ -97,6 +97,16 @@ test.describe("Binary Orbits -- E2E", () => {
     expect(value).toContain("0.300");
   });
 
+  test("mass-ratio anchor presets behave like buttons and move the slider", async ({ page }) => {
+    await page.locator('[data-ratio-anchor="0.100"]').click();
+    await expect(page.locator("#massRatioValue")).toContainText("0.100");
+    expect(Number(await page.locator("#massRatio").inputValue())).toBeCloseTo(0.1, 3);
+
+    await page.locator('[data-ratio-anchor="1.000"]').click();
+    await expect(page.locator("#massRatioValue")).toContainText("1.000");
+    expect(Number(await page.locator("#massRatio").inputValue())).toBeCloseTo(1, 3);
+  });
+
   test("separation slider changes displayed value", async ({ page }) => {
     const slider = page.locator("#separation");
     await slider.evaluate((el: HTMLInputElement) => {
@@ -121,13 +131,14 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(page.locator("#massRatioValue")).toContainText("0.001");
   });
 
-  test("auto-scale toggle is visible and defaults on", async ({ page }) => {
-    const toggle = page.locator("#autoScaleLog");
+  test("auto-fit view toggle is visible and defaults on", async ({ page }) => {
+    const toggle = page.locator("#autoFitView");
     await expect(toggle).toBeVisible();
     await expect(toggle).toBeChecked();
+    await expect(page.locator("label[for='autoFitView'], .cp-toggle")).toContainText("Auto-fit view");
   });
 
-  test("auto-scale toggle does not change physics readouts", async ({ page }) => {
+  test("auto-fit toggle does not change physics readouts", async ({ page }) => {
     const before = {
       a1: await page.locator("#baryOffsetValue").textContent(),
       a2: await page.locator("#baryOffsetSecondaryValue").textContent(),
@@ -139,7 +150,7 @@ test.describe("Binary Orbits -- E2E", () => {
       e: await page.locator("#energyTotalValue").textContent(),
     };
 
-    await page.locator("#autoScaleLog").uncheck();
+    await page.locator("#autoFitView").uncheck();
     await page.waitForTimeout(80);
 
     const after = {
@@ -225,6 +236,18 @@ test.describe("Binary Orbits -- E2E", () => {
     expect(after.a2).toBeGreaterThan(after.a1);
     expect(after.v2).toBeGreaterThan(after.v1);
     expect(after.k2).toBeGreaterThan(after.k1);
+  });
+
+  test("live response renders math with KaTeX after the mass ratio changes", async ({ page }) => {
+    const slider = page.locator("#massRatio");
+    await slider.evaluate((el: HTMLInputElement) => {
+      el.value = "0.100";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    await expect(page.locator("#massRatioInsight .katex")).toHaveCount(3);
+    await expect(page.locator("#massRatioInsight")).toContainText("a2");
+    await expect(page.locator("#massRatioInsight")).toContainText("K2");
   });
 
   test("reduced-motion mode still rerenders immediately when mass ratio changes", async ({ browser }) => {

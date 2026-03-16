@@ -9,16 +9,23 @@ import {
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { BinaryOrbitModel, DopplerShiftModel, SpectralLineModel } from "@cosmic/physics";
 import {
+  CAMERA_TRANSITION_MS,
   INCLINATION_MAX_DEG,
   INCLINATION_MIN_DEG,
   MASS_RATIO_MAX,
   MASS_RATIO_MIN,
+  ORBIT_TRANSITION_MS,
+  READOUT_PULSE_MS,
   SEPARATION_MAX_AU,
   SEPARATION_MIN_AU,
   bodyPositions,
   bodyRadius,
   clamp,
   computeModel,
+  computeOrbitScreenRadii,
+  computeTargetViewScale,
+  createBinarySystemState,
+  derivePhysics,
   energyScaleCueForControl,
   evaluateIntegrityChecks,
   evaluateInvariants,
@@ -28,10 +35,10 @@ import {
   gradeInvariantSelection,
   isRvChallengeLocked,
   logSliderToValue,
-  orbitAutoScaleLogFactor,
-  pixelsPerUnit,
   rvCacheKey,
   scalingCueForControl,
+  stepViewScale,
+  type BinarySystemState,
   type BinaryModel,
   type EnergyScaleCue,
   type IntegrityCheck,
@@ -59,6 +66,9 @@ const inclinationValue = $<HTMLSpanElement>("#inclinationValue");
 const presetEqual = $<HTMLButtonElement>("#presetEqual");
 const presetPlanet = $<HTMLButtonElement>("#presetPlanet");
 const presetHalf = $<HTMLButtonElement>("#presetHalf");
+const ratioAnchorButtons = Array.from(
+  document.querySelectorAll<HTMLButtonElement>(".ratio-anchor"),
+);
 
 const motionMode = $<HTMLSelectElement>("#motionMode");
 const spectroscopySb2 = $<HTMLButtonElement>("#spectroscopySb2");
@@ -70,13 +80,14 @@ const viewOrbit = $<HTMLButtonElement>("#viewOrbit");
 const viewRv = $<HTMLButtonElement>("#viewRv");
 const viewSpectrum = $<HTMLButtonElement>("#viewSpectrum");
 const viewEnergy = $<HTMLButtonElement>("#viewEnergy");
-const autoScaleLog = $<HTMLInputElement>("#autoScaleLog");
+const autoFitView = $<HTMLInputElement>("#autoFitView");
+const autoFitToggleLabel = $<HTMLLabelElement>("#autoFitToggleLabel");
 const showOmega = $<HTMLInputElement>("#showOmega");
 
 const scalingCue = $<HTMLParagraphElement>("#scalingCue");
 const energyScalingCue = $<HTMLParagraphElement>("#energyScalingCue");
 const massRatioInsightTitle = $<HTMLDivElement>("#massRatioInsightTitle");
-const massRatioInsightBody = $<HTMLParagraphElement>("#massRatioInsightBody");
+const massRatioInsightBody = $<HTMLDivElement>("#massRatioInsightBody");
 
 const predictPanel = $<HTMLDivElement>("#predictPanel");
 const startPrediction = $<HTMLButtonElement>("#startPrediction");
@@ -133,8 +144,18 @@ const readoutA1 = $<HTMLDivElement>("#readoutA1");
 const readoutA2 = $<HTMLDivElement>("#readoutA2");
 const readoutV1 = $<HTMLDivElement>("#readoutV1");
 const readoutV2 = $<HTMLDivElement>("#readoutV2");
+const readoutPeriod = $<HTMLDivElement>("#readoutPeriod");
 const readoutK1 = $<HTMLDivElement>("#readoutK1");
 const readoutK2 = $<HTMLDivElement>("#readoutK2");
+const debugPanel = $<HTMLDetailsElement>("#debugPanel");
+const debugSumRow = $<HTMLDivElement>("#debugSumRow");
+const debugBaryRow = $<HTMLDivElement>("#debugBaryRow");
+const debugRatioRow = $<HTMLDivElement>("#debugRatioRow");
+const debugPeriodRow = $<HTMLDivElement>("#debugPeriodRow");
+const debugSumValue = $<HTMLDivElement>("#debugSumValue");
+const debugBaryValue = $<HTMLDivElement>("#debugBaryValue");
+const debugRatioValue = $<HTMLDivElement>("#debugRatioValue");
+const debugPeriodValue = $<HTMLDivElement>("#debugPeriodValue");
 
 const invariantSum = $<HTMLInputElement>("#invariantSum");
 const invariantBary = $<HTMLInputElement>("#invariantBary");
@@ -180,8 +201,6 @@ const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield
 if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 
 type MotionMode = "normalized" | "physical";
-type SpectroscopyMode = "sb1" | "sb2";
-type SpectrumElementKey = "H" | "Na" | "Ca";
 type CurveMeasurementKey = "primary" | "secondary";
 
 type SpectrumDomain = {
@@ -197,12 +216,8 @@ type CurveMeasurement = {
 
 const YEARS_PER_SECOND_PHYSICAL = 0.06;
 const NORMALIZED_ORBIT_SECONDS = 20;
-const DEFAULT_MASS_RATIO = 1;
-const DEFAULT_SEPARATION_AU = 4;
-const DEFAULT_INCLINATION_DEG = 60;
 const SPECTRUM_DOMAIN: SpectrumDomain = { minNm: 380, maxNm: 700 };
 const RV_MEASUREMENT_DISTANCE_PX = 28;
-const CONTROL_FLASH_MS = 1200;
 
 const prefersReducedMotion =
   typeof window !== "undefined"
@@ -264,11 +279,9 @@ type EnergyCacheEntry = {
 };
 
 const state: {
+  system: BinarySystemState;
   view: StageView;
-  autoScaleLog: boolean;
   showOmega: boolean;
-  spectroscopyMode: SpectroscopyMode;
-  selectedElement: SpectrumElementKey;
   scalingCue: ScalingCue | null;
   scalingCueActive: boolean;
   scalingCueTimeoutId: number | null;
@@ -279,6 +292,17 @@ const state: {
   lastPredictionOutcome: string;
   orbitFocusUntilMs: number;
   readoutFlashTimeoutId: number | null;
+  transition: {
+    from: BinarySystemState;
+    to: BinarySystemState;
+    startMs: number;
+    durationMs: number;
+  };
+  camera: {
+    viewScale: number;
+    lastFrameMs: number | null;
+    pulseTimeoutId: number | null;
+  };
   rvChallenge: {
     active: boolean;
     revealed: boolean;
@@ -294,11 +318,9 @@ const state: {
   energyCache: EnergyCacheEntry | null;
   phaseRad: number;
 } = {
+  system: createBinarySystemState(),
   view: "orbit",
-  autoScaleLog: true,
   showOmega: false,
-  spectroscopyMode: "sb2",
-  selectedElement: "H",
   scalingCue: null,
   scalingCueActive: false,
   scalingCueTimeoutId: null,
@@ -309,6 +331,21 @@ const state: {
   lastPredictionOutcome: "",
   orbitFocusUntilMs: 0,
   readoutFlashTimeoutId: null,
+  transition: {
+    from: createBinarySystemState(),
+    to: createBinarySystemState(),
+    startMs: currentTimeMs(),
+    durationMs: 0,
+  },
+  camera: {
+    viewScale: computeTargetViewScale({
+      autoScale: true,
+      physicsRadiusAu: 2,
+      canvasMinDimensionPx: 600,
+    }),
+    lastFrameMs: null,
+    pulseTimeoutId: null,
+  },
   rvChallenge: {
     active: false,
     revealed: false,
@@ -325,16 +362,84 @@ const state: {
   phaseRad: 0,
 };
 
+debugPanel.hidden = !new URLSearchParams(window.location.search).has("debug");
+
+function syncControlsFromState(): void {
+  massRatioInput.value = formatNumber(state.system.massRatio, 3);
+  separationInput.value = String(
+    valueToLogSlider(state.system.separation, SEPARATION_MIN_AU, SEPARATION_MAX_AU),
+  );
+  inclinationInput.value = formatNumber(state.system.inclination, 0);
+  motionMode.value = state.system.motionMode;
+  autoFitView.checked = state.system.autoScale;
+}
+
 function getMotionMode(): MotionMode {
-  return motionMode.value === "physical" ? "physical" : "normalized";
+  return state.system.motionMode;
 }
 
 function getStageModel(): BinaryModel {
-  return computeModel(
-    Number(massRatioInput.value),
-    logSliderToValue(Number(separationInput.value), SEPARATION_MIN_AU, SEPARATION_MAX_AU),
-    Number(inclinationInput.value),
-  );
+  return derivePhysics(state.system);
+}
+
+function interpolateNumber(start: number, end: number, t: number): number {
+  return start + ((end - start) * t);
+}
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - (Math.pow(-2 * t + 2, 3) / 2);
+}
+
+function interpolateSystemState(
+  from: BinarySystemState,
+  to: BinarySystemState,
+  t: number,
+): BinarySystemState {
+  const eased = easeInOutCubic(clamp(t, 0, 1));
+  return {
+    massRatio: interpolateNumber(from.massRatio, to.massRatio, eased),
+    M1: interpolateNumber(from.M1, to.M1, eased),
+    separation: interpolateNumber(from.separation, to.separation, eased),
+    inclination: interpolateNumber(from.inclination, to.inclination, eased),
+    motionMode: to.motionMode,
+    spectroscopyMode: to.spectroscopyMode,
+    element: to.element,
+    autoScale: to.autoScale,
+  };
+}
+
+function getDisplayedSystem(nowMs: number): BinarySystemState {
+  if (state.transition.durationMs <= 0 || prefersReducedMotion) {
+    return { ...state.system };
+  }
+  const elapsedMs = Math.max(0, nowMs - state.transition.startMs);
+  const t = clamp(elapsedMs / state.transition.durationMs, 0, 1);
+  if (t >= 1) return { ...state.system };
+  return interpolateSystemState(state.transition.from, state.transition.to, t);
+}
+
+function getDisplayedModel(nowMs: number): BinaryModel {
+  return derivePhysics(getDisplayedSystem(nowMs));
+}
+
+function updateSystemState(
+  patch: Partial<BinarySystemState>,
+  options: { animate?: boolean } = {},
+): void {
+  const nowMs = currentTimeMs();
+  const fromState = getDisplayedSystem(nowMs);
+  const nextState: BinarySystemState = {
+    ...state.system,
+    ...patch,
+  };
+  state.system = nextState;
+  state.transition = {
+    from: fromState,
+    to: { ...nextState },
+    startMs: nowMs,
+    durationMs: options.animate === false || prefersReducedMotion ? 0 : ORBIT_TRANSITION_MS,
+  };
+  syncControlsFromState();
 }
 
 function rvChallengeStateLabel(): "inactive" | "active-hidden" | "revealed" {
@@ -344,7 +449,7 @@ function rvChallengeStateLabel(): "inactive" | "active-hidden" | "revealed" {
 }
 
 function selectedElementLines() {
-  const catalog = SpectralLineModel.elementLines({ element: state.selectedElement });
+  const catalog = SpectralLineModel.elementLines({ element: state.system.element });
   return catalog.lines;
 }
 
@@ -411,7 +516,7 @@ function phaseFromElapsedSeconds(elapsedSec: number, model: BinaryModel): number
   return model.omegaRadPerYr * elapsedYears;
 }
 
-function drawOrbit(model: BinaryModel, phaseRad: number): void {
+function drawOrbit(model: BinaryModel, phaseRad: number, nowMs: number): void {
   const { width: w, height: h } = resizeCanvasToCssPixels(orbitCanvas, orbitCtx);
   const cx = w / 2;
   const cy = h / 2;
@@ -424,12 +529,26 @@ function drawOrbit(model: BinaryModel, phaseRad: number): void {
   orbitCtx.fillStyle = glow;
   orbitCtx.fillRect(0, 0, w, h);
 
-  const ppuBase = pixelsPerUnit(model.r1, model.r2, w, h);
-  const ppu = state.autoScaleLog
-    ? ppuBase * orbitAutoScaleLogFactor(model.separation, SEPARATION_MIN_AU, SEPARATION_MAX_AU)
-    : ppuBase;
-  const r1px = model.r1 * ppu;
-  const r2px = model.r2 * ppu;
+  const targetViewScale = computeTargetViewScale({
+    autoScale: state.system.autoScale,
+    physicsRadiusAu: Math.max(model.r1, model.r2),
+    canvasMinDimensionPx: Math.min(w, h),
+  });
+  const previousFrameMs = state.camera.lastFrameMs ?? nowMs;
+  const deltaMs = Math.max(0, nowMs - previousFrameMs);
+  state.camera.lastFrameMs = nowMs;
+  state.camera.viewScale = prefersReducedMotion
+    ? targetViewScale
+    : stepViewScale({
+      current: state.camera.viewScale,
+      target: targetViewScale,
+      deltaMs,
+    });
+  const { r1Px: r1px, r2Px: r2px } = computeOrbitScreenRadii({
+    r1Au: model.r1,
+    r2Au: model.r2,
+    viewScale: state.camera.viewScale,
+  });
 
   orbitCtx.strokeStyle = canvasTheme.border;
   orbitCtx.lineWidth = 2;
@@ -469,9 +588,9 @@ function drawOrbit(model: BinaryModel, phaseRad: number): void {
   orbitCtx.arc(cx, cy, 3, 0, Math.PI * 2);
   orbitCtx.fill();
 
-  const emphasisRemaining = Math.max(0, state.orbitFocusUntilMs - currentTimeMs());
+  const emphasisRemaining = Math.max(0, state.orbitFocusUntilMs - nowMs);
   if (emphasisRemaining > 0) {
-    const pulseFraction = 1 - (emphasisRemaining / CONTROL_FLASH_MS);
+    const pulseFraction = 1 - (emphasisRemaining / READOUT_PULSE_MS);
     const pulseRadius = 10 + (pulseFraction * 26);
     orbitCtx.save();
     orbitCtx.strokeStyle = colorMix(canvasTheme.accent, canvasTheme.text, 0.72);
@@ -884,7 +1003,7 @@ function drawSpectrum(model: BinaryModel, phaseRad: number): void {
   });
 
   drawLineSet(shiftedPrimary, observedY, canvasTheme.body1, false);
-  if (state.spectroscopyMode === "sb2") {
+  if (state.system.spectroscopyMode === "SB2") {
     drawLineSet(shiftedSecondary, observedY, canvasTheme.body2, true);
   }
 
@@ -939,7 +1058,7 @@ function drawSpectrum(model: BinaryModel, phaseRad: number): void {
 
   spectrumCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.body1, 0.72);
   spectrumCtx.fillText(`Primary RV = ${formatNumber(rvSample.rv1KmPerS, 2)} km/s`, margin.left, h - 10);
-  if (state.spectroscopyMode === "sb2") {
+  if (state.system.spectroscopyMode === "SB2") {
     spectrumCtx.fillStyle = colorMix(canvasTheme.text, canvasTheme.body2, 0.72);
     spectrumCtx.fillText(`Secondary RV = ${formatNumber(rvSample.rv2KmPerS, 2)} km/s`, margin.left + 220, h - 10);
   } else {
@@ -982,24 +1101,23 @@ function updatePredictionUi(model: BinaryModel): void {
 
 function updateMassRatioInsight(model: BinaryModel): void {
   const inverseMassRatio = model.massRatio > 0 ? 1 / model.massRatio : Number.POSITIVE_INFINITY;
-  if (Math.abs(model.massRatio - 1) < 1e-3) {
-    massRatioInsightTitle.textContent = "Equal masses keep the system balanced.";
-    massRatioInsightBody.textContent =
-      "At q = 1, both stars sit the same distance from the barycenter and share equal speeds and RV amplitudes.";
-    return;
-  }
-
+  let narrative = "At $q=1$, both stars sit the same distance from the barycenter and share equal speeds and RV amplitudes.";
   if (model.massRatio <= 0.01) {
-    massRatioInsightTitle.textContent = "Planet-limit regime: the primary barely budges.";
-    massRatioInsightBody.textContent =
-      `The lighter companion is about ${formatNumber(inverseMassRatio, 0)}x farther and faster about the barycenter, so the host star's wobble becomes the observable.`;
-    return;
+    narrative =
+      `The lighter companion is about $${formatNumber(inverseMassRatio, 0)}$ times farther and faster about the barycenter, so the host star's wobble becomes the observable.`;
+  } else if (Math.abs(model.massRatio - 1) >= 1e-3) {
+    narrative =
+      "The lower-mass companion sweeps the larger orbit while both bodies keep one shared angular frequency and one shared period.";
   }
 
-  massRatioInsightTitle.textContent = "Lighter body -> farther orbit, faster motion.";
-  massRatioInsightBody.textContent =
-    `Right now a2/a1 = ${formatNumber(model.r2 / model.r1, 2)} and K2/K1 = ${formatNumber(model.k2KmPerS / model.k1KmPerS, 2)}, `
-    + `so the lower-mass companion sweeps the larger, faster orbit while both bodies keep one shared period.`;
+  massRatioInsightTitle.innerHTML = "$\\textbf{Lighter body} \\rightarrow \\textbf{farther orbit, faster motion}$";
+  massRatioInsightBody.innerHTML = [
+    `<p>${narrative}</p>`,
+    `<p>$$\\frac{a_2}{a_1} = ${formatNumber(model.r2 / model.r1, 2)}, \\qquad \\frac{K_2}{K_1} = ${formatNumber(model.k2KmPerS / model.k1KmPerS, 2)}$$</p>`,
+    "<p>$$M_1 v_1 = M_2 v_2$$</p>",
+  ].join("");
+  initMath(massRatioInsightTitle);
+  initMath(massRatioInsightBody);
 }
 
 function setIntegrityRow(args: {
@@ -1034,15 +1152,77 @@ function updateIntegrityPanel(model: BinaryModel): void {
   });
 }
 
+function setDebugRow(args: {
+  row: HTMLDivElement;
+  value: HTMLDivElement;
+  delta: number;
+  unit: string;
+}): void {
+  const absDelta = Math.abs(args.delta);
+  const level = absDelta < 1e-6 ? "ok" : absDelta < 1e-3 ? "warn" : "bad";
+  args.row.dataset.level = level;
+  args.value.textContent = `${formatNumber(args.delta, 6)} ${args.unit}`.trim();
+}
+
+function updateDebugPanel(model: BinaryModel): void {
+  if (debugPanel.hidden) return;
+  const integrityChecks = evaluateIntegrityChecks(model);
+  setDebugRow({
+    row: debugSumRow,
+    value: debugSumValue,
+    delta: integrityChecks[0].lhs - integrityChecks[0].rhs,
+    unit: "AU",
+  });
+  setDebugRow({
+    row: debugBaryRow,
+    value: debugBaryValue,
+    delta: integrityChecks[1].lhs - integrityChecks[1].rhs,
+    unit: "M_sun AU",
+  });
+  setDebugRow({
+    row: debugRatioRow,
+    value: debugRatioValue,
+    delta: integrityChecks[2].lhs - integrityChecks[2].rhs,
+    unit: "",
+  });
+  setDebugRow({
+    row: debugPeriodRow,
+    value: debugPeriodValue,
+    delta: 0,
+    unit: "yr",
+  });
+}
+
 function flashReadoutGroup(targets: HTMLElement[]): void {
+  const allPulseTargets = [
+    readoutA1,
+    readoutA2,
+    readoutV1,
+    readoutV2,
+    readoutPeriod,
+    readoutK1,
+    readoutK2,
+  ];
+  allPulseTargets.forEach((target) => target.classList.remove("is-live-changed"));
   targets.forEach((target) => target.classList.add("is-live-changed"));
   if (state.readoutFlashTimeoutId !== null) {
     window.clearTimeout(state.readoutFlashTimeoutId);
   }
   state.readoutFlashTimeoutId = window.setTimeout(() => {
-    targets.forEach((target) => target.classList.remove("is-live-changed"));
+    allPulseTargets.forEach((target) => target.classList.remove("is-live-changed"));
     state.readoutFlashTimeoutId = null;
-  }, CONTROL_FLASH_MS);
+  }, READOUT_PULSE_MS);
+}
+
+function pulseAutoFitIndicator(): void {
+  autoFitToggleLabel.classList.add("is-live-changed");
+  if (state.camera.pulseTimeoutId !== null) {
+    window.clearTimeout(state.camera.pulseTimeoutId);
+  }
+  state.camera.pulseTimeoutId = window.setTimeout(() => {
+    autoFitToggleLabel.classList.remove("is-live-changed");
+    state.camera.pulseTimeoutId = null;
+  }, READOUT_PULSE_MS);
 }
 
 function handleLiveControlChange(control: "massRatio" | "separation" | "inclination"): void {
@@ -1051,17 +1231,25 @@ function handleLiveControlChange(control: "massRatio" | "separation" | "inclinat
     clearPredictionOutcome();
   }
   if (control === "massRatio") {
-    state.orbitFocusUntilMs = currentTimeMs() + CONTROL_FLASH_MS;
+    state.orbitFocusUntilMs = currentTimeMs() + READOUT_PULSE_MS;
     flashReadoutGroup([readoutA1, readoutA2, readoutV1, readoutV2, readoutK1, readoutK2]);
     setScalingCue("massRatio");
   } else if (control === "separation") {
+    state.orbitFocusUntilMs = currentTimeMs() + READOUT_PULSE_MS;
+    flashReadoutGroup([readoutA1, readoutA2, readoutV1, readoutV2, readoutPeriod]);
     setScalingCue("separation");
+  } else {
+    flashReadoutGroup([readoutK1, readoutK2]);
+  }
+  if (state.system.autoScale && (control === "massRatio" || control === "separation")) {
+    pulseAutoFitIndicator();
+    setLiveRegionText(status, "View auto-scaled.");
   }
   renderStatic();
 }
 
 function capturePredictionBaseline(): void {
-  state.predictionBaseline = getStageModel();
+  state.predictionBaseline = getDisplayedModel(currentTimeMs());
   predictionFeedback.textContent =
     "Baseline captured. Change the controls, keep watching the live system, then compare your prediction.";
   clearPredictionOutcome();
@@ -1278,9 +1466,9 @@ function updateReadouts(model: BinaryModel): void {
     periodYr: model.periodYr,
   });
 
-  massRatioValue.textContent = formatNumber(model.massRatio, 3);
-  separationValue.textContent = formatNumber(model.separation, 2);
-  inclinationValue.textContent = formatNumber(model.inclinationDeg, 0);
+  massRatioValue.textContent = formatNumber(state.system.massRatio, 3);
+  separationValue.textContent = formatNumber(state.system.separation, 2);
+  inclinationValue.textContent = formatNumber(state.system.inclination, 0);
 
   baryOffsetValue.textContent = formatNumber(model.r1, 3);
   baryOffsetSecondaryValue.textContent = formatNumber(model.r2, 3);
@@ -1321,8 +1509,8 @@ function updateStagePrompt(): void {
 
 function updateSpectroscopyControls(): void {
   const spectroscopyButtons = [
-    { button: spectroscopySb2, selected: state.spectroscopyMode === "sb2" },
-    { button: spectroscopySb1, selected: state.spectroscopyMode === "sb1" },
+    { button: spectroscopySb2, selected: state.system.spectroscopyMode === "SB2" },
+    { button: spectroscopySb1, selected: state.system.spectroscopyMode === "SB1" },
   ];
   spectroscopyButtons.forEach(({ button, selected }) => {
     button.setAttribute("aria-checked", String(selected));
@@ -1330,9 +1518,9 @@ function updateSpectroscopyControls(): void {
   });
 
   const elementButtons = [
-    { button: elementH, selected: state.selectedElement === "H" },
-    { button: elementNa, selected: state.selectedElement === "Na" },
-    { button: elementCa, selected: state.selectedElement === "Ca" },
+    { button: elementH, selected: state.system.element === "H" },
+    { button: elementNa, selected: state.system.element === "Na" },
+    { button: elementCa, selected: state.system.element === "Ca" },
   ];
   elementButtons.forEach(({ button, selected }) => {
     button.setAttribute("aria-checked", String(selected));
@@ -1374,34 +1562,36 @@ function updateViewControls(): void {
   energyPanel.hidden = state.view !== "energy";
 }
 
-function renderAtPhase(phaseRad: number): void {
+function renderAtPhase(phaseRad: number, nowMs = currentTimeMs()): void {
   state.phaseRad = phaseRad;
-  const model = getStageModel();
+  const targetModel = getStageModel();
+  const orbitModel = getDisplayedModel(nowMs);
 
-  updateReadouts(model);
-  updateMassRatioInsight(model);
-  updateIntegrityPanel(model);
-  updatePredictionUi(model);
+  updateReadouts(targetModel);
+  updateMassRatioInsight(targetModel);
+  updateIntegrityPanel(targetModel);
+  updateDebugPanel(targetModel);
+  updatePredictionUi(targetModel);
   updateScalingCue();
   updateStagePrompt();
   updateSpectroscopyControls();
   updateViewControls();
   renderPredictionOutcome();
-  updateRvChallengeUi(model);
+  updateRvChallengeUi(targetModel);
 
   if (state.view === "orbit") {
-    drawOrbit(model, phaseRad);
+    drawOrbit(orbitModel, phaseRad, nowMs);
   } else if (state.view === "rv") {
-    drawRadialVelocity(model, phaseRad);
+    drawRadialVelocity(targetModel, phaseRad);
   } else if (state.view === "spectrum") {
-    drawSpectrum(model, phaseRad);
+    drawSpectrum(targetModel, phaseRad);
   } else {
-    drawEnergyView(model);
+    drawEnergyView(targetModel);
   }
 }
 
 function renderStatic(): void {
-  renderAtPhase(state.phaseRad);
+  renderAtPhase(state.phaseRad, currentTimeMs());
 }
 
 function setScalingCue(control: "separation" | "massRatio"): void {
@@ -1413,7 +1603,7 @@ function setScalingCue(control: "separation" | "massRatio"): void {
   state.scalingCueTimeoutId = window.setTimeout(() => {
     state.scalingCueActive = false;
     renderStatic();
-  }, 1200);
+  }, READOUT_PULSE_MS);
 
   state.energyScalingCue = energyScaleCueForControl(control);
   state.energyScalingCueActive = true;
@@ -1423,7 +1613,7 @@ function setScalingCue(control: "separation" | "massRatio"): void {
   state.energyScalingCueTimeoutId = window.setTimeout(() => {
     state.energyScalingCueActive = false;
     renderStatic();
-  }, 1200);
+  }, READOUT_PULSE_MS);
 }
 
 function startRvChallenge(): void {
@@ -1496,6 +1686,9 @@ function endRvChallenge(): void {
 }
 
 function handleMassRatioChange(): void {
+  updateSystemState({
+    massRatio: Number(massRatioInput.value),
+  });
   handleLiveControlChange("massRatio");
 }
 
@@ -1508,25 +1701,24 @@ function setMassRatio(value: number): void {
 massRatioInput.min = String(MASS_RATIO_MIN);
 massRatioInput.max = String(MASS_RATIO_MAX);
 massRatioInput.step = "0.001";
-massRatioInput.value = formatNumber(DEFAULT_MASS_RATIO, 3);
-
-separationInput.value = String(
-  valueToLogSlider(DEFAULT_SEPARATION_AU, SEPARATION_MIN_AU, SEPARATION_MAX_AU),
-);
 inclinationInput.min = String(INCLINATION_MIN_DEG);
 inclinationInput.max = String(INCLINATION_MAX_DEG);
-inclinationInput.value = String(DEFAULT_INCLINATION_DEG);
-
-state.autoScaleLog = autoScaleLog.checked;
+syncControlsFromState();
 predictionFeedback.textContent = "Capture a baseline before you change controls if you want to run a prediction check.";
 
 massRatioInput.addEventListener("input", handleMassRatioChange);
 
 separationInput.addEventListener("input", () => {
+  updateSystemState({
+    separation: logSliderToValue(Number(separationInput.value), SEPARATION_MIN_AU, SEPARATION_MAX_AU),
+  });
   handleLiveControlChange("separation");
 });
 
 inclinationInput.addEventListener("input", () => {
+  updateSystemState({
+    inclination: Number(inclinationInput.value),
+  });
   handleLiveControlChange("inclination");
 });
 
@@ -1535,14 +1727,16 @@ showOmega.addEventListener("change", () => {
   renderStatic();
 });
 
-autoScaleLog.addEventListener("change", () => {
-  state.autoScaleLog = autoScaleLog.checked;
+autoFitView.addEventListener("change", () => {
+  updateSystemState({
+    autoScale: autoFitView.checked,
+  }, { animate: false });
   renderStatic();
   setLiveRegionText(
     status,
-    state.autoScaleLog
-      ? "Auto-scale enabled: orbit camera uses logarithmic visual scaling."
-      : "Auto-scale disabled: orbit camera uses fixed visual scaling.",
+    state.system.autoScale
+      ? "Auto-fit enabled: orbit camera keeps the system in view."
+      : "Auto-fit disabled: orbit camera now uses a fixed scale.",
   );
 });
 
@@ -1576,49 +1770,66 @@ bindButtonRadioGroup({
 });
 
 spectroscopySb2.addEventListener("click", () => {
-  state.spectroscopyMode = "sb2";
+  updateSystemState({
+    spectroscopyMode: "SB2",
+  }, { animate: false });
   renderStatic();
 });
 
 spectroscopySb1.addEventListener("click", () => {
-  state.spectroscopyMode = "sb1";
+  updateSystemState({
+    spectroscopyMode: "SB1",
+  }, { animate: false });
   renderStatic();
 });
 
 bindButtonRadioGroup({
   buttons: [spectroscopySb2, spectroscopySb1],
-  getSelectedIndex: () => (state.spectroscopyMode === "sb2" ? 0 : 1),
+  getSelectedIndex: () => (state.system.spectroscopyMode === "SB2" ? 0 : 1),
   setSelectedIndex: (index) => {
-    state.spectroscopyMode = index === 0 ? "sb2" : "sb1";
+    updateSystemState({
+      spectroscopyMode: index === 0 ? "SB2" : "SB1",
+    }, { animate: false });
     renderStatic();
   },
 });
 
 elementH.addEventListener("click", () => {
-  state.selectedElement = "H";
+  updateSystemState({
+    element: "H",
+  }, { animate: false });
   renderStatic();
 });
 
 elementNa.addEventListener("click", () => {
-  state.selectedElement = "Na";
+  updateSystemState({
+    element: "Na",
+  }, { animate: false });
   renderStatic();
 });
 
 elementCa.addEventListener("click", () => {
-  state.selectedElement = "Ca";
+  updateSystemState({
+    element: "Ca",
+  }, { animate: false });
   renderStatic();
 });
 
 bindButtonRadioGroup({
   buttons: [elementH, elementNa, elementCa],
-  getSelectedIndex: () => (state.selectedElement === "H" ? 0 : state.selectedElement === "Na" ? 1 : 2),
+  getSelectedIndex: () => (state.system.element === "H" ? 0 : state.system.element === "Na" ? 1 : 2),
   setSelectedIndex: (index) => {
-    state.selectedElement = index === 0 ? "H" : index === 1 ? "Na" : "Ca";
+    updateSystemState({
+      element: index === 0 ? "H" : index === 1 ? "Na" : "Ca",
+    }, { animate: false });
     renderStatic();
   },
 });
 
 motionMode.addEventListener("change", () => {
+  updateSystemState({
+    motionMode: motionMode.value === "physical" ? "physical" : "normalized",
+  }, { animate: false });
   renderStatic();
   const modeLabel =
     getMotionMode() === "normalized"
@@ -1637,6 +1848,14 @@ presetPlanet.addEventListener("click", () => {
 
 presetHalf.addEventListener("click", () => {
   setMassRatio(0.5);
+});
+
+ratioAnchorButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const ratioValue = Number(button.dataset.ratioAnchor);
+    if (!Number.isFinite(ratioValue)) return;
+    setMassRatio(ratioValue);
+  });
 });
 
 revealPrediction.addEventListener("click", () => {
@@ -1692,7 +1911,7 @@ if (prefersReducedMotion) {
   const frame = (now: number) => {
     const model = getStageModel();
     const elapsed = (now - start) / 1000;
-    renderAtPhase(phaseFromElapsedSeconds(elapsed, model));
+    renderAtPhase(phaseFromElapsedSeconds(elapsed, model), now);
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
@@ -1777,8 +1996,8 @@ const demoModes = createDemoModes({
         massRatio: formatNumber(model.massRatio, 3),
         separationAu: formatNumber(model.separation, 2),
         inclinationDeg: formatNumber(model.inclinationDeg, 0),
-        spectroscopyMode: state.spectroscopyMode.toUpperCase(),
-        element: state.selectedElement,
+        spectroscopyMode: state.system.spectroscopyMode,
+        element: state.system.element,
         a1Au: formatNumber(model.r1, 3),
         a2Au: formatNumber(model.r2, 3),
         omegaRadPerYr: formatNumber(model.omegaRadPerYr, 3),
@@ -1821,7 +2040,7 @@ const demoModes = createDemoModes({
               separationAu: formatNumber(model.separation, 2),
               inclinationDeg: formatNumber(model.inclinationDeg, 0),
               spectroscopyMode: "SB2",
-              element: state.selectedElement,
+              element: state.system.element,
               a1Au: formatNumber(model.r1, 3),
               a2Au: formatNumber(model.r2, 3),
               omegaRadPerYr: formatNumber(model.omegaRadPerYr, 3),
@@ -1877,10 +2096,10 @@ function exportResults(): ExportPayloadV1 {
         name: "Motion mode",
         value: getMotionMode() === "normalized" ? "normalized-20s-cycle" : "physical-kepler",
       },
-      { name: "Auto-scale (log)", value: state.autoScaleLog ? "on" : "off" },
+      { name: "Auto-fit view", value: state.system.autoScale ? "on" : "off" },
       { name: "View", value: state.view },
-      { name: "Spectroscopy mode", value: state.spectroscopyMode },
-      { name: "Spectrum element", value: state.selectedElement },
+      { name: "Spectroscopy mode", value: state.system.spectroscopyMode },
+      { name: "Spectrum element", value: state.system.element },
       { name: "RV challenge state", value: rvChallengeStateLabel() },
     ],
     readouts: [
@@ -1925,7 +2144,7 @@ function exportResults(): ExportPayloadV1 {
       "Assumes circular, coplanar two-body motion with point masses in barycentric frame.",
       "Uses AU/yr/Msun teaching units with G = 4*pi^2, so P^2 = a^3/(M1+M2).",
       "RV amplitudes project with inclination through K = v sin(i).",
-      `Spectrum mode: ${state.spectroscopyMode.toUpperCase()} using ${state.selectedElement} absorption lines in a shared ${SPECTRUM_DOMAIN.minNm}-${SPECTRUM_DOMAIN.maxNm} nm window.`,
+      `Spectrum mode: ${state.system.spectroscopyMode} using ${state.system.element} absorption lines in a shared ${SPECTRUM_DOMAIN.minNm}-${SPECTRUM_DOMAIN.maxNm} nm window.`,
       `RV challenge inferred q: ${state.rvChallenge.inferredQ === null ? "n/a" : formatNumber(state.rvChallenge.inferredQ, 3)}, `
         + `target q: ${state.rvChallenge.targetQ === null ? "n/a" : formatNumber(state.rvChallenge.targetQ, 3)}.`,
       `Invariant truth flags: ${checks.map((check) => `${check.statement}:${check.isTrue ? "true" : "false"}`).join(", ")}`,

@@ -1,10 +1,17 @@
 import { describe, it, expect } from "vitest";
 import {
+  CAMERA_TRANSITION_MS,
   INVARIANT_STATEMENTS,
+  ORBIT_TRANSITION_MS,
+  READOUT_PULSE_MS,
   bodyPositions,
   bodyRadius,
   clamp,
   computeModel,
+  computeOrbitScreenRadii,
+  computeTargetViewScale,
+  createBinarySystemState,
+  derivePhysics,
   evaluateIntegrityChecks,
   evaluateInvariants,
   evaluatePredictionChoices,
@@ -13,11 +20,10 @@ import {
   gradeInvariantSelection,
   isRvChallengeLocked,
   logSliderToValue,
-  orbitAutoScaleLogFactor,
-  pixelsPerUnit,
   rvCacheKey,
   energyScaleCueForControl,
   scalingCueForControl,
+  stepViewScale,
   valueToLogSlider,
 } from "./logic";
 
@@ -126,6 +132,35 @@ describe("Binary Orbits -- UI Logic", () => {
       const edgeOn = computeModel(0.2, 4, 90);
       expect(edgeOn.k1AuPerYr).toBeCloseTo(edgeOn.v1AuPerYr, 12);
       expect(edgeOn.k2AuPerYr).toBeCloseTo(edgeOn.v2AuPerYr, 12);
+    });
+  });
+
+  describe("canonical state + derived physics", () => {
+    it("creates a single canonical state object with explicit defaults", () => {
+      const state = createBinarySystemState();
+      expect(state.massRatio).toBe(1);
+      expect(state.M1).toBe(1);
+      expect(state.separation).toBe(4);
+      expect(state.inclination).toBe(60);
+      expect(state.motionMode).toBe("normalized");
+      expect(state.spectroscopyMode).toBe("SB2");
+      expect(state.element).toBe("H");
+      expect(state.autoScale).toBe(true);
+    });
+
+    it("derives physics purely from canonical state", () => {
+      const state = createBinarySystemState({
+        massRatio: 0.306,
+        separation: 0.96,
+        inclination: 90,
+      });
+      const physics = derivePhysics(state);
+      expect(physics.massRatio).toBeCloseTo(0.306, 12);
+      expect(physics.r1).toBeCloseTo(0.22493, 4);
+      expect(physics.r2).toBeCloseTo(0.73507, 4);
+      expect(physics.v2AuPerYr).toBeGreaterThan(physics.v1AuPerYr);
+      expect(physics.k2KmPerS).toBeGreaterThan(physics.k1KmPerS);
+      expect(physics.m1 * physics.r1).toBeCloseTo(physics.m2 * physics.r2, 10);
     });
   });
 
@@ -238,6 +273,63 @@ describe("Binary Orbits -- UI Logic", () => {
     });
   });
 
+  describe("camera helpers", () => {
+    it("uses a constant fixed-view scale so screen radii grow monotonically with separation", () => {
+      const fixedViewScale = computeTargetViewScale({
+        autoScale: false,
+        physicsRadiusAu: 2,
+        canvasMinDimensionPx: 600,
+      });
+
+      const nearRadius = computeOrbitScreenRadii({
+        r1Au: 0.5,
+        r2Au: 1.5,
+        viewScale: fixedViewScale,
+      });
+      const farRadius = computeOrbitScreenRadii({
+        r1Au: 5,
+        r2Au: 15,
+        viewScale: fixedViewScale,
+      });
+
+      expect(farRadius.r1Px).toBeGreaterThan(nearRadius.r1Px);
+      expect(farRadius.r2Px).toBeGreaterThan(nearRadius.r2Px);
+    });
+
+    it("auto-fit target view scale grows with larger physical radius", () => {
+      const nearScale = computeTargetViewScale({
+        autoScale: true,
+        physicsRadiusAu: 1.5,
+        canvasMinDimensionPx: 600,
+      });
+      const farScale = computeTargetViewScale({
+        autoScale: true,
+        physicsRadiusAu: 15,
+        canvasMinDimensionPx: 600,
+      });
+
+      expect(farScale).toBeGreaterThan(nearScale);
+    });
+
+    it("damps camera motion instead of snapping to the target scale", () => {
+      const next = stepViewScale({
+        current: 1,
+        target: 5,
+        deltaMs: CAMERA_TRANSITION_MS / 2,
+      });
+      expect(next).toBeGreaterThan(1);
+      expect(next).toBeLessThan(5);
+    });
+  });
+
+  describe("timing constants", () => {
+    it("keeps transition timings aligned across orbit, camera, and readout pulses", () => {
+      expect(ORBIT_TRANSITION_MS).toBe(500);
+      expect(CAMERA_TRANSITION_MS).toBe(300);
+      expect(READOUT_PULSE_MS).toBe(450);
+    });
+  });
+
   describe("scaling cues", () => {
     it("returns separation scaling cue for separation control", () => {
       const cue = scalingCueForControl("separation");
@@ -333,35 +425,4 @@ describe("Binary Orbits -- UI Logic", () => {
     });
   });
 
-  describe("pixelsPerUnit", () => {
-    it("scales so larger orbit uses 38% of smaller canvas dimension", () => {
-      const scale = pixelsPerUnit(3, 1, 400, 300);
-      expect(scale).toBeCloseTo(38, 8);
-    });
-
-    it("returns 1 when both radii are zero", () => {
-      expect(pixelsPerUnit(0, 0, 400, 400)).toBe(1);
-    });
-  });
-
-  describe("orbitAutoScaleLogFactor", () => {
-    it("returns finite bounded values across the supported separation range", () => {
-      for (const a of [0.1, 0.3, 1, 3, 10, 30, 100]) {
-        const factor = orbitAutoScaleLogFactor(a);
-        expect(Number.isFinite(factor)).toBe(true);
-        expect(factor).toBeGreaterThanOrEqual(0.68);
-        expect(factor).toBeLessThanOrEqual(1.22);
-      }
-    });
-
-    it("decreases smoothly as separation increases", () => {
-      const f1 = orbitAutoScaleLogFactor(0.1);
-      const f2 = orbitAutoScaleLogFactor(1);
-      const f3 = orbitAutoScaleLogFactor(10);
-      const f4 = orbitAutoScaleLogFactor(100);
-      expect(f1).toBeGreaterThan(f2);
-      expect(f2).toBeGreaterThan(f3);
-      expect(f3).toBeGreaterThan(f4);
-    });
-  });
 });

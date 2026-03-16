@@ -68,9 +68,24 @@
               data-tooltip-source="#massRatioValue"
             />
             <span class="control__value"><span id="massRatioValue"></span></span>
-            <span class="control__ticks" aria-hidden="true">
-              <span>0.001</span><span>0.010</span><span>0.100</span><span>1.000</span>
-            </span>
+            <div class="control__anchors" role="group" aria-label="Mass-ratio anchor presets">
+              <button class="ratio-anchor" data-ratio-anchor="0.001" type="button">
+                <span class="ratio-anchor__value">0.001</span>
+                <span class="ratio-anchor__hint">planet</span>
+              </button>
+              <button class="ratio-anchor" data-ratio-anchor="0.010" type="button">
+                <span class="ratio-anchor__value">0.010</span>
+                <span class="ratio-anchor__hint">extreme</span>
+              </button>
+              <button class="ratio-anchor" data-ratio-anchor="0.100" type="button">
+                <span class="ratio-anchor__value">0.100</span>
+                <span class="ratio-anchor__hint">unequal</span>
+              </button>
+              <button class="ratio-anchor" data-ratio-anchor="1.000" type="button">
+                <span class="ratio-anchor__value">1.000</span>
+                <span class="ratio-anchor__hint">equal</span>
+              </button>
+            </div>
           </label>
 
           <div class="cp-chip-group" role="group" aria-label="Mass-ratio presets">
@@ -79,12 +94,17 @@
             <button id="presetHalf" class="cp-chip" type="button">$M_2 = 0.5 M_1$</button>
           </div>
 
-          <div id="massRatioInsight" class="cp-live-insight" aria-live="polite">
+          <div
+            id="massRatioInsight"
+            class="cp-live-insight"
+            aria-live="polite"
+            title="Ratios reflect conservation of momentum and shared angular frequency."
+          >
             <div class="cp-live-insight__eyebrow">Live response</div>
             <div id="massRatioInsightTitle" class="cp-live-insight__title">Equal masses keep the system balanced.</div>
-            <p id="massRatioInsightBody" class="cp-live-insight__body">
+            <div id="massRatioInsightBody" class="cp-live-insight__body">
               At $q=1$, both stars sit the same distance from the barycenter and share equal speeds and RV amplitudes.
-            </p>
+            </div>
           </div>
 
           <label class="control">
@@ -143,11 +163,16 @@
             <p class="control__hint">Use a strong line set to compare the rest-frame lab spectrum with the observed Doppler-shifted spectrum.</p>
           </div>
 
-          <label class="cp-toggle" title="Auto-scale changes the camera/visual scale only; it does not change the physics.">
-            <input id="autoScaleLog" type="checkbox" checked />
-            <span>Auto-scale (log)</span>
+          <label
+            id="autoFitToggleLabel"
+            class="cp-toggle"
+            for="autoFitView"
+            title="Auto-fit changes the camera/visual scale only; it does not change the physics."
+          >
+            <input id="autoFitView" type="checkbox" checked />
+            <span>Auto-fit view</span>
           </label>
-          <p class="cp-muted control__hint">Auto-scale changes the camera/visual scale only; it does not change the physics.</p>
+          <p class="cp-muted control__hint">Auto-fit changes the camera/visual scale only; it does not change the physics.</p>
 
           <label class="check">
             <input id="showOmega" type="checkbox" />
@@ -286,7 +311,7 @@
             <div class="cp-readout__label">Orbital speed of $M_2$ ($v_2$)</div>
             <div class="cp-readout__value"><span id="speedSecondaryValue"></span> <span class="cp-readout__unit">AU/yr</span></div>
           </div>
-          <div class="cp-readout">
+          <div id="readoutPeriod" class="cp-readout cp-readout--focus">
             <div class="cp-readout__label">Orbital period</div>
             <div class="cp-readout__value"><span id="periodValue"></span> <span class="cp-readout__unit">yr</span></div>
           </div>
@@ -369,6 +394,28 @@
               <div id="integrityRatioValue" class="integrity-item__value"></div>
             </div>
           </div>
+
+          <details id="debugPanel" class="cp-notice debug-panel" hidden>
+            <summary>Developer checks</summary>
+            <div class="debug-panel__body">
+              <div id="debugSumRow" class="debug-item">
+                <div class="debug-item__label">$a_1 + a_2 - a$</div>
+                <div id="debugSumValue" class="debug-item__value"></div>
+              </div>
+              <div id="debugBaryRow" class="debug-item">
+                <div class="debug-item__label">$M_1 a_1 - M_2 a_2$</div>
+                <div id="debugBaryValue" class="debug-item__value"></div>
+              </div>
+              <div id="debugRatioRow" class="debug-item">
+                <div class="debug-item__label">$K_1/K_2 - q$</div>
+                <div id="debugRatioValue" class="debug-item__value"></div>
+              </div>
+              <div id="debugPeriodRow" class="debug-item">
+                <div class="debug-item__label">$P_1 - P_2$</div>
+                <div id="debugPeriodValue" class="debug-item__value"></div>
+              </div>
+            </div>
+          </details>
 
           <div class="cp-notice invariant-mode">
             <h3>What must be true?</h3>

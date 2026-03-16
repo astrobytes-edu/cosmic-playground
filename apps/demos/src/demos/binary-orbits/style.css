@@ -15,12 +15,45 @@
   font-size: var(--cp-text-xs);
 }
 
-.control__ticks {
+.control__anchors {
   display: flex;
   justify-content: space-between;
-  padding: 0 2px;
-  color: color-mix(in srgb, var(--cp-text) 56%, var(--cp-bg0));
-  font-size: 0.75rem;
+  gap: 0.45rem;
+}
+
+.ratio-anchor {
+  flex: 1 1 0;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 82%, var(--cp-accent) 18%);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cp-bg1) 94%, transparent);
+  color: color-mix(in srgb, var(--cp-text) 74%, var(--cp-bg0));
+  cursor: pointer;
+  transition:
+    transform 180ms var(--cp-ease-out),
+    border-color 180ms var(--cp-ease-out),
+    background-color 180ms var(--cp-ease-out);
+}
+
+.ratio-anchor:hover,
+.ratio-anchor:focus-visible {
+  border-color: color-mix(in srgb, var(--cp-accent) 58%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-accent) 12%, transparent);
+  transform: translateY(-1px);
+}
+
+.ratio-anchor__value {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.ratio-anchor__hint {
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--cp-text) 54%, var(--cp-bg0));
 }
 
 .control-group {
@@ -72,10 +105,13 @@
 }
 
 .cp-live-insight__body {
-  margin: 0;
   color: color-mix(in srgb, var(--cp-text) 76%, var(--cp-bg0));
   font-size: 0.92rem;
   line-height: 1.45;
+}
+
+.cp-live-insight__body p {
+  margin: 0;
 }
 
 .cp-demo__stage {
@@ -263,6 +299,7 @@
   border-color: color-mix(in srgb, var(--cp-accent) 56%, var(--cp-border));
   background: color-mix(in srgb, var(--cp-accent) 12%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--cp-accent) 18%, transparent);
+  animation: glowPulse 450ms var(--cp-ease-out);
 }
 
 .cp-readout--focus.is-live-changed::after {
@@ -296,6 +333,53 @@
 .integrity-item__value {
   color: color-mix(in srgb, var(--cp-text) 72%, var(--cp-bg0));
   font-size: 0.9rem;
+}
+
+.debug-panel {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.debug-panel summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.debug-panel__body {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.debug-item {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 84%, var(--cp-accent) 16%);
+  background: color-mix(in srgb, var(--cp-bg1) 94%, transparent);
+}
+
+.debug-item[data-level="ok"] {
+  border-color: color-mix(in srgb, var(--cp-accent) 46%, var(--cp-border));
+}
+
+.debug-item[data-level="warn"] {
+  border-color: color-mix(in srgb, var(--cp-accent) 32%, var(--cp-border));
+}
+
+.debug-item[data-level="bad"] {
+  border-color: color-mix(in srgb, var(--cp-chart-2) 58%, var(--cp-border));
+}
+
+.debug-item__label {
+  color: color-mix(in srgb, var(--cp-text) 82%, var(--cp-bg0));
+  font-weight: 600;
+}
+
+.debug-item__value {
+  color: color-mix(in srgb, var(--cp-text) 70%, var(--cp-bg0));
+  font-size: 0.88rem;
 }
 
 .momentum-badge {
@@ -354,6 +438,12 @@
   background: color-mix(in srgb, var(--cp-accent) 22%, transparent);
 }
 
+#autoFitToggleLabel.is-live-changed {
+  border-color: color-mix(in srgb, var(--cp-accent) 60%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-accent) 14%, transparent);
+  animation: glowPulse 450ms var(--cp-ease-out);
+}
+
 .cp-chip:focus-visible,
 .cp-button:focus-visible {
   outline: 2px solid var(--cp-focus);
@@ -374,6 +464,20 @@
 
 .cp-demo__drawer {
   animation: cp-fade-in 0.8s var(--cp-ease-out) 0.3s backwards;
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--cp-accent) 0%, transparent);
+  }
+
+  45% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--cp-accent) 22%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--cp-accent) 0%, transparent);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
