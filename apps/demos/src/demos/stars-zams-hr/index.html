@@ -29,10 +29,19 @@
             aria-label="Stellar population plot"
             aria-describedby="hrCanvasKeyboardHelp"
           ></canvas>
-          <div class="axis-badges" aria-hidden="true">
-            <span class="axis-badge">Brighter ↑</span>
-            <span class="axis-badge">Hotter ←</span>
+          <div class="axis-guides" aria-hidden="true">
+            <div class="axis-badges">
+              <span class="axis-badge axis-badge--bright">Brighter ↑</span>
+              <span class="axis-badge">Fainter ↓</span>
+              <span class="axis-badge axis-badge--hot">Hotter ←</span>
+              <span class="axis-badge">Cooler →</span>
+            </div>
+            <p id="plotOrientationHint" class="axis-orientation-hint">
+              In Theorist HR mode, hotter stars are on the left because temperature increases toward the left.
+            </p>
           </div>
+          <div id="guideOverlay" class="guide-overlay" aria-hidden="true"></div>
+          <div id="plotTooltip" class="plot-tooltip" hidden aria-hidden="true"></div>
           <div id="massLegend" class="mass-legend" hidden>
             <div class="mass-legend__title">Mass colors</div>
             <div id="massLegendBar" class="mass-legend__bar"></div>
@@ -49,8 +58,283 @@
       </section>
 
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
-        <div class="cp-panel-header">Controls, Inference, and Assessment</div>
+        <div class="cp-panel-header">Guided Inference Controls</div>
         <div class="cp-panel-body cp-scroll-shadow">
+          <section class="control-card start-here-card" aria-labelledby="startHereTitle">
+            <p class="card-kicker">Start Here</p>
+            <h2 id="startHereTitle">Start Here</h2>
+            <p class="card-intro">Use the workflow below to move from pattern recognition to physical inference.</p>
+            <ol class="workflow-list">
+              <li>Find the main sequence</li>
+              <li>Click a star</li>
+              <li>Compare temperature and luminosity</li>
+              <li>Turn on radius lines</li>
+              <li>Reveal mass colors</li>
+            </ol>
+          </section>
+
+          <section class="control-card explore-card" aria-labelledby="exploreTitle">
+            <div class="card-heading">
+              <h2 id="exploreTitle">Explore the Diagram</h2>
+              <span class="card-pill">Core controls</span>
+            </div>
+            <p id="exploreHint" class="cp-muted">
+              Start in Observer CMD mode, then switch to Theorist HR mode when you are ready to infer radius.
+            </p>
+
+            <div class="cp-chip-group" role="group" aria-label="Plot mode">
+              <button id="modeObserver" class="cp-chip" type="button" aria-pressed="true">Observer CMD</button>
+              <button id="modeTheorist" class="cp-chip" type="button" aria-pressed="false">Theorist HR</button>
+            </div>
+
+            <label class="check" for="guideMode">
+              <input id="guideMode" type="checkbox" checked aria-describedby="guideModeHint" />
+              <span>Guide mode</span>
+            </label>
+            <p id="guideModeHint" class="control__hint">
+              Annotates the plot and keeps the learning workflow visually in front.
+            </p>
+
+            <label class="check" for="showRadiusLines">
+              <input id="showRadiusLines" type="checkbox" aria-describedby="radiusLinesHint" />
+              <span>Show radius lines</span>
+            </label>
+            <p id="radiusLinesHint" class="control__hint">
+              Constant-radius guides appear in Theorist HR mode so you can infer stellar size from luminosity and temperature.
+            </p>
+
+            <label class="check" for="revealMassColors">
+              <input id="revealMassColors" type="checkbox" aria-describedby="massColorsHint" />
+              <span>Reveal mass colors</span>
+            </label>
+            <p id="massColorsHint" class="control__hint">
+              Keep this off until after you have predicted which end of the main sequence should contain high-mass stars.
+            </p>
+          </section>
+
+          <section class="control-card selected-star-card" aria-labelledby="selectedStarTitle">
+            <div class="card-heading">
+              <h2 id="selectedStarTitle">Selected Star</h2>
+              <span class="card-pill">Inference</span>
+            </div>
+            <p class="cp-muted">Click a star or use the keyboard on the plot to inspect a specific point.</p>
+            <div class="readout-grid">
+              <div class="cp-readout">
+                <div class="cp-readout__label">Stage</div>
+                <div class="cp-readout__value" id="selectedStage">-</div>
+              </div>
+              <div class="cp-readout">
+                <div class="cp-readout__label">Effective temperature (K)</div>
+                <div class="cp-readout__value" id="selectedTeff">-</div>
+              </div>
+              <div class="cp-readout">
+                <div class="cp-readout__label">Luminosity (L/L_sun)</div>
+                <div class="cp-readout__value" id="selectedLuminosity">-</div>
+              </div>
+              <div class="cp-readout">
+                <div class="cp-readout__label">Radius (R/R_sun)</div>
+                <div class="cp-readout__value" id="selectedRadius">-</div>
+              </div>
+              <div class="cp-readout">
+                <div class="cp-readout__label">Mass</div>
+                <div class="cp-readout__value" id="selectedMass">-</div>
+              </div>
+            </div>
+            <div class="interpretation-block">
+              <div class="interpretation-label">Plain-language interpretation</div>
+              <p id="selectedInterpretation" class="interpretation-text">
+                Click a star to begin the inference workflow.
+              </p>
+              <p id="selectedGuideHint" class="cp-muted guide-hint">
+                Ask whether this star is unusually bright or faint for its temperature.
+              </p>
+            </div>
+          </section>
+
+          <details id="experimentControls" class="control-card experiment-controls" aria-labelledby="experimentControlsTitle">
+            <summary>
+              <span>
+                <span class="card-kicker">Experiment Controls</span>
+                <span id="experimentControlsTitle" class="experiment-controls__title">Experiment Controls</span>
+              </span>
+              <span class="experiment-controls__meta">Advanced simulation + evolution</span>
+            </summary>
+            <div class="experiment-controls__body">
+              <div class="presets" aria-labelledby="presetTitle">
+                <div class="presets__label" id="presetTitle">Preset scenarios</div>
+                <div class="cp-chip-group--grid presets__row presets__row--3col" role="group" aria-label="Preset scenarios">
+                  <button class="cp-chip preset" id="presetYoungCluster" data-hr-preset="young-cluster" type="button" aria-pressed="false">Young cluster</button>
+                  <button class="cp-chip preset" id="presetOldCluster" data-hr-preset="old-cluster" type="button" aria-pressed="false">Old cluster</button>
+                  <button class="cp-chip preset" id="presetHighBinary" data-hr-preset="high-binary-fraction" type="button" aria-pressed="false">High binary fraction</button>
+                  <button class="cp-chip preset" id="presetLowMetallicity" data-hr-preset="low-metallicity" type="button" aria-pressed="false">Low metallicity</button>
+                  <button class="cp-chip preset" id="presetSolarLike" data-hr-preset="solar-like-reference" type="button" aria-pressed="false">Solar-like reference</button>
+                </div>
+              </div>
+
+              <section class="advanced-section" aria-labelledby="populationControlsTitle">
+                <h3 id="populationControlsTitle">Synthetic population</h3>
+                <label class="control" for="seedInput">
+                  <span>Seed</span>
+                  <input id="seedInput" type="text" value="hr-lab-42" />
+                  <span class="control__hint">Same seed plus same settings gives the same synthetic population.</span>
+                </label>
+
+                <label class="control" for="populationSize">
+                  <span>Population size N</span>
+                  <input id="populationSize" type="number" min="40" max="1200" step="10" value="320" inputmode="numeric" />
+                  <span class="control__hint">Larger samples reveal the sequence structure more clearly, but add crowding.</span>
+                </label>
+
+                <label class="control" for="distancePc">
+                  <span>Distance (pc)</span>
+                  <input id="distancePc" type="number" min="1" max="10000" step="1" value="140" inputmode="decimal" />
+                  <span class="control__hint">Distance changes how faint the stars appear before photometric scatter is added.</span>
+                </label>
+
+                <label class="control" for="photErr">
+                  <span>Photometric error sigma (mag)</span>
+                  <input id="photErr" type="number" min="0" max="0.5" step="0.005" value="0.03" inputmode="decimal" />
+                  <span class="control__hint">Higher uncertainty broadens the CMD and makes the sequence look noisier.</span>
+                </label>
+
+                <label class="control" for="metallicityZ">
+                  <span>Metallicity Z</span>
+                  <input id="metallicityZ" type="number" min="0.0001" max="0.03" step="0.0001" value="0.02" inputmode="decimal" />
+                  <span class="control__hint">Metallicity Z (chemical composition) shifts the stellar structure built into the model.</span>
+                </label>
+
+                <label class="check" for="clusterMode">
+                  <input id="clusterMode" type="checkbox" checked />
+                  <span>Cluster mode</span>
+                </label>
+                <p class="control__hint">
+                  In cluster mode, stars share one age so the turnoff and evolved stars line up as a population.
+                </p>
+
+                <div class="control control--paired">
+                  <label class="control__label" for="clusterAge">Cluster age (Gyr)</label>
+                  <div class="paired-inputs">
+                    <input
+                      id="clusterAge"
+                      type="range"
+                      min="0"
+                      max="1400"
+                      step="1"
+                      value="70"
+                      data-tooltip-source="#clusterAgeValue"
+                      aria-describedby="clusterAgeHint"
+                    />
+                    <input
+                      id="clusterAgeNumber"
+                      type="number"
+                      min="0"
+                      max="14"
+                      step="0.01"
+                      value="0.70"
+                      inputmode="decimal"
+                      aria-label="Cluster age in gigayears"
+                    />
+                  </div>
+                  <div class="paired-readout">Current value: <strong id="clusterAgeValue">0.70 Gyr</strong></div>
+                  <span id="clusterAgeHint" class="control__hint">Older clusters lose their hottest main-sequence stars first.</span>
+                </div>
+
+                <div class="control control--paired">
+                  <label class="control__label" for="binaryFrac">Binary fraction</label>
+                  <div class="paired-inputs">
+                    <input
+                      id="binaryFrac"
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value="28"
+                      data-tooltip-source="#binaryFracValue"
+                      aria-describedby="binaryFracHint"
+                    />
+                    <input
+                      id="binaryFracNumber"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value="28"
+                      inputmode="numeric"
+                      aria-label="Binary fraction in percent"
+                    />
+                  </div>
+                  <div class="paired-readout">Current value: <strong id="binaryFracValue">28%</strong></div>
+                  <span id="binaryFracHint" class="control__hint">Higher unresolved binary fractions push some stars above the main sequence.</span>
+                </div>
+
+                <button id="regeneratePopulation" class="cp-button cp-button--outline" type="button">Regenerate population</button>
+              </section>
+
+              <section class="advanced-section" aria-labelledby="evolveControlsTitle">
+                <h3 id="evolveControlsTitle">Evolve a star</h3>
+                <label class="control" for="evolveMass">
+                  <span>Mass (M_sun)</span>
+                  <select id="evolveMass" aria-describedby="evolveMassHint"></select>
+                  <span id="evolveMassHint" class="control__hint">Compare how different masses change both the path and the lifetime.</span>
+                </label>
+
+                <div class="control">
+                  <label class="control__label" for="evolveTime">Time along track</label>
+                  <input
+                    id="evolveTime"
+                    type="range"
+                    min="0"
+                    max="12"
+                    step="0.001"
+                    value="0"
+                    data-tooltip-source="#evolveTimeValue"
+                    aria-describedby="evolveTimeHint"
+                  />
+                  <div class="paired-readout">Current value: <strong id="evolveTimeValue">0.000 Gyr</strong></div>
+                  <span id="evolveTimeHint" class="control__hint">Move forward in time to see where the chosen mass leaves the main sequence.</span>
+                </div>
+
+                <p class="cp-muted">Main-sequence lifetime estimate: <strong id="evolveMsLifetime">10.000 Gyr</strong></p>
+                <p class="cp-muted">Current stage: <strong id="evolveStage">Main sequence</strong></p>
+                <p id="evolveMessage" class="cp-muted">Mass determines both the path and the timescale.</p>
+              </section>
+            </div>
+          </details>
+
+          <section class="control-card" aria-labelledby="inferenceLogTitle">
+            <div class="card-heading">
+              <h2 id="inferenceLogTitle">Inference Log</h2>
+              <span class="card-pill">Classroom notes</span>
+            </div>
+            <label class="control" for="claimInput">
+              <span>Add one-sentence claim</span>
+              <input id="claimInput" type="text" placeholder="Example: Hot, faint stars must be very small in radius." />
+              <span class="control__hint">Use one claim per inference step so you can compare your reasoning before and after reveals.</span>
+            </label>
+
+            <div class="sentence-starters" role="group" aria-label="Sentence starters">
+              <div class="presets__label">Sentence starters</div>
+              <div class="cp-chip-group starters-row">
+                <button id="claimStarterMainSequence" class="cp-chip" type="button">
+                  As stars on the main sequence become hotter, they also become ___.
+                </button>
+                <button id="claimStarterHotFaint" class="cp-chip" type="button">
+                  This hot but faint star must have a ___ radius because ___.
+                </button>
+                <button id="claimStarterMassGradient" class="cp-chip" type="button">
+                  Revealing mass colors shows that mass increases toward the ___ end of the main sequence.
+                </button>
+              </div>
+            </div>
+
+            <div class="claim-actions">
+              <button id="addClaim" class="cp-button cp-button--outline" type="button">Add claim</button>
+              <button id="exportClaims" class="cp-button cp-button--outline" type="button">Export JSON</button>
+              <button id="clearClaims" class="cp-button cp-button--outline" type="button">Clear</button>
+            </div>
+            <ul id="claimList" class="claim-list" aria-label="Inference claim list"></ul>
+          </section>
+
           <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
             <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -90,104 +374,6 @@
               </div>
             </div>
           </div>
-
-          <section class="control-block">
-            <h2>Plot mode</h2>
-            <div class="cp-chip-group" role="group" aria-label="Plot mode">
-              <button id="modeObserver" class="cp-chip" type="button" aria-pressed="true">Observer CMD</button>
-              <button id="modeTheorist" class="cp-chip" type="button" aria-pressed="false">Theorist HR</button>
-            </div>
-            <label class="check"><input id="showRadiusLines" type="checkbox" /> Show radius lines</label>
-            <label class="check"><input id="revealMassColors" type="checkbox" /> Reveal mass colors</label>
-          </section>
-
-          <section class="control-block">
-            <h2>Synthetic population</h2>
-            <label class="control">
-              <span>Seed</span>
-              <input id="seedInput" type="text" value="hr-lab-42" />
-            </label>
-            <label class="control">
-              <span>Population size N</span>
-              <input id="populationSize" type="number" min="40" max="1200" step="10" value="320" />
-            </label>
-            <label class="control">
-              <span>Distance [pc]</span>
-              <input id="distancePc" type="number" min="1" max="10000" step="1" value="140" />
-            </label>
-            <label class="control">
-              <span>Photometric error sigma [mag]</span>
-              <input id="photErr" type="number" min="0" max="0.5" step="0.005" value="0.03" />
-            </label>
-            <label class="control">
-              <span>Metallicity Z</span>
-              <input id="metallicityZ" type="number" min="0.0001" max="0.03" step="0.0001" value="0.02" />
-            </label>
-            <label class="check"><input id="clusterMode" type="checkbox" checked /> Cluster mode</label>
-            <label class="control">
-              <span>Cluster age: <strong id="clusterAgeValue">0.70 Gyr</strong></span>
-              <input id="clusterAge" type="range" min="0" max="1400" step="1" value="70" />
-            </label>
-            <label class="control">
-              <span>Binary fraction: <strong id="binaryFracValue">28%</strong></span>
-              <input id="binaryFrac" type="range" min="0" max="100" step="1" value="28" />
-            </label>
-            <button id="regeneratePopulation" class="cp-button cp-button--outline" type="button">Regenerate population</button>
-          </section>
-
-          <section class="control-block">
-            <h2>Evolve a star</h2>
-            <label class="control">
-              <span>Mass [M_sun]</span>
-              <select id="evolveMass"></select>
-            </label>
-            <label class="control">
-              <span>Time: <strong id="evolveTimeValue">0.000 Gyr</strong></span>
-              <input id="evolveTime" type="range" min="0" max="12" step="0.001" value="0" />
-            </label>
-            <p class="cp-muted">Main-sequence lifetime estimate: <strong id="evolveMsLifetime">10.000 Gyr</strong></p>
-            <p class="cp-muted">Current stage: <strong id="evolveStage">Main sequence</strong></p>
-            <p id="evolveMessage" class="cp-muted">Mass determines both the path and the timescale.</p>
-          </section>
-
-          <section class="control-block">
-            <h2>Selected star readout</h2>
-            <p class="cp-muted">Use arrow keys to move selection on the plot.</p>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Stage</div>
-              <div class="cp-readout__value" id="selectedStage">-</div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Luminosity</div>
-              <div class="cp-readout__value" id="selectedLuminosity">-</div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Effective temperature</div>
-              <div class="cp-readout__value" id="selectedTeff">-</div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Inferred radius (from L and Teff)</div>
-              <div class="cp-readout__value" id="selectedRadius">-</div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Mass</div>
-              <div class="cp-readout__value" id="selectedMass">-</div>
-            </div>
-          </section>
-
-          <section class="control-block">
-            <h2>Inference log</h2>
-            <label class="control">
-              <span>Add one-sentence claim</span>
-              <input id="claimInput" type="text" placeholder="Example: Hot, faint stars must be very small in radius." />
-            </label>
-            <div class="claim-actions">
-              <button id="addClaim" class="cp-button cp-button--outline" type="button">Add claim</button>
-              <button id="exportClaims" class="cp-button cp-button--outline" type="button">Export JSON</button>
-              <button id="clearClaims" class="cp-button cp-button--outline" type="button">Clear</button>
-            </div>
-            <ul id="claimList" class="claim-list" aria-label="Inference claim list"></ul>
-          </section>
 
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>

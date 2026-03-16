@@ -1,7 +1,7 @@
 @import "../../shared/stub-demo.css";
 
 .hr-lab {
-  grid-template-columns: minmax(0, 1fr) clamp(320px, 33vw, 430px);
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 34vw, 460px);
   grid-template-rows: 1fr auto;
   grid-template-areas:
     "viz sidebar"
@@ -9,7 +9,7 @@
 }
 
 .hr-lab .cp-demo__stage {
-  min-height: clamp(440px, 72svh, 860px);
+  min-height: clamp(460px, 72svh, 860px);
   display: grid;
   gap: var(--cp-space-2);
   padding: var(--cp-space-3);
@@ -36,21 +36,23 @@
   font-size: 1.35rem;
 }
 
-.plot-kicker {
+.plot-kicker,
+.card-kicker {
   margin: 0;
   color: var(--cp-text2);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
 }
 
-.plot-mode-badge {
+.plot-mode-badge,
+.card-pill {
   border: 1px solid var(--cp-border);
   border-radius: 999px;
   padding: 4px 10px;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: var(--cp-text2);
-  background: color-mix(in srgb, var(--cp-bg2) 80%, transparent);
+  background: color-mix(in srgb, var(--cp-bg2) 82%, transparent);
 }
 
 .hr-plot {
@@ -64,64 +66,154 @@
   height: auto;
   aspect-ratio: 4 / 3;
   display: block;
-  border-radius: 4px;
+  border-radius: 16px;
   border: 1px solid var(--cp-border);
-  background: color-mix(in srgb, var(--cp-bg1) 94%, var(--cp-bg0));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cp-border) 28%, transparent);
+  background:
+    radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--cp-accent) 10%, transparent), transparent 30%),
+    color-mix(in srgb, var(--cp-bg1) 94%, var(--cp-bg0));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--cp-border) 28%, transparent),
+    var(--cp-card-shadow);
 }
 
 #hrCanvas:focus-visible {
   outline: 2px solid var(--cp-accent);
-  outline-offset: 2px;
+  outline-offset: 3px;
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--cp-border) 28%, transparent),
-    0 0 0 3px color-mix(in srgb, var(--cp-accent) 28%, transparent);
+    0 0 0 4px color-mix(in srgb, var(--cp-accent) 24%, transparent);
+}
+
+.axis-guides {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  display: grid;
+  gap: 8px;
+  max-width: min(380px, calc(100% - 24px));
+  pointer-events: none;
 }
 
 .axis-badges {
-  position: absolute;
-  left: 10px;
-  top: 10px;
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  pointer-events: none;
 }
 
 .axis-badge {
   border: 1px solid var(--cp-border);
   border-radius: 999px;
-  padding: 3px 8px;
+  padding: 4px 9px;
   font-size: 0.74rem;
-  color: var(--cp-text2);
+  color: var(--cp-text);
   background: color-mix(in srgb, var(--cp-bg1) 88%, transparent);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--cp-bg0) 40%, transparent);
+}
+
+.axis-badge--bright,
+.axis-badge--hot {
+  border-color: color-mix(in srgb, var(--cp-accent) 36%, var(--cp-border));
+  color: color-mix(in srgb, var(--cp-accent-soft) 60%, var(--cp-text));
+}
+
+.axis-orientation-hint {
+  margin: 0;
+  max-width: 28rem;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 72%, transparent);
+  background: color-mix(in srgb, var(--cp-bg2) 88%, transparent);
+  color: var(--cp-text);
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.guide-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.guide-overlay__label {
+  position: absolute;
+  display: grid;
+  gap: 2px;
+  max-width: 12rem;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 80%, transparent);
+  background: color-mix(in srgb, var(--cp-bg1) 88%, transparent);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--cp-bg0) 48%, transparent);
+}
+
+.guide-overlay__title {
+  color: var(--cp-text);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.guide-overlay__hint {
+  color: var(--cp-text2);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.plot-tooltip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, calc(-100% - 14px));
+  min-width: 10rem;
+  max-width: 13rem;
+  padding: 9px 11px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 90%, transparent);
+  background: color-mix(in srgb, var(--cp-bg1) 94%, transparent);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--cp-bg0) 52%, transparent);
+  color: var(--cp-text);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  pointer-events: none;
+  z-index: var(--cp-z-tooltip, 400);
+}
+
+.plot-tooltip__title {
+  display: block;
+  font-weight: 700;
+  color: var(--cp-text);
+}
+
+.plot-tooltip__meta {
+  display: block;
+  color: var(--cp-text2);
 }
 
 .mass-legend {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
-  width: min(220px, 55%);
-  padding: 8px;
+  right: 12px;
+  bottom: 12px;
+  width: min(230px, 58%);
+  padding: 10px;
   border: 1px solid var(--cp-border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: color-mix(in srgb, var(--cp-bg1) 92%, transparent);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--cp-bg0) 48%, transparent);
 }
 
 .mass-legend__title {
   color: var(--cp-text2);
   font-size: 0.78rem;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .mass-legend__bar {
   height: 10px;
-  border-radius: 6px;
+  border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--cp-border) 70%, transparent);
 }
 
 .mass-legend__labels {
-  margin-top: 4px;
+  margin-top: 5px;
   display: flex;
   justify-content: space-between;
   color: var(--cp-text2);
@@ -136,44 +228,252 @@
   font-size: 0.85rem;
 }
 
-.control-block {
+.control-card {
   display: grid;
   gap: var(--cp-space-2);
-  padding-bottom: var(--cp-space-2);
-  border-bottom: 1px solid color-mix(in srgb, var(--cp-border) 60%, transparent);
+  padding: var(--cp-space-3);
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 82%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cp-bg2) 92%, transparent), color-mix(in srgb, var(--cp-bg1) 96%, transparent));
+  box-shadow: 0 18px 30px color-mix(in srgb, var(--cp-bg0) 30%, transparent);
 }
 
-.control-block h2 {
+.control-card h2,
+.advanced-section h3 {
   margin: 0;
-  font-size: 0.98rem;
 }
 
-.control {
+.card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--cp-space-2);
+}
+
+.card-intro {
+  margin: 0;
+  color: var(--cp-text);
+}
+
+.start-here-card {
+  border-color: color-mix(in srgb, var(--cp-accent) 40%, var(--cp-border));
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--cp-accent) 12%, var(--cp-bg2)), color-mix(in srgb, var(--cp-bg1) 96%, transparent));
+}
+
+.workflow-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.workflow-list li {
+  color: var(--cp-text);
+}
+
+.selected-star-card {
+  border-color: color-mix(in srgb, var(--cp-accent-soft) 38%, var(--cp-border));
+}
+
+.readout-grid {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.interpretation-block {
   display: grid;
   gap: 6px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 72%, transparent);
+  background: color-mix(in srgb, var(--cp-bg0) 22%, var(--cp-bg2));
+}
+
+.interpretation-label {
+  color: var(--cp-text2);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+
+.interpretation-text,
+.guide-hint {
+  margin: 0;
+}
+
+.guide-hint[hidden] {
+  display: none;
+}
+
+.control,
+.advanced-section {
+  display: grid;
+  gap: 6px;
+}
+
+.advanced-section + .advanced-section {
+  padding-top: var(--cp-space-2);
+  border-top: 1px solid color-mix(in srgb, var(--cp-border) 58%, transparent);
 }
 
 .control input[type="text"],
 .control input[type="number"],
 .control select {
-  background: var(--cp-bg1);
+  width: 100%;
+  min-height: 44px;
+  background: color-mix(in srgb, var(--cp-bg1) 96%, transparent);
   color: var(--cp-text);
   border: 1px solid var(--cp-border);
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
   font: inherit;
+}
+
+.control input[type="text"]:focus-visible,
+.control input[type="number"]:focus-visible,
+.control select:focus-visible,
+.check:focus-within,
+.preset:focus-visible,
+.sentence-starters .cp-chip:focus-visible {
+  outline: 2px solid var(--cp-accent);
+  outline-offset: 2px;
+}
+
+.control input[type="range"] {
+  width: 100%;
+}
+
+.control__label {
+  font-weight: 600;
+  color: var(--cp-text);
+}
+
+.control__hint {
+  color: var(--cp-text2);
+  font-size: 0.84rem;
+  line-height: 1.35;
 }
 
 .check {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: var(--cp-text2);
-  font-size: 0.92rem;
+  gap: 10px;
+  min-height: 44px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--cp-border) 70%, transparent);
+  background: color-mix(in srgb, var(--cp-bg1) 92%, transparent);
+  color: var(--cp-text);
 }
 
 .check input[type="checkbox"] {
   accent-color: var(--cp-accent);
+}
+
+.check input[type="checkbox"]:disabled + span,
+.check:has(input:disabled) {
+  color: var(--cp-text2);
+  opacity: 0.78;
+}
+
+.paired-inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 10px;
+  align-items: center;
+}
+
+.paired-readout {
+  color: var(--cp-text2);
+  font-size: 0.88rem;
+}
+
+.presets {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.presets__label {
+  color: var(--cp-text2);
+  font-size: 0.88rem;
+}
+
+.presets__row {
+  display: grid;
+  gap: var(--cp-space-1);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.presets__row--3col {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.preset[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--cp-accent) 40%, var(--cp-border));
+  background: color-mix(in srgb, var(--cp-accent) 16%, var(--cp-bg2));
+}
+
+.sentence-starters {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.starters-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--cp-space-1);
+}
+
+.starters-row .cp-chip {
+  justify-content: flex-start;
+  text-align: left;
+  min-height: 44px;
+}
+
+.experiment-controls {
+  gap: 0;
+}
+
+.experiment-controls[open] {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cp-bg2) 96%, transparent), color-mix(in srgb, var(--cp-bg1) 96%, transparent));
+}
+
+.experiment-controls.is-guided:not([open]) {
+  opacity: 0.72;
+}
+
+.experiment-controls summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--cp-space-2);
+  cursor: pointer;
+  list-style: none;
+}
+
+.experiment-controls summary::-webkit-details-marker {
+  display: none;
+}
+
+.experiment-controls__title {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cp-text);
+}
+
+.experiment-controls__meta {
+  color: var(--cp-text2);
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+.experiment-controls__body {
+  display: grid;
+  gap: var(--cp-space-3);
+  padding-top: var(--cp-space-3);
 }
 
 .claim-actions {
@@ -192,15 +492,25 @@
 
 .claim-item {
   border: 1px solid var(--cp-border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: color-mix(in srgb, var(--cp-bg2) 88%, transparent);
-  padding: 8px 10px;
+  padding: 10px 12px;
   color: var(--cp-text);
   font-size: 0.92rem;
 }
 
 .claim-item--empty {
   color: var(--cp-text2);
+}
+
+@media (max-width: 1180px) {
+  .hr-lab {
+    grid-template-columns: minmax(0, 1fr) clamp(320px, 38vw, 420px);
+  }
+
+  .paired-inputs {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -213,15 +523,42 @@
   }
 
   .hr-lab .cp-demo__stage {
-    min-height: clamp(380px, 55svh, 620px);
+    min-height: clamp(390px, 58svh, 680px);
   }
 
-  .plot-header {
+  .plot-header,
+  .card-heading,
+  .experiment-controls summary {
     flex-direction: column;
+    align-items: flex-start;
   }
 
   .mass-legend {
-    width: min(240px, 70%);
+    width: min(240px, 74%);
+  }
+}
+
+@media (max-width: 720px) {
+  .hr-lab .cp-demo__stage,
+  .control-card {
+    padding: var(--cp-space-2);
+  }
+
+  .presets__row,
+  .presets__row--3col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .axis-guides {
+    max-width: calc(100% - 24px);
+  }
+
+  .guide-overlay__label {
+    max-width: 9.5rem;
+  }
+
+  .claim-actions .cp-button {
+    flex: 1 1 12rem;
   }
 }
 

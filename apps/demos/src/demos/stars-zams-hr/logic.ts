@@ -1,5 +1,19 @@
 export type PlotMode = "observer" | "theorist";
 
+export type HrLabPresetId =
+  | "young-cluster"
+  | "old-cluster"
+  | "high-binary-fraction"
+  | "low-metallicity"
+  | "solar-like-reference";
+
+export type GuideRegion = {
+  label: string;
+  hint: string;
+  xNorm: number;
+  yNorm: number;
+};
+
 export const THEORIST_AXIS_LIMITS = {
   teffMinK: 2500,
   teffMaxK: 50000,
@@ -22,8 +36,27 @@ export type PlotPoint = {
   y: number;
 };
 
+export type SanitizedNumericControlArgs = {
+  rawValue: string;
+  fallback: number;
+  min: number;
+  max: number;
+  step?: number;
+};
+
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+export function sanitizeNumericControl(args: SanitizedNumericControlArgs): number {
+  const { rawValue, fallback, min, max, step } = args;
+  const normalized = rawValue.trim();
+  const parsed = normalized.length === 0 ? Number.NaN : Number(normalized);
+  const safeBase = Number.isFinite(parsed) ? parsed : fallback;
+  const clamped = clamp(safeBase, min, max);
+  if (!Number.isFinite(step) || !step || step <= 0) return clamped;
+  const snapped = Math.round((clamped - min) / step) * step + min;
+  return clamp(Number(snapped.toFixed(12)), min, max);
 }
 
 export function formatNumber(value: number, digits = 3): string {
@@ -140,6 +173,162 @@ export function massColorHex(massMsun: number): string {
   const sat = 78;
   const light = 56;
   return `hsl(${hue.toFixed(0)}deg ${sat}% ${light}%)`;
+}
+
+const GUIDE_REGIONS: Record<PlotMode, GuideRegion[]> = {
+  theorist: [
+    {
+      label: "Main sequence",
+      hint: "Most stars lie along this diagonal band: hotter stars trend left and brighter stars trend up.",
+      xNorm: 0.42,
+      yNorm: 0.46
+    },
+    {
+      label: "Giant branch",
+      hint: "Cool but luminous giants sit toward the upper right because they have large radii.",
+      xNorm: 0.76,
+      yNorm: 0.78
+    },
+    {
+      label: "White dwarf region",
+      hint: "White dwarfs are hot but faint, so they cluster down to the left with very small radii.",
+      xNorm: 0.18,
+      yNorm: 0.16
+    }
+  ],
+  observer: [
+    {
+      label: "Main sequence",
+      hint: "Trace the dense diagonal band before clicking a star.",
+      xNorm: 0.43,
+      yNorm: 0.46
+    },
+    {
+      label: "Giant branch",
+      hint: "The bright, redder giant branch sits up and to the right.",
+      xNorm: 0.76,
+      yNorm: 0.78
+    },
+    {
+      label: "White dwarf region",
+      hint: "White dwarfs are blue-ish but faint, so they appear lower and left of the main sequence.",
+      xNorm: 0.17,
+      yNorm: 0.19
+    }
+  ]
+};
+
+export function getGuideRegions(plotMode: PlotMode): GuideRegion[] {
+  return GUIDE_REGIONS[plotMode];
+}
+
+export function getRadiusLinesVisible(args: {
+  plotMode: PlotMode;
+  showRadiusLinesPreference: boolean;
+}): boolean {
+  return args.plotMode === "theorist" && args.showRadiusLinesPreference;
+}
+
+const HR_LAB_PRESETS: Record<HrLabPresetId, Partial<{
+  modeCluster: boolean;
+  clusterAgeGyr: number;
+  binaryFrac: number;
+  metallicityZ: number;
+  evolveMassMsun: number;
+}>> = {
+  "young-cluster": {
+    modeCluster: true,
+    clusterAgeGyr: 0.08,
+    binaryFrac: 0.2,
+    metallicityZ: 0.02
+  },
+  "old-cluster": {
+    modeCluster: true,
+    clusterAgeGyr: 10,
+    binaryFrac: 0.2,
+    metallicityZ: 0.02
+  },
+  "high-binary-fraction": {
+    modeCluster: true,
+    clusterAgeGyr: 0.7,
+    binaryFrac: 0.65,
+    metallicityZ: 0.02
+  },
+  "low-metallicity": {
+    modeCluster: true,
+    clusterAgeGyr: 0.7,
+    binaryFrac: 0.28,
+    metallicityZ: 0.004
+  },
+  "solar-like-reference": {
+    modeCluster: true,
+    clusterAgeGyr: 4.6,
+    binaryFrac: 0.28,
+    metallicityZ: 0.02,
+    evolveMassMsun: 1
+  }
+};
+
+export function applyHrLabPreset(presetId: HrLabPresetId) {
+  return HR_LAB_PRESETS[presetId];
+}
+
+export function describeSelectedStarInference(args: {
+  stage: string;
+  teffK: number;
+  luminosityLsun: number;
+  radiusRsun: number;
+}): string {
+  const { stage, teffK, luminosityLsun, radiusRsun } = args;
+
+  if (stage === "white_dwarf") {
+    return "White dwarfs are hot but faint, so white dwarfs must have a very small radius.";
+  }
+
+  if (stage === "giant" || stage === "supergiant") {
+    return "Cool but luminous giant stars must have a large radius.";
+  }
+
+  if (stage === "subgiant") {
+    return "Subgiants sit between the main sequence and giants, so their radius is growing as they brighten.";
+  }
+
+  if (stage === "compact_remnant") {
+    return "Compact remnants stay extremely small even when their temperatures are very high.";
+  }
+
+  const hot = teffK >= 9000;
+  const cool = teffK <= 5200;
+  const luminous = luminosityLsun >= 10;
+  const faint = luminosityLsun <= 0.15;
+  const smallRadius = radiusRsun <= 0.3;
+  const largeRadius = radiusRsun >= 5;
+
+  if (hot && faint) {
+    return "Hot but faint stars must have a small radius.";
+  }
+
+  if (cool && luminous) {
+    return "Cool but luminous stars must have a large radius.";
+  }
+
+  if (cool && faint) {
+    return "Cool and faint main-sequence stars are usually small and low mass.";
+  }
+
+  if (hot && luminous) {
+    return "Hot and luminous main-sequence stars are usually more massive and larger than the Sun.";
+  }
+
+  if (smallRadius) {
+    return "This star is faint for its temperature, which points to a small radius.";
+  }
+
+  if (largeRadius) {
+    return "This star is especially luminous for its temperature, which points to a large radius.";
+  }
+
+  return "Compare this star with nearby main-sequence stars to decide whether radius or mass is changing more strongly.";
 }
 
 export function selectNextStarByDirection(args: {

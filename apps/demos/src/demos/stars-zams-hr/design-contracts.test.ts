@@ -26,6 +26,7 @@ describe("HR Diagram Inference Lab -- Design System Contracts", () => {
   });
 
   it("contains required staged-reveal controls", () => {
+    expect(html).toContain('id="guideMode"');
     expect(html).toContain('id="showRadiusLines"');
     expect(html).toContain('id="revealMassColors"');
     expect(html).toContain('id="massLegend"');
@@ -37,12 +38,42 @@ describe("HR Diagram Inference Lab -- Design System Contracts", () => {
     expect(html).toContain('id="claimInput"');
     expect(html).toContain('id="addClaim"');
     expect(html).toContain('id="exportClaims"');
+    expect(html).toContain('id="claimStarterHotFaint"');
   });
 
   it("contains plot stage and persistent axis badges", () => {
     expect(html).toContain('id="hrCanvas"');
     expect(html).toContain("Brighter ↑");
     expect(html).toContain("Hotter ←");
+  });
+
+  it("contains start-here and explore cards in the controls panel", () => {
+    expect(html).toContain("Start Here");
+    expect(html).toContain("Explore the Diagram");
+    expect(html).toContain("Selected Star");
+    expect(html).toContain("Experiment Controls");
+    expect(html).toContain("Inference Log");
+    expect(html).toContain("Find the main sequence");
+    expect(html).toContain("Turn on radius lines");
+    expect(html).toContain("Reveal mass colors");
+  });
+
+  it("marks guide mode on by default and collapses experiment controls by default", () => {
+    expect(html).toMatch(/id="guideMode"[^>]*checked/);
+    expect(html).toMatch(/<details[^>]*id="experimentControls"[^>]*>/);
+    expect(html).not.toMatch(/<details[^>]*id="experimentControls"[^>]*open/);
+  });
+
+  it("contains preset buttons and hover tooltip container", () => {
+    expect(html).toContain('data-hr-preset="young-cluster"');
+    expect(html).toContain('data-hr-preset="old-cluster"');
+    expect(html).toContain('data-hr-preset="solar-like-reference"');
+    expect(html).toContain('id="plotTooltip"');
+  });
+
+  it("contains selected-star interpretation helper text", () => {
+    expect(html).toContain('id="selectedInterpretation"');
+    expect(html).toContain("Plain-language interpretation");
   });
 
   it("keeps plot canvas keyboard-focusable with guidance text", () => {
@@ -74,5 +105,12 @@ describe("HR Diagram Inference Lab -- Design System Contracts", () => {
   it("keeps token-first styling and avoids hardcoded hex colors", () => {
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(css).toContain("var(--cp-");
+  });
+
+  it("styles the stronger teaching cards and tooltip affordances", () => {
+    expect(css).toContain(".start-here-card");
+    expect(css).toContain(".selected-star-card");
+    expect(css).toContain(".plot-tooltip");
+    expect(css).toContain(".experiment-controls[open]");
   });
 });
