@@ -215,6 +215,29 @@ describe("BinaryOrbitModel", () => {
     expect(masses.secondaryMinimumMassSolar).toBeCloseTo(state.secondaryMassSolar * sinICubed, 12);
   });
 
+  it("returns zero-valued observables for face-on systems with zero RV amplitudes", () => {
+    const faceOn = BinaryOrbitModel.circularState({
+      primaryMassSolar: 1,
+      secondaryMassSolar: 0.2,
+      separationAu: 4,
+      inclinationDeg: 0,
+    });
+
+    const massFunction = BinaryOrbitModel.massFunctionSolar({
+      k1KmPerS: faceOn.k1KmPerS,
+      periodYr: faceOn.periodYr,
+    });
+    const minimumMasses = BinaryOrbitModel.minimumMassesSolar({
+      k1KmPerS: faceOn.k1KmPerS,
+      k2KmPerS: faceOn.k2KmPerS,
+      periodYr: faceOn.periodYr,
+    });
+
+    expect(massFunction).toBe(0);
+    expect(minimumMasses.primaryMinimumMassSolar).toBe(0);
+    expect(minimumMasses.secondaryMinimumMassSolar).toBe(0);
+  });
+
   it("preserves inclination scaling in the mass function and minimum masses", () => {
     const edgeOn = BinaryOrbitModel.circularState({
       primaryMassSolar: 1,

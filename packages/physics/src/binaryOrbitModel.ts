@@ -268,7 +268,9 @@ function inferMassRatioFromRvAmplitudes(
 function massFunctionSolar(
   input: BinaryMassFunctionInput,
 ): number {
-  if (!isFinitePositive(input.k1KmPerS) || !isFinitePositive(input.periodYr)) return Number.NaN;
+  if (!Number.isFinite(input.k1KmPerS) || !isFinitePositive(input.periodYr)) return Number.NaN;
+  if (input.k1KmPerS < 0) return Number.NaN;
+  if (input.k1KmPerS === 0) return 0;
 
   const k1AuPerYr = AstroUnits.kmPerSToAuPerYr(input.k1KmPerS);
   return (
@@ -280,6 +282,27 @@ function massFunctionSolar(
 function minimumMassesSolar(
   input: BinaryMinimumMassesInput,
 ): BinaryMinimumMassesResult {
+  if (!Number.isFinite(input.k1KmPerS) || !Number.isFinite(input.k2KmPerS) || !isFinitePositive(input.periodYr)) {
+    return {
+      primaryMinimumMassSolar: Number.NaN,
+      secondaryMinimumMassSolar: Number.NaN,
+    };
+  }
+
+  if (input.k1KmPerS < 0 || input.k2KmPerS < 0) {
+    return {
+      primaryMinimumMassSolar: Number.NaN,
+      secondaryMinimumMassSolar: Number.NaN,
+    };
+  }
+
+  if (input.k1KmPerS === 0 && input.k2KmPerS === 0) {
+    return {
+      primaryMinimumMassSolar: 0,
+      secondaryMinimumMassSolar: 0,
+    };
+  }
+
   if (
     !isFinitePositive(input.k1KmPerS)
     || !isFinitePositive(input.k2KmPerS)

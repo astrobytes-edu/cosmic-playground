@@ -743,7 +743,13 @@ function getRvChartLayout(args: {
   };
   const plotW = Math.max(1, args.width - margin.left - margin.right);
   const plotH = Math.max(1, args.height - margin.top - margin.bottom);
-  const yMaxKmS = Math.max(1, Math.abs(args.model.k1KmPerS), Math.abs(args.model.k2KmPerS)) * 1.2;
+  const edgeOnState = BinaryOrbitModel.circularState({
+    primaryMassSolar: args.model.m1,
+    secondaryMassSolar: args.model.m2,
+    separationAu: args.model.separation,
+    inclinationDeg: 90,
+  });
+  const yMaxKmS = Math.max(1, Math.abs(edgeOnState.k1KmPerS), Math.abs(edgeOnState.k2KmPerS)) * 1.2;
   const xFromPhaseCycle = (phaseCycle: number) => margin.left + (phaseCycle / 2) * plotW;
   const yFromVelocity = (velocityKmS: number) => margin.top + ((yMaxKmS - velocityKmS) / (2 * yMaxKmS)) * plotH;
   const velocityFromY = (pixelY: number) => {
@@ -852,7 +858,9 @@ function drawRadialVelocity(model: BinaryModel, phaseRad: number): void {
   };
 
   drawCurve("primary", canvasTheme.body1, false);
-  drawCurve("secondary", canvasTheme.body2, true);
+  if (state.system.spectroscopyMode === "SB2") {
+    drawCurve("secondary", canvasTheme.body2, true);
+  }
 
   const phaseCycle = (((phaseRad % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) / (2 * Math.PI);
   const xPhase = xFromPhaseCycle(phaseCycle);
@@ -874,10 +882,12 @@ function drawRadialVelocity(model: BinaryModel, phaseRad: number): void {
     rvCtx.arc(xPhase, yFromVelocity(phaseSample.rv1KmPerS), 4.2, 0, Math.PI * 2);
     rvCtx.fill();
 
-    rvCtx.fillStyle = canvasTheme.body2;
-    rvCtx.beginPath();
-    rvCtx.arc(xPhase, yFromVelocity(phaseSample.rv2KmPerS), 4.2, 0, Math.PI * 2);
-    rvCtx.fill();
+    if (state.system.spectroscopyMode === "SB2") {
+      rvCtx.fillStyle = canvasTheme.body2;
+      rvCtx.beginPath();
+      rvCtx.arc(xPhase, yFromVelocity(phaseSample.rv2KmPerS), 4.2, 0, Math.PI * 2);
+      rvCtx.fill();
+    }
   });
 
   const annotateAmplitude = (label: string, amplitudeKmPerS: number, strokeStyle: string, x: number) => {
@@ -903,7 +913,9 @@ function drawRadialVelocity(model: BinaryModel, phaseRad: number): void {
   };
 
   annotateAmplitude("K1", model.k1KmPerS, canvasTheme.body1, margin.left + plotW * 0.74);
-  annotateAmplitude("K2", model.k2KmPerS, canvasTheme.body2, margin.left + plotW * 0.88);
+  if (state.system.spectroscopyMode === "SB2") {
+    annotateAmplitude("K2", model.k2KmPerS, canvasTheme.body2, margin.left + plotW * 0.88);
+  }
 
   const drawMeasurementMarker = (measurement: CurveMeasurement | null, strokeStyle: string, label: string) => {
     if (!measurement) return;

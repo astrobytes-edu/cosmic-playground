@@ -361,6 +361,25 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(page.locator("#inclinationProjectionHint")).toContainText("0.500");
   });
 
+  test("RV plot visibly flattens when inclination decreases instead of silently rescaling the axis", async ({ page }) => {
+    await page.locator("#viewRv").click();
+    await page.locator("#inclination").evaluate((el: HTMLInputElement) => {
+      el.value = "90";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await page.waitForTimeout(120);
+
+    await page.locator("#inclination").evaluate((el: HTMLInputElement) => {
+      el.value = "30";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await page.waitForTimeout(120);
+
+    await expect(page.locator("#rvPanel")).toHaveScreenshot("binary-orbits-rv-inclination-30.png", {
+      maxDiffPixelRatio: 0.02,
+    });
+  });
+
   test("face-on inclination collapses projected RV and spectrum wobble toward zero", async ({ page }) => {
     await page.locator("#inclination").evaluate((el: HTMLInputElement) => {
       el.value = "0";
@@ -375,6 +394,22 @@ test.describe("Binary Orbits -- E2E", () => {
 
     await page.locator("#viewSpectrum").click();
     await expect(page.locator("#spectrumProjectionNote")).toContainText("0.000");
+  });
+
+  test("SB1 mode hides the secondary RV curve while SB2 mode shows it", async ({ page }) => {
+    await page.locator("#viewRv").click();
+    await page.locator("#inclination").evaluate((el: HTMLInputElement) => {
+      el.value = "90";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await page.waitForTimeout(120);
+
+    await page.locator("#spectroscopySb1").click();
+    await page.waitForTimeout(120);
+
+    await expect(page.locator("#rvPanel")).toHaveScreenshot("binary-orbits-rv-sb1.png", {
+      maxDiffPixelRatio: 0.02,
+    });
   });
 
   test("secondary barycenter and speed readouts are numeric", async ({ page }) => {
