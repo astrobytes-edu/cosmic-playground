@@ -219,14 +219,36 @@ test.describe("Cosmic Playground smoke", () => {
     await expect(page.getByText(/generic station template/i)).toBeVisible();
   });
 
-  test("Instructor pages flag incomplete bundles", async ({ page }) => {
-    await page.goto("instructor/planetary-conjunctions/");
+  test("Instructor pages are honest about missing teaching material", async ({ page }) => {
+    // Two states exist. Originally this test pointed at planetary-conjunctions, which
+    // had 1 of 5 sections; that bundle is now complete, and as of 2026-09-04 NO bundle
+    // is partial, so the "incomplete" branch has no instance to assert against. What
+    // remains testable -- and what a lesson-planning instructor actually hits -- is the
+    // no-bundle fallback. Both branches are covered by unit tests on the section list.
+    const slugsWithNoBundle = ["eos-lab", "stars-zams-hr"];
 
-    await expect(
-      page.getByRole("heading", { name: /planetary conjunctions/i })
-    ).toBeVisible();
-    await expect(page.getByText(/Instructor bundle incomplete/i)).toBeVisible();
-    await expect(page.getByText(/Missing sections/i)).toBeVisible();
+    for (const slug of slugsWithNoBundle) {
+      await page.goto(`instructor/${slug}/`);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      // The page must not silently look like real teaching material.
+      await expect(page.getByText(/scaffold/i).first()).toBeVisible();
+    }
+  });
+
+  test("Complete instructor bundles show no incompleteness notice", async ({ page }) => {
+    // Regression guard for the bundles authored on 2026-09-04: if a section is deleted,
+    // the notice comes back and this fails.
+    for (const slug of ["retrograde-motion", "planetary-conjunctions", "moon-phases"]) {
+      await page.goto(`instructor/${slug}/`);
+      await expect(page.getByText(/Instructor Bundle Incomplete/i)).toHaveCount(0);
+      // These are the rendered section labels from sectionLabels in
+      // src/pages/instructor/[slug].astro, not the frontmatter section keys.
+      for (const section of ["Overview", "Activities", "Assessment", "Model notes (deeper)", "Backlog"]) {
+        await expect(
+          page.getByRole("heading", { name: section, exact: true }).first()
+        ).toBeVisible();
+      }
+    }
   });
 
   test("All /play/<slug>/ pages load the instrument root", async ({ page }) => {
