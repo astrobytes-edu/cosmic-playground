@@ -189,10 +189,6 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--cp-accent) 22%, transparent);
 }
 
-.control {
-  display: grid;
-  gap: 0.5rem;
-}
 
 .control > span,
 .control__label {

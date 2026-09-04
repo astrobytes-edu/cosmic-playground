@@ -123,12 +123,13 @@ describe("Cluster Census -- Design System Contracts", () => {
       expect(css).toContain("max-height: calc(100svh");
     });
 
-    it("gives each slider its value on the label's line, not a row of its own", () => {
-      expect(css).toMatch(/\.control \{[^}]*grid-template-columns: minmax\(0, 1fr\) auto/);
-      // Explicit rows: the slider sits between label and value in the DOM, so
-      // auto-placement would put the value on a third row and undo the saving.
-      expect(css).toMatch(/\.control__value \{[^}]*grid-row: 1/);
-      expect(css).toMatch(/\.control input\[type="range"\] \{[^}]*grid-row: 2/);
+    it("takes its control layout from the shared component, not a local copy", () => {
+      // That layout moved into packages/theme/styles/components/control.css once the
+      // same `display: grid; gap: 8px` was found copy-pasted into fifteen demos. The
+      // rules themselves are guarded by the theme's own tests; what matters here is that
+      // this demo no longer carries a private copy to drift out of step.
+      expect(css).not.toMatch(/\.control \{[^}]*grid-template-columns/);
+      expect(css).not.toMatch(/\.control \{[^}]*display: grid/);
     });
 
     it("floors the drawing surfaces rather than the grid rows", () => {

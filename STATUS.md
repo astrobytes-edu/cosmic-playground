@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: port the progenax/startrax cross-validation fixtures so the IMF, cluster, lifetime and post-main-sequence models are gated against an external reference (the largest gap in docs/reviews/cluster-census.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
+next: fix binary-orbits' layout (worst of the 15 demos in docs/reviews/2026-09-04-layout-audit.md -- two 875px prose panels belong in the drawer, not the control sidebar), then stars-zams-hr. Also open: port the progenax/startrax cross-validation fixtures so the IMF, cluster, lifetime and post-main-sequence models are gated against an external reference (the largest gap in docs/reviews/cluster-census.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -79,6 +79,35 @@ silently doing nothing on any styled container — the DOM said hidden and the p
 disagreed. The theme had already patched this twice per-component
 (`.cp-tab-panel[hidden]`, `.cp-popover[hidden]`); a scan found **26 element/rule pairs
 across 14 demos** exposed to the same failure. Guarded by a token test.
+
+## Project-wide layout audit, 2026-09-04
+
+Full measurement of all 20 demos at 1440x900 in
+`docs/reviews/2026-09-04-layout-audit.md`. **15 of 20 had at least one readout below the
+fold.** binary-orbits had 46 of 48, the first at y = 3,388, in a sidebar holding 3,889px of
+content in an 819px box.
+
+It went unnoticed because ~1,000 E2E tests all assert readout **text** and none looked at
+**geometry**: a readout can hold a perfectly correct number 3,000px below the viewport and
+every test passes.
+
+**It is mostly not the controls.** It is prose -- challenge panels, live-insight boxes,
+callouts and control cards stacked into a *control* sidebar, when the shell already has a
+drawer for exactly that content. binary-orbits alone has 1,748px of it in two panels.
+
+Two things landed:
+
+- **`packages/theme/styles/components/control.css`.** `.control { display: grid; gap: 8px }`
+  had been copy-pasted into fifteen demos, stacking label / input / value on three rows.
+  Hoisting the value onto the label's line removed **836px across nine sidebars**. It must
+  be scoped with `:has(> .control__value)` -- forcing two columns on a control with no
+  value pushes its input into the narrow auto column, which made stars-zams-hr's sidebar
+  88px *longer* before the scope went in. `doppler-shift` and `seasons` opt out via
+  `.control--stacked`.
+- **`apps/site/tests/layout-budget.spec.ts`, a ratchet.** It records what each demo does
+  today, fails if any gets worse, and fails just as loudly if one gets better -- because
+  then the budget should be tightened. Each fix removes a line; when the map is empty the
+  problem is gone.
 
 ## cluster-census layout pass, 2026-09-04
 

@@ -2,10 +2,6 @@
 
 /* ── Layout ──────────────────────────────────────────────── */
 
-.control {
-  display: grid;
-  gap: 8px;
-}
 
 .demo-intro {
   margin: 0;

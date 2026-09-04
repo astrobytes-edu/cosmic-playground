@@ -1,9 +1,5 @@
 @import "../../shared/stub-demo.css";
 
-.control {
-  display: grid;
-  gap: 8px;
-}
 
 .control__value {
   color: var(--cp-muted);

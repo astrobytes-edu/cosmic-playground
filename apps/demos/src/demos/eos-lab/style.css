@@ -16,10 +16,6 @@
   align-items: start;
 }
 
-.control {
-  display: grid;
-  gap: var(--cp-space-2);
-}
 
 .control__value {
   color: color-mix(in srgb, var(--cp-text) 84%, var(--cp-muted));

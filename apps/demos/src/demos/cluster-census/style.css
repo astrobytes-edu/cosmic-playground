@@ -1,51 +1,13 @@
 @import "../../shared/stub-demo.css";
 
-/*
- * Label and value share a line; the slider spans beneath them.
- *
- * Stacking label / slider / value gave every control a third row for one number, and
- * three of those plus the rest overflowed the sidebar by 171px -- which is why the live
- * status line at the bottom was being clipped mid-sentence.
- */
-.control {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 4px var(--cp-space-2);
-}
-
-/*
- * Rows are explicit because the slider sits BETWEEN the label and the value in the DOM.
- * With auto-placement the value lands on a third row and the saving is lost.
- */
-.control > span:first-child {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.control input[type="range"] {
-  grid-column: 1 / -1;
-  grid-row: 2;
-}
-
+/* Value styling only; the two-row layout comes from the theme's control component. */
 .control__value {
-  grid-column: 2;
-  grid-row: 1;
-  text-align: right;
   color: var(--cp-readout-value-color, var(--cp-muted));
   font-family: var(--cp-font-mono);
   font-size: 0.9rem;
-  white-space: nowrap;
 }
 
 /* The environment hints are prose, not values: full width, left, and quiet. */
-.derive__nudge {
-  grid-column: 1 / -1;
-  grid-row: 3;
-  text-align: left;
-  font-family: var(--cp-font-sans, inherit);
-}
-
 .reseed {
   width: 100%;
   margin-top: var(--cp-space-2);

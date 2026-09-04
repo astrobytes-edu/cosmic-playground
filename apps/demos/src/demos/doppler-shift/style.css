@@ -16,10 +16,6 @@
   animation: cp-fade-in 0.8s var(--cp-ease-out) 0.24s backwards;
 }
 
-.control {
-  display: grid;
-  gap: var(--cp-space-2);
-}
 
 .control__value {
   display: flex;

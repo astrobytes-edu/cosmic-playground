@@ -1,0 +1,73 @@
+/* ============================================
+   Control — a labelled input, optionally with its value on the label's line
+   ============================================
+   `.control` was copy-pasted into fifteen demos as `display: grid; gap: 8px`, which
+   stacks label / input / value on three rows and spends a whole row on one number.
+
+   Measured 2026-09-04 at 1440x900: galaxy-rotation's eight sliders came to 592px of an
+   819px sidebar, and 15 of 20 demos had at least one readout below the fold. Hoisting the
+   value onto the label's line takes about 26px off each control.
+
+     +---------------------------+--------+
+     | Number of stars N         |    800 |   row 1
+     +---------------------------+--------+
+     | [========O--------------] |            row 2
+     +---------------------------+--------+
+
+   Two things this must NOT do, both found by measuring rather than by reading:
+
+   1. It applies only to a control that HAS a `.control__value`. There is nothing to hoist
+      otherwise, and forcing two columns on a control without one pushes its input into
+      the narrow auto column -- which is what happened to stars-zams-hr's text and number
+      fields, making its sidebar 88px LONGER.
+
+   2. The rows are EXPLICIT. The input sits between the label and the value in source
+      order, so auto-placement puts the value on a third row and the saving is lost.
+
+   A control whose value cell needs the full width -- a pair of values, a unit picker --
+   opts out with `.control--stacked`.
+   ============================================ */
+
+.control {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.control:has(> .control__value):not(.control--stacked) {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px var(--cp-space-2);
+}
+
+.control:has(> .control__value):not(.control--stacked) > :first-child {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.control:has(> .control__value):not(.control--stacked) > .control__value {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The input, whatever kind it is, spans the width below them. */
+.control:has(> .control__value):not(.control--stacked) > input,
+.control:has(> .control__value):not(.control--stacked) > select,
+.control:has(> .control__value):not(.control--stacked) > textarea,
+.control:has(> .control__value):not(.control--stacked) > .cp-range {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+/* Hints and anything else below the input keep the full width. */
+.control:has(> .control__value):not(.control--stacked) > .control__hint,
+.control:has(> .control__value):not(.control--stacked) > :nth-child(n + 4) {
+  grid-column: 1 / -1;
+  grid-row: auto;
+  text-align: left;
+  white-space: normal;
+}

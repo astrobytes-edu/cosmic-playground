@@ -295,3 +295,38 @@ describe("Component CSS — Scroll Shadow", () => {
     expect(css).toContain("radial-gradient(");
   });
 });
+
+describe("control component", () => {
+  const controlCss = fs.readFileSync(
+    path.resolve(__dirname, "../styles/components/control.css"),
+    "utf-8"
+  );
+
+  it("hoists a control's value onto its label's line", () => {
+    // `.control { display: grid; gap: 8px }` was copy-pasted into fifteen demos, stacking
+    // label / input / value on three rows. Measured at 1440x900: galaxy-rotation's eight
+    // sliders came to 592px of an 819px sidebar.
+    expect(controlCss).toContain("grid-template-columns: minmax(0, 1fr) auto");
+  });
+
+  it("only does so when there is a value to hoist", () => {
+    // Forcing two columns on a control with no value pushes its input into the narrow
+    // auto column. That is what happened to stars-zams-hr's text and number fields, and
+    // it made that sidebar 88px LONGER rather than shorter.
+    expect(controlCss).toContain(".control:has(> .control__value)");
+    const bare = controlCss.match(/\n\.control \{\n([^}]*)\}/)?.[1] ?? "";
+    expect(bare).not.toContain("grid-template-columns");
+  });
+
+  it("places the rows explicitly", () => {
+    // The input sits between the label and the value in source order, so auto-placement
+    // puts the value on a third row and the saving is lost.
+    expect(controlCss).toMatch(/> :first-child \{[^}]*grid-row: 1/);
+    expect(controlCss).toMatch(/> \.control__value \{[^}]*grid-row: 1/);
+    expect(controlCss).toMatch(/> \.cp-range \{[^}]*grid-row: 2/s);
+  });
+
+  it("offers an opt-out for a value that needs the full width", () => {
+    expect(controlCss).toContain(".control--stacked");
+  });
+});

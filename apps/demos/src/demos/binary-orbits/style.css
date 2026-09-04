@@ -4,10 +4,6 @@
   grid-template-columns: clamp(360px, 31vw, 420px) minmax(0, 1fr);
 }
 
-.control {
-  display: grid;
-  gap: 8px;
-}
 
 .control__value {
   color: color-mix(in srgb, var(--cp-text) 76%, var(--cp-bg0));
