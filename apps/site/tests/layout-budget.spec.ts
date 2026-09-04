@@ -65,7 +65,11 @@ const BUDGETS: Record<string, Budget> = {
   "conservation-laws": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
   "planetary-conjunctions": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
   "spectral-lines": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
-  "stars-zams-hr": { readoutsBelowFold: 10, sidebarOverflowPx: 2220 },
+  // stars-zams-hr was 10 below the fold with 2,178px hidden. Fixed 2026-09-04: Start
+  // Here and the Inference Log moved to the drawer, the 905px Selected Star card became a
+  // strip under the plot, and the demo's custom grid gained the `readouts` row it never
+  // had. The sidebar's remaining overflow is the controls themselves.
+  "stars-zams-hr": { readoutsBelowFold: 0, sidebarOverflowPx: 40 },
   seasons: { readoutsBelowFold: 10, sidebarOverflowPx: 80 },
   "telescope-resolution": { readoutsBelowFold: 8, sidebarOverflowPx: 120 },
   "blackbody-radiation": { readoutsBelowFold: 4, sidebarOverflowPx: 330 },

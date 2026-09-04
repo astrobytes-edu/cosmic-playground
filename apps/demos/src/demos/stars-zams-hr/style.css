@@ -1,15 +1,23 @@
 @import "../../shared/stub-demo.css";
 
+/*
+ * This demo puts its controls on the RIGHT and defines its own areas, so it never had a
+ * `readouts` row -- anything placed there fell into an implicit row below the drawer. The
+ * selected-star strip needs to sit directly under the plot it describes.
+ */
 .hr-lab {
   grid-template-columns: minmax(0, 1fr) clamp(340px, 34vw, 460px);
-  grid-template-rows: 1fr auto;
+  grid-template-rows: 1fr auto auto;
   grid-template-areas:
-    "viz sidebar"
-    "shelf shelf";
+    "viz      sidebar"
+    "readouts sidebar"
+    "shelf    shelf";
 }
 
 .hr-lab .cp-demo__stage {
-  min-height: clamp(460px, 72svh, 860px);
+  /* min-height beats max-height in CSS, so this has to come down for the strip to fit
+     alongside the plot rather than below the fold. */
+  min-height: clamp(360px, 48svh, 620px);
   display: grid;
   gap: var(--cp-space-2);
   padding: var(--cp-space-3);
@@ -518,6 +526,7 @@
     grid-template-columns: 1fr;
     grid-template-areas:
       "viz"
+      "readouts"
       "sidebar"
       "shelf";
   }
@@ -568,4 +577,190 @@
   .hr-lab .cp-demo__drawer {
     animation: none;
   }
+}
+
+/* ── Selected-star strip ─────────────────────────────────────────────────────
+ * Measured 2026-09-04 at 1440x900, before this: the sidebar held 2,997px of content in an
+ * 819px box, hiding 2,178px behind a nested scroller. The Selected Star card alone was
+ * 905px of it -- an inspector for the plot, kept 900px away from the plot.
+ *
+ * It reads horizontally now, beside the diagram it describes, like the cluster-census
+ * inspector. */
+
+.zams-strip {
+  display: block;
+  padding: var(--cp-space-2) var(--cp-space-3);
+}
+
+/*
+ * Flex, not grid. A two-column grid sized its first track from the widest item in it and
+ * left the readouts a 0px column, which wrapped them one per line and made the "strip"
+ * 562px tall. A row that wraps is the right shape for a variable number of readouts.
+ */
+.zams-strip .selected-star-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px var(--cp-space-4);
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.zams-strip .card-heading {
+  margin: 0;
+  gap: var(--cp-space-2);
+}
+
+.zams-strip .card-heading h2 {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cp-muted);
+}
+
+/* The instruction is an empty-state hint: useful once, not worth a line for ever. */
+.zams-strip .selected-star-card > .cp-muted {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.zams-strip .readout-grid {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--cp-space-4);
+  margin: 0;
+}
+
+.zams-strip .cp-readout {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.zams-strip .cp-readout__label {
+  font-size: 0.72rem;
+}
+
+.zams-strip .cp-readout__value {
+  font-size: 0.95rem;
+}
+
+/* ── Stage budget ────────────────────────────────────────────────────────────
+ * The plot and the strip that describes it share one height, so both fit on a laptop. */
+
+/*
+ * 745px, not 700px. At 720 the fitted stage could not hold the plot: `overflow: hidden`
+ * clipped 35px off the bottom of the diagram, axis and all. Below this the demo keeps its
+ * natural layout and the page scrolls, which is the honest trade -- a clipped plot is
+ * worse than a scroll.
+ */
+@media (min-width: 1025px) and (min-height: 745px) {
+  .cp-demo__stage {
+    /*
+     * The floor has to clear everything above the canvas (about 173px of toolbar and
+     * legend) plus the canvas floor below. Set lower than that, the stage's
+     * `overflow: hidden` clipped 55px off the bottom of the diagram at 1280x720 -- a
+     * plot with its lower axis cut off, which is worse than a page that scrolls.
+     */
+    min-height: clamp(525px, 48svh, 620px);
+    max-height: calc(100svh - 17rem);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  /* The plot is sized by an id selector with a fixed aspect ratio, which ignores the
+   * viewport entirely; height-driven here, with a floor so it stays readable. */
+  #hrCanvas {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 300px;
+    width: 100%;
+  }
+}
+
+/* The interpretation is a sentence about the selected star; it belongs on the strip's
+ * own line, at note size, not as a block the height of the readouts above it. */
+.zams-strip .interpretation-block {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.zams-strip .interpretation-block > * {
+  margin: 0;
+}
+
+/* ── Sidebar density ─────────────────────────────────────────────────────────
+ * The explore card holds the controls and 774px of an 819px box. Its per-control hints
+ * are guidance, not labels, and were set at body size. */
+
+.hr-lab .control__hint {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  margin: 2px 0 0;
+}
+
+.hr-lab .card-intro {
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.hr-lab .control-card {
+  padding: var(--cp-space-2) var(--cp-space-3);
+}
+
+.hr-lab .card-heading h2 {
+  font-size: var(--cp-text-md);
+}
+
+/*
+ * Final density pass on the strip. Measured: heading 31 + hint 21 + readouts 87 (five
+ * items wrapping to three rows) + interpretation 98 = 266px, which put the strip's lower
+ * edge past the fold on a 900px screen.
+ */
+.zams-strip .card-heading .card-pill {
+  padding: 1px 7px;
+  font-size: 0.66rem;
+}
+
+.zams-strip .cp-readout__label {
+  font-size: 0.68rem;
+}
+
+.zams-strip .cp-readout__value {
+  font-size: 0.9rem;
+}
+
+/* The interpretation reads as one line: a label, the sentence, and the guide hint. */
+.zams-strip .interpretation-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--cp-space-2);
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.zams-strip .interpretation-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cp-muted);
+}
+
+.zams-strip .interpretation-text,
+.zams-strip .interpretation-block .cp-muted {
+  font-size: 0.8rem;
+  line-height: 1.35;
 }

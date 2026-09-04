@@ -61,18 +61,7 @@
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Guided Inference Controls</div>
         <div class="cp-panel-body cp-scroll-shadow">
-          <section class="control-card start-here-card" aria-labelledby="startHereTitle">
-            <p class="card-kicker">Start Here</p>
-            <h2 id="startHereTitle">Start Here</h2>
-            <p class="card-intro">Use the workflow below to move from pattern recognition to physical inference.</p>
-            <ol class="workflow-list">
-              <li>Find the main sequence</li>
-              <li>Click a star</li>
-              <li>Compare temperature and luminosity</li>
-              <li>Turn on radius lines</li>
-              <li>Reveal mass colors</li>
-            </ol>
-          </section>
+          
 
           <section class="control-card explore-card" aria-labelledby="exploreTitle">
             <div class="card-heading">
@@ -113,44 +102,7 @@
             </p>
           </section>
 
-          <section class="control-card selected-star-card" aria-labelledby="selectedStarTitle">
-            <div class="card-heading">
-              <h2 id="selectedStarTitle">Selected Star</h2>
-              <span class="card-pill">Inference</span>
-            </div>
-            <p class="cp-muted">Click a star or use the keyboard on the plot to inspect a specific point.</p>
-            <div class="readout-grid">
-              <div class="cp-readout">
-                <div class="cp-readout__label">Stage</div>
-                <div class="cp-readout__value" id="selectedStage">-</div>
-              </div>
-              <div class="cp-readout">
-                <div class="cp-readout__label">Effective temperature <span class="cp-readout__unit">K</span></div>
-                <div class="cp-readout__value" id="selectedTeff">-</div>
-              </div>
-              <div class="cp-readout">
-                <div class="cp-readout__label">Luminosity <span class="cp-readout__unit">L/L_sun</span></div>
-                <div class="cp-readout__value" id="selectedLuminosity">-</div>
-              </div>
-              <div class="cp-readout">
-                <div class="cp-readout__label">Radius <span class="cp-readout__unit">R/R_sun</span></div>
-                <div class="cp-readout__value" id="selectedRadius">-</div>
-              </div>
-              <div class="cp-readout">
-                <div class="cp-readout__label">Mass</div>
-                <div class="cp-readout__value" id="selectedMass">-</div>
-              </div>
-            </div>
-            <div class="interpretation-block">
-              <div class="interpretation-label">Plain-language interpretation</div>
-              <p id="selectedInterpretation" class="interpretation-text">
-                Click a star to begin the inference workflow.
-              </p>
-              <p id="selectedGuideHint" class="cp-muted guide-hint">
-                Ask whether this star is unusually bright or faint for its temperature.
-              </p>
-            </div>
-          </section>
+          
 
           <details id="experimentControls" class="control-card experiment-controls" aria-labelledby="experimentControlsTitle">
             <summary>
@@ -302,39 +254,7 @@
             </div>
           </details>
 
-          <section class="control-card" aria-labelledby="inferenceLogTitle">
-            <div class="card-heading">
-              <h2 id="inferenceLogTitle">Inference Log</h2>
-              <span class="card-pill">Classroom notes</span>
-            </div>
-            <label class="control" for="claimInput">
-              <span>Add one-sentence claim</span>
-              <input id="claimInput" type="text" placeholder="Example: Hot, faint stars must be very small in radius." />
-              <span class="control__hint">Use one claim per inference step so you can compare your reasoning before and after reveals.</span>
-            </label>
-
-            <div class="sentence-starters" role="group" aria-label="Sentence starters">
-              <div class="presets__label">Sentence starters</div>
-              <div class="cp-chip-group starters-row">
-                <button id="claimStarterMainSequence" class="cp-chip" type="button">
-                  As stars on the main sequence become hotter, they also become ___.
-                </button>
-                <button id="claimStarterHotFaint" class="cp-chip" type="button">
-                  This hot but faint star must have a ___ radius because ___.
-                </button>
-                <button id="claimStarterMassGradient" class="cp-chip" type="button">
-                  Revealing mass colors shows that mass increases toward the ___ end of the main sequence.
-                </button>
-              </div>
-            </div>
-
-            <div class="claim-actions">
-              <button id="addClaim" class="cp-button cp-button--outline" type="button">Add claim</button>
-              <button id="exportClaims" class="cp-button cp-button--outline" type="button">Export JSON</button>
-              <button id="clearClaims" class="cp-button cp-button--outline" type="button">Clear</button>
-            </div>
-            <ul id="claimList" class="claim-list" aria-label="Inference claim list"></ul>
-          </section>
+          
 
           <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
             <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
@@ -376,10 +296,52 @@
             </div>
           </div>
 
-          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+          <p id="status" class="cp-status sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
       </aside>
 
+      <div class="cp-demo__readouts" aria-label="Selected star">
+        <div class="cp-readout-strip zams-strip">
+          <section class="control-card selected-star-card" aria-labelledby="selectedStarTitle">
+          <div class="card-heading">
+          <h2 id="selectedStarTitle">Selected Star</h2>
+          <span class="card-pill">Inference</span>
+          </div>
+          <p class="cp-muted">Click a star or use the keyboard on the plot to inspect a specific point.</p>
+          <div class="readout-grid">
+          <div class="cp-readout">
+          <div class="cp-readout__label">Stage</div>
+          <div class="cp-readout__value" id="selectedStage">-</div>
+          </div>
+          <div class="cp-readout">
+          <div class="cp-readout__label">Effective temperature <span class="cp-readout__unit">K</span></div>
+          <div class="cp-readout__value" id="selectedTeff">-</div>
+          </div>
+          <div class="cp-readout">
+          <div class="cp-readout__label">Luminosity <span class="cp-readout__unit">L/L_sun</span></div>
+          <div class="cp-readout__value" id="selectedLuminosity">-</div>
+          </div>
+          <div class="cp-readout">
+          <div class="cp-readout__label">Radius <span class="cp-readout__unit">R/R_sun</span></div>
+          <div class="cp-readout__value" id="selectedRadius">-</div>
+          </div>
+          <div class="cp-readout">
+          <div class="cp-readout__label">Mass</div>
+          <div class="cp-readout__value" id="selectedMass">-</div>
+          </div>
+          </div>
+          <div class="interpretation-block">
+          <div class="interpretation-label">Plain-language interpretation</div>
+          <p id="selectedInterpretation" class="interpretation-text">
+          Click a star to begin the inference workflow.
+          </p>
+          <p id="selectedGuideHint" class="cp-muted guide-hint">
+          Ask whether this star is unusually bright or faint for its temperature.
+          </p>
+          </div>
+          </section>
+        </div>
+      </div>
       <section class="cp-demo__drawer cp-drawer" aria-label="Step guide and model notes">
         <div class="cp-panels">
           <details class="cp-accordion" open>
@@ -407,6 +369,69 @@
                 <li>Observer CMD mapping uses empirical bolometric correction and Teff-color calibration, plus deterministic Gaussian photometric scatter.</li>
                 <li>Radius guides follow L/L_sun = (R/R_sun)^2 (T/T_sun)^4.</li>
               </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Start here</span>
+              <span class="cp-accordion__meta">a route through the diagram</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <section class="control-card start-here-card" aria-labelledby="startHereTitle">
+              <p class="card-kicker">Start Here</p>
+              <h2 id="startHereTitle">Start Here</h2>
+              <p class="card-intro">Use the workflow below to move from pattern recognition to physical inference.</p>
+              <ol class="workflow-list">
+              <li>Find the main sequence</li>
+              <li>Click a star</li>
+              <li>Compare temperature and luminosity</li>
+              <li>Turn on radius lines</li>
+              <li>Reveal mass colors</li>
+              </ol>
+              </section>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Inference log</span>
+              <span class="cp-accordion__meta">write and export your claims</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <section class="control-card" aria-labelledby="inferenceLogTitle">
+              <div class="card-heading">
+              <h2 id="inferenceLogTitle">Inference Log</h2>
+              <span class="card-pill">Classroom notes</span>
+              </div>
+              <label class="control" for="claimInput">
+              <span>Add one-sentence claim</span>
+              <input id="claimInput" type="text" placeholder="Example: Hot, faint stars must be very small in radius." />
+              <span class="control__hint">Use one claim per inference step so you can compare your reasoning before and after reveals.</span>
+              </label>
+
+              <div class="sentence-starters" role="group" aria-label="Sentence starters">
+              <div class="presets__label">Sentence starters</div>
+              <div class="cp-chip-group starters-row">
+              <button id="claimStarterMainSequence" class="cp-chip" type="button">
+              As stars on the main sequence become hotter, they also become ___.
+              </button>
+              <button id="claimStarterHotFaint" class="cp-chip" type="button">
+              This hot but faint star must have a ___ radius because ___.
+              </button>
+              <button id="claimStarterMassGradient" class="cp-chip" type="button">
+              Revealing mass colors shows that mass increases toward the ___ end of the main sequence.
+              </button>
+              </div>
+              </div>
+
+              <div class="claim-actions">
+              <button id="addClaim" class="cp-button cp-button--outline" type="button">Add claim</button>
+              <button id="exportClaims" class="cp-button cp-button--outline" type="button">Export JSON</button>
+              <button id="clearClaims" class="cp-button cp-button--outline" type="button">Clear</button>
+              </div>
+              <ul id="claimList" class="claim-list" aria-label="Inference claim list"></ul>
+              </section>
             </div>
           </details>
         </div>

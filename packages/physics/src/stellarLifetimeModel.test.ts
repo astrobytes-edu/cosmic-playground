@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  bMinusVFromTemperatureK,
   mainSequenceLifetimeMyr,
   postMainSequenceTrack,
   remnantFateFromInitialMass,
@@ -302,5 +303,52 @@ describe("supergiants", () => {
     expect(at(5)).toBe("giant");
     expect(at(10)).toBe("supergiant");
     expect(at(25)).toBe("supergiant");
+  });
+});
+
+describe("colour", () => {
+  it("reproduces the anchors it is built from", () => {
+    // Pecaut & Mamajek's dwarf sequence, spot-checked at both ends and at the Sun.
+    expect(bMinusVFromTemperatureK(5770)).toBeCloseTo(0.65, 3);
+    expect(bMinusVFromTemperatureK(9800)).toBeCloseTo(0.0, 3);
+    expect(bMinusVFromTemperatureK(3850)).toBeCloseTo(1.42, 3);
+    expect(bMinusVFromTemperatureK(42000)).toBeCloseTo(-0.33, 3);
+  });
+
+  it("gets the Sun right, which is the one value everyone checks", () => {
+    // B-V = 0.65 for the Sun is the number an instructor will look for first.
+    expect(bMinusVFromTemperatureK(5772)).toBeGreaterThan(0.64);
+    expect(bMinusVFromTemperatureK(5772)).toBeLessThan(0.66);
+  });
+
+  it("reddens monotonically as a star cools", () => {
+    let previous = -Infinity;
+    for (const t of [42000, 20000, 10000, 7000, 5772, 4500, 3500, 2500]) {
+      const bv = bMinusVFromTemperatureK(t);
+      expect(bv).toBeGreaterThan(previous);
+      previous = bv;
+    }
+  });
+
+  it("keeps cool dwarfs off the red edge, where Ballesteros extrapolated them", () => {
+    // The 0.1 Msun ZAMS floor is 2,812 K. Inverting Ballesteros put it at B-V = 2.37;
+    // no real M dwarf is redder than about 2.2, and the empirical sequence says 1.91.
+    const coolest = bMinusVFromTemperatureK(2812);
+    expect(coolest).toBeGreaterThan(1.8);
+    expect(coolest).toBeLessThan(2.0);
+  });
+
+  it("never returns a colour bluer than a real O star", () => {
+    // Ballesteros could not reach past 21,707 K and returned its bracket endpoint of
+    // -0.4, which is bluer than anything on the main sequence.
+    for (const t of [22000, 30000, 42000, 100000]) {
+      expect(bMinusVFromTemperatureK(t)).toBeGreaterThanOrEqual(-0.33);
+    }
+  });
+
+  it("stays inside the tabulated range at both ends", () => {
+    expect(bMinusVFromTemperatureK(1000)).toBeCloseTo(2.15, 3);
+    expect(bMinusVFromTemperatureK(1e6)).toBeCloseTo(-0.33, 3);
+    expect(Number.isNaN(bMinusVFromTemperatureK(0))).toBe(true);
   });
 });

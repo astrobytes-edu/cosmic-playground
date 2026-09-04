@@ -69,25 +69,76 @@ export function mainSequenceLifetimeMyr(massMsun: number): number {
  * anchors themselves are quoted to the precision the published sequence supports. Use it
  * to name a star, not to infer one. */
 
-const SPECTRAL_ANCHORS: ReadonlyArray<readonly [number, string]> = [
-  [42000, "O5"],
-  [31400, "B0"],
-  [16400, "B5"],
-  [9800, "A0"],
-  [8080, "A5"],
-  [7220, "F0"],
-  [6510, "F5"],
-  [5920, "G0"],
+/**
+ * The Pecaut & Mamajek main-sequence sequence: temperature, spectral type, and B-V.
+ *
+ * One table, two uses. It already named spectral types; it now also supplies colour,
+ * because the alternative was a second relation that disagreed with it. The Ballesteros
+ * (2012) formula this replaced for colour is calibrated over roughly 3,000-10,000 K, and
+ * inverting it below that returned colours about 0.46 mag too red -- a 2,812 K dwarf came
+ * out at B-V = 2.37 where the empirical sequence puts it at 1.91 and no real M dwarf is
+ * redder than about 2.2.
+ *
+ * B-V values are the dwarf sequence from the same source. Colour is a poor discriminator
+ * at the cool end -- the B band has almost no flux there, so B-V compresses -- which is
+ * why the last few anchors are close together. That compression is physical and should
+ * show on a colour-magnitude diagram.
+ */
+const SPECTRAL_ANCHORS: ReadonlyArray<readonly [number, string, number]> = [
+  [42000, "O5", -0.33],
+  [31400, "B0", -0.3],
+  [16400, "B5", -0.16],
+  [9800, "A0", 0.0],
+  [8080, "A5", 0.16],
+  [7220, "F0", 0.29],
+  [6510, "F5", 0.44],
+  [5920, "G0", 0.59],
   // The Sun's anchor. Without it the nearest neighbour to 5772 K is G5, and a model that
   // cannot call the Sun a G2 star is one no instructor will trust with anything else.
-  [5770, "G2"],
-  [5660, "G5"],
-  [5280, "K0"],
-  [4410, "K5"],
-  [3850, "M0"],
-  [3060, "M5"],
-  [2320, "M8"]
+  [5770, "G2", 0.65],
+  [5660, "G5", 0.68],
+  [5280, "K0", 0.82],
+  [4410, "K5", 1.15],
+  [3850, "M0", 1.42],
+  [3060, "M5", 1.81],
+  [2320, "M8", 2.15]
 ];
+
+/** Coolest and hottest the colour relation is defined for [K]. */
+export const COLOUR_TEMPERATURE_RANGE_K = {
+  min: SPECTRAL_ANCHORS[SPECTRAL_ANCHORS.length - 1][0],
+  max: SPECTRAL_ANCHORS[0][0]
+} as const;
+
+/**
+ * B-V for a main-sequence star of this effective temperature.
+ *
+ * Linear interpolation between the anchors in log T, which is how the sequence behaves.
+ * Outside the tabulated range the endpoint is returned -- those are the ends of the
+ * stellar main sequence, not an artifact of the fit.
+ *
+ * This is a DWARF relation. A white dwarf at the same temperature is bluer, because its
+ * atmosphere and surface gravity are nothing like a main-sequence star's; applying this
+ * to one puts it a few tenths too red. Stated rather than corrected, because the fix is a
+ * separate white-dwarf colour table and this demo does not yet need that precision.
+ */
+export function bMinusVFromTemperatureK(temperatureK: number): number {
+  if (!(temperatureK > 0)) return Number.NaN;
+  if (temperatureK >= SPECTRAL_ANCHORS[0][0]) return SPECTRAL_ANCHORS[0][2];
+  const last = SPECTRAL_ANCHORS[SPECTRAL_ANCHORS.length - 1];
+  if (temperatureK <= last[0]) return last[2];
+
+  const logT = Math.log10(temperatureK);
+  for (let i = 0; i < SPECTRAL_ANCHORS.length - 1; i += 1) {
+    const [hotT, , hotBv] = SPECTRAL_ANCHORS[i];
+    const [coolT, , coolBv] = SPECTRAL_ANCHORS[i + 1];
+    if (temperatureK <= hotT && temperatureK >= coolT) {
+      const f = (Math.log10(hotT) - logT) / (Math.log10(hotT) - Math.log10(coolT));
+      return hotBv + f * (coolBv - hotBv);
+    }
+  }
+  return last[2];
+}
 
 /** Nearest main-sequence spectral type for an effective temperature [K]. */
 export function spectralTypeFromTemperature(temperatureK: number): string {
@@ -397,6 +448,8 @@ function whiteDwarfPoint(
 
 export const StellarLifetimeModel = {
   SOLAR_METALLICITY_ONLY,
+  COLOUR_TEMPERATURE_RANGE_K,
+  bMinusVFromTemperatureK,
   mainSequenceLifetimeMyr,
   totalLifetimeMyr,
   postMainSequenceTrack,

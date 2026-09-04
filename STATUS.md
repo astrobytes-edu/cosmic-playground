@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: fix the stars-zams-hr CMD colour saturation (30.3% of a default population still pegs at B-V = 2.2, because the Ballesteros bisection bracket only spans 2975-21707 K -- needs a colour-temperature relation valid below that), then its layout (2,654px of control cards, and it still carries the ZAMS clamping defect from the 2026-09-03 audit, so one combined pass), then keplers-laws and parallax-distance. See docs/reviews/2026-09-04-layout-audit.md. Also open: port the progenax/startrax cross-validation fixtures so the IMF, cluster, lifetime and post-main-sequence models are gated against an external reference (the largest gap in docs/reviews/cluster-census.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
+next: keplers-laws and parallax-distance layouts (cp-field stacks), then the rest of the demos in docs/reviews/2026-09-04-layout-audit.md. Old note follows: fix the stars-zams-hr CMD colour saturation (30.3% of a default population still pegs at B-V = 2.2, because the Ballesteros bisection bracket only spans 2975-21707 K -- needs a colour-temperature relation valid below that), then its layout (2,654px of control cards, and it still carries the ZAMS clamping defect from the 2026-09-03 audit, so one combined pass), then keplers-laws and parallax-distance. See docs/reviews/2026-09-04-layout-audit.md. Also open: port the progenax/startrax cross-validation fixtures so the IMF, cluster, lifetime and post-main-sequence models are gated against an external reference (the largest gap in docs/reviews/cluster-census.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -79,6 +79,39 @@ silently doing nothing on any styled container — the DOM said hidden and the p
 disagreed. The theme had already patched this twice per-component
 (`.cp-tab-panel[hidden]`, `.cp-popover[hidden]`); a scan found **26 element/rule pairs
 across 14 demos** exposed to the same failure. Guarded by a token test.
+
+## stars-zams-hr: colour, then layout, 2026-09-04
+
+**Colour.** I told you 30.3 percent of the population pegged at B-V = 2.2. That was my
+error: the filter was `>= 2.2`, which counts cool stars, not stars stuck on an endpoint.
+Measured properly the worst pile-up was 0.8-3.0 percent, and the bisection saturation had
+already been fixed before this session.
+
+Checking did find a real error, though. Ballesteros (2012) is calibrated over roughly
+3,000-10,000 K, and inverting it below that returned colours about **0.46 mag too red** --
+our coolest star (2,812 K) came out at B-V = 2.37 where no real M dwarf is redder than
+about 2.2. Above 21,707 K it could not reach at all and returned its bracket endpoint of
+-0.4, bluer than any real star.
+
+Replaced with the Pecaut & Mamajek dwarf sequence -- the same table that already names the
+spectral types, so one source of truth again. The Sun now comes out at B-V = 0.650
+exactly, the coolest dwarf at 1.91, and the hot end at -0.33 (O5V).
+
+**Layout.** Sidebar hidden **2,178px -> 25px**; zero readouts below the fold at 1920x1080,
+1440x900 and 1366x768. Start Here and the Inference Log moved to the drawer; the 905px
+Selected Star card became a strip under the plot. This demo defines its own grid
+(`"viz sidebar" / "shelf shelf"`, controls on the right) and had **no `readouts` row at
+all**, so the strip first landed in an implicit row below the drawer.
+
+A new E2E spec caught something worth having: at 1280x720 the stage's `overflow: hidden`
+was **clipping 55px off the bottom of the diagram**, axis and all. Below 745px of viewport
+height the demo now keeps its natural layout and the page scrolls, which is the honest
+trade.
+
+It was the only demo of the twenty with no dedicated E2E spec. Two of the tests I first
+wrote for it asserted `typeof text === "string"` and that the canvas was still visible --
+neither could fail. Replaced with one that compares the canvas to itself across a control
+change, which is the strongest thing E2E can say about a plot it cannot read back.
 
 ## One source of truth for the stellar physics, 2026-09-04
 

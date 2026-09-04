@@ -149,8 +149,11 @@ a line. When the map is empty the problem is gone.
 ## Suggested order
 
 1. ~~**binary-orbits**~~ — done, above.
-2. **stars-zams-hr** — 2,654px of control cards; also still carries the ZAMS clamping
-   defect from the 2026-09-03 audit, so it wants one combined pass.
+2. ~~**stars-zams-hr**~~ — done. Start Here and the Inference Log to the drawer, the
+   905px Selected Star card to a strip under the plot, and the demo's own grid gained the
+   `readouts` row it never had. Sidebar hidden 2,178px -> 25px at 1440x900; zero readouts
+   below the fold at 1920x1080, 1440x900 and 1366x768. It was also the only demo of the
+   twenty with no dedicated E2E spec, which is now written.
 3. **keplers-laws**, **parallax-distance** — `cp-field` stacks.
 4. The rest, where the overflow is a few hundred pixels and a readout strip is most of the
    answer.

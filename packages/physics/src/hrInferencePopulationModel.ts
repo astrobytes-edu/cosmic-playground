@@ -1,6 +1,10 @@
 import { ZamsTout1996Model } from "./zamsTout1996Model";
 import { hashSeed, mulberry32 } from "./seededRandom";
-import { mainSequenceLifetimeMyr, postMainSequenceTrack } from "./stellarLifetimeModel";
+import {
+  bMinusVFromTemperatureK,
+  mainSequenceLifetimeMyr,
+  postMainSequenceTrack
+} from "./stellarLifetimeModel";
 import type { PostMainSequenceStage } from "./stellarLifetimeModel";
 
 export type HrStarStage =
@@ -130,37 +134,22 @@ function bolometricCorrectionV(teffK: number): number {
   );
 }
 
-function temperatureFromBminusVBallesteros(bMinusV: number): number {
-  const x = bMinusV;
-  return 4600 * (1 / (0.92 * x + 1.7) + 1 / (0.92 * x + 0.62));
-}
-
 /**
- * Temperature range the Ballesteros relation actually spans over BALLESTEROS_BV_RANGE.
- * T(B-V) is monotonically decreasing, so the hot end comes from the low B-V endpoint.
+ * B-V for an effective temperature.
+ *
+ * Delegates to the Pecaut & Mamajek sequence in `stellarLifetimeModel`, which is the same
+ * table that names the spectral types -- one source of truth for the empirical
+ * main-sequence.
+ *
+ * This replaced an inverted Ballesteros (2012) formula solved by bisection. Ballesteros
+ * is calibrated over roughly 3,000-10,000 K; extrapolated below that it returned colours
+ * about 0.46 mag too red (a 2,812 K dwarf at B-V = 2.37 against 1.91 from the empirical
+ * sequence, and no real M dwarf redder than about 2.2), which is what pushed 3 percent of
+ * a default population into the photometric-noise clamp at 2.4. Above 21,707 K it could
+ * not reach at all and returned its bracket endpoint.
  */
-const BALLESTEROS_BV_MIN = -0.4; // ~21707 K
-const BALLESTEROS_BV_MAX = 3.0; //  ~2392 K
-
 function bminusVFromTeffK(teffK: number): number {
-  // Clamp the TARGET into the range the bracket can actually reach. Previously the
-  // target was clamped to 2800-42000 K while the bracket [-0.4, 2.2] only spans
-  // 2975-21707 K, so any star outside that window drove the bisection into a bracket
-  // endpoint and was returned as if it were a real colour. With colorMax = 2.2 on the
-  // CMD axis, that stacked ~26% of a default population on the right edge of the plot.
-  const tHot = temperatureFromBminusVBallesteros(BALLESTEROS_BV_MIN);
-  const tCool = temperatureFromBminusVBallesteros(BALLESTEROS_BV_MAX);
-  const target = clamp(teffK, tCool, tHot);
-  let low = BALLESTEROS_BV_MIN;
-  let high = BALLESTEROS_BV_MAX;
-  for (let i = 0; i < 72; i += 1) {
-    const mid = 0.5 * (low + high);
-    const tMid = temperatureFromBminusVBallesteros(mid);
-    if (Math.abs(tMid - target) / target < 1e-8) return mid;
-    if (tMid > target) low = mid;
-    else high = mid;
-  }
-  return 0.5 * (low + high);
+  return bMinusVFromTemperatureK(teffK);
 }
 
 function observerFromPhysical(args: { luminosityLsun: number; teffK: number }): {
