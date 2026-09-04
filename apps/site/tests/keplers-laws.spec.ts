@@ -485,6 +485,65 @@ test.describe("Kepler's Laws -- E2E", () => {
     await expect(accordion).toHaveAttribute("open", "");
   });
 
+  // --- Height budget ---
+
+  const DESKTOP_VIEWPORTS = [
+    { width: 1920, height: 1080 },
+    { width: 1440, height: 900 },
+    { width: 1366, height: 768 },
+    { width: 1280, height: 720 }
+  ] as const;
+
+  test("the orbit shrinks to fit the stage instead of being clipped by it", async ({
+    page
+  }) => {
+    /*
+     * The stage is height-bounded so the readouts fit on screen, and `.cp-stage` is
+     * `overflow: hidden`. An earlier attempt at that bound cut up to 317px off the bottom
+     * of the orbit, because an SVG with a viewBox and `height: auto` takes its height from
+     * its intrinsic aspect ratio and ignores a cap on its container.
+     *
+     * Nothing else would have caught it: every other test here asserts on the orbit's SVG
+     * coordinates, which are unchanged by the crop, or on text.
+     */
+    for (const viewport of DESKTOP_VIEWPORTS) {
+      await page.setViewportSize(viewport);
+      await page.waitForTimeout(350);
+      const clipped = await page.evaluate(() => {
+        const stage = document.querySelector(".cp-demo__stage")!.getBoundingClientRect();
+        const svg = document.querySelector("#orbitSvg")!.getBoundingClientRect();
+        return {
+          bottom: Math.round(Math.max(0, svg.bottom - stage.bottom)),
+          right: Math.round(Math.max(0, svg.right - stage.right)),
+          height: Math.round(svg.height)
+        };
+      });
+      const where = `${viewport.width}x${viewport.height}`;
+      expect(clipped.bottom, `${where}: ${clipped.bottom}px of the orbit is cut off`).toBe(0);
+      expect(clipped.right, `${where}: ${clipped.right}px of the orbit is cut off`).toBe(0);
+      // A stage that collapsed to nothing would also pass the two checks above.
+      expect(clipped.height, `${where}: the orbit collapsed`).toBeGreaterThan(200);
+    }
+  });
+
+  test("the readouts panel is fully on screen at every desktop size", async ({ page }) => {
+    // The stage reserves a fixed height for this panel, so the panel has to actually be
+    // that height. It is 254px at all four sizes: the cards keep to one row and the
+    // Conservation disclosure spans the full width beneath them.
+    for (const viewport of DESKTOP_VIEWPORTS) {
+      await page.setViewportSize(viewport);
+      await page.waitForTimeout(350);
+      const overflow = await page.evaluate(() => {
+        const panel = document.querySelector(".cp-demo__readouts")!.getBoundingClientRect();
+        return Math.round(Math.max(0, panel.bottom - window.innerHeight));
+      });
+      expect(
+        overflow,
+        `${viewport.width}x${viewport.height}: the readouts panel runs ${overflow}px past the fold`
+      ).toBe(0);
+    }
+  });
+
   // --- Links ---
 
   test("exhibit and instructor links are present", async ({ page }) => {

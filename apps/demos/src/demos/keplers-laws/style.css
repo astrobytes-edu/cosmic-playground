@@ -90,11 +90,28 @@
 }
 
 .kepler-unit-toggle,
+/* A mode switch, not an action: it lives in the panel header beside the title, where it
+ * costs no grid cell. As a body cell it stretched to the row height -- two 91x101px
+ * buttons to choose a detail level. */
+.cp-demo__readouts .cp-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cp-space-3);
+  flex-wrap: wrap;
+  padding-block: var(--cp-space-2);
+}
+
 .kepler-readout-mode {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
   gap: var(--cp-space-2);
-  margin-bottom: var(--cp-space-3);
+}
+
+.kepler-readout-mode .cp-button {
+  padding: var(--cp-space-1) var(--cp-space-3);
+  font-size: var(--cp-text-sm);
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .kepler-notation-toggle {
@@ -324,24 +341,92 @@
   }
 }
 
-/* ── Stage and readout budget ────────────────────────────────────────────────
+/* ── Stage and readout budget ───────────────────────────────────────
  * Measured 2026-09-04 at 1440x900, before this: the stage was 787px and the readouts
- * began at y=835, so all 17 sat below the fold. The sidebar held 1,943px in an 819px box.
+ * began at y=839, so all seven sat below the fold.
  *
- * The stage and the readouts share one height budget. Below 745px of viewport the demo
- * keeps its natural layout and the page scrolls, because squeezing an orbit diagram
- * further makes it unreadable, which is worse. */
+ * The stage and the readouts share one height budget, and the reserve below is what the
+ * readouts need. NOTE the root font-size here is 18px, not the browser default 16, so
+ * every rem in this file is 1.125x what a px mental model expects.
+ *
+ *   above the stage           24px
+ *   two 12px grid gaps        24px          (the playbar row is empty in this demo)
+ *   readouts panel           254px          (one row of cards + the disclosure below them)
+ *   --------------------------------
+ *   reserved                 302px
+ *   declared               17.5rem = 315px
+ *
+ * The panel is 254px at 1280, 1366, 1440 and 1920 alike, because the cards keep to one row
+ * and the Conservation disclosure spans the full width beneath them. One measurement, one
+ * number, no breakpoint. Advanced mode adds two more cards and can wrap to a second row,
+ * which is a deliberate request for more numbers.
+ *
+ * A previous attempt at this cap clipped the orbit instead of shrinking it, because an SVG
+ * with a viewBox and `height: auto` is WIDTH-driven: its intrinsic aspect ratio sets its
+ * height, so capping an ancestor only lets `overflow: hidden` cut the bottom off -- 317px
+ * of it, measured. The three rules below make it HEIGHT-driven instead:
+ *
+ *   1. the stage is a flex column, so its children divide a bounded height;
+ *   2. the surface takes what is left (`flex: 1`) and may shrink (`min-height: 0`, without
+ *      which a flex item refuses to go below its content size);
+ *   3. the SVG fills the surface with an explicit width AND height, so nothing is left for
+ *      the intrinsic ratio to decide. `preserveAspectRatio="xMidYMid meet"` then scales the
+ *      viewBox to fit and centres it -- letterboxed, never cropped, never distorted.
+ *
+ * Dragging still lands where it should because the pointer mapping goes through
+ * `getScreenCTM().inverse()`, which already accounts for that letterboxing.
+ *
+ * The 360px floor means that below roughly a 700px viewport the readouts go back under the
+ * fold and the page scrolls, because squeezing an orbit diagram past that makes it
+ * unreadable, which is worse than a scroll. */
 
-/*
- * NOT DONE: constraining the stage here.
- *
- * Tried 2026-09-04 and reverted. The orbit is an SVG with a viewBox and `height: auto`,
- * so its intrinsic aspect ratio sets the height; capping the stage does not shrink it, it
- * just lets `overflow: hidden` cut the bottom off -- up to 317px of the orbit, measured.
- * Making it height-driven needs the wrapper chain sorted out too, which is a real pass on
- * this demo rather than a few lines. Until then keplers-laws keeps its natural layout and
- * the readouts stay below the fold; the layout ratchet records that.
- */
+@media (min-width: 1025px) {
+  .cp-demo__stage {
+    /* Readouts wrap to two rows below 1440px; see the reserve table above. */
+    --kepler-readout-reserve: 17.5rem;
+    display: flex;
+    flex-direction: column;
+    /* An explicit height, not a max: the surface's only child is absolutely positioned, so
+     * the stage has no content height of its own to cap. `align-self: start` from the
+     * shell grid then honours this exactly. The shell's own `min-height` clamp has to go,
+     * or it wins over this at short viewports; the 360px lower bound replaces it. */
+    min-height: 0;
+    height: clamp(360px, calc(100svh - var(--kepler-readout-reserve)), 820px);
+  }
+
+  .kepler-stage-header {
+    flex: none;
+  }
+
+  /* The surface hugs the drawing rather than framing empty space. Once the stage is
+   * height-bounded the box is much wider than a 3:2 orbit needs -- 898x299 at 1280x720,
+   * so half the panel was blank. `aspect-ratio` with an auto width derives the width from
+   * the height flex just handed it. */
+  .stage-surface {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: auto;
+    max-width: 100%;
+    margin-inline: auto;
+    aspect-ratio: 600 / 400;
+  }
+
+  /* Mirrors .orbit-canvas above, so the two layers stay registered. */
+  #orbitSvg {
+    position: absolute;
+    inset: var(--cp-space-3);
+    width: calc(100% - (2 * var(--cp-space-3)));
+    height: calc(100% - (2 * var(--cp-space-3)));
+  }
+}
+
+/* The Conservation disclosure is not a readout; as a 190px card its summary either clipped
+ * ("ene" for "energy + angular momentum") or wrapped to three lines and took the whole row
+ * up with it. Given the full width it is one line at every desktop size, which is also what
+ * makes the panel a constant height and lets the reserve above be a single number. */
+.cp-demo__readouts .cp-accordion {
+  grid-column: 1 / -1;
+}
 
 /* Six readout cards at 109-130px came to 347px. These are numbers to glance at while
  * dragging a slider. */

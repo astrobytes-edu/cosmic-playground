@@ -196,6 +196,18 @@
   font-weight: var(--cp-font-bold);
 }
 
+/* An accordion used as a readout card is roughly 190px wide, far narrower than one in the
+ * drawer. A nowrap meta then runs off the edge: keplers-laws' Conservation card showed
+ * "ene" where "energy + angular momentum" belonged. Inside the readouts panel the summary
+ * wraps instead. */
+.cp-demo__readouts .cp-accordion > summary {
+  flex-wrap: wrap;
+}
+
+.cp-demo__readouts .cp-accordion__meta {
+  white-space: normal;
+}
+
 .cp-accordion__meta {
   color: var(--cp-muted);
   font-size: var(--cp-text-sm);

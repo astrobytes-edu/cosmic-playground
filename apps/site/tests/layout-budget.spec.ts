@@ -66,7 +66,11 @@ const BUDGETS: Record<string, Budget> = {
   "eos-lab": { readoutsBelowFold: 14, sidebarOverflowPx: 580 },
   "galaxy-rotation": { readoutsBelowFold: 22, sidebarOverflowPx: 360 },
   "doppler-shift": { readoutsBelowFold: 20, sidebarOverflowPx: 380 },
-  "keplers-laws": { readoutsBelowFold: 7, sidebarOverflowPx: 880 },
+  // keplers-laws was 7 below the fold. Fixed 2026-09-04: the stage is height-bounded and
+  // its SVG made height-driven so the cap shrinks the orbit rather than cropping it, the
+  // Friendly/Advanced switch moved into the panel header, and the Conservation disclosure
+  // spans the readouts row. The remaining overflow is the sidebar's own controls.
+  "keplers-laws": { readoutsBelowFold: 0, sidebarOverflowPx: 880 },
   "conservation-laws": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
   "planetary-conjunctions": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
   "spectral-lines": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },

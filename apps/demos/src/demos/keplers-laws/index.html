@@ -408,13 +408,14 @@
       </aside>
 
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel" data-focus-group="readouts-primary">
-        <div class="cp-panel-header">Readouts</div>
-        <div class="cp-panel-body">
+        <div class="cp-panel-header">
+          <span class="cp-panel-header__title">Readouts</span>
           <div class="kepler-readout-mode" role="group" aria-label="Readout detail level">
             <button id="readoutFriendly" class="cp-button cp-button--active" type="button">Friendly</button>
             <button id="readoutAdvanced" class="cp-button cp-button--outline" type="button">Advanced</button>
           </div>
-
+        </div>
+        <div class="cp-panel-body">
           <div id="advancedReadoutControls" hidden>
             <div class="kepler-unit-toggle" role="group" aria-label="Unit system">
               <button id="unit101" class="cp-button cp-button--active" type="button">101</button>
@@ -457,7 +458,7 @@
           <details class="cp-accordion" id="conservationDetails">
             <summary>
               <span class="cp-accordion__title">Conservation laws</span>
-              <span class="cp-accordion__meta">energy + angular momentum</span>
+              <span class="cp-accordion__meta">5 values</span>
             </summary>
             <div class="cp-accordion__body">
               <div class="cp-readout">
