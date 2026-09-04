@@ -59,3 +59,47 @@ export type {
 } from "./hydrostaticEquilibriumModel";
 export { solarDeclinationDegFromDayOfYear } from "./riseSetModel";
 export { solarRiseSetLocalTimeHours, moonRiseSetLocalTimeHours } from "./riseSetModel";
+
+export { hashSeed, mulberry32, subStream, xmur3 } from "./seededRandom";
+export { InitialMassFunctionModel } from "./initialMassFunctionModel";
+export {
+  CANONICAL_HIGH_MASS_SLOPE,
+  HYDROGEN_BURNING_MIN_MSUN,
+  IMF_MAX_MSUN,
+  KROUPA_ALPHA_LOW,
+  KROUPA_BREAK_MSUN,
+  MASCHBERGER_BETA,
+  MASCHBERGER_MU,
+  buildKroupaSegments,
+  highMassSlopeFromEnvironment,
+  kroupaMassFraction,
+  kroupaMassMsun,
+  maschbergerMassFraction,
+  maschbergerMassMsun
+} from "./initialMassFunctionModel";
+export type { KroupaSegment, MaschbergerParams } from "./initialMassFunctionModel";
+export { ClusterProfileModel } from "./clusterProfileModel";
+export {
+  PLUMMER_HALF_MASS_OVER_SCALE,
+  buildEffCdf,
+  effHalfMassOverScale,
+  makeProfileSampler,
+  plummerRadiusPc
+} from "./clusterProfileModel";
+export type { ProfileSpec, Vector3Pc } from "./clusterProfileModel";
+export { StellarLifetimeModel } from "./stellarLifetimeModel";
+export {
+  mainSequenceLifetimeMyr,
+  remnantFateFromInitialMass,
+  spectralTypeFromTemperature
+} from "./stellarLifetimeModel";
+export type { RemnantFate } from "./stellarLifetimeModel";
+export { StarClusterModel } from "./starClusterModel";
+export { MAX_CLUSTER_STARS, sampleStarCluster } from "./starClusterModel";
+export type {
+  ClusterStar,
+  ImfKind,
+  StarCluster,
+  StarClusterOptions,
+  StarPhase
+} from "./starClusterModel";

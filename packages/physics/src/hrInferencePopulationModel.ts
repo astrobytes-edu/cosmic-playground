@@ -1,4 +1,5 @@
 import { ZamsTout1996Model } from "./zamsTout1996Model";
+import { hashSeed, mulberry32 } from "./seededRandom";
 
 export type HrStarStage =
   | "ms"
@@ -52,27 +53,6 @@ const DEFAULT_Z = ZamsTout1996Model.CONSTANTS.zSun;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
-}
-
-function hashSeed(seed: string | number): number {
-  const text = String(seed);
-  let h = 2166136261;
-  for (let i = 0; i < text.length; i += 1) {
-    h ^= text.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function mulberry32(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state += 0x6d2b79f5;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 function gaussianUnit(random: () => number): number {
