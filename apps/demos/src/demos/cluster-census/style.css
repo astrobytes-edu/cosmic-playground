@@ -698,7 +698,16 @@
   color: var(--cp-accent-amber);
 }
 
-/* A truncated "orange gia..." helps nobody; the type is one of the shorter fields. */
-.census-strip .census-card__list > div:nth-child(2) {
-  flex: 1 1 9rem;
+/*
+ * Fields size to their contents.
+ *
+ * Equal-width grid columns truncated "orange giant" to "orange gia..." while the columns
+ * either side of it had room to spare -- and a `flex` rule on a grid item does nothing,
+ * which is how the first attempt at this failed silently. These are six readouts of very
+ * different widths, so let each take what it needs and wrap when the row runs out.
+ */
+.census-strip .census-card__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--cp-space-4);
 }
