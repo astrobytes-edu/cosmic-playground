@@ -34,7 +34,7 @@ no equivalent of today.
 
 ## The five ports
 
-### 1. `cluster-census` — a new demo *(highest value)*
+### 1. `cluster-census` — a new demo *(highest value)* — SHIPPED 2026-09-04
 
 Sample a star cluster from a real IMF, then show the **same stars** three ways: their
 positions in space, their place on an HR diagram, and their mass histogram against the
@@ -122,11 +122,102 @@ lecture bookmark survives a control being renamed.
 
 ---
 
+## The interaction patterns are worth more than the physics
+
+*Added 2026-09-04 after reading `CensusEngine.astro` end to end, prompted by "it looks
+horrible … make it more like novascope".*
+
+The original survey compared **physics modules**, and on that axis the port was
+straightforward. Comparing the two *components* is a different and more useful exercise:
+`cluster-census` had all the same physics and still looked like a plotted function next to
+`CensusEngine.astro`.
+
+> **Correction, same day.** This section first said none of these patterns need three.js.
+> That answered a question nobody asked. The brief was "install relevant packages
+> (three.js, etc.) to make CP SOTA", and the survey's whole three.js verdict was scoped to
+> "do the *physics* ports require it" -- which is not the same question and is not the one
+> that was put. three.js is now a dependency of `cluster-census`; what the cluster panel
+> gains from it is set out below.
+
+| Pattern | What it does | Status in CP |
+| --- | --- | --- |
+| **Cross-panel selection** | One `hoverId`, passed into *both* renderers. Pointing at a star in the cluster rings the same star on the HR diagram. | **Ported** into `cluster-census` |
+| **Inspection card** | Hover previews, click pins, click empty space clears. Mass, type, $T_{\rm eff}$, $\log L$, radius, phase, plus a swatch glowing in the star's own colour. | **Ported**, plus a keyboard path novascope does not have |
+| **KaTeX axis titles in HTML** | Titles are `<span>`s positioned around the canvas by grid, so the maths is really typeset. Only tick labels stay on the canvas. | **Ported** to both plot panels |
+| **Lenses** | Controls grouped into toggleable sets (Census / Environment / Structure) rather than one long sidebar, with `?` popovers explaining each model. | **Not ported** — see below |
+| **Derived parameters** | A switch turns $\alpha$ from a slider into a *derived* quantity: set metallicity and cluster mass, and Jerabkova+2018 gives you the slope. | **Not ported** — `highMassSlopeFromEnvironment` is already in `@cosmic/physics`, unused |
+
+The first three are the ones that turn two plots into one instrument, and they are now in.
+The remaining two are the next increment, and both are cheap because the hard part already
+exists on our side:
+
+**Lenses.** `cluster-census` currently stacks eight controls in one column. The lens
+pattern groups them by the question they answer and hides the rest, which both shortens
+the sidebar and tells the reader what each control is *for*. CP already has `cp-chip`,
+`cp-chip-group` and `initPopovers`, so this is composition, not new machinery.
+
+**Derived slope.** This is the most pedagogically interesting control in the whole
+novascope component, and we already ported the physics for it: `highMassSlopeFromEnvironment`
+(Jerabkova et al. 2018, A&A 620, A39, eq. 6) sits in `initialMassFunctionModel.ts` with no
+caller. Wiring a "derive $\alpha$" switch would let a student discover that the mass
+function is not a universal constant — that metal-poor, massive clusters are top-heavy —
+which is a genuinely better lesson than dragging a slope by hand.
+
+### The cluster panel: three.js, and why it beats the reference
+
+`CensusEngine.astro` pins `three` in its package.json, but its **cluster field is Canvas
+2D** with a hand-rolled orbit camera; three is used elsewhere on that site, for the
+starfield and volume work. So the thing that makes the novascope cluster look right is not
+three.js. It is:
+
+1. `globalCompositeOperation = "lighter"` -- **additive blending**. Overlapping stars sum
+   instead of the last-drawn one painting over the rest, which is what makes a dense core
+   read as light rather than as a flat disc of whatever colour finished last.
+2. A **radial-gradient glow** on each star: a bright core inside a soft halo.
+3. Depth sorting and a depth cue under the orbit camera.
+
+CP now does all three on the GPU instead, in `clusterScene.ts`. That is not a like-for-like
+port; it is strictly better on the axis the reference itself flags. The novascope renderer
+carries this comment:
+
+> the faint many (most of an IMF-sampled cluster) get a cheap square dot; only the bright
+> few get the expensive radial-gradient glow ... This is what keeps N ~ 10^4 smooth under
+> live orbit.
+
+That fallback is a compromise Canvas 2D forces: a gradient per star per frame is too
+expensive, so most of the cluster is drawn as plain squares. In a fragment shader the
+falloff is two lines and **every** star gets it, at 20,000 stars, while the camera moves.
+The interaction comes with it: real orbit, zoom and pan through `OrbitControls`, and a 2-D
+view that is the same scene with an orthographic camera locked overhead rather than a
+second renderer to keep in step.
+
+Cost: 562 KB for the `cluster-census` chunk, about 130 KB gzipped. Vite code-splits it, so
+no other demo pays for it, and a browser without WebGL loses that one panel rather than the
+instrument.
+
+Two implementation notes worth carrying to the next 3-D demo:
+
+- three's stock size attenuation is a fixed constant over view-space depth, which assumes a
+  scene measured in units of roughly one. This scene is measured in tens of parsecs, where
+  the same constant magnifies sprites about 19x. Normalise the depth cue to the camera's
+  own focal distance instead.
+- `OrbitControls` zooms a **perspective** camera by moving it and an **orthographic** one
+  by changing `camera.zoom`. A reset that only repositions the cameras therefore half
+  works, and the 2-D view stays zoomed.
+
+### What the port should *not* copy
+
+- **A five-preset row.** Novascope has typical / low-mass / starburst / diffuse /
+  segregated; two of those (diffuse, segregated) need controls CP does not have yet. Three
+  presets that all do something is better than five where two are inert.
+
+---
+
 ## Do not port
 
 | What | Why |
 |---|---|
-| `viz/starfield/*` + `/star-render-lab` (7,000 lines) | Needs three.js WebGPU + TSL. `three.tsl.*.js` alone is 833 KB in that site's build; CP ships zero 3D today. The subject — exposure calibration, tone mapping — is not intro material. |
+| `viz/starfield/*` + `/star-render-lab` (7,000 lines) | Needs three.js **WebGPU + TSL**, a much heavier path than the WebGL renderer `cluster-census` now uses; `three.tsl.*.js` alone is 833 KB in that site's build. The subject — exposure calibration, tone mapping — is also not intro material. This is a judgement about *that* subsystem, not about three.js. |
 | `viz/webgl/*`, `/volume-lab`, `/explore/gas-expulsion`, `/explore/cluster` | Raw WebGL 2 with hand-written GLSL, plus a 16 MB binary dataset dependency. |
 | `core/feedback/*` (2,635 lines) | Research-grade: Vink vs Björklund winds, KM09 radiation pressure, Weaver bubbles. Two published wind prescriptions disagreeing by 5× is a great *graduate* lesson. Its own project note calls it a temporary prototype. |
 | `/explore/feedback-budget`, `/explore/mass-segregation` | Both quarantined by their author — one for an undiagnosed rendering fault, one pending redesign. Do not inherit known-broken pages. |

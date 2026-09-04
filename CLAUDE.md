@@ -114,6 +114,25 @@ You can keep PR overhead low but still get value:
   - Do **not** use `G=1` or "natural units" phrasing.
   - When orbital mechanics units matter pedagogically, prefer AU / yr / M☉ with `G = 4π² AU³/(yr²·M☉)`.
 
+### WebGL demos (three.js)
+
+`three` is a dependency of `apps/demos`, used by `cluster-census` (`clusterScene.ts`) and
+available to any demo that needs real 3-D. Vite code-splits it, so only demos that import
+it pay the ~130 KB gzipped. Conventions, learned the hard way:
+
+- **Never call `requiredContext2d` on a canvas you intend to render WebGL into.** Asking a
+  canvas for a 2-D context permanently forecloses getting a WebGL one from it.
+- **Stack a 2-D overlay canvas** over the WebGL one for anything needing text (scale bars,
+  labels) and for one-off shapes like selection rings.
+- **Return `null` rather than throwing** when the renderer cannot be created. Scenes are
+  built at module scope, so a throw takes the whole demo down; a reader without WebGL
+  should lose one panel.
+- **Publish camera state as `data-` attributes** on the overlay. The WebGL buffer is not
+  preserved, so `readPixels` returns nothing and E2E has no other way to assert that the
+  view actually moved.
+- Point-sprite size attenuation and `OrbitControls` zoom both have scene-scale traps; see
+  the notes in `docs/reviews/2026-09-04-novascope-port-survey.md`.
+
 ---
 
 ## Design System — Contract-Driven Architecture
