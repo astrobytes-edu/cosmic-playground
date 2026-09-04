@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 test.describe("Kepler's Laws -- E2E", () => {
   test.beforeEach(async ({ page }) => {
@@ -257,25 +258,51 @@ test.describe("Kepler's Laws -- E2E", () => {
 
   // --- Overlays ---
 
+  /*
+   * These assert VISIBILITY, not the mechanism.
+   *
+   * They used to read `el.style.display` directly, which pinned one implementation: the
+   * demo set an inline display and left the markup's `hidden` attribute in place, so the
+   * DOM claimed these overlays did not exist while they were on screen. The tests passed
+   * throughout, because they were checking the very line that caused the problem. Asking
+   * "can you see it, and does the DOM agree" catches that class of bug instead of
+   * cementing it.
+   */
+  const expectOverlay = async (page: Page, selector: string, shown: boolean) => {
+    const group = page.locator(selector);
+    if (shown) await expect(group).toBeVisible();
+    else await expect(group).toBeHidden();
+    // The accessibility half of the same claim: `hidden` must track what is on screen.
+    expect(await group.evaluate((el) => el.hasAttribute("hidden"))).toBe(!shown);
+  };
+
   test("unchecking Foci hides foci markers", async ({ page }) => {
+    await expectOverlay(page, "#fociGroup", true);
     await page.locator("#toggleFoci").click();
-    const fociGroup = page.locator("#fociGroup");
-    const display = await fociGroup.evaluate((el) => el.style.display);
-    expect(display).toBe("none");
+    await expectOverlay(page, "#fociGroup", false);
   });
 
   test("unchecking Apsides hides apsides markers", async ({ page }) => {
+    await expectOverlay(page, "#apsidesGroup", true);
     await page.locator("#toggleApsides").click();
-    const group = page.locator("#apsidesGroup");
-    const display = await group.evaluate((el) => el.style.display);
-    expect(display).toBe("none");
+    await expectOverlay(page, "#apsidesGroup", false);
   });
 
   test("checking Equal Areas shows the equal-area wedge", async ({ page }) => {
+    await expectOverlay(page, "#equalAreasGroup", false);
     await page.locator("#toggleEqualAreas").click();
-    const group = page.locator("#equalAreasGroup");
-    const display = await group.evaluate((el) => el.style.display);
-    expect(display).toBe("block");
+    await expectOverlay(page, "#equalAreasGroup", true);
+  });
+
+  test("the Newton vectors appear in the DOM as well as on screen", async ({ page }) => {
+    // The regression that prompted this: #velocityVector and #forceVector were shown by
+    // an inline display while keeping their `hidden` attribute, so assistive technology
+    // was told they were not there.
+    await page.locator("#modeNewton").click();
+    await expectOverlay(page, "#velocityVector", false);
+    await page.locator("#toggleVectors").check();
+    await expectOverlay(page, "#velocityVector", true);
+    await expectOverlay(page, "#forceVector", true);
   });
 
   test("equal-areas control is prominently visible in Kepler 2 section", async ({ page }) => {

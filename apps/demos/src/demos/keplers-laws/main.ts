@@ -188,8 +188,22 @@ function orbitalToSvg(rAu: number, thetaRad: number) {
   };
 }
 
+/**
+ * Show or hide an SVG overlay group.
+ *
+ * Uses the `hidden` ATTRIBUTE rather than an inline display. These groups ship hidden in
+ * the markup, and an inline `display: block` merely paints over that: the element stays
+ * `hidden` in the DOM, so assistive technology is told the velocity and force vectors do
+ * not exist while they are plainly on screen. Toggling the attribute makes the DOM and the
+ * pixels agree.
+ *
+ * (This was invisible until `[hidden] { display: none !important }` was added to
+ * tokens.css, at which point the attribute started winning and the vectors stopped
+ * appearing at all -- the bug becoming visible is the point of that rule.)
+ */
 function setSvgVisible(el: SVGElement, visible: boolean) {
-  el.style.display = visible ? "block" : "none";
+  el.toggleAttribute("hidden", !visible);
+  el.style.removeProperty("display");
 }
 
 function setConceptFocus(next: "law2" | "energy" | "law3") {

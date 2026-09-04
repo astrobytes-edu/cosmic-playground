@@ -335,3 +335,19 @@ a:active {
   outline: 2px solid var(--cp-focus);
   outline-offset: 2px;
 }
+
+/*
+ * The `hidden` attribute must beat any author `display` rule.
+ *
+ * The UA stylesheet's [hidden] { display: none } is author-overridable, so ANY rule that
+ * sets display on a container -- `.panel { display: grid }` -- silently defeats
+ * `element.hidden = true`. The element stays on screen with the attribute set, which is
+ * the most confusing possible failure: the DOM says hidden and the pixels disagree.
+ *
+ * The theme had already patched this twice, per component (.cp-tab-panel[hidden],
+ * .cp-popover[hidden]). Doing it once here retires that pattern; 26 element/rule pairs
+ * across 14 demos were exposed to it.
+ */
+[hidden] {
+  display: none !important;
+}

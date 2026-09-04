@@ -9,6 +9,16 @@ describe("Design tokens", () => {
   const animPath = path.resolve(__dirname, "../styles/animations.css");
   const animCss = fs.existsSync(animPath) ? fs.readFileSync(animPath, "utf-8") : "";
 
+  describe("hidden attribute", () => {
+    it("beats any author display rule", () => {
+      // Without this the UA's [hidden] { display: none } is overridable, so a rule like
+      // `.panel { display: grid }` silently defeats `element.hidden = true`: the DOM says
+      // hidden and the pixels disagree. Found by a Playwright assertion that a panel was
+      // hidden while it was plainly on screen.
+      expect(css).toMatch(/\[hidden\]\s*\{[^}]*display:\s*none\s*!important/);
+    });
+  });
+
   describe("Typography scale", () => {
     it("defines all text size tokens", () => {
       const requiredTokens = [
