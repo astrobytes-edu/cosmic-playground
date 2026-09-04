@@ -61,9 +61,9 @@ const hasPartialInstructorBundle = hasInstructorContent && missingSections.lengt
   <header class="header">
     <h1>Instructor notes: {entry.data.title}</h1>
     <p class="meta">
-      Public notes (v0.2 policy). Not linked from primary navigation.
+      Teaching notes for this exhibit. Free to adapt for your own course.
     </p>
-    <p class="meta">Exhibit: <a href={exhibitHref}>{exhibitHref}</a></p>
+    <p class="meta">Exhibit: <a href={exhibitHref}>{entry.data.title}</a></p>
   </header>
 
   {!entry.data.content_verified ? (

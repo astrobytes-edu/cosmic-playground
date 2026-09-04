@@ -1,0 +1,168 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import DemoCanvasThumbnail from "../../components/DemoCanvasThumbnail.astro";
+import { topicColor, primaryTopic } from "../../lib/topicColors";
+
+const demos = await getCollection("demos");
+const stationEntries = await getCollection("stations");
+
+const base = import.meta.env.BASE_URL;
+const withBase = (path: string) => {
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedBase}${normalizedPath}`;
+};
+
+// A station page exists for every demo (getStaticPaths derives from the demos
+// collection), but only some have authored content. The rest render a generic
+// scaffold, so say which is which rather than implying they are equivalent.
+const authoredStationSlugs = new Set(stationEntries.map((entry) => entry.data.demo_slug));
+
+const sortedDemos = [...demos].sort((a, b) => a.data.title.localeCompare(b.data.title));
+const authoredCount = sortedDemos.filter((d) => authoredStationSlugs.has(d.slug)).length;
+---
+
+<Layout title="Station Cards — Cosmic Playground" hasMath={false}>
+  <Breadcrumb crumbs={[{ label: "Station Cards" }]} withBase={withBase} />
+
+  <section class="station-hero cp-hero">
+    <h1>Station Cards</h1>
+    <p class="station-hero__lede">
+      Printable one-page observation scaffolds, one per exhibit. Each card gives students
+      a prediction to commit to, parameters to set, and space to record what they saw.
+      They are laid out for paper — print straight from the page.
+    </p>
+    <p class="station-hero__count">
+      <strong>{authoredCount}</strong> of {sortedDemos.length} exhibits have a dedicated card;
+      the rest render a generic observation template.
+    </p>
+  </section>
+
+  <div class="station-grid">
+    {sortedDemos.map((d) => {
+      const authored = authoredStationSlugs.has(d.slug);
+      const color = topicColor(primaryTopic(d.data.topics));
+      return (
+        <a
+          class="station-card cp-card"
+          href={withBase(`stations/${d.slug}/`)}
+          style={`--topic-color: ${color}`}
+        >
+          <div class="station-card__illus">
+            <DemoCanvasThumbnail slug={d.slug} />
+          </div>
+          <div class="station-card__body">
+            <h2 class="station-card__title">{d.data.title}</h2>
+            <div class="station-card__meta">
+              <span class="station-card__stat">
+                <span class="station-card__stat-value">{d.data.time_minutes}</span>
+                <span class="station-card__stat-unit">min</span>
+              </span>
+              {authored ? (
+                <span class="station-card__stat">
+                  <span class="station-card__stat-value">card</span>
+                  <span class="station-card__stat-unit">authored</span>
+                </span>
+              ) : (
+                <span class="station-card__fallback">generic template</span>
+              )}
+            </div>
+          </div>
+        </a>
+      );
+    })}
+  </div>
+</Layout>
+
+<style>
+  .station-hero {
+    margin-bottom: var(--cp-space-5);
+  }
+
+  .station-hero__lede {
+    margin: 6px 0 0;
+    color: var(--cp-muted);
+    max-width: 72ch;
+  }
+
+  .station-hero__count {
+    margin: 10px 0 0;
+    color: var(--cp-muted);
+    font-size: var(--cp-text-sm);
+  }
+
+  .station-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    gap: var(--cp-space-4);
+  }
+
+  .station-card {
+    display: flex;
+    gap: var(--cp-space-3);
+    padding: var(--cp-space-4);
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    border-left: 3px solid var(--topic-color, var(--cp-accent));
+    transition: transform var(--cp-transition-fast) var(--cp-ease-out),
+      border-color var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .station-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .station-card__illus {
+    flex: 0 0 84px;
+    width: 84px;
+    border-radius: var(--cp-r-2);
+    overflow: clip;
+  }
+
+  .station-card__body {
+    min-width: 0;
+  }
+
+  .station-card__title {
+    margin: 0;
+    font-size: var(--cp-text-md);
+    color: var(--topic-color, var(--cp-text));
+  }
+
+  .station-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-3);
+    margin-top: 4px;
+    color: var(--cp-muted);
+    font-size: var(--cp-text-sm);
+  }
+
+  .station-card__stat-value {
+    font-weight: 600;
+    color: var(--cp-text);
+  }
+
+  .station-card__stat-unit {
+    margin-left: 3px;
+  }
+
+  .station-card__fallback {
+    font-style: italic;
+  }
+
+  @media (max-width: 420px) {
+    .station-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .station-card__illus {
+      flex-basis: auto;
+      width: 100%;
+    }
+  }
+</style>

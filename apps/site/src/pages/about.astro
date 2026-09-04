@@ -1,4 +1,5 @@
 ---
+import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
 import StatBar from "../components/StatBar.astro";
 import CitationCard from "../components/CitationCard.astro";
@@ -11,8 +12,11 @@ const withBase = (path: string) => {
   return `${normalizedBase}${normalizedPath}`;
 };
 
+// Derived, not hardcoded: this read "14" while 19 demos shipped.
+const demoCount = (await getCollection("demos")).length;
+
 const stats = [
-  { value: "14", unit: "interactive demos" },
+  { value: String(demoCount), unit: "interactive demos" },
   { value: "3", unit: "modes per demo", label: "Station / Challenge / Export" },
   { value: "0", unit: "logins required" },
   { value: "8", unit: "topic areas" },
@@ -275,7 +279,8 @@ const citations = [
 
   .design-table td:first-child {
     font-weight: 500;
-    white-space: nowrap;
+    white-space: normal;
+    text-wrap: balance;
   }
 
   /* ── Collapsible sections ───────────────── */
@@ -350,7 +355,7 @@ const citations = [
 
   .citation-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
     gap: var(--cp-space-4);
   }
 </style>

@@ -34,6 +34,14 @@
   --cp-glow-pink: 0 0 20px rgba(244, 114, 182, 0.35);
   --cp-glow-violet: 0 0 20px rgba(167, 139, 250, 0.35);
 
+  /* Colour tints, brighter than museum so gradients read against the starfield. */
+  --cp-tint-teal: rgba(45, 212, 191, 0.22);
+  --cp-tint-pink: rgba(244, 114, 182, 0.20);
+  --cp-tint-violet: rgba(167, 139, 250, 0.20);
+  --cp-tint-accent: var(--cp-tint-teal);
+  --cp-tint-blue: var(--cp-tint-violet);
+  --cp-tint-magenta: var(--cp-tint-pink);
+
   /* Legacy */
   --cp-glow-accent: var(--cp-glow-teal);
   --cp-glow-blue: var(--cp-glow-violet);

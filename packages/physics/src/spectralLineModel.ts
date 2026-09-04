@@ -21,8 +21,16 @@ import { AstroConstants } from "./astroConstants";
 // ── Constants ──────────────────────────────────────────────
 
 const BOHR = {
-  /** Rydberg energy (eV) — ionization energy of hydrogen from n=1 */
-  RYDBERG_EV: 13.605693,               // NIST CODATA 2018
+  /**
+   * Hydrogen ionization energy R_H (eV) — the reduced-mass-corrected Rydberg.
+   *
+   * NOT R_infinity (13.605693 eV, CODATA), which assumes an infinitely heavy nucleus.
+   * For hydrogen R_H = R_infinity * mu/m_e = R_infinity * m_p/(m_p + m_e) = 0.9994566
+   * of it. Using R_infinity makes every hydrogen wavelength 0.054% short (H-alpha
+   * 656.112 nm instead of 656.461 nm), which is a visible error against any line list.
+   * Source: NIST ASD, ionization energy of H I = 13.598434599702(13) eV.
+   */
+  RYDBERG_EV: 13.598434599,
   /** Bohr radius a₀ (nm) */
   A0_NM: 0.052918,                      // NIST CODATA 2018
   /** hc product (eV·nm) for λ = hc/E conversions */

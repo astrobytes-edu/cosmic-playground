@@ -148,12 +148,25 @@ async function main() {
 
     const hasAriaLabel = /\baria-label=["'][^"']+["']/i.test(rootTag);
     const hasAriaLabelledBy = /\baria-labelledby=["'][^"']+["']/i.test(rootTag);
+    // A bare <div> has role=generic, and ARIA PROHIBITS aria-label on role=generic, so
+    // assistive technology discards the name entirely. An explicit landmark role (or a
+    // <main> element) is what makes the accessible name real -- and gives the instrument
+    // the page landmark it otherwise lacks.
+    const isMainElement = /^<main\b/i.test(rootTag);
+    const hasLandmarkRole = /\brole=["'](main|region|application)["']/i.test(rootTag);
 
     if (!hasAriaLabel && !hasAriaLabelledBy) {
       invalidInstrumentRootA11y.push({
         slug,
         indexPath,
         missing: ['aria-label="…"', 'aria-labelledby="…"'],
+        rootTag
+      });
+    } else if (!isMainElement && !hasLandmarkRole) {
+      invalidInstrumentRootA11y.push({
+        slug,
+        indexPath,
+        missing: ['role="main" (or a <main> element) so aria-label is not discarded'],
         rootTag
       });
     }

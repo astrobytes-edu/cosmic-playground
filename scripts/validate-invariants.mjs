@@ -84,6 +84,7 @@ export async function validateInvariants({ repoRoot = process.cwd() } = {}) {
   const siteContentRoot = path.join(siteSrcRoot, "content");
   const sitePagesRoot = path.join(siteSrcRoot, "pages");
 
+  const themeStylesRoot = path.join(repoRoot, "packages", "theme", "styles");
   const demosSrcRoot = path.join(repoRoot, "apps", "demos", "src");
   const demosDemosRoot = path.join(demosSrcRoot, "demos");
 
@@ -304,6 +305,58 @@ export async function validateInvariants({ repoRoot = process.cwd() } = {}) {
         message:
           "Page-local print CSS in an Astro page; print fixes must be centralized in packages/theme/styles/print.css."
       });
+    }
+  }
+
+  // A design token must hold the SAME KIND of value in every layer. --cp-glow-teal was a
+  // colour in tokens.css/layer-museum.css and a shadow list in layer-instrument.css, so
+  // layer-agnostic rules such as `box-shadow: 0 0 0 3px var(--cp-glow-teal)` expanded to
+  // invalid CSS inside every demo and were silently dropped, removing the focus ring.
+  // Convention: --cp-glow-* are SHADOW LISTS, --cp-tint-* are COLOURS.
+  if (await pathExists(themeStylesRoot)) {
+    const themeFiles = await listFiles(themeStylesRoot, { includeExtensions: new Set([".css"]) });
+    const declarations = new Map(); // token -> Map<kind, {file, line, column}>
+
+    for (const filePath of themeFiles) {
+      const text = await fs.readFile(filePath, "utf8");
+      const rx = /(--cp-(?:glow|tint)-[a-z0-9-]+)\s*:\s*([^;]+);/g;
+      let m;
+      while ((m = rx.exec(text)) !== null) {
+        const [, token, rawValue] = m;
+        const value = rawValue.trim();
+        // An alias (`var(--other)`) inherits its kind; skip it.
+        if (/^var\(/.test(value)) continue;
+        // A shadow list starts with a <length> (possibly a bare 0) or "inset". No CSS
+        // colour value starts with a digit or a minus sign, so this is unambiguous.
+        const kind = /^(inset\b|-?[0-9.])/.test(value) ? "shadow" : "color";
+        const { line, column } = lineColFromIndex(text, m.index);
+        if (!declarations.has(token)) declarations.set(token, new Map());
+        declarations.get(token).set(kind, { file: filePath, line, column });
+      }
+    }
+
+    for (const [token, kinds] of declarations) {
+      const expected = token.startsWith("--cp-glow-") ? "shadow" : "color";
+      for (const [kind, where] of kinds) {
+        if (kind === expected) continue;
+        violations.push({
+          code: "theme:token-kind-mismatch",
+          file: where.file,
+          line: where.line,
+          column: where.column,
+          message: `${token} is declared as a ${kind} value but --cp-${expected === "shadow" ? "glow" : "tint"}-* must be a ${expected} value. Colours belong in --cp-tint-*, shadow lists in --cp-glow-*.`
+        });
+      }
+      if (kinds.size > 1) {
+        const where = [...kinds.values()][0];
+        violations.push({
+          code: "theme:token-kind-conflict",
+          file: where.file,
+          line: where.line,
+          column: where.column,
+          message: `${token} holds different value kinds (${[...kinds.keys()].join(", ")}) across layers; layer-agnostic CSS cannot consume it safely.`
+        });
+      }
     }
   }
 

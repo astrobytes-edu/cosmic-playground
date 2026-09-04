@@ -463,7 +463,7 @@ function renderHeroSvg(
       </desc>
       <defs>
         <radialGradient id="hydroHeroGlow" cx="36%" cy="38%" r="78%">
-          <stop offset="0%" style="stop-color: color-mix(in srgb, var(--cp-glow-blue) 82%, transparent); stop-opacity: 1;" />
+          <stop offset="0%" style="stop-color: color-mix(in srgb, var(--cp-tint-blue) 82%, transparent); stop-opacity: 1;" />
           <stop offset="58%" style="stop-color: color-mix(in srgb, var(--cp-accent) 8%, transparent); stop-opacity: 0.72;" />
           <stop offset="100%" style="stop-color: transparent; stop-opacity: 0;" />
         </radialGradient>

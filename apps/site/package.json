@@ -20,7 +20,9 @@
     "dev": "node ../../scripts/copy-katex-assets.mjs && astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test:e2e": "playwright test",
-    "typecheck": "astro check"
+    "test:e2e": "playwright test --project=desktop --project=mobile",
+    "typecheck": "astro check",
+    "test:e2e:visual": "playwright test --project=visual",
+    "test:e2e:all": "playwright test"
   }
 }

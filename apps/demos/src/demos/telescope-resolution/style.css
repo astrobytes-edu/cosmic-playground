@@ -59,8 +59,8 @@
   height: auto;
   border-radius: 18px;
   border: 1px solid var(--cp-border);
-  background: radial-gradient(circle at 20% 30%, var(--cp-glow-teal), transparent 55%),
-    radial-gradient(circle at 80% 20%, var(--cp-glow-violet), transparent 55%),
+  background: radial-gradient(circle at 20% 30%, var(--cp-tint-teal), transparent 55%),
+    radial-gradient(circle at 80% 20%, var(--cp-tint-violet), transparent 55%),
     color-mix(in srgb, var(--cp-bg0) 70%, transparent);
   box-shadow: 0 24px 50px color-mix(in srgb, var(--cp-bg0) 65%, transparent);
 }

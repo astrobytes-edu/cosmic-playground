@@ -113,7 +113,7 @@
   border: 1px solid var(--cp-border);
   background: radial-gradient(
     circle at 20% 20%,
-    var(--cp-glow-violet),
+    var(--cp-tint-violet),
     color-mix(in srgb, var(--cp-bg0) 75%, transparent)
   );
 }

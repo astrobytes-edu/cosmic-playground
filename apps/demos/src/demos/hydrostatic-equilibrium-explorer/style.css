@@ -7,7 +7,7 @@
   --hydro-gravity-soft: color-mix(in srgb, var(--cp-accent-amber) 14%, transparent);
   --hydro-density: color-mix(in srgb, var(--cp-accent) 48%, var(--cp-accent-ice) 52%);
   --hydro-density-soft: color-mix(in srgb, var(--cp-accent) 14%, transparent);
-  --hydro-profile: color-mix(in srgb, var(--cp-accent) 62%, var(--cp-glow-blue));
+  --hydro-profile: color-mix(in srgb, var(--cp-accent) 62%, var(--cp-tint-blue));
   --hydro-star-core: color-mix(in srgb, var(--cp-accent) 30%, var(--cp-bg0) 70%);
   --hydro-star-outer: color-mix(in srgb, var(--cp-accent) 36%, var(--cp-bg1) 64%);
   --hydro-shell: color-mix(in srgb, var(--cp-accent-amber) 72%, var(--cp-text) 28%);
@@ -599,7 +599,7 @@
     linear-gradient(
       135deg,
       color-mix(in srgb, var(--cp-accent) 11%, transparent),
-      color-mix(in srgb, var(--cp-glow-blue) 8%, transparent)
+      color-mix(in srgb, var(--cp-tint-blue) 8%, transparent)
     ),
     color-mix(in srgb, var(--cp-bg1) 94%, transparent);
 }
@@ -626,7 +626,7 @@
   background:
     radial-gradient(
       circle at 50% 44%,
-      color-mix(in srgb, var(--cp-glow-blue) 44%, transparent),
+      color-mix(in srgb, var(--cp-tint-blue) 44%, transparent),
       color-mix(in srgb, var(--cp-bg0) 90%, transparent)
     ),
     linear-gradient(180deg, color-mix(in srgb, var(--cp-bg1) 94%, transparent), color-mix(in srgb, var(--cp-bg0) 88%, var(--cp-bg1)));
@@ -645,7 +645,7 @@
     ),
     radial-gradient(
       circle at 56% 48%,
-      color-mix(in srgb, var(--cp-glow-blue) 44%, transparent),
+      color-mix(in srgb, var(--cp-tint-blue) 44%, transparent),
       color-mix(in srgb, var(--cp-bg0) 92%, transparent)
     ),
     linear-gradient(180deg, color-mix(in srgb, var(--cp-bg1) 92%, transparent), color-mix(in srgb, var(--cp-bg0) 88%, var(--cp-bg1)));

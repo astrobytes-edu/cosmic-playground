@@ -24,7 +24,7 @@
 .cp-demo select:focus {
   outline: none;
   border-color: var(--cp-accent);
-  box-shadow: 0 0 0 3px var(--cp-glow-teal);
+  box-shadow: 0 0 0 3px var(--cp-focus);
 }
 
 .cp-input::placeholder,
@@ -66,7 +66,7 @@
 .cp-field--error .cp-input:focus,
 .cp-field--error .cp-select:focus,
 .cp-field--error .cp-textarea:focus {
-  box-shadow: 0 0 0 3px var(--cp-glow-pink);
+  box-shadow: 0 0 0 3px var(--cp-danger, var(--cp-pink));
 }
 
 .cp-error-message {

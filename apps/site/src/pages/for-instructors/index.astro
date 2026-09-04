@@ -188,12 +188,12 @@ const sortedDemos = [...demos].sort((a, b) =>
 
   .instr-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
     gap: var(--cp-space-3);
   }
 
   .instr-grid--wide {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   }
 
   .instr-link-card {

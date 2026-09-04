@@ -42,12 +42,17 @@
   --cp-accent4: var(--cp-pink);
 
   /* ---------- Glows (subtle on light) ---------- */
-  --cp-glow-teal: color-mix(in srgb, var(--cp-accent) 10%, transparent);
-  --cp-glow-pink: color-mix(in srgb, var(--cp-pink) 8%, transparent);
-  --cp-glow-violet: color-mix(in srgb, var(--cp-violet) 10%, transparent);
-  --cp-glow-accent: var(--cp-glow-teal);
-  --cp-glow-blue: var(--cp-glow-violet);
-  --cp-glow-magenta: var(--cp-glow-pink);
+  --cp-tint-teal: color-mix(in srgb, var(--cp-accent) 10%, transparent);
+  --cp-tint-pink: color-mix(in srgb, var(--cp-pink) 8%, transparent);
+  --cp-tint-violet: color-mix(in srgb, var(--cp-violet) 10%, transparent);
+  --cp-tint-accent: var(--cp-tint-teal);
+  --cp-tint-blue: var(--cp-tint-violet);
+  --cp-tint-magenta: var(--cp-tint-pink);
+
+  /* Paper prints; glows stay effectively off rather than smearing ink. */
+  --cp-glow-teal: 0 0 0 rgba(0, 0, 0, 0);
+  --cp-glow-pink: 0 0 0 rgba(0, 0, 0, 0);
+  --cp-glow-violet: 0 0 0 rgba(0, 0, 0, 0);
 
   /* ---------- Selection & Focus ---------- */
   --cp-selection-bg: color-mix(in srgb, var(--cp-violet) 18%, transparent);
@@ -108,3 +113,4 @@
     --cp-muted: #333;
   }
 }
+

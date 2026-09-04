@@ -137,7 +137,7 @@ const {
 
   .filter-bar__row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
     gap: var(--cp-space-2);
     align-items: end;
   }
@@ -193,7 +193,7 @@ const {
 
   .filter-bar__more {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
     gap: var(--cp-space-2);
   }
 

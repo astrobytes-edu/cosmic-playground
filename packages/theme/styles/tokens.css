@@ -44,9 +44,26 @@
   --cp-danger: #fb7185;
 
   /* ---------- Glows (subtle, muted) ---------- */
-  --cp-glow-teal: color-mix(in srgb, var(--cp-accent) 10%, transparent);
-  --cp-glow-pink: color-mix(in srgb, var(--cp-pink) 6%, transparent);
-  --cp-glow-violet: color-mix(in srgb, var(--cp-violet) 8%, transparent);
+  /*
+   * TINTS are COLOURS. GLOWS are SHADOW LISTS. Never mix the two under one name.
+   *
+   * These were previously both called --cp-glow-*: a colour in the museum layer and a
+   * shadow list in the instrument layer. Layer-agnostic code (components/form.css, every
+   * demo stylesheet) cannot know which it will get, so `box-shadow: 0 0 0 3px
+   * var(--cp-glow-teal)` expanded to invalid CSS inside demos and was dropped -- taking
+   * the focus ring with it -- while demo gradients using them as colours were dropped in
+   * the other direction. Enforced by scripts/validate-invariants.mjs.
+   */
+  --cp-tint-teal: color-mix(in srgb, var(--cp-accent) 10%, transparent);
+  --cp-tint-pink: color-mix(in srgb, var(--cp-pink) 6%, transparent);
+  --cp-tint-violet: color-mix(in srgb, var(--cp-violet) 8%, transparent);
+  --cp-tint-accent: var(--cp-tint-teal);
+  --cp-tint-blue: var(--cp-tint-violet);
+  --cp-tint-magenta: var(--cp-tint-pink);
+
+  --cp-glow-teal: 0 0 20px rgba(45, 212, 191, 0.28);
+  --cp-glow-pink: 0 0 20px rgba(244, 114, 182, 0.24);
+  --cp-glow-violet: 0 0 20px rgba(167, 139, 250, 0.24);
 
   /* Legacy aliases */
   --cp-glow-accent: var(--cp-glow-teal);
@@ -98,7 +115,9 @@
 
   /* ---------- Selection & Focus ---------- */
   --cp-selection-bg: color-mix(in srgb, var(--cp-pink) 22%, transparent);
-  --cp-focus: color-mix(in srgb, var(--cp-accent) 55%, transparent);
+  /* Opaque: a 55%-transparent ring composited to 2.25:1, failing WCAG 1.4.11 (3:1).
+     The accent at full opacity is 4.73:1 on the museum ground and 3.84:1 on paper. */
+  --cp-focus: var(--cp-accent);
   --cp-focus-ring: 2px solid var(--cp-focus);
 
   /* ---------- Form Inputs ---------- */

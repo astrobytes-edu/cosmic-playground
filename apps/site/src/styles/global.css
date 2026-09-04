@@ -223,3 +223,23 @@ body {
   gap: var(--cp-space-3);
   margin-top: var(--cp-space-2);
 }
+
+/* ---------- Scrollable wide tables ---------- */
+/* Emitted by src/lib/rehypeScrollableTables.mjs. Wide instructor/station reference
+   tables scroll inside this container so the page never scrolls horizontally
+   (WCAG 2.2 SC 1.4.10). The container is focusable, so it needs a focus indicator
+   (WCAG 2.4.7) and must be reachable by keyboard (2.1.1). */
+.cp-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  border-radius: var(--cp-r-2);
+}
+
+.cp-table-scroll:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 2px;
+}
+
+.cp-table-scroll > table {
+  min-width: max-content;
+}

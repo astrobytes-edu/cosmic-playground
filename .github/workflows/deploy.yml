@@ -17,8 +17,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Runs on EVERY event. Previously this job was gated `if: pull_request` while the
+  # deploying job was gated `if: != pull_request`, so the two never ran together and
+  # a push to main deployed without typecheck, unit tests, or the full E2E suite.
+  # Since no pull request was ever opened, these gates had never run in CI at all.
   verify:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,52 +54,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
       - name: Install Playwright Chromium
-        run: corepack pnpm -C apps/site exec playwright install chromium
-      - name: Playwright full suite (PR)
+        run: corepack pnpm -C apps/site exec playwright install --with-deps chromium
+      - name: Playwright full suite
         run: corepack pnpm -C apps/site test:e2e
-
-  build:
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          version: 9.0.0
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-      - name: Install deps (workspace root)
-        run: |
-          corepack enable
-          corepack pnpm install --frozen-lockfile
-      - name: Build (demos → copy → site)
-        run: corepack pnpm build
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
-      - name: Install Playwright Chromium
-        run: corepack pnpm -C apps/site exec playwright install chromium
-      - name: Playwright deploy smoke
-        run: >
-          corepack pnpm -C apps/site test:e2e
-          tests/smoke.spec.ts
-          --grep "All /play/<slug>/ pages load the instrument root"
+          name: playwright-report
+          path: apps/site/playwright-report/
+          retention-days: 7
+      # The site is built above, so deploy reuses this artifact instead of rebuilding.
       - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: apps/site/dist
 
   deploy:
     if: github.event_name != 'pull_request'
-    needs: build
+    needs: verify
     runs-on: ubuntu-latest
     environment:
       name: github-pages

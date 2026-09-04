@@ -22,34 +22,52 @@ describe("SpectralLineModel", () => {
   });
 
   describe("benchmark wavelengths", () => {
-    it("Hα (n=3→2) = 656.3 nm ± 0.5", () => {
+    // Reference values are NIST/standard VACUUM wavelengths. The Bohr model with the
+    // reduced-mass-corrected Rydberg (R_H) reproduces them to better than 0.01 nm; the
+    // residual is the Bohr model itself (no fine structure), not the constant.
+    //
+    // Tolerances are deliberately tight. The previous +/-0.5 nm windows were ~3x wider
+    // than the 0.35 nm error introduced by using R_infinity instead of R_H, so a wrong
+    // constant shipped green for months.
+    const TOL_NM = 0.02;
+
+    it("H-alpha (n=3->2) = 656.461 nm (vacuum)", () => {
       const lambda = SpectralLineModel.transitionWavelengthNm({ nUpper: 3, nLower: 2 });
-      expect(lambda).toBeCloseTo(656.3, 0);
+      expect(Math.abs(lambda - 656.4614)).toBeLessThan(TOL_NM);
     });
 
-    it("Hβ (n=4→2) = 486.1 nm ± 0.5", () => {
+    it("H-beta (n=4->2) = 486.272 nm (vacuum)", () => {
       const lambda = SpectralLineModel.transitionWavelengthNm({ nUpper: 4, nLower: 2 });
-      expect(lambda).toBeCloseTo(486.1, 0);
+      expect(Math.abs(lambda - 486.2721)).toBeLessThan(TOL_NM);
     });
 
-    it("Hγ (n=5→2) = 434.0 nm ± 0.5", () => {
+    it("H-gamma (n=5->2) = 434.172 nm (vacuum)", () => {
       const lambda = SpectralLineModel.transitionWavelengthNm({ nUpper: 5, nLower: 2 });
-      expect(lambda).toBeCloseTo(434.0, 0);
+      expect(Math.abs(lambda - 434.1721)).toBeLessThan(TOL_NM);
     });
 
-    it("Lyα (n=2→1) = 121.6 nm ± 0.5", () => {
+    it("Ly-alpha (n=2->1) = 121.567 nm (vacuum)", () => {
       const lambda = SpectralLineModel.transitionWavelengthNm({ nUpper: 2, nLower: 1 });
-      expect(lambda).toBeCloseTo(121.6, 0);
+      expect(Math.abs(lambda - 121.5670)).toBeLessThan(TOL_NM);
     });
 
-    it("Balmer limit (series limit for n_lower=2) = 364.6 nm ± 0.5", () => {
+    it("Balmer limit (n_lower=2) = 364.70 nm (vacuum)", () => {
       const lambda = SpectralLineModel.seriesLimitNm({ nLower: 2 });
-      expect(lambda).toBeCloseTo(364.6, 0);
+      expect(Math.abs(lambda - 364.7014)).toBeLessThan(TOL_NM);
     });
 
-    it("Paα (n=4→3) = 1875 nm ± 2", () => {
+    it("Pa-alpha (n=4->3) = 1875.6 nm (vacuum)", () => {
       const lambda = SpectralLineModel.transitionWavelengthNm({ nUpper: 4, nLower: 3 });
-      expect(Math.abs(lambda - 1875)).toBeLessThan(2);
+      expect(Math.abs(lambda - 1875.63)).toBeLessThan(0.1);
+    });
+
+    it("uses the reduced-mass-corrected Rydberg, not R_infinity", () => {
+      // Using R_infinity (13.605693 eV, infinite nuclear mass) instead of R_H makes
+      // every hydrogen line short by the factor mu/m_e = 0.999456. For H-alpha that is
+      // 656.112 nm -- inside the old +/-0.5 nm window, which is why it went unnoticed.
+      const R_INFINITY_HALPHA_NM = 656.1123;
+      const lambda = SpectralLineModel.transitionWavelengthNm({ nUpper: 3, nLower: 2 });
+      expect(Math.abs(lambda - R_INFINITY_HALPHA_NM)).toBeGreaterThan(0.3);
     });
   });
 

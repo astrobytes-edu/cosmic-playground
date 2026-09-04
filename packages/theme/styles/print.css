@@ -1,4 +1,14 @@
 @media print {
+  /* ── Scrollable tables: no scrolling on paper ── */
+  .cp-table-scroll {
+    overflow-x: visible !important;
+  }
+
+  .cp-table-scroll > table {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
   @page {
     size: letter;
     margin: 0.75in 0.6in;

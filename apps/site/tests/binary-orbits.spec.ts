@@ -361,7 +361,7 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(page.locator("#inclinationProjectionHint")).toContainText("0.500");
   });
 
-  test("RV plot visibly flattens when inclination decreases instead of silently rescaling the axis", async ({ page }) => {
+  test("RV plot visibly flattens when inclination decreases instead of silently rescaling the axis @visual", async ({ page }) => {
     await page.locator("#viewRv").click();
     await page.locator("#inclination").evaluate((el: HTMLInputElement) => {
       el.value = "90";
@@ -396,7 +396,7 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(page.locator("#spectrumProjectionNote")).toContainText("0.000");
   });
 
-  test("SB1 mode hides the secondary RV curve while SB2 mode shows it", async ({ page }) => {
+  test("SB1 mode hides the secondary RV curve while SB2 mode shows it @visual", async ({ page }) => {
     await page.locator("#viewRv").click();
     await page.locator("#inclination").evaluate((el: HTMLInputElement) => {
       el.value = "90";
@@ -823,14 +823,14 @@ test.describe("Binary Orbits -- E2E", () => {
 
   // --- Visual Regression ---
 
-  test("screenshot: default view", async ({ page }) => {
+  test("screenshot: default view @visual", async ({ page }) => {
     await page.waitForTimeout(500);
     await expect(page).toHaveScreenshot("binary-orbits-default.png", {
       maxDiffPixelRatio: 0.05,
     });
   });
 
-  test("screenshot: mobile default view", async ({ page }) => {
+  test("screenshot: mobile default view @visual", async ({ page }) => {
     await page.setViewportSize({ width: 420, height: 1100 });
     await page.reload({ waitUntil: "domcontentloaded" });
     await expect(page.locator("#cp-demo")).toBeVisible();
@@ -840,7 +840,7 @@ test.describe("Binary Orbits -- E2E", () => {
     });
   });
 
-  test("screenshot: low mass ratio q=0.2", async ({ page }) => {
+  test("screenshot: low mass ratio q=0.2 @visual", async ({ page }) => {
     const slider = page.locator("#massRatio");
     await slider.evaluate((el: HTMLInputElement) => {
       el.value = "0.2";

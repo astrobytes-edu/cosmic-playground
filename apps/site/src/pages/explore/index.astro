@@ -507,11 +507,18 @@ const startHere = startHereTiles.map((tile) => {
   const surpriseBtn = document.querySelector("[data-all-slugs]");
   if (surpriseBtn instanceof HTMLAnchorElement) {
     const slugs = JSON.parse(surpriseBtn.dataset.allSlugs || "[]");
+    // The server-rendered href already carries the GitHub Pages base path. Rebuilding
+    // the URL from `document.querySelector("base")` used to drop it (there is no <base>
+    // element on this site), so the button worked with JS off and 404'd with JS on.
+    // Swap only the slug segment of the real href and let the browser navigate.
+    const template = surpriseBtn.getAttribute("href") || "";
     surpriseBtn.addEventListener("click", (e) => {
-      e.preventDefault();
+      if (slugs.length === 0) return;
       const slug = slugs[Math.floor(Math.random() * slugs.length)];
-      const baseHref = document.querySelector("base")?.href || "/";
-      window.location.href = `${baseHref}exhibits/${slug}/`;
+      const target = template.replace(/exhibits\/[^/]+\//, `exhibits/${slug}/`);
+      if (target === template) return; // pattern did not match; keep the static href
+      e.preventDefault();
+      window.location.href = target;
     });
   }
 </script>
@@ -520,7 +527,7 @@ const startHere = startHereTiles.map((tile) => {
   .explore-hero {
     margin-bottom: var(--cp-space-5);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.72fr);
+    grid-template-columns: minmax(0, 1fr) minmax(min(260px, 100%), 0.72fr);
     align-items: center;
     gap: var(--cp-space-5);
     overflow: hidden;
@@ -610,7 +617,7 @@ const startHere = startHereTiles.map((tile) => {
 
   .start-here__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
     gap: var(--cp-space-3);
   }
 
@@ -742,7 +749,7 @@ const startHere = startHereTiles.map((tile) => {
 
   .results__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
     gap: var(--cp-space-5);
   }
 
