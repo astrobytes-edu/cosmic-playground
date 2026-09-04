@@ -665,7 +665,7 @@ function drawSpectrumComparator() {
       ctx.stroke();
 
       const revealTarget = !(state.mystery.active && !state.mystery.revealed);
-      if (revealTarget) {
+      if (revealTarget && line.label) {
         ctx.fillStyle = "rgba(234, 239, 255, 0.78)";
         ctx.font = "11px var(--cp-font-sans, ui-sans-serif)";
         ctx.fillText(line.label, obsX + 3, bottomY - 6);

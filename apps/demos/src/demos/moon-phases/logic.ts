@@ -118,7 +118,7 @@ export interface StablePhaseNameArgs {
 
 function nearestPhaseAnchor(angleDeg: number): (typeof PHASE_ANCHORS)[number] {
   const normalized = normalizeAngle(angleDeg);
-  let nearest = PHASE_ANCHORS[0];
+  let nearest: (typeof PHASE_ANCHORS)[number] = PHASE_ANCHORS[0];
   let bestAbsDelta = Infinity;
 
   for (const anchor of PHASE_ANCHORS) {

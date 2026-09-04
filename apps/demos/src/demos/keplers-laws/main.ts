@@ -1,6 +1,7 @@
 import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AstroUnits, KeplersLawsModel, TwoBodyAnalytic } from "@cosmic/physics";
+import { requiredSelector } from "../../shared/dom";
 import {
   buildConservationDrift,
   buildExportPayload,
@@ -113,10 +114,7 @@ if (required.length > 0) {
   throw new Error(`Missing required DOM elements: ${required.map(([key]) => key).join(", ")}`);
 }
 
-const demoRoot = document.querySelector<HTMLElement>("#cp-demo");
-if (!demoRoot) {
-  throw new Error("Missing #cp-demo root");
-}
+const demoRoot = requiredSelector<HTMLElement>("#cp-demo");
 
 const state = {
   mode: "kepler" as "kepler" | "newton",
@@ -1126,4 +1124,4 @@ const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield
 if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 initMath(document);
 
-if (demoRoot) initPopovers(demoRoot);
+initPopovers(demoRoot);

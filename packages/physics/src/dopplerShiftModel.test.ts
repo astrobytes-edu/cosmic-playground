@@ -152,6 +152,22 @@ describe("DopplerShiftModel", () => {
       );
     });
 
+    it("accepts unlabelled lines (ElementLineEntry shape) and preserves the absent label", () => {
+      // ElementLineEntry (spectralLineModel) declares `label?: string`, so catalogue
+      // lines must be shiftable without inventing a label. Regression guard for the
+      // ElementLineEntry[] -> ShiftLineInput[] mismatch that broke binary-orbits.
+      const shifted = DopplerShiftModel.shiftLines({
+        lines: [{ wavelengthNm: 656.281, relativeIntensity: 1 }],
+        velocityKmS: 300,
+        relativistic: false,
+      });
+
+      expect(shifted).toHaveLength(1);
+      expect(shifted[0].label).toBeUndefined();
+      expect(shifted[0].relativeIntensity).toBe(1);
+      expect(shifted[0].shiftedNm).toBeGreaterThan(shifted[0].wavelengthNm);
+    });
+
     it("invalid inputs return NaN", () => {
       expect(DopplerShiftModel.wavelengthNmToFrequencyTHz(0)).toBeNaN();
       expect(DopplerShiftModel.frequencyTHzToWavelengthNm(0)).toBeNaN();

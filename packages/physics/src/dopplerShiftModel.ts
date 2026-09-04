@@ -17,7 +17,12 @@ export type DopplerRegimeLabel =
 
 export interface ShiftLineInput {
   wavelengthNm: number;
-  label: string;
+  /**
+   * Optional, matching `ElementLineEntry` in spectralLineModel: catalogue lines are
+   * identified by wavelength, and a display label is presentation data the caller may
+   * not have. Kept optional so element catalogues shift without inventing a label.
+   */
+  label?: string;
   relativeIntensity?: number;
 }
 
@@ -25,7 +30,8 @@ export interface ShiftLineResult {
   wavelengthNm: number;
   shiftedNm: number;
   shiftedFrequencyTHz: number;
-  label: string;
+  /** Passed through from the input line; absent when the input carried no label. */
+  label?: string;
   deltaLambdaNm: number;
   deltaFrequencyTHz: number;
   z: number;

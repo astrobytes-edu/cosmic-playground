@@ -14,6 +14,7 @@ import {
   type PopulationStar,
   ZamsTout1996Model
 } from "@cosmic/physics";
+import { requiredContext2d } from "../../shared/dom";
 import {
   type HrLabPresetId,
   OBSERVER_AXIS_LIMITS,
@@ -277,8 +278,7 @@ const state: DemoState = {
   claims: []
 };
 
-const ctx = hrCanvas.getContext("2d");
-if (!ctx) throw new Error("Canvas 2D context unavailable for HR inference lab.");
+const ctx = requiredContext2d(hrCanvas, "HR inference lab");
 
 const colorProbe = document.createElement("span");
 colorProbe.style.position = "absolute";
