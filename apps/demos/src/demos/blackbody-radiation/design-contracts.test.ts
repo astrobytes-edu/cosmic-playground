@@ -162,6 +162,10 @@ describe("Blackbody Radiation -- Design System Contracts", () => {
       expect(html).toContain("cp-layer-instrument");
     });
 
+    it("custom shell grid includes a mobile single-column override", () => {
+      expect(css).toMatch(/@media\s*\(max-width:\s*1024px\)[\s\S]*grid-template-areas/);
+    });
+
     it("readouts are integrated in controls panel (no separate readouts aside)", () => {
       // Star preview and readouts should be inside the controls panel, not a separate aside
       expect(html).not.toMatch(/<aside[^>]*cp-demo__readouts/);

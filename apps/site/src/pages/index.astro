@@ -7,7 +7,7 @@ import HeroOrbit from "../components/HeroOrbit.astro";
 import PPEVisual from "../components/PPEVisual.astro";
 import Icon from "../components/Icon.astro";
 import TopicStrip from "../components/TopicStrip.astro";
-import DemoIllustration from "../components/DemoIllustration.astro";
+import DemoCanvasThumbnail from "../components/DemoCanvasThumbnail.astro";
 import { topicColor, primaryTopic } from "../lib/topicColors";
 
 const demos = await getCollection("demos");
@@ -99,7 +99,7 @@ const base = import.meta.env.BASE_URL;
           <article class="featured-card cp-card" style={`--card-i: ${i}; --topic-color: ${color}`}>
             <a class="featured-card__link" href={`${base}exhibits/${d.slug}/`}>
               <div class="featured-card__illustration">
-                <DemoIllustration slug={d.slug} />
+                <DemoCanvasThumbnail slug={d.slug} />
               </div>
               <div class="featured-card__body">
                 <span class="featured-card__number">{i + 1}</span>
@@ -133,7 +133,13 @@ const base = import.meta.env.BASE_URL;
 
   {/* ───── Scroll-triggered entrance animations ───── */}
   <script>
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    document.documentElement.classList.add("js");
+
+    const setupHomeSectionObserver = () => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        return;
+      }
+
       const sections = document.querySelectorAll(".home-section");
       const observer = new IntersectionObserver(
         (entries) => {
@@ -147,6 +153,12 @@ const base = import.meta.env.BASE_URL;
         { threshold: 0.15 }
       );
       sections.forEach((s) => observer.observe(s));
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupHomeSectionObserver, { once: true });
+    } else {
+      setupHomeSectionObserver();
     }
   </script>
 
@@ -275,6 +287,11 @@ const base = import.meta.env.BASE_URL;
   /* ── Sections ─────────────────────────────── */
   .home-section {
     margin-top: var(--cp-space-7);
+    opacity: 1;
+    transform: none;
+  }
+
+  :global(.js) .home-section {
     opacity: 0;
     transform: translateY(16px);
     transition:
@@ -282,13 +299,14 @@ const base = import.meta.env.BASE_URL;
       transform 0.5s var(--cp-ease-out);
   }
 
-  .home-section.is-visible {
+  :global(.js) .home-section.is-visible {
     opacity: 1;
     transform: translateY(0);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .home-section {
+    :global(.js) .home-section,
+    :global(.js) .home-section.is-visible {
       opacity: 1;
       transform: none;
       transition: none;
@@ -386,12 +404,7 @@ const base = import.meta.env.BASE_URL;
 
   .featured-card__illustration {
     padding: var(--cp-space-4);
-    background:
-      radial-gradient(
-        ellipse 80% 70% at 50% 50%,
-        color-mix(in srgb, var(--topic-color) 8%, transparent) 0%,
-        transparent 70%
-      );
+    background: none;
     border-bottom: 1px solid var(--cp-border-subtle);
     flex: 1;
     display: flex;

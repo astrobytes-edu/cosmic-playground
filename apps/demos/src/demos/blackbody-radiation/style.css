@@ -152,6 +152,16 @@
     "sidebar shelf";
 }
 
+@media (max-width: 1024px) {
+  .cp-demo {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "viz"
+      "sidebar"
+      "shelf";
+  }
+}
+
 .cp-demo__controls {
   animation: cp-slide-up 0.6s var(--cp-ease-out);
 }

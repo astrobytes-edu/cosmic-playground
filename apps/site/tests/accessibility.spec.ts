@@ -1,24 +1,32 @@
 import { test, expect } from "@playwright/test";
+import { existsSync, readdirSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-// All demos in the Cosmic Playground suite
-const DEMOS = [
-  "angular-size",
-  "binary-orbits",
-  "blackbody-radiation",
-  "conservation-laws",
-  "doppler-shift",
-  "eclipse-geometry",
-  "em-spectrum",
-  "eos-lab",
-  "galaxy-rotation",
-  "keplers-laws",
-  "moon-phases",
-  "parallax-distance",
-  "planetary-conjunctions",
-  "retrograde-motion",
-  "seasons",
-  "telescope-resolution",
-];
+const here = path.dirname(fileURLToPath(import.meta.url));
+const siteRoot = path.resolve(here, "..");
+const demosDir = path.join(siteRoot, "src", "content", "demos");
+
+function demoSlugsFromContent() {
+  return readdirSync(demosDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name)
+    .filter((name) => name.endsWith(".md") || name.endsWith(".mdx"))
+    .map((name) => name.replace(/\.(md|mdx)$/, ""))
+    .sort();
+}
+
+const DEMOS = demoSlugsFromContent();
+
+test.describe("DEMOS content coverage", () => {
+  test("DEMOS includes content-backed demo slugs omitted from the old static list", () => {
+    expect(DEMOS).toContain("spectral-lines");
+    expect(DEMOS).toContain("stars-zams-hr");
+    if (existsSync(path.join(demosDir, "hydrostatic-equilibrium-explorer.md"))) {
+      expect(DEMOS).toContain("hydrostatic-equilibrium-explorer");
+    }
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Cross-demo structural accessibility audit

@@ -1,5 +1,22 @@
 import { test, expect } from "@playwright/test";
 
+test("blackbody mobile shell gives the visualization usable width", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("play/blackbody-radiation/");
+
+  const stage = await page.locator(".cp-demo__stage").boundingBox();
+  const controls = await page.locator(".cp-demo__controls").boundingBox();
+
+  expect(stage).not.toBeNull();
+  expect(controls).not.toBeNull();
+
+  expect(stage!.width).toBeGreaterThan(300);
+  expect(controls!.width).toBeGreaterThan(300);
+
+  const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(scrollWidth).toBeLessThanOrEqual(390);
+});
+
 test.describe("Blackbody Radiation -- E2E", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("play/blackbody-radiation/", { waitUntil: "domcontentloaded" });

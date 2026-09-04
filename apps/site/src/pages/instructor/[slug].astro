@@ -45,6 +45,12 @@ const sectionLabels: Record<InstructorSection, string> = {
   model: "Model notes (deeper)",
   backlog: "Backlog"
 };
+
+const presentSections = new Set(
+  sections.filter((section) => section.Content).map((section) => section.section)
+);
+const missingSections = sectionOrder.filter((section) => !presentSections.has(section));
+const hasPartialInstructorBundle = hasInstructorContent && missingSections.length > 0;
 ---
 
 <Layout title={`${entry.data.title} — Instructor Notes`} hasMath={true}>
@@ -73,6 +79,23 @@ const sectionLabels: Record<InstructorSection, string> = {
   {hasInstructorContent ? (
     <>
       <div id="instructor-content">
+        {hasPartialInstructorBundle ? (
+          <section
+            class="cp-callout"
+            data-kind="warn"
+            aria-label="Instructor bundle status"
+          >
+            <h2>Instructor Bundle Incomplete</h2>
+            <p>
+              This page has some instructor material, but it is not a complete bundle yet.
+            </p>
+            <p>
+              Missing sections:{" "}
+              {missingSections.map((section) => sectionLabels[section]).join(", ")}
+            </p>
+          </section>
+        ) : null}
+
         <nav class="nav" aria-label="Instructor bundle sections">
           <ul>
             {sectionOrder

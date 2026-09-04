@@ -38,9 +38,82 @@ test.describe("Cosmic Playground smoke", () => {
     });
 
     await page.goto("explore/");
-    await expect(page.getByRole("heading", { name: "Explore" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Explore", exact: true })
+    ).toBeVisible();
+    if ((await demoSlugsFromContent()).includes("hydrostatic-equilibrium-explorer")) {
+      await expect(
+        page.getByRole("heading", { name: /Hydrostatic Equilibrium Explorer/i })
+      ).toBeVisible();
+    }
     expect(await page.locator(".demo-card").count()).toBeGreaterThan(0);
     expect(errors, `Console errors on ${basePath}explore/`).toEqual([]);
+  });
+
+  test("Explore cards use Canvas thumbnails with SVG fallback", async ({ page }) => {
+    await page.goto("explore/");
+
+    const cardCount = await page.locator(".demo-card").count();
+    expect(cardCount).toBeGreaterThan(0);
+    await expect(page.locator(".demo-card .demo-canvas-thumb canvas")).toHaveCount(cardCount);
+    await expect(page.locator(".demo-card .demo-canvas-thumb__fallback svg")).toHaveCount(cardCount);
+  });
+
+  test("Canvas thumbnails do not animate under reduced motion", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.addInitScript(() => {
+      const original = window.requestAnimationFrame.bind(window);
+      let count = 0;
+      window.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+        count += 1;
+        return original(cb);
+      }) as typeof window.requestAnimationFrame;
+      Object.defineProperty(window, "__thumbnailRafCount", {
+        get: () => count
+      });
+    });
+
+    await page.goto("explore/");
+    await expect(page.locator(".demo-card .demo-canvas-thumb canvas").first()).toBeVisible();
+    const count = await page.evaluate(() => (window as any).__thumbnailRafCount ?? 0);
+    expect(count).toBe(0);
+  });
+
+  test("Canvas thumbnail renderer keeps real alpha and distinct scene families", async () => {
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const source = await fs.readFile(
+      path.resolve(here, "..", "src", "components", "DemoCanvasThumbnail.astro"),
+      "utf8"
+    );
+
+    expect(source).toContain("color-mix(in srgb");
+    expect(source).not.toContain("_alpha");
+    expect(source).toContain("thumbnailSceneBySlug");
+  });
+
+  test("Canvas thumbnails expose distinct scene metadata on Explore", async ({ page }) => {
+    await page.goto("explore/");
+
+    await expect(page.locator('[data-demo-thumbnail][data-slug="galaxy-rotation"]').first()).toHaveAttribute(
+      "data-scene",
+      "galaxy"
+    );
+    await expect(
+      page.locator('[data-demo-thumbnail][data-slug="hydrostatic-equilibrium-explorer"]')
+    ).toHaveAttribute("data-scene", "stellar-core");
+    await expect(page.locator('[data-demo-thumbnail][data-slug="eos-lab"]')).toHaveAttribute(
+      "data-scene",
+      "regime-map"
+    );
+  });
+
+  test("Homepage featured thumbnail wrapper does not add a second glow stage", async ({ page }) => {
+    await page.goto("./");
+
+    const background = await page.locator(".featured-card__illustration").first().evaluate((node) => {
+      return window.getComputedStyle(node).backgroundImage;
+    });
+    expect(background).toBe("none");
   });
 
   test("Hero glow is scoped to hero", async ({ page }) => {
@@ -131,6 +204,29 @@ test.describe("Cosmic Playground smoke", () => {
     await page.goto("explore/");
     const count = page.locator(".results__count");
     await expect(count).toContainText("interactive exhibit");
+  });
+
+  test("Station fallback copy is generic when a demo lacks station content", async ({
+    page
+  }) => {
+    await page.goto("stations/planetary-conjunctions/");
+
+    await expect(
+      page.getByRole("heading", { name: /planetary conjunctions/i })
+    ).toBeVisible();
+    await expect(page.getByText(/phase angle/i)).toHaveCount(0);
+    await expect(page.getByText(/illuminated fraction/i)).toHaveCount(0);
+    await expect(page.getByText(/generic station template/i)).toBeVisible();
+  });
+
+  test("Instructor pages flag incomplete bundles", async ({ page }) => {
+    await page.goto("instructor/planetary-conjunctions/");
+
+    await expect(
+      page.getByRole("heading", { name: /planetary conjunctions/i })
+    ).toBeVisible();
+    await expect(page.getByText(/Instructor bundle incomplete/i)).toBeVisible();
+    await expect(page.getByText(/Missing sections/i)).toBeVisible();
   });
 
   test("All /play/<slug>/ pages load the instrument root", async ({ page }) => {
@@ -570,6 +666,26 @@ test.describe("Cosmic Playground smoke", () => {
     await expect(cadenceItems.nth(2)).toHaveText("Explain");
   });
 
+  test("Header brand mark and demo SVG motion respect reduced motion", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("explore/");
+
+    const brandHome = page.getByLabel("Cosmic Playground home");
+    await expect(brandHome).toBeVisible();
+    await expect(page.locator(".brand__home .brand-mark")).toHaveCount(1);
+    await expect(page.locator(".brand__home .brand-mark")).toHaveAttribute("aria-hidden", "true");
+
+    const brandOrbitAnimation = await page.locator(".brand-mark__orbit").evaluate((node) => {
+      return window.getComputedStyle(node).animationName;
+    });
+    expect(brandOrbitAnimation).toBe("none");
+
+    const demoStarAnimation = await page.locator(".demo-illus__stars circle").first().evaluate((node) => {
+      return window.getComputedStyle(node).animationName;
+    });
+    expect(demoStarAnimation).toBe("none");
+  });
+
   test("Hero shows physics line", async ({ page }) => {
     await page.goto("explore/");
 
@@ -698,6 +814,21 @@ test.describe("Cosmic Playground smoke", () => {
     await expect(page.getByRole("heading", { name: "Orbits & Gravity" })).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Light & Measuring the Universe" })
+    ).toBeVisible();
+  });
+});
+
+test.describe("Cosmic Playground no-JS smoke", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("Home content remains visible without JavaScript", async ({ page }) => {
+    await page.goto("./");
+
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Start here" })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Recently updated" })
     ).toBeVisible();
   });
 });

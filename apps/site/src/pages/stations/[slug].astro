@@ -91,12 +91,25 @@ const StationOverride =
 
         <section class="box">
           <h2>Parameter table</h2>
+          {!hasStationParams ? (
+            <section
+              class="cp-callout"
+              data-kind="warn"
+              aria-label="Generic station template notice"
+            >
+              <strong>Generic station template</strong>
+              <div>
+                This demo does not yet have a custom station card, so use these prompts as a
+                lightweight observation scaffold.
+              </div>
+            </section>
+          ) : null}
           <table class="table">
             <thead>
               <tr>
-                <th>Parameter</th>
-                <th>Value</th>
-                <th>What to notice</th>
+                <th>{hasStationParams ? "Parameter" : "Observable or setting"}</th>
+                <th>{hasStationParams ? "Value" : "Prediction"}</th>
+                <th>{hasStationParams ? "What to notice" : "Observation"}</th>
               </tr>
             </thead>
             <tbody>
@@ -111,12 +124,12 @@ const StationOverride =
               ) : (
                 <>
                   <tr>
-                    <td>(example) Phase angle (°)</td>
+                    <td>Primary control you changed</td>
                     <td>________</td>
-                    <td>How the illuminated fraction changes</td>
+                    <td>________</td>
                   </tr>
                   <tr>
-                    <td>(your choice)</td>
+                    <td>Most visible pattern in the visualization</td>
                     <td>________</td>
                     <td>________</td>
                   </tr>
