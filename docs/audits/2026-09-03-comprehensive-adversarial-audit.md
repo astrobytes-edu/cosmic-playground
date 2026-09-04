@@ -600,13 +600,16 @@ Two more, on 2026-09-04:
   all five sections, ~5,300 and ~5,500 words, written to the `moon-phases` pattern. Every
   bundle in the collection is now complete; the only remaining gaps are `eos-lab` and
   `stars-zams-hr`, which have no bundle at all and render the scaffold fallback.
-- **New defect found while writing them** — the planetary-conjunctions demo fires on
-  heliocentric longitude agreement within 5 degrees and labels every such event a
-  "conjunction". That is right for Venus, but for Mars, Jupiter and Saturn the same
+- **New defect found while writing them, since fixed** — the planetary-conjunctions demo
+  fired on heliocentric longitude agreement within 5 degrees and labelled every such event
+  a "conjunction". That is right for Venus, but for Mars, Jupiter and Saturn the same
   geometry is an **opposition** as seen from Earth, contradicting the demo's own learning
-  goal ("conjunction and opposition as seen from Earth"). Recorded as backlog item A1 with
-  a proposed fix; the instructor notes handle it explicitly in the meantime. A second
-  consequence: Venus's superior conjunctions are never flagged.
+  goal ("conjunction and opposition as seen from Earth"). Fixed the same day: the
+  alignment is now classified from the target's semi-major axis relative to Earth's, and
+  the label drives the readout, the announcement and the export. The complementary
+  180-degree alignment (backlog A2) remains undetected, deliberately — flagging it would
+  halve the interval between flashes and break the synodic-period investigation in the
+  instructor activities.
 
 ### Still open
 

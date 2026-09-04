@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: work the P2 backlog in docs/audits/2026-09-03-comprehensive-adversarial-audit.md — GR-1, the linter, and the retrograde-motion + planetary-conjunctions instructor bundles are done; next up are the conjunctions opposition-labelling defect (backlog A1), the orphaned /topics/* tree, and instructor bundles for eos-lab + stars-zams-hr
+next: work the P2 backlog in docs/audits/2026-09-03-comprehensive-adversarial-audit.md — GR-1, the linter, the retrograde-motion + planetary-conjunctions instructor bundles, and the conjunctions opposition labelling (backlog A1) are done; next up are the orphaned /topics/* tree and instructor bundles for eos-lab + stars-zams-hr
 blocker: none — all 10 P1 blockers fixed 2026-09-04; lint/typecheck/build green, 2,168 unit + 897 e2e passing
 due:
 
