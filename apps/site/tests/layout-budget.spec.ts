@@ -51,17 +51,22 @@ interface Budget {
  *
  * Overflow figures were re-measured after the shared `.control` component landed, which
  * took 836px off nine sidebars.
+ *
+ * Readout counts were re-measured on 2026-09-04 after the visibility filter was corrected
+ * (see the note on `checkVisibility` below). Three demos had been over-reported because
+ * their closed accordions were counted: binary-orbits 9 -> 1, eos-lab 22 -> 14,
+ * keplers-laws 17 -> 7.
  */
 const BUDGETS: Record<string, Budget> = {
   // binary-orbits was 46 below the fold with 3,070px hidden. Fixed 2026-09-04: activities
   // and the invariant quiz moved to the drawer, readouts filtered by view, the integrity
   // panel given the full grid width. Not yet clean -- the Energy view has the most
   // readouts of any -- but no longer the outlier.
-  "binary-orbits": { readoutsBelowFold: 9, sidebarOverflowPx: 650 },
-  "eos-lab": { readoutsBelowFold: 22, sidebarOverflowPx: 580 },
+  "binary-orbits": { readoutsBelowFold: 1, sidebarOverflowPx: 650 },
+  "eos-lab": { readoutsBelowFold: 14, sidebarOverflowPx: 580 },
   "galaxy-rotation": { readoutsBelowFold: 22, sidebarOverflowPx: 360 },
   "doppler-shift": { readoutsBelowFold: 20, sidebarOverflowPx: 380 },
-  "keplers-laws": { readoutsBelowFold: 17, sidebarOverflowPx: 880 },
+  "keplers-laws": { readoutsBelowFold: 7, sidebarOverflowPx: 880 },
   "conservation-laws": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
   "planetary-conjunctions": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
   "spectral-lines": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
@@ -95,12 +100,23 @@ test.describe("Layout budget", () => {
         );
         const scroller =
           sidebar?.querySelector<HTMLElement>(".cp-panel-body") ?? sidebar ?? null;
-        // Rendered readouts only. An element inside a collapsed <details> still reports a
-        // rect at the summary's position, so counting it as "below the fold" would blame a
-        // demo for content the reader has deliberately not opened.
+        // Rendered readouts only. An element inside a collapsed <details> is content the
+        // reader has deliberately not opened, so counting it below the fold blames the demo
+        // for the reader's choice.
+        //
+        // This filter used to be `getBoundingClientRect().height > 0`, which does NOT do
+        // that. Chromium hides a closed <details>'s contents with `content-visibility:
+        // hidden`: painting and descendant layout are skipped, but the element keeps a box
+        // and still reports a rect. keplers-laws' closed Conservation accordion measured
+        // 189x582 while `checkVisibility()` said false, so the ratchet counted its five
+        // readouts -- and their five value spans -- as below the fold. It reported 17 where
+        // the honest figure was 7.
+        //
+        // `checkVisibility()` is the predicate that actually answers the question: it
+        // accounts for display:none, visibility:hidden and content-visibility together.
         const readouts = [
           ...document.querySelectorAll<HTMLElement>(".cp-readout, .cp-readout__value")
-        ].filter((el) => el.getBoundingClientRect().height > 0);
+        ].filter((el) => el.checkVisibility());
         const below = readouts.filter(
           (el) => el.getBoundingClientRect().bottom > window.innerHeight
         );
