@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hydrostatic Equilibrium Explorer — Cosmic Playground</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
+  </head>
+  <body>
+    <canvas class="cp-starfield" aria-hidden="true"></canvas>
+
+    <div
+      id="cp-demo"
+      class="cp-layer-instrument cp-demo hydro-demo"
+      data-shell="viz-first"
+      aria-label="Hydrostatic equilibrium explorer instrument"
+    >
+      <h1 class="sr-only">Hydrostatic Equilibrium Explorer</h1>
+      <aside class="cp-demo__controls cp-demo__sidebar cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Hydrostatic Equilibrium Explorer</div>
+        <div class="cp-panel-body cp-scroll-shadow">
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"></rect>
+                <line x1="7" y1="7" x2="13" y2="7"></line>
+                <line x1="7" y1="10" x2="13" y2="10"></line>
+                <line x1="7" y1="13" x2="10" y2="13"></line>
+              </svg>
+            </button>
+            <button id="help" class="cp-utility-btn" type="button" aria-label="Help and shortcuts" title="Help / keys">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"></circle>
+                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"></path>
+                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"></circle>
+              </svg>
+            </button>
+            <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"></circle>
+                  <circle cx="10" cy="10" r="1.5"></circle>
+                  <circle cx="16" cy="10" r="1.5"></circle>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/hydrostatic-equilibrium-explorer/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/hydrostatic-equilibrium-explorer/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/hydrostatic-equilibrium-explorer/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
+          </div>
+
+          <section id="modeCard" class="control-card mode-card" aria-labelledby="modeTitle">
+            <div class="card-heading">
+              <h2 id="modeTitle">Lesson flow</h2>
+              <span id="sidebarStepBadge" class="card-pill">Step 1</span>
+            </div>
+            <p id="modeDescription" class="card-intro">
+              Student mode stages the reasoning. Instructor mode leaves the full instrument open.
+            </p>
+            <div class="control control--toggle-group">
+              <span class="control__label">View mode</span>
+              <div class="cp-chip-group" role="radiogroup" aria-label="View mode">
+                <button id="modeStudent" class="cp-chip" role="radio" aria-checked="true" type="button">Student mode</button>
+                <button id="modeInstructor" class="cp-chip" role="radio" aria-checked="false" type="button">Instructor mode</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="presetCard" class="control-card" aria-labelledby="presetTitle">
+            <div class="card-heading">
+              <h2 id="presetTitle">Presets</h2>
+              <span id="presetStateBadge" class="card-pill">Preset active</span>
+            </div>
+            <div class="cp-chip-group--grid presets-grid" role="group" aria-label="Preset scenarios">
+              <button id="presetSunLike" class="cp-chip preset-chip" type="button" aria-pressed="false">Sun-like star</button>
+              <button id="presetSameMassSmallerRadius" class="cp-chip preset-chip" type="button" aria-pressed="false">Same mass, smaller radius</button>
+              <button id="presetMassiveMainSequence" class="cp-chip preset-chip" type="button" aria-pressed="false">Massive main-sequence star</button>
+              <button id="presetCompactToy" class="cp-chip preset-chip" type="button" aria-pressed="false">Compact toy star</button>
+              <button id="presetUnderSupported" class="cp-chip preset-chip" type="button" aria-pressed="false">Under-supported</button>
+              <button id="presetOverSupported" class="cp-chip preset-chip" type="button" aria-pressed="false">Over-supported</button>
+            </div>
+            <p id="presetNote" class="cp-muted"></p>
+          </section>
+
+          <section id="basicControlsCard" class="control-card control-group" aria-labelledby="basicControlsTitle">
+            <div class="card-heading">
+              <h2 id="basicControlsTitle">Shell</h2>
+              <span class="card-pill">Local thought experiment</span>
+            </div>
+            <p id="basicControlsLock" class="control-lock" hidden>
+              Locked until the guided flow reaches the local-shell step.
+            </p>
+            <label class="control" for="shellRadiusSlider">
+              <span>Shell radius $r/R$</span>
+              <input id="shellRadiusSlider" type="range" min="0" max="100" step="1" value="55" />
+              <span class="control__value"><span id="shellRadiusValue">0.55</span></span>
+            </label>
+            <div id="localShellStateControls" class="control control--toggle-group">
+              <span class="control__label">Local shell state</span>
+              <div class="cp-chip-group" role="radiogroup" aria-label="Local shell state">
+                <button id="supportModeBalanced" class="cp-chip" role="radio" aria-checked="true" type="button">Balanced</button>
+                <button id="supportModeUnder" class="cp-chip" role="radio" aria-checked="false" type="button">Under-supported</button>
+                <button id="supportModeOver" class="cp-chip" role="radio" aria-checked="false" type="button">Over-supported</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="structureControlsCard" class="control-card control-group" aria-labelledby="structureControlsTitle">
+            <div class="card-heading">
+              <h2 id="structureControlsTitle">Star</h2>
+              <span class="card-pill">Global profile</span>
+            </div>
+            <p id="structureControlsLock" class="control-lock" hidden>
+              Locked until the compactness and density-model steps.
+            </p>
+
+            <label class="control" for="massSlider">
+              <span>Stellar mass $M$ ($M_{\odot}$)</span>
+              <input id="massSlider" type="range" min="0.1" max="30" step="0.1" value="1" />
+              <span class="control__value"><span id="massValue">1.0</span></span>
+            </label>
+
+            <label class="control" for="radiusSlider">
+              <span>Stellar radius $R$ ($R_{\odot}$)</span>
+              <input id="radiusSlider" type="range" min="0.1" max="20" step="0.05" value="1" />
+              <span class="control__value"><span id="radiusValue">1.00</span></span>
+            </label>
+
+            <div class="control control--toggle-group">
+              <span class="control__label">Density model</span>
+              <div class="cp-chip-group" role="radiogroup" aria-label="Density model">
+                <button id="densityModelUniform" class="cp-chip" role="radio" aria-checked="true" type="button">Uniform-density toy</button>
+                <button id="densityModelCentral" class="cp-chip" role="radio" aria-checked="false" type="button">Centrally concentrated toy</button>
+              </div>
+            </div>
+          </section>
+
+          <details id="advancedControlsCard" class="control-card control-group advanced-controls">
+            <summary>
+              <span class="summary-title">Model + display</span>
+              <span class="card-pill">Perturb + notation</span>
+            </summary>
+            <div class="advanced-controls__body">
+              <p id="advancedControlsLock" class="control-lock" hidden>
+                Locked until the thermal-bridge step in student mode.
+              </p>
+
+              <label class="control" for="muSlider">
+                <span>Mean molecular weight $\mu$</span>
+                <input id="muSlider" type="range" min="0.5" max="1.35" step="0.01" value="0.62" />
+                <span class="control__value"><span id="muValue">0.62</span></span>
+              </label>
+              <p class="cp-muted helper-copy">
+                $\mu$ changes how much temperature is required for gas pressure support.
+              </p>
+
+              <div class="toggle-stack">
+                <label class="cp-toggle">
+                  <input id="toggleUnits" type="checkbox" checked />
+                  Show units
+                </label>
+                <label class="cp-toggle">
+                  <input id="toggleNormalized" type="checkbox" checked />
+                  Show solar-normalized values
+                </label>
+                <label class="cp-toggle">
+                  <input id="toggleDerivation" type="checkbox" />
+                  Show derivation hints
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </aside>
+
+      <section class="cp-demo__stage cp-stage" aria-label="Hydrostatic equilibrium stage">
+        <div class="cp-tabs stage-tabs" role="tablist" aria-label="View mode">
+          <button class="cp-tab" role="tab" aria-selected="true" aria-controls="panel-explore" id="tab-explore">Explore</button>
+          <button class="cp-tab" role="tab" aria-selected="false" aria-controls="panel-understand" id="tab-understand">Understand</button>
+        </div>
+
+        <div class="cp-tab-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
+          <div class="stage">
+            <section class="stage-toolbar" aria-labelledby="objectiveTitle">
+              <div class="stage-toolbar__copy">
+                <p class="stage-toolbar__eyebrow">Hydrostatic Reasoning Lab</p>
+                <h2 id="objectiveTitle">Pressure support comes from a gradient, not just large pressure.</h2>
+                <p id="objectiveText" class="stage-toolbar__prompt">
+                  Move one shell first, then change compactness and structure to connect local force balance to global stellar support.
+                </p>
+              </div>
+              <div class="stage-toolbar__task">
+                <div class="task-header">
+                  <div class="panel-tag-group">
+                    <span id="currentTaskBadge" class="card-pill">Step 1 of 7</span>
+                    <span id="currentTaskTag" class="panel-tag">Predict</span>
+                  </div>
+                  <div class="task-actions task-actions--compact">
+                    <button id="taskPrev" class="cp-button cp-button--ghost" type="button">Back</button>
+                    <button id="taskNext" class="cp-button cp-button--outline" type="button">Next step</button>
+                  </div>
+                </div>
+                <h3 id="currentTaskTitle">Start with a prediction</h3>
+                <p id="currentTaskPrompt" class="stage-toolbar__prompt">
+                  If the same mass is squeezed into a smaller radius, what happens to the required central pressure?
+                </p>
+
+                <div id="predictionPanel" class="prediction-panel">
+                  <div class="prediction-choices" role="radiogroup" aria-label="Prediction prompt">
+                    <button id="predictionUp" class="cp-chip prediction-chip" type="button" aria-pressed="false">It goes up</button>
+                    <button id="predictionDown" class="cp-chip prediction-chip" type="button" aria-pressed="false">It goes down</button>
+                    <button id="predictionSame" class="cp-chip prediction-chip" type="button" aria-pressed="false">It stays the same</button>
+                  </div>
+                  <div class="task-actions">
+                    <button id="checkPrediction" class="cp-button cp-button--outline" type="button">Check prediction</button>
+                  </div>
+                  <p id="predictionFeedback" class="prediction-feedback" hidden></p>
+                </div>
+
+                <div id="guidedTaskActions" class="task-actions" hidden>
+                  <button id="taskPrevAlt" class="cp-button cp-button--ghost" type="button">Back</button>
+                  <button id="taskNextAlt" class="cp-button cp-button--outline" type="button">Next step</button>
+                </div>
+              </div>
+            </section>
+
+            <div class="viz-layout">
+              <article id="heroCard" class="viz-card hero-card">
+                <header class="viz-card__header">
+                  <div>
+                    <div class="panel-tag-group">
+                      <span id="shellScopeBadge" class="panel-tag">Local shell thought experiment</span>
+                      <span class="panel-tag">Toy model</span>
+                    </div>
+                    <h3>Local shell force balance</h3>
+                    <p class="cp-muted">
+                      Match the cutaway shell to the inset patch: equal pressure cancels, but a pressure difference can balance local weight.
+                    </p>
+                  </div>
+                  <div class="hero-badges">
+                    <span id="heroShellRadiusText" class="card-pill">$r/R = 0.55$</span>
+                    <span id="heroDensityBadge" class="card-pill">Uniform-density toy</span>
+                    <span id="heroSupportBadge" class="card-pill">Balanced</span>
+                  </div>
+                </header>
+                <div class="hero-visual">
+                  <svg id="starShellView" viewBox="0 0 840 560" role="img" aria-label="Star cutaway with highlighted shell and local shell-force patch"></svg>
+                  <div class="hero-legend" aria-label="Force legend">
+                    <span class="hero-legend__item">
+                      <span class="hero-legend__swatch hero-legend__swatch--pressure"></span>
+                      Pressure forces
+                    </span>
+                    <span class="hero-legend__item">
+                      <span class="hero-legend__swatch hero-legend__swatch--gravity"></span>
+                      Gravity
+                    </span>
+                    <span class="hero-legend__item">
+                      <span class="hero-legend__swatch hero-legend__swatch--net"></span>
+                      Net response
+                    </span>
+                  </div>
+                </div>
+                <p id="shellNarrative" class="stage-note stage-note--hero"></p>
+              </article>
+
+              <article id="noticeCard" class="viz-card notice-card">
+                <header class="viz-card__header">
+                  <div>
+                    <div class="panel-tag-group">
+                      <span class="panel-tag">Notice</span>
+                      <span id="noticeModeTag" class="panel-tag">Student mode</span>
+                    </div>
+                    <h3 id="noticeTitle">What to notice now</h3>
+                  </div>
+                </header>
+                <p id="noticeBody" class="stage-note stage-note--compact"></p>
+                <div id="stateBanner" class="state-banner" hidden></div>
+                <ul id="noticeList" class="notice-list"></ul>
+
+                <div class="context-summary" aria-label="State-aware inference summary">
+                  <div class="context-summary__item">
+                    <div class="context-summary__label">What changed</div>
+                    <p id="summaryChange" class="summary-copy"></p>
+                  </div>
+                  <div class="context-summary__item">
+                    <div class="context-summary__label">Why</div>
+                    <p id="summaryWhy" class="summary-copy"></p>
+                  </div>
+                  <div class="context-summary__item">
+                    <div class="context-summary__label">Infer</div>
+                    <p id="summaryInfer" class="summary-copy"></p>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <article id="profileCard" class="viz-card profile-card">
+              <header class="viz-card__header">
+                <div>
+                  <div class="panel-tag-group">
+                    <span id="profileScopeBadge" class="panel-tag">Reference hydrostatic profile</span>
+                    <span class="panel-tag">Model context</span>
+                  </div>
+                  <h3>How that shell fits into the full star</h3>
+                  <p class="cp-muted">
+                    The shell guide marks the same radius shown in the cutaway, so one local observation can be placed in the whole star.
+                  </p>
+                </div>
+              </header>
+              <div id="profileTabGroup" class="cp-chip-group profile-tabs" role="tablist" aria-label="Profile quantity">
+                <button class="cp-chip" type="button" data-profile-key="pressure" aria-pressed="true">Pressure</button>
+                <button class="cp-chip" type="button" data-profile-key="pressure-gradient" aria-pressed="false">Gradient</button>
+                <button class="cp-chip" type="button" data-profile-key="enclosed-mass" aria-pressed="false">Enclosed mass</button>
+                <button class="cp-chip" type="button" data-profile-key="gravity" aria-pressed="false">Gravity</button>
+                <button class="cp-chip" type="button" data-profile-key="density" aria-pressed="false">Density</button>
+              </div>
+              <svg id="profilePlot" viewBox="0 0 760 380" role="img" aria-label="Radial profile plot for the selected hydrostatic quantity"></svg>
+              <div class="profile-summary">
+                <div class="cp-readout">
+                  <div class="cp-readout__label">Selected quantity</div>
+                  <div class="cp-readout__value" id="profileCurrentValue">$0$</div>
+                </div>
+                <div class="cp-readout">
+                  <div class="cp-readout__label">Current plot</div>
+                  <div class="cp-readout__value" id="profileCurrentLabel">$P(r)$</div>
+                </div>
+              </div>
+              <p id="profileInterpretation" class="stage-note stage-note--compact"></p>
+            </article>
+
+            <article id="thermalBridgeCard" class="viz-card thermal-bridge-card">
+              <header class="viz-card__header">
+                <div>
+                  <div class="panel-tag-group">
+                    <span class="panel-tag">Thermal bridge</span>
+                    <span class="panel-tag">Scale estimate</span>
+                  </div>
+                  <h3>Turn support into a temperature scale</h3>
+                  <p class="cp-muted">
+                    Separate the exact local law from the global scale estimate, then connect the support requirement to gas temperature.
+                  </p>
+                </div>
+              </header>
+              <div class="thermal-bridge-grid">
+                <div class="stage-note stage-note--compact">
+                  <strong>Exact local law:</strong> $dP/dr=-\rho g$ tells you what balance must hold at one shell.
+                </div>
+                <div class="stage-note stage-note--compact">
+                  <strong>Global support scale:</strong> $P_c\sim GM^2/R^4$ estimates how demanding the full-star support problem is.
+                </div>
+                <div class="stage-note stage-note--compact">
+                  <strong>Ideal-gas bridge:</strong> $P\sim \rho k_B T/(\mu m_p)$ turns support into a required thermal scale.
+                </div>
+              </div>
+              <p id="thermalBridgeNotice" class="stage-note stage-note--compact"></p>
+            </article>
+
+            <article id="synthesisCard" class="viz-card synthesis-card">
+              <header class="viz-card__header">
+                <div>
+                  <div class="panel-tag-group">
+                    <span class="panel-tag">Synthesis</span>
+                    <span class="panel-tag">Explain the chain</span>
+                  </div>
+                  <h3>Write the full causal chain</h3>
+                  <p class="cp-muted">
+                    Use one local shell observation, one global scaling statement, and one thermal bridge statement.
+                  </p>
+                </div>
+              </header>
+              <label class="control" for="synthesisLocal">
+                <span>Local shell observation</span>
+                <textarea id="synthesisLocal" rows="3" placeholder="What did one shell need in order to stay supported?"></textarea>
+              </label>
+              <label class="control" for="synthesisGlobal">
+                <span>Global scaling statement</span>
+                <textarea id="synthesisGlobal" rows="3" placeholder="What changes when the same mass is packed into a smaller radius?"></textarea>
+              </label>
+              <label class="control" for="synthesisThermal">
+                <span>Temperature-support bridge</span>
+                <textarea id="synthesisThermal" rows="3" placeholder="If gas pressure provides support, what temperature scale is required and why?"></textarea>
+              </label>
+              <p id="synthesisChecklist" class="stage-note stage-note--compact"></p>
+            </article>
+          </div>
+        </div>
+
+        <div class="cp-tab-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
+          <div class="understand-top">
+            <article class="viz-card compact-reasoning-card">
+              <header class="viz-card__header">
+                <div>
+                  <div class="panel-tag-group">
+                    <span class="panel-tag">Reasoning ladder</span>
+                    <span class="panel-tag">Scale estimate</span>
+                  </div>
+                  <h3>Gravity to core temperature</h3>
+                  <p class="cp-muted">
+                    The demo’s full logic chain lives here once you have seen the shell and the profile together.
+                  </p>
+                </div>
+              </header>
+              <div id="reasoningLadder" class="reasoning-ladder" aria-label="Reasoning ladder">
+                <div class="ladder-step">
+                  <div class="ladder-step__label">Gravity</div>
+                  <div class="ladder-step__text" id="ladderGravityText"></div>
+                </div>
+                <div class="ladder-step">
+                  <div class="ladder-step__label">Hydrostatic equilibrium</div>
+                  <div class="ladder-step__text" id="ladderHydroText"></div>
+                </div>
+                <div class="ladder-step">
+                  <div class="ladder-step__label">Pressure scale</div>
+                  <div class="ladder-step__text" id="ladderPressureText"></div>
+                </div>
+                <div class="ladder-step">
+                  <div class="ladder-step__label">Ideal gas bridge</div>
+                  <div class="ladder-step__text" id="ladderGasText"></div>
+                </div>
+                <div class="ladder-step">
+                  <div class="ladder-step__label">Core temperature</div>
+                  <div class="ladder-step__text" id="ladderTemperatureText"></div>
+                </div>
+              </div>
+            </article>
+
+            <div class="equation-grid">
+              <article id="equationGravityCard" class="equation-card">
+                <div class="panel-tag-group">
+                  <span class="panel-tag">Local shell</span>
+                </div>
+                <h4>Enclosed mass sets local gravity</h4>
+                <div class="equation-card__equation" id="equationGravityLatex">$$g(r)=\frac{G M(r)}{r^2}$$</div>
+                <p class="equation-card__meaning">In spherical symmetry, the local gravitational field at radius $r$ depends only on the mass enclosed within $r$.</p>
+                <ul class="equation-card__legend">
+                  <li>$g(r)$: local gravitational acceleration</li>
+                  <li>$M(r)$: mass enclosed inside radius $r$</li>
+                  <li>$r$: shell radius</li>
+                </ul>
+                <p class="equation-card__notice" id="gravityNotice"></p>
+                <details class="equation-card__details derivation-toggle">
+                  <summary>Show derivation sketch</summary>
+                  <p class="cp-muted">
+                    Start from spherical symmetry: only the enclosed mass contributes to the local gravitational field at radius $r$.
+                  </p>
+                </details>
+              </article>
+
+              <article id="equationHydroCard" class="equation-card">
+                <div class="panel-tag-group">
+                  <span class="panel-tag">Local shell</span>
+                </div>
+                <h4>Pressure gradient balances local weight</h4>
+                <div class="equation-card__equation" id="equationHydroLatex">$$\frac{dP}{dr}=-\rho g$$</div>
+                <p class="equation-card__meaning">A shell is supported only if the inner side pushes harder than the outer side.</p>
+                <ul class="equation-card__legend">
+                  <li>$dP/dr$: how fast pressure changes with radius</li>
+                  <li>$\rho$: local density</li>
+                  <li>$g$: local gravity</li>
+                </ul>
+                <p class="equation-card__notice" id="hydroNotice"></p>
+                <details class="equation-card__details derivation-toggle">
+                  <summary>Show derivation sketch</summary>
+                  <p class="cp-muted">
+                    For a thin local patch of thickness $dr$, outward pressure difference is $(dP/dr)dr$ times area, and it must balance the weight $\rho g\,dr$ times area.
+                  </p>
+                </details>
+              </article>
+
+              <article id="equationPressureScaleCard" class="equation-card">
+                <div class="panel-tag-group">
+                  <span class="panel-tag">Scale estimate</span>
+                </div>
+                <h4>Compactness sets the pressure scale</h4>
+                <div class="equation-card__equation" id="equationPressureScaleLatex">$$P_c\sim\frac{G M^2}{R^4}$$</div>
+                <p class="equation-card__meaning">This is an order-of-magnitude support requirement, not the exact central pressure for every stellar structure.</p>
+                <ul class="equation-card__legend">
+                  <li>$P_c$: characteristic central pressure scale</li>
+                  <li>$M$: stellar mass</li>
+                  <li>$R$: stellar radius</li>
+                </ul>
+                <p class="equation-card__notice" id="pressureScaleNotice"></p>
+                <details class="equation-card__details derivation-toggle">
+                  <summary>Show derivation sketch</summary>
+                  <p class="cp-muted">
+                    Combine the hydrostatic scale $\Delta P / R \sim \rho G M / R^2$ with $\rho \sim M / R^3$ to get $P_c \sim G M^2 / R^4$.
+                  </p>
+                </details>
+              </article>
+
+              <article id="equationTemperatureCard" class="equation-card">
+                <div class="panel-tag-group">
+                  <span class="panel-tag">Scale estimate</span>
+                </div>
+                <h4>Ideal-gas support implies a thermal scale</h4>
+                <div class="equation-card__equation" id="equationTemperatureLatex">$$T_c\sim\frac{\mu G M m_p}{k_B R}$$</div>
+                <p class="equation-card__meaning">If thermal gas pressure provides the support, this gives the rough temperature scale required in the deep interior.</p>
+                <ul class="equation-card__legend">
+                  <li>$T_c$: core-temperature scale</li>
+                  <li>$\mu$: mean molecular weight</li>
+                  <li>$m_p$: proton mass</li>
+                  <li>$k_B$: Boltzmann constant</li>
+                </ul>
+                <p class="equation-card__notice" id="temperatureNotice"></p>
+                <details class="equation-card__details derivation-toggle">
+                  <summary>Show derivation sketch</summary>
+                  <p class="cp-muted">
+                    Pair the pressure scale with the ideal-gas relation $P\sim \rho k_B T / (\mu m_p)$ and use $\rho \sim M / R^3$.
+                  </p>
+                </details>
+              </article>
+            </div>
+          </div>
+
+          <div class="understand-grid">
+            <article class="cp-notice understand-card">
+              <div class="panel-tag-group">
+                <span class="panel-tag">Misconception</span>
+              </div>
+              <h3>Pressure versus pressure gradient</h3>
+              <p>
+                Pressure on both sides of a shell can cancel. Support requires the lower side to push harder than the upper side. That is why stars need a pressure gradient, not just pressure.
+              </p>
+            </article>
+            <article class="cp-notice understand-card">
+              <div class="panel-tag-group">
+                <span class="panel-tag">Local shell</span>
+              </div>
+              <h3>Hydrostatic equilibrium is local</h3>
+              <p>
+                Hydrostatic equilibrium is a local force-balance law. At every radius, the pressure gradient must exactly balance the local weight of the overlying gas.
+              </p>
+            </article>
+            <article class="cp-notice understand-card">
+              <div class="panel-tag-group">
+                <span class="panel-tag">Scale estimate</span>
+              </div>
+              <h3>Compactness changes everything</h3>
+              <p>
+                If the same mass is squeezed into a smaller radius, gravity becomes harder to resist. At fixed mass, the required central pressure scales as $P_c \propto R^{-4}$.
+              </p>
+            </article>
+            <article class="cp-notice understand-card">
+              <div class="panel-tag-group">
+                <span class="panel-tag">Energy source</span>
+              </div>
+              <h3>Support is not the energy source</h3>
+              <p>
+                Pressure support in an ordinary star is mainly thermal gas pressure, but maintaining the temperature needed for that pressure requires an energy source. For main-sequence stars, that source is nuclear fusion.
+              </p>
+            </article>
+            <article class="cp-notice understand-card">
+              <div class="panel-tag-group">
+                <span class="panel-tag">Toy model</span>
+              </div>
+              <h3>Toy-model limits</h3>
+              <p>
+                This demo uses toy models to teach the logic of hydrostatic equilibrium. The goal is conceptual understanding and scaling intuition, not a full stellar evolution calculation.
+              </p>
+            </article>
+            <article class="cp-notice understand-card">
+              <div class="panel-tag-group">
+                <span class="panel-tag">Misconception</span>
+              </div>
+              <h3>Equilibrium is not stasis</h3>
+              <p>
+                A star can be in hydrostatic equilibrium and still evolve because force balance can hold while temperature, luminosity, and composition change on longer timescales.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="readoutStrip" class="cp-readout-strip cp-demo__readouts" aria-label="Hydrostatic readouts">
+        <div id="readoutMassCard" class="cp-readout">
+          <div class="cp-readout__label">Mass <span class="cp-readout__unit hydro-readout-unit">M_sun</span></div>
+          <div class="cp-readout__value" id="readoutMass">$1.00$</div>
+        </div>
+        <div id="readoutRadiusCard" class="cp-readout">
+          <div class="cp-readout__label">Radius <span class="cp-readout__unit hydro-readout-unit">R_sun</span></div>
+          <div class="cp-readout__value" id="readoutRadius">$1.00$</div>
+        </div>
+        <div id="readoutMeanDensityCard" class="cp-readout">
+          <div class="cp-readout__label">Mean density <span class="cp-readout__unit hydro-readout-unit">g cm^-3</span></div>
+          <div class="cp-readout__value" id="readoutMeanDensity">$1.41$</div>
+        </div>
+        <div id="readoutGravityCard" class="cp-readout">
+          <div class="cp-readout__label">Local gravity <span class="cp-readout__unit hydro-readout-unit">cm s^-2</span></div>
+          <div class="cp-readout__value" id="readoutGravity">$0$</div>
+        </div>
+        <div id="readoutCentralPressureCard" class="cp-readout">
+          <div class="cp-readout__label">Exact central pressure <span class="cp-readout__unit hydro-readout-unit">dyne cm^-2</span></div>
+          <div class="cp-readout__value" id="readoutCentralPressure">$0$</div>
+        </div>
+        <div id="readoutCoreTemperatureCard" class="cp-readout">
+          <div class="cp-readout__label">Core-temperature scale <span class="cp-readout__unit hydro-readout-unit">K</span></div>
+          <div class="cp-readout__value" id="readoutCoreTemperature">$0$</div>
+        </div>
+      </section>
+
+      <section id="drawerShelf" class="cp-demo__drawer cp-drawer" aria-label="Explanation shelf">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">Checkpoint deck</span>
+              <span class="cp-accordion__meta">synthesis below fold</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <section id="challengeCard" class="challenge-card challenge-drawer-card" aria-labelledby="challengeTitle">
+                <div class="card-heading">
+                  <h2 id="challengeTitle">Checkpoint deck</h2>
+                  <span id="challengeProgress" class="card-pill">1 / 5</span>
+                </div>
+                <p class="challenge-intro">
+                  Answer before checking. Use one local observation and one global scaling idea as evidence.
+                </p>
+                <p id="challengePrompt" class="challenge-prompt"></p>
+                <div id="challengeChoices" class="challenge-choices" role="radiogroup" aria-label="Challenge choices"></div>
+                <p id="challengeHintText" class="cp-muted challenge-hint" hidden></p>
+                <div id="challengeFeedback" class="cp-notice challenge-feedback" hidden></div>
+                <div class="challenge-actions">
+                  <button id="checkChallenge" class="cp-button cp-button--outline" type="button">Check answer</button>
+                  <button id="challengeHint" class="cp-button cp-button--outline" type="button">Hint</button>
+                  <button id="nextChallenge" class="cp-button cp-button--ghost" type="button">Next question</button>
+                </div>
+              </section>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">3 prompts</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>Uniform pressure does not create a net outward support force for a local gas patch. A pressure gradient does.</li>
+                <li>Switching from a uniform-density toy star to a centrally concentrated toy star raises the exact central pressure even when the total mass and radius stay fixed.</li>
+                <li>Halving the radius at fixed mass leaves the gravity problem much harder: the required pressure scale jumps by $16\times$.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">toy models + units</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>This demo uses toy models with CGS units internally: mass in g, radius in cm, density in g cm$^{-3}$, and pressure in dyne cm$^{-2}$.</li>
+                <li>Uniform-density toy model: $\rho(r)=\text{constant}$, so $M(r)\propto r^3$ and $g(r)\propto r$.</li>
+                <li>Centrally concentrated toy model: $\rho(r)=\rho_c\left[1-(r/R)^2\right]$ with normalization chosen so the total mass still equals the selected $M$.</li>
+                <li>The local shell inset uses a thin patch with equal face area, so it teaches the local meaning of $dP/dr=-\rho g$ directly.</li>
+                <li>Under-supported and over-supported modes perturb only the local shell patch. The global radial profiles stay hydrostatic so you can compare equilibrium to imbalance honestly.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Support is not fusion</span>
+              <span class="cp-accordion__meta">common confusion</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p>
+                Thermal pressure can support a star against gravity, but hydrostatic equilibrium by itself does not tell you where the heat came from. Main-sequence stars stay hot because nuclear fusion replenishes the energy that the star radiates away.
+              </p>
+              <p>
+                That is why hydrostatic equilibrium does not mean the star is inert. It means the inward and outward forces nearly balance at each radius while the star evolves more slowly through changes in composition and energy flow.
+              </p>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Derivation sketches</span>
+              <span class="cp-accordion__meta">compactness ladder</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p>
+                Begin with the local force-balance law:
+              </p>
+              <p>$$\frac{dP}{dr}=-\rho g=-\frac{G M(r)\rho(r)}{r^2}$$</p>
+              <p>
+                Then estimate the order of magnitude by taking $dP/dr\sim P_c/R$ and $\rho\sim M/R^3$:
+              </p>
+              <p>$$\frac{P_c}{R}\sim \frac{G M}{R^2}\frac{M}{R^3} \quad \Rightarrow \quad P_c\sim\frac{G M^2}{R^4}$$</p>
+              <p>
+                If gas pressure supplies that support, use $P\sim \rho k_B T/(\mu m_p)$ with $\rho\sim M/R^3$:
+              </p>
+              <p>$$T_c\sim\frac{\mu G M m_p}{k_B R}$$</p>
+            </div>
+          </details>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
