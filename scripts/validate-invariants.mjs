@@ -308,6 +308,29 @@ export async function validateInvariants({ repoRoot = process.cwd() } = {}) {
     }
   }
 
+  // `cssVar("--cp-glow-*")` in demo TypeScript reads a token into a JS colour context
+  // (canvas fillStyle, addColorStop, an SVG paint attribute), but --cp-glow-* holds a
+  // SHADOW LIST. This shipped as a runtime SyntaxError from addColorStop. Shadow use in
+  // JS goes through a `drop-shadow(var(--cp-glow-*))` string, which this does not match.
+  for (const root of [demosSrcRoot, siteSrcRoot]) {
+    if (!(await pathExists(root))) continue;
+    const tsFiles = (
+      await listFiles(root, { includeExtensions: new Set([".ts", ".astro"]) })
+    ).filter((f) => !f.endsWith(".test.ts"));
+    for (const filePath of tsFiles) {
+      const text = await fs.readFile(filePath, "utf8");
+      pushRegexViolations({
+        violations,
+        code: "apps:glow-token-in-color-context",
+        filePath,
+        text,
+        regex: /cssVar\(\s*["'`]--cp-glow-[a-z0-9-]+["'`]\s*\)/g,
+        message:
+          "--cp-glow-* is a shadow list; reading it into a JS color context fails at runtime. Use the matching --cp-tint-* color token."
+      });
+    }
+  }
+
   // A design token must hold the SAME KIND of value in every layer. --cp-glow-teal was a
   // colour in tokens.css/layer-museum.css and a shadow list in layer-instrument.css, so
   // layer-agnostic rules such as `box-shadow: 0 0 0 3px var(--cp-glow-teal)` expanded to

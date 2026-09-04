@@ -133,7 +133,7 @@ const canvasTheme = {
   bg: resolveCssColor(cssVar("--cp-bg0")),
   grid: resolveCssColor(cssVar("--cp-border-subtle")),
   curve: resolveCssColor(cssVar("--cp-chart-1")),
-  highlight: resolveCssColor(cssVar("--cp-glow-teal")),
+  highlight: resolveCssColor(cssVar("--cp-tint-teal")),
   peak: resolveCssColor(cssVar("--cp-chart-2")),
   text: resolveCssColor(cssVar("--cp-text2"))
 };

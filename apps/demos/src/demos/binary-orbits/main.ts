@@ -242,7 +242,7 @@ function colorMix(primary: string, secondary: string, primaryFraction: number): 
 }
 
 const canvasTheme = {
-  glow: cssVar("--cp-glow-blue"),
+  glow: cssVar("--cp-tint-blue"),
   border: cssVar("--cp-border"),
   text: cssVar("--cp-text"),
   muted: cssVar("--cp-muted"),
