@@ -37,7 +37,7 @@ export interface RotationCurvePoint {
   vBulgeKmS: number;
   vDiskKmS: number;
   vHaloKmS: number;
-  vKeplerianKmS: number;
+  vVisibleKmS: number;
   vMondKmS: number;
   mTotal10: number;
   mVisible10: number;
@@ -398,9 +398,39 @@ export const GalaxyRotationModel = {
     return { total, visible, dark, bulge, disk, halo };
   },
 
-  vKeplerianKmS(args: { radiusKpc: number; params: GalaxyParams }): number {
-    const masses = this.enclosedMass10(args);
-    return circularVelocityKmS({ enclosedMass10: masses.visible, radiusKpc: args.radiusKpc });
+  /**
+   * Rotation curve from the visible (baryonic) components alone.
+   *
+   * This is the benchmark the demo shades against the total curve as evidence for dark
+   * matter, so it MUST be built from the same physics as vTotalKmS -- bulge and disk in
+   * quadrature, using the exact Freeman disk.
+   *
+   * It previously used a spherical sqrt(G*M_visible(<R)/R), which is not the rotation
+   * curve of a disk. With the halo set to zero the shaded band still opened to 22.1 km/s
+   * (13.2%) at R = 7 kpc and the curves crossed at 2.35 kpc, so the fill polygon
+   * self-intersected -- while the M_dark readout correctly showed 0.000. Plot and readout
+   * contradicted each other, and the contradiction ran in the direction that overstated
+   * the evidence for dark matter.
+   *
+   * (Named vKeplerianKmS until 2026-09-04. A true Keplerian falloff is the point-mass
+   * limit sqrt(G*M/R), which this is not and never was at small R.)
+   */
+  vVisibleKmS(args: { radiusKpc: number; params: GalaxyParams }): number {
+    const { radiusKpc, params } = args;
+    if (!isFiniteNonNegative(radiusKpc)) return NaN;
+    if (radiusKpc === 0) return 0;
+    const vBulge = this.vBulgeKmS({
+      radiusKpc,
+      bulgeMass10: params.bulgeMass10,
+      bulgeScaleKpc: params.bulgeScaleKpc,
+    });
+    const vDisk = this.vDiskKmS({
+      radiusKpc,
+      diskMass10: params.diskMass10,
+      diskScaleLengthKpc: params.diskScaleLengthKpc,
+    });
+    if (!Number.isFinite(vBulge) || !Number.isFinite(vDisk)) return NaN;
+    return Math.hypot(vBulge, vDisk);
   },
 
   vMondDeepKmS(args: { radiusKpc: number; params: GalaxyParams }): number {
@@ -517,7 +547,7 @@ export const GalaxyRotationModel = {
         haloScaleRadiusKpc: args.params.haloScaleRadiusKpc,
       });
       const vTotalKmS = Math.sqrt(vBulgeKmS ** 2 + vDiskKmS ** 2 + vHaloKmS ** 2);
-      const vKeplerianKmS = circularVelocityKmS({ enclosedMass10: masses.visible, radiusKpc });
+      const vVisibleKmS = Math.hypot(vBulgeKmS, vDiskKmS);
       const vMondKmS = this.vMondKmS({ radiusKpc, params: args.params });
       const darkVisRatio = masses.visible > 0 ? masses.dark / masses.visible : NaN;
       const baryonFraction = masses.total > 0 ? masses.visible / masses.total : 0;
@@ -527,7 +557,7 @@ export const GalaxyRotationModel = {
         vBulgeKmS,
         vDiskKmS,
         vHaloKmS,
-        vKeplerianKmS,
+        vVisibleKmS,
         vMondKmS,
         mTotal10: masses.total,
         mVisible10: masses.visible,

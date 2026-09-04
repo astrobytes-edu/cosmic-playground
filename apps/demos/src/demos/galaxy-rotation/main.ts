@@ -57,7 +57,7 @@ const radiusSliderValue = $<HTMLSpanElement>("#radiusSliderValue");
 
 const plotVelocity = $<HTMLButtonElement>("#plotVelocity");
 const plotMass = $<HTMLButtonElement>("#plotMass");
-const showKeplerian = $<HTMLInputElement>("#showKeplerian");
+const showVisibleCurve = $<HTMLInputElement>("#showVisibleCurve");
 const showDisk = $<HTMLInputElement>("#showDisk");
 const showBulge = $<HTMLInputElement>("#showBulge");
 const showHalo = $<HTMLInputElement>("#showHalo");
@@ -95,7 +95,7 @@ const plotAria = $<HTMLParagraphElement>("#plotAria");
 
 const radiusValue = $<HTMLSpanElement>("#radiusValue");
 const vTotalValue = $<HTMLSpanElement>("#vTotalValue");
-const vKeplerianValue = $<HTMLSpanElement>("#vKeplerianValue");
+const vVisibleValue = $<HTMLSpanElement>("#vVisibleValue");
 const mEnclosedValue = $<HTMLSpanElement>("#mEnclosedValue");
 const mVisibleValue = $<HTMLSpanElement>("#mVisibleValue");
 const mDarkValue = $<HTMLSpanElement>("#mDarkValue");
@@ -185,7 +185,7 @@ const state = {
       correct: boolean;
       radiusKpc: number;
       vTotalKmS: number;
-      vKeplerianKmS: number;
+      vVisibleKmS: number;
       darkVisibleRatio: number;
       baryonFraction: number;
       deltaLambda21mm: number;
@@ -357,7 +357,7 @@ function sampleCurveAtRadius(curve: RotationCurvePoint[], radiusKpc: number): Ro
         vBulgeKmS: lerp(a.vBulgeKmS, b.vBulgeKmS),
         vDiskKmS: lerp(a.vDiskKmS, b.vDiskKmS),
         vHaloKmS: lerp(a.vHaloKmS, b.vHaloKmS),
-        vKeplerianKmS: lerp(a.vKeplerianKmS, b.vKeplerianKmS),
+        vVisibleKmS: lerp(a.vVisibleKmS, b.vVisibleKmS),
         vMondKmS: lerp(a.vMondKmS, b.vMondKmS),
         mTotal10: lerp(a.mTotal10, b.mTotal10),
         mVisible10: lerp(a.mVisible10, b.mVisible10),
@@ -684,7 +684,7 @@ function drawCurvePlot(curve: RotationCurvePoint[], sample: RotationCurvePoint) 
     ? Math.max(
       240,
       ...curve.map((row) => row.vTotalKmS),
-      ...(state.show.keplerian ? curve.map((row) => row.vKeplerianKmS) : [0]),
+      ...(state.show.keplerian ? curve.map((row) => row.vVisibleKmS) : [0]),
       ...(state.show.halo ? curve.map((row) => row.vHaloKmS) : [0]),
       ...(state.show.disk ? curve.map((row) => row.vDiskKmS) : [0]),
       ...(state.show.bulge ? curve.map((row) => row.vBulgeKmS) : [0]),
@@ -712,7 +712,7 @@ function drawCurvePlot(curve: RotationCurvePoint[], sample: RotationCurvePoint) 
   }
 
   const totalPoints = curve.map((row) => ({ x: xFromRadius(row.radiusKpc), y: yFromValue(state.plotMode === "velocity" ? row.vTotalKmS : row.mTotal10) }));
-  const visiblePoints = curve.map((row) => ({ x: xFromRadius(row.radiusKpc), y: yFromValue(state.plotMode === "velocity" ? row.vKeplerianKmS : row.mVisible10) }));
+  const visiblePoints = curve.map((row) => ({ x: xFromRadius(row.radiusKpc), y: yFromValue(state.plotMode === "velocity" ? row.vVisibleKmS : row.mVisible10) }));
   const darkPoints = curve.map((row) => ({ x: xFromRadius(row.radiusKpc), y: yFromValue(state.plotMode === "velocity" ? row.vHaloKmS : row.mDark10) }));
 
   if (state.plotMode === "velocity" && state.show.keplerian) {
@@ -777,7 +777,7 @@ function drawCurvePlot(curve: RotationCurvePoint[], sample: RotationCurvePoint) 
     const crossing = findDarkDominanceRadiusKpc(curve.map((row) => ({
       radiusKpc: row.radiusKpc,
       vTotalKmS: row.vTotalKmS,
-      vKeplerianKmS: row.vKeplerianKmS,
+      vVisibleKmS: row.vVisibleKmS,
       mVisible10: row.mVisible10,
       mDark10: row.mDark10,
       mTotal10: row.mTotal10,
@@ -852,7 +852,7 @@ function exportResults(curveSample: RotationCurvePoint): ExportPayloadV1 {
     },
     readouts: {
       vTotalKmS: curveSample.vTotalKmS,
-      vKeplerianKmS: curveSample.vKeplerianKmS,
+      vVisibleKmS: curveSample.vVisibleKmS,
       vMondKmS: curveSample.vMondKmS,
       mTotal10: curveSample.mTotal10,
       mVisible10: curveSample.mVisible10,
@@ -909,7 +909,7 @@ function render() {
   plotVelocity.tabIndex = state.plotMode === "velocity" ? 0 : -1;
   plotMass.tabIndex = state.plotMode === "mass" ? 0 : -1;
 
-  showKeplerian.checked = state.show.keplerian;
+  showVisibleCurve.checked = state.show.keplerian;
   showDisk.checked = state.show.disk;
   showBulge.checked = state.show.bulge;
   showHalo.checked = state.show.halo;
@@ -936,7 +936,7 @@ function render() {
   radiusValue.textContent = formatNumber(state.radiusMarkerKpc, 1);
   if (challengeHidden) {
     vTotalValue.textContent = "\u2014";
-    vKeplerianValue.textContent = "\u2014";
+    vVisibleValue.textContent = "\u2014";
     mEnclosedValue.textContent = "\u2014";
     mVisibleValue.textContent = "\u2014";
     mDarkValue.textContent = "\u2014";
@@ -947,7 +947,7 @@ function render() {
     rVirValue.textContent = "\u2014";
   } else {
     vTotalValue.textContent = formatNumber(sample.vTotalKmS, 2);
-    vKeplerianValue.textContent = formatNumber(sample.vKeplerianKmS, 2);
+    vVisibleValue.textContent = formatNumber(sample.vVisibleKmS, 2);
     mEnclosedValue.textContent = formatNumber(sample.mTotal10, 3);
     mVisibleValue.textContent = formatNumber(sample.mVisible10, 3);
     mDarkValue.textContent = formatNumber(sample.mDark10, 3);
@@ -1111,7 +1111,7 @@ function checkChallengeAnswer() {
     correct: Boolean(result.correct),
     radiusKpc: state.radiusMarkerKpc,
     vTotalKmS: sample.vTotalKmS,
-    vKeplerianKmS: sample.vKeplerianKmS,
+    vVisibleKmS: sample.vVisibleKmS,
     darkVisibleRatio: sample.darkVisRatio,
     baryonFraction: sample.baryonFraction,
     deltaLambda21mm: sample.deltaLambda21mm,
@@ -1179,9 +1179,9 @@ bindButtonRadioGroup({
   setSelectedIndex: (index) => setPlotMode(index === 0 ? "velocity" : "mass", true),
 });
 
-showKeplerian.addEventListener("change", () => {
+showVisibleCurve.addEventListener("change", () => {
   stopRadiusSweep();
-  state.show.keplerian = showKeplerian.checked;
+  state.show.keplerian = showVisibleCurve.checked;
   render();
 });
 showDisk.addEventListener("change", () => {
@@ -1338,7 +1338,7 @@ const demoModes = createDemoModes({
         items: [
           { key: "?", action: "Toggle help" },
           { key: "g", action: "Toggle station mode" },
-          { key: "k", action: "Toggle Keplerian curve" },
+          { key: "k", action: "Toggle visible-matter curve" },
           { key: "m", action: "Toggle MOND curve" },
           { key: "s", action: "Toggle solar-system inset" },
           { key: "p", action: "Toggle plot mode" },
@@ -1369,7 +1369,7 @@ const demoModes = createDemoModes({
       { key: "case", label: "Case" },
       { key: "radiusKpc", label: "R (kpc)" },
       { key: "vTotalKmS", label: "V_total (km/s)" },
-      { key: "vKeplerianKmS", label: "V_Kep (km/s)" },
+      { key: "vVisibleKmS", label: "V_Kep (km/s)" },
       { key: "vMondKmS", label: "V_MOND (km/s)" },
       { key: "mEnclosed10", label: "M_total(<R) (10^10 Msun)" },
       { key: "mVisible10", label: "M_vis(<R) (10^10 Msun)" },
@@ -1385,7 +1385,7 @@ const demoModes = createDemoModes({
         case: "Snapshot",
         radiusKpc: formatNumber(state.radiusMarkerKpc, 1),
         vTotalKmS: formatNumber(sample.vTotalKmS, 2),
-        vKeplerianKmS: formatNumber(sample.vKeplerianKmS, 2),
+        vVisibleKmS: formatNumber(sample.vVisibleKmS, 2),
         vMondKmS: formatNumber(sample.vMondKmS, 2),
         mEnclosed10: formatNumber(sample.mTotal10, 3),
         mVisible10: formatNumber(sample.mVisible10, 3),
@@ -1407,7 +1407,7 @@ const demoModes = createDemoModes({
               case: `R=${radiusKpc} kpc`,
               radiusKpc: formatNumber(radiusKpc, 1),
               vTotalKmS: formatNumber(sample.vTotalKmS, 2),
-              vKeplerianKmS: formatNumber(sample.vKeplerianKmS, 2),
+              vVisibleKmS: formatNumber(sample.vVisibleKmS, 2),
               vMondKmS: formatNumber(sample.vMondKmS, 2),
               mEnclosed10: formatNumber(sample.mTotal10, 3),
               mVisible10: formatNumber(sample.mVisible10, 3),

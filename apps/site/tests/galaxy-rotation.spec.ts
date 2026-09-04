@@ -51,7 +51,7 @@ test.describe("Galaxy Rotation -- E2E", () => {
 
   test("keyboard shortcuts toggle curves and presets", async ({ page }) => {
     await page.keyboard.press("k");
-    await expect(page.locator("#showKeplerian")).not.toBeChecked();
+    await expect(page.locator("#showVisibleCurve")).not.toBeChecked();
 
     await page.keyboard.press("m");
     await expect(page.locator("#showMond")).toBeChecked();

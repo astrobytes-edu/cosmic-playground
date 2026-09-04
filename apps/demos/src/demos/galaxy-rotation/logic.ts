@@ -13,7 +13,7 @@ export type GalaxyPresetId =
 export interface RotationSample {
   radiusKpc: number;
   vTotalKmS: number;
-  vKeplerianKmS: number;
+  vVisibleKmS: number;
   mVisible10: number;
   mDark10: number;
   mTotal10: number;
@@ -145,7 +145,7 @@ export function buildChallengeEvidenceText(args: {
   correct: boolean;
   radiusKpc: number;
   vTotalKmS: number;
-  vKeplerianKmS: number;
+  vVisibleKmS: number;
   darkVisibleRatio: number;
   baryonFraction: number;
   deltaLambda21mm: number;
@@ -161,7 +161,7 @@ export function buildChallengeEvidenceText(args: {
     `Target outer behavior: ${outerBehaviorLabel(args.targetOuterBehavior)}`,
     `Radius R (kpc): ${formatNumber(args.radiusKpc, 1)}`,
     `V_total (km/s): ${formatNumber(args.vTotalKmS, 2)}`,
-    `V_Keplerian (km/s): ${formatNumber(args.vKeplerianKmS, 2)}`,
+    `V_visible (km/s): ${formatNumber(args.vVisibleKmS, 2)}`,
     `Dark-to-visible ratio: ${formatNumber(args.darkVisibleRatio, 3)}`,
     `Baryon fraction f_b: ${formatNumber(args.baryonFraction, 3)}`,
     `Delta-lambda 21cm (mm): ${formatNumber(args.deltaLambda21mm, 3)}`,
@@ -181,7 +181,7 @@ export function buildGalaxyRotationExportPayload(args: {
   };
   readouts: {
     vTotalKmS: number;
-    vKeplerianKmS: number;
+    vVisibleKmS: number;
     vMondKmS: number;
     mTotal10: number;
     mVisible10: number;
@@ -211,7 +211,7 @@ export function buildGalaxyRotationExportPayload(args: {
     readouts: [
       { name: "Radius R (kpc)", value: formatNumber(args.radiusKpc, 3) },
       { name: "V_total (km/s)", value: formatNumber(args.readouts.vTotalKmS, 3) },
-      { name: "V_Keplerian (km/s)", value: formatNumber(args.readouts.vKeplerianKmS, 3) },
+      { name: "V_visible (km/s)", value: formatNumber(args.readouts.vVisibleKmS, 3) },
       { name: "V_MOND (km/s)", value: formatNumber(args.readouts.vMondKmS, 3) },
       { name: "M_total(<R) (10^10 Msun)", value: formatNumber(args.readouts.mTotal10, 3) },
       { name: "M_visible(<R) (10^10 Msun)", value: formatNumber(args.readouts.mVisible10, 3) },

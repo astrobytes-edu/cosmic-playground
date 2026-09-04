@@ -55,7 +55,7 @@
           </div>
 
           <p class="cp-muted">
-            Build a galaxy mass model and compare observed flat rotation curves to Keplerian decline from visible matter.
+            Build a galaxy mass model and compare the observed flat rotation curve to what the visible matter alone can produce.
           </p>
 
           <label class="control" for="presetSelect">
@@ -133,8 +133,8 @@
           </div>
 
           <label class="check">
-            <input id="showKeplerian" type="checkbox" checked />
-            Show Keplerian reference
+            <input id="showVisibleCurve" type="checkbox" checked />
+            Show visible-matter curve
           </label>
           <label class="check">
             <input id="showDisk" type="checkbox" />
@@ -208,7 +208,7 @@
             <article class="viz-card curve-card">
               <header>
                 <h3>Rotation and mass curves</h3>
-                <p class="cp-muted">Compare total, visible-only Keplerian, components, and optional MOND prediction.</p>
+                <p class="cp-muted">Compare the total curve, the visible-matter-only curve, the individual components, and an optional MOND prediction.</p>
               </header>
               <canvas id="rotationCanvas" role="img" aria-label="Rotation curve showing velocity versus radius for galaxy model"></canvas>
               <p id="plotAria" class="sr-only">
@@ -222,7 +222,7 @@
         <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
           <div class="cp-notice understand-intro">
             <h3>Core equations</h3>
-            <p>Dark matter evidence appears when observed $V(R)$ stays flat where visible-mass-only Keplerian prediction declines.</p>
+            <p>Dark matter evidence appears when the observed $V(R)$ stays flat out where the visible-matter-only curve is already declining.</p>
           </div>
           <div class="understand-grid">
             <article class="cp-notice understand-card">
@@ -234,7 +234,7 @@
               <p class="understand-equation">$$M_{\rm dark}(&lt;R)=\frac{V_{\rm obs}^2R}{G}-M_{\rm vis}(&lt;R)$$</p>
             </article>
             <article class="cp-notice understand-card">
-              <h3>Keplerian benchmark</h3>
+              <h3>Visible-matter benchmark</h3>
               <p class="understand-equation">$$V_{\rm Kep}(R)\propto R^{-1/2} \quad (R\gg R_d)$$</p>
             </article>
             <article class="cp-notice understand-card">
@@ -294,8 +294,8 @@
             <div class="cp-readout__value"><span id="vTotalValue">&mdash;</span> <span class="cp-readout__unit">km/s</span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Keplerian velocity</div>
-            <div class="cp-readout__value"><span id="vKeplerianValue">&mdash;</span> <span class="cp-readout__unit">km/s</span></div>
+            <div class="cp-readout__label">Visible-matter velocity</div>
+            <div class="cp-readout__value"><span id="vVisibleValue">&mdash;</span> <span class="cp-readout__unit">km/s</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Enclosed mass $M(&lt;R)$</div>
@@ -341,7 +341,7 @@
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>When dark halo mass is removed, the rotation curve drops as $R^{-1/2}$ at large radii — matching the Keplerian prediction from visible matter alone.</li>
+                <li>When the dark halo is removed, the rotation curve falls off as $R^{-1/2}$ at large radii, approaching the Keplerian limit you expect far outside the visible mass. Closer in the disk is not a point mass, so the curve is not Keplerian there.</li>
                 <li>Flat rotation curves at large $R$ require extra mass beyond what we see — the dark halo component supplies this.</li>
                 <li>The dark-to-visible mass ratio grows with radius: dark matter dominates the outskirts of galaxies.</li>
               </ul>

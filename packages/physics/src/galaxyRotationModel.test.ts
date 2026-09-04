@@ -219,4 +219,63 @@ describe("GalaxyRotationModel", () => {
       }
     });
   });
+
+  describe("visible-matter benchmark consistency (GR-1 regression)", () => {
+    /**
+     * The demo shades the region between the total curve and the visible-matter curve as
+     * the evidence for dark matter, and derives M_dark from it. That is only honest if
+     * the two curves are built from the SAME physics.
+     *
+     * They were not: the total used the exact Freeman disk in quadrature, while the
+     * benchmark used a spherical sqrt(G*M_visible(<R)/R). With the halo set to zero the
+     * band still opened to 22.1 km/s (13.2%) at R = 7 kpc, and the two curves crossed at
+     * 2.35 kpc so the fill polygon self-intersected -- all while the M_dark readout
+     * correctly showed 0.000.
+     */
+    const params = GalaxyRotationModel.PRESETS["no-dark-matter"];
+
+    it("total and visible curves are identical when the halo is empty", () => {
+      expect(params.haloMass10).toBe(0);
+
+      for (let radiusKpc = 0.25; radiusKpc <= 30; radiusKpc += 0.25) {
+        const vTotal = GalaxyRotationModel.vTotalKmS({ radiusKpc, params });
+        const vVisible = GalaxyRotationModel.vVisibleKmS({ radiusKpc, params });
+        expect(vVisible).toBeCloseTo(vTotal, 10);
+      }
+    });
+
+    it("the visible curve never exceeds the total curve", () => {
+      // total = sqrt(visible^2 + halo^2), so visible <= total identically. A crossing is
+      // what made the shaded band self-intersect.
+      const withHalo = GalaxyRotationModel.PRESETS["milky-way-like"];
+      for (let radiusKpc = 0.25; radiusKpc <= 30; radiusKpc += 0.25) {
+        const vTotal = GalaxyRotationModel.vTotalKmS({ radiusKpc, params: withHalo });
+        const vVisible = GalaxyRotationModel.vVisibleKmS({ radiusKpc, params: withHalo });
+        expect(vVisible).toBeLessThanOrEqual(vTotal + 1e-9);
+      }
+    });
+
+    it("the sampled curve carries the same visible values as the direct call", () => {
+      const rows = GalaxyRotationModel.rotationCurve({ params, rMinKpc: 1, rMaxKpc: 25, nPoints: 25 });
+      for (const row of rows) {
+        expect(row.vVisibleKmS).toBeCloseTo(
+          GalaxyRotationModel.vVisibleKmS({ radiusKpc: row.radiusKpc, params }),
+          10
+        );
+        // And with no halo, the sampled total matches too.
+        expect(row.vVisibleKmS).toBeCloseTo(row.vTotalKmS, 10);
+      }
+    });
+
+    it("dark mass inferred from the curve gap is zero when the halo is empty", () => {
+      // M_dark from V^2 R / G must agree with the model's own mDark10 readout.
+      for (const radiusKpc of [5, 8, 12]) {
+        const vTotal = GalaxyRotationModel.vTotalKmS({ radiusKpc, params });
+        const vVisible = GalaxyRotationModel.vVisibleKmS({ radiusKpc, params });
+        const impliedDark10 =
+          ((vTotal * vTotal - vVisible * vVisible) * radiusKpc) / GalaxyRotationModel.G_GALAXY;
+        expect(impliedDark10).toBeCloseTo(0, 9);
+      }
+    });
+  });
 });

@@ -38,7 +38,7 @@ describe("Galaxy Rotation -- Design System Contracts", () => {
     const ids = [
       "radiusValue",
       "vTotalValue",
-      "vKeplerianValue",
+      "vVisibleValue",
       "mEnclosedValue",
       "mVisibleValue",
       "mDarkValue",

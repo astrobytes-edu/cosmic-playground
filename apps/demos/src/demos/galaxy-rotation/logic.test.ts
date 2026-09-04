@@ -20,26 +20,26 @@ describe("Galaxy Rotation demo logic", () => {
 
   it("detects dark-matter dominance crossing radius", () => {
     const points: RotationSample[] = [
-      { radiusKpc: 2, vTotalKmS: 150, vKeplerianKmS: 140, mVisible10: 3.2, mDark10: 0.4, mTotal10: 3.6 },
-      { radiusKpc: 5, vTotalKmS: 190, vKeplerianKmS: 165, mVisible10: 4.8, mDark10: 2.1, mTotal10: 6.9 },
-      { radiusKpc: 10, vTotalKmS: 218, vKeplerianKmS: 162, mVisible10: 5.1, mDark10: 5.3, mTotal10: 10.4 },
-      { radiusKpc: 20, vTotalKmS: 223, vKeplerianKmS: 136, mVisible10: 5.5, mDark10: 14.3, mTotal10: 19.8 },
+      { radiusKpc: 2, vTotalKmS: 150, vVisibleKmS: 140, mVisible10: 3.2, mDark10: 0.4, mTotal10: 3.6 },
+      { radiusKpc: 5, vTotalKmS: 190, vVisibleKmS: 165, mVisible10: 4.8, mDark10: 2.1, mTotal10: 6.9 },
+      { radiusKpc: 10, vTotalKmS: 218, vVisibleKmS: 162, mVisible10: 5.1, mDark10: 5.3, mTotal10: 10.4 },
+      { radiusKpc: 20, vTotalKmS: 223, vVisibleKmS: 136, mVisible10: 5.5, mDark10: 14.3, mTotal10: 19.8 },
     ];
     expect(findDarkDominanceRadiusKpc(points)).toBe(10);
   });
 
   it("classifies outer behavior as flat for halo-dominated profile", () => {
     const points: RotationSample[] = [
-      { radiusKpc: 30, vTotalKmS: 214, vKeplerianKmS: 106, mVisible10: 5.7, mDark10: 24.4, mTotal10: 30.1 },
-      { radiusKpc: 50, vTotalKmS: 209, vKeplerianKmS: 83, mVisible10: 5.8, mDark10: 41.2, mTotal10: 47.0 },
+      { radiusKpc: 30, vTotalKmS: 214, vVisibleKmS: 106, mVisible10: 5.7, mDark10: 24.4, mTotal10: 30.1 },
+      { radiusKpc: 50, vTotalKmS: 209, vVisibleKmS: 83, mVisible10: 5.8, mDark10: 41.2, mTotal10: 47.0 },
     ];
     expect(classifyOuterCurveBehavior(points)).toBe("flat");
   });
 
   it("classifies outer behavior as Keplerian without halo", () => {
     const points: RotationSample[] = [
-      { radiusKpc: 30, vTotalKmS: 92, vKeplerianKmS: 92, mVisible10: 5.6, mDark10: 0, mTotal10: 5.6 },
-      { radiusKpc: 50, vTotalKmS: 71, vKeplerianKmS: 71, mVisible10: 5.8, mDark10: 0, mTotal10: 5.8 },
+      { radiusKpc: 30, vTotalKmS: 92, vVisibleKmS: 92, mVisible10: 5.6, mDark10: 0, mTotal10: 5.6 },
+      { radiusKpc: 50, vTotalKmS: 71, vVisibleKmS: 71, mVisible10: 5.8, mDark10: 0, mTotal10: 5.8 },
     ];
     expect(classifyOuterCurveBehavior(points)).toBe("keplerian");
   });
@@ -101,7 +101,7 @@ describe("Galaxy Rotation demo logic", () => {
       correct: false,
       radiusKpc: 30,
       vTotalKmS: 214,
-      vKeplerianKmS: 106,
+      vVisibleKmS: 106,
       darkVisibleRatio: 4.2,
       baryonFraction: 0.19,
       deltaLambda21mm: 0.151,
@@ -134,7 +134,7 @@ describe("Galaxy Rotation demo logic", () => {
       },
       readouts: {
         vTotalKmS: 219.3,
-        vKeplerianKmS: 153.2,
+        vVisibleKmS: 153.2,
         vMondKmS: 179.8,
         mTotal10: 11.2,
         mVisible10: 5.4,
