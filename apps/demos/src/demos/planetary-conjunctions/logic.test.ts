@@ -13,7 +13,10 @@ import {
   formatAngleDeg,
   orbitToSvg,
   orbitRadiusPx,
-  planetCssVar
+  planetCssVar,
+  alignmentAtSameLongitude,
+  alignmentLabel,
+  alignmentLabelPlural
 } from "./logic";
 
 // ---------------------------------------------------------------------------
@@ -360,5 +363,66 @@ describe("planetCssVar", () => {
 
   it("returns correct CSS variable for Saturn", () => {
     expect(planetCssVar("Saturn")).toBe("--cp-celestial-saturn");
+  });
+
+  describe("same-longitude alignment classification (A1 regression)", () => {
+    /**
+     * The demo fires when the two heliocentric longitudes agree to within 5 degrees,
+     * meaning both planets lie on the same ray out from the Sun. What that IS, as seen
+     * from Earth, depends entirely on which side of Earth's orbit the target sits:
+     *
+     *   target inside Earth's orbit  -> target lies between Earth and the Sun
+     *                                -> INFERIOR CONJUNCTION
+     *   target outside Earth's orbit -> Earth lies between the Sun and the target
+     *                                -> OPPOSITION
+     *
+     * The demo previously called every such event a "conjunction", which is correct for
+     * Venus and wrong for Mars, Jupiter and Saturn -- three of its four presets -- while
+     * its own learning goal promises "conjunction and opposition as seen from Earth".
+     */
+    const EARTH_AU = 1.00000261;
+
+    it("classifies an inferior planet as inferior conjunction", () => {
+      expect(alignmentAtSameLongitude(0.72333566, EARTH_AU)).toBe("inferior-conjunction");
+    });
+
+    it.each([
+      ["Mars", 1.52371034],
+      ["Jupiter", 5.202887],
+      ["Saturn", 9.53667594]
+    ])("classifies %s as opposition, not conjunction", (_name, targetAu) => {
+      expect(alignmentAtSameLongitude(targetAu as number, EARTH_AU)).toBe("opposition");
+    });
+
+    it("is driven by geometry, so an unseen planet classifies correctly", () => {
+      // Mercury and Uranus are backlog candidates; no name list to update.
+      expect(alignmentAtSameLongitude(0.38709927, EARTH_AU)).toBe("inferior-conjunction");
+      expect(alignmentAtSameLongitude(19.18916464, EARTH_AU)).toBe("opposition");
+    });
+
+    it("returns null for a target on Earth's own orbit", () => {
+      // Co-orbital: the alignment never recurs and neither label applies.
+      expect(alignmentAtSameLongitude(EARTH_AU, EARTH_AU)).toBeNull();
+    });
+
+    it("returns null for non-finite input rather than guessing", () => {
+      expect(alignmentAtSameLongitude(Number.NaN, EARTH_AU)).toBeNull();
+      expect(alignmentAtSameLongitude(1.5, Number.NaN)).toBeNull();
+    });
+
+    it("provides display labels that never call an opposition a conjunction", () => {
+      expect(alignmentLabel("opposition")).toBe("Opposition");
+      expect(alignmentLabel("inferior-conjunction")).toBe("Inferior conjunction");
+      expect(alignmentLabel(null)).toBe("Alignment");
+
+      // The plural label drives the counter readout.
+      expect(alignmentLabelPlural("opposition")).toBe("Oppositions observed");
+      expect(alignmentLabelPlural("inferior-conjunction")).toBe("Inferior conjunctions observed");
+      expect(alignmentLabelPlural(null)).toBe("Alignments observed");
+
+      // Guard the actual defect: no Mars-like target may be labelled a conjunction.
+      const marsLabel = alignmentLabel(alignmentAtSameLongitude(1.52371034, EARTH_AU));
+      expect(marsLabel.toLowerCase()).not.toContain("conjunction");
+    });
   });
 });

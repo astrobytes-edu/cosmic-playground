@@ -2,6 +2,10 @@ import { createInstrumentRuntime, initMath, initPopovers, initStarfield, setLive
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { RetrogradeMotionModel, TwoBodyAnalytic } from "@cosmic/physics";
 import {
+  type SameLongitudeAlignment,
+  alignmentLabelPlural,
+  alignmentLabel,
+  alignmentAtSameLongitude,
   type PlanetName,
   type ConjunctionCallbacks,
   siderealPeriodDays,
@@ -45,6 +49,7 @@ const conjunctionFlashEl = document.querySelector<SVGCircleElement>("#conjunctio
 const synodicPeriodEl = document.querySelector<HTMLSpanElement>("#synodicPeriod");
 const daysElapsedEl = document.querySelector<HTMLSpanElement>("#daysElapsed");
 const conjunctionCountEl = document.querySelector<HTMLSpanElement>("#conjunctionCount");
+const alignmentCountLabelEl = document.querySelector<HTMLDivElement>("#alignmentCountLabel");
 const earthAngleEl = document.querySelector<HTMLSpanElement>("#earthAngle");
 const targetAngleEl = document.querySelector<HTMLSpanElement>("#targetAngle");
 const separationEl = document.querySelector<HTMLSpanElement>("#separation");
@@ -53,7 +58,7 @@ if (
   !speedSliderEl || !speedValueEl || !resetEl || !copyResultsEl || !statusEl ||
   !earthOrbitEl || !targetOrbitEl || !earthDotEl || !targetDotEl ||
   !earthLabelEl || !targetLabelEl || !conjunctionLineEl || !conjunctionFlashEl ||
-  !synodicPeriodEl || !daysElapsedEl || !conjunctionCountEl ||
+  !synodicPeriodEl || !daysElapsedEl || !conjunctionCountEl || !alignmentCountLabelEl ||
   !earthAngleEl || !targetAngleEl || !separationEl
 ) {
   throw new Error("Missing required DOM elements for planetary-conjunctions demo.");
@@ -75,6 +80,7 @@ const conjunctionFlash = conjunctionFlashEl;
 const synodicPeriodReadout = synodicPeriodEl;
 const daysElapsedReadout = daysElapsedEl;
 const conjunctionCountReadout = conjunctionCountEl;
+const alignmentCountLabel = alignmentCountLabelEl;
 const earthAngleReadout = earthAngleEl;
 const targetAngleReadout = targetAngleEl;
 const separationReadout = separationEl;
@@ -110,7 +116,21 @@ const CONJUNCTION_THRESHOLD_DEG = 5;
 let selectedPlanet: PlanetName = "Mars";
 let elapsedDays = 0;
 let conjunctionCount = 0;
-let lastWasConjunction = false; // edge detector for conjunction counting
+let lastWasConjunction = false; // edge detector for alignment counting
+
+const EARTH_SEMI_MAJOR_AXIS_AU = RetrogradeMotionModel.planetElements("Earth").aAu;
+
+/**
+ * What the same-heliocentric-longitude alignment IS for the current target, as seen from
+ * Earth. An inner target gives an inferior conjunction; an outer target gives an
+ * opposition. Calling both "conjunction" was wrong for three of the four presets.
+ */
+function currentAlignment(): SameLongitudeAlignment | null {
+  return alignmentAtSameLongitude(
+    callbacks.planetSemiMajorAxisAu(selectedPlanet),
+    EARTH_SEMI_MAJOR_AXIS_AU
+  );
+}
 let animId: number | null = null;
 let lastTimestamp = 0;
 let flashOpacity = 0;
@@ -184,6 +204,10 @@ function render(): void {
   if (inConj && !lastWasConjunction && elapsedDays > 1) {
     conjunctionCount++;
     flashOpacity = 0.8;
+    setLiveRegionText(
+      status,
+      `${alignmentLabel(currentAlignment())} ${conjunctionCount} at day ${Math.round(elapsedDays)}.`
+    );
   }
   lastWasConjunction = inConj;
 
@@ -279,6 +303,10 @@ function resetSimulation(): void {
 function selectPlanet(name: PlanetName): void {
   selectedPlanet = name;
 
+  // The same-longitude alignment is an opposition for an outer target and an inferior
+  // conjunction for an inner one. Label it for the target actually selected.
+  alignmentCountLabel.textContent = alignmentLabelPlural(currentAlignment());
+
   // Update chip aria states
   for (const chip of planetChips) {
     const isSelected = chip.getAttribute("data-planet") === name;
@@ -342,7 +370,7 @@ function exportResults(): ExportPayloadV1 {
     readouts: [
       { name: "Synodic period (days)", value: formatNumber(synPeriodDays, 1) },
       { name: "Days elapsed", value: formatDays(elapsedDays) },
-      { name: "Conjunctions observed", value: String(conjunctionCount) },
+      { name: alignmentLabelPlural(currentAlignment()), value: String(conjunctionCount) },
       { name: "Earth sidereal period (days)", value: formatNumber(earthPeriodDays, 2) },
       { name: "Target sidereal period (days)", value: formatNumber(targetPeriodDays, 2) }
     ],

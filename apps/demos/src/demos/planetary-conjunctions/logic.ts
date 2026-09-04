@@ -112,11 +112,66 @@ export function angularSeparationDeg(angle1Rad: number, angle2Rad: number): numb
 }
 
 /**
- * Check whether the angular separation qualifies as a conjunction.
+ * Check whether the angular separation qualifies as a same-longitude alignment.
+ *
+ * Note the name is historical: what this detects is agreement in HELIOCENTRIC longitude.
+ * Whether that alignment is a conjunction or an opposition as seen from Earth depends on
+ * the target -- see `alignmentAtSameLongitude`.
  */
 export function isConjunction(separationDeg: number, thresholdDeg: number = 5): boolean {
   if (!Number.isFinite(separationDeg)) return false;
   return separationDeg <= thresholdDeg;
+}
+
+// ---------------------------------------------------------------------------
+// Alignment classification
+// ---------------------------------------------------------------------------
+
+/**
+ * What a same-heliocentric-longitude alignment looks like from Earth.
+ *
+ * `null` means neither label applies: a co-orbital target never laps Earth, so the
+ * alignment does not recur, and non-finite input has no answer.
+ */
+export type SameLongitudeAlignment = "inferior-conjunction" | "opposition";
+
+/**
+ * Classify the alignment that occurs when Earth and the target share a heliocentric
+ * longitude, i.e. both lie on the same ray out from the Sun.
+ *
+ *   target inside Earth's orbit  -> target sits between Earth and the Sun
+ *                                -> INFERIOR CONJUNCTION (target near the Sun in our sky)
+ *   target outside Earth's orbit -> Earth sits between the Sun and the target
+ *                                -> OPPOSITION (target opposite the Sun, up all night)
+ *
+ * This is decided by geometry rather than by a list of planet names, so adding Mercury,
+ * Uranus or Neptune requires no change here.
+ */
+export function alignmentAtSameLongitude(
+  targetSemiMajorAxisAu: number,
+  earthSemiMajorAxisAu: number
+): SameLongitudeAlignment | null {
+  if (!Number.isFinite(targetSemiMajorAxisAu) || !Number.isFinite(earthSemiMajorAxisAu)) {
+    return null;
+  }
+  if (targetSemiMajorAxisAu <= 0 || earthSemiMajorAxisAu <= 0) return null;
+  // Co-orbital: Earth never gains a lap, so the alignment never recurs.
+  if (Math.abs(targetSemiMajorAxisAu - earthSemiMajorAxisAu) < 1e-9) return null;
+  return targetSemiMajorAxisAu < earthSemiMajorAxisAu ? "inferior-conjunction" : "opposition";
+}
+
+/** Singular display label for an alignment, e.g. for the event announcement. */
+export function alignmentLabel(alignment: SameLongitudeAlignment | null): string {
+  if (alignment === "opposition") return "Opposition";
+  if (alignment === "inferior-conjunction") return "Inferior conjunction";
+  return "Alignment";
+}
+
+/** Plural display label, used for the running counter readout. */
+export function alignmentLabelPlural(alignment: SameLongitudeAlignment | null): string {
+  if (alignment === "opposition") return "Oppositions observed";
+  if (alignment === "inferior-conjunction") return "Inferior conjunctions observed";
+  return "Alignments observed";
 }
 
 // ---------------------------------------------------------------------------

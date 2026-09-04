@@ -20,7 +20,7 @@
         <div class="cp-panel-header">Planetary Conjunctions: Synodic Periods</div>
         <div class="cp-panel-body">
           <p class="cp-muted">
-            Watch how relative orbital motion produces conjunctions at the synodic period.
+            Watch how relative orbital motion brings Earth and another planet back into line once per synodic period &mdash; an opposition for the outer planets, an inferior conjunction for Venus.
           </p>
 
           <div class="planet-selector">
@@ -118,7 +118,7 @@
             <div class="cp-readout__value"><span id="daysElapsed">0</span> <span class="cp-readout__unit">days</span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Conjunctions observed</div>
+            <div class="cp-readout__label" id="alignmentCountLabel">Alignments observed</div>
             <div class="cp-readout__value"><span id="conjunctionCount">0</span></div>
           </div>
           <div class="cp-readout">
@@ -163,7 +163,9 @@
                 <li>Orbits are shown as circles at the mean semi-major axis (eccentricity ignored for visual clarity).</li>
                 <li>Sidereal periods come from JPL J2000 approximate elements via Kepler's third law: $P^2 = a^3$.</li>
                 <li>Synodic period: $P_{\rm syn} = \dfrac{P_1 \cdot P_2}{|P_1 - P_2|}$.</li>
-                <li>A conjunction is detected when the heliocentric angular separation drops below 5 degrees.</li>
+                <li>An alignment is detected when the heliocentric angular separation drops below 5 degrees, meaning both planets lie on the same ray out from the Sun.</li>
+                <li>What that alignment is <em>from Earth</em> depends on the target: for a planet inside Earth's orbit (Venus) it is an <strong>inferior conjunction</strong>; for a planet outside Earth's orbit (Mars, Jupiter, Saturn) Earth lies between the Sun and the target, which is an <strong>opposition</strong>. The readout label tracks the selected target.</li>
+                <li>Only the same-longitude alignment is detected. The complementary alignment 180 degrees away (superior conjunction for Venus, conjunction for the outer planets) is not flagged.</li>
               </ul>
             </div>
           </details>

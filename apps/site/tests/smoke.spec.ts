@@ -496,7 +496,10 @@ test.describe("Cosmic Playground smoke", () => {
     },
     {
       slug: "planetary-conjunctions",
-      expects: ["Synodic period (days)", "Days elapsed", "Conjunctions observed"]
+      // "Oppositions observed", not "Conjunctions observed": the default target is Mars,
+      // which orbits outside Earth's orbit, so the same-longitude alignment is an
+      // opposition. This expectation previously pinned the incorrect label.
+      expects: ["Synodic period (days)", "Days elapsed", "Oppositions observed"]
     },
     {
       slug: "eos-lab",

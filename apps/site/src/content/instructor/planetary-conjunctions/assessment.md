@@ -34,7 +34,7 @@ has_math: true
 > - C: orbits do not cross; this often comes with a worry about collisions.
 > - D: confuses an Earth-relative alignment with each planet's own perihelion.
 >
-> **Demo setup:** select **Venus** and run to a flash, then freeze. Point at the separation readout near zero, then at the two dots sitting on different orbits. Use Venus rather than Mars here: the demo's "conjunction" label is only geocentrically correct for the inner planet (see `model.md`), and this item is about the word.
+> **Demo setup:** select **Venus** and run to a flash, then freeze. Point at the separation readout near zero, then at the two dots sitting on different orbits. Venus is the right target for this item because the demo labels its alignment "Inferior conjunctions observed", so the word on screen matches the word in the question.
 >
 > **If A leads:** do not argue. Freeze at conjunction, say nothing, and ask one student to describe what they see in the orbit view. The picture does the work.
 

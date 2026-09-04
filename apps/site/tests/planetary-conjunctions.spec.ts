@@ -2,6 +2,22 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Planetary Conjunctions -- E2E", () => {
   test.beforeEach(async ({ page }) => {
+    // Same clipboard bridge the sibling specs use, so export payloads are assertable.
+    await page.addInitScript(() => {
+      const clipboardStore = { text: "" };
+      // @ts-expect-error test-only bridge
+      window.__cpClipboardStore = clipboardStore;
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: {
+          writeText: async (text: string) => {
+            clipboardStore.text = text;
+          },
+          readText: async () => clipboardStore.text,
+        },
+      });
+    });
+
     await page.goto("play/planetary-conjunctions/", { waitUntil: "domcontentloaded" });
     await expect(page.locator("#cp-demo")).toBeVisible();
   });
@@ -244,6 +260,48 @@ test.describe("Planetary Conjunctions -- E2E", () => {
       maxDiffPixelRatio: 0.05,
     });
   });
+
+  test("labels the same-longitude alignment correctly for each target", async ({ page }) => {
+    // The demo fires when the two heliocentric longitudes agree within 5 degrees. For a
+    // target OUTSIDE Earth's orbit that geometry puts Earth between the Sun and the
+    // target, which is an opposition, not a conjunction. The demo called every such event
+    // a "conjunction", contradicting its own learning goal about "conjunction and
+    // opposition as seen from Earth".
+    const label = page.locator("#alignmentCountLabel");
+
+    // Mars is the default target.
+    await expect(label).toHaveText(/Oppositions observed/i);
+
+    for (const outer of ["Jupiter", "Saturn", "Mars"]) {
+      await page.locator(`[data-planet="${outer}"]`).click();
+      await expect(label).toHaveText(/Oppositions observed/i);
+      await expect(label).not.toHaveText(/conjunction/i);
+    }
+
+    // Venus orbits inside Earth's orbit, so the same alignment IS an inferior conjunction.
+    await page.locator('[data-planet="Venus"]').click();
+    await expect(label).toHaveText(/Inferior conjunctions observed/i);
+  });
+
+  test("export payload names the alignment for the selected target", async ({ page }) => {
+    await page.locator('[data-planet="Venus"]').click();
+    await page.locator("#copyResults").click();
+    const venusText = await page.evaluate(() =>
+      // @ts-expect-error test-only bridge
+      window.__cpClipboardStore?.text ?? ""
+    );
+    expect(venusText).toContain("Inferior conjunctions observed");
+
+    await page.locator('[data-planet="Jupiter"]').click();
+    await page.locator("#copyResults").click();
+    const jupiterText = await page.evaluate(() =>
+      // @ts-expect-error test-only bridge
+      window.__cpClipboardStore?.text ?? ""
+    );
+    expect(jupiterText).toContain("Oppositions observed");
+    expect(jupiterText).not.toContain("Conjunctions observed");
+  });
+
 });
 
 // --- Reduced Motion (separate describe, no beforeEach) ---

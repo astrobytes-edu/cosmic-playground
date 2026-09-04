@@ -52,7 +52,7 @@ Open on the **Mars** target with the speed slider low.
 
 2. **Define the observable.** Run the demo until the first flash. Ask: *"What was true at that instant?"* Steer to: the two planets had the same **heliocentric** longitude, meaning they lay on the same ray out from the Sun. Point at the separation readout going to zero.
 
-   > **Say this out loud, because the demo does not.** With Mars selected, that geometry puts *Earth between the Sun and Mars*, which from Earth is an **opposition**, not a conjunction. The demo labels every flash a "conjunction", which is correct only for Venus. See `model.md` for how to handle this; the short version is to call the flash "same direction from the Sun" and let students work out what it looks like from here.
+   > **Note the label.** With Mars selected the counter reads **"Oppositions observed"**, because that geometry puts Earth between the Sun and Mars. Switch to Venus and it becomes "Inferior conjunctions observed". Ask the class why the same alignment gets two different names before you explain it.
 
 3. **Kill the "close together" idea now.** Freeze at the flash and ask: *"How far apart are these two planets in the picture?"* They are on completely different orbits. The alignment is about direction, not distance. This is worth thirty seconds of silence while they look at it.
 

@@ -10,20 +10,17 @@ has_math: true
 
 ## A) Content correctness
 
-**A1. The flash is labelled "conjunction" for all four targets, but it is an opposition for three of them.** *(P1)*
+**A1. ~~The flash is labelled "conjunction" for all four targets, but it is an opposition for three of them.~~** *(FIXED 2026-09-04)*
 
-The demo fires when the heliocentric longitude separation drops below 5 degrees (`logic.ts`, `isConjunction`). Same heliocentric longitude means both planets lie on the same ray from the Sun, and what that looks like from Earth depends on the target:
+The demo now classifies the alignment from the target's semi-major axis relative to Earth's and labels it accordingly: **"Oppositions observed"** for Mars, Jupiter and Saturn, **"Inferior conjunctions observed"** for Venus. The label drives the readout, the live-region announcement, and the exported results. The classification is geometric rather than a name lookup (`alignmentAtSameLongitude` in `logic.ts`), so adding Mercury, Uranus or Neptune under C3 needs no change here.
 
-- **Venus** (inside Earth's orbit): Venus is between Earth and the Sun. This is an **inferior conjunction**, and the label is correct.
-- **Mars, Jupiter, Saturn** (outside Earth's orbit): Earth is between the Sun and the target. From Earth this is an **opposition**, not a conjunction.
+Covered by unit tests in `logic.test.ts` and two E2E tests in `apps/site/tests/planetary-conjunctions.spec.ts`, one of which asserts that no outer-planet label contains the word "conjunction".
 
-The demo's own learning goal is "Define conjunction and opposition **as seen from Earth**", so the geocentric sense is the one that matters here, and the current label contradicts it for three quarters of the presets. `model.md` documents a classroom workaround, but the instrument should not need one.
+**A2. The complementary 180-degree alignment is never flagged.** *(P2, still open)*
 
-*Suggested fix:* detect both the 0-degree and 180-degree alignments, then label each event from the target's classification: for an inferior planet, inferior conjunction at 0 degrees and superior conjunction at 180; for a superior planet, opposition at 0 degrees and conjunction at 180. That change also makes the alternating Venus pair visible, which the current single test hides (see A2).
+Only the same-longitude alignment is detected. The alignment 180 degrees away is also real and also recurs once per synodic period: **superior conjunction** for Venus, and **conjunction** proper for the outer planets. A student watching Venus pass behind the Sun sees nothing happen.
 
-**A2. Superior conjunctions of Venus are never flagged.** *(P2)*
-
-Venus alternates between inferior conjunction (same heliocentric longitude) and superior conjunction (180 degrees apart), each once per 584-day synodic period. Only the first fires. A student watching Venus pass behind the Sun sees nothing happen. Falls out of the A1 fix.
+Deliberately left out of the A1 fix. Detecting both would double the flash rate, and the counter is what students time to measure the synodic period in `activities.md` — successive flashes would then be half a synodic period apart and the investigation would break. Doing this properly means counting the two event types separately, which is a UI change rather than a labelling one.
 
 **A3. `content_verified` is `false` and there is no `docs/reviews/planetary-conjunctions.md` physics review.** *(P2)*
 

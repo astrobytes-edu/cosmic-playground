@@ -66,27 +66,20 @@ $$\frac{1}{P_{\text{syn}}} = \left| 1 - \frac{1}{P_2} \right|$$
 
 So the controlling quantity is not the target's speed but **how different its rate is from Earth's**. Mars, the nearest superior planet, has the longest synodic period of the four targets precisely because its period is the closest to Earth's. Jupiter and Saturn differ by more than a factor of two in orbital period yet their synodic periods differ by only about three weeks, because both are already deep in the slow limit.
 
-## Conjunction versus opposition: read this before you teach
+## Conjunction versus opposition
 
-**The demo's label is imprecise for three of its four targets, and you need to handle it explicitly.**
-
-The demo flashes when the two heliocentric longitudes agree to within 5 degrees, and calls that event a "conjunction". Same heliocentric longitude means both planets lie on the same ray from the Sun. What that looks like *from Earth* depends entirely on whether the target orbits inside or outside Earth's orbit:
+The demo fires when the two heliocentric longitudes agree to within 5 degrees, meaning both planets lie on the same ray out from the Sun. What that alignment **is**, as seen from Earth, depends on which side of Earth's orbit the target sits:
 
 | Target | Same heliocentric longitude means | Seen from Earth this is |
 | --- | --- | --- |
 | Venus (inside Earth's orbit) | Venus lies between the Sun and Earth | **inferior conjunction** — target near the Sun in our sky |
 | Mars, Jupiter, Saturn (outside) | Earth lies between the Sun and the target | **opposition** — target opposite the Sun, up all night |
 
-So the flash is correctly named for Venus and misnamed for Mars, Jupiter and Saturn. In strict usage the demo is detecting *heliocentric conjunction*, which is a real term, but the demo's own learning goals promise "conjunction and opposition **as seen from Earth**", and that is the geocentric sense in which the words differ.
+**The demo labels this correctly per target.** The counter reads "Oppositions observed" for the three outer planets and "Inferior conjunctions observed" for Venus, and the exported results carry the same label. Until 2026-09-04 it called every alignment a "conjunction", which was correct only for Venus; if you are working from older notes or a printed handout, check the wording.
 
-**What to do in class.** Do not skip this; students who go on to the retrograde-motion demo will meet the distinction again and the mismatch will bite. Two workable moves:
+Opposition is the observationally interesting case: the planet is closest, brightest, up all night, and going retrograde. That last point is the direct bridge to the retrograde-motion demo, which shows the same event from the other side.
 
-- *Simplest:* tell the class up front that the demo is flagging "same direction from the Sun", then have them work out for themselves what that looks like from Earth for an inner versus an outer planet. The demo's imprecision becomes the exercise.
-- *If you want the vocabulary clean:* run Venus first, establish inferior conjunction, then switch to Mars and ask "same geometry from the Sun's point of view — but where is Mars in our sky now?" The answer, opposition, is the observationally interesting case anyway.
-
-Opposition is worth the airtime regardless: it is when a superior planet is closest, brightest, up all night, and going retrograde. That last point is the direct bridge to the retrograde-motion demo, which shows the same event from the other side.
-
-This terminology issue is recorded in `backlog.md` as a content fix for the instrument itself.
+**Teaching move worth keeping.** Even with the labels correct, the *why* is worth eliciting rather than telling. Run Venus first, establish inferior conjunction, then switch to Mars and ask: "same geometry from the Sun's point of view — so why does the label change?" The answer, that Earth is now the one in the middle, is the whole idea.
 
 ## Assumptions and honest limitations
 
@@ -94,7 +87,7 @@ This terminology issue is recorded in `backlog.md` as a content fix for the inst
 - **Not to scale.** Orbit radii on screen are compressed so all four targets are visible in one frame. Do not let students measure distances off the display.
 - **Constant angular speed.** A consequence of the circular assumption. Real planets move faster near perihelion.
 - **No third bodies, no perturbations.** Each run involves exactly Earth and one target.
-- **"Conjunction" here is heliocentric longitude alignment.** That is a clean way to define the repeating event, but it is not the geocentric sense of the word: for a superior planet the same-longitude flash is an **opposition**, not a conjunction. See the section above before using the demo's vocabulary in class.
+- **Detection is on heliocentric longitude**, and the event is then labelled from the target's geometry (opposition for an outer planet, inferior conjunction for Venus). Published conjunction and opposition dates use full geocentric coordinates including inclination, so they will differ slightly.
 
 ## Teaching note on the inferior case
 
