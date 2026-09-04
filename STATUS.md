@@ -1,7 +1,7 @@
 # Cosmic Playground — status
 
-next: work the P2 backlog in docs/audits/2026-09-03-comprehensive-adversarial-audit.md — GR-1, the linter, the retrograde-motion + planetary-conjunctions instructor bundles, and the conjunctions opposition labelling (backlog A1) are done; next up are the orphaned /topics/* tree and instructor bundles for eos-lab + stars-zams-hr
-blocker: none — all 10 P1 blockers fixed 2026-09-04; lint/typecheck/build green, 2,168 unit + 897 e2e passing
+next: port novascope's IMF + cluster census + HR diagram into packages/physics as a new cluster-census demo (survey done 2026-09-04, see docs/reviews/2026-09-04-novascope-port-survey.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build (see below), instructor bundles for eos-lab + stars-zams-hr
+blocker: none — /topics/* un-orphaned 2026-09-04 with a route-reachability gate; eos-lab unlisted pending a complete EOS; lint/typecheck/build green, 2,115 unit + 919 e2e passing
 due:
 
 ## Current focus
@@ -11,3 +11,19 @@ Research-grade interactive demos (physics unit-tested), deployed live, used in A
 
 ## Open
 - [ ] (no empirical learning data yet — assessment plan via CRMSE)
+
+## Findings recorded 2026-09-04
+
+- **Explore's filters do nothing in production.** `apps/site` builds with `output: "static"`,
+  so `Astro.url.searchParams` is empty at build time and `explore/index.astro` renders one
+  unfiltered page. Topic, level, time, status, math, quick-filter, sort and search are all
+  computed server-side from params that never arrive; `/explore/?topic=Orbits` returns the
+  same 19 cards as `/explore/`. The active-filter chips never render either. `smoke.spec.ts`
+  appeared to cover this but only asserted that *some* `.cp-chip` is visible, which the
+  quick-filter row always satisfies. Fix is a design decision — client-side filtering, or
+  `getStaticPaths` over the filter space, or SSR — so it is not being done incidentally.
+  Topic filtering specifically now has a working alternative: `/topics/<slug>/`.
+- **`unlisted: true`** is a new demo frontmatter field for "exists, but is not advertised".
+  Listing surfaces go through `listedDemos()` in `apps/site/src/lib/catalog.ts`; detail
+  routes (`exhibits/`, `stations/`, `instructor/`, `play/`) deliberately still build so
+  shared links survive. `eos-lab` is the first user.

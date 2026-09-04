@@ -15,6 +15,7 @@ Each review documents:
 
 | Demo | Status | Date |
 |------|--------|------|
+| [novascope-port-survey](2026-09-04-novascope-port-survey.md) | Survey | 2026-09-04 |
 | [retrograde-motion](retrograde-motion.md) | Complete | 2026-02-07 |
 | [eos-lab](eos-lab.md) | Complete | 2026-02-07 |
 | [component-consolidation](2026-02-07-component-consolidation.md) | Complete | 2026-02-07 |

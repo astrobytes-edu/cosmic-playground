@@ -622,3 +622,79 @@ mangles underscores into `<em>` in 18 content files.
 
 Visual regression remains off pending Linux baselines; the tests are tagged and runnable
 via `pnpm -C apps/site test:e2e:visual`.
+
+
+---
+
+## Remediation record — 2026-09-04 (session 3)
+
+### §3.4 "Seven or more built pages are unreachable" — FIXED
+
+`/topics/*` (index + 8 topic pages), `/glossary/` and `/welcome/` are now reachable from
+the home page. Specifically:
+
+- **Topics is in the primary and mobile nav.** The homepage topic strip now points at
+  `/topics/<slug>/` rather than `/explore/?topic=`, and renders all eight topics rather
+  than the six it had hardcoded.
+- **`TagPill` takes an optional `href`** (recommendation 18). Topic badges on demo cards
+  and exhibit pages are now links, and show the human label — they were rendering the raw
+  enum key, so exhibit pages read "EarthSky" rather than "Earth & Sky".
+- **A footer nav** gives `/glossary/` and `/stations/` their first inbound links; the
+  homepage hero links `/welcome/`.
+- **The four copies of the topic taxonomy are consolidated** into
+  `apps/site/src/lib/topics.ts` (recommendation 31). `TopicKey` is derived from
+  `TOPIC_ORDER`, so the `Record` types make a missing label or sequence a compile error.
+  The copies had already drifted — `TopicStrip` was missing two topics, and explore's
+  blurb table used a straight apostrophe where the other three used a curly one.
+- **`TOPIC_SEQUENCE` is complete for all eight topics.** It previously covered five and
+  omitted every demo added since it was written, so `conservation-laws`, `spectral-lines`,
+  `doppler-shift`, `galaxy-rotation`, `parallax-distance`, `planetary-conjunctions` and
+  `retrograde-motion` were silently unsequenced.
+- **`var(--cp-text-base)`** in `topics/[slug].astro` (§3.4) is now `--cp-text-md`.
+
+**Two gates so it cannot recur:**
+
+1. `site-links.spec.ts` → *"every built page is reachable by following links from the home
+   page"*. Enumerates `dist/**/index.html`, crawls the real link graph from `/`, and diffs.
+   This is the assertion whose absence let the topic tree stay invisible: Astro's
+   file-based routing makes *"this page exists"* and *"you can get to this page"*
+   independent facts, and nothing tested the second one.
+2. `site:topic-sequence-unknown-slug` in `validate-invariants.mjs` — a slug in
+   `TOPIC_SEQUENCE` that has no demo file fails the build. Verified to fire.
+
+### §3.5 `eos-lab` — put on hold and unlisted
+
+Rather than ship a demo whose equation of state is incomplete, `eos-lab` is now
+`unlisted: true`. This is a new demo frontmatter field, added because `status`
+(stable/beta/draft) and `readiness` (stub…launch-ready) have **no value meaning "exists but
+is not advertised"** — every value of both is listed.
+
+- Listing surfaces go through `listedDemos()` in `catalog.ts`; the detail routes
+  (`exhibits/`, `stations/`, `instructor/`, `play/`) deliberately still build, so existing
+  links survive and the E2E suite keeps the instrument from rotting.
+- The exhibit page carries an on-hold callout quoting `unlistedReason`.
+- The reachability gate derives its exemptions from `unlisted: true` in content, so
+  re-listing the demo re-arms the assertion automatically.
+
+### NEW FINDING — Explore's filters are inert in production
+
+Found while adding a topics↔explore cross-link. `apps/site` builds with
+`output: "static"`, so `Astro.url.searchParams` is **empty at build time**.
+`explore/index.astro` computes every filter server-side from those params, so the build
+emits **one** unfiltered `explore/index.html`: `/explore/?topic=Orbits` returns the same
+19 cards as `/explore/`, and the active-filter chips never render at all.
+
+Verified: `find dist/explore -name '*.html'` → one file; `grep -c 'filter-chips'` → 0;
+242 `demo-card` occurrences on the single page.
+
+`smoke.spec.ts` looked like coverage — *"Filter chips use theme chip class"*, navigating to
+`explore/?topic=Orbits` — but asserted only that *some* `.cp-chip` is visible, which the
+quick-filter row always satisfies. **A fourth test found this session that encoded a defect
+rather than catching it.** Renamed to say what it actually checks.
+
+Not fixed here: the remedy is a design decision (client-side filtering vs `getStaticPaths`
+over the filter space vs SSR), not an incidental change. Topic filtering specifically now
+has a working alternative in `/topics/<slug>/`. Tracked in `STATUS.md`.
+
+**Gates after this session:** lint · typecheck · build · invariants · 2,115 unit · 919 E2E
+(34 skipped) — all green.
