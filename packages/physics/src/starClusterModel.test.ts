@@ -126,7 +126,10 @@ describe("sampleStarCluster", () => {
     for (const ageMyr of [0, 100, 5000]) {
       const cluster = sampleStarCluster({ ...BASE, starCount: 3000, ageMyr });
       expect(
-        cluster.mainSequenceCount + cluster.remnantCount + cluster.outsideModelCount
+        cluster.mainSequenceCount +
+          cluster.postMainSequenceCount +
+          cluster.remnantCount +
+          cluster.outsideModelCount
       ).toBe(cluster.stars.length);
     }
   });
@@ -254,6 +257,73 @@ describe("sampleStarCluster", () => {
     for (const star of low) {
       expect(star.phase).toBe("outside-model-range");
       expect(star.zamsExtrapolated).toBe(false);
+    }
+  });
+});
+
+describe("post-main-sequence stars in a cluster", () => {
+  const AGED = { ...BASE, starCount: 4000 };
+
+  it("has none at age zero", () => {
+    const cluster = sampleStarCluster({ ...AGED, ageMyr: 0 });
+    expect(cluster.postMainSequenceCount).toBe(0);
+    expect(cluster.remnantCount).toBe(0);
+  });
+
+  it("grows a giant branch as the cluster ages", () => {
+    // The regression this guards: stars past the turnoff used to be marked "remnant" and
+    // dropped, so ageing a cluster erased the top of the HR diagram instead of bending
+    // it into a giant branch. An old cluster with zero giants is the bug coming back.
+    for (const ageMyr of [200, 2000, 12000]) {
+      const cluster = sampleStarCluster({ ...AGED, ageMyr });
+      expect(cluster.postMainSequenceCount).toBeGreaterThan(0);
+    }
+  });
+
+  it("places giants above and to the right of the turnoff", () => {
+    const cluster = sampleStarCluster({ ...AGED, ageMyr: 12000 });
+    const giants = cluster.stars.filter((s) => s.phase === "post-main-sequence");
+    const mainSequence = cluster.stars.filter((s) => s.phase === "main-sequence");
+    const turnoffLuminosity = Math.max(...mainSequence.map((s) => s.luminosityLsun));
+    const turnoffTemperature = Math.max(
+      ...mainSequence.filter((s) => s.luminosityLsun === turnoffLuminosity).map((s) => s.temperatureK)
+    );
+    const onTheBranch = giants.filter((s) => s.postMainSequenceStage === "giant");
+    expect(onTheBranch.length).toBeGreaterThan(0);
+    for (const giant of onTheBranch) {
+      expect(giant.luminosityLsun).toBeGreaterThan(turnoffLuminosity);
+      expect(giant.temperatureK).toBeLessThan(turnoffTemperature);
+    }
+  });
+
+  it("gives every giant a stage and every other star none", () => {
+    const cluster = sampleStarCluster({ ...AGED, ageMyr: 3000 });
+    for (const star of cluster.stars) {
+      if (star.phase === "post-main-sequence") {
+        expect(star.postMainSequenceStage).not.toBeNull();
+        expect(star.luminosityLsun).toBeGreaterThan(0);
+        expect(star.temperatureK).toBeGreaterThan(0);
+      } else {
+        expect(star.postMainSequenceStage).toBeNull();
+      }
+    }
+  });
+
+  it("does not label a giant with a main-sequence spectral type", () => {
+    // spectralTypeFromTemperature classifies against the main-sequence sequence and
+    // appends luminosity class V. Calling a red giant "K5V" would be a real error.
+    const cluster = sampleStarCluster({ ...AGED, ageMyr: 12000 });
+    for (const star of cluster.stars) {
+      if (star.phase === "post-main-sequence") expect(star.spectralType).toBe("");
+    }
+  });
+
+  it("keeps ageing monotone: stars leave the main sequence and never return", () => {
+    let previousMainSequence = Infinity;
+    for (const ageMyr of [0, 50, 500, 5000, 13000]) {
+      const cluster = sampleStarCluster({ ...AGED, ageMyr });
+      expect(cluster.mainSequenceCount).toBeLessThanOrEqual(previousMainSequence);
+      previousMainSequence = cluster.mainSequenceCount;
     }
   });
 });

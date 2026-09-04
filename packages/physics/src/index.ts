@@ -90,10 +90,16 @@ export type { ProfileSpec, Vector3Pc } from "./clusterProfileModel";
 export { StellarLifetimeModel } from "./stellarLifetimeModel";
 export {
   mainSequenceLifetimeMyr,
+  postMainSequenceTrack,
   remnantFateFromInitialMass,
-  spectralTypeFromTemperature
+  spectralTypeFromTemperature,
+  totalLifetimeMyr
 } from "./stellarLifetimeModel";
-export type { RemnantFate } from "./stellarLifetimeModel";
+export type {
+  PostMainSequencePoint,
+  PostMainSequenceStage,
+  RemnantFate
+} from "./stellarLifetimeModel";
 export { StarClusterModel } from "./starClusterModel";
 export { MAX_CLUSTER_STARS, sampleStarCluster } from "./starClusterModel";
 export type {

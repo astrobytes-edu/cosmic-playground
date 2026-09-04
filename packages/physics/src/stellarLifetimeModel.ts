@@ -117,9 +117,169 @@ export function remnantFateFromInitialMass(massMsun: number): RemnantFate {
   return "black hole";
 }
 
+
+/* ── Post-main-sequence track ────────────────────────────────────────────────
+ * A SCHEMATIC track, not an evolutionary code.
+ *
+ * Why this exists: a cluster HR diagram whose only content is the zero-age main sequence
+ * is a plot of a function, not a picture of a population. The giant branch is the feature
+ * an astronomer looks for first, and it is what makes a cluster's age visible. Deleting
+ * post-main-sequence stars -- treating "left the main sequence" as "gone" -- removes the
+ * one structure that carries the age.
+ *
+ * Two of the three timescales below are Hurley's own, not invented here:
+ *
+ *   t_MS   main-sequence lifetime                 Hurley eq. (5), above
+ *   t_BGB  time to the base of the giant branch   Hurley eq. (4), above
+ *
+ * so the Hertzsprung-gap window t_BGB - t_MS falls straight out of the existing fits. It
+ * is at most 5 percent of t_BGB (because t_MS >= 0.95 t_BGB) and narrows to almost nothing
+ * at high mass, which is the correct behaviour: the crossing runs on a thermal timescale
+ * and that is exactly why real HR diagrams show the gap nearly empty.
+ *
+ * The third, POST_BGB_FRACTION, is a round figure rather than a fit. Core helium burning
+ * runs about 10 percent of the hydrogen-burning lifetime, with the RGB and AGB adding the
+ * rest; 0.15 is the conventional classroom value for the whole post-BGB span.
+ *
+ * The SHAPE of the track is textbook rather than computed:
+ *   - Across the Hertzsprung gap the surface cools at roughly constant luminosity.
+ *   - On the giant branch the star sits near the Hayashi limit, so temperature is nearly
+ *     pinned and luminosity climbs.
+ *   - Below 2 Msun the climb ends near a mass-INDEPENDENT tip, because the tip is set by
+ *     the degenerate helium core mass at the flash. That is the reason the RGB tip works
+ *     as a standard candle, and it is worth a student noticing it in the picture.
+ *   - Above 2 Msun there is no degenerate core, so the star crosses to the red at roughly
+ *     constant luminosity: the near-horizontal supergiant track.
+ *
+ * Positions are therefore good to a factor of a few, and good enough to teach the shape.
+ * Do not read radii or ages off them as measurements. */
+
+/** Post-BGB phases as a fraction of the time taken to reach the giant branch. */
+const POST_BGB_FRACTION = 0.15;
+
+/** Luminosity gain from the turnoff to the base of the giant branch. */
+const BGB_BRIGHTENING = 2.2;
+
+/** Tip-of-the-RGB luminosity [Lsun] below 2 Msun, set by the core mass at the flash. */
+const RGB_TIP_LSUN = 2500;
+
+/** Above this mass the helium core never becomes degenerate, so there is no fixed tip. */
+const DEGENERATE_CORE_MAX_MSUN = 2;
+
+export type PostMainSequenceStage = "hertzsprung-gap" | "giant";
+
+export interface PostMainSequencePoint {
+  stage: PostMainSequenceStage;
+  luminosityLsun: number;
+  radiusRsun: number;
+  temperatureK: number;
+}
+
+/**
+ * Total nuclear-burning lifetime [Myr]: the main sequence plus everything after it.
+ *
+ * A star older than this is a remnant.
+ */
+export function totalLifetimeMyr(massMsun: number): number {
+  return timeToGiantBranchMyr(massMsun) * (1 + POST_BGB_FRACTION);
+}
+
+/**
+ * Effective temperature [K] at the BASE of the giant branch for this mass.
+ *
+ * The star cools further as it climbs -- see `GIANT_TIP_COOLING` -- because the giant
+ * branch is not vertical. Holding the temperature fixed drew the branch as a solid
+ * vertical bar, which is not what a cluster's red giant branch looks like.
+ */
+function giantBranchBaseTemperatureK(massMsun: number): number {
+  const raw = 4700 * massMsun ** -0.08;
+  return Math.min(5000, Math.max(3600, raw));
+}
+
+/**
+ * Temperature at the tip as a fraction of the base.
+ *
+ * A solar-mass star leaves the base of the giant branch near 4700 K and reaches the tip
+ * near 3200 K, so it cools by about a third while brightening by three decades. With this
+ * factor the model puts the tip of the RGB at roughly 3200 K and 155 Rsun, against
+ * observed values near 3100 K and 170 Rsun.
+ */
+const GIANT_TIP_COOLING = 0.68;
+
+/** Coolest a giant gets [K]; red supergiants bottom out here rather than continuing down. */
+const GIANT_MIN_TEMPERATURE_K = 3100;
+
+/** Stefan-Boltzmann, in solar units. */
+function radiusRsunFromLuminosityTemperature(luminosityLsun: number, temperatureK: number): number {
+  return Math.sqrt(luminosityLsun) * (5772 / temperatureK) ** 2;
+}
+
+/**
+ * Where a star sits after the main sequence, given its zero-age values.
+ *
+ * Returns `null` when the star has not left the main sequence yet, or has already burned
+ * through every post-main-sequence phase and become a remnant -- so a caller can branch on
+ * the three cases without recomputing the timescales.
+ */
+export function postMainSequenceTrack(args: {
+  massMsun: number;
+  ageMyr: number;
+  zamsLuminosityLsun: number;
+  zamsTemperatureK: number;
+}): PostMainSequencePoint | null {
+  const { massMsun, ageMyr, zamsLuminosityLsun, zamsTemperatureK } = args;
+  if (!(zamsLuminosityLsun > 0) || !(zamsTemperatureK > 0)) return null;
+
+  const mainSequenceEnd = mainSequenceLifetimeMyr(massMsun);
+  if (ageMyr < mainSequenceEnd) return null;
+
+  const giantBranchStart = timeToGiantBranchMyr(massMsun);
+  const end = giantBranchStart * (1 + POST_BGB_FRACTION);
+  if (ageMyr >= end) return null;
+
+  const giantBaseTemperatureK = giantBranchBaseTemperatureK(massMsun);
+
+  // Hertzsprung gap: cool at roughly constant luminosity. Geometric interpolation keeps
+  // the path straight on the log-log axes an HR diagram actually uses.
+  if (ageMyr < giantBranchStart) {
+    const span = giantBranchStart - mainSequenceEnd;
+    const f = span > 0 ? (ageMyr - mainSequenceEnd) / span : 1;
+    const luminosityLsun = zamsLuminosityLsun * BGB_BRIGHTENING ** f;
+    const temperatureK = zamsTemperatureK * (giantBaseTemperatureK / zamsTemperatureK) ** f;
+    return {
+      stage: "hertzsprung-gap",
+      luminosityLsun,
+      temperatureK,
+      radiusRsun: radiusRsunFromLuminosityTemperature(luminosityLsun, temperatureK)
+    };
+  }
+
+  // Giant branch: temperature nearly pinned, luminosity climbing to the tip.
+  const g = (ageMyr - giantBranchStart) / (end - giantBranchStart);
+  const baseLuminosityLsun = zamsLuminosityLsun * BGB_BRIGHTENING;
+  const tipLuminosityLsun =
+    massMsun < DEGENERATE_CORE_MAX_MSUN
+      ? Math.max(RGB_TIP_LSUN, baseLuminosityLsun)
+      : baseLuminosityLsun * 3;
+  const luminosityLsun = baseLuminosityLsun * (tipLuminosityLsun / baseLuminosityLsun) ** g;
+  const tipTemperatureK = Math.max(
+    GIANT_MIN_TEMPERATURE_K,
+    giantBaseTemperatureK * GIANT_TIP_COOLING
+  );
+  const temperatureK = giantBaseTemperatureK * (tipTemperatureK / giantBaseTemperatureK) ** g;
+  return {
+    stage: "giant",
+    luminosityLsun,
+    temperatureK,
+    radiusRsun: radiusRsunFromLuminosityTemperature(luminosityLsun, temperatureK)
+  };
+}
+
 export const StellarLifetimeModel = {
   SOLAR_METALLICITY_ONLY,
   mainSequenceLifetimeMyr,
+  totalLifetimeMyr,
+  postMainSequenceTrack,
   spectralTypeFromTemperature,
   remnantFateFromInitialMass
 } as const;

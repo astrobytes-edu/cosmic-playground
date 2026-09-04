@@ -27,11 +27,13 @@ import {
   maschbergerMassMsun
 } from "./initialMassFunctionModel";
 import { subStream } from "./seededRandom";
-import type { RemnantFate } from "./stellarLifetimeModel";
+import type { PostMainSequenceStage, RemnantFate } from "./stellarLifetimeModel";
 import {
   mainSequenceLifetimeMyr,
+  postMainSequenceTrack,
   remnantFateFromInitialMass,
-  spectralTypeFromTemperature
+  spectralTypeFromTemperature,
+  totalLifetimeMyr
 } from "./stellarLifetimeModel";
 import { ZamsTout1996Model } from "./zamsTout1996Model";
 
@@ -54,7 +56,11 @@ export type ImfKind = "maschberger" | "kroupa";
  * defect once, in `stars-zams-hr`. Consumers must skip these stars when plotting L and T,
  * and are encouraged to say how many there were.
  */
-export type StarPhase = "main-sequence" | "remnant" | "outside-model-range";
+export type StarPhase =
+  | "main-sequence"
+  | "post-main-sequence"
+  | "remnant"
+  | "outside-model-range";
 
 export interface ClusterStar {
   id: number;
@@ -62,12 +68,18 @@ export interface ClusterStar {
   positionPc: Vector3Pc;
   /** Distance from the cluster centre [pc]. */
   radiusPc: number;
-  /** Zero-age values. Both are zero once the star has left the main sequence. */
+  /**
+   * Current luminosity, radius and temperature. Zero-age values while `phase` is
+   * "main-sequence"; a point on the schematic post-main-sequence track while it is
+   * "post-main-sequence"; all zero for a remnant, which this model does not place.
+   */
   luminosityLsun: number;
   stellarRadiusRsun: number;
   temperatureK: number;
   mainSequenceLifetimeMyr: number;
   phase: StarPhase;
+  /** Non-null exactly when `phase` is "post-main-sequence". */
+  postMainSequenceStage: PostMainSequenceStage | null;
   /** Empty once the star is a remnant, which has no main-sequence spectral type. */
   spectralType: string;
   /** Non-null exactly when `phase` is "remnant". */
@@ -89,7 +101,11 @@ export interface StarClusterOptions {
   maxMassMsun?: number;
   profile: ProfileSpec;
   metallicityZ?: number;
-  /** Cluster age [Myr]. Stars whose main-sequence lifetime has elapsed become remnants. */
+  /**
+   * Cluster age [Myr]. A star past its main-sequence lifetime moves onto the schematic
+   * post-main-sequence track, and becomes a remnant only once its total nuclear lifetime
+   * has elapsed.
+   */
   ageMyr?: number;
 }
 
@@ -102,6 +118,8 @@ export interface StarCluster {
   /** Most massive star drawn [Msun] — the quantity that visibly flickers on reseed. */
   mostMassiveMsun: number;
   mainSequenceCount: number;
+  /** Stars past the turnoff but still burning: the giant branch. */
+  postMainSequenceCount: number;
   remnantCount: number;
   /** Stars outside the ZAMS model's validity domain, so absent from the HR diagram. */
   outsideModelCount: number;
@@ -150,6 +168,7 @@ export function sampleStarCluster(options: StarClusterOptions): StarCluster {
   let totalMassMsun = 0;
   let mostMassiveMsun = 0;
   let mainSequenceCount = 0;
+  let postMainSequenceCount = 0;
   let outsideModelCount = 0;
   let extrapolatedCount = 0;
 
@@ -165,7 +184,10 @@ export function sampleStarCluster(options: StarClusterOptions): StarCluster {
     const positionPc = samplePosition(positionStream);
     const radiusPc = Math.hypot(positionPc.x, positionPc.y, positionPc.z);
     const lifetimeMyr = mainSequenceLifetimeMyr(massMsun);
-    const isRemnant = ageMyr >= lifetimeMyr;
+    // A star that leaves the main sequence is not gone: it is a giant, and it stays one
+    // for another ~15 percent of its life. Ending the star at t_MS deletes the single
+    // feature that makes a cluster's age visible.
+    const isRemnant = ageMyr >= totalLifetimeMyr(massMsun);
 
     totalMassMsun += massMsun;
     if (massMsun > mostMassiveMsun) mostMassiveMsun = massMsun;
@@ -181,6 +203,7 @@ export function sampleStarCluster(options: StarClusterOptions): StarCluster {
         temperatureK: 0,
         mainSequenceLifetimeMyr: lifetimeMyr,
         phase: "remnant",
+        postMainSequenceStage: null,
         spectralType: "",
         remnant: remnantFateFromInitialMass(massMsun),
         zamsExtrapolated: false
@@ -206,6 +229,7 @@ export function sampleStarCluster(options: StarClusterOptions): StarCluster {
         temperatureK: 0,
         mainSequenceLifetimeMyr: lifetimeMyr,
         phase: "outside-model-range",
+        postMainSequenceStage: null,
         spectralType: "",
         remnant: null,
         zamsExtrapolated: false
@@ -213,20 +237,54 @@ export function sampleStarCluster(options: StarClusterOptions): StarCluster {
       continue;
     }
 
-    mainSequenceCount += 1;
     if (!zamsValidity.massInRange) extrapolatedCount += 1;
-    const temperatureK = ZamsTout1996Model.effectiveTemperatureKFromMassMetallicity(zamsInput);
+    const zamsTemperatureK =
+      ZamsTout1996Model.effectiveTemperatureKFromMassMetallicity(zamsInput);
+    const zamsLuminosityLsun = ZamsTout1996Model.luminosityLsunFromMassMetallicity(zamsInput);
+
+    // Past the turnoff but still burning: place it on the giant branch rather than
+    // dropping it. The ZAMS point is still needed, as the track starts from there.
+    const post = postMainSequenceTrack({
+      massMsun,
+      ageMyr,
+      zamsLuminosityLsun,
+      zamsTemperatureK
+    });
+    if (post) {
+      postMainSequenceCount += 1;
+      stars.push({
+        id,
+        massMsun,
+        positionPc,
+        radiusPc,
+        luminosityLsun: post.luminosityLsun,
+        stellarRadiusRsun: post.radiusRsun,
+        temperatureK: post.temperatureK,
+        mainSequenceLifetimeMyr: lifetimeMyr,
+        phase: "post-main-sequence",
+        postMainSequenceStage: post.stage,
+        // spectralTypeFromTemperature classifies against the MAIN-SEQUENCE sequence and
+        // appends luminosity class V, which a giant is not. Left empty rather than wrong.
+        spectralType: "",
+        remnant: null,
+        zamsExtrapolated: !zamsValidity.massInRange
+      });
+      continue;
+    }
+
+    mainSequenceCount += 1;
     stars.push({
       id,
       massMsun,
       positionPc,
       radiusPc,
-      luminosityLsun: ZamsTout1996Model.luminosityLsunFromMassMetallicity(zamsInput),
+      luminosityLsun: zamsLuminosityLsun,
       stellarRadiusRsun: ZamsTout1996Model.radiusRsunFromMassMetallicity(zamsInput),
-      temperatureK,
+      temperatureK: zamsTemperatureK,
       mainSequenceLifetimeMyr: lifetimeMyr,
       phase: "main-sequence",
-      spectralType: spectralTypeFromTemperature(temperatureK),
+      postMainSequenceStage: null,
+      spectralType: spectralTypeFromTemperature(zamsTemperatureK),
       remnant: null,
       zamsExtrapolated: !zamsValidity.massInRange
     });
@@ -242,7 +300,9 @@ export function sampleStarCluster(options: StarClusterOptions): StarCluster {
     halfNumberRadiusPc,
     mostMassiveMsun,
     mainSequenceCount,
-    remnantCount: stars.length - mainSequenceCount - outsideModelCount,
+    postMainSequenceCount,
+    remnantCount:
+      stars.length - mainSequenceCount - postMainSequenceCount - outsideModelCount,
     outsideModelCount,
     extrapolatedCount
   };
