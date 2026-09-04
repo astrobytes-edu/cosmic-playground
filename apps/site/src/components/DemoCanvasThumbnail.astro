@@ -26,7 +26,8 @@ const thumbnailSceneBySlug: Record<string, string> = {
   "galaxy-rotation": "galaxy",
   "hydrostatic-equilibrium-explorer": "stellar-core",
   "stars-zams-hr": "hr-track",
-  "eos-lab": "regime-map"
+  "eos-lab": "regime-map",
+  "cluster-census": "cluster"
 };
 
 const scene = thumbnailSceneBySlug[slug] ?? "geometry";
@@ -369,6 +370,49 @@ const scene = thumbnailSceneBySlug[slug] ?? "geometry";
       });
     }
 
+    /*
+     * A sampled cluster: many faint low-mass stars, a handful of bright massive ones.
+     * Positions come from a fixed pseudo-random sequence rather than Math.random so the
+     * card looks the same on every render, and the mass distribution is deliberately
+     * lopsided because that is the demo's whole subject.
+     */
+    function clusterScene(
+      ctx: CanvasRenderingContext2D,
+      w: number,
+      h: number,
+      t: number,
+      root: HTMLElement
+    ) {
+      const star = colorFor(root, "--cp-celestial-star", "transparent");
+      const sun = colorFor(root, "--cp-celestial-sun", "transparent");
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+      const scale = Math.min(w, h) * 0.42;
+
+      let seed = 20260904;
+      const next = () => {
+        seed = (seed * 1664525 + 1013904223) % 4294967296;
+        return seed / 4294967296;
+      };
+
+      for (let i = 0; i < 90; i += 1) {
+        // Plummer-like: most stars near the centre, a long sparse tail outward.
+        const u = next();
+        const r = (0.35 * scale) / Math.sqrt(Math.max(u, 0.02) ** (-2 / 3) - 1);
+        const angle = next() * Math.PI * 2;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r * 0.82;
+        const massDraw = next();
+        const heavy = massDraw > 0.94;
+        const twinkle = 0.75 + 0.25 * Math.sin(t * 1.4 + i);
+        if (heavy) {
+          glowDot(ctx, x, y, 2.4, star, 0.9 * twinkle);
+        } else {
+          dot(ctx, x, y, massDraw > 0.7 ? 1.5 : 1, sun, (0.3 + massDraw * 0.5) * twinkle);
+        }
+      }
+    }
+
     function hrTrackScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement) {
       const sun = colorFor(root, "--cp-celestial-sun", "transparent");
       const accent = colorFor(root, "--topic-color", colorFor(root, "--cp-accent", "transparent"));
@@ -501,6 +545,8 @@ const scene = thumbnailSceneBySlug[slug] ?? "geometry";
         galaxyScene(ctx, w, h, t, root);
       } else if (scene === "stellar-core") {
         stellarCoreScene(ctx, w, h, t, root);
+      } else if (scene === "cluster") {
+        clusterScene(ctx, w, h, t, root);
       } else if (scene === "hr-track") {
         hrTrackScene(ctx, w, h, t, root);
       } else if (scene === "regime-map") {

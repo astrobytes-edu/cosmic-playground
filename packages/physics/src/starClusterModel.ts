@@ -42,9 +42,11 @@ export type ImfKind = "maschberger" | "kroupa";
  *
  * "outside-model-range" is not an error condition. The IMF's physical range runs from the
  * hydrogen-burning limit (0.08 Msun) to 150 Msun, while the Tout et al. (1996) ZAMS fits
- * are valid only on [0.1, 100] and explicitly forbid extrapolation. Roughly a tenth of a
- * sampled cluster falls below 0.1 Msun, and those stars are real: they have a mass and a
- * position, and they belong in a mass histogram.
+ * are published for [0.1, 100]. Above the ceiling the fits extrapolate cleanly and this
+ * model uses them (see `extrapolateAboveMassCeiling`); below 0.1 Msun it does not, because
+ * the interior physics genuinely changes as a star approaches the hydrogen-burning limit.
+ * Roughly a tenth of a sampled cluster falls below 0.1 Msun, and those stars are real:
+ * they have a mass and a position, and they belong in a mass histogram.
  *
  * What they do NOT have is a defensible point on an HR diagram. The alternative -- clamping
  * their mass to 0.1 and plotting them anyway -- is how a tenth of a population turns into a
@@ -70,6 +72,11 @@ export interface ClusterStar {
   spectralType: string;
   /** Non-null exactly when `phase` is "remnant". */
   remnant: RemnantFate | null;
+  /**
+   * True when the ZAMS values come from extrapolating the Tout fits above their 100 Msun
+   * ceiling. The star is plotted, and a consumer that says so is telling the truth.
+   */
+  zamsExtrapolated: boolean;
 }
 
 export interface StarClusterOptions {
@@ -98,6 +105,8 @@ export interface StarCluster {
   remnantCount: number;
   /** Stars outside the ZAMS model's validity domain, so absent from the HR diagram. */
   outsideModelCount: number;
+  /** Stars plotted from an extrapolation above the Tout 100 Msun ceiling. */
+  extrapolatedCount: number;
 }
 
 /** Guard so a pathological star count cannot lock the main thread. */
@@ -142,6 +151,7 @@ export function sampleStarCluster(options: StarClusterOptions): StarCluster {
   let mostMassiveMsun = 0;
   let mainSequenceCount = 0;
   let outsideModelCount = 0;
+  let extrapolatedCount = 0;
 
   for (let id = 0; id < count; id += 1) {
     const massMsun = drawMass(
@@ -172,13 +182,18 @@ export function sampleStarCluster(options: StarClusterOptions): StarCluster {
         mainSequenceLifetimeMyr: lifetimeMyr,
         phase: "remnant",
         spectralType: "",
-        remnant: remnantFateFromInitialMass(massMsun)
+        remnant: remnantFateFromInitialMass(massMsun),
+        zamsExtrapolated: false
       });
       continue;
     }
 
-    const zamsInput = { massMsun, metallicityZ };
-    if (!ZamsTout1996Model.validity(zamsInput).valid) {
+    // Extrapolate upward but never downward. The Tout polynomials stay monotone and
+    // physically sensible above 100 Msun -- at 200 Msun they give L = 3.9e6 Lsun and
+    // Teff = 48500 K, inside the observed range for the most massive stars known.
+    const zamsInput = { massMsun, metallicityZ, extrapolateAboveMassCeiling: true };
+    const zamsValidity = ZamsTout1996Model.validity(zamsInput);
+    if (!zamsValidity.valid) {
       // Real star, no ZAMS point. See the note on StarPhase.
       outsideModelCount += 1;
       stars.push({
@@ -192,12 +207,14 @@ export function sampleStarCluster(options: StarClusterOptions): StarCluster {
         mainSequenceLifetimeMyr: lifetimeMyr,
         phase: "outside-model-range",
         spectralType: "",
-        remnant: null
+        remnant: null,
+        zamsExtrapolated: false
       });
       continue;
     }
 
     mainSequenceCount += 1;
+    if (!zamsValidity.massInRange) extrapolatedCount += 1;
     const temperatureK = ZamsTout1996Model.effectiveTemperatureKFromMassMetallicity(zamsInput);
     stars.push({
       id,
@@ -210,7 +227,8 @@ export function sampleStarCluster(options: StarClusterOptions): StarCluster {
       mainSequenceLifetimeMyr: lifetimeMyr,
       phase: "main-sequence",
       spectralType: spectralTypeFromTemperature(temperatureK),
-      remnant: null
+      remnant: null,
+      zamsExtrapolated: !zamsValidity.massInRange
     });
   }
 
@@ -225,7 +243,8 @@ export function sampleStarCluster(options: StarClusterOptions): StarCluster {
     mostMassiveMsun,
     mainSequenceCount,
     remnantCount: stars.length - mainSequenceCount - outsideModelCount,
-    outsideModelCount
+    outsideModelCount,
+    extrapolatedCount
   };
 }
 

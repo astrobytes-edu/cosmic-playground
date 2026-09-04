@@ -1,0 +1,226 @@
+@import "../../shared/stub-demo.css";
+
+.control {
+  display: grid;
+  gap: 8px;
+}
+
+.control__value {
+  color: var(--cp-muted);
+  font-size: 0.95rem;
+}
+
+.reseed {
+  width: 100%;
+  margin-top: var(--cp-space-2);
+}
+
+.reseed__hint {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.presets {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.presets__label {
+  color: var(--cp-muted);
+  font-size: 0.9rem;
+}
+
+.presets__row {
+  display: grid;
+  gap: var(--cp-space-1);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.presets__row--3col {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* ── Population tally ────────────────────────────────────────────────────────
+ * Three counts that must always add up to N. The swatches match the colours the
+ * cluster panel uses for the same three categories, so the legend is the picture. */
+
+.census-tally {
+  display: grid;
+  gap: var(--cp-space-1);
+  padding: var(--cp-space-2) var(--cp-space-3);
+  border: 1px solid var(--cp-instr-panel-border);
+  border-radius: var(--cp-r-2);
+  background: var(--cp-instr-panel-bg-muted);
+}
+
+.census-tally__row {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: var(--cp-space-2);
+  font-size: 0.9rem;
+}
+
+.census-tally__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.census-tally__swatch--shining {
+  background: var(--cp-accent-ice);
+}
+
+.census-tally__swatch--remnant {
+  background: var(--cp-muted);
+}
+
+.census-tally__swatch--outside {
+  background: transparent;
+  border: 1px dashed var(--cp-muted);
+}
+
+.census-tally__swatch--extrapolated {
+  background: transparent;
+  border: 1px solid var(--cp-accent-amber);
+}
+
+.census-tally__label {
+  color: var(--cp-text2);
+}
+
+.census-tally__value {
+  font-family: var(--cp-font-mono);
+  color: var(--cp-readout-value-color);
+}
+
+/* ── Stage ───────────────────────────────────────────────────────────────────*/
+
+.stage {
+  display: grid;
+  padding: var(--cp-space-4);
+}
+
+.stage-tabs {
+  padding: var(--cp-space-2) var(--cp-space-2) 0;
+}
+
+/*
+ * The cluster and the HR diagram sit side by side because they are the comparison;
+ * the histogram spans beneath both because it describes the whole draw. Below the
+ * medium breakpoint the three stack, which keeps every panel above the minimum size
+ * at which its dots are still distinguishable.
+ */
+.census-grid {
+  width: 100%;
+  gap: var(--cp-space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    "cluster hr"
+    "imf imf";
+}
+
+@media (max-width: 900px) {
+  .census-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "cluster"
+      "hr"
+      "imf";
+  }
+}
+
+.census-panel {
+  margin: 0;
+  display: grid;
+  gap: var(--cp-space-1);
+  min-width: 0;
+}
+
+.census-panel--cluster {
+  grid-area: cluster;
+}
+
+.census-panel--hr {
+  grid-area: hr;
+}
+
+.census-panel--imf {
+  grid-area: imf;
+}
+
+.census-panel__title {
+  color: var(--cp-text2);
+  font-size: 0.9rem;
+  padding-left: 2px;
+}
+
+/*
+ * Three small plot panels sit over the starfield, so they need the instrument layer's
+ * translucent-panel treatment rather than a mostly transparent gradient: without the
+ * blur, stars read straight through the axes and the dots become hard to separate from
+ * the background.
+ */
+.census-panel canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 14px;
+  border: 1px solid var(--cp-instr-panel-border);
+  background: var(--cp-instr-panel-bg);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+#clusterCanvas,
+#hrCanvas {
+  aspect-ratio: 4 / 3;
+}
+
+#imfCanvas {
+  aspect-ratio: 21 / 6;
+}
+
+/* ── Understand tab ──────────────────────────────────────────────────────────*/
+
+.understand-panel {
+  padding: var(--cp-space-2) var(--cp-space-2) var(--cp-space-3);
+  display: grid;
+  gap: var(--cp-space-3);
+  overflow-y: auto;
+}
+
+.understand-intro h3 {
+  margin-top: 0;
+}
+
+.understand-grid {
+  display: grid;
+  gap: var(--cp-space-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+}
+
+.understand-card h3 {
+  margin-top: 0;
+  font-size: var(--cp-text-md);
+}
+
+.understand-card ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: var(--cp-space-1);
+}
+
+.understand-equation {
+  text-align: center;
+}
+
+/* Staggered entry, matching the shell convention. */
+.cp-demo__controls {
+  animation: cp-slide-up var(--cp-transition-slow) var(--cp-ease-out) both;
+}
+
+.cp-demo__stage {
+  animation: cp-fade-in var(--cp-transition-slow) var(--cp-ease-out) 80ms both;
+}

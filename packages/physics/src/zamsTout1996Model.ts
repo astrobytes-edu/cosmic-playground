@@ -3,6 +3,23 @@ type ToutPolynomialCoefficients = readonly [number, number, number, number, numb
 type ValidityInput = {
   massMsun: number;
   metallicityZ: number;
+  /**
+   * Permit masses above the Tout ceiling of 100 Msun.
+   *
+   * Off by default: Tout et al. state the fits' domain, and silently running past it is
+   * how a fit becomes a fabrication. It is offered because the polynomials are unusually
+   * well behaved above the ceiling -- L, R and Teff all stay monotone, and d log L /
+   * d log M relaxes smoothly from 1.73 at 100 Msun toward 1.5, which is the direction the
+   * physics goes as a star approaches the Eddington limit. At 200 Msun the extrapolation
+   * gives L = 3.9e6 Lsun, Teff = 48500 K and R = 28 Rsun, which sit inside the observed
+   * range for the most massive stars known.
+   *
+   * The extrapolation warning is still recorded, and `massInRange` still reports false,
+   * so a caller can label the result. Nothing here extrapolates DOWNWARD: below 0.1 Msun
+   * the star is approaching the hydrogen-burning limit, where the interior physics
+   * genuinely changes and a fit to main-sequence stars has nothing to say.
+   */
+  extrapolateAboveMassCeiling?: boolean;
 };
 
 type ZamsValidity = {
@@ -60,6 +77,9 @@ function evaluateMetallicityCoefficient(
 function validity(args: ValidityInput): ZamsValidity {
   const { massMsun, metallicityZ } = args;
 
+  const aboveCeiling = Number.isFinite(massMsun) && massMsun > CONSTANTS.massMaxMsun;
+  const extrapolatingHighMass = aboveCeiling && args.extrapolateAboveMassCeiling === true;
+
   const massInRange =
     Number.isFinite(massMsun) &&
     massMsun >= CONSTANTS.massMinMsun &&
@@ -72,7 +92,9 @@ function validity(args: ValidityInput): ZamsValidity {
   const warnings: string[] = [];
   if (!massInRange) {
     warnings.push(
-      `Mass outside Tout-1996 ZAMS validity range (${CONSTANTS.massMinMsun} to ${CONSTANTS.massMaxMsun} Msun).`
+      extrapolatingHighMass
+        ? `Mass above the Tout-1996 ZAMS ceiling of ${CONSTANTS.massMaxMsun} Msun; values are extrapolated.`
+        : `Mass outside Tout-1996 ZAMS validity range (${CONSTANTS.massMinMsun} to ${CONSTANTS.massMaxMsun} Msun).`
     );
   }
   if (!metallicityInRange) {
@@ -82,7 +104,10 @@ function validity(args: ValidityInput): ZamsValidity {
   }
 
   return {
-    valid: massInRange && metallicityInRange,
+    // `valid` gates evaluation; `massInRange` reports the fit's own domain. They differ
+    // exactly when the caller has opted into high-mass extrapolation, which is what lets
+    // a consumer both plot the star and label it as extrapolated.
+    valid: (massInRange || extrapolatingHighMass) && metallicityInRange,
     massInRange,
     metallicityInRange,
     warnings

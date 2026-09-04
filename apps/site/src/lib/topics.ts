@@ -103,9 +103,9 @@ export const TOPIC_SEQUENCE: Record<TopicKey, readonly string[]> = {
   Telescopes: ["telescope-resolution"],
   // The distance ladder's first rung, then a second observable, then an inference
   // that needs both and lands on something you cannot see.
-  DataInference: ["parallax-distance", "doppler-shift", "galaxy-rotation"],
+  DataInference: ["parallax-distance", "doppler-shift", "cluster-census", "galaxy-rotation"],
   // What holds a star up, what that looks like from outside, then the microphysics.
-  Stars: ["hydrostatic-equilibrium-explorer", "stars-zams-hr", "eos-lab"],
+  Stars: ["hydrostatic-equilibrium-explorer", "stars-zams-hr", "cluster-census", "eos-lab"],
   Galaxies: ["galaxy-rotation"],
   Cosmology: ["galaxy-rotation"]
 };

@@ -8,13 +8,17 @@ import { expect, test } from "@playwright/test";
  * months while the instrument suites stayed green.
  */
 
-/** Demos per topic, after `eos-lab` was unlisted. Update deliberately, not reflexively. */
+/**
+ * Demos per topic. Update deliberately, not reflexively: a change here should follow a
+ * demo being added, unlisted or retagged, never a red test.
+ * Currently: `eos-lab` is unlisted, and `cluster-census` is tagged Stars + DataInference.
+ */
 const TOPIC_EXHIBIT_COUNTS: Array<[string, string, number]> = [
   ["earthsky", "Earth & Sky", 6],
   ["orbits", "Orbits", 5],
   ["lightspectra", "Light & Spectra", 4],
-  ["datainference", "Data & Inference", 3],
-  ["stars", "Stars", 2],
+  ["datainference", "Data & Inference", 4],
+  ["stars", "Stars", 3],
   ["telescopes", "Telescopes", 1],
   ["galaxies", "Galaxies", 1],
   ["cosmology", "Cosmology", 1]

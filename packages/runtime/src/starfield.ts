@@ -436,6 +436,8 @@ export function initStarfield(config: StarfieldConfig): () => void {
   let sprites: Map<number, HTMLCanvasElement> = new Map();
   let animationId = 0;
   let running = false;
+  /** False until the canvas has a non-zero measured size. See `resize`. */
+  let hasSize = false;
 
   // Static offscreen layer
   const staticCanvas = document.createElement("canvas");
@@ -461,6 +463,21 @@ export function initStarfield(config: StarfieldConfig): () => void {
 
     logicalWidth = rect.width;
     logicalHeight = rect.height;
+
+    /*
+     * A canvas with no measured size is normal, not exceptional: a background browser tab,
+     * a hidden pane, a print layout, or an iframe the parent has not laid out yet all
+     * produce a 0x0 rect. Building the static layer at that size gave `staticCanvas` zero
+     * width, and the very next `drawImage(staticCanvas, ...)` threw
+     * InvalidStateError -- an uncaught error on every demo, from a condition that resolves
+     * itself a frame later. Bail out and let the resize observer run again once the
+     * element has a size.
+     */
+    if (logicalWidth <= 0 || logicalHeight <= 0) {
+      hasSize = false;
+      return;
+    }
+    hasSize = true;
 
     canvas.width = Math.round(logicalWidth * dpr);
     canvas.height = Math.round(logicalHeight * dpr);
@@ -489,6 +506,9 @@ export function initStarfield(config: StarfieldConfig): () => void {
   }
 
   function renderFrame(timeSec: number, dt: number): void {
+    // Nothing to paint into, and `drawImage` from a zero-size source throws.
+    if (!hasSize) return;
+
     ctx!.clearRect(0, 0, logicalWidth, logicalHeight);
 
     // Blit static layer (Milky Way, nebulae, static stars, spikes)

@@ -94,7 +94,8 @@ describe("sampleStarCluster", () => {
     const outside = cluster.stars.filter((s) => s.phase === "outside-model-range");
     expect(outside.length).toBe(cluster.outsideModelCount);
     for (const star of outside) {
-      expect(star.massMsun < 0.1 || star.massMsun > 100).toBe(true);
+      // Only the low end now: masses above the Tout ceiling are extrapolated, not dropped.
+      expect(star.massMsun).toBeLessThan(0.1);
       expect(star.luminosityLsun).toBe(0);
       expect(star.temperatureK).toBe(0);
     }
@@ -218,5 +219,41 @@ describe("sampleStarCluster", () => {
     const shallow = sampleStarCluster({ ...BASE, starCount: 20_000, alphaHigh: 1.8 });
     const above8 = (c: typeof steep) => c.stars.filter((s) => s.massMsun > 8).length;
     expect(above8(shallow)).toBeGreaterThan(above8(steep));
+  });
+
+  it("extrapolates above the Tout ceiling rather than dropping the heaviest stars", () => {
+    // Cutting these would remove exactly the stars the top-left of the HR diagram is for.
+    const cluster = sampleStarCluster({
+      ...BASE,
+      starCount: 60_000,
+      alphaHigh: 1.7,
+      ageMyr: 0
+    });
+    const heavy = cluster.stars.filter((s) => s.massMsun > 100);
+    expect(heavy.length).toBeGreaterThan(0);
+    for (const star of heavy) {
+      expect(star.phase).toBe("main-sequence");
+      expect(star.zamsExtrapolated).toBe(true);
+      expect(star.luminosityLsun).toBeGreaterThan(1e6);
+      expect(star.temperatureK).toBeGreaterThan(40_000);
+    }
+    expect(cluster.extrapolatedCount).toBe(heavy.length);
+  });
+
+  it("does not mark in-domain stars as extrapolated", () => {
+    const cluster = sampleStarCluster({ ...BASE, starCount: 3000, ageMyr: 0 });
+    for (const star of cluster.stars) {
+      if (star.massMsun <= 100) expect(star.zamsExtrapolated).toBe(false);
+    }
+  });
+
+  it("still refuses to extrapolate below the hydrogen-burning end", () => {
+    const cluster = sampleStarCluster({ ...BASE, starCount: 5000, ageMyr: 0 });
+    const low = cluster.stars.filter((s) => s.massMsun < 0.1);
+    expect(low.length).toBeGreaterThan(0);
+    for (const star of low) {
+      expect(star.phase).toBe("outside-model-range");
+      expect(star.zamsExtrapolated).toBe(false);
+    }
   });
 });

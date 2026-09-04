@@ -104,3 +104,76 @@ describe("ZamsTout1996Model", () => {
     ).toBeNaN();
   });
 });
+
+describe("opt-in high-mass extrapolation", () => {
+  const Z = 0.02;
+
+  it("refuses masses above the ceiling by default", () => {
+    const args = { massMsun: 150, metallicityZ: Z };
+    expect(ZamsTout1996Model.validity(args).valid).toBe(false);
+    expect(Number.isNaN(ZamsTout1996Model.luminosityLsunFromMassMetallicity(args))).toBe(true);
+  });
+
+  it("evaluates above the ceiling when explicitly asked", () => {
+    const args = { massMsun: 150, metallicityZ: Z, extrapolateAboveMassCeiling: true };
+    expect(ZamsTout1996Model.validity(args).valid).toBe(true);
+    expect(ZamsTout1996Model.luminosityLsunFromMassMetallicity(args)).toBeCloseTo(2.4803e6, -3);
+    expect(ZamsTout1996Model.radiusRsunFromMassMetallicity(args)).toBeCloseTo(22.861, 2);
+  });
+
+  it("still reports the mass as outside the fit's own domain", () => {
+    // `valid` gates evaluation; `massInRange` reports the published domain. A consumer
+    // needs both, so it can plot the star AND label it as extrapolated.
+    const v = ZamsTout1996Model.validity({
+      massMsun: 150,
+      metallicityZ: Z,
+      extrapolateAboveMassCeiling: true
+    });
+    expect(v.valid).toBe(true);
+    expect(v.massInRange).toBe(false);
+    expect(v.warnings.join(" ")).toContain("extrapolated");
+  });
+
+  it("never extrapolates downward, even with the flag set", () => {
+    // Below 0.1 Msun the interior physics changes; a main-sequence fit has nothing to say.
+    const args = { massMsun: 0.05, metallicityZ: Z, extrapolateAboveMassCeiling: true };
+    expect(ZamsTout1996Model.validity(args).valid).toBe(false);
+    expect(Number.isNaN(ZamsTout1996Model.luminosityLsunFromMassMetallicity(args))).toBe(true);
+  });
+
+  it("stays monotone and physical through the ceiling", () => {
+    let previousL = 0;
+    let previousR = 0;
+    let previousT = 0;
+    for (const massMsun of [80, 100, 120, 150, 200, 300]) {
+      const args = { massMsun, metallicityZ: Z, extrapolateAboveMassCeiling: true };
+      const L = ZamsTout1996Model.luminosityLsunFromMassMetallicity(args);
+      const R = ZamsTout1996Model.radiusRsunFromMassMetallicity(args);
+      const T = ZamsTout1996Model.effectiveTemperatureKFromMassMetallicity(args);
+      expect(L).toBeGreaterThan(previousL);
+      expect(R).toBeGreaterThan(previousR);
+      expect(T).toBeGreaterThan(previousT);
+      previousL = L;
+      previousR = R;
+      previousT = T;
+    }
+  });
+
+  it("lands in the observed range for the most massive stars known", () => {
+    // R136a1-class, around 200 Msun: L of a few times 1e6 Lsun and Teff around 46000 to
+    // 53000 K. This is the check that makes the extrapolation defensible rather than
+    // merely smooth.
+    const args = { massMsun: 200, metallicityZ: Z, extrapolateAboveMassCeiling: true };
+    const L = ZamsTout1996Model.luminosityLsunFromMassMetallicity(args);
+    const T = ZamsTout1996Model.effectiveTemperatureKFromMassMetallicity(args);
+    expect(L).toBeGreaterThan(1e6);
+    expect(L).toBeLessThan(1e7);
+    expect(T).toBeGreaterThan(40_000);
+    expect(T).toBeLessThan(60_000);
+  });
+
+  it("still respects the metallicity limits", () => {
+    const args = { massMsun: 150, metallicityZ: 0.5, extrapolateAboveMassCeiling: true };
+    expect(ZamsTout1996Model.validity(args).valid).toBe(false);
+  });
+});

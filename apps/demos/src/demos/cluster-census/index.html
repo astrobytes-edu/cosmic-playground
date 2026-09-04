@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cluster Census — Cosmic Playground</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="../../assets/katex/katex.min.css" />
+  </head>
+  <body>
+    <div
+      id="cp-demo"
+      role="main"
+      class="cp-layer-instrument cp-demo"
+      aria-label="Cluster Census instrument"
+    >
+      <h1 class="sr-only">Cluster Census: Sampling a Star Cluster from the Initial Mass Function</h1>
+      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
+        <div class="cp-panel-header">Cluster Census</div>
+        <div class="cp-panel-body">
+          <p class="cp-muted">
+            Draw a cluster of stars from a mass function, then look at the same stars three
+            ways: where they are, where they sit on an HR diagram, and how many of each mass
+            you got.
+          </p>
+
+          <div class="cp-chip-group" role="group" aria-label="Initial mass function">
+            <button id="lawMaschberger" class="cp-chip" type="button" aria-pressed="true">Maschberger</button>
+            <button id="lawKroupa" class="cp-chip" type="button" aria-pressed="false">Kroupa</button>
+          </div>
+
+          <label class="control">
+            <span>Number of stars <i>N</i></span>
+            <input
+              id="countSlider"
+              type="range"
+              min="0"
+              max="1000"
+              step="1"
+              value="500"
+              data-tooltip-source="#countValue"
+              aria-label="Number of stars (logarithmic)"
+            />
+            <span class="control__value"><span id="countValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>High-mass slope $\alpha$</span>
+            <input
+              id="slopeSlider"
+              type="range"
+              min="150"
+              max="300"
+              step="1"
+              value="230"
+              data-tooltip-source="#slopeValue"
+              aria-label="High-mass slope alpha"
+            />
+            <span class="control__value"><span id="slopeValue"></span></span>
+          </label>
+
+          <label class="control">
+            <span>Cluster age</span>
+            <input
+              id="ageSlider"
+              type="range"
+              min="0"
+              max="1000"
+              step="1"
+              value="0"
+              data-tooltip-source="#ageValue"
+              aria-label="Cluster age (logarithmic)"
+            />
+            <span class="control__value"><span id="ageValue"></span></span>
+          </label>
+
+          <div class="cp-chip-group" role="group" aria-label="Spatial profile">
+            <button id="profilePlummer" class="cp-chip" type="button" aria-pressed="true">Plummer</button>
+            <button id="profileEff" class="cp-chip" type="button" aria-pressed="false">EFF (young)</button>
+          </div>
+
+          <button id="reseed" class="cp-button cp-button--primary reseed" type="button">
+            Draw a new cluster
+          </button>
+          <p class="cp-muted reseed__hint">
+            Same law, same number of stars, different luck. Watch the heaviest star.
+          </p>
+
+          <div class="presets">
+            <div class="presets__label">Presets</div>
+            <div class="cp-chip-group--grid presets__row presets__row--3col" role="group" aria-label="Cluster presets">
+              <button class="cp-chip preset" data-preset="open" type="button" aria-pressed="false">Open cluster</button>
+              <button class="cp-chip preset" data-preset="young" type="button" aria-pressed="false">Young massive</button>
+              <button class="cp-chip preset" data-preset="globular" type="button" aria-pressed="false">Old and rich</button>
+            </div>
+          </div>
+
+          <div class="cp-readout">
+            <div class="cp-readout__label">Heaviest star</div>
+            <div class="cp-readout__value">
+              <span id="mostMassive"></span>
+              <span class="cp-readout__unit">$M_\odot$</span>
+            </div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Main-sequence turnoff</div>
+            <div class="cp-readout__value">
+              <span id="turnoff"></span>
+              <span class="cp-readout__unit">$M_\odot$</span>
+            </div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Total mass</div>
+            <div class="cp-readout__value">
+              <span id="totalMass"></span>
+              <span class="cp-readout__unit">$M_\odot$</span>
+            </div>
+          </div>
+          <div class="cp-readout">
+            <div class="cp-readout__label">Half-number radius</div>
+            <div class="cp-readout__value">
+              <span id="halfRadius"></span>
+              <span class="cp-readout__unit">pc</span>
+            </div>
+          </div>
+
+          <div class="census-tally" aria-label="Population tally">
+            <div class="census-tally__row">
+              <span class="census-tally__swatch census-tally__swatch--shining" aria-hidden="true"></span>
+              <span class="census-tally__label">Shining</span>
+              <span class="census-tally__value" id="shiningCount"></span>
+            </div>
+            <div class="census-tally__row">
+              <span class="census-tally__swatch census-tally__swatch--remnant" aria-hidden="true"></span>
+              <span class="census-tally__label">Remnants</span>
+              <span class="census-tally__value" id="remnantCount"></span>
+            </div>
+            <div class="census-tally__row">
+              <span class="census-tally__swatch census-tally__swatch--outside" aria-hidden="true"></span>
+              <span class="census-tally__label">Below model range</span>
+              <span class="census-tally__value" id="outsideCount"></span>
+            </div>
+            <div class="census-tally__row">
+              <span class="census-tally__swatch census-tally__swatch--extrapolated" aria-hidden="true"></span>
+              <span class="census-tally__label">Extrapolated above $100\,M_\odot$</span>
+              <span class="census-tally__value" id="extrapolatedCount"></span>
+            </div>
+          </div>
+
+          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+            <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"></rect>
+                <line x1="7" y1="7" x2="13" y2="7"></line>
+                <line x1="7" y1="10" x2="13" y2="10"></line>
+                <line x1="7" y1="13" x2="10" y2="13"></line>
+              </svg>
+            </button>
+            <button id="help" class="cp-utility-btn" type="button" aria-label="Help and shortcuts" title="Help / keys">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"></circle>
+                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"></path>
+                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"></circle>
+              </svg>
+            </button>
+            <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
+                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
+              </svg>
+            </button>
+            <button id="reset" class="cp-utility-btn" type="button" aria-label="Reset to defaults" title="Reset">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 10a7 7 0 1 1 2.05 4.95"></path>
+                <polyline points="3 5 3 10 8 10"></polyline>
+              </svg>
+            </button>
+            <div class="cp-popover-anchor">
+              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <circle cx="4" cy="10" r="1.5"></circle>
+                  <circle cx="10" cy="10" r="1.5"></circle>
+                  <circle cx="16" cy="10" r="1.5"></circle>
+                </svg>
+              </button>
+              <div class="cp-popover" id="navPopover" hidden>
+                <nav class="cp-popover__body">
+                  <a class="cp-popover-link" href="../../exhibits/cluster-census/">Open exhibit</a>
+                  <a class="cp-popover-link" href="../../stations/cluster-census/">Station card</a>
+                  <a class="cp-popover-link" href="../../instructor/cluster-census/">Instructor notes</a>
+                </nav>
+              </div>
+            </div>
+          </div>
+          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </aside>
+
+      <section class="cp-demo__stage cp-stage" aria-label="Cluster census stage">
+        <canvas class="cp-starfield" aria-hidden="true"></canvas>
+        <div class="cp-tabs stage-tabs" role="tablist" aria-label="View mode">
+          <button class="cp-tab" role="tab" aria-selected="true"
+                  aria-controls="panel-explore" id="tab-explore">Explore</button>
+          <button class="cp-tab" role="tab" aria-selected="false"
+                  aria-controls="panel-understand" id="tab-understand">Understand</button>
+        </div>
+        <div class="cp-tab-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
+          <div class="stage census-grid">
+            <figure class="census-panel census-panel--cluster">
+              <figcaption class="census-panel__title">The cluster in space</figcaption>
+              <canvas
+                id="clusterCanvas"
+                role="img"
+                aria-label="Projected positions of the sampled stars, with dot size scaled by mass and colour by temperature"
+              ></canvas>
+            </figure>
+            <figure class="census-panel census-panel--hr">
+              <figcaption class="census-panel__title">Where they land on the HR diagram</figcaption>
+              <canvas
+                id="hrCanvas"
+                role="img"
+                aria-label="Hertzsprung-Russell diagram of the same stars, luminosity against effective temperature"
+              ></canvas>
+            </figure>
+            <figure class="census-panel census-panel--imf">
+              <figcaption class="census-panel__title">How many of each mass you drew</figcaption>
+              <canvas
+                id="imfCanvas"
+                role="img"
+                aria-label="Histogram of sampled stellar masses with the analytic mass function overlaid"
+              ></canvas>
+            </figure>
+          </div>
+        </div>
+        <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
+          <div class="cp-notice understand-intro">
+            <h3>One draw, three views</h3>
+            <p>
+              Star formation does not make one star at a time. It makes a population, and the
+              distribution of masses in that population is remarkably similar from cluster to
+              cluster. That distribution is the <strong>initial mass function</strong>.
+            </p>
+            <p>
+              All three panels show the <em>same</em> stars. Nothing is re-sampled between them.
+            </p>
+          </div>
+
+          <div class="understand-grid">
+            <article class="cp-notice understand-card">
+              <h3>The mass function</h3>
+              <p class="understand-equation">
+                $$
+                \xi(m) \propto m^{-\alpha}
+                $$
+              </p>
+              <ul>
+                <li>For $m \gtrsim 0.5\,M_\odot$ the canonical slope is $\alpha = 2.3$.</li>
+                <li>Steeper $\alpha$ means fewer massive stars for the same total number.</li>
+                <li>
+                  Maschberger (2013) replaces the broken power law with one smooth formula that
+                  turns over at low mass. Kroupa (2001) keeps the break at $0.5\,M_\odot$.
+                </li>
+                <li>
+                  The smooth curve on the histogram is the law itself, computed analytically.
+                  The bars are what you actually drew. They are not the same computation.
+                </li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>Small numbers at the top</h3>
+              <ul>
+                <li>
+                  Most stars are small. Around 80 percent of a cluster sits below $1\,M_\odot$,
+                  which is why the histogram falls away so steeply to the right.
+                </li>
+                <li>
+                  So the massive end is only a handful of draws. Press
+                  <strong>Draw a new cluster</strong> a few times with a few hundred stars and
+                  watch the heaviest star jump around by a factor of several.
+                </li>
+                <li>
+                  Turn the number of stars up and the same readout settles down. Nothing about
+                  the law changed; there are just more draws from its tail.
+                </li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>Age carves the diagram from the top</h3>
+              <ul>
+                <li>
+                  A star's main-sequence lifetime falls steeply with mass, so the heaviest
+                  stars leave first and the HR diagram loses its top-left corner.
+                </li>
+                <li>
+                  The heaviest star still shining is the <strong>turnoff</strong>. It is how a
+                  cluster's age is read off in practice.
+                </li>
+                <li>
+                  Lifetimes here come from Hurley, Pols &amp; Tout (2000), not from the common
+                  shortcut $t_{\rm MS} \approx 10\,{\rm Gyr}\,(M/M_\odot)^{-2.5}$, which is off
+                  by more than a factor of thirty at $100\,M_\odot$.
+                </li>
+              </ul>
+            </article>
+
+            <article class="cp-notice understand-card">
+              <h3>What this model does not do</h3>
+              <ul>
+                <li>
+                  <strong>No post-main-sequence track.</strong> A star sits at its zero-age point
+                  until its lifetime runs out, then becomes a remnant. There is no giant branch,
+                  so do not read the turnoff region as a real colour-magnitude diagram.
+                </li>
+                <li>
+                  <strong>The model has a domain, and the two ends differ.</strong> The Tout et
+                  al. (1996) fits are published for $0.1$ to $100\,M_\odot$. Above the ceiling
+                  they extrapolate cleanly, so stars heavier than $100\,M_\odot$ are plotted with
+                  a ring and counted as extrapolated. Below $0.1\,M_\odot$ they are not used at
+                  all: that is where a star approaches the hydrogen-burning limit and the
+                  interior physics changes. Those stars appear in the cluster and the histogram
+                  but carry no HR point, because plotting them would mean inventing one.
+                </li>
+                <li>
+                  <strong>No dynamics.</strong> Positions are drawn from a static profile.
+                  Nothing orbits, nothing sinks, and there is no mass segregation.
+                </li>
+                <li>
+                  <strong>Dot size is legibility, not radius.</strong> It scales as the cube root
+                  of mass so one heavy star cannot swamp the frame.
+                </li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
+        <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What to notice</span>
+              <span class="cp-accordion__meta">3 bullets</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>
+                  The histogram falls steeply to the right. Most stars are small, and about
+                  80 percent of any cluster sits below $1\,M_\odot$.
+                </li>
+                <li>
+                  The last few bins hold a handful of stars, so that is where the bars and the
+                  smooth law disagree most. Redraw and watch only that end move.
+                </li>
+                <li>
+                  Raising the age eats the HR diagram from the top left, because the heaviest
+                  stars have the shortest lives.
+                </li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Model notes</span>
+              <span class="cp-accordion__meta">sources and limits</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <ul>
+                <li>
+                  Masses: Maschberger (2013) or Kroupa (2001). Positions: Plummer (1911) or a
+                  truncated EFF (1987) profile, sampled in three dimensions and projected.
+                </li>
+                <li>
+                  Zero-age luminosity, radius and temperature: Tout et al. (1996).
+                  Main-sequence lifetimes: Hurley, Pols &amp; Tout (2000). Remnant kinds:
+                  Heger et al. (2003).
+                </li>
+                <li>
+                  Above $100\,M_\odot$ the Tout fits are extrapolated. Those stars carry a ring
+                  on the HR diagram and their own line in the tally. Below $0.1\,M_\odot$ the
+                  fits are not used at all.
+                </li>
+                <li>
+                  There is no post-main-sequence track and no dynamics. Dot size scales as the
+                  cube root of mass for legibility; it is not a stellar radius.
+                </li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Reproducibility</span>
+              <span class="cp-accordion__meta">seeds</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p>
+                The same controls and the same seed always produce exactly the same cluster.
+                Masses and positions are drawn from separate streams, so changing the mass
+                function moves the masses while leaving every star where it was, and changing
+                the profile does the reverse.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
