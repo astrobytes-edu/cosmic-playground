@@ -288,6 +288,7 @@ colorProbe.style.visibility = "hidden";
 document.body.appendChild(colorProbe);
 
 let plottedPoints: CanvasPoint[] = [];
+let starsOutsideFrame = 0;
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -615,11 +616,22 @@ function drawPlot(): void {
 
   plottedPoints = [];
 
+  starsOutsideFrame = 0;
+
   for (const star of state.population) {
     const norm =
       state.plotMode === "theorist"
         ? hrCoordinates({ teffK: star.Teff, luminosityLsun: star.L })
         : cmdCoordinates({ bMinusV: star.BminusV, absoluteMv: star.Mv });
+
+    // Skip stars outside the plotted frame rather than clamping them onto its edge.
+    // Clamping stacked them on the axis borders (and on one corner pixel, where they
+    // could not be individually selected), which made the diagram look like a real
+    // feature of the population instead of the edge of the plotted range.
+    if ("inFrame" in norm && !norm.inFrame) {
+      starsOutsideFrame += 1;
+      continue;
+    }
 
     const x = xPx(norm.xNorm);
     const y = yPx(norm.yNorm);
@@ -821,10 +833,17 @@ function renderModeControls(): void {
     ? "Guide mode highlights the major regions and keeps the core inference steps in front."
     : "Guide mode is off, so the diagram is in full sandbox mode.";
 
-  plotCaption.textContent =
+  const baseCaption =
     state.plotMode === "observer"
       ? "Observer CMD mode: M_V vs (B-V), with brighter stars upward and photometric scatter tied to distance and uncertainty."
       : "Theorist HR mode: log(L/L_sun) vs log(T_eff), with hotter stars to the left and optional constant-radius guides.";
+
+  // Say how many stars fall outside the plotted axes instead of silently stacking them
+  // on the frame edge, which used to make the clamped pile look like a real feature.
+  plotCaption.textContent =
+    starsOutsideFrame > 0
+      ? `${baseCaption} ${starsOutsideFrame} of ${state.population.length} stars fall outside these axis limits and are not drawn.`
+      : baseCaption;
 
   experimentControls.classList.toggle("is-guided", state.guideMode);
 }

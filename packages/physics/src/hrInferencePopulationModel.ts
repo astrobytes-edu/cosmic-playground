@@ -105,8 +105,15 @@ function luminosityFromRadiusTeff(radiusRsun: number, teffK: number): number {
 }
 
 function bolometricCorrectionV(teffK: number): number {
-  // Torres (2010) polynomial fit based on Flower BC_V tables.
-  const logT = Math.log10(clamp(teffK, 2600, 50000));
+  // Torres (2010), correcting the Flower (1996) BC_V polynomials.
+  //
+  // The fit is only valid for log T_eff >= 3.5 (3162 K). Below that the cubic diverges
+  // fast: it gives BC_V(3000 K) = -5.01 and BC_V(2600 K) = -9.38 against real values
+  // near -2.7 and -3. Since M_V = M_bol - BC_V, that pushed the coolest dwarfs several
+  // magnitudes too faint and off the bottom of the plotted frame. Clamp the input to the
+  // validity floor rather than extrapolating past it.
+  const TORRES_MIN_VALID_K = 3162;
+  const logT = Math.log10(clamp(teffK, TORRES_MIN_VALID_K, 50000));
   if (logT < 3.7) {
     return (
       -0.190537291496456e5 +
@@ -139,10 +146,24 @@ function temperatureFromBminusVBallesteros(bMinusV: number): number {
   return 4600 * (1 / (0.92 * x + 1.7) + 1 / (0.92 * x + 0.62));
 }
 
+/**
+ * Temperature range the Ballesteros relation actually spans over BALLESTEROS_BV_RANGE.
+ * T(B-V) is monotonically decreasing, so the hot end comes from the low B-V endpoint.
+ */
+const BALLESTEROS_BV_MIN = -0.4; // ~21707 K
+const BALLESTEROS_BV_MAX = 3.0; //  ~2392 K
+
 function bminusVFromTeffK(teffK: number): number {
-  const target = clamp(teffK, 2800, 42000);
-  let low = -0.4;
-  let high = 2.2;
+  // Clamp the TARGET into the range the bracket can actually reach. Previously the
+  // target was clamped to 2800-42000 K while the bracket [-0.4, 2.2] only spans
+  // 2975-21707 K, so any star outside that window drove the bisection into a bracket
+  // endpoint and was returned as if it were a real colour. With colorMax = 2.2 on the
+  // CMD axis, that stacked ~26% of a default population on the right edge of the plot.
+  const tHot = temperatureFromBminusVBallesteros(BALLESTEROS_BV_MIN);
+  const tCool = temperatureFromBminusVBallesteros(BALLESTEROS_BV_MAX);
+  const target = clamp(teffK, tCool, tHot);
+  let low = BALLESTEROS_BV_MIN;
+  let high = BALLESTEROS_BV_MAX;
   for (let i = 0; i < 72; i += 1) {
     const mid = 0.5 * (low + high);
     const tMid = temperatureFromBminusVBallesteros(mid);

@@ -60,7 +60,27 @@ describe("HR Inference Lab logic", () => {
     expect(THEORIST_AXIS_LIMITS.teffMinK).toBe(2500);
     expect(THEORIST_AXIS_LIMITS.teffMaxK).toBe(50000);
     expect(OBSERVER_AXIS_LIMITS.mvBright).toBe(-10);
-    expect(OBSERVER_AXIS_LIMITS.mvFaint).toBe(16);
+    // Wide enough to contain a default Salpeter population (faintest M_V ~ 16.1,
+    // reddest B-V ~ 2.40) rather than clamping ~29% of it onto the frame edge.
+    expect(OBSERVER_AXIS_LIMITS.mvFaint).toBe(17);
+    expect(OBSERVER_AXIS_LIMITS.colorMax).toBe(2.5);
+  });
+
+  it("reports out-of-frame stars instead of clamping them onto the edge", () => {
+    const inside = cmdCoordinates({ bMinusV: 0.65, absoluteMv: 4.8 });
+    expect(inside.inFrame).toBe(true);
+
+    // Redder than colorMax: clamped position is still returned for compatibility, but
+    // inFrame is false so callers cull rather than stack it on the axis border.
+    const tooRed = cmdCoordinates({ bMinusV: 3.4, absoluteMv: 4.8 });
+    expect(tooRed.inFrame).toBe(false);
+    expect(tooRed.xNorm).toBe(1);
+
+    const tooFaint = cmdCoordinates({ bMinusV: 0.65, absoluteMv: 25 });
+    expect(tooFaint.inFrame).toBe(false);
+
+    const notANumber = cmdCoordinates({ bMinusV: Number.NaN, absoluteMv: 4.8 });
+    expect(notANumber.inFrame).toBe(false);
   });
 
   it("provides log and linear tick helpers", () => {

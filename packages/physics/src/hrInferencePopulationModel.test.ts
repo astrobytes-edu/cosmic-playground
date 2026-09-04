@@ -210,4 +210,83 @@ describe("HrInferencePopulationModel", () => {
       expect(remnant.Teff).toBeGreaterThan(0);
     }
   });
+
+  describe("colour calibration domain (regression)", () => {
+    /**
+     * bminusVFromTeffK bisects on a bracket whose Ballesteros temperatures span only
+     * 2975-21707 K, while the model clamps T_eff into 2800-42000 K. Targets outside that
+     * bracket cannot be reached, so the bisection silently returned a bracket endpoint.
+     * OBSERVER_AXIS_LIMITS.colorMax is 2.2 -- exactly that endpoint -- so about a quarter
+     * of a default population piled onto the right edge of the CMD, and cmdCoordinates
+     * clamped rather than culled, stacking them on a single corner pixel.
+     */
+    it("does not pin a default population onto the bracket endpoints", () => {
+      const stars = HrInferencePopulationModel.generatePopulation({ N: 400, seed: "colour-domain", metallicityZ: 0.02, distancePc: 140, photErr: 0.03 });
+      // Bracket endpoints are BALLESTEROS_BV_MIN/-MAX = -0.4 / 3.0. A value landing
+      // exactly there means the bisection ran out of domain rather than converging.
+      const pinnedLow = stars.filter((s) => Number.isFinite(s.BminusV) && s.BminusV <= -0.3999);
+      const pinnedHigh = stars.filter((s) => Number.isFinite(s.BminusV) && s.BminusV >= 2.9999);
+      // Cool pinning was the defect: 102/400 before the fix, because the bracket's cool
+      // end (2975 K) sat well inside the sampled temperature range.
+      expect(
+        pinnedHigh.length,
+        `${pinnedHigh.length}/${stars.length} stars pinned to the cool bracket endpoint`
+      ).toBe(0);
+
+      // Hot saturation is physical, not a defect: the Ballesteros relation ends at
+      // ~21707 K and real O stars plateau near B-V = -0.33 anyway. It must stay rare.
+      expect(
+        pinnedLow.length / stars.length,
+        `${pinnedLow.length}/${stars.length} stars hotter than the Ballesteros domain`
+      ).toBeLessThan(0.02);
+    });
+
+    it("keeps a default population inside the plotted magnitude range", () => {
+      // Torres BC_V extrapolated below its 3162 K validity floor gave BC_V(2600 K) =
+      // -9.38 against a real value near -3, and since M_V = M_bol - BC_V that pushed the
+      // coolest dwarfs several magnitudes too faint. With the clamp in place the faintest
+      // land near M_V = 16.1, which is correct for 0.1 Msun M dwarfs (Proxima is 15.6),
+      // and the CMD axis now extends to 17 to contain them.
+      const stars = HrInferencePopulationModel.generatePopulation({
+        N: 400,
+        seed: "mv-domain",
+        metallicityZ: 0.02,
+        distancePc: 140,
+        photErr: 0.03
+      });
+      const offBottom = stars.filter((s) => Number.isFinite(s.Mv) && s.Mv > 17);
+      expect(
+        offBottom.length,
+        `${offBottom.length}/${stars.length} stars fainter than the M_V=17 axis limit`
+      ).toBe(0);
+
+      // And the divergent extrapolation is genuinely gone.
+      const absurdlyFaint = stars.filter((s) => Number.isFinite(s.Mv) && s.Mv > 18.5);
+      expect(absurdlyFaint.length).toBe(0);
+    });
+
+    it("reproduces solar colour for a solar-mass ZAMS star", () => {
+      // Ballesteros: B-V = 0.65 <-> 5778 K. ZAMS solar values are L=0.698, T=5597 K,
+      // which maps to B-V ~ 0.70. Use cluster mode at age 0 so the star really is on
+      // the ZAMS -- in field mode a 1 Msun star gets a random age up to 12.5 Gyr and
+      // may legitimately have evolved off it.
+      const stars = HrInferencePopulationModel.generatePopulation({
+        N: 800,
+        seed: "solar-check",
+        metallicityZ: 0.02,
+        distancePc: 140,
+        photErr: 0.03,
+        modeCluster: true,
+        clusterAge: 0
+      });
+      const solarLike = stars.filter((s) => Math.abs(s.mass - 1) < 0.05);
+      expect(solarLike.length).toBeGreaterThan(0);
+      for (const s of solarLike) {
+        expect(s.Teff).toBeGreaterThan(5300);
+        expect(s.Teff).toBeLessThan(5900);
+        expect(s.BminusV).toBeGreaterThan(0.55);
+        expect(s.BminusV).toBeLessThan(0.85);
+      }
+    });
+  });
 });

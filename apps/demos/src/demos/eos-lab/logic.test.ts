@@ -33,6 +33,8 @@ import {
   solarProfileData,
   getContextualSuggestion,
   type ContextualSuggestionInput,
+  LOG_AXIS_FLOOR,
+  logSafe
 } from "./logic";
 
 const SOLAR_COMPOSITION = {
@@ -431,8 +433,10 @@ describe("EOS Lab -- LaTeX formatters", () => {
     expect(latexScientific(0)).toBe("0");
   });
 
-  it("latexScientific returns '0' for NaN", () => {
-    expect(latexScientific(Number.NaN)).toBe("0");
+  it("latexScientific marks NaN as unavailable rather than reporting it as zero", () => {
+    // This previously asserted "0", locking in a defect: a failed EOS solve rendered as
+    // a confident P = 0 in the deep-dive equations.
+    expect(latexScientific(Number.NaN)).toBe("\\text{--}");
   });
 
   it("gasEquationLatex produces valid LaTeX with P_{\\rm gas}", () => {
@@ -675,5 +679,28 @@ describe("getContextualSuggestion", () => {
   it("returns a non-empty string for any valid input", () => {
     const s = getContextualSuggestion({ ...base, dominantChannel: "extension" });
     expect(s.length).toBeGreaterThan(10);
+  });
+
+  describe("log-axis safety (regression)", () => {
+    it("logSafe floors non-finite values instead of propagating them", () => {
+      // Math.max(1e-30, NaN) === NaN. That is how a failed EOS solve reached a uPlot
+      // log axis, where the split lookup throws RangeError.
+      expect(Math.max(LOG_AXIS_FLOOR, Number.NaN)).toBeNaN();
+      expect(logSafe(Number.NaN)).toBe(LOG_AXIS_FLOOR);
+      expect(logSafe(Number.POSITIVE_INFINITY)).toBe(LOG_AXIS_FLOOR);
+      expect(logSafe(Number.NEGATIVE_INFINITY)).toBe(LOG_AXIS_FLOOR);
+    });
+
+    it("logSafe floors values below the uPlot lookup range but preserves real ones", () => {
+      expect(logSafe(0)).toBe(LOG_AXIS_FLOOR);
+      expect(logSafe(-5)).toBe(LOG_AXIS_FLOOR);
+      expect(logSafe(1e20)).toBe(1e20);
+    });
+
+    it("latexScientific does not report a failed solve as zero", () => {
+      expect(latexScientific(Number.NaN)).not.toBe("0");
+      expect(latexScientific(0)).toBe("0");
+      expect(latexScientific(1.5e16)).toContain("10^{16}");
+    });
   });
 });

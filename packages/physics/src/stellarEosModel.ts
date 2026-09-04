@@ -425,12 +425,28 @@ function electronPressureFiniteTNonRelDynePerCm2(args: {
     return prefactorN * integrals.numberIntegral - nElectron;
   };
 
-  let lower = -40;
-  let upper = 8;
+  // Bracket the degeneracy parameter eta = mu/(k_B T).
+  //
+  // A fixed start of 8 walked upward in steps of 4 with a hard stop at 240. For a
+  // degenerate electron gas eta ~ E_F/(k_B T), which exceeds that cap well inside the
+  // demo's slider domain: the bracket never reached the root, bisection returned NaN,
+  // and the NaN propagated into totalPressure and the regime map. Seed the bracket from
+  // the physics instead, then expand geometrically so the search cannot be outrun.
+  const fermiEnergyEstimateErg =
+    (Math.pow(CGS_CONSTANTS.hbarErgS, 2) / (2 * CGS_CONSTANTS.electronMassG)) *
+    Math.pow(3 * Math.PI * Math.PI * nElectron, 2 / 3);
+  const etaDegenerateEstimate =
+    fermiEnergyEstimateErg / (CGS_CONSTANTS.kBoltzmannErgPerK * temperatureK);
+
+  const lower = -40;
+  let upper = Number.isFinite(etaDegenerateEstimate)
+    ? Math.max(8, 1.5 * etaDegenerateEstimate + 20)
+    : 8;
   let fUpper = evaluateDensityResidual(upper);
   let guard = 0;
-  while (fUpper < 0 && upper < 240 && guard < 80) {
-    upper += 4;
+  // Doubling (rather than a fixed +4) keeps this O(log) in the distance to the root.
+  while (fUpper < 0 && guard < 60) {
+    upper *= 2;
     fUpper = evaluateDensityResidual(upper);
     guard += 1;
   }

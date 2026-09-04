@@ -21,11 +21,21 @@ export const THEORIST_AXIS_LIMITS = {
   logLumMax: 6
 } as const;
 
+/**
+ * CMD axis limits.
+ *
+ * A Salpeter population over 0.1-50 Msun is dominated by M dwarfs: the median B-V of a
+ * default population is ~2.0 and the faintest reach M_V ~ 16.1. The previous limits
+ * (colorMax 2.2, mvFaint 16) cut off ~29% of the stars, and cmdCoordinates clamped them
+ * onto the frame edge instead of dropping them -- so the pile-up looked like a feature
+ * of the population rather than the edge of the plot. Widened to contain a default
+ * population, with genuine outliers now culled and counted in the plot caption.
+ */
 export const OBSERVER_AXIS_LIMITS = {
   colorMin: -0.4,
-  colorMax: 2.2,
+  colorMax: 2.5,
   mvBright: -10,
-  mvFaint: 16
+  mvFaint: 17
 } as const;
 
 export const RADIUS_GUIDE_VALUES_RSUN = [0.01, 0.1, 1, 10, 100, 1000] as const;
@@ -109,7 +119,7 @@ export function cmdCoordinates(args: {
   colorMax?: number;
   mvBright?: number;
   mvFaint?: number;
-}): { xNorm: number; yNorm: number } {
+}): { xNorm: number; yNorm: number; inFrame: boolean } {
   const {
     bMinusV,
     absoluteMv,
@@ -119,11 +129,23 @@ export function cmdCoordinates(args: {
     mvFaint = OBSERVER_AXIS_LIMITS.mvFaint
   } = args;
 
-  if (!Number.isFinite(bMinusV) || !Number.isFinite(absoluteMv)) return { xNorm: 0, yNorm: 0 };
+  if (!Number.isFinite(bMinusV) || !Number.isFinite(absoluteMv)) {
+    return { xNorm: 0, yNorm: 0, inFrame: false };
+  }
+
+  const xRaw = (bMinusV - colorMin) / (colorMax - colorMin);
+  const yRaw = (mvFaint - absoluteMv) / (mvFaint - mvBright);
+
+  // Report whether the star actually lies inside the plotted frame. Clamping alone made
+  // out-of-range stars pile onto the axis edges -- and onto a single corner pixel, where
+  // they were individually unselectable -- so the diagram showed the edge of its own
+  // calibration rather than the population. Callers should cull, not draw, when false.
+  const inFrame = xRaw >= 0 && xRaw <= 1 && yRaw >= 0 && yRaw <= 1;
 
   return {
-    xNorm: clamp((bMinusV - colorMin) / (colorMax - colorMin), 0, 1),
-    yNorm: clamp((mvFaint - absoluteMv) / (mvFaint - mvBright), 0, 1)
+    xNorm: clamp(xRaw, 0, 1),
+    yNorm: clamp(yRaw, 0, 1),
+    inFrame
   };
 }
 

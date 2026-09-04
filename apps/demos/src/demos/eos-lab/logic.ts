@@ -2,6 +2,22 @@ import { AstroConstants, StellarEosModel } from "@cosmic/physics";
 import type { StellarCompositionFractions } from "@cosmic/physics";
 import { logspace } from "@cosmic/math";
 
+
+/** Lower bound for values handed to a uPlot log axis. */
+export const LOG_AXIS_FLOOR = 1e-30;
+
+/**
+ * Clamp a value into the range a uPlot log axis can render.
+ *
+ * `Math.max(LOG_AXIS_FLOOR, value)` looks like it does this but returns NaN for a NaN
+ * input, because Math.max propagates NaN. A non-finite value reaching uPlot's log-split
+ * lookup throws RangeError and takes the whole chart down, so handle it explicitly.
+ */
+export function logSafe(value: number): number {
+  if (!Number.isFinite(value)) return LOG_AXIS_FLOOR;
+  return Math.max(LOG_AXIS_FLOOR, value);
+}
+
 export type { StellarCompositionFractions };
 
 const C = AstroConstants.EOS;
@@ -263,13 +279,16 @@ export function pressureCurveData(args: {
       },
     });
 
-    // Floor at 1e-30 to stay log-safe (uPlot log scale internal lookup
-    // table covers 1e-32..1e+32; values outside this range trigger
-    // RangeError in the axis-splits algorithm).
-    pGas[i] = Math.max(1e-30, state.gasPressureDynePerCm2);
-    pRad[i] = Math.max(1e-30, state.radiationPressureDynePerCm2);
-    pDeg[i] = Math.max(1e-30, state.electronDegeneracyPressureDynePerCm2);
-    pTotal[i] = Math.max(1e-30, state.totalPressureDynePerCm2);
+    // Floor at 1e-30 to stay log-safe (uPlot's log-scale split algorithm has a lookup
+    // table covering 1e-32..1e+32 and throws RangeError outside it).
+    //
+    // NOTE: Math.max(1e-30, NaN) is NaN, so Math.max alone does NOT floor a failed
+    // solve -- that is how NaN from the EOS solver reached a uPlot log axis. logSafe
+    // handles the non-finite case explicitly.
+    pGas[i] = logSafe(state.gasPressureDynePerCm2);
+    pRad[i] = logSafe(state.radiationPressureDynePerCm2);
+    pDeg[i] = logSafe(state.electronDegeneracyPressureDynePerCm2);
+    pTotal[i] = logSafe(state.totalPressureDynePerCm2);
   }
 
   return { densities, pGas, pRad, pDeg, pTotal };
@@ -687,7 +706,10 @@ export function adiabaticIndex(args: {
  * Format a number in LaTeX scientific notation: 1.38 \times 10^{-16}
  */
 export function latexScientific(value: number, sigFigs = 3): string {
-  if (!Number.isFinite(value) || value === 0) return "0";
+  // A non-finite value means the solve failed. Returning "0" made the deep-dive
+  // equations positively assert P = 0 where there was no answer at all; say so instead.
+  if (!Number.isFinite(value)) return "\\text{--}";
+  if (value === 0) return "0";
   const exp = Math.floor(Math.log10(Math.abs(value)));
   const mantissa = value / Math.pow(10, exp);
   return `${mantissa.toFixed(sigFigs - 1)} \\times 10^{${exp}}`;

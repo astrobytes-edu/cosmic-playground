@@ -536,4 +536,59 @@ describe("StellarEosModel", () => {
     expectRelativeClose(state.fermiRelativityX, 0.8007195483017491, 1e-6);
     expectRelativeClose(state.chiDegeneracy, 0.005999726901107544, 1e-6);
   });
+
+  describe("finite-temperature solver stability (regression)", () => {
+    const SOLAR_ENVELOPE_COMPOSITION = {
+      hydrogenMassFractionX: 0.74,
+      heliumMassFractionY: 0.24,
+      metalMassFractionZ: 0.02
+    };
+
+    /**
+     * The finite-T Fermi-Dirac chemical-potential solve brackets eta in [-40, 240].
+     * The zero-T shortcut only fired at chi = T/T_F <= 1e-3, but the non-relativistic
+     * branch needs eta ~ 1/chi, so for 1e-3 < chi <~ 4.2e-3 the bracket could not reach
+     * the root, solveBisection returned NaN, and NaN propagated all the way to
+     * totalPressureDynePerCm2 -> classifyDominantPressure -> the regime map.
+     *
+     * The demo's log-safety floor is `Math.max(1e-30, value)`, and Math.max(1e-30, NaN)
+     * is NaN, so nothing downstream caught it either: NaN reached a uPlot log axis.
+     */
+    it("returns a finite total pressure across the whole slider domain", () => {
+      const offenders: string[] = [];
+      for (let logRho = -10; logRho <= 10; logRho += 0.25) {
+        for (let logT = 3; logT <= 9; logT += 0.25) {
+          const state = StellarEosModel.evaluateStateCgs({
+            input: {
+              densityGPerCm3: 10 ** logRho,
+              temperatureK: 10 ** logT,
+              composition: SOLAR_ENVELOPE_COMPOSITION,
+              radiationDepartureEta: 1
+            }
+          });
+          if (!Number.isFinite(state.totalPressureDynePerCm2)) {
+            offenders.push(`log rho=${logRho.toFixed(2)} log T=${logT.toFixed(2)}`);
+          }
+        }
+      }
+      expect(offenders.slice(0, 10), `${offenders.length} non-finite grid points`).toEqual([]);
+    });
+
+    it.each([
+      ["Solar envelope", 5800, 1e-7],
+      ["Red giant envelope", 4000, 1e-8]
+    ])("%s preset evaluates to a finite pressure", (_label, temperatureK, densityGPerCm3) => {
+      const state = StellarEosModel.evaluateStateCgs({
+        input: {
+          densityGPerCm3,
+          temperatureK,
+          composition: SOLAR_ENVELOPE_COMPOSITION,
+          radiationDepartureEta: 1
+        }
+      });
+      expect(Number.isFinite(state.totalPressureDynePerCm2)).toBe(true);
+      expect(state.totalPressureDynePerCm2).toBeGreaterThan(0);
+      expect(state.dominantPressureChannel).not.toBe("invalid");
+    });
+  });
 });

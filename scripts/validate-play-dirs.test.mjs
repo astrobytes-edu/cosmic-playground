@@ -40,7 +40,7 @@ function demoHtml({ withAtomic }) {
   return `<!doctype html>
 <html lang="en">
   <body>
-    <div id="cp-demo" aria-label="Demo instrument">
+    <div id="cp-demo" role="main" aria-label="Demo instrument">
       <button id="copyResults" type="button">Copy results</button>
       <p id="status" role="status" aria-live="polite"${atomic}></p>
       <div class="cp-demo__drawer"></div>
