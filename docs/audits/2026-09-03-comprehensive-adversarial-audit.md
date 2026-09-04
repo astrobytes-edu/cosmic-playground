@@ -593,6 +593,21 @@ Two further items from the P2 backlog are now closed:
   were shown "P propto a^{3/2}". `.astro` is excluded — Biome cannot see component usage in
   Astro templates and stripped 111 import lines across 25 files.
 
+Two more, on 2026-09-04:
+
+- **Instructor bundles** — `retrograde-motion` (previously `backlog.md` only, while being
+  `featured: true` on the homepage) and `planetary-conjunctions` (a 55-word index) now have
+  all five sections, ~5,300 and ~5,500 words, written to the `moon-phases` pattern. Every
+  bundle in the collection is now complete; the only remaining gaps are `eos-lab` and
+  `stars-zams-hr`, which have no bundle at all and render the scaffold fallback.
+- **New defect found while writing them** — the planetary-conjunctions demo fires on
+  heliocentric longitude agreement within 5 degrees and labels every such event a
+  "conjunction". That is right for Venus, but for Mars, Jupiter and Saturn the same
+  geometry is an **opposition** as seen from Earth, contradicting the demo's own learning
+  goal ("conjunction and opposition as seen from Earth"). Recorded as backlog item A1 with
+  a proposed fix; the instructor notes handle it explicitly in the meantime. A second
+  consequence: Venus's superior conjunctions are never flagged.
+
 ### Still open
 
 Everything in §3 not listed above, notably: the `doppler-shift`
