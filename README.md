@@ -33,3 +33,13 @@ Workflow: `.github/workflows/deploy.yml`
 Astro GitHub Pages settings:
 - The museum site is configured as a **project site** with `base: "/cosmic-playground/"` in `apps/site/astro.config.mjs`.
 - Local dev will serve the site under the same base path: open `http://localhost:4321/cosmic-playground/`.
+
+## Licensing
+
+Cosmic Playground uses a dual-license model:
+
+- Source code is licensed under the [Apache License 2.0](LICENSE).
+- Original written content, instructional materials, and visual assets are licensed under
+  [CC BY-NC-SA 4.0](LICENSE-CONTENT.md).
+
+Third-party dependencies and assets retain their original licenses.

@@ -151,3 +151,7 @@ If the user asks “what should I do?” / “is this normal?” / “what branc
   - `$L/L_{\odot}$`, `$R/R_{\odot}$`, `$T_{\rm eff}$`.
 - For powers-of-ten axes/readouts, use exponent notation (`$10^n$`) and avoid `e` notation in teaching-facing copy.
 </INSTRUCTIONS>
+
+<!-- brain-status-convention -->
+## Brain status updates
+When you make notable progress, hit a blocker, or set the next action, update this repo's `STATUS.md` (`next:` / `blocker:` / `due:` lines) — the brain pulls it into the portfolio dashboard + standup via `federate.py` (see `~/brain/work/meta/status-convention.md`). Brain stays pull-only: never hand-edit `~/brain`; capture events with `brain "…"`.

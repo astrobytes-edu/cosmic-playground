@@ -235,3 +235,7 @@ The moon-phases demo is the fully migrated reference. Every pattern established 
 ### Physics imports
 
 All physics models MUST come from `@cosmic/physics` — no inline equations in demo code.
+
+<!-- brain-status-convention -->
+## Brain status updates
+When you make notable progress, hit a blocker, or set the next action, update this repo's `STATUS.md` (`next:` / `blocker:` / `due:` lines) — the brain pulls it into the portfolio dashboard + standup via `federate.py` (see `~/brain/work/meta/status-convention.md`). Brain stays pull-only: never hand-edit `~/brain`; capture events with `brain "…"`.
