@@ -1,5 +1,10 @@
 # Cosmic Playground — Comprehensive Adversarial Audit
 
+> **Status (2026-09-04): all ten P1 blockers are fixed and landed.** See the
+> [Remediation](#9-remediation-2026-09-04) section at the end for what changed, what the
+> gates read now, and which P2 items remain open. The body of this report is preserved
+> as written so the before/after is auditable.
+
 **Date:** 2026-09-03
 **Branch:** `codex/p0-ui-ux-test-hardening` (identical commit to `main`; 62 uncommitted files on top)
 **Mode:** AUDIT — read-only. No repository file was modified by this audit.
@@ -535,3 +540,47 @@ The single highest-leverage non-technical item: **QTI or Canvas-CSV export for t
 First: **the metadata is already telling the truth.** Zero demos are marked `stable`, zero are `launch-ready`, and the 2026-04-25 audit's P0 list has been fully implemented in the working tree. Nothing in this report contradicts the project's own self-assessment — it sharpens it. The stale internal note claiming "A+ (100/100)" should be deleted so it stops misleading future sessions.
 
 Second: **almost every P1 here is a gate that was designed but not closed**, not work that was done badly. The physics review exists and is excellent where it ran; it just never ran on five demos. The E2E suite is large and well-structured; it just never tests navigation. The token system is coherent; one token just holds two types. The CI workflow has the right jobs; they are attached to an event that never fires. That is a much better position to be in than the grade suggests, and it is why the P1 list is roughly a week rather than a quarter.
+
+
+---
+
+## 9. Remediation (2026-09-04)
+
+All ten P1 blockers fixed across seven commits. Gates now read:
+
+| Gate | Before | After |
+|---|---|---|
+| `pnpm lint` | pass | **pass** |
+| `pnpm -r typecheck` | **FAIL** (100 errors in 4 files, only 1 visible) | **pass** |
+| `pnpm test` | 2,138 | **2,168 passed** |
+| `pnpm build` | pass | **pass** |
+| `test:e2e` | 768 passed / 34 skipped | **897 passed / 34 skipped** |
+| CI `verify` job | never ran | **runs on every event; deploy depends on it** |
+
+### P1 outcomes
+
+| ID | Outcome |
+|---|---|
+| P1-1 CI gating | `verify` no longer gated on `pull_request`; `deploy` needs it. Nightly root cause identified (darwin-only snapshots on a Linux runner, from commit `00613fb`, 2026-03-11 13:01 — the last green nightly was 09:21 the same morning); visual tests tagged `@visual` and split into their own project. |
+| P1-2 typecheck | 100 errors → 0. Root causes: an ambient `katex` shim shadowing the package's real types; a `getContext("2d")` whose null check cannot narrow inside hoisted functions (94 of the errors); `ShiftLineInput.label` required where the sibling type makes it optional; an `as const` accumulator inferring one element's literal type. |
+| P1-3 404s | `/stations/` index created; "Surprise me" derives its URL from the server-rendered href. New `site-links.spec.ts` crawls every internal link. |
+| P1-4 metadata | Five missing physics reviews written; the `content_verified` inversion corrected; a `validate-play-dirs` gate now refuses `content_verified: true` without `docs/reviews/<slug>.md`. |
+| P1-5 Rydberg | `R∞` → `R_H`; Hα 656.112 → 656.462 nm (reference vacuum 656.461). Tolerances tightened from ±0.5 nm to ±0.02 nm. |
+| P1-6 focus ring | Colours split into `--cp-tint-*`, shadow lists kept as `--cp-glow-*`; two new build invariants (`theme:token-kind-*`, `apps:glow-token-in-color-context`). The second caught three JS consumers that were throwing `addColorStop` SyntaxErrors at runtime. |
+| P1-7 landmarks | `role="main"` on all 19 instrument roots; `validate-play-dirs` now requires a landmark role so the `aria-label` is not discarded. |
+| P1-8 contrast + reflow | `--cp-focus` opaque in both layers; paper accents darkened to 6.8:1 / 6.4:1; **reflow at 320px went from 51 failing routes to 0**. New `tokenContrast.test.ts` parses the real CSS and found a third failure the audit missed. |
+| P1-9 eos-lab NaN | Bracket seeded from `E_F/(k_B T)` and expanded geometrically; `logSafe()` replaces `Math.max(1e-30, …)`; `latexScientific` no longer renders a failed solve as `0`. 39 NaN grid points → 0. |
+| P1-10 HR clamping | Colour bracket clamped to its reachable range (102/400 pinned stars → 0); Torres BC_V clamped to its 3162 K validity floor; CMD axes widened; out-of-frame stars culled and counted in the caption. |
+
+### Still open
+
+Everything in §3 not listed above, notably: **GR-1** (galaxy-rotation's dark-matter band is
+partly a formula artifact — the highest-value remaining physics fix), the `doppler-shift`
+arrow direction and cosmological-`z` labelling, `spectral-lines`' ad hoc line strengths,
+`stars-zams-hr`'s divergent evolution track, the orphaned `/topics/*` tree and `hubs`
+collection, `hasStationPath()`'s dead filter, the four missing/partial instructor bundles,
+`short_key_idea` (0/19), the absent linter, and the LaTeX-in-markdown rendering bug that
+mangles underscores into `<em>` in 18 content files.
+
+Visual regression remains off pending Linux baselines; the tests are tagged and runnable
+via `pnpm -C apps/site test:e2e:visual`.
