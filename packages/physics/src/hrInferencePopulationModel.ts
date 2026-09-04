@@ -1,5 +1,6 @@
 import { ZamsTout1996Model } from "./zamsTout1996Model";
 import { hashSeed, mulberry32 } from "./seededRandom";
+import { mainSequenceLifetimeMyr } from "./stellarLifetimeModel";
 
 export type HrStarStage =
   | "ms"
@@ -73,9 +74,21 @@ function sampleMassMsun(random: () => number, minMsun: number, maxMsun: number):
   return (a + (b - a) * u) ** (1 / p);
 }
 
+/**
+ * Main-sequence lifetime [Gyr].
+ *
+ * Delegates to the Hurley et al. (2000) relation in `stellarLifetimeModel`, which is the
+ * one source of truth for this quantity across the package.
+ *
+ * Until 2026-09-04 this was a private `10 * M^-2.5`, the classroom shortcut. It is a fit
+ * to the middle of the mass range and wrong at both ends, and the disagreement is not
+ * small: at 100 Msun it gives 0.1 Myr against Hurley's 3.35 Myr, a factor of 33. Two
+ * demos in the same course were disagreeing about when a star dies -- cluster-census on
+ * Hurley, this population on the shortcut.
+ */
 function mainSequenceLifetimeGyr(massMsun: number): number {
   if (!(massMsun > 0)) return Number.NaN;
-  return 10 * massMsun ** -2.5;
+  return mainSequenceLifetimeMyr(massMsun) / 1000;
 }
 
 function luminosityFromRadiusTeff(radiusRsun: number, teffK: number): number {

@@ -201,6 +201,12 @@ at 0.1 rather than 0.08, and the total cluster mass is marginally lower than a t
 - **Star colours are a display fit,** not integrated photometry. Hot looks blue, cool looks
   red, and that is all the colour is claiming.
 - **Dot size is a legibility scale** (cube root of mass), not a stellar radius.
+- ~~**Not validated against an external fixture.**~~ **Closed 2026-09-04.** The startrax
+  ZAMS fixture is ported to `packages/physics/src/__fixtures__/stellar-startrax.json` and
+  gated by `stellarStartraxParity.test.ts`: 10 masses from 0.1 to 100 Msun, agreeing on L,
+  R, T_eff and t_MS to a part in a thousand against an independent implementation in
+  another language. Original text follows.
+
 - **Not validated against an external fixture.** The upstream package pins these laws
   against progenax and startrax reference fixtures. Those fixtures were not ported. The
   checks above are internal consistency plus published values, which is weaker. Bringing
