@@ -243,3 +243,50 @@ body {
 .cp-table-scroll > table {
   min-width: max-content;
 }
+
+/* ---------- Long unbreakable content ---------- */
+/* Instructor and station prose cites file paths and identifiers in inline <code>.
+   These are single unbreakable tokens (no spaces, and browsers do not break at "/"),
+   so a 447px path forced a 320px viewport to scroll horizontally (WCAG 1.4.10).
+   `anywhere` rather than `break-word` so the break is allowed mid-token when nothing
+   better exists, while still preferring normal break opportunities. */
+:where(.cp-prose, .block, article) code {
+  overflow-wrap: anywhere;
+}
+
+/* Prose can also contain long unbreakable runs outside <code> -- notably LaTeX that
+   markdown mangled into <em>/<strong> because it ate the underscores before KaTeX ran
+   (see the content backlog). break-word keeps normal wrapping and only breaks a token
+   that cannot fit on its own line. */
+:where(.cp-prose, .block, article) :where(p, li, td, th, em, strong, dd, dt) {
+  overflow-wrap: break-word;
+}
+
+/* Fenced code blocks scroll inside themselves rather than widening the page. */
+:where(.cp-prose, .block, article) pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+:where(.cp-prose, .block, article) pre code {
+  overflow-wrap: normal;
+  white-space: pre;
+}
+
+/* ---------- Display math ---------- */
+/* KaTeX display equations are a single unbreakable box: a multi-part relation like the
+   three pressure laws renders 575px wide and forced a 320px viewport to scroll
+   (WCAG 1.4.10). Scroll the equation inside its own region instead, and make that
+   region keyboard-reachable since it is scrollable (WCAG 2.1.1). */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  /* Room for the scrollbar so it does not clip descenders. */
+  padding-block: 2px;
+}
+
+.katex-display:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 2px;
+}

@@ -68,7 +68,18 @@ const links = [
   @media (max-width: 767px) {
     .mobile-nav {
       display: block;
+      /* The panel is position: absolute; without this it resolved against some other
+         positioned ancestor and came out 40px wide, so its links spilled past the
+         viewport and forced the page to scroll horizontally at 320px. */
+      position: relative;
     }
+  }
+
+  /* A closed <details> should contribute no layout at all. Belt and braces: the panel
+     is absolutely positioned, so anything that lets it escape the closed state also
+     lets it widen the page. */
+  .mobile-nav:not([open]) .mobile-nav__panel {
+    display: none;
   }
 
   .mobile-nav__toggle {
@@ -110,8 +121,12 @@ const links = [
   .mobile-nav__panel {
     position: absolute;
     top: 100%;
+    /* Anchor to the button's right edge and size to content, capped at the viewport,
+       rather than stretching across a container that is only as wide as the toggle. */
     right: 0;
-    left: 0;
+    left: auto;
+    min-width: max-content;
+    max-width: calc(100vw - 2 * var(--cp-space-3));
     z-index: var(--cp-z-dropdown);
     display: flex;
     flex-direction: column;

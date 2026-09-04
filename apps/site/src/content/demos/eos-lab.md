@@ -10,7 +10,7 @@ tags: ["stellar-structure", "equation-of-state", "pressure"]
 readiness: experimental
 readinessReason: "EOS core channels + diagnostics + regime map are implemented with finite-T Fermi branches; neutron/pair-rich extensions remain planned."
 parityAuditPath: "docs/audits/migrations/eos-lab-parity.md"
-lastVerifiedAt: "2026-02-06"
+lastVerifiedAt: "2026-09-03"
 plotContractVersion: 1
 plotParityAudit: "pass"
 learning_goals:

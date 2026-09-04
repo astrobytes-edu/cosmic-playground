@@ -10,7 +10,7 @@ tags: ["stars", "zams", "hr-diagram", "metallicity"]
 readiness: experimental
 readinessReason: "Tout-1996 ZAMS model and instrument workflow are implemented; classroom parity and launch-gate QA remain in progress."
 parityAuditPath: "docs/audits/migrations/stars-zams-hr-parity.md"
-lastVerifiedAt: "2026-02-24"
+lastVerifiedAt: "2026-09-03"
 learning_goals:
   - "Use observer-space and theorist-space views to interpret stellar populations as measurement-built maps."
   - "Infer stellar radius from luminosity and effective temperature with explicit Stefan-Boltzmann reasoning."

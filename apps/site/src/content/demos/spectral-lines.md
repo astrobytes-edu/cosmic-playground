@@ -10,7 +10,7 @@ tags: ["spectral lines", "Bohr atom", "emission", "absorption", "hydrogen", "ene
 readiness: candidate
 readinessReason: "SoTA UX/pedagogy uplift is complete (playbar transport, deeper challenge deck, tooltip affordances, misconception framing, expanded station snapshots) and regression gates are passing; launch-ready promotion now depends on classroom + screen-reader validation logs."
 parityAuditPath: "docs/audits/migrations/spectral-lines-parity.md"
-lastVerifiedAt: "2026-02-24"
+lastVerifiedAt: "2026-09-03"
 learning_goals:
   - "Explain why atoms emit and absorb light only at specific wavelengths using the Bohr model."
   - "Connect energy-level transitions to the Rydberg formula and predict transition wavelengths."

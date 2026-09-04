@@ -15,5 +15,16 @@
       throwOnError: false,
       katex
     });
+
+    // Display equations scroll horizontally on narrow viewports (see global.css).
+    // A scrollable region must be reachable by keyboard: browsers do not make an
+    // overflow container focusable on their own (WCAG 2.1.1).
+    for (const node of root.querySelectorAll<HTMLElement>(".katex-display")) {
+      if (node.scrollWidth > node.clientWidth) {
+        node.tabIndex = 0;
+        node.setAttribute("role", "region");
+        node.setAttribute("aria-label", "Scrollable equation");
+      }
+    }
   }
 </script>

@@ -10,7 +10,7 @@ tags: ["stellar-structure", "hydrostatic-equilibrium", "pressure-scale-height", 
 readiness: experimental
 readinessReason: "The demo is designed as a guided ASTR 201 structure explorer, but launch-gate classroom validation and accessibility evidence are still pending."
 parityAuditPath: "docs/audits/migrations/hydrostatic-equilibrium-explorer-parity.md"
-lastVerifiedAt: "2026-03-18"
+lastVerifiedAt: "2026-09-03"
 learning_goals:
   - "Explain hydrostatic equilibrium as a balance between inward gravity and outward pressure support."
   - "Use the pressure scale height to connect local gravity to how steeply pressure must change with radius."

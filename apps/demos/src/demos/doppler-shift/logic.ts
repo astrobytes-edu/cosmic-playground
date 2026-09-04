@@ -551,7 +551,7 @@ export function buildDopplerExportPayload(args: {
       "Sign convention: positive radial velocity means receding (redshift).",
       "Physical state coupling uses relativistic z <-> velocity mapping.",
       "Wave diagram spacing is uniform at the observer (light, no medium).",
-      "Spectral lines use vacuum wavelengths; element catalogs are empirical (NIST teaching subset).",
+      "Element catalogs use air wavelengths (NIST teaching subset); Bohr-model hydrogen lines are vacuum wavelengths.",
     ],
   };
 }

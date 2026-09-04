@@ -197,14 +197,41 @@ async function main() {
     missingMetadata.push({ slug, expected: [mdPath, mdxPath] });
   }
 
+  // `content_verified: true` is a public claim on the exhibit page. It must be backed by
+  // an actual physics review, not by intent. Before this gate, five demos claimed
+  // verification with no review on file while the one demo marked unverified had two --
+  // the metadata was inverted, which is worse than absent.
+  const unbackedVerification = [];
+  for (const slug of sourceSlugs) {
+    const mdPath = path.join(repoRoot, "apps", "site", "src", "content", "demos", `${slug}.md`);
+    if (!(await pathExists(mdPath))) continue;
+    const front = await readText(mdPath);
+    if (!/^content_verified:\s*true\s*$/m.test(front)) continue;
+    const reviewPath = path.join(repoRoot, "docs", "reviews", `${slug}.md`);
+    if (await pathExists(reviewPath)) continue;
+    unbackedVerification.push({ slug, reviewPath });
+  }
+
   if (
     missingPlayArtifacts.length > 0 ||
     missingContractMarkers.length > 0 ||
     invalidExportStatusRegion.length > 0 ||
     invalidCopyResultsButton.length > 0 ||
     invalidInstrumentRootA11y.length > 0 ||
-    missingMetadata.length > 0
+    missingMetadata.length > 0 ||
+    unbackedVerification.length > 0
   ) {
+    if (unbackedVerification.length > 0) {
+      console.error("Demos claiming content_verified: true with no physics review on file:");
+      for (const item of unbackedVerification) {
+        console.error(`- ${item.slug} (expected ${item.reviewPath})`);
+      }
+      console.error(
+        "  Either write the review, or set content_verified: false until it is done."
+      );
+      console.error("");
+    }
+
     if (missingPlayArtifacts.length > 0) {
       console.error("Missing built demo artifacts for content slugs:");
       for (const m of missingPlayArtifacts) {

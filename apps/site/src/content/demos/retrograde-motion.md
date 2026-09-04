@@ -1,7 +1,7 @@
 ---
 title: "Retrograde Motion: Apparent Longitude from Relative Motion"
 status: draft
-content_verified: false
+content_verified: true
 levels: [Both]
 topics: [EarthSky, Orbits]
 time_minutes: 12
@@ -10,7 +10,7 @@ tags: ["retrograde", "stationary points", "relative motion", "apparent longitude
 readiness: experimental
 readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/retrograde-motion-parity.md"
-lastVerifiedAt: "2026-02-03"
+lastVerifiedAt: "2026-09-03"
 featured: true
 learning_goals:
   - "Define retrograde motion as an apparent reversal caused by viewing geometry and relative motion."

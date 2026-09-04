@@ -54,9 +54,20 @@
   --cp-glow-pink: 0 0 0 rgba(0, 0, 0, 0);
   --cp-glow-violet: 0 0 0 rgba(0, 0, 0, 0);
 
+  /* ---------- Instrument accents on paper ---------- */
+  /* These are dark-ground accents. layer-paper.css sets --cp-bg0 to near-white but never
+     redefined them, so components using them as TEXT (instructor hub, StatBar,
+     CitationCard, DemoCard, playlists) rendered at 1.33:1 (ice) and 1.64:1 (amber)
+     against the paper ground -- effectively invisible, and far below the 4.5:1 WCAG
+     1.4.3 requirement for body text. Same hues, darkened until they pass. */
+  --cp-accent-ice: #146074;   /* 6.83:1 on --cp-bg0 */
+  --cp-accent-amber: #8a4e00; /* 6.37:1 on --cp-bg0 */
+
   /* ---------- Selection & Focus ---------- */
   --cp-selection-bg: color-mix(in srgb, var(--cp-violet) 18%, transparent);
-  --cp-focus: color-mix(in srgb, var(--cp-accent) 55%, transparent);
+  /* Opaque, like the museum layer: the 55% mix composited to 2.33:1 against the paper
+     ground, below the 3:1 WCAG 1.4.11 minimum for a focus indicator. */
+  --cp-focus: var(--cp-accent);
 
   /* ---------- Status (WCAG AA contrast on paper bg) ---------- */
   --cp-success: #047857;  /* emerald-700: 5.2:1 */

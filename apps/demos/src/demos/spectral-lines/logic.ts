@@ -556,7 +556,7 @@ export function buildSpectralExportPayload(args: {
     readouts,
     notes: [
       "Hydrogen energy levels from the Bohr model: E_n = -13.6 eV / n^2.",
-      "Wavelengths computed via lambda = hc / Delta E (vacuum wavelengths).",
+      "Hydrogen wavelengths computed via lambda = hc / Delta E are vacuum values; the element catalog lists laboratory air wavelengths.",
       "Multi-element line data from NIST Atomic Spectra Database (strongest lines only).",
       "Elements tab readouts use each selected element's canonical strongest-intensity representative line.",
       "Inverse mode solves for the nearest hydrogen transition to an observed wavelength and reports residual.",

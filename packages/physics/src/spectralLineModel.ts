@@ -9,7 +9,10 @@
  * Multi-element line data is empirical (NIST Atomic Spectra Database).
  *
  * Units policy:
- *   - wavelengths: nm (vacuum)
+ *   - wavelengths: nm. Bohr-model transitions (transitionWavelengthNm, seriesLimitNm)
+ *     are VACUUM wavelengths. The element catalogues (elementLines) are laboratory
+ *     AIR wavelengths, which differ by ~0.03% in the optical -- do not mix them
+ *     without converting.
  *   - energies: eV
  *   - frequencies: Hz
  *   - radii: nm

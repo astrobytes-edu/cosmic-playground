@@ -10,7 +10,7 @@ tags: ["doppler shift", "redshift", "blueshift", "spectral lines", "radial veloc
 readiness: candidate
 readinessReason: "SoTA UX/pedagogy uplift is complete (playbar transport, deeper challenge deck, tooltip affordances, cross-demo scaffolding) and automated gates are passing; launch-ready now depends on classroom and screen-reader validation artifacts."
 parityAuditPath: "docs/audits/migrations/doppler-shift-parity.md"
-lastVerifiedAt: "2026-02-24"
+lastVerifiedAt: "2026-09-03"
 learning_goals:
   - "Relate radial motion to observed wavelength and frequency shifts in spectral lines."
   - "Interpret redshift z and convert between z and radial velocity with the correct formula."
