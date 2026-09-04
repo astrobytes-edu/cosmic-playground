@@ -80,6 +80,26 @@ disagreed. The theme had already patched this twice per-component
 (`.cp-tab-panel[hidden]`, `.cp-popover[hidden]`); a scan found **26 element/rule pairs
 across 14 demos** exposed to the same failure. Guarded by a token test.
 
+## Finding: the E2E suite is flaky under parallel load
+
+Three consecutive full runs of the 1,001-test suite each ended with **exactly one failure,
+and a different one each time**:
+
+| Run | Failure | Isolated re-run |
+| --- | --- | --- |
+| 1 | `keplers-laws renders with resolved canvas colors and animates` | genuine, fixed |
+| 2 | `eos-lab composition constraints keep X + Y + Z = 1` | 31/31 pass |
+| 3 | `site-links every built page is reachable` | 3/3 pass |
+
+Runs 2 and 3 pass in isolation and pass as their whole spec file, so those are flakes, not
+regressions. Run 1 was real and is fixed.
+
+This is not new and was not introduced by the 2026-09-04 work, but it has been invisible
+because a suite that reports "1 failed" is easy to re-run until green. It matters because
+it makes every full-suite result ambiguous: a real single failure is indistinguishable from
+the flake without a second run. Worth a pass to find the shared cause -- most likely
+timing under `--workers` contention.
+
 ## Findings recorded 2026-09-04
 
 - **Explore's filters do nothing in production.** `apps/site` builds with `output: "static"`,
