@@ -411,7 +411,13 @@ test.describe("Cluster Census", () => {
       .toBeLessThan(start * 0.9);
 
     await page.locator("#resetView").click();
-    await expect.poll(() => scaleOf(page)).toBeCloseTo(start, 5);
+    // Within a percent, not to fifteen decimals. The stage is height-driven now, so the
+    // canvas can differ by a pixel between the first read and the last as fonts settle,
+    // and the claim being made is "reset restores the view", not "reproduces a float".
+    await expect
+      .poll(() => scaleOf(page), { message: "reset returns to the starting scale" })
+      .toBeGreaterThan(start * 0.98);
+    expect(await scaleOf(page)).toBeLessThan(start * 1.02);
   });
 
   test("the 3D view is reachable in both directions without the scale jumping", async ({
@@ -453,6 +459,76 @@ test.describe("Cluster Census", () => {
     });
     expect(found).toBe(true);
     await expect(card.locator('[data-star="mass"]')).not.toHaveText("--");
+  });
+
+  /*
+   * Layout budget.
+   *
+   * Measured before this was fixed, at 1440x900: the sidebar held 1,421px of content in an
+   * 870px column, so the heaviest star sat at y = 931 and the population tally at y =
+   * 1,351 -- every readout below the fold, on a demo whose own reseed hint says "watch the
+   * heaviest star". Nothing caught it, because nothing was looking at geometry.
+   */
+  const layoutAt = async (page: Page, width: number, height: number) => {
+    await page.setViewportSize({ width, height });
+    await page.waitForTimeout(400);
+    return page.evaluate(() => {
+      const q = (sel: string) => document.querySelector(sel) as HTMLElement;
+      const body = q(".cp-demo__controls .cp-panel-body");
+      const rect = (sel: string) => q(sel).getBoundingClientRect();
+      return {
+        sidebarOverflow: body.scrollHeight - body.clientHeight,
+        stripBottom: rect(".census-strip").bottom,
+        viewportHeight: window.innerHeight,
+        heaviestBottom: rect("#mostMassive").bottom,
+        clusterHeight: rect("#clusterCanvas").height,
+        hrHeight: rect("#hrCanvas").height,
+        imfHeight: rect("#imfCanvas").height
+      };
+    });
+  };
+
+  for (const [width, height] of [
+    [1920, 1080],
+    [1440, 900],
+    [1366, 768],
+    [1280, 720]
+  ] as const) {
+    test(`every number is on screen at ${width}x${height}`, async ({ page }) => {
+      const layout = await layoutAt(page, width, height);
+      expect(layout.heaviestBottom).toBeLessThanOrEqual(layout.viewportHeight);
+      expect(layout.stripBottom).toBeLessThanOrEqual(layout.viewportHeight);
+      // The sidebar holds controls only; content that does not fit is a design error, not
+      // something to hide behind an inner scrollbar.
+      expect(layout.sidebarOverflow).toBeLessThanOrEqual(0);
+    });
+
+    test(`no panel collapses below a readable height at ${width}x${height}`, async ({ page }) => {
+      const layout = await layoutAt(page, width, height);
+      // A histogram under ~110px cannot show four decade labels and a mass axis. Present
+      // but unreadable is worse than making the reader scroll.
+      expect(layout.imfHeight).toBeGreaterThanOrEqual(110);
+      expect(layout.hrHeight).toBeGreaterThanOrEqual(160);
+      expect(layout.clusterHeight).toBeGreaterThanOrEqual(160);
+      // The cluster and the HR diagram are the comparison; the histogram supports them.
+      expect(layout.clusterHeight).toBeGreaterThan(layout.imfHeight);
+    });
+  }
+
+  test("the turnoff drops its unit when there is no turnoff to report", async ({ page }) => {
+    await setSlider(page, "#ageSlider", 0);
+    await expect(page.locator("#turnoff")).toHaveText(/not yet/i);
+    // "not yet Msun" is not a quantity.
+    await expect(page.locator("#turnoffUnit")).toBeHidden();
+
+    await setSlider(page, "#ageSlider", 900);
+    await expect(page.locator("#turnoffUnit")).toBeVisible();
+  });
+
+  test("the extrapolated count hides itself when nothing is extrapolated", async ({ page }) => {
+    await setSlider(page, "#countSlider", 300);
+    await expect(page.locator("#extrapolatedRow")).toHaveAttribute("data-empty", "true");
+    await expect(page.locator("#extrapolatedRow")).toBeHidden();
   });
 });
 

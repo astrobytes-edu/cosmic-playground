@@ -83,6 +83,7 @@ const presetButtons = Array.from(
 
 const mostMassiveEl = document.querySelector<HTMLSpanElement>("#mostMassive");
 const turnoffEl = document.querySelector<HTMLSpanElement>("#turnoff");
+const turnoffUnitEl = document.querySelector<HTMLSpanElement>("#turnoffUnit");
 const totalMassEl = document.querySelector<HTMLSpanElement>("#totalMass");
 const halfRadiusEl = document.querySelector<HTMLSpanElement>("#halfRadius");
 const shiningCountEl = document.querySelector<HTMLSpanElement>("#shiningCount");
@@ -119,6 +120,7 @@ if (
   !shiningCountEl ||
   !remnantCountEl ||
   !giantCountEl ||
+  !turnoffUnitEl ||
   !clusterOverlayEl ||
   !view2dEl ||
   !view3dEl ||
@@ -162,6 +164,7 @@ const halfRadius = halfRadiusEl;
 const shiningCount = shiningCountEl;
 const remnantCount = remnantCountEl;
 const giantCount = giantCountEl;
+const turnoffUnit = turnoffUnitEl;
 const clusterOverlay = clusterOverlayEl;
 const clusterOverlayCtx = requiredContext2d(clusterOverlay);
 const view2d = view2dEl;
@@ -888,13 +891,16 @@ function drawHistogram(palette: Palette): void {
   }
   ctx.stroke();
 
-  ctx.font = axisFont;
-  ctx.fillStyle = palette.amber;
-  ctx.textAlign = "right";
-  ctx.textBaseline = "top";
-  ctx.fillText("the law", plotRight - 8, plotTop + 4);
-  ctx.fillStyle = palette.muted;
-  ctx.fillText("bars: what you drew", plotRight - 8, plotTop + 6 + fontPx);
+  /*
+   * No legend on the canvas.
+   *
+   * It sat top-right until the panel got short enough for the first bins to reach it,
+   * then bottom-right until a 20,000-star draw filled the tail out to 100 Msun. There is
+   * no corner of this plot that is reliably empty, because which corners are empty is
+   * exactly what the reader is changing. The panel's own subtitle already says "bars are
+   * your draw; the line is the law", in HTML, where nothing can collide with it and a
+   * screen reader can read it.
+   */
 }
 
 /**
@@ -916,12 +922,19 @@ function renderReadouts(): void {
     state.ageMyr > 0 && cluster.remnantCount + cluster.postMainSequenceCount > 0;
   turnoffReadout.textContent =
     turnoff === null ? "none left" : turnoffHasHappened ? formatMassMsun(turnoff) : "not yet";
+  // "not yet Msun" is not a quantity. The unit belongs to the number, so it goes with it.
+  turnoffUnit.hidden = !(turnoff !== null && turnoffHasHappened);
   totalMass.textContent = formatCount(cluster.totalMassMsun);
   halfRadius.textContent = formatRadiusPc(radiusEnclosingFractionPc(cluster.stars, 0.5));
   shiningCount.textContent = formatCount(cluster.mainSequenceCount);
   remnantCount.textContent = formatCount(cluster.remnantCount);
   giantCount.textContent = formatCount(cluster.postMainSequenceCount);
   extrapolatedCount.textContent = formatCount(cluster.extrapolatedCount);
+  // Nothing above the Tout ceiling is the normal case; a permanent "0" is just noise.
+  extrapolatedCount.parentElement?.setAttribute(
+    "data-empty",
+    String(cluster.extrapolatedCount === 0)
+  );
 
   const age = formatAge(state.ageMyr);
   countValue.textContent = formatCount(state.starCount);

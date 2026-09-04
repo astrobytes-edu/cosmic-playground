@@ -98,6 +98,52 @@ describe("Cluster Census -- Design System Contracts", () => {
     });
   });
 
+  describe("Layout", () => {
+    it("keeps the readouts with the plots, not at the bottom of the sidebar", () => {
+      // Measured at 1440x900 before this moved: the sidebar held 1,421px of content in an
+      // 870px column, putting the heaviest star at y = 931 and the tally at y = 1,351.
+      // Both below the fold, on a demo whose reseed hint says "watch the heaviest star".
+      const sidebar = html.slice(
+        html.indexOf('class="cp-demo__controls'),
+        html.indexOf('class="cp-demo__stage')
+      );
+      expect(sidebar).not.toContain('id="mostMassive"');
+      expect(sidebar).not.toContain("census-tally");
+      expect(html).toContain("cp-readout-strip census-strip");
+    });
+
+    it("bounds the plots and their numbers with one height", () => {
+      // The shell's `readouts` area is a sibling ROW of `viz`, so it cannot be
+      // height-coupled to the stage; the strip therefore lives inside the stage grid.
+      const explore = html.slice(
+        html.indexOf('id="panel-explore"'),
+        html.indexOf('id="panel-understand"')
+      );
+      expect(explore).toContain("census-strip");
+      expect(css).toContain("max-height: calc(100svh");
+    });
+
+    it("gives each slider its value on the label's line, not a row of its own", () => {
+      expect(css).toMatch(/\.control \{[^}]*grid-template-columns: minmax\(0, 1fr\) auto/);
+      // Explicit rows: the slider sits between label and value in the DOM, so
+      // auto-placement would put the value on a third row and undo the saving.
+      expect(css).toMatch(/\.control__value \{[^}]*grid-row: 1/);
+      expect(css).toMatch(/\.control input\[type="range"\] \{[^}]*grid-row: 2/);
+    });
+
+    it("floors the drawing surfaces rather than the grid rows", () => {
+      // A row floor also has to cover the panel title, so a 112px row left the histogram
+      // 88px of canvas -- not enough for four decade labels and a mass axis.
+      expect(css).toMatch(/#imfCanvas \{[^}]*min-height/);
+      expect(css).toMatch(/#hrCanvas \{[^}]*min-height/);
+    });
+
+    it("drops the turnoff's unit when there is no turnoff", () => {
+      expect(html).toContain('id="turnoffUnit"');
+      expect(mainTs).toContain("turnoffUnit.hidden");
+    });
+  });
+
   describe("Shell", () => {
     it("uses the instrument layer", () => {
       expect(html).toContain("cp-layer-instrument");

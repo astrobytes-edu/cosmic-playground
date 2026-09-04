@@ -1,13 +1,49 @@
 @import "../../shared/stub-demo.css";
 
+/*
+ * Label and value share a line; the slider spans beneath them.
+ *
+ * Stacking label / slider / value gave every control a third row for one number, and
+ * three of those plus the rest overflowed the sidebar by 171px -- which is why the live
+ * status line at the bottom was being clipped mid-sentence.
+ */
 .control {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px var(--cp-space-2);
+}
+
+/*
+ * Rows are explicit because the slider sits BETWEEN the label and the value in the DOM.
+ * With auto-placement the value lands on a third row and the saving is lost.
+ */
+.control > span:first-child {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.control input[type="range"] {
+  grid-column: 1 / -1;
+  grid-row: 2;
 }
 
 .control__value {
-  color: var(--cp-muted);
-  font-size: 0.95rem;
+  grid-column: 2;
+  grid-row: 1;
+  text-align: right;
+  color: var(--cp-readout-value-color, var(--cp-muted));
+  font-family: var(--cp-font-mono);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* The environment hints are prose, not values: full width, left, and quiet. */
+.derive__nudge {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  text-align: left;
+  font-family: var(--cp-font-sans, inherit);
 }
 
 .reseed {
@@ -30,6 +66,13 @@
   font-size: 0.9rem;
 }
 
+.presets {
+  /* Label and chips on one line: a heading row for three chips is a row too many. */
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--cp-space-2);
+}
+
 .presets__row {
   display: grid;
   gap: var(--cp-space-1);
@@ -44,21 +87,27 @@
  * Three counts that must always add up to N. The swatches match the colours the
  * cluster panel uses for the same three categories, so the legend is the picture. */
 
+/*
+ * Inline, not stacked. As four stacked rows in the sidebar this sat 1,350px down the page,
+ * which is a strange place to keep a count that changes on every redraw.
+ */
 .census-tally {
-  display: grid;
-  gap: var(--cp-space-1);
-  padding: var(--cp-space-2) var(--cp-space-3);
-  border: 1px solid var(--cp-instr-panel-border);
-  border-radius: var(--cp-r-2);
-  background: var(--cp-instr-panel-bg-muted);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cp-space-1) var(--cp-space-3);
 }
 
 .census-tally__row {
-  display: grid;
-  grid-template-columns: 10px 1fr auto;
-  align-items: center;
-  gap: var(--cp-space-2);
-  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.census-tally__swatch {
+  align-self: center;
 }
 
 .census-tally__swatch {
@@ -85,7 +134,12 @@
 }
 
 .census-tally__label {
-  color: var(--cp-text2);
+  color: var(--cp-muted);
+}
+
+/* Nothing above the Tout ceiling is the normal case; an always-visible "0" is noise. */
+.census-tally__row[data-empty="true"] {
+  display: none;
 }
 
 .census-tally__value {
@@ -116,8 +170,8 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-areas:
     "cluster hr"
-    "card card"
-    "imf imf";
+    "imf imf"
+    "strip strip";
 }
 
 @media (max-width: 900px) {
@@ -126,9 +180,13 @@
     grid-template-areas:
       "cluster"
       "hr"
-      "card"
-      "imf";
+      "imf"
+      "strip";
   }
+}
+
+.census-strip {
+  grid-area: strip;
 }
 
 .census-panel {
@@ -455,6 +513,7 @@
   display: block;
   font-size: 0.78rem;
   color: var(--cp-muted);
+  white-space: normal;
 }
 
 /* While the slope is derived, its own slider is read-only rather than removed: seeing it
@@ -483,4 +542,163 @@
   color: var(--cp-muted);
   font-size: var(--cp-text-sm);
   line-height: 1.5;
+}
+
+/* ── Readout strip ───────────────────────────────────────────────────────────
+ * Everything the reader needs while turning a dial, on one line under the plots.
+ *
+ * These four numbers and the tally used to live at the bottom of the sidebar. Measured on
+ * a 1440x900 laptop: the sidebar held 1,421px of content in an 870px column, so the
+ * heaviest star sat at y = 931 and the tally at y = 1,351 -- every one of them below the
+ * fold, on a demo whose own reseed hint says "watch the heaviest star". */
+
+.census-strip {
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cp-space-2) var(--cp-space-4);
+  padding: var(--cp-space-2) var(--cp-space-3);
+}
+
+.census-strip__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cp-space-3) var(--cp-space-5);
+  min-width: 0;
+}
+
+.census-strip .cp-readout {
+  display: grid;
+  gap: 1px;
+}
+
+/* Compact against the sidebar's stacked variant: this is a strip, not a stack. */
+.census-strip .cp-readout__label {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.census-strip .cp-readout__value {
+  font-size: var(--cp-text-md);
+  line-height: 1.1;
+}
+
+/*
+ * The inspector shares the strip rather than owning a band of its own. It keeps its
+ * footprint when empty, so hovering a star does not shift the plots above it.
+ */
+.census-strip .census-card {
+  grid-area: auto;
+  flex: 1 1 100%;
+  min-width: 0;
+  /* Reserved, so hovering a star does not shift the plots above it -- but only just: the
+   * empty state is one line of hint, and padding it out to a card-sized box spends a
+   * fifth of the viewport on the words "hover a star". */
+  min-height: 2.5rem;
+  align-items: center;
+  padding: 4px var(--cp-space-2);
+  gap: var(--cp-space-2);
+}
+
+.census-strip .census-card__empty,
+.census-strip .census-card__list {
+  font-size: 0.82rem;
+}
+
+.census-strip .census-card__swatch {
+  inline-size: 0.95rem;
+  block-size: 0.95rem;
+  margin-top: 0;
+}
+
+.census-strip .census-card__list {
+  grid-template-columns: repeat(auto-fit, minmax(min(6.8rem, 100%), 1fr));
+}
+
+/* ── Stage sizing ────────────────────────────────────────────────────────────
+ * The stage fills the height the shell gives it rather than adding up three fixed aspect
+ * ratios. Before this the three panels summed to 1,004px whatever the window was, which is
+ * why a 900px-tall laptop could not show the plots and their numbers at the same time. */
+
+@media (min-width: 1025px) and (min-height: 640px) {
+  .cp-demo__stage {
+    align-self: stretch;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    max-height: calc(100svh - 2 * var(--cp-space-4));
+  }
+
+  .cp-demo__stage .cp-tab-panel[id="panel-explore"] {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .census-grid {
+    min-height: 0;
+    height: 100%;
+    /* The cluster and the HR diagram are the comparison, so they get the room; the
+     * histogram describes the draw and reads fine at two thirds their height. The strip
+     * takes what it needs and no more. */
+    grid-template-rows: minmax(0, 1fr) minmax(0, 0.66fr) auto;
+  }
+
+  .census-panel {
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  /*
+   * Height-driven, so the aspect ratios have to stop dictating it -- including the ones on
+   * the canvases themselves, which otherwise give each row an intrinsic height and take
+   * the fr distribution out of the picture entirely. That is what made the histogram end
+   * up taller than the cluster.
+   */
+  .census-panel--cluster .census-stage,
+  .census-panel--hr .census-plot,
+  .census-panel--imf .census-plot {
+    aspect-ratio: auto;
+    min-height: 0;
+    height: 100%;
+  }
+
+  #clusterCanvas,
+  #hrCanvas,
+  #imfCanvas {
+    aspect-ratio: auto;
+  }
+
+  .census-plot {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .census-plot canvas,
+  .census-panel--cluster .census-stage {
+    height: 100%;
+  }
+
+  /*
+   * Floors on the DRAWING SURFACES, not on the grid rows: a row floor also has to cover
+   * the panel title, so a 112px row left the histogram 88px of canvas -- not enough for
+   * four decade labels and a mass axis. A panel that is present but unreadable is worse
+   * than a page that scrolls, so below this the grid overflows and the reader scrolls.
+   */
+  .census-panel--cluster .census-stage,
+  #hrCanvas {
+    min-height: 170px;
+  }
+
+  #imfCanvas {
+    min-height: 120px;
+  }
+}
+
+/* The subtitle carries the histogram's legend, so it has to name the curve's colour. */
+.census-panel__hint-law {
+  color: var(--cp-accent-amber);
+}
+
+/* A truncated "orange gia..." helps nobody; the type is one of the shorter fields. */
+.census-strip .census-card__list > div:nth-child(2) {
+  flex: 1 1 9rem;
 }

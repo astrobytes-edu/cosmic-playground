@@ -80,6 +80,45 @@ disagreed. The theme had already patched this twice per-component
 (`.cp-tab-panel[hidden]`, `.cp-popover[hidden]`); a scan found **26 element/rule pairs
 across 14 demos** exposed to the same failure. Guarded by a token test.
 
+## cluster-census layout pass, 2026-09-04
+
+Prompted by "tighten the sidebar ... don't have to drag the whole page to see one number".
+Measured first, at 1440x900:
+
+| Element | Top edge | On screen? |
+| --- | --- | --- |
+| "Heaviest star" | 931px | no (viewport ends at 900) |
+| Turnoff / total mass / radius | 1039 / 1147 / 1255 | no |
+| Population tally | 1351px | no |
+
+The sidebar held **1,421px of content in an 870px column**, and the reseed hint said "watch
+the heaviest star" 900px above the number it named. Nothing caught it because no test was
+looking at geometry.
+
+What changed:
+
+- **Readouts moved out of the sidebar into a strip under the plots**, along with the tally
+  (now inline chips) and the star inspector. It lives *inside* the stage grid rather than
+  the shell's `readouts` area, because that area is a sibling row of `viz` and cannot be
+  height-coupled to it -- and the point is that one max-height bounds the plots and the
+  numbers describing them together.
+- **The stage is height-driven** rather than three stacked aspect ratios that summed to
+  1,004px whatever the window was. Floors go on the drawing surfaces, not the grid rows: a
+  row floor also has to cover the panel title, which left the histogram 88px of canvas.
+- **Each slider's value sits on its label's line.** Explicit `grid-row`, because the slider
+  is between them in the DOM and auto-placement puts the value on a third row.
+- Sidebar content is now **586px**. The live-region status line was being clipped
+  mid-sentence by the old overflow; it is `sr-only` now, since the strip says the same
+  thing visually.
+- Smaller honesty fixes: the turnoff's `Msun` unit disappears with the number when it reads
+  "not yet"; the extrapolated count hides itself at zero; the histogram's canvas legend is
+  gone, because no corner of that plot is reliably empty -- which corners are empty is
+  exactly what the reader is changing -- and the panel subtitle already said it.
+
+**Eight new E2E tests assert the layout budget** across 1920x1080 / 1440x900 / 1366x768 /
+1280x720: every readout on screen, no sidebar overflow, and no panel collapsed below a
+readable height.
+
 ## Finding: the E2E suite is flaky under parallel load
 
 Three consecutive full runs of the 1,001-test suite each ended with **exactly one failure,

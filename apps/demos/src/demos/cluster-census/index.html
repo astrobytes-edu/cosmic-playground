@@ -18,12 +18,6 @@
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Cluster Census</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">
-            Draw a cluster of stars from a mass function, then look at the same stars three
-            ways: where they are, where they sit on an HR diagram, and how many of each mass
-            you got.
-          </p>
-
           <div class="cp-chip-group" role="group" aria-label="Initial mass function">
             <button id="lawMaschberger" class="cp-chip" type="button" aria-pressed="true">Maschberger</button>
             <button id="lawKroupa" class="cp-chip" type="button" aria-pressed="false">Kroupa</button>
@@ -67,7 +61,7 @@
               aria-pressed="false"
               aria-controls="derivePanel"
             >
-              Derive $\alpha$ from the environment
+              Derive&nbsp;$\alpha$&nbsp;from the environment
             </button>
             <div class="derive__panel" id="derivePanel" hidden>
               <p class="derive__lede">
@@ -135,68 +129,14 @@
           <button id="reseed" class="cp-button cp-button--primary reseed" type="button">
             Draw a new cluster
           </button>
-          <p class="cp-muted reseed__hint">
-            Same law, same number of stars, different luck. Watch the heaviest star.
-          </p>
+          <p class="cp-muted reseed__hint">Same law, different luck.</p>
 
           <div class="presets">
-            <div class="presets__label">Presets</div>
+            <span class="presets__label">Presets</span>
             <div class="cp-chip-group--grid presets__row presets__row--3col" role="group" aria-label="Cluster presets">
-              <button class="cp-chip preset" data-preset="open" type="button" aria-pressed="false">Open cluster</button>
-              <button class="cp-chip preset" data-preset="young" type="button" aria-pressed="false">Young massive</button>
-              <button class="cp-chip preset" data-preset="globular" type="button" aria-pressed="false">Old and rich</button>
-            </div>
-          </div>
-
-          <div class="cp-readout">
-            <div class="cp-readout__label">Heaviest star</div>
-            <div class="cp-readout__value">
-              <span id="mostMassive"></span>
-              <span class="cp-readout__unit">$M_\odot$</span>
-            </div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Main-sequence turnoff</div>
-            <div class="cp-readout__value">
-              <span id="turnoff"></span>
-              <span class="cp-readout__unit">$M_\odot$</span>
-            </div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Total mass</div>
-            <div class="cp-readout__value">
-              <span id="totalMass"></span>
-              <span class="cp-readout__unit">$M_\odot$</span>
-            </div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Half-number radius</div>
-            <div class="cp-readout__value">
-              <span id="halfRadius"></span>
-              <span class="cp-readout__unit">pc</span>
-            </div>
-          </div>
-
-          <div class="census-tally" aria-label="Population tally">
-            <div class="census-tally__row">
-              <span class="census-tally__swatch census-tally__swatch--shining" aria-hidden="true"></span>
-              <span class="census-tally__label">On the main sequence</span>
-              <span class="census-tally__value" id="shiningCount"></span>
-            </div>
-            <div class="census-tally__row">
-              <span class="census-tally__swatch census-tally__swatch--giant" aria-hidden="true"></span>
-              <span class="census-tally__label">Giants</span>
-              <span class="census-tally__value" id="giantCount"></span>
-            </div>
-            <div class="census-tally__row">
-              <span class="census-tally__swatch census-tally__swatch--remnant" aria-hidden="true"></span>
-              <span class="census-tally__label">Remnants</span>
-              <span class="census-tally__value" id="remnantCount"></span>
-            </div>
-            <div class="census-tally__row">
-              <span class="census-tally__swatch census-tally__swatch--extrapolated" aria-hidden="true"></span>
-              <span class="census-tally__label">Extrapolated above $100\,M_\odot$</span>
-              <span class="census-tally__value" id="extrapolatedCount"></span>
+              <button class="cp-chip preset" data-preset="open" type="button" aria-pressed="false">Open</button>
+              <button class="cp-chip preset" data-preset="young" type="button" aria-pressed="false">Young</button>
+              <button class="cp-chip preset" data-preset="globular" type="button" aria-pressed="false">Globular</button>
             </div>
           </div>
 
@@ -245,7 +185,7 @@
               </div>
             </div>
           </div>
-          <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
+          <p id="status" class="cp-status sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
       </aside>
 
@@ -305,22 +245,12 @@
                 <span class="census-plot__xtitle">$T_\mathrm{eff}\;(\mathrm{K})$</span>
               </div>
             </figure>
-            <aside class="census-card" id="starCard" data-empty="true" aria-live="polite">
-              <span class="census-card__swatch" id="starSwatch" aria-hidden="true"></span>
-              <p class="census-card__empty">Hover a star in either panel to inspect it. Click to keep it.</p>
-              <dl class="census-card__list">
-                <div><dt>mass</dt><dd><span data-star="mass">--</span> <span>$M_\odot$</span></dd></div>
-                <div><dt>type</dt><dd data-star="type">--</dd></div>
-                <div><dt><span>$T_\mathrm{eff}$</span></dt><dd><span data-star="teff">--</span> K</dd></div>
-                <div><dt><span>$\log_{10} L/L_\odot$</span></dt><dd data-star="logl">--</dd></div>
-                <div><dt>radius</dt><dd><span data-star="radius">--</span> <span>$R_\odot$</span></dd></div>
-                <div><dt>phase</dt><dd data-star="phase">--</dd></div>
-              </dl>
-            </aside>
             <figure class="census-panel census-panel--imf">
               <figcaption class="census-panel__title">
                 How many of each mass you drew
-                <span class="census-panel__hint">bars are your draw; the line is the law</span>
+                <span class="census-panel__hint">
+                  bars are your draw; <span class="census-panel__hint-law">the line</span> is the law
+                </span>
               </figcaption>
               <div class="census-plot">
                 <span class="census-plot__ytitle">stars per bin</span>
@@ -332,6 +262,74 @@
                 <span class="census-plot__xtitle">$M/M_\odot$</span>
               </div>
             </figure>
+
+            <div class="cp-readout-strip census-strip">
+          <div class="census-strip__summary">
+            <div class="cp-readout">
+              <div class="cp-readout__label">Heaviest star</div>
+              <div class="cp-readout__value">
+                <span id="mostMassive"></span>
+                <span class="cp-readout__unit">$M_\odot$</span>
+              </div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Turnoff</div>
+              <div class="cp-readout__value">
+                <span id="turnoff"></span>
+                <span class="cp-readout__unit" id="turnoffUnit">$M_\odot$</span>
+              </div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Total mass</div>
+              <div class="cp-readout__value">
+                <span id="totalMass"></span>
+                <span class="cp-readout__unit">$M_\odot$</span>
+              </div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Half-number radius</div>
+              <div class="cp-readout__value">
+                <span id="halfRadius"></span>
+                <span class="cp-readout__unit">pc</span>
+              </div>
+            </div>
+            <div class="census-tally" aria-label="Population tally">
+              <span class="census-tally__row">
+                <span class="census-tally__swatch census-tally__swatch--shining" aria-hidden="true"></span>
+                <span class="census-tally__value" id="shiningCount"></span>
+                <span class="census-tally__label">on the main sequence</span>
+              </span>
+              <span class="census-tally__row">
+                <span class="census-tally__swatch census-tally__swatch--giant" aria-hidden="true"></span>
+                <span class="census-tally__value" id="giantCount"></span>
+                <span class="census-tally__label">giants</span>
+              </span>
+              <span class="census-tally__row">
+                <span class="census-tally__swatch census-tally__swatch--remnant" aria-hidden="true"></span>
+                <span class="census-tally__value" id="remnantCount"></span>
+                <span class="census-tally__label">remnants</span>
+              </span>
+              <span class="census-tally__row" id="extrapolatedRow">
+                <span class="census-tally__swatch census-tally__swatch--extrapolated" aria-hidden="true"></span>
+                <span class="census-tally__value" id="extrapolatedCount"></span>
+                <span class="census-tally__label">above $100\,M_\odot$</span>
+              </span>
+            </div>
+          </div>
+
+          <aside class="census-card" id="starCard" data-empty="true" aria-live="polite">
+            <span class="census-card__swatch" id="starSwatch" aria-hidden="true"></span>
+            <p class="census-card__empty">Hover a star in either panel &middot; click to keep it</p>
+            <dl class="census-card__list">
+              <div><dt>mass</dt><dd><span data-star="mass">--</span> <span>$M_\odot$</span></dd></div>
+              <div><dt>type</dt><dd data-star="type">--</dd></div>
+              <div><dt><span>$T_\mathrm{eff}$</span></dt><dd><span data-star="teff">--</span> K</dd></div>
+              <div><dt><span>$\log_{10} L/L_\odot$</span></dt><dd data-star="logl">--</dd></div>
+              <div><dt>radius</dt><dd><span data-star="radius">--</span> <span>$R_\odot$</span></dd></div>
+              <div><dt>phase</dt><dd data-star="phase">--</dd></div>
+            </dl>
+          </aside>
+        </div>
           </div>
         </div>
         <div class="cp-tab-panel understand-panel" role="tabpanel" id="panel-understand" aria-labelledby="tab-understand" hidden>
