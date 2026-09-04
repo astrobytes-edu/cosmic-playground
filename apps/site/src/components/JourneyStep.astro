@@ -4,7 +4,7 @@
  * Vertical layout: numbered circle + connector line + content.
  * Required demos get solid connector, optional get dashed.
  */
-import DemoIllustration from "./DemoIllustration.astro";
+import DemoCanvasThumbnail from "./DemoCanvasThumbnail.astro";
 import TagPill from "./TagPill.astro";
 import { topicColor, primaryTopic } from "../lib/topicColors";
 
@@ -37,7 +37,7 @@ const timeLabel = `${timeMinutes} min`;
   </div>
   <a class="journey-step__card cp-card" href={href} style={`--topic-color: ${color}`}>
     <div class="journey-step__illus">
-      <DemoIllustration slug={slug} />
+      <DemoCanvasThumbnail slug={slug} />
     </div>
     <div class="journey-step__body">
       <h3 class="journey-step__title">{title}</h3>

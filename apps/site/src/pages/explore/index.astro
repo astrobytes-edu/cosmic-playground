@@ -4,6 +4,7 @@ import Layout from "../../layouts/Layout.astro";
 import DemoCard from "../../components/DemoCard.astro";
 import FilterBar from "../../components/FilterBar.astro";
 import EmptyState from "../../components/EmptyState.astro";
+import HeroOrbit from "../../components/HeroOrbit.astro";
 import TopicIcon from "../../components/TopicIcon.astro";
 import { topicColor } from "../../lib/topicColors";
 import {
@@ -280,14 +281,19 @@ const startHere = startHereTiles.map((tile) => {
 
 <Layout title="Explore — Cosmic Playground" hasMath={false}>
   <section class="explore-hero cp-hero">
-    <h1>Explore</h1>
-    <p class="explore-hero__identity">An interactive museum of astronomy reasoning instruments.</p>
-    <p class="explore-hero__identity-sub">
-      Explore observables, models, and inferences—like doing experiments on ideas.
-    </p>
-    <p class="explore-hero__tagline">Play with the universe. Learn the physics.</p>
-    <div class="site-state-note cp-card" role="note" aria-label="Project state">
-      Cosmic Playground is in active beta. Use status and readiness badges to judge classroom readiness.
+    <div class="explore-hero__content">
+      <h1>Explore</h1>
+      <p class="explore-hero__identity">An interactive museum of astronomy reasoning instruments.</p>
+      <p class="explore-hero__identity-sub">
+        Explore observables, models, and inferences—like doing experiments on ideas.
+      </p>
+      <p class="explore-hero__tagline">Play with the universe. Learn the physics.</p>
+      <div class="site-state-note cp-card" role="note" aria-label="Project state">
+        Cosmic Playground is in active beta. Use status and readiness badges to judge classroom readiness.
+      </div>
+    </div>
+    <div class="explore-hero__motion" aria-hidden="true">
+      <HeroOrbit />
     </div>
   </section>
 
@@ -514,7 +520,43 @@ const startHere = startHereTiles.map((tile) => {
   .explore-hero {
     margin-bottom: var(--cp-space-5);
     display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.72fr);
+    align-items: center;
+    gap: var(--cp-space-5);
+    overflow: hidden;
+  }
+
+  .explore-hero__content {
+    display: grid;
     gap: var(--cp-space-2);
+  }
+
+  .explore-hero__content h1 {
+    margin: 0;
+  }
+
+  .explore-hero__motion {
+    min-height: 240px;
+    align-self: stretch;
+    opacity: 0.92;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        ellipse 85% 70% at 50% 50%,
+        color-mix(in srgb, var(--cp-accent) 9%, transparent) 0%,
+        transparent 72%
+      );
+  }
+
+  @media (max-width: 767px) {
+    .explore-hero {
+      grid-template-columns: 1fr;
+      gap: var(--cp-space-4);
+    }
+
+    .explore-hero__motion {
+      min-height: 180px;
+    }
   }
 
   .explore-hero__identity {

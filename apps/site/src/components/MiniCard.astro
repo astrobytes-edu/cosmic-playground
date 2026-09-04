@@ -1,9 +1,9 @@
 ---
 /**
  * Compact demo card for horizontal scroll strips.
- * Shows: DemoIllustration + title + primary topic + update date.
+ * Shows: DemoCanvasThumbnail + title + primary topic + update date.
  */
-import DemoIllustration from "./DemoIllustration.astro";
+import DemoCanvasThumbnail from "./DemoCanvasThumbnail.astro";
 import TopicIcon from "./TopicIcon.astro";
 import TagPill from "./TagPill.astro";
 import { topicColor, primaryTopic } from "../lib/topicColors";
@@ -34,7 +34,7 @@ const readinessTone =
 
 <a class="mini-card cp-card" href={href} style={`--topic-color: ${color}`}>
   <div class="mini-card__illustration">
-    <DemoIllustration slug={slug} />
+    <DemoCanvasThumbnail slug={slug} />
   </div>
   <span class="mini-card__title">{title}</span>
   <span class="mini-card__meta">

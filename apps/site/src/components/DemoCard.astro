@@ -1,7 +1,7 @@
 ---
 import TagPill from "./TagPill.astro";
 import TopicIcon from "./TopicIcon.astro";
-import DemoIllustration from "./DemoIllustration.astro";
+import DemoCanvasThumbnail from "./DemoCanvasThumbnail.astro";
 import { topicColor, primaryTopic } from "../lib/topicColors";
 
 export type DemoCardProps = {
@@ -72,7 +72,7 @@ const timeLabel =
   <div class="demo-card__top">
     <a class="demo-card__illustration-link" href={href} aria-label={`Open exhibit: ${title}`}>
       <div class="demo-card__illustration">
-        <DemoIllustration slug={slug} />
+        <DemoCanvasThumbnail slug={slug} />
       </div>
     </a>
     <div class="demo-card__body">

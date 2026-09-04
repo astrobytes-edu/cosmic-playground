@@ -2,7 +2,7 @@
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
-import DemoIllustration from "../../components/DemoIllustration.astro";
+import DemoCanvasThumbnail from "../../components/DemoCanvasThumbnail.astro";
 import { topicColor, primaryTopic } from "../../lib/topicColors";
 import Icon from "../../components/Icon.astro";
 
@@ -82,7 +82,7 @@ const sortedDemos = [...demos].sort((a, b) =>
         return (
           <a class="instr-link-card cp-card" href={withBase(`stations/${d.slug}/`)} style={`--topic-color: ${color}`}>
             <div class="instr-link-card__illus">
-              <DemoIllustration slug={d.slug} />
+              <DemoCanvasThumbnail slug={d.slug} />
             </div>
             <div>
               <h3>{d.data.title}</h3>
@@ -110,7 +110,7 @@ const sortedDemos = [...demos].sort((a, b) =>
         return (
           <a class="instr-link-card cp-card" href={withBase(`instructor/${d.slug}/`)} style={`--topic-color: ${color}`}>
             <div class="instr-link-card__illus">
-              <DemoIllustration slug={d.slug} />
+              <DemoCanvasThumbnail slug={d.slug} />
             </div>
             <div>
               <h3>{d.data.title}</h3>

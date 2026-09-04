@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import BrandMark from "../components/BrandMark.astro";
 import KatexAutoRender from "../components/KatexAutoRender.astro";
 import MobileNav from "../components/MobileNav.astro";
 import MuseumStarfield from "../components/MuseumStarfield.astro";
@@ -80,7 +81,10 @@ const isLightTheme =
     <header class="site-header cp-no-print">
       <div class="site-header__inner">
         <div class="brand">
-          <a class="brand__name" href={withBase("")}>Cosmic Playground</a>
+          <a class="brand__home" href={withBase("")} aria-label="Cosmic Playground home">
+            <BrandMark />
+            <span class="brand__name">Cosmic Playground</span>
+          </a>
           <ul class="brand__cadence" aria-label="Predict, Play, Explain">
             <li>Predict</li>
             <li>Play</li>

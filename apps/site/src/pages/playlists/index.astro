@@ -3,7 +3,7 @@ import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import TagPill from "../../components/TagPill.astro";
-import DemoIllustration from "../../components/DemoIllustration.astro";
+import DemoCanvasThumbnail from "../../components/DemoCanvasThumbnail.astro";
 import { normalizeBasePathPath } from "../../lib/catalog";
 
 const playlists = await getCollection("playlists");
@@ -110,7 +110,7 @@ const grouped = groups.map((group) => ({
                   {previewDemos.map((item) => (
                     <li>
                       <span class="playlist-card__preview-icon" aria-hidden="true">
-                        <DemoIllustration slug={item.entry!.slug} />
+                        <DemoCanvasThumbnail slug={item.entry!.slug} />
                       </span>
                       <span>{item.entry!.data.title}</span>
                     </li>

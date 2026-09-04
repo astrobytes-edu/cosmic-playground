@@ -39,6 +39,13 @@ export function renderMath(root: Element): void {
   });
 }
 
+export function renderInlineKatex(latexSource: string): string {
+  return katex.renderToString(latexSource, {
+    displayMode: false,
+    throwOnError: false
+  });
+}
+
 export function initMath(root: Document | Element = document): void {
   if (typeof window === "undefined") return;
   const el = root instanceof Document ? root.body : root;

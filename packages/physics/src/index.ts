@@ -51,5 +51,11 @@ export type { ZamsValidity } from "./zamsTout1996Model";
 export { HrInferencePopulationModel } from "./hrInferencePopulationModel";
 export { generatePopulation } from "./hrInferencePopulationModel";
 export type { HrStarStage, PopulationOptions, PopulationStar } from "./hrInferencePopulationModel";
+export { HydrostaticEquilibriumModel } from "./hydrostaticEquilibriumModel";
+export type {
+  HydrostaticDensityModel,
+  HydrostaticRadialProfilePoint,
+  LocalShellPatchBalance
+} from "./hydrostaticEquilibriumModel";
 export { solarDeclinationDegFromDayOfYear } from "./riseSetModel";
 export { solarRiseSetLocalTimeHours, moonRiseSetLocalTimeHours } from "./riseSetModel";

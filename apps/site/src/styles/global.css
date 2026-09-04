@@ -72,11 +72,30 @@ body {
   line-height: 1.1;
 }
 
-.brand__name {
+.brand__home {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   text-decoration: none;
+  color: var(--cp-text);
+  width: max-content;
+  max-width: 100%;
+}
+
+.brand__home:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 4px;
+  border-radius: var(--cp-r-2);
+}
+
+.brand__home:hover .brand__name {
+  color: var(--cp-link-hover);
+}
+
+.brand__name {
   font-weight: 700;
   letter-spacing: 0.2px;
-  color: var(--cp-text);
+  transition: color var(--cp-transition-fast) var(--cp-ease-out);
 }
 
 .brand__cadence {

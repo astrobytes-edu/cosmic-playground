@@ -32,6 +32,7 @@ export {
   interp1,
   logspace,
   linspace,
+  renderInlineKatex,
   renderMath
 } from "./math";
 export { initDemoPolish } from "./polish";

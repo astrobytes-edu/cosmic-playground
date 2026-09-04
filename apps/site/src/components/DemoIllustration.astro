@@ -13,7 +13,7 @@ const { slug, class: className } = Astro.props;
 ---
 
 <svg
-  class:list={["demo-illus", className]}
+  class:list={["demo-illus", `demo-illus--${slug}`, className]}
   viewBox="0 0 200 140"
   aria-hidden="true"
   focusable="false"
@@ -311,5 +311,100 @@ const { slug, class: className } = Astro.props;
     width: 100%;
     height: auto;
     display: block;
+    overflow: visible;
+  }
+
+  .demo-illus__stars circle {
+    animation: demo-star-twinkle 4.8s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .demo-illus__stars circle:nth-child(2n) {
+    animation-delay: 0.8s;
+  }
+
+  .demo-illus__stars circle:nth-child(3n) {
+    animation-delay: 1.6s;
+  }
+
+  .demo-illus [filter],
+  .demo-illus circle[opacity="0.15"],
+  .demo-illus circle[opacity="0.1"] {
+    animation: demo-soft-pulse 6.5s var(--cp-ease-out) infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .demo-illus path[stroke],
+  .demo-illus ellipse[stroke],
+  .demo-illus circle[stroke],
+  .demo-illus line[stroke] {
+    transition:
+      opacity 200ms var(--cp-ease-out),
+      stroke-width 200ms var(--cp-ease-out);
+  }
+
+  :global(a:hover) .demo-illus path[stroke],
+  :global(a:hover) .demo-illus ellipse[stroke],
+  :global(a:hover) .demo-illus circle[stroke],
+  :global(a:hover) .demo-illus line[stroke],
+  :global(a:focus-visible) .demo-illus path[stroke],
+  :global(a:focus-visible) .demo-illus ellipse[stroke],
+  :global(a:focus-visible) .demo-illus circle[stroke],
+  :global(a:focus-visible) .demo-illus line[stroke] {
+    opacity: 0.78;
+    stroke-width: 1.2;
+  }
+
+  :global(a:hover) .demo-illus path[stroke],
+  :global(a:hover) .demo-illus ellipse[stroke],
+  :global(a:focus-visible) .demo-illus path[stroke],
+  :global(a:focus-visible) .demo-illus ellipse[stroke] {
+    stroke-dasharray: 7 5;
+    animation: demo-orbit-flow 2.2s linear infinite;
+  }
+
+  @keyframes demo-star-twinkle {
+    0%,
+    100% {
+      opacity: 0.32;
+      transform: scale(0.88);
+    }
+    48% {
+      opacity: 0.95;
+      transform: scale(1.08);
+    }
+  }
+
+  @keyframes demo-soft-pulse {
+    0%,
+    100% {
+      opacity: 0.1;
+      transform: scale(0.96);
+    }
+    50% {
+      opacity: 0.2;
+      transform: scale(1.04);
+    }
+  }
+
+  @keyframes demo-orbit-flow {
+    to {
+      stroke-dashoffset: -24;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .demo-illus__stars circle,
+    .demo-illus [filter],
+    .demo-illus circle[opacity="0.15"],
+    .demo-illus circle[opacity="0.1"],
+    :global(a:hover) .demo-illus path[stroke],
+    :global(a:hover) .demo-illus ellipse[stroke],
+    :global(a:focus-visible) .demo-illus path[stroke],
+    :global(a:focus-visible) .demo-illus ellipse[stroke] {
+      animation: none;
+    }
   }
 </style>

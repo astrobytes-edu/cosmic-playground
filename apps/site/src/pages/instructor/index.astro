@@ -2,7 +2,7 @@
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
-import DemoIllustration from "../../components/DemoIllustration.astro";
+import DemoCanvasThumbnail from "../../components/DemoCanvasThumbnail.astro";
 import { topicColor, primaryTopic } from "../../lib/topicColors";
 
 const demos = await getCollection("demos");
@@ -48,7 +48,7 @@ const sortedDemos = [...demos].sort((a, b) =>
       return (
         <a class="instr-card cp-card" href={withBase(`instructor/${d.slug}/`)} style={`--topic-color: ${color}`}>
           <div class="instr-card__illus">
-            <DemoIllustration slug={d.slug} />
+            <DemoCanvasThumbnail slug={d.slug} />
           </div>
           <div class="instr-card__body">
             <h2 class="instr-card__title">{d.data.title}</h2>

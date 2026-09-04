@@ -1,0 +1,597 @@
+---
+import DemoIllustration from "./DemoIllustration.astro";
+
+interface Props {
+  slug: string;
+  class?: string;
+}
+
+const { slug, class: className } = Astro.props;
+const thumbnailSceneBySlug: Record<string, string> = {
+  "keplers-laws": "orbit",
+  "binary-orbits": "binary",
+  "retrograde-motion": "retrograde",
+  "planetary-conjunctions": "conjunction",
+  "moon-phases": "moon-phase",
+  seasons: "seasons",
+  "eclipse-geometry": "eclipse",
+  "angular-size": "sightlines",
+  "parallax-distance": "parallax",
+  "em-spectrum": "spectrum",
+  "spectral-lines": "spectral-lines",
+  "doppler-shift": "doppler",
+  "blackbody-radiation": "blackbody",
+  "telescope-resolution": "diffraction",
+  "conservation-laws": "conservation",
+  "galaxy-rotation": "galaxy",
+  "hydrostatic-equilibrium-explorer": "stellar-core",
+  "stars-zams-hr": "hr-track",
+  "eos-lab": "regime-map"
+};
+
+const scene = thumbnailSceneBySlug[slug] ?? "geometry";
+---
+
+<div class:list={["demo-canvas-thumb", className]} data-demo-thumbnail data-slug={slug} data-scene={scene}>
+  <canvas class="demo-canvas-thumb__canvas" aria-hidden="true"></canvas>
+  <div class="demo-canvas-thumb__fallback" aria-hidden="true">
+    <DemoIllustration slug={slug} />
+  </div>
+</div>
+
+<style>
+  .demo-canvas-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 10 / 7;
+    min-height: 112px;
+    overflow: hidden;
+    isolation: isolate;
+    background: color-mix(in srgb, var(--cp-bg0) 56%, transparent);
+  }
+
+  .demo-canvas-thumb__canvas,
+  .demo-canvas-thumb__fallback {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .demo-canvas-thumb__canvas {
+    display: block;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 220ms var(--cp-ease-out);
+  }
+
+  .demo-canvas-thumb__fallback {
+    z-index: 0;
+    opacity: 1;
+    transition: opacity 220ms var(--cp-ease-out);
+  }
+
+  .demo-canvas-thumb__fallback :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .demo-canvas-thumb.is-ready .demo-canvas-thumb__canvas {
+    opacity: 1;
+  }
+
+  .demo-canvas-thumb.is-ready .demo-canvas-thumb__fallback {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .demo-canvas-thumb__canvas,
+    .demo-canvas-thumb__fallback {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  type Thumb = {
+    root: HTMLElement;
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    slug: string;
+    visible: boolean;
+    width: number;
+    height: number;
+  };
+
+  const existingRuntime = (window as any).__cosmicDemoThumbnailRuntime;
+  if (existingRuntime) {
+    existingRuntime.refresh();
+  } else {
+    const roots = new Set<HTMLElement>();
+    const thumbs: Thumb[] = [];
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let reduceMotion = media.matches;
+    let frame = 0;
+    let observer: IntersectionObserver | null = null;
+
+    const css = (name: string, root?: HTMLElement) => {
+      const source = root ?? document.documentElement;
+      return getComputedStyle(source).getPropertyValue(name).trim();
+    };
+
+    const colorFor = (root: HTMLElement, name: string, fallback: string) =>
+      css(name, root) || css(name) || fallback;
+
+    const withAlpha = (color: string, alpha: number) => {
+      const trimmed = color.trim();
+      const amount = Math.max(0, Math.min(1, alpha));
+      if (!trimmed || amount <= 0) return "transparent";
+      if (amount >= 0.995) return trimmed;
+      return `color-mix(in srgb, ${trimmed} ${(amount * 100).toFixed(2)}%, transparent)`;
+    };
+
+    function resize(thumb: Thumb) {
+      const rect = thumb.canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(1, Math.round(rect.width * dpr));
+      const height = Math.max(1, Math.round(rect.height * dpr));
+      if (thumb.canvas.width !== width || thumb.canvas.height !== height) {
+        thumb.canvas.width = width;
+        thumb.canvas.height = height;
+      }
+      thumb.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      thumb.width = rect.width;
+      thumb.height = rect.height;
+    }
+
+    function dot(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, alpha = 1) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function glowDot(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, alpha = 1) {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+      g.addColorStop(0, withAlpha(color, alpha));
+      g.addColorStop(0.42, withAlpha(color, alpha * 0.32));
+      g.addColorStop(1, "transparent");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 4, 0, Math.PI * 2);
+      ctx.fill();
+      dot(ctx, x, y, r, color, alpha);
+    }
+
+    function strokePath(ctx: CanvasRenderingContext2D, color: string, alpha: number, width: number) {
+      ctx.strokeStyle = withAlpha(color, alpha);
+      ctx.lineWidth = width;
+      ctx.stroke();
+    }
+
+    function setup(ctx: CanvasRenderingContext2D, w: number, h: number, root: HTMLElement) {
+      ctx.clearRect(0, 0, w, h);
+      const bg0 = colorFor(root, "--cp-bg0", "transparent");
+      const accent = colorFor(root, "--topic-color", colorFor(root, "--cp-accent", "transparent"));
+      const g = ctx.createRadialGradient(w * 0.5, h * 0.48, 0, w * 0.5, h * 0.48, Math.max(w, h) * 0.76);
+      g.addColorStop(0, withAlpha(accent, 0.1));
+      g.addColorStop(0.58, withAlpha(bg0, 0.28));
+      g.addColorStop(1, withAlpha(bg0, 0));
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      const star = colorFor(root, "--cp-celestial-star", "transparent");
+      for (let i = 0; i < 10; i += 1) {
+        const x = ((i * 41 + 19) % 101) / 100 * w;
+        const y = ((i * 29 + 13) % 89) / 88 * h;
+        dot(ctx, x, y, 0.55 + (i % 3) * 0.2, star, 0.08 + (i % 4) * 0.03);
+      }
+    }
+
+    function orbitScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement, scene: string) {
+      const sun = colorFor(root, "--cp-celestial-sun", "transparent");
+      const earth = colorFor(root, "--cp-celestial-earth", "transparent");
+      const mars = colorFor(root, "--cp-celestial-mars", "transparent");
+      const orbit = colorFor(root, "--cp-celestial-orbit", "transparent");
+      const accent = colorFor(root, "--topic-color", colorFor(root, "--cp-accent", "transparent"));
+      const cx = w * 0.5;
+      const cy = h * 0.52;
+      const rx = w * 0.32;
+      const ry = h * 0.25;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx, ry, -0.1, 0, Math.PI * 2);
+      strokePath(ctx, orbit, 0.24, 1.1);
+
+      const a = t * (scene === "binary" ? 0.9 : 0.62);
+      const p1 = { x: cx + Math.cos(a) * rx, y: cy + Math.sin(a) * ry };
+      const p2 = { x: cx + Math.cos(a + Math.PI * 0.78) * rx * 0.78, y: cy + Math.sin(a + Math.PI * 0.78) * ry * 0.78 };
+      if (scene === "retrograde") {
+        ctx.beginPath();
+        for (let i = 0; i < 70; i += 1) {
+          const u = i / 69;
+          const x = w * (0.58 + u * 0.28);
+          const y = h * (0.25 + Math.sin(u * Math.PI * 2 + t) * 0.08 + Math.sin(u * Math.PI * 4) * 0.05);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        strokePath(ctx, mars, 0.38, 1.6);
+      }
+      if (scene === "conjunction") {
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(w * 0.86, cy + Math.sin(t) * 4);
+        strokePath(ctx, accent, 0.34, 1);
+        ctx.setLineDash([]);
+      }
+      glowDot(ctx, cx - rx * 0.18, cy, Math.max(4, w * 0.023), sun, 0.86);
+      glowDot(ctx, p1.x, p1.y, Math.max(3, w * 0.017), scene === "binary" ? sun : earth, 0.78);
+      glowDot(ctx, p2.x, p2.y, Math.max(2.5, w * 0.013), mars, 0.64);
+    }
+
+    function moonScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement) {
+      const moon = colorFor(root, "--cp-celestial-moon", "transparent");
+      const dark = colorFor(root, "--cp-celestial-moon-dark", "transparent");
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+      const r = Math.min(w, h) * 0.24;
+      glowDot(ctx, cx, cy, r * 0.15, moon, 0.35);
+      dot(ctx, cx, cy, r, dark, 1);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.clip();
+      const phase = Math.sin(t * 0.7);
+      ctx.fillStyle = moon;
+      ctx.beginPath();
+      ctx.ellipse(cx + phase * r * 0.55, cy, r * (0.5 + Math.abs(phase) * 0.42), r, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function spectrumScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement, scene: string) {
+      const y = h * 0.52;
+      const x0 = w * 0.12;
+      const barW = w * 0.76;
+      const grad = ctx.createLinearGradient(x0, 0, x0 + barW, 0);
+      const stops = [
+        colorFor(root, "--cp-celestial-mars", "transparent"),
+        colorFor(root, "--cp-celestial-sun-corona", "transparent"),
+        colorFor(root, "--cp-celestial-sun", "transparent"),
+        colorFor(root, "--cp-celestial-earth-land", "transparent"),
+        colorFor(root, "--cp-accent-ice", "transparent"),
+        colorFor(root, "--cp-violet", "transparent"),
+        colorFor(root, "--cp-pink", "transparent")
+      ];
+      stops.forEach((c, i, a) => {
+        grad.addColorStop(i / (a.length - 1), c);
+      });
+      ctx.fillStyle = grad;
+      ctx.globalAlpha = 0.68;
+      ctx.beginPath();
+      ctx.roundRect(x0, y - h * 0.08, barW, h * 0.16, 8);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = withAlpha(colorFor(root, "--cp-celestial-star", "transparent"), 0.52);
+      ctx.lineWidth = 1.15;
+      ctx.beginPath();
+      for (let i = 0; i <= 100; i += 1) {
+        const u = i / 100;
+        const amp = h * (scene === "spectrum" ? 0.1 * (1 - u * 0.72) : 0.07);
+        const x = x0 + u * barW;
+        const yy = h * 0.28 + Math.sin(u * Math.PI * (scene === "spectrum" ? 16 : 8) - t * 2.2) * amp;
+        if (i === 0) ctx.moveTo(x, yy);
+        else ctx.lineTo(x, yy);
+      }
+      ctx.stroke();
+      if (scene === "spectral-lines" || scene === "doppler") {
+        const shift = scene === "doppler" ? Math.sin(t) * barW * 0.08 : 0;
+        ctx.fillStyle = colorFor(root, "--cp-bg0", "transparent");
+        ctx.globalAlpha = 0.78;
+        [0.22, 0.42, 0.63, 0.79].forEach((u) => ctx.fillRect(x0 + u * barW + shift, y - h * 0.09, 3, h * 0.18));
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function blackbodyScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement) {
+      const accent = colorFor(root, "--topic-color", colorFor(root, "--cp-accent", "transparent"));
+      const sun = colorFor(root, "--cp-celestial-sun", "transparent");
+      const x0 = w * 0.14;
+      const y0 = h * 0.82;
+      const x1 = w * 0.86;
+      ctx.strokeStyle = withAlpha(colorFor(root, "--cp-muted", "transparent"), 0.35);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x0, h * 0.18);
+      ctx.lineTo(x0, y0);
+      ctx.lineTo(x1, y0);
+      ctx.stroke();
+      ctx.strokeStyle = sun;
+      ctx.lineWidth = 1.9;
+      ctx.beginPath();
+      for (let i = 0; i <= 90; i += 1) {
+        const u = i / 90;
+        const peak = 0.38 + Math.sin(t * 0.7) * 0.08;
+        const v = Math.exp(-Math.pow((u - peak) / 0.18, 2)) * (1 - u * 0.2);
+        const x = x0 + u * (x1 - x0);
+        const y = y0 - v * h * 0.58;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      glowDot(ctx, x0 + (0.38 + Math.sin(t * 0.7) * 0.08) * (x1 - x0), y0 - h * 0.54, 3, sun, 0.75);
+    }
+
+    function galaxyScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement) {
+      const accent = colorFor(root, "--topic-color", colorFor(root, "--cp-accent", "transparent"));
+      const muted = colorFor(root, "--cp-muted", "transparent");
+      const cx = w * 0.5;
+      const cy = h * 0.54;
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(w, h) * 0.48);
+      glow.addColorStop(0, withAlpha(accent, 0.28));
+      glow.addColorStop(1, "transparent");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = withAlpha(muted, 0.35);
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      for (let i = 0; i <= 70; i += 1) {
+        const u = i / 70;
+        const x = w * (0.14 + u * 0.76);
+        const y = h * (0.72 - 0.34 * (1 - Math.exp(-u * 5)) + Math.sin(t + u * 4) * 0.012);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      glowDot(ctx, cx, cy, Math.min(w, h) * 0.025, colorFor(root, "--cp-celestial-sun", "transparent"), 0.58);
+    }
+
+    function stellarCoreScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement) {
+      const sun = colorFor(root, "--cp-celestial-sun", "transparent");
+      const accent = colorFor(root, "--topic-color", colorFor(root, "--cp-accent", "transparent"));
+      const cx = w * 0.5;
+      const cy = h * 0.52;
+      const r = Math.min(w, h) * 0.28;
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 1.65);
+      core.addColorStop(0, withAlpha(sun, 0.55));
+      core.addColorStop(0.45, withAlpha(accent, 0.22));
+      core.addColorStop(1, "transparent");
+      ctx.fillStyle = core;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 1.65, 0, Math.PI * 2);
+      ctx.fill();
+      [0.46, 0.68, 0.9].forEach((scale, i) => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * scale * (1 + Math.sin(t + i) * 0.018), 0, Math.PI * 2);
+        strokePath(ctx, sun, 0.16 - i * 0.035, 1);
+      });
+    }
+
+    function hrTrackScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement) {
+      const sun = colorFor(root, "--cp-celestial-sun", "transparent");
+      const accent = colorFor(root, "--topic-color", colorFor(root, "--cp-accent", "transparent"));
+      const x0 = w * 0.18;
+      const y0 = h * 0.78;
+      ctx.beginPath();
+      ctx.moveTo(x0, h * 0.22);
+      ctx.lineTo(x0, y0);
+      ctx.lineTo(w * 0.82, y0);
+      strokePath(ctx, colorFor(root, "--cp-muted", "transparent"), 0.22, 1);
+      ctx.beginPath();
+      for (let i = 0; i <= 80; i += 1) {
+        const u = i / 80;
+        const x = x0 + u * w * 0.6;
+        const y = y0 - (0.72 - u * 0.5 + Math.sin(u * Math.PI + t * 0.25) * 0.025) * h * 0.52;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      strokePath(ctx, sun, 0.42, 1.7);
+      glowDot(ctx, x0 + w * 0.3, y0 - h * 0.36, 3, accent, 0.56);
+    }
+
+    function regimeMapScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement) {
+      const accent = colorFor(root, "--topic-color", colorFor(root, "--cp-accent", "transparent"));
+      const sun = colorFor(root, "--cp-celestial-sun", "transparent");
+      const violet = colorFor(root, "--cp-violet", "transparent");
+      const bands = [accent, sun, violet];
+      bands.forEach((color, i) => {
+        ctx.fillStyle = withAlpha(color, 0.08 + i * 0.025);
+        ctx.beginPath();
+        ctx.roundRect(w * (0.16 + i * 0.21), h * (0.66 - i * 0.18), w * 0.22, h * (0.2 + i * 0.12), 5);
+        ctx.fill();
+      });
+      ctx.beginPath();
+      ctx.moveTo(w * 0.16, h * 0.64);
+      ctx.bezierCurveTo(w * 0.36, h * (0.62 + Math.sin(t) * 0.018), w * 0.48, h * 0.38, w * 0.68, h * 0.26);
+      strokePath(ctx, sun, 0.42, 1.4);
+    }
+
+    function diffractionScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement) {
+      const star = colorFor(root, "--cp-celestial-star", "transparent");
+      const accent = colorFor(root, "--topic-color", colorFor(root, "--cp-accent", "transparent"));
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+      [0.42, 0.28, 0.16].forEach((scale, i) => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, Math.min(w, h) * scale * (1 + Math.sin(t + i) * 0.02), 0, Math.PI * 2);
+        strokePath(ctx, accent, 0.11 + i * 0.05, 1);
+      });
+      glowDot(ctx, cx, cy, Math.min(w, h) * 0.035, star, 0.9);
+    }
+
+    function conservationScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement) {
+      const earth = colorFor(root, "--cp-celestial-earth", "transparent");
+      const mars = colorFor(root, "--cp-celestial-mars", "transparent");
+      const accent = colorFor(root, "--topic-color", colorFor(root, "--cp-accent", "transparent"));
+      const x1 = w * (0.36 + Math.sin(t) * 0.05);
+      const x2 = w * (0.66 - Math.sin(t) * 0.04);
+      glowDot(ctx, x1, h * 0.52, Math.min(w, h) * 0.045, earth, 0.66);
+      glowDot(ctx, x2, h * 0.52, Math.min(w, h) * 0.035, mars, 0.62);
+      ctx.beginPath();
+      ctx.moveTo(x1 + 12, h * 0.52);
+      ctx.lineTo(x2 - 12, h * 0.52);
+      strokePath(ctx, accent, 0.42, 1.2);
+    }
+
+    function geometryScene(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, root: HTMLElement, scene: string) {
+      const accent = colorFor(root, "--topic-color", colorFor(root, "--cp-accent", "transparent"));
+      const earth = colorFor(root, "--cp-celestial-earth", "transparent");
+      const sun = colorFor(root, "--cp-celestial-sun", "transparent");
+      const mars = colorFor(root, "--cp-celestial-mars", "transparent");
+      if (scene === "seasons") {
+        glowDot(ctx, w * 0.18, h * 0.5, 8, sun, 0.85);
+        const cx = w * 0.64;
+        const cy = h * 0.5;
+        dot(ctx, cx, cy, Math.min(w, h) * 0.2, earth, 0.82);
+        ctx.strokeStyle = withAlpha(colorFor(root, "--cp-celestial-star", "transparent"), 0.62);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10, cy - 34);
+        ctx.lineTo(cx + 12, cy + 34);
+        ctx.stroke();
+        return;
+      }
+      if (scene === "eclipse") {
+        glowDot(ctx, w * 0.18, h * 0.5, 12, sun, 0.9);
+        dot(ctx, w * 0.46, h * 0.5, 6, colorFor(root, "--cp-celestial-moon-dark", "transparent"), 1);
+        ctx.fillStyle = colorFor(root, "--cp-bg0", "transparent");
+        ctx.globalAlpha = 0.34;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.47, h * 0.43);
+        ctx.lineTo(w * 0.86, h * 0.35);
+        ctx.lineTo(w * 0.86, h * 0.65);
+        ctx.lineTo(w * 0.47, h * 0.57);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        glowDot(ctx, w * 0.84, h * 0.5, 8, earth, 0.78);
+        return;
+      }
+      const y = scene === "parallax" ? h * 0.78 : h * 0.5;
+      dot(ctx, w * 0.18, y, 3.5, accent, 1);
+      dot(ctx, w * 0.82, scene === "sightlines" ? h * 0.35 : h * 0.22, scene === "sightlines" ? 12 : 4, scene === "sightlines" ? earth : sun, 0.8);
+      dot(ctx, w * 0.56, scene === "sightlines" ? h * 0.66 : h * 0.78, scene === "sightlines" ? 6 : 3, mars, 0.72);
+      ctx.strokeStyle = withAlpha(accent, 0.48);
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(w * 0.18, y);
+      ctx.lineTo(w * 0.82, scene === "sightlines" ? h * 0.35 : h * 0.22);
+      ctx.moveTo(w * 0.18, y);
+      ctx.lineTo(w * 0.56, scene === "sightlines" ? h * 0.66 : h * 0.78);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawThumb(thumb: Thumb, now: number) {
+      resize(thumb);
+      const { ctx, width: w, height: h, root } = thumb;
+      const scene = root.dataset.scene ?? "geometry";
+      const t = reduceMotion ? 1.15 : now * 0.001;
+      setup(ctx, w, h, root);
+      if (["orbit", "binary", "retrograde", "conjunction"].includes(scene)) {
+        orbitScene(ctx, w, h, t, root, scene);
+      } else if (scene === "moon-phase") {
+        moonScene(ctx, w, h, t, root);
+      } else if (["spectrum", "spectral-lines", "doppler"].includes(scene)) {
+        spectrumScene(ctx, w, h, t, root, scene);
+      } else if (scene === "blackbody") {
+        blackbodyScene(ctx, w, h, t, root);
+      } else if (scene === "galaxy") {
+        galaxyScene(ctx, w, h, t, root);
+      } else if (scene === "stellar-core") {
+        stellarCoreScene(ctx, w, h, t, root);
+      } else if (scene === "hr-track") {
+        hrTrackScene(ctx, w, h, t, root);
+      } else if (scene === "regime-map") {
+        regimeMapScene(ctx, w, h, t, root);
+      } else if (scene === "diffraction") {
+        diffractionScene(ctx, w, h, t, root);
+      } else if (scene === "conservation") {
+        conservationScene(ctx, w, h, t, root);
+      } else {
+        geometryScene(ctx, w, h, t, root, scene);
+      }
+      root.classList.add("is-ready");
+    }
+
+    function loop(now: number) {
+      frame = 0;
+      let anyVisible = false;
+      thumbs.forEach((thumb) => {
+        if (thumb.visible) {
+          anyVisible = true;
+          drawThumb(thumb, now);
+        }
+      });
+      if (anyVisible && !reduceMotion) {
+        frame = window.requestAnimationFrame(loop);
+      }
+    }
+
+    function start() {
+      if (reduceMotion || frame) return;
+      frame = window.requestAnimationFrame(loop);
+    }
+
+    function redrawStatic() {
+      thumbs.forEach((thumb) => drawThumb(thumb, 1150));
+    }
+
+    function refresh() {
+      document.querySelectorAll<HTMLElement>("[data-demo-thumbnail]").forEach((root) => {
+        if (roots.has(root)) return;
+        const canvas = root.querySelector<HTMLCanvasElement>("canvas");
+        const ctx = canvas?.getContext("2d");
+        if (!canvas || !ctx) return;
+        roots.add(root);
+        const thumb = {
+          root,
+          canvas,
+          ctx,
+          slug: root.dataset.slug ?? "keplers-laws",
+          visible: true,
+          width: 1,
+          height: 1
+        };
+        thumbs.push(thumb);
+        if (observer) observer.observe(root);
+        drawThumb(thumb, 1150);
+      });
+      if (!reduceMotion) start();
+    }
+
+    observer = "IntersectionObserver" in window
+      ? new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            const thumb = thumbs.find((item) => item.root === entry.target);
+            if (thumb) thumb.visible = entry.isIntersecting;
+          });
+          start();
+        }, { rootMargin: "220px" })
+      : null;
+
+    media.addEventListener("change", () => {
+      reduceMotion = media.matches;
+      if (frame) {
+        window.cancelAnimationFrame(frame);
+        frame = 0;
+      }
+      if (reduceMotion) redrawStatic();
+      else start();
+    });
+
+    window.addEventListener("resize", () => {
+      redrawStatic();
+      start();
+    });
+
+    (window as any).__cosmicDemoThumbnailRuntime = { refresh };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", refresh, { once: true });
+    } else {
+      refresh();
+    }
+  }
+</script>

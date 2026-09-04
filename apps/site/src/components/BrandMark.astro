@@ -1,0 +1,121 @@
+---
+interface Props {
+  size?: number;
+}
+
+const { size = 40 } = Astro.props;
+---
+
+<svg
+  class="brand-mark"
+  width={size}
+  height={size}
+  viewBox="0 0 48 48"
+  aria-hidden="true"
+  focusable="false"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <radialGradient id="brand-mark-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="var(--cp-celestial-star)" />
+      <stop offset="54%" stop-color="var(--cp-celestial-sun)" />
+      <stop offset="100%" stop-color="var(--cp-celestial-sun-corona)" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="brand-mark-orbit" x1="7" y1="14" x2="42" y2="35" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="var(--cp-accent)" stop-opacity="0.18" />
+      <stop offset="45%" stop-color="var(--cp-accent-ice)" stop-opacity="0.84" />
+      <stop offset="100%" stop-color="var(--cp-violet)" stop-opacity="0.28" />
+    </linearGradient>
+    <filter id="brand-mark-glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <circle class="brand-mark__halo" cx="24" cy="24" r="19" fill="var(--cp-bg2)" opacity="0.76" />
+  <circle class="brand-mark__core-glow" cx="24" cy="24" r="13" fill="url(#brand-mark-core)" filter="url(#brand-mark-glow)" />
+  <circle class="brand-mark__core" cx="24" cy="24" r="4.4" fill="var(--cp-celestial-star)" />
+  <g class="brand-mark__orbit">
+    <ellipse cx="24" cy="24" rx="18" ry="8.8" transform="rotate(-24 24 24)" stroke="url(#brand-mark-orbit)" stroke-width="1.35" fill="none" />
+    <circle class="brand-mark__body" cx="39.4" cy="17.2" r="2.45" fill="var(--cp-accent-ice)" />
+  </g>
+  <g class="brand-mark__sparkles" fill="var(--cp-celestial-star)">
+    <circle cx="13" cy="14" r="1" />
+    <circle cx="35" cy="35" r="0.8" />
+    <circle cx="16" cy="36" r="0.7" />
+  </g>
+</svg>
+
+<style>
+  .brand-mark {
+    display: block;
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  .brand-mark__halo {
+    stroke: var(--cp-border-subtle);
+    stroke-width: 1;
+  }
+
+  .brand-mark__core-glow {
+    animation: brand-pulse 5.6s var(--cp-ease-out) infinite;
+    transform-origin: 24px 24px;
+  }
+
+  .brand-mark__orbit {
+    animation: brand-orbit 10s linear infinite;
+    transform-origin: 24px 24px;
+  }
+
+  .brand-mark__sparkles circle {
+    animation: brand-twinkle 3.8s ease-in-out infinite;
+  }
+
+  .brand-mark__sparkles circle:nth-child(2) {
+    animation-delay: 0.8s;
+  }
+
+  .brand-mark__sparkles circle:nth-child(3) {
+    animation-delay: 1.6s;
+  }
+
+  @keyframes brand-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes brand-pulse {
+    0%,
+    100% {
+      opacity: 0.66;
+      transform: scale(0.94);
+    }
+    46% {
+      opacity: 0.96;
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes brand-twinkle {
+    0%,
+    100% {
+      opacity: 0.38;
+    }
+    48% {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brand-mark__core-glow,
+    .brand-mark__orbit,
+    .brand-mark__sparkles circle {
+      animation: none;
+    }
+  }
+</style>
