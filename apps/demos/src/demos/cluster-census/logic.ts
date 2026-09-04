@@ -269,16 +269,183 @@ export function censusAnnouncement(input: {
   mostMassiveMsun: number;
   turnoffMsun: number | null;
   remnantCount: number;
+  giantCount: number;
 }): string {
   const lawName = input.law === "kroupa" ? "Kroupa" : "Maschberger";
   const age = formatAge(input.ageMyr);
+  // Mirrors the turnoff readout: at age zero the turnoff is not a measurement, it is just
+  // the heaviest star wearing a different label, and saying so twice helps nobody.
+  const turnoffHasHappened = input.ageMyr > 0 && input.remnantCount + input.giantCount > 0;
   const turnoff =
     input.turnoffMsun === null
       ? "no stars remain on the main sequence"
-      : `turnoff at ${formatMassMsun(input.turnoffMsun)} solar masses`;
+      : turnoffHasHappened
+        ? `turnoff at ${formatMassMsun(input.turnoffMsun)} solar masses`
+        : "no star has left the main sequence yet";
   return (
     `${formatCount(input.starCount)} stars drawn from the ${lawName} mass function ` +
     `at age ${age.value} ${age.unit}. Heaviest star ${formatMassMsun(input.mostMassiveMsun)} ` +
-    `solar masses, ${turnoff}, ${formatCount(input.remnantCount)} remnants.`
+    `solar masses, ${turnoff}, ${formatCount(input.giantCount)} giants, ` +
+    `${formatCount(input.remnantCount)} remnants.`
   );
+}
+
+/* ── Canvas typography ───────────────────────────────────────────────────────
+ * Canvas 2D cannot render KaTeX, so this is the one place the project allows real
+ * Unicode for maths. The source stays ASCII because `validate-math-formatting` scans
+ * raw text: the symbols are written as escapes and only become themselves at runtime. */
+
+const SUPERSCRIPT_DIGITS = [
+  "\u2070",
+  "\u00b9",
+  "\u00b2",
+  "\u00b3",
+  "\u2074",
+  "\u2075",
+  "\u2076",
+  "\u2077",
+  "\u2078",
+  "\u2079"
+] as const;
+
+const SUPERSCRIPT_MINUS = "\u207b";
+
+/** Solar-mass and solar-luminosity symbols, for axis titles. */
+export const MSUN_SYMBOL = "M\u2609";
+export const LSUN_SYMBOL = "L\u2609";
+
+/** An integer rendered in Unicode superscript digits: -4 becomes a raised minus four. */
+export function toSuperscript(value: number): string {
+  const rounded = Math.trunc(value);
+  const digits = Math.abs(rounded)
+    .toString()
+    .split("")
+    .map((d) => SUPERSCRIPT_DIGITS[Number(d)])
+    .join("");
+  return rounded < 0 ? `${SUPERSCRIPT_MINUS}${digits}` : digits;
+}
+
+/** A decade tick label: 10 to the given power, as a reader expects to see it. */
+export function powerOfTenLabel(exponent: number): string {
+  return `10${toSuperscript(exponent)}`;
+}
+
+/**
+ * Temperature tick label [K].
+ *
+ * Mixing "40k" with "5000" on one axis makes the reader do unit arithmetic mid-glance,
+ * so every tick uses the same form.
+ */
+export function temperatureTickLabel(temperatureK: number): string {
+  if (temperatureK < 1000) return String(temperatureK);
+  const thousands = temperatureK / 1000;
+  // 2500 and 3000 both round to "3k", and an axis that prints the same label twice in a
+  // row is worse than no label at all.
+  return Number.isInteger(thousands) ? `${thousands}k` : `${thousands.toFixed(1)}k`;
+}
+
+/**
+ * Axis font size [px] for a panel of this width.
+ *
+ * A fixed 11px is legible in a 500px panel and vanishes in a 1200px one. Tying the size
+ * to the panel keeps the plot readable on a lecture projector, which is where these are
+ * actually used.
+ */
+export function axisFontPx(panelWidthPx: number): number {
+  return Math.round(Math.min(16, Math.max(11, panelWidthPx / 42)));
+}
+
+/* ── Hit testing ─────────────────────────────────────────────────────────────
+ * A cluster panel and an HR diagram show the SAME stars in two spaces, so pointing at a
+ * star in one has to light it up in the other. That link is the whole reason both panels
+ * are on screen at once, and it only works if picking is exact -- which means picking has
+ * to use the projection the renderer just used, not a re-derived one. */
+
+export interface PickCandidate {
+  id: number;
+  x: number;
+  y: number;
+  radiusPx: number;
+}
+
+/**
+ * The drawn star nearest the pointer, or null if the pointer is over empty sky.
+ *
+ * Ties break toward the SMALLER dot: a massive star's halo can cover a dozen dwarfs, and
+ * a picker that always returns the big one makes the faint stars unselectable.
+ */
+export function pickNearest(
+  candidates: readonly PickCandidate[],
+  pointerX: number,
+  pointerY: number,
+  slopPx = 6
+): number | null {
+  let bestId: number | null = null;
+  let bestDistance = Infinity;
+  let bestRadius = Infinity;
+  for (const candidate of candidates) {
+    const distance = Math.hypot(candidate.x - pointerX, candidate.y - pointerY);
+    // Reach scales with the drawn dot, so a big star stays clickable anywhere on its
+    // disc while a 2px dwarf is still catchable a few pixels off.
+    if (distance > candidate.radiusPx + slopPx) continue;
+    // Rank on distance to the CENTRE, not on distance minus radius. The latter scores a
+    // big star better simply for being big, so a dwarf drawn on top of a supergiant's
+    // disc could never be selected however precisely you pointed at it.
+    if (
+      distance < bestDistance - 0.001 ||
+      (Math.abs(distance - bestDistance) <= 0.001 && candidate.radiusPx < bestRadius)
+    ) {
+      bestDistance = distance;
+      bestRadius = candidate.radiusPx;
+      bestId = candidate.id;
+    }
+  }
+  return bestId;
+}
+
+/** Luminosity as a base-10 log, or "--" when the star has no luminosity to report. */
+export function formatLogLuminosity(luminosityLsun: number): string {
+  return luminosityLsun > 0 ? Math.log10(luminosityLsun).toFixed(2) : "--";
+}
+
+/** Stellar radius [Rsun], with the precision switching where the numbers get large. */
+export function formatStellarRadius(radiusRsun: number): string {
+  if (!(radiusRsun > 0)) return "--";
+  if (radiusRsun >= 100) return String(Math.round(radiusRsun));
+  if (radiusRsun >= 10) return radiusRsun.toFixed(1);
+  return radiusRsun.toFixed(2);
+}
+
+/* ── Derived high-mass slope ─────────────────────────────────────────────────*/
+
+/** Slider integer to metallicity [Fe/H]. The slider carries hundredths of a dex. */
+export function sliderToFeH(sliderValue: number): number {
+  return sliderValue / 100;
+}
+
+/** Slider integer to log10 of the cluster mass [Msun]. Hundredths of a dex again. */
+export function sliderToLogClusterMass(sliderValue: number): number {
+  return sliderValue / 100;
+}
+
+export function fehToSlider(feH: number): number {
+  return Math.round(feH * 100);
+}
+
+export function logClusterMassToSlider(logMass: number): number {
+  return Math.round(logMass * 100);
+}
+
+/**
+ * One line saying what the environment did to the slope.
+ *
+ * The whole point of the derived mode is that the slope stops being arbitrary, so the
+ * reader needs to be told which way it moved and why -- otherwise the number just changes
+ * on its own.
+ */
+export function slopeVerdict(alphaHigh: number, canonical: number): string {
+  const gap = canonical - alphaHigh;
+  if (gap < 0.02) return "Canonical slope: this environment is nothing special.";
+  if (gap < 0.4) return "Slightly top-heavy: a few more massive stars than canonical.";
+  return "Top-heavy: markedly more massive stars than a canonical cluster.";
 }

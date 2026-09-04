@@ -75,9 +75,8 @@
   background: var(--cp-muted);
 }
 
-.census-tally__swatch--outside {
-  background: transparent;
-  border: 1px dashed var(--cp-muted);
+.census-tally__swatch--giant {
+  background: var(--cp-celestial-mars);
 }
 
 .census-tally__swatch--extrapolated {
@@ -117,6 +116,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-areas:
     "cluster hr"
+    "card card"
     "imf imf";
 }
 
@@ -126,6 +126,7 @@
     grid-template-areas:
       "cluster"
       "hr"
+      "card"
       "imf";
   }
 }
@@ -172,9 +173,78 @@
   backdrop-filter: blur(8px);
 }
 
-#clusterCanvas,
 #hrCanvas {
   aspect-ratio: 4 / 3;
+}
+
+/* ── Cluster stage ───────────────────────────────────────────────────────────
+ * Two stacked canvases: WebGL for the stars, 2-D for the scale bar, the selection ring
+ * and anything else that needs text. WebGL has no text, and a second material just to
+ * draw one ring would cost more than a 2-D circle. */
+
+.census-stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  border: 1px solid var(--cp-instr-panel-border);
+  background: var(--cp-instr-panel-bg);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+}
+
+.census-stage > canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+#clusterCanvas {
+  /* Orbit and pan are drags; the browser's own gesture handling must not eat them. */
+  touch-action: none;
+  cursor: grab;
+}
+
+#clusterCanvas:active {
+  cursor: grabbing;
+}
+
+.census-stage__overlay {
+  pointer-events: none;
+}
+
+.census-stage__tools {
+  position: absolute;
+  top: var(--cp-space-2);
+  right: var(--cp-space-2);
+  display: flex;
+  gap: var(--cp-space-1);
+  align-items: center;
+}
+
+.census-stage__modes {
+  gap: 2px;
+}
+
+/*
+ * Reset is an action, not a toggle, so it is a button rather than a chip: `cp-chip` is
+ * styled and contract-tested around [aria-pressed], and a chip carrying no pressed state
+ * is an accessibility bug wearing the right colours.
+ */
+.census-stage__tools .cp-chip,
+.census-stage__tools .cp-button {
+  font-size: 0.78rem;
+  padding: 3px 9px;
+  background: var(--cp-instr-panel-bg);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 #imfCanvas {
@@ -223,4 +293,194 @@
 
 .cp-demo__stage {
   animation: cp-fade-in var(--cp-transition-slow) var(--cp-ease-out) 80ms both;
+}
+
+/* ── Plot furniture ──────────────────────────────────────────────────────────
+ * Axis titles are HTML, not canvas text, so they can be real KaTeX rather than a Unicode
+ * approximation -- and so a screen reader meets "L over L sub sun" instead of nothing.
+ * Only the tick labels stay on the canvas, where they have to be. */
+
+.census-plot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 4px;
+}
+
+.census-plot canvas {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.census-plot__ytitle {
+  grid-column: 1;
+  grid-row: 1;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  justify-self: center;
+  color: var(--cp-text2);
+  font-size: var(--cp-text-sm);
+}
+
+.census-plot__xtitle {
+  grid-column: 2;
+  grid-row: 2;
+  text-align: center;
+  color: var(--cp-text2);
+  font-size: var(--cp-text-sm);
+}
+
+.census-panel__hint {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--cp-muted);
+  font-weight: normal;
+  letter-spacing: 0.01em;
+}
+
+/* ── Star inspector ──────────────────────────────────────────────────────────
+ * Keeps its footprint when empty: collapsing it made the stage jump every time the
+ * pointer crossed the gap between two stars. */
+
+.census-card {
+  grid-area: card;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--cp-space-2);
+  min-height: 4.6rem;
+  padding: var(--cp-space-2) var(--cp-space-3);
+  border: 1px solid var(--cp-instr-panel-border);
+  border-radius: var(--cp-r-2);
+  background: var(--cp-instr-panel-bg-muted);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: border-color var(--cp-transition-fast) var(--cp-ease-out);
+}
+
+.census-card[data-empty="false"] {
+  border-color: color-mix(in srgb, var(--cp-accent-ice) 40%, var(--cp-instr-panel-border));
+}
+
+.census-card__swatch {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  border-radius: 50%;
+  margin-top: 0.15rem;
+  background: var(--cp-muted);
+  /* currentColor is set alongside background in JS, so the glow matches the star. */
+  box-shadow: 0 0 12px currentColor;
+}
+
+.census-card[data-empty="true"] .census-card__swatch {
+  box-shadow: none;
+  opacity: 0.35;
+}
+
+.census-card__empty {
+  margin: 0;
+  align-self: center;
+  color: var(--cp-muted);
+  font-size: var(--cp-text-sm);
+}
+
+.census-card[data-empty="false"] .census-card__empty,
+.census-card[data-empty="true"] .census-card__list {
+  display: none;
+}
+
+.census-card__list {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(7.5rem, 100%), 1fr));
+  gap: 2px var(--cp-space-3);
+  font-size: 0.85rem;
+}
+
+.census-card__list > div {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.census-card__list dt {
+  color: var(--cp-readout-label-color, var(--cp-muted));
+  white-space: nowrap;
+}
+
+.census-card__list dd {
+  margin: 0;
+  font-family: var(--cp-font-mono);
+  color: var(--cp-readout-value-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Derived slope ───────────────────────────────────────────────────────────
+ * A lens, borrowed from the novascope census engine: the slope stops being a number you
+ * drag and becomes a consequence of two physical properties. Collapsed by default, so the
+ * sidebar does not grow a third slider for readers who do not want it. */
+
+.derive {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.derive__toggle {
+  justify-self: start;
+  text-align: left;
+}
+
+.derive__panel {
+  display: grid;
+  gap: var(--cp-space-3);
+  padding: var(--cp-space-3);
+  border: 1px solid var(--cp-instr-panel-border);
+  border-radius: var(--cp-r-2);
+  background: var(--cp-instr-panel-bg-muted);
+  animation: cp-fade-in var(--cp-transition-fast) var(--cp-ease-out) both;
+}
+
+.derive__lede {
+  margin: 0;
+  font-size: var(--cp-text-sm);
+  color: var(--cp-text2);
+  line-height: 1.5;
+}
+
+.derive__nudge {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--cp-muted);
+}
+
+/* While the slope is derived, its own slider is read-only rather than removed: seeing it
+ * move is the point. */
+.control--derived input[type="range"] {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* A browser without WebGL loses this one panel, not the instrument. */
+.census-stage--unavailable {
+  display: grid;
+  place-items: center;
+  padding: var(--cp-space-4);
+}
+
+.census-stage--unavailable > canvas,
+.census-stage--unavailable > .census-stage__tools {
+  display: none;
+}
+
+.census-stage__unavailable {
+  margin: 0;
+  max-width: 34ch;
+  text-align: center;
+  color: var(--cp-muted);
+  font-size: var(--cp-text-sm);
+  line-height: 1.5;
 }

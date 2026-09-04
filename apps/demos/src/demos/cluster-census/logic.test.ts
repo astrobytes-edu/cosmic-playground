@@ -2,27 +2,41 @@ import { describe, expect, it } from "vitest";
 import {
   AGE_MAX_MYR,
   AGE_MIN_MYR,
+  LSUN_SYMBOL,
+  MSUN_SYMBOL,
   SLIDER_STEPS,
   STAR_COUNT_MAX,
   STAR_COUNT_MIN,
   ageMyrToSlider,
+  axisFontPx,
   buildLogMassBins,
   censusAnnouncement,
   clamp,
   countIntoBins,
   expectedCounts,
+  fehToSlider,
   formatAge,
   formatCount,
+  formatLogLuminosity,
   formatMassMsun,
   formatRadiusPc,
+  formatStellarRadius,
+  logClusterMassToSlider,
   massToDotRadiusPx,
+  pickNearest,
+  powerOfTenLabel,
   projectToPixels,
   radiusEnclosingFractionPc,
   rgbToCss,
   sliderToAgeMyr,
+  sliderToFeH,
+  sliderToLogClusterMass,
   sliderToStarCount,
+  slopeVerdict,
   starCountToSlider,
+  temperatureTickLabel,
   temperatureToRgb,
+  toSuperscript,
   turnoffMassMsun
 } from "./logic";
 import type { CensusStar } from "./logic";
@@ -300,7 +314,8 @@ describe("census announcement", () => {
       ageMyr: 100,
       mostMassiveMsun: 34.2,
       turnoffMsun: 5.1,
-      remnantCount: 3
+      remnantCount: 3,
+      giantCount: 2
     });
     expect(text).toContain("2,000 stars");
     expect(text).toContain("Maschberger");
@@ -308,6 +323,23 @@ describe("census announcement", () => {
     expect(text).toContain("34.2");
     expect(text).toContain("turnoff at 5.10");
     expect(text).toContain("3 remnants");
+    expect(text).toContain("2 giants");
+  });
+
+  it("does not report a turnoff before any star has left the main sequence", () => {
+    const text = censusAnnouncement({
+      starCount: 800,
+      law: "maschberger",
+      ageMyr: 0,
+      mostMassiveMsun: 17.8,
+      turnoffMsun: 17.8,
+      remnantCount: 0,
+      giantCount: 0
+    });
+    // The old wording reported "turnoff at 17.8" at age zero, which is just the heaviest
+    // star restated -- two readouts agreeing for no reason a student could learn from.
+    expect(text).toContain("no star has left the main sequence yet");
+    expect(text).not.toContain("turnoff at");
   });
 
   it("names the law that is actually selected", () => {
@@ -317,7 +349,8 @@ describe("census announcement", () => {
       ageMyr: 0,
       mostMassiveMsun: 1,
       turnoffMsun: 1,
-      remnantCount: 0
+      remnantCount: 0,
+      giantCount: 0
     });
     expect(text).toContain("Kroupa");
   });
@@ -329,9 +362,122 @@ describe("census announcement", () => {
       ageMyr: 13_000,
       mostMassiveMsun: 40,
       turnoffMsun: null,
-      remnantCount: 10
+      remnantCount: 10,
+      giantCount: 0
     });
     expect(text).toContain("no stars remain on the main sequence");
     expect(text).not.toContain("turnoff at");
+  });
+});
+
+describe("canvas typography", () => {
+  it("renders exponents as superscripts, including negatives", () => {
+    expect(toSuperscript(0)).toBe("\u2070");
+    expect(toSuperscript(6)).toBe("\u2076");
+    expect(toSuperscript(-4)).toBe("\u207b\u2074");
+    expect(toSuperscript(12)).toBe("\u00b9\u00b2");
+  });
+
+  it("builds decade labels without a caret", () => {
+    expect(powerOfTenLabel(3)).toBe("10\u00b3");
+    expect(powerOfTenLabel(-2)).toBe("10\u207b\u00b2");
+    // The caret form is what this replaced; it should not survive anywhere.
+    expect(powerOfTenLabel(3)).not.toContain("^");
+  });
+
+  it("uses the solar symbol rather than an ASCII stand-in", () => {
+    expect(MSUN_SYMBOL).toBe("M\u2609");
+    expect(LSUN_SYMBOL).toBe("L\u2609");
+  });
+
+  it("never prints the same temperature tick twice in a row", () => {
+    // 2500 and 3000 both rounded to "3k" before this, which is worse than no label.
+    expect(temperatureTickLabel(3000)).toBe("3k");
+    expect(temperatureTickLabel(2500)).toBe("2.5k");
+    expect(temperatureTickLabel(3000)).not.toBe(temperatureTickLabel(2500));
+    expect(temperatureTickLabel(40000)).toBe("40k");
+    expect(temperatureTickLabel(900)).toBe("900");
+  });
+
+  it("scales the axis font with the panel and clamps at both ends", () => {
+    expect(axisFontPx(300)).toBe(11);
+    expect(axisFontPx(5000)).toBe(16);
+    expect(axisFontPx(630)).toBeGreaterThan(axisFontPx(300));
+  });
+});
+
+describe("star inspector formatting", () => {
+  it("reports luminosity as a log and refuses to log a dark star", () => {
+    expect(formatLogLuminosity(1)).toBe("0.00");
+    expect(formatLogLuminosity(1000)).toBe("3.00");
+    expect(formatLogLuminosity(0)).toBe("--");
+  });
+
+  it("drops precision as the radius grows, and reports nothing for a remnant", () => {
+    expect(formatStellarRadius(1.234)).toBe("1.23");
+    // Not 63.55: that is stored as 63.5499... so toFixed(1) rounds it DOWN, and an
+    // expectation written from decimal intuition would fail for the wrong reason.
+    expect(formatStellarRadius(63.57)).toBe("63.6");
+    expect(formatStellarRadius(155.4)).toBe("155");
+    expect(formatStellarRadius(0)).toBe("--");
+  });
+});
+
+describe("picking", () => {
+  const candidates = [
+    { id: 1, x: 100, y: 100, radiusPx: 3 },
+    { id: 2, x: 140, y: 100, radiusPx: 12 },
+    { id: 3, x: 143, y: 100, radiusPx: 2 }
+  ];
+
+  it("returns nothing when the pointer is over empty sky", () => {
+    expect(pickNearest(candidates, 400, 400)).toBeNull();
+  });
+
+  it("returns the star under the pointer", () => {
+    expect(pickNearest(candidates, 100, 101)).toBe(1);
+  });
+
+  it("prefers the small star sitting inside a big one's halo", () => {
+    // A massive star's drawn disc can cover a dozen dwarfs. Always returning the big one
+    // makes every faint star in the crowded centre unselectable.
+    expect(pickNearest(candidates, 143, 100)).toBe(3);
+    // ...but pointing at the big star's own disc, away from the dwarf, still gets it.
+    expect(pickNearest(candidates, 134, 100)).toBe(2);
+  });
+
+  it("still finds a star a few pixels off, so a 2px dot is not impossible to hit", () => {
+    expect(pickNearest(candidates, 105, 100)).toBe(1);
+    expect(pickNearest(candidates, 100, 112)).toBeNull();
+  });
+
+  it("has no opinion when there is nothing drawn", () => {
+    expect(pickNearest([], 10, 10)).toBeNull();
+  });
+});
+
+describe("derived high-mass slope controls", () => {
+  it("round-trips the metallicity slider", () => {
+    for (const feH of [-2, -0.75, 0, 0.5]) {
+      expect(sliderToFeH(fehToSlider(feH))).toBeCloseTo(feH, 10);
+    }
+  });
+
+  it("round-trips the cluster-mass slider", () => {
+    for (const logMass of [2, 3.5, 4, 6]) {
+      expect(sliderToLogClusterMass(logClusterMassToSlider(logMass))).toBeCloseTo(logMass, 10);
+    }
+  });
+
+  it("says nothing special when the slope is canonical", () => {
+    expect(slopeVerdict(2.3, 2.3)).toMatch(/nothing special/i);
+  });
+
+  it("escalates its wording as the slope flattens", () => {
+    // The number alone is not enough: a reader who has never met a mass-function slope
+    // cannot tell whether 1.74 is a big change or a rounding difference.
+    expect(slopeVerdict(2.1, 2.3)).toMatch(/slightly top-heavy/i);
+    expect(slopeVerdict(1.74, 2.3)).toMatch(/^top-heavy/i);
+    expect(slopeVerdict(0.9, 2.3)).toMatch(/^top-heavy/i);
   });
 });

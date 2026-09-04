@@ -59,6 +59,59 @@
             <span class="control__value"><span id="slopeValue"></span></span>
           </label>
 
+          <div class="derive">
+            <button
+              id="deriveToggle"
+              type="button"
+              class="cp-chip derive__toggle"
+              aria-pressed="false"
+              aria-controls="derivePanel"
+            >
+              Derive $\alpha$ from the environment
+            </button>
+            <div class="derive__panel" id="derivePanel" hidden>
+              <p class="derive__lede">
+                The mass function is not a universal constant. In dense, metal-poor
+                clusters the high-mass end flattens, so the same $N$ stars come out
+                top-heavy. Jerabkova et al. (2018).
+              </p>
+              <label class="control">
+                <span>Metallicity $[\mathrm{Fe}/\mathrm{H}]$</span>
+                <input
+                  id="fehSlider"
+                  type="range"
+                  min="-200"
+                  max="50"
+                  step="5"
+                  value="0"
+                  data-tooltip-source="#fehValue"
+                  aria-label="Metallicity [Fe/H]"
+                />
+                <span class="control__value">
+                  <span id="fehValue"></span>
+                  <span class="derive__nudge">metal-poor gives a flatter slope</span>
+                </span>
+              </label>
+              <label class="control">
+                <span>Cluster mass $\log_{10} M_{\mathrm{ecl}}$</span>
+                <input
+                  id="meclSlider"
+                  type="range"
+                  min="200"
+                  max="600"
+                  step="5"
+                  value="400"
+                  data-tooltip-source="#meclValue"
+                  aria-label="Cluster mass, log10 solar masses"
+                />
+                <span class="control__value">
+                  <span id="meclValue"></span>
+                  <span class="derive__nudge">more massive gives a flatter slope</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
           <label class="control">
             <span>Cluster age</span>
             <input
@@ -127,18 +180,18 @@
           <div class="census-tally" aria-label="Population tally">
             <div class="census-tally__row">
               <span class="census-tally__swatch census-tally__swatch--shining" aria-hidden="true"></span>
-              <span class="census-tally__label">Shining</span>
+              <span class="census-tally__label">On the main sequence</span>
               <span class="census-tally__value" id="shiningCount"></span>
+            </div>
+            <div class="census-tally__row">
+              <span class="census-tally__swatch census-tally__swatch--giant" aria-hidden="true"></span>
+              <span class="census-tally__label">Giants</span>
+              <span class="census-tally__value" id="giantCount"></span>
             </div>
             <div class="census-tally__row">
               <span class="census-tally__swatch census-tally__swatch--remnant" aria-hidden="true"></span>
               <span class="census-tally__label">Remnants</span>
               <span class="census-tally__value" id="remnantCount"></span>
-            </div>
-            <div class="census-tally__row">
-              <span class="census-tally__swatch census-tally__swatch--outside" aria-hidden="true"></span>
-              <span class="census-tally__label">Below model range</span>
-              <span class="census-tally__value" id="outsideCount"></span>
             </div>
             <div class="census-tally__row">
               <span class="census-tally__swatch census-tally__swatch--extrapolated" aria-hidden="true"></span>
@@ -207,28 +260,77 @@
         <div class="cp-tab-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
           <div class="stage census-grid">
             <figure class="census-panel census-panel--cluster">
-              <figcaption class="census-panel__title">The cluster in space</figcaption>
-              <canvas
-                id="clusterCanvas"
-                role="img"
-                aria-label="Projected positions of the sampled stars, with dot size scaled by mass and colour by temperature"
-              ></canvas>
+              <figcaption class="census-panel__title">
+                The cluster in space
+                <span class="census-panel__hint">
+                  hover a star &middot; click to keep it &middot; scroll to zoom
+                </span>
+              </figcaption>
+              <div class="census-stage">
+                <canvas
+                  id="clusterCanvas"
+                  role="img"
+                  tabindex="0"
+                  aria-label="The sampled stars in three dimensions, with size scaled by mass and colour by temperature. Drag to orbit in 3D, scroll to zoom, right-drag to pan. Hover or focus and use the left and right arrow keys to step through stars by mass; Escape clears the selection."
+                ></canvas>
+                <canvas id="clusterOverlay" class="census-stage__overlay" aria-hidden="true"></canvas>
+                <div class="census-stage__tools">
+                  <div class="cp-chip-group census-stage__modes" role="group" aria-label="Cluster view">
+                    <button id="view2d" type="button" class="cp-chip" aria-pressed="true">2D</button>
+                    <button id="view3d" type="button" class="cp-chip" aria-pressed="false">3D</button>
+                  </div>
+                  <button
+                    id="resetView"
+                    type="button"
+                    class="cp-button cp-button--outline census-stage__reset"
+                  >
+                    Reset view
+                  </button>
+                </div>
+              </div>
             </figure>
             <figure class="census-panel census-panel--hr">
-              <figcaption class="census-panel__title">Where they land on the HR diagram</figcaption>
-              <canvas
-                id="hrCanvas"
-                role="img"
-                aria-label="Hertzsprung-Russell diagram of the same stars, luminosity against effective temperature"
-              ></canvas>
+              <figcaption class="census-panel__title">
+                Where they land on the HR diagram
+                <span class="census-panel__hint">same stars, hotter to the left</span>
+              </figcaption>
+              <div class="census-plot">
+                <span class="census-plot__ytitle">$L/L_\odot$</span>
+                <canvas
+                  id="hrCanvas"
+                  role="img"
+                  tabindex="0"
+                  aria-label="Hertzsprung-Russell diagram of the same stars, luminosity against effective temperature. Hover or focus and use the left and right arrow keys to step through stars by mass; Escape clears the selection."
+                ></canvas>
+                <span class="census-plot__xtitle">$T_\mathrm{eff}\;(\mathrm{K})$</span>
+              </div>
             </figure>
+            <aside class="census-card" id="starCard" data-empty="true" aria-live="polite">
+              <span class="census-card__swatch" id="starSwatch" aria-hidden="true"></span>
+              <p class="census-card__empty">Hover a star in either panel to inspect it. Click to keep it.</p>
+              <dl class="census-card__list">
+                <div><dt>mass</dt><dd><span data-star="mass">--</span> <span>$M_\odot$</span></dd></div>
+                <div><dt>type</dt><dd data-star="type">--</dd></div>
+                <div><dt><span>$T_\mathrm{eff}$</span></dt><dd><span data-star="teff">--</span> K</dd></div>
+                <div><dt><span>$\log_{10} L/L_\odot$</span></dt><dd data-star="logl">--</dd></div>
+                <div><dt>radius</dt><dd><span data-star="radius">--</span> <span>$R_\odot$</span></dd></div>
+                <div><dt>phase</dt><dd data-star="phase">--</dd></div>
+              </dl>
+            </aside>
             <figure class="census-panel census-panel--imf">
-              <figcaption class="census-panel__title">How many of each mass you drew</figcaption>
-              <canvas
-                id="imfCanvas"
-                role="img"
-                aria-label="Histogram of sampled stellar masses with the analytic mass function overlaid"
-              ></canvas>
+              <figcaption class="census-panel__title">
+                How many of each mass you drew
+                <span class="census-panel__hint">bars are your draw; the line is the law</span>
+              </figcaption>
+              <div class="census-plot">
+                <span class="census-plot__ytitle">stars per bin</span>
+                <canvas
+                  id="imfCanvas"
+                  role="img"
+                  aria-label="Histogram of sampled stellar masses with the analytic mass function overlaid"
+                ></canvas>
+                <span class="census-plot__xtitle">$M/M_\odot$</span>
+              </div>
             </figure>
           </div>
         </div>
@@ -309,18 +411,28 @@
               <h3>What this model does not do</h3>
               <ul>
                 <li>
-                  <strong>No post-main-sequence track.</strong> A star sits at its zero-age point
-                  until its lifetime runs out, then becomes a remnant. There is no giant branch,
-                  so do not read the turnoff region as a real colour-magnitude diagram.
+                  <strong>The giant branch is schematic.</strong> Two of its three timescales
+                  are real: the main-sequence lifetime and the time to the base of the giant
+                  branch both come from Hurley et al. (2000). The <em>shape</em> of the track is
+                  textbook rather than computed, so positions are good to a factor of a few.
+                  Read the branch for its shape and its turnoff, not for a star's exact radius.
                 </li>
                 <li>
                   <strong>The model has a domain, and the two ends differ.</strong> The Tout et
                   al. (1996) fits are published for $0.1$ to $100\,M_\odot$. Above the ceiling
-                  they extrapolate cleanly, so stars heavier than $100\,M_\odot$ are plotted with
-                  a ring and counted as extrapolated. Below $0.1\,M_\odot$ they are not used at
-                  all: that is where a star approaches the hydrogen-burning limit and the
-                  interior physics changes. Those stars appear in the cluster and the histogram
-                  but carry no HR point, because plotting them would mean inventing one.
+                  they extrapolate cleanly, so stars heavier than $100\,M_\odot$ are plotted
+                  with a ring and counted as extrapolated. Below $0.1\,M_\odot$ they are not
+                  used at all, so the draw starts there rather than at the true
+                  hydrogen-burning limit of $0.08\,M_\odot$. That missing sliver is narrow in
+                  mass but holds roughly a tenth of the stars, because the mass function is so
+                  steep. Drawing them and then leaving them off the HR diagram taught nothing;
+                  clamping them up to $0.1\,M_\odot$ would have invented a spike that is not
+                  in the mass function.
+                </li>
+                <li>
+                  <strong>No white dwarfs, and no horizontal branch.</strong> Once a star burns
+                  through its giant phase it leaves the tally as a remnant and is drawn grey.
+                  The cooling track a real cluster shows at bottom left is not modelled.
                 </li>
                 <li>
                   <strong>No dynamics.</strong> Positions are drawn from a static profile.
@@ -380,10 +492,11 @@
                 <li>
                   Above $100\,M_\odot$ the Tout fits are extrapolated. Those stars carry a ring
                   on the HR diagram and their own line in the tally. Below $0.1\,M_\odot$ the
-                  fits are not used at all.
+                  fits are not used at all, so the draw starts there.
                 </li>
                 <li>
-                  There is no post-main-sequence track and no dynamics. Dot size scales as the
+                  The post-main-sequence track is schematic: real timescales from Hurley et al.
+                  (2000), textbook track shape. There are no dynamics. Dot size scales as the
                   cube root of mass for legibility; it is not a stellar radius.
                 </li>
               </ul>
