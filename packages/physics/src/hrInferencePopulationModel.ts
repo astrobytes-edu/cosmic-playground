@@ -1,6 +1,7 @@
 import { ZamsTout1996Model } from "./zamsTout1996Model";
 import { hashSeed, mulberry32 } from "./seededRandom";
-import { mainSequenceLifetimeMyr } from "./stellarLifetimeModel";
+import { mainSequenceLifetimeMyr, postMainSequenceTrack } from "./stellarLifetimeModel";
+import type { PostMainSequenceStage } from "./stellarLifetimeModel";
 
 export type HrStarStage =
   | "ms"
@@ -91,11 +92,6 @@ function mainSequenceLifetimeGyr(massMsun: number): number {
   return mainSequenceLifetimeMyr(massMsun) / 1000;
 }
 
-function luminosityFromRadiusTeff(radiusRsun: number, teffK: number): number {
-  if (!(radiusRsun > 0) || !(teffK > 0)) return Number.NaN;
-  const ratio = teffK / T_SUN_K;
-  return radiusRsun * radiusRsun * ratio ** 4;
-}
 
 function bolometricCorrectionV(teffK: number): number {
   // Torres (2010), correcting the Flower (1996) BC_V polynomials.
@@ -245,86 +241,66 @@ function msProperties(args: { massMsun: number; metallicityZ: number }): {
   };
 }
 
+/**
+ * Where a star of this mass sits at this age.
+ *
+ * The physics lives in `stellarLifetimeModel`; this function is the adapter that maps its
+ * vocabulary onto the stage names this demo's UI and exports already use. Until
+ * 2026-09-04 it carried its own schematic track, which meant the two star demos disagreed
+ * about the shape of the giant branch as well as about the main-sequence lifetime.
+ *
+ * The old white-dwarf branch is the reason this mattered in practice. Its cooling phase
+ * was `clamp((postPhase - 0.95) / 0.45, 0, 1)` where `postPhase` was itself clamped at
+ * 1.4 -- which lands exactly on 1.0, so EVERY white dwarf came out at 15,400 K. The
+ * cooling sequence, one of the three structures this demo asks the reader to identify,
+ * was a single point with every white dwarf stacked on it.
+ */
 function stageProperties(args: {
   massMsun: number;
   metallicityZ: number;
   ageGyr: number;
   random: () => number;
 }): { stage: HrStarStage; L: number; R: number; Teff: number } {
-  const { massMsun, metallicityZ, ageGyr, random } = args;
+  const { massMsun, metallicityZ, ageGyr } = args;
   const ms = msProperties({ massMsun, metallicityZ });
-  const tMsGyr = mainSequenceLifetimeGyr(massMsun);
+  const ageMyr = ageGyr * 1000;
 
-  if (ageGyr <= tMsGyr) {
-    return {
-      stage: "ms",
-      L: ms.L,
-      R: ms.R,
-      Teff: ms.Teff
-    };
+  if (ageMyr < mainSequenceLifetimeMyr(massMsun)) {
+    return { stage: "ms", L: ms.L, R: ms.R, Teff: ms.Teff };
   }
 
-  const highMass = massMsun >= 8;
-  const postWindowGyr = tMsGyr * (highMass ? 0.15 : 0.25);
-  const postPhase = clamp((ageGyr - tMsGyr) / Math.max(postWindowGyr, 1e-6), 0, 1.4);
+  const point = postMainSequenceTrack({
+    massMsun,
+    ageMyr,
+    zamsLuminosityLsun: ms.L,
+    zamsTemperatureK: ms.Teff
+  });
 
-  if (!highMass) {
-    if (postPhase < 0.28) {
-      const f = postPhase / 0.28;
-      const R = ms.R * (1.3 + 2.5 * f);
-      const Teff = ms.Teff * (0.98 - 0.18 * f);
-      return {
-        stage: "subgiant",
-        L: luminosityFromRadiusTeff(R, Teff),
-        R,
-        Teff
-      };
-    }
-    if (postPhase < 0.95) {
-      const f = (postPhase - 0.28) / 0.67;
-      const R = ms.R * (5 + 90 * f ** 1.15);
-      const Teff = clamp(ms.Teff * (0.82 - 0.48 * f), 3200, 6500);
-      return {
-        stage: "giant",
-        L: luminosityFromRadiusTeff(R, Teff),
-        R,
-        Teff
-      };
-    }
-
-    const wdMass = clamp(0.45 + 0.12 * massMsun, 0.52, 1.1);
-    const coolPhase = clamp((postPhase - 0.95) / 0.45, 0, 1);
-    const R = 0.012 * (wdMass / 0.6) ** (-1 / 3);
-    const Teff = 30000 * (1 - 0.72 * coolPhase) + 7000;
-    return {
-      stage: "white_dwarf",
-      L: luminosityFromRadiusTeff(R, Teff),
-      R,
-      Teff
-    };
+  if (!point) {
+    // Past its whole nuclear life and too massive to leave a white dwarf: a neutron star
+    // or a black hole. Neither has a photosphere to plot, so it keeps the tiny, absurdly
+    // hot placeholder this demo has always used to park it off the visible diagram.
+    return { stage: "compact_remnant", L: COMPACT_REMNANT.L, R: COMPACT_REMNANT.R, Teff: COMPACT_REMNANT.Teff };
   }
 
-  if (postPhase < 0.92) {
-    const f = postPhase / 0.92;
-    const R = ms.R * (12 + 380 * f ** 1.05);
-    const Teff = clamp(ms.Teff * (0.9 - 0.7 * f), 3200, 24000);
-    return {
-      stage: "supergiant",
-      L: luminosityFromRadiusTeff(R, Teff),
-      R,
-      Teff
-    };
-  }
-
-  const R = 2.0e-5;
-  const Teff = 2.2e5;
   return {
-    stage: "compact_remnant",
-    L: luminosityFromRadiusTeff(R, Teff),
-    R,
-    Teff
+    stage: STAGE_NAMES[point.stage],
+    L: point.luminosityLsun,
+    R: point.radiusRsun,
+    Teff: point.temperatureK
   };
 }
+
+/** This demo's stage vocabulary, keyed by the shared model's. */
+const STAGE_NAMES: Record<PostMainSequenceStage, HrStarStage> = {
+  "hertzsprung-gap": "subgiant",
+  giant: "giant",
+  supergiant: "supergiant",
+  "white-dwarf": "white_dwarf"
+};
+
+/** A neutron star or black hole: no photosphere, parked off the diagram. */
+const COMPACT_REMNANT = { R: 2.0e-5, Teff: 2.2e5, L: (2.0e-5) ** 2 * (2.2e5 / T_SUN_K) ** 4 };
 
 export function generatePopulation(options: PopulationOptions): PopulationStar[] {
   const N = Math.max(0, Math.floor(options.N));

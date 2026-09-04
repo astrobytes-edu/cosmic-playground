@@ -1711,12 +1711,19 @@ function syncReadoutsToView(): void {
 }
 
 /**
- * The spectroscopy mode and spectrum element pickers only do anything in the spectrum
- * view, and cost 450px of sidebar in the three views where they do nothing.
+ * Show a control group only in the views where it does something.
+ *
+ * They cost 450px of sidebar in the views where they do nothing. Same `data-views`
+ * mechanism as the readouts, and for the same reason -- membership is a list, not a
+ * single owner. SB1/SB2 is the case in point: it is labelled "Spectroscopy mode" but it
+ * decides whether the RV panel draws one curve or two, so it belongs to the RV view as
+ * well. Scoping it to the spectrum view alone made it unreachable from RV, which a
+ * screenshot test caught.
  */
 function syncSpectrumControlsToView(): void {
-  for (const group of document.querySelectorAll<HTMLElement>("[data-view-only]")) {
-    group.hidden = group.dataset.viewOnly !== state.view;
+  for (const group of document.querySelectorAll<HTMLElement>(".control-group[data-views]")) {
+    const views = (group.dataset.views ?? "").split(/\s+/).filter(Boolean);
+    group.hidden = views.length > 0 && !views.includes(state.view);
   }
 }
 

@@ -254,15 +254,20 @@ describe("HrInferencePopulationModel", () => {
         distancePc: 140,
         photErr: 0.03
       });
-      const offBottom = stars.filter((s) => Number.isFinite(s.Mv) && s.Mv > 17);
+      // The axis reaches M_V = 19 since 2026-09-04, because the white-dwarf cooling
+      // sequence is real now rather than a single point: a 0.57 Msun white dwarf cooled
+      // for 12 Gyr lands near M_V = 18, which is where it belongs.
+      const offBottom = stars.filter((s) => Number.isFinite(s.Mv) && s.Mv > 19);
       expect(
         offBottom.length,
-        `${offBottom.length}/${stars.length} stars fainter than the M_V=17 axis limit`
+        `${offBottom.length}/${stars.length} stars fainter than the M_V=19 axis limit`
       ).toBe(0);
 
-      // And the divergent extrapolation is genuinely gone.
-      const absurdlyFaint = stars.filter((s) => Number.isFinite(s.Mv) && s.Mv > 18.5);
-      expect(absurdlyFaint.length).toBe(0);
+      // And the divergent extrapolation is genuinely gone. Main-sequence dwarfs, which
+      // this regression was about, still land no fainter than M_V ~ 16.
+      const dwarfs = stars.filter((s) => s.stage === "ms");
+      const faintestDwarf = Math.max(...dwarfs.map((s) => s.Mv));
+      expect(faintestDwarf).toBeLessThan(18.5);
     });
 
     it("reproduces solar colour for a solar-mass ZAMS star", () => {

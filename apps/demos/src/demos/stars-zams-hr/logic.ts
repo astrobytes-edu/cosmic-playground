@@ -35,7 +35,7 @@ export const OBSERVER_AXIS_LIMITS = {
   colorMin: -0.4,
   colorMax: 2.5,
   mvBright: -10,
-  mvFaint: 17
+  mvFaint: 19
 } as const;
 
 export const RADIUS_GUIDE_VALUES_RSUN = [0.01, 0.1, 1, 10, 100, 1000] as const;

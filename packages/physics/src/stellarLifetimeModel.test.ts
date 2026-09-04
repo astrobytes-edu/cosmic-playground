@@ -4,7 +4,8 @@ import {
   postMainSequenceTrack,
   remnantFateFromInitialMass,
   spectralTypeFromTemperature,
-  totalLifetimeMyr
+  totalLifetimeMyr,
+  whiteDwarfMassMsun
 } from "./stellarLifetimeModel";
 import { ZamsTout1996Model } from "./zamsTout1996Model";
 
@@ -142,11 +143,17 @@ describe("total lifetime", () => {
 });
 
 describe("post-main-sequence track", () => {
-  it("returns null on the main sequence and null once the star is a remnant", () => {
-    const before = postMainSequenceTrack({ massMsun: 1, ageMyr: 100, ...zams(1) });
-    expect(before).toBeNull();
-    const after = postMainSequenceTrack({ massMsun: 1, ageMyr: 1e9, ...zams(1) });
-    expect(after).toBeNull();
+  it("returns null on the main sequence", () => {
+    expect(postMainSequenceTrack({ massMsun: 1, ageMyr: 100, ...zams(1) })).toBeNull();
+  });
+
+  it("leaves a white dwarf below the 8 Msun line and nothing above it", () => {
+    // A low-mass star does not vanish when it stops burning: it becomes a white dwarf and
+    // cools for the rest of the age of the universe. Above 8 Msun the remnant is a
+    // neutron star or a black hole, which has no photosphere to place on an HR diagram.
+    const lowMass = postMainSequenceTrack({ massMsun: 1, ageMyr: 1e9, ...zams(1) });
+    expect(lowMass?.stage).toBe("white-dwarf");
+    expect(postMainSequenceTrack({ massMsun: 20, ageMyr: 1e9, ...zams(20) })).toBeNull();
   });
 
   it("crosses the Hertzsprung gap before reaching the giant branch", () => {
@@ -219,5 +226,81 @@ describe("post-main-sequence track", () => {
         zamsTemperatureK: Number.NaN
       })
     ).toBeNull();
+  });
+});
+
+describe("white dwarfs", () => {
+  const wdAt = (initialMassMsun: number, coolingMyr: number) =>
+    postMainSequenceTrack({
+      massMsun: initialMassMsun,
+      ageMyr: totalLifetimeMyr(initialMassMsun) + coolingMyr,
+      ...zams(initialMassMsun)
+    });
+
+  it("follows the Cummings (2018) initial-final mass relation", () => {
+    // Their three linear segments, spot-checked against the published fits.
+    expect(whiteDwarfMassMsun(1)).toBeCloseTo(0.569, 3);
+    expect(whiteDwarfMassMsun(3)).toBeCloseTo(0.745, 3);
+    expect(whiteDwarfMassMsun(5)).toBeCloseTo(1.006, 3);
+    // Nothing lighter than a helium white dwarf, nothing above Chandrasekhar.
+    expect(whiteDwarfMassMsun(0.5)).toBeGreaterThanOrEqual(0.5);
+    expect(whiteDwarfMassMsun(50)).toBeLessThanOrEqual(1.38);
+  });
+
+  it("cools along a sequence rather than sitting at one temperature", () => {
+    // The defect this replaced: the previous implementation clamped its cooling phase to
+    // exactly 1, so EVERY white dwarf came out at 15,400 K -- a cooling sequence that was
+    // a single point, in a demo that asks the reader to identify it as a structure.
+    const temperatures = [1, 10, 100, 1000, 5000].map((t) => wdAt(1, t)!.temperatureK);
+    for (let i = 1; i < temperatures.length; i += 1) {
+      expect(temperatures[i]).toBeLessThan(temperatures[i - 1]);
+    }
+    expect(temperatures[0]).toBeGreaterThan(40_000);
+    expect(temperatures[temperatures.length - 1]).toBeLessThan(6000);
+  });
+
+  it("holds its radius while it cools, which is what makes it a sequence", () => {
+    // Degeneracy pressure does not depend on temperature, so the star does not contract.
+    const radii = [1, 100, 5000].map((t) => wdAt(1, t)!.radiusRsun);
+    for (const r of radii) expect(r).toBeCloseTo(radii[0], 12);
+    // A 0.57 Msun white dwarf is about an Earth radius: 0.0125 Rsun is 1.4 Earth radii.
+    expect(radii[0]).toBeGreaterThan(0.008);
+    expect(radii[0]).toBeLessThan(0.02);
+  });
+
+  it("stops at the observed luminosity-function cutoff, not at absolute zero", () => {
+    // The galactic disk is only about 10 Gyr old, so nothing has cooled below ~3,900 K.
+    const ancient = wdAt(1, 200_000)!;
+    expect(ancient.temperatureK).toBeGreaterThanOrEqual(3900);
+    expect(ancient.temperatureK).toBeLessThan(4100);
+  });
+
+  it("keeps L, R and T consistent so a reader can infer the radius back", () => {
+    for (const cooling of [10, 1000, 20_000]) {
+      const wd = wdAt(1, cooling)!;
+      const implied = wd.radiusRsun ** 2 * (wd.temperatureK / 5772) ** 4;
+      expect(implied / wd.luminosityLsun).toBeCloseTo(1, 6);
+    }
+  });
+
+  it("leaves no white dwarf above the 8 Msun line", () => {
+    for (const massMsun of [8, 12, 25, 60]) {
+      expect(wdAt(massMsun, 1000)).toBeNull();
+    }
+    expect(wdAt(7.9, 1000)?.stage).toBe("white-dwarf");
+  });
+});
+
+describe("supergiants", () => {
+  it("names a post-main-sequence star above 8 Msun a supergiant", () => {
+    const at = (massMsun: number) =>
+      postMainSequenceTrack({
+        massMsun,
+        ageMyr: totalLifetimeMyr(massMsun) * 0.98,
+        ...zams(massMsun)
+      })?.stage;
+    expect(at(5)).toBe("giant");
+    expect(at(10)).toBe("supergiant");
+    expect(at(25)).toBe("supergiant");
   });
 });

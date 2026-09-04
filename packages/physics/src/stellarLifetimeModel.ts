@@ -166,7 +166,80 @@ const RGB_TIP_LSUN = 2500;
 /** Above this mass the helium core never becomes degenerate, so there is no fixed tip. */
 const DEGENERATE_CORE_MAX_MSUN = 2;
 
-export type PostMainSequenceStage = "hertzsprung-gap" | "giant";
+/*
+ * ── White dwarfs ────────────────────────────────────────────────────────────
+ *
+ * Below the 8 Msun white-dwarf/neutron-star line the star does not vanish when it stops
+ * burning: it becomes a white dwarf and cools for the rest of the age of the universe,
+ * tracing a diagonal sequence below the main sequence. That sequence is one of the three
+ * structures a colour-magnitude diagram is read for, alongside the main sequence and the
+ * giant branch.
+ *
+ * Initial-final mass relation: Cummings et al. (2018), ApJ 866, 21, their three linear
+ * segments. Radius: the non-relativistic degenerate relation R ~ M^(-1/3), normalised so
+ * a 0.6 Msun white dwarf has R = 0.0125 Rsun. Cooling: Mestel (1952), L ~ t^(-7/5),
+ * anchored at 10^-2 Lsun after 100 Myr.
+ *
+ * The anchoring makes this schematic like the rest of the track, but it is a real
+ * sequence rather than a point: at 10 Myr it gives 36,500 K, at 5 Gyr 4,200 K.
+ */
+
+/** Mestel's cooling exponent: luminosity falls as t^(-7/5). */
+const WHITE_DWARF_COOLING_EXPONENT = -1.4;
+
+/** Luminosity [Lsun] at the anchor age below. */
+const WHITE_DWARF_ANCHOR_LSUN = 1e-2;
+
+/** Cooling age [Myr] at which the anchor luminosity applies. */
+const WHITE_DWARF_ANCHOR_MYR = 100;
+
+/** Radius [Rsun] of a 0.6 Msun white dwarf; the relation scales as M^(-1/3) from here. */
+const WHITE_DWARF_RADIUS_AT_0P6_RSUN = 0.0125;
+
+/**
+ * Coolest white dwarf [K].
+ *
+ * Not a physical floor -- degenerate matter keeps radiating -- but an age-of-the-galaxy
+ * one. The observed white-dwarf luminosity function has a sharp cutoff near
+ * log(L/Lsun) = -4.5, about 3,900 K, because the disk is only some 10 Gyr old and nothing
+ * has had time to cool further. Winget et al. (1987), ApJ 315, L77, is the classic
+ * statement of it, and the cutoff is used to date the disk.
+ *
+ * At 3,200 K the model was producing white dwarfs cooler than any that exist, reaching
+ * M_V = 20.3 where the faintest real ones sit near 17.
+ */
+const WHITE_DWARF_MIN_TEMPERATURE_K = 3900;
+
+/** Above this initial mass the remnant is a neutron star or black hole, not a white dwarf. */
+const WHITE_DWARF_MAX_PROGENITOR_MSUN = 8;
+
+/** Above this initial mass a post-main-sequence star is a supergiant, not a giant. */
+const SUPERGIANT_MIN_MSUN = 8;
+
+/**
+ * White-dwarf mass [Msun] left by a star of this initial mass.
+ *
+ * Cummings et al. (2018), ApJ 866, 21, Table 1: three linear segments fitted to cluster
+ * white dwarfs. Outside the fitted range the nearest segment is extended, which is why
+ * the result is clamped to the physical span.
+ */
+export function whiteDwarfMassMsun(initialMassMsun: number): number {
+  const m = initialMassMsun;
+  const fitted =
+    m < 2.85
+      ? 0.08 * m + 0.489
+      : m < 3.6
+        ? 0.187 * m + 0.184
+        : 0.107 * m + 0.471;
+  // 0.5 is about the lightest a single star can leave; 1.38 is the Chandrasekhar limit.
+  return Math.min(1.38, Math.max(0.5, fitted));
+}
+
+export type PostMainSequenceStage =
+  | "hertzsprung-gap"
+  | "giant"
+  | "supergiant"
+  | "white-dwarf";
 
 export interface PostMainSequencePoint {
   stage: PostMainSequenceStage;
@@ -235,7 +308,13 @@ export function postMainSequenceTrack(args: {
 
   const giantBranchStart = timeToGiantBranchMyr(massMsun);
   const end = giantBranchStart * (1 + POST_BGB_FRACTION);
-  if (ageMyr >= end) return null;
+
+  if (ageMyr >= end) {
+    // Above the white-dwarf line the remnant is a neutron star or a black hole. Neither
+    // belongs on an HR diagram of stellar photospheres, so there is no point to return.
+    if (massMsun >= WHITE_DWARF_MAX_PROGENITOR_MSUN) return null;
+    return whiteDwarfPoint(massMsun, ageMyr - end);
+  }
 
   const giantBaseTemperatureK = giantBranchBaseTemperatureK(massMsun);
 
@@ -268,10 +347,51 @@ export function postMainSequenceTrack(args: {
   );
   const temperatureK = giantBaseTemperatureK * (tipTemperatureK / giantBaseTemperatureK) ** g;
   return {
-    stage: "giant",
+    // Above 8 Msun the same climb is a supergiant, not a giant: no degenerate core, and
+    // the star ends as a neutron star or black hole rather than a white dwarf. The word
+    // matters on a diagram a reader is being taught to name structures on.
+    stage: massMsun >= SUPERGIANT_MIN_MSUN ? "supergiant" : "giant",
     luminosityLsun,
     temperatureK,
     radiusRsun: radiusRsunFromLuminosityTemperature(luminosityLsun, temperatureK)
+  };
+}
+
+/**
+ * A cooling white dwarf, `coolingAgeMyr` after it formed.
+ *
+ * Radius is fixed: degeneracy pressure does not care about temperature, so a white dwarf
+ * contracts negligibly as it cools. The whole sequence is therefore a line of constant
+ * radius on the HR diagram, which is exactly why it looks like a sequence.
+ */
+function whiteDwarfPoint(
+  initialMassMsun: number,
+  coolingAgeMyr: number
+): PostMainSequencePoint {
+  const massMsun = whiteDwarfMassMsun(initialMassMsun);
+  const radiusRsun =
+    WHITE_DWARF_RADIUS_AT_0P6_RSUN * (massMsun / 0.6) ** (-1 / 3);
+
+  // Mestel cooling. The floor on the age keeps a just-formed white dwarf from being
+  // infinitely bright rather than merely very hot.
+  const age = Math.max(coolingAgeMyr, WHITE_DWARF_ANCHOR_MYR * 1e-3);
+  const luminosityLsun =
+    WHITE_DWARF_ANCHOR_LSUN *
+    (age / WHITE_DWARF_ANCHOR_MYR) ** WHITE_DWARF_COOLING_EXPONENT;
+
+  const temperatureK = Math.max(
+    WHITE_DWARF_MIN_TEMPERATURE_K,
+    5772 * (luminosityLsun / radiusRsun ** 2) ** 0.25
+  );
+  // Recompute L from the clamped temperature so the three quantities stay consistent
+  // with Stefan-Boltzmann; a reader inferring R from L and T must get the radius back.
+  const consistentLuminosityLsun = radiusRsun ** 2 * (temperatureK / 5772) ** 4;
+
+  return {
+    stage: "white-dwarf",
+    luminosityLsun: consistentLuminosityLsun,
+    temperatureK,
+    radiusRsun
   };
 }
 
@@ -280,6 +400,7 @@ export const StellarLifetimeModel = {
   mainSequenceLifetimeMyr,
   totalLifetimeMyr,
   postMainSequenceTrack,
+  whiteDwarfMassMsun,
   spectralTypeFromTemperature,
   remnantFateFromInitialMass
 } as const;

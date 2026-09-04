@@ -62,7 +62,7 @@ describe("HR Inference Lab logic", () => {
     expect(OBSERVER_AXIS_LIMITS.mvBright).toBe(-10);
     // Wide enough to contain a default Salpeter population (faintest M_V ~ 16.1,
     // reddest B-V ~ 2.40) rather than clamping ~29% of it onto the frame edge.
-    expect(OBSERVER_AXIS_LIMITS.mvFaint).toBe(17);
+    expect(OBSERVER_AXIS_LIMITS.mvFaint).toBe(19);
     expect(OBSERVER_AXIS_LIMITS.colorMax).toBe(2.5);
   });
 

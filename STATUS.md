@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: stars-zams-hr layout (2,654px of control cards, and it still carries the ZAMS clamping defect from the 2026-09-03 audit, so one combined pass), then keplers-laws and parallax-distance. See docs/reviews/2026-09-04-layout-audit.md. Also open: port the progenax/startrax cross-validation fixtures so the IMF, cluster, lifetime and post-main-sequence models are gated against an external reference (the largest gap in docs/reviews/cluster-census.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
+next: fix the stars-zams-hr CMD colour saturation (30.3% of a default population still pegs at B-V = 2.2, because the Ballesteros bisection bracket only spans 2975-21707 K -- needs a colour-temperature relation valid below that), then its layout (2,654px of control cards, and it still carries the ZAMS clamping defect from the 2026-09-03 audit, so one combined pass), then keplers-laws and parallax-distance. See docs/reviews/2026-09-04-layout-audit.md. Also open: port the progenax/startrax cross-validation fixtures so the IMF, cluster, lifetime and post-main-sequence models are gated against an external reference (the largest gap in docs/reviews/cluster-census.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -79,6 +79,34 @@ silently doing nothing on any styled container — the DOM said hidden and the p
 disagreed. The theme had already patched this twice per-component
 (`.cp-tab-panel[hidden]`, `.cp-popover[hidden]`); a scan found **26 element/rule pairs
 across 14 demos** exposed to the same failure. Guarded by a token test.
+
+## One source of truth for the stellar physics, 2026-09-04
+
+Both star demos now take their shared physics from the same place, and it is gated against
+an external reference.
+
+- **startrax parity.** `packages/physics/src/__fixtures__/stellar-startrax.json` is a
+  committed dump of startrax's own Tout (1996) ZAMS and Hurley (2000) lifetime at ten
+  masses; 42 tests assert our ports reproduce it to a part in a thousand. This closes the
+  gap the cluster-census review named as its largest.
+- **One main-sequence lifetime.** The HR population model carried a private
+  `10 * M^-2.5`; it disagreed with Hurley by **33x at 100 Msun**. Unified, with tests that
+  stop the shortcut reappearing.
+- **One post-main-sequence track**, extended to cover white dwarfs and supergiants so the
+  richer demo keeps what it needs. The old private version clamped its cooling phase to
+  exactly 1, so **every white dwarf came out at 15,400 K** -- the cooling sequence, one of
+  the three structures that demo asks readers to identify, was a single point. It is a
+  real sequence now: 81,000 K down to the observed luminosity-function cutoff at 3,900 K,
+  at constant radius. IFMR from Cummings et al. (2018); cooling from Mestel (1952).
+
+Two mistakes of mine worth recording:
+
+- I scoped binary-orbits' "Spectroscopy mode" control to the spectrum view **from its
+  label**, without checking what it does. SB1/SB2 decides whether the RV panel draws one
+  curve or two, so it belongs to the RV view as well; a screenshot test caught it.
+- The `-visual-` screenshot baselines were swept into commit 7dd9b81 by a blanket
+  `git add -A` after I had said I would leave them out, and I then regenerated them while
+  the layout was mid-fix. They are correct now and committed deliberately.
 
 ## binary-orbits fixed, 2026-09-04
 

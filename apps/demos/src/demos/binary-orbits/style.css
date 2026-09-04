@@ -554,7 +554,16 @@
  *
  * The stage and the readouts share one height budget so both fit on a laptop screen. */
 
-@media (min-width: 1025px) and (min-height: 700px) {
+/*
+ * The threshold is 820px, not 700px.
+ *
+ * This demo needs a taller budget than cluster-census does: a banner, a plot that has to
+ * carry axis labels and two RV curves, and a readout grid. At 720px the fitted layout
+ * squeezed the RV panel to 219px, which is present but unreadable -- and unreadable is
+ * worse than a page that scrolls. Below this height the demo keeps its natural layout and
+ * the reader scrolls, which is the honest trade.
+ */
+@media (min-width: 1025px) and (min-height: 820px) {
   .cp-demo__stage {
     /*
      * min-height BEATS max-height in CSS, so the shell's `min-height: clamp(420px, 70svh,
@@ -587,7 +596,8 @@
   #spectrumCanvas {
     aspect-ratio: auto;
     height: 100%;
-    min-height: 200px;
+    /* An RV curve needs room for two traces, an axis and its labels. */
+    min-height: 300px;
     width: 100%;
     max-width: 860px;
   }
