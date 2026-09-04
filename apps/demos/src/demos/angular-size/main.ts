@@ -638,7 +638,7 @@ function setState(next: unknown): void {
   if (
     presetKey &&
     presetKey !== "Custom" &&
-    Object.prototype.hasOwnProperty.call(AngularSizeModel.presets, presetKey)
+    Object.hasOwn(AngularSizeModel.presets, presetKey)
   ) {
     setFromPreset(presetKey as keyof typeof AngularSizeModel.presets);
   }

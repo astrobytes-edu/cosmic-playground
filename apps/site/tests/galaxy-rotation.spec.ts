@@ -9,7 +9,7 @@ test.describe("Galaxy Rotation -- E2E", () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       const clipboardStore = { text: "" };
-      // @ts-ignore test-only bridge
+      // @ts-expect-error test-only bridge
       window.__cpClipboardStore = clipboardStore;
       Object.defineProperty(navigator, "clipboard", {
         configurable: true,
@@ -97,7 +97,7 @@ test.describe("Galaxy Rotation -- E2E", () => {
     await page.locator("#copyChallengeEvidence").click();
 
     const copied = await page.evaluate(() => {
-      // @ts-ignore test-only bridge
+      // @ts-expect-error test-only bridge
       return window.__cpClipboardStore?.text ?? "";
     });
 
@@ -112,7 +112,7 @@ test.describe("Galaxy Rotation -- E2E", () => {
     await page.locator("#copyResults").click();
 
     const copied = await page.evaluate(() => {
-      // @ts-ignore test-only bridge
+      // @ts-expect-error test-only bridge
       return window.__cpClipboardStore?.text ?? "";
     });
 

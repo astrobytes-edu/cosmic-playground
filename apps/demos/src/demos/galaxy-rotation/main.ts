@@ -10,7 +10,7 @@ import {
   setLiveRegionText,
 } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
-import { GalaxyRotationModel, type GalaxyParams, type GalaxyPresetKey, type RotationCurvePoint } from "@cosmic/physics";
+import { GalaxyRotationModel, type GalaxyParams, type RotationCurvePoint } from "@cosmic/physics";
 import {
   RADIAL_PROFILE_SAMPLE_KPC,
   advanceRadiusSweep,
@@ -21,7 +21,6 @@ import {
   createSeededRandom,
   findDarkDominanceRadiusKpc,
   formatNumber,
-  formatSigned,
   isChallengeCopyLocked,
   pickChallengeTarget,
   type ChallengeTarget,

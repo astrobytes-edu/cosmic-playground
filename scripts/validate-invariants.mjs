@@ -343,8 +343,7 @@ export async function validateInvariants({ repoRoot = process.cwd() } = {}) {
     for (const filePath of themeFiles) {
       const text = await fs.readFile(filePath, "utf8");
       const rx = /(--cp-(?:glow|tint)-[a-z0-9-]+)\s*:\s*([^;]+);/g;
-      let m;
-      while ((m = rx.exec(text)) !== null) {
+      for (const m of text.matchAll(rx)) {
         const [, token, rawValue] = m;
         const value = rawValue.trim();
         // An alias (`var(--other)`) inherits its kind; skip it.

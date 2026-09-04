@@ -9,7 +9,6 @@ import {
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { BinaryOrbitModel, DopplerShiftModel, SpectralLineModel } from "@cosmic/physics";
 import {
-  CAMERA_TRANSITION_MS,
   INCLINATION_MAX_DEG,
   INCLINATION_MIN_DEG,
   MASS_RATIO_MAX,
@@ -1295,13 +1294,19 @@ function flashReadoutGroup(targets: HTMLElement[]): void {
     readoutM2Sini,
     readoutMassFunction,
   ];
-  allPulseTargets.forEach((target) => target.classList.remove("is-live-changed"));
-  targets.forEach((target) => target.classList.add("is-live-changed"));
+  allPulseTargets.forEach((target) => {
+    target.classList.remove("is-live-changed");
+  });
+  targets.forEach((target) => {
+    target.classList.add("is-live-changed");
+  });
   if (state.readoutFlashTimeoutId !== null) {
     window.clearTimeout(state.readoutFlashTimeoutId);
   }
   state.readoutFlashTimeoutId = window.setTimeout(() => {
-    allPulseTargets.forEach((target) => target.classList.remove("is-live-changed"));
+    allPulseTargets.forEach((target) => {
+    target.classList.remove("is-live-changed");
+  });
     state.readoutFlashTimeoutId = null;
   }, READOUT_PULSE_MS);
 }

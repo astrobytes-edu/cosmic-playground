@@ -2,7 +2,6 @@ import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, in
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
 import { clamp, formatNumber, formatDateFromDayOfYear, formatDayLength, formatLatitude, seasonFromPhaseNorth, oppositeSeason, orbitPosition, terminatorShiftX, latitudeBandEllipse, globeAxisEndpoints, animationProgress, easeInOutCubic, shortestDayDelta, orbitSeasonLabelPositions, polarisIndicatorEndpoints, seasonColorClass, contextualMessage, dayLengthArcGeometry } from "./logic";
-import type { Season } from "./logic";
 
 const dayOfYearEl = document.querySelector<HTMLInputElement>("#dayOfYear");
 const dayOfYearValueEl = document.querySelector<HTMLSpanElement>("#dayOfYearValue");

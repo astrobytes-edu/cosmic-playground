@@ -1,0 +1,83 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    // *.astro is deliberately NOT linted. Biome 2.x parses the frontmatter as standalone
+    // TypeScript and cannot see component usage in the template markup, so
+    // noUnusedImports strips Layout / Breadcrumb / DemoCanvasThumbnail and breaks the
+    // build. Verified: enabling it deleted 111 import lines across 25 files. Astro files
+    // are type-checked by `astro check` via `pnpm -C apps/site typecheck`.
+    "includes": [
+      "apps/**/*.ts",
+      "packages/**/*.ts",
+      "scripts/**/*.mjs",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/.astro",
+      "!apps/site/public",
+      "!apps/demos/public"
+    ]
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        // Pure churn on an existing codebase, and it fights the formatter being off.
+        "organizeImports": "off"
+      }
+    }
+  },
+  "formatter": {
+    // Deliberately off. Enabling it would rewrite 218 TypeScript files in one commit,
+    // burying every real change and destroying `git blame` on the whole repo. The
+    // javascript.formatter block below records the house style so a future opt-in
+    // reformat matches what is already here.
+    "enabled": false
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        // Dead code. The audit called ts-prune/knip "the highest remaining ROI"; these
+        // rules cover the same ground and run on every build.
+        "noUnusedImports": "error",
+        "noUnusedVariables": "warn",
+        "noUnusedFunctionParameters": "warn"
+      },
+      "suspicious": {
+        // The silent-failure class: 16 empty blocks, mostly swallowed catches.
+        "noEmptyBlockStatements": "warn",
+        "noTsIgnore": "error",
+        "noExplicitAny": "warn",
+        // False positives here: every hit is `formatNumber(3.14159, n)` in a test, using
+        // 3.14159 as an arbitrary input to a FORMATTER, not as pi in a calculation.
+        "noApproximativeNumericConstant": "off"
+      },
+      "style": {
+        // 331 occurrences. Real debt, tracked as a warning rather than blocking the
+        // build on a cleanup that is its own project.
+        "noNonNullAssertion": "warn",
+        // Math.pow reads better than ** in physics code and matches the existing style.
+        "useExponentiationOperator": "off",
+        "useTemplate": "off"
+      },
+      "complexity": {
+        "noForEach": "off",
+        "useLiteralKeys": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 100
+    }
+  }
+}

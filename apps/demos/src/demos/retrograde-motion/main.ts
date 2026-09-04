@@ -931,7 +931,15 @@ function renderOrbitDynamic() {
   clear(ctx.dynamicLayer);
 
   const colorCache: Record<string, string> = {};
-  const cachedColor = (key: string) => (colorCache[key] ??= resolvePlanetColor(key));
+  const cachedColor = (key: string): string => {
+    // Memoised because resolvePlanetColor reads getComputedStyle, which is a layout
+    // read; this runs per planet per frame.
+    const cached = colorCache[key];
+    if (cached !== undefined) return cached;
+    const resolved = resolvePlanetColor(key);
+    colorCache[key] = resolved;
+    return resolved;
+  };
 
   const observerState = RetrogradeMotionModel.orbitStateAtModelDay({
     elements: RetrogradeMotionModel.planetElements(state.observer),

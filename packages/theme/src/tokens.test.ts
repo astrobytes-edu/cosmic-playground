@@ -181,10 +181,9 @@ describe("Design tokens", () => {
 
     it("glow tokens use 30-50% opacity range", () => {
       const glowPattern = /--cp-glow-(?:sun|moon|planet|star|accent-teal|accent-rose|accent-violet):.*?rgba\([^)]*,\s*([\d.]+)\)/g;
-      let match;
       const opacities: number[] = [];
-      while ((match = glowPattern.exec(css)) !== null) {
-        opacities.push(parseFloat(match[1]));
+      for (const match of css.matchAll(glowPattern)) {
+        opacities.push(Number.parseFloat(match[1]));
       }
       expect(opacities.length).toBeGreaterThanOrEqual(4);
       for (const opacity of opacities) {

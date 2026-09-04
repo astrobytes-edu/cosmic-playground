@@ -26,8 +26,6 @@ import {
   offsetPx,
   parallaxArcsecFromMas,
   scaleVec2,
-  signalToNoise,
-  subVec2,
   type CaptureInference,
   type Vec2
 } from "./logic";

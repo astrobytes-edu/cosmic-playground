@@ -1004,7 +1004,7 @@ const demoModes = createDemoModes({
           <ul style="margin: 0; padding-left: 1.2rem;">
             <li>Pick a hypothesis first: where will speed be highest and why?</li>
             <li>Turn on equal-area slices, then compare near perihelion and aphelion.</li>
-            <li>Change a and test period scaling: $P \propto a^{3/2}$ for fixed M.</li>
+            <li>Change a and test period scaling: $P \\propto a^{3/2}$ for fixed M.</li>
           </ul>
         `
       }

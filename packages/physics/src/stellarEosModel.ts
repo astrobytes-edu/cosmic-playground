@@ -641,7 +641,7 @@ function assessRadiationClosure(args: {
   temperatureK: number;
   radiationDepartureEta: number;
 }): RadiationClosureAssessment {
-  const { densityGPerCm3: rho, temperatureK: temperatureK, radiationDepartureEta: eta } = args;
+  const { densityGPerCm3: rho, temperatureK, radiationDepartureEta: eta } = args;
 
   if (!isFinitePositive(temperatureK) || !isFinitePositive(rho) || !isFiniteNonNegative(eta)) {
     return {

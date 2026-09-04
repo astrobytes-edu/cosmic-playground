@@ -26,9 +26,9 @@ function readStyles(file: string): string {
 /** Collect `--token: value;` declarations in source order (later wins). */
 function parseTokens(css: string): Map<string, string> {
   const out = new Map<string, string>();
-  const rx = /(--cp-[a-z0-9-]+)\s*:\s*([^;]+);/g;
-  let m: RegExpExecArray | null;
-  while ((m = rx.exec(css)) !== null) out.set(m[1], m[2].trim());
+  for (const m of css.matchAll(/(--cp-[a-z0-9-]+)\s*:\s*([^;]+);/g)) {
+    out.set(m[1], m[2].trim());
+  }
   return out;
 }
 

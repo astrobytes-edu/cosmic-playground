@@ -17,7 +17,6 @@ import {
 import { requiredContext2d } from "../../shared/dom";
 import {
   type HrLabPresetId,
-  OBSERVER_AXIS_LIMITS,
   type PlotMode,
   type PlotPoint,
   RADIUS_GUIDE_VALUES_RSUN,

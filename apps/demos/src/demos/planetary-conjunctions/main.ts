@@ -15,7 +15,6 @@ import {
   orbitToSvg,
   orbitRadiusPx,
   planetCssVar,
-  yearDays
 } from "./logic";
 
 // ---------------------------------------------------------------------------
@@ -119,7 +118,7 @@ let flashOpacity = 0;
 // ---------------------------------------------------------------------------
 // Precomputed periods
 // ---------------------------------------------------------------------------
-let earthPeriodDays = siderealPeriodDays("Earth", callbacks);
+const earthPeriodDays = siderealPeriodDays("Earth", callbacks);
 let targetPeriodDays = siderealPeriodDays(selectedPlanet, callbacks);
 let synPeriodDays = synodicPeriodDays(earthPeriodDays, targetPeriodDays, callbacks);
 
