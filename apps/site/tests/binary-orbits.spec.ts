@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 function rvPlotMargin(width: number) {
   const compact = width < 720;
@@ -24,6 +25,22 @@ function rvPeakClickPosition(args: {
     + ((yMaxKmPerS - velocityKmPerS) / (2 * yMaxKmPerS)) * plotHeight
     + verticalOffsetPx;
   return { x, y };
+}
+
+
+/**
+ * Open the drawer accordion that contains a given control.
+ *
+ * The predict/compare and RV-challenge activities used to live in the control sidebar,
+ * where they were 1,748px of a panel that only showed 819px -- so in practice a reader
+ * never found them. They are drawer accordions now, which means a test has to open the
+ * accordion first, exactly as a reader does.
+ */
+async function openPanelContaining(page: Page, selector: string): Promise<void> {
+  await page.locator(selector).evaluate((element) => {
+    const details = element.closest("details");
+    if (details && !details.open) details.open = true;
+  });
 }
 
 test.describe("Binary Orbits -- E2E", () => {
@@ -450,6 +467,7 @@ test.describe("Binary Orbits -- E2E", () => {
   });
 
   test("copy results stays available during prediction compare workflow", async ({ page }) => {
+    await openPanelContaining(page, "#startPrediction");
     await page.locator("#startPrediction").click();
     await expect(page.locator("#predictionFeedback")).toContainText("Baseline captured");
     await page.locator("#copyResults").click();
@@ -604,6 +622,7 @@ test.describe("Binary Orbits -- E2E", () => {
   });
 
   test("station snapshot remains available during prediction compare workflow", async ({ page }) => {
+    await openPanelContaining(page, "#startPrediction");
     await page.locator("#startPrediction").click();
     await page.locator("#stationMode").click();
     const stationDialog = page.getByRole("dialog", {
@@ -615,6 +634,7 @@ test.describe("Binary Orbits -- E2E", () => {
   });
 
   test("prediction compare uses a captured baseline while the live demo keeps updating", async ({ page }) => {
+    await openPanelContaining(page, "#startPrediction");
     await page.locator("#startPrediction").click();
     await expect(page.locator("#predictionFeedback")).toContainText("Baseline captured");
 
@@ -627,6 +647,8 @@ test.describe("Binary Orbits -- E2E", () => {
     await expect(page.locator("#massRatioValue")).toContainText("0.306");
     await expect(page.locator("#baryOffsetSecondaryValue")).not.toContainText("2.000");
 
+    await openPanelContaining(page, "#predictPeriod");
+
     await page.locator("#predictPeriod").selectOption("increase");
     await page.locator("#predictV1").selectOption("decrease");
     await page.locator("#predictA1").selectOption("decrease");
@@ -637,18 +659,21 @@ test.describe("Binary Orbits -- E2E", () => {
   });
 
   test("invariant discrimination flags selected distractors", async ({ page }) => {
+    await openPanelContaining(page, "#invariantSum");
     await page.locator("#invariantSum").check();
     await page.locator("#invariantBary").check();
     await page.locator("#invariantSpeed").check();
     await page.locator("#invariantPeriod").check();
     await page.locator("#invariantEqualOffsets").check();
     await page.locator("#invariantEqualRv").check();
+    await openPanelContaining(page, "#invariantCheck");
     await page.locator("#invariantCheck").click();
     await expect(page.locator("#invariantFeedback")).toContainText("distractor");
   });
 
   test("RV challenge workflow: start, measure, reveal, and compare inferred q", async ({ page }) => {
     await page.locator("#viewRv").click();
+    await openPanelContaining(page, "#rvChallengeStart");
     await page.locator("#rvChallengeStart").click();
     await expect(page.locator("#rvChallengeFeedback")).toContainText("Challenge active");
 
@@ -691,6 +716,7 @@ test.describe("Binary Orbits -- E2E", () => {
     const trueK1 = parseFloat((await page.locator("#k1Value").textContent()) || "NaN");
     const trueK2 = parseFloat((await page.locator("#k2Value").textContent()) || "NaN");
 
+    await openPanelContaining(page, "#rvChallengeStart");
     await page.locator("#rvChallengeStart").click();
     const rvCanvas = page.locator("#rvCanvas");
     const box = await rvCanvas.boundingBox();
@@ -726,6 +752,7 @@ test.describe("Binary Orbits -- E2E", () => {
 
   test("copy and snapshot are locked while RV challenge is active and unrevealed", async ({ page }) => {
     await page.locator("#viewRv").click();
+    await openPanelContaining(page, "#rvChallengeStart");
     await page.locator("#rvChallengeStart").click();
     await page.locator("#copyResults").click();
     await expect(page.locator("#status")).toContainText("Finish or reveal the RV challenge before copying results.");
@@ -741,6 +768,7 @@ test.describe("Binary Orbits -- E2E", () => {
 
   test("RV challenge resets measurements when the system changes", async ({ page }) => {
     await page.locator("#viewRv").click();
+    await openPanelContaining(page, "#rvChallengeStart");
     await page.locator("#rvChallengeStart").click();
 
     const rvCanvas = page.locator("#rvCanvas");

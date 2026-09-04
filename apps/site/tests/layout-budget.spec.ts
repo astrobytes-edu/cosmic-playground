@@ -53,7 +53,11 @@ interface Budget {
  * took 836px off nine sidebars.
  */
 const BUDGETS: Record<string, Budget> = {
-  "binary-orbits": { readoutsBelowFold: 46, sidebarOverflowPx: 3000 },
+  // binary-orbits was 46 below the fold with 3,070px hidden. Fixed 2026-09-04: activities
+  // and the invariant quiz moved to the drawer, readouts filtered by view, the integrity
+  // panel given the full grid width. Not yet clean -- the Energy view has the most
+  // readouts of any -- but no longer the outlier.
+  "binary-orbits": { readoutsBelowFold: 9, sidebarOverflowPx: 650 },
   "eos-lab": { readoutsBelowFold: 22, sidebarOverflowPx: 580 },
   "galaxy-rotation": { readoutsBelowFold: 22, sidebarOverflowPx: 360 },
   "doppler-shift": { readoutsBelowFold: 20, sidebarOverflowPx: 380 },
@@ -87,9 +91,12 @@ test.describe("Layout budget", () => {
         );
         const scroller =
           sidebar?.querySelector<HTMLElement>(".cp-panel-body") ?? sidebar ?? null;
+        // Rendered readouts only. An element inside a collapsed <details> still reports a
+        // rect at the summary's position, so counting it as "below the fold" would blame a
+        // demo for content the reader has deliberately not opened.
         const readouts = [
           ...document.querySelectorAll<HTMLElement>(".cp-readout, .cp-readout__value")
-        ];
+        ].filter((el) => el.getBoundingClientRect().height > 0);
         const below = readouts.filter(
           (el) => el.getBoundingClientRect().bottom > window.innerHeight
         );

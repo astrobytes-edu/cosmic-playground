@@ -87,6 +87,54 @@ Two findings from doing it, both from measuring rather than reading:
 - `doppler-shift` and `seasons` use the value cell as a full-width flex row of its own.
   They opt out with `.control--stacked` and keep their old layout.
 
+## binary-orbits, fixed
+
+The worst case. Before, at 1440x900: **3,764px of sidebar in an 819px box, hiding 2,945px**
+behind a nested scroller with no affordance -- including `#predictPanel` at y=1,957 and
+`#rvChallengePanel` at y=2,907 *within that scroller*. 1,748px of teaching activity a
+reader would never find.
+
+| | Before | After |
+| --- | ---: | ---: |
+| Sidebar content hidden | 2,945px | 601px |
+| Readouts shown | 23, every view | 8-13, per view |
+| Readouts below the fold | 46 of 48 | 9 of 24 |
+| Readouts area | 2,252px | ~440px |
+| Page height | 3,717px | 1,592-1,833px |
+| Integrity panel | 922px in a 226px column | ~100px, spanning the grid |
+
+What was done:
+
+- **The two activities and the invariant quiz moved to the drawer** as accordions. They
+  are exercises, not controls.
+- **Readouts are filtered by view.** `state.view` used to toggle only the plots, so the
+  orbit view showed mass functions and RV semi-amplitudes for a curve that was not drawn.
+  Each readout now declares its views in `data-views`; a few (the period, the momentum
+  check) legitimately belong to several.
+- **The spectroscopy-mode and spectrum-element pickers** are shown only in the spectrum
+  view, where they do anything. 450px of sidebar in the other three.
+- **`#integrityPanel` spans the readout grid** instead of wrapping to 922px inside one
+  226px column. It is the demo's thesis and it was the worst-laid-out thing on the page.
+- **The stage is height-driven.** `#orbitCanvas { aspect-ratio: 4/3 }` is an id selector
+  that ignores the viewport, and `min-height: clamp(440px, 72svh, 860px)` beat the
+  max-height that was meant to cap it -- **min-height wins over max-height in CSS**, so
+  capping alone did nothing.
+
+### A layering bug this uncovered
+
+Moving an activity into the drawer made it **unclickable**. The sidebar is `position:
+sticky` with `z-index: 3`; the drawer is `z-index: 2` and spans both columns, so a button
+in the drawer's left ~360px receives no clicks -- `elementFromPoint` returns a sidebar
+chip instead. This has been true for every demo since the shell was written; nobody noticed
+because the drawer only ever held prose. The project's own E2E notes had recorded the
+symptom as a test quirk to work around with `force: true`, which hid it.
+
+Raising the drawer above the sidebar was measured and **rejected**: it makes every sidebar
+control, sliders included, unclickable once the drawer is in view, which is worse. The two
+comments in `demo-shell.css` disagreed about which should win; the sidebar's was correct.
+The fix is to stop the overlap -- interactive drawer content is now inset past the sidebar
+column -- and both are reachable.
+
 ## What has not been fixed
 
 Everything else. The remaining work is per-demo and structural: moving prose out of
@@ -100,8 +148,7 @@ a line. When the map is empty the problem is gone.
 
 ## Suggested order
 
-1. **binary-orbits** — by far the worst, and the fix is well defined: two 875px prose
-   panels belong in the drawer, not the sidebar.
+1. ~~**binary-orbits**~~ — done, above.
 2. **stars-zams-hr** — 2,654px of control cards; also still carries the ZAMS clamping
    defect from the 2026-09-03 audit, so it wants one combined pass.
 3. **keplers-laws**, **parallax-distance** — `cp-field` stacks.

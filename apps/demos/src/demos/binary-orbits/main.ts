@@ -1689,6 +1689,35 @@ function updateViewControls(): void {
   rvPanel.hidden = state.view !== "rv";
   spectrumPanel.hidden = state.view !== "spectrum";
   energyPanel.hidden = state.view !== "energy";
+  syncReadoutsToView();
+  syncSpectrumControlsToView();
+}
+
+/**
+ * Show only the readouts the current view is about.
+ *
+ * The view chips used to switch the PLOT and leave all twenty readouts on screen, so the
+ * orbit view showed mass functions and RV semi-amplitudes for a curve that was not being
+ * drawn, and the whole block ran to 2,252px. Each readout declares the views it belongs to
+ * in `data-views`; a few (the period, the momentum check) legitimately belong to more than
+ * one, which is why this is a list rather than a single owner.
+ */
+function syncReadoutsToView(): void {
+  const grouped = document.querySelectorAll<HTMLElement>(".cp-readout[data-views]");
+  for (const readout of grouped) {
+    const views = (readout.dataset.views ?? "").split(/\s+/).filter(Boolean);
+    readout.hidden = views.length > 0 && !views.includes(state.view);
+  }
+}
+
+/**
+ * The spectroscopy mode and spectrum element pickers only do anything in the spectrum
+ * view, and cost 450px of sidebar in the three views where they do nothing.
+ */
+function syncSpectrumControlsToView(): void {
+  for (const group of document.querySelectorAll<HTMLElement>("[data-view-only]")) {
+    group.hidden = group.dataset.viewOnly !== state.view;
+  }
 }
 
 function renderAtPhase(phaseRad: number, nowMs = currentTimeMs()): void {

@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: fix binary-orbits' layout (worst of the 15 demos in docs/reviews/2026-09-04-layout-audit.md -- two 875px prose panels belong in the drawer, not the control sidebar), then stars-zams-hr. Also open: port the progenax/startrax cross-validation fixtures so the IMF, cluster, lifetime and post-main-sequence models are gated against an external reference (the largest gap in docs/reviews/cluster-census.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
+next: stars-zams-hr layout (2,654px of control cards, and it still carries the ZAMS clamping defect from the 2026-09-03 audit, so one combined pass), then keplers-laws and parallax-distance. See docs/reviews/2026-09-04-layout-audit.md. Also open: port the progenax/startrax cross-validation fixtures so the IMF, cluster, lifetime and post-main-sequence models are gated against an external reference (the largest gap in docs/reviews/cluster-census.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -79,6 +79,26 @@ silently doing nothing on any styled container — the DOM said hidden and the p
 disagreed. The theme had already patched this twice per-component
 (`.cp-tab-panel[hidden]`, `.cp-popover[hidden]`); a scan found **26 element/rule pairs
 across 14 demos** exposed to the same failure. Guarded by a token test.
+
+## binary-orbits fixed, 2026-09-04
+
+Worst demo in the audit. Sidebar hidden content **2,945px -> 601px**; readouts **23 in
+every view -> 8-13 filtered by view**; page **3,717px -> ~1,700px**. Activities and the
+invariant quiz moved to the drawer, the integrity panel given the full grid width, the
+stage made height-driven. Detail in the audit doc.
+
+Two things worth remembering:
+
+- **min-height beats max-height in CSS.** The stage carried `min-height: clamp(440px,
+  72svh, 860px)`, so capping it with max-height did nothing at all -- the computed max was
+  504px, the min 648px, and the stage stayed 682px. Both have to move.
+- **The drawer has been unclickable under the sticky sidebar since the shell was written.**
+  Sidebar `z-index: 3`, drawer `z-index: 2`, and the drawer spans both columns, so a button
+  in its left ~360px gets no clicks. Nobody noticed because the drawer only held prose. The
+  project's own E2E notes recorded the symptom as a test quirk to work around with
+  `force: true`, which hid it. Raising the drawer was measured and rejected -- it makes
+  every sidebar control unclickable instead, which is worse. Interactive drawer content is
+  inset past the sidebar column now, and both are reachable.
 
 ## Project-wide layout audit, 2026-09-04
 

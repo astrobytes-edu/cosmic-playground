@@ -92,7 +92,16 @@
 /* Shelf / Drawer: tabbed content below everything.
    position: relative + z-index ensures the shelf layers ABOVE the
    sticky sidebar when they overlap during scroll.
-   Background prevents the sidebar from bleeding through.           */
+   Background prevents the sidebar from bleeding through.
+
+   NOTE, 2026-09-04: the comment above is aspirational and the sidebar wins on purpose --
+   see its own rule, which raises it to 3 so its controls stay clickable. Measured both
+   ways: with the drawer on top, every sidebar control (sliders included) becomes
+   unclickable once the drawer is in view, which is worse, because the sidebar is how you
+   drive the demo. The two overlap only while the sidebar is sticky-pinned past its grid
+   area, so the real fix is to stop the overlap, not to reorder the layers. Until then,
+   interactive drawer content must sit clear of the sidebar column -- see
+   `.cp-drawer__body` below. */
 .cp-demo__drawer,
 .cp-demo__shelf {
   grid-area: shelf;
@@ -100,6 +109,21 @@
   position: relative;
   z-index: 2;
   background: var(--cp-bg1);
+}
+
+/*
+ * Keep interactive drawer content clear of the sticky sidebar.
+ *
+ * The sidebar stays pinned over the left column while the drawer scrolls under it, so a
+ * button in the drawer's left ~360px is unclickable: elementFromPoint returns a sidebar
+ * control instead. Prose never noticed, which is why this survived -- the drawer only
+ * held accordions of text until an activity with buttons moved into one.
+ */
+@media (min-width: 1025px) {
+  .cp-demo__drawer .cp-accordion__body,
+  .cp-demo__shelf .cp-accordion__body {
+    padding-left: clamp(280px, 25vw, 360px);
+  }
 }
 
 /* --- Sidebar internals --- */

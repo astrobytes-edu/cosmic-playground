@@ -546,3 +546,192 @@
     aspect-ratio: 3 / 1.72;
   }
 }
+
+/* ── Stage and readout budget ────────────────────────────────────────────────
+ * Measured 2026-09-04 at 1440x900, before this: the sidebar held 3,764px of content in an
+ * 819px box, hiding 2,945px behind a nested scroller, and all 23 readouts sat below the
+ * fold with the first at y=978. The page ran to 3,717px for a 647px plot.
+ *
+ * The stage and the readouts share one height budget so both fit on a laptop screen. */
+
+@media (min-width: 1025px) and (min-height: 700px) {
+  .cp-demo__stage {
+    /*
+     * min-height BEATS max-height in CSS, so the shell's `min-height: clamp(420px, 70svh,
+     * 820px)` and this demo's own `72svh` were quietly winning: the max-height computed to
+     * 504px, the min to 648px, and the stage stayed 682px tall. Both have to be lowered,
+     * not just capped.
+     */
+    min-height: clamp(300px, 42svh, 520px);
+    max-height: calc(100svh - 22rem);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .cp-demo__stage > canvas:not(.cp-starfield),
+  .cp-demo__stage > .rv-panel {
+    min-height: 0;
+    height: 100%;
+  }
+
+  /*
+   * The plots are sized by id selectors carrying a fixed aspect ratio, which beats any
+   * class-based rule and ignores the viewport entirely: at 860px wide the 4/3 orbit
+   * canvas is 645px tall whatever the window is, so the stage's max-height was set and
+   * then overflowed. Height-driven here, with the width still capped so a wide monitor
+   * does not stretch a circular orbit into an ellipse.
+   */
+  #orbitCanvas,
+  #rvCanvas,
+  #energyCanvas,
+  #spectrumCanvas {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 200px;
+    width: 100%;
+    max-width: 860px;
+  }
+
+  .rv-panel {
+    min-height: 0;
+    height: 100%;
+  }
+}
+
+/*
+ * The prompt is live -- it reports the current inclination's projection factor -- so it
+ * stays. One line of it, though: three lines of wrapped prose above the plot on every
+ * view was 91px of the banner.
+ */
+.stage-toolbar__prompt {
+  margin: 0;
+  font-size: var(--cp-text-sm);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Readout density ─────────────────────────────────────────────────────────
+ * Twelve cards in a 4-column grid came to 1,445px. These are numbers to glance at while
+ * dragging a slider, not documents. */
+
+.cp-demo__readouts .cp-panel-body {
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  gap: var(--cp-space-2);
+}
+
+.cp-demo__readouts .cp-readout {
+  padding: var(--cp-space-2);
+}
+
+.cp-demo__readouts .cp-readout__label {
+  font-size: 0.7rem;
+  line-height: 1.25;
+}
+
+.cp-demo__readouts .cp-readout__value {
+  font-size: var(--cp-text-md);
+  line-height: 1.2;
+}
+
+/* Units must not break mid-symbol: "AU^2/yr^2" was rendering as "AU^2/yr" plus a
+ * stranded "2" on the next line. */
+.cp-demo__readouts .cp-readout__unit {
+  white-space: nowrap;
+}
+
+/*
+ * The integrity panel spans the readout grid instead of sitting in one 226px column.
+ *
+ * These are the demo's thesis -- live checks that a1+a2=a, M1a1=M2a2 and K1/K2=q stay
+ * true while you drag -- and squeezed into a single readout column they wrapped to 922px,
+ * taller than the entire viewport, for three short equalities.
+ */
+.cp-demo__readouts .integrity-panel {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px var(--cp-space-4);
+  padding: var(--cp-space-2) var(--cp-space-3);
+}
+
+.cp-demo__readouts .integrity-panel > h3 {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cp-muted);
+}
+
+.cp-demo__readouts .integrity-panel > p {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.cp-demo__readouts .integrity-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+}
+
+.cp-demo__readouts .integrity-item__label,
+.cp-demo__readouts .integrity-item__value {
+  margin: 0;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+/*
+ * Row height in a grid is set by the tallest card, so two cards carrying an explanatory
+ * paragraph made their whole row 182px against 81px for the rest. The notes stay -- the
+ * momentum badge is a live check -- but at note size rather than body size.
+ */
+.cp-demo__readouts .momentum-badge,
+.cp-demo__readouts .cp-readout p {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  margin: 2px 0 0;
+}
+
+/* Short cards should not stretch to match a tall neighbour. */
+.cp-demo__readouts .cp-panel-body {
+  align-items: start;
+}
+
+/*
+ * Supporting lines inside a readout -- the omega identities, the momentum badge -- are
+ * notes, not values. At body size they set their grid row to 182px against 81px for the
+ * plain cards, so every card in that row inherited the height of the wordiest one.
+ */
+.cp-demo__readouts .cp-readout > *:not(.cp-readout__label):not(.cp-readout__value) {
+  font-size: 0.7rem;
+  line-height: 1.3;
+  margin: 2px 0 0;
+  color: var(--cp-muted);
+}
+
+.cp-demo__readouts .cp-readout .katex {
+  font-size: 0.82em;
+}
+
+/*
+ * The live-insight panel earns its place: its heading changes with the mass ratio. Its
+ * body paragraph does not need three lines of the sidebar to say so.
+ */
+.cp-live-insight {
+  padding: var(--cp-space-2) var(--cp-space-3);
+}
+
+.cp-live-insight__title {
+  font-size: var(--cp-text-md);
+  line-height: 1.25;
+}
+
+.cp-live-insight__body {
+  font-size: 0.8rem;
+  line-height: 1.4;
+}

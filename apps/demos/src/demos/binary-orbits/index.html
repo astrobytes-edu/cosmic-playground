@@ -147,7 +147,7 @@
             </select>
           </label>
 
-          <div class="control-group">
+          <div class="control-group" data-view-only="spectrum" hidden>
             <div class="control-group__label">Spectroscopy mode</div>
             <div class="cp-chip-group" role="radiogroup" aria-label="Spectroscopy visibility mode">
               <button id="spectroscopySb2" class="cp-chip" role="radio" aria-checked="true" type="button">SB2</button>
@@ -156,7 +156,7 @@
             <p class="control__hint">SB2 shows both stars' lines. SB1 hides the secondary spectrum to mimic a single-lined binary.</p>
           </div>
 
-          <div class="control-group">
+          <div class="control-group" data-view-only="spectrum" hidden>
             <div class="control-group__label">Spectrum element</div>
             <div class="cp-chip-group" role="radiogroup" aria-label="Spectrum element">
               <button id="elementH" class="cp-chip" role="radio" aria-checked="true" type="button">H</button>
@@ -185,77 +185,6 @@
           <p id="scalingCue" class="cp-scaling-cue" aria-live="polite"></p>
           <p id="energyScalingCue" class="cp-scaling-cue" aria-live="polite"></p>
 
-          <div id="predictPanel" class="cp-notice cp-predict-panel">
-            <h3>Predict and compare</h3>
-            <p class="cp-muted">
-              Capture the current system, then change controls. The demo stays live while you compare your prediction to the measured trend.
-            </p>
-            <div class="challenge-actions">
-              <button id="startPrediction" class="cp-button cp-button--outline" type="button">Capture current state</button>
-              <button id="revealPrediction" class="cp-button cp-button--outline" type="button">Compare with current system</button>
-            </div>
-            <p class="cp-muted">
-              Baseline snapshot: <span id="predictionBaselineSummary">No baseline captured yet.</span>
-            </p>
-            <label class="control" for="predictPeriod">
-              <span>Does period change?</span>
-              <select id="predictPeriod" class="cp-select">
-                <option value="increase">Increase</option>
-                <option value="decrease">Decrease</option>
-                <option value="same">Stay about the same</option>
-              </select>
-            </label>
-            <label class="control" for="predictV1">
-              <span>Does $v_1$ change?</span>
-              <select id="predictV1" class="cp-select">
-                <option value="increase">Increase</option>
-                <option value="decrease">Decrease</option>
-                <option value="same">Stay about the same</option>
-              </select>
-            </label>
-            <label class="control" for="predictA1">
-              <span>Does $a_1$ change?</span>
-              <select id="predictA1" class="cp-select">
-                <option value="increase">Increase</option>
-                <option value="decrease">Decrease</option>
-                <option value="same">Stay about the same</option>
-              </select>
-            </label>
-            <p id="predictionFeedback" class="cp-muted"></p>
-          </div>
-          <p id="predictionOutcome" class="cp-prediction-outcome cp-muted" aria-live="polite"></p>
-
-          <div id="rvChallengePanel" class="cp-notice rv-challenge-panel" hidden>
-            <h3>RV inversion challenge</h3>
-            <p class="cp-muted">Measure $K_1$ and $K_2$ from the RV curves, infer $q=K_1/K_2$, then compare to the model.</p>
-            <div class="challenge-actions">
-              <button id="rvChallengeStart" class="cp-button cp-button--outline" type="button">Start challenge</button>
-              <button id="rvChallengeClear" class="cp-button cp-button--outline" type="button">Clear measurements</button>
-              <button id="rvChallengeReveal" class="cp-button cp-button--outline" type="button">Check / reveal</button>
-              <button id="rvChallengeEnd" class="cp-button cp-button--ghost" type="button" hidden>End challenge</button>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Measured $K_1$</div>
-              <div class="cp-readout__value"><span id="rvMeasuredK1Value">—</span> <span class="cp-readout__unit">km/s</span></div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Measured $K_2$</div>
-              <div class="cp-readout__value"><span id="rvMeasuredK2Value">—</span> <span class="cp-readout__unit">km/s</span></div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">Inferred $q = K_1/K_2$</div>
-              <div class="cp-readout__value"><span id="rvInferredQValue">—</span></div>
-            </div>
-            <div class="cp-readout">
-              <div class="cp-readout__label">True model $q$</div>
-              <div class="cp-readout__value"><span id="rvTargetQValue">hidden</span></div>
-            </div>
-            <p id="rvChallengeFeedback" class="cp-muted">Start challenge to infer q from measured RV amplitudes.</p>
-            <p id="rvChallengeLockHint" class="cp-muted" hidden>
-              Copy Results and station snapshots are locked while the challenge is active and unrevealed.
-            </p>
-          </div>
-
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
       </aside>
@@ -264,8 +193,13 @@
         <canvas class="cp-starfield" aria-hidden="true"></canvas>
         <div class="stage-toolbar">
           <div class="stage-toolbar__copy">
-            <p class="stage-toolbar__eyebrow">Observable-first binary lab</p>
-            <h2 class="stage-toolbar__title">Trace the same orbit through geometry, velocity, and spectra.</h2>
+            <!--
+              The eyebrow and title said the same thing on every view and cost 56px of the
+              237px banner above the plot. They are the page's identity, not a per-view
+              caption, so they stay for assistive technology and leave the layout.
+            -->
+            <p class="stage-toolbar__eyebrow sr-only">Observable-first binary lab</p>
+            <h2 class="stage-toolbar__title sr-only">Trace the same orbit through geometry, velocity, and spectra.</h2>
             <p id="stagePrompt" class="stage-toolbar__prompt">
               Start with the orbit to locate the barycenter, then switch views to see how the same motion becomes a measurable RV curve and shifting spectral lines.
             </p>
@@ -298,85 +232,85 @@
       <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <div id="readoutA1" class="cp-readout cp-readout--focus">
+          <div id="readoutA1" class="cp-readout cp-readout--focus" data-views="orbit">
             <div class="cp-readout__label">Barycenter offset from $M_1$ ($a_1$)</div>
             <div class="cp-readout__value"><span id="baryOffsetValue"></span> <span class="cp-readout__unit">AU</span></div>
           </div>
-          <div id="readoutA2" class="cp-readout cp-readout--focus">
+          <div id="readoutA2" class="cp-readout cp-readout--focus" data-views="orbit">
             <div class="cp-readout__label">Barycenter offset from $M_2$ ($a_2$)</div>
             <div class="cp-readout__value"><span id="baryOffsetSecondaryValue"></span> <span class="cp-readout__unit">AU</span></div>
           </div>
-          <div id="readoutV1" class="cp-readout cp-readout--focus">
+          <div id="readoutV1" class="cp-readout cp-readout--focus" data-views="orbit">
             <div class="cp-readout__label">Orbital speed of $M_1$ ($v_1$)</div>
             <div class="cp-readout__value"><span id="speedPrimaryValue"></span> <span class="cp-readout__unit">AU/yr</span></div>
           </div>
-          <div id="readoutV2" class="cp-readout cp-readout--focus">
+          <div id="readoutV2" class="cp-readout cp-readout--focus" data-views="orbit">
             <div class="cp-readout__label">Orbital speed of $M_2$ ($v_2$)</div>
             <div class="cp-readout__value"><span id="speedSecondaryValue"></span> <span class="cp-readout__unit">AU/yr</span></div>
           </div>
-          <div id="readoutPeriod" class="cp-readout cp-readout--focus">
+          <div id="readoutPeriod" class="cp-readout cp-readout--focus" data-views="orbit rv spectrum energy">
             <div class="cp-readout__label">Orbital period</div>
             <div class="cp-readout__value"><span id="periodValue"></span> <span class="cp-readout__unit">yr</span></div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" data-views="orbit">
             <div class="cp-readout__label">Shared-period check</div>
             <div class="cp-readout__value"><span id="periodSharedCue"></span></div>
           </div>
-          <div id="omegaReadout" class="cp-readout" hidden>
+          <div id="omegaReadout" class="cp-readout" hidden data-views="orbit energy">
             <div class="cp-readout__label">Angular frequency $\omega$</div>
             <div class="cp-readout__value"><span id="omegaValue"></span> <span class="cp-readout__unit">rad/yr</span></div>
             <div class="cp-muted">$v_1 = \omega a_1, \quad v_2 = \omega a_2$</div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" data-views="orbit energy">
             <div class="cp-readout__label">Linear momentum magnitude check</div>
             <div class="cp-readout__value"><span id="momentumPrimaryValue"></span> vs <span id="momentumSecondaryValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU/yr</span></div>
             <div id="momentumBadge" class="momentum-badge"></div>
           </div>
-          <div id="readoutK1" class="cp-readout cp-readout--focus">
+          <div id="readoutK1" class="cp-readout cp-readout--focus" data-views="rv spectrum">
             <div class="cp-readout__label">RV semi-amplitude of $M_1$ ($K_1$)</div>
             <div class="cp-readout__value"><span id="k1Value"></span> <span class="cp-readout__unit">km/s</span></div>
           </div>
-          <div id="readoutK2" class="cp-readout cp-readout--focus">
+          <div id="readoutK2" class="cp-readout cp-readout--focus" data-views="rv spectrum">
             <div class="cp-readout__label">RV semi-amplitude of $M_2$ ($K_2$)</div>
             <div class="cp-readout__value"><span id="k2Value"></span> <span class="cp-readout__unit">km/s</span></div>
           </div>
-          <div id="readoutM1Sini" class="cp-readout cp-readout--focus">
+          <div id="readoutM1Sini" class="cp-readout cp-readout--focus" data-views="rv">
             <div class="cp-readout__label">Primary minimum mass ($M_1 \sin^3 i$)</div>
             <div class="cp-readout__value"><span id="m1SiniValue"></span> <span class="cp-readout__unit">$M_{\odot}$</span></div>
           </div>
-          <div id="readoutM2Sini" class="cp-readout cp-readout--focus">
+          <div id="readoutM2Sini" class="cp-readout cp-readout--focus" data-views="rv">
             <div class="cp-readout__label">Secondary minimum mass ($M_2 \sin^3 i$)</div>
             <div class="cp-readout__value"><span id="m2SiniValue"></span> <span class="cp-readout__unit">$M_{\odot}$</span></div>
           </div>
-          <div id="readoutMassFunction" class="cp-readout cp-readout--focus">
+          <div id="readoutMassFunction" class="cp-readout cp-readout--focus" data-views="rv">
             <div class="cp-readout__label">Mass function ($f(m)$)</div>
             <div class="cp-readout__value"><span id="massFuncValue"></span> <span class="cp-readout__unit">$M_{\odot}$</span></div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" data-views="rv spectrum">
             <div class="cp-readout__label">System velocity ($v_{\rm sys}$)</div>
             <div class="cp-readout__value"><span id="vsysValue"></span> <span class="cp-readout__unit">km/s</span></div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" data-views="energy">
             <div class="cp-readout__label">Kinetic energy of $M_1$ ($K_1$)</div>
             <div class="cp-readout__value"><span id="energyK1Value"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" data-views="energy">
             <div class="cp-readout__label">Kinetic energy of $M_2$ ($K_2$)</div>
             <div class="cp-readout__value"><span id="energyK2Value"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" data-views="energy">
             <div class="cp-readout__label">Total kinetic energy ($K$)</div>
             <div class="cp-readout__value"><span id="energyKTotalValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" data-views="energy">
             <div class="cp-readout__label">Potential energy ($U$)</div>
             <div class="cp-readout__value"><span id="energyPotentialValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" data-views="energy">
             <div class="cp-readout__label">Total orbital energy ($E$)</div>
             <div class="cp-readout__value"><span id="energyTotalValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
           </div>
-          <div class="cp-readout">
+          <div class="cp-readout" data-views="energy">
             <div class="cp-readout__label">Virial residual ($2K+U$)</div>
             <div class="cp-readout__value"><span id="energyVirialValue"></span> <span class="cp-readout__unit">$M_{\odot}$ AU$^2$/yr$^2$</span></div>
           </div>
@@ -420,18 +354,7 @@
             </div>
           </details>
 
-          <div class="cp-notice invariant-mode">
-            <h3>What must be true?</h3>
-            <p class="cp-muted">Choose all statements that must hold for this model, then check.</p>
-            <label id="invariantLabelSum" class="invariant-item"><input id="invariantSum" type="checkbox" /> $a_1 + a_2 = a$</label>
-            <label id="invariantLabelBary" class="invariant-item"><input id="invariantBary" type="checkbox" /> $M_1 a_1 = M_2 a_2$</label>
-            <label id="invariantLabelSpeed" class="invariant-item"><input id="invariantSpeed" type="checkbox" /> $v_1/v_2 = M_2/M_1$</label>
-            <label id="invariantLabelPeriod" class="invariant-item"><input id="invariantPeriod" type="checkbox" /> $P_1 = P_2$</label>
-            <label id="invariantLabelEqualOffsets" class="invariant-item"><input id="invariantEqualOffsets" type="checkbox" /> $a_1 = a_2$ for any mass ratio</label>
-            <label id="invariantLabelEqualRv" class="invariant-item"><input id="invariantEqualRv" type="checkbox" /> $K_1 = K_2$ at fixed inclination for any mass ratio</label>
-            <button id="invariantCheck" class="cp-button cp-button--outline" type="button">Check statements</button>
-            <p id="invariantFeedback" class="cp-muted"></p>
-          </div>
+
         </div>
       </aside>
 
@@ -497,6 +420,114 @@
               <p>$$\frac{K_1}{K_2} = \frac{M_2}{M_1} = q.$$</p>
               <p>For mass inference, astronomers use the SB1 mass function and the SB2 minimum masses:</p>
               <p>$$f(m) = \frac{P K_1^3}{2\pi G}, \qquad M_1\sin^3 i,\; M_2\sin^3 i.$$</p>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Predict and compare</span>
+              <span class="cp-accordion__meta">capture, then change something</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <div id="predictPanel" class="cp-notice cp-predict-panel">
+                <h3>Predict and compare</h3>
+                <p class="cp-muted">
+                  Capture the current system, then change controls. The demo stays live while you compare your prediction to the measured trend.
+                </p>
+                <div class="challenge-actions">
+                  <button id="startPrediction" class="cp-button cp-button--outline" type="button">Capture current state</button>
+                  <button id="revealPrediction" class="cp-button cp-button--outline" type="button">Compare with current system</button>
+                </div>
+                <p class="cp-muted">
+                  Baseline snapshot: <span id="predictionBaselineSummary">No baseline captured yet.</span>
+                </p>
+                <label class="control" for="predictPeriod">
+                  <span>Does period change?</span>
+                  <select id="predictPeriod" class="cp-select">
+                    <option value="increase">Increase</option>
+                    <option value="decrease">Decrease</option>
+                    <option value="same">Stay about the same</option>
+                  </select>
+                </label>
+                <label class="control" for="predictV1">
+                  <span>Does $v_1$ change?</span>
+                  <select id="predictV1" class="cp-select">
+                    <option value="increase">Increase</option>
+                    <option value="decrease">Decrease</option>
+                    <option value="same">Stay about the same</option>
+                  </select>
+                </label>
+                <label class="control" for="predictA1">
+                  <span>Does $a_1$ change?</span>
+                  <select id="predictA1" class="cp-select">
+                    <option value="increase">Increase</option>
+                    <option value="decrease">Decrease</option>
+                    <option value="same">Stay about the same</option>
+                  </select>
+                </label>
+                <p id="predictionFeedback" class="cp-muted"></p>
+              </div>
+              <p id="predictionOutcome" class="cp-prediction-outcome cp-muted" aria-live="polite"></p>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">RV inversion challenge</span>
+              <span class="cp-accordion__meta">measure $K_1$, $K_2$, infer $q$</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <div id="rvChallengePanel" class="cp-notice rv-challenge-panel" hidden>
+                          <h3>RV inversion challenge</h3>
+                          <p class="cp-muted">Measure $K_1$ and $K_2$ from the RV curves, infer $q=K_1/K_2$, then compare to the model.</p>
+                          <div class="challenge-actions">
+                            <button id="rvChallengeStart" class="cp-button cp-button--outline" type="button">Start challenge</button>
+                            <button id="rvChallengeClear" class="cp-button cp-button--outline" type="button">Clear measurements</button>
+                            <button id="rvChallengeReveal" class="cp-button cp-button--outline" type="button">Check / reveal</button>
+                            <button id="rvChallengeEnd" class="cp-button cp-button--ghost" type="button" hidden>End challenge</button>
+                          </div>
+                          <div class="cp-readout">
+                            <div class="cp-readout__label">Measured $K_1$</div>
+                            <div class="cp-readout__value"><span id="rvMeasuredK1Value">—</span> <span class="cp-readout__unit">km/s</span></div>
+                          </div>
+                          <div class="cp-readout">
+                            <div class="cp-readout__label">Measured $K_2$</div>
+                            <div class="cp-readout__value"><span id="rvMeasuredK2Value">—</span> <span class="cp-readout__unit">km/s</span></div>
+                          </div>
+                          <div class="cp-readout">
+                            <div class="cp-readout__label">Inferred $q = K_1/K_2$</div>
+                            <div class="cp-readout__value"><span id="rvInferredQValue">—</span></div>
+                          </div>
+                          <div class="cp-readout">
+                            <div class="cp-readout__label">True model $q$</div>
+                            <div class="cp-readout__value"><span id="rvTargetQValue">hidden</span></div>
+                          </div>
+                          <p id="rvChallengeFeedback" class="cp-muted">Start challenge to infer q from measured RV amplitudes.</p>
+                          <p id="rvChallengeLockHint" class="cp-muted" hidden>
+                            Copy Results and station snapshots are locked while the challenge is active and unrevealed.
+                          </p>
+                        </div>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">What must be true?</span>
+              <span class="cp-accordion__meta">check your reasoning</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <div class="cp-notice invariant-mode">
+              <h3>What must be true?</h3>
+              <p class="cp-muted">Choose all statements that must hold for this model, then check.</p>
+              <label id="invariantLabelSum" class="invariant-item"><input id="invariantSum" type="checkbox" /> $a_1 + a_2 = a$</label>
+              <label id="invariantLabelBary" class="invariant-item"><input id="invariantBary" type="checkbox" /> $M_1 a_1 = M_2 a_2$</label>
+              <label id="invariantLabelSpeed" class="invariant-item"><input id="invariantSpeed" type="checkbox" /> $v_1/v_2 = M_2/M_1$</label>
+              <label id="invariantLabelPeriod" class="invariant-item"><input id="invariantPeriod" type="checkbox" /> $P_1 = P_2$</label>
+              <label id="invariantLabelEqualOffsets" class="invariant-item"><input id="invariantEqualOffsets" type="checkbox" /> $a_1 = a_2$ for any mass ratio</label>
+              <label id="invariantLabelEqualRv" class="invariant-item"><input id="invariantEqualRv" type="checkbox" /> $K_1 = K_2$ at fixed inclination for any mass ratio</label>
+              <button id="invariantCheck" class="cp-button cp-button--outline" type="button">Check statements</button>
+              <p id="invariantFeedback" class="cp-muted"></p>
+              </div>
             </div>
           </details>
         </div>
