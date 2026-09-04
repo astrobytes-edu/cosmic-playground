@@ -9,6 +9,18 @@ export function normalizeBasePathPath(path: string, base: string): string {
   return `${normalizedBase}${normalizedPath}`;
 }
 
+/**
+ * Demos that belong in catalogue listings.
+ *
+ * Every listing surface (home, explore, topics, stations, instructor) must go through
+ * this rather than using `getCollection("demos")` directly, so that unlisting a demo is
+ * one frontmatter edit instead of fifteen. Detail routes deliberately do NOT filter:
+ * an unlisted demo keeps its exhibit, station and play pages so shared links survive.
+ */
+export function listedDemos(demos: readonly DemoEntry[]): DemoEntry[] {
+  return demos.filter((entry) => !entry.data.unlisted);
+}
+
 export function demoKeyIdea(entry: DemoEntry): string {
   // TODO(content): populate `short_key_idea` in demo frontmatter for richer card summaries.
   return entry.data.short_key_idea ?? entry.data.learning_goals[0] ?? "\u2014";

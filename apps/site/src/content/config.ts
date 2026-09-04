@@ -25,6 +25,11 @@ const demos = defineCollection({
     has_math_mode: z.boolean(),
     tags: z.array(z.string()).default([]),
     featured: z.boolean().default(false),
+    // Withheld from catalogue listings while its physics is being reworked. The
+    // exhibit, station and play routes still build, so existing links keep working;
+    // `status` and `readiness` cannot express this, since every value of both is listed.
+    unlisted: z.boolean().default(false),
+    unlistedReason: z.string().min(1).optional(),
     readiness: z.enum(["stub", "experimental", "candidate", "launch-ready"]),
     readinessReason: z.string().min(1),
     parityAuditPath: z.string().min(1),

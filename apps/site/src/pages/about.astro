@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import { listedDemos } from "../lib/catalog";
 import Layout from "../layouts/Layout.astro";
 import StatBar from "../components/StatBar.astro";
 import CitationCard from "../components/CitationCard.astro";
@@ -13,7 +14,7 @@ const withBase = (path: string) => {
 };
 
 // Derived, not hardcoded: this read "14" while 19 demos shipped.
-const demoCount = (await getCollection("demos")).length;
+const demoCount = listedDemos(await getCollection("demos")).length;
 
 const stats = [
   { value: String(demoCount), unit: "interactive demos" },

@@ -1,10 +1,12 @@
 ---
 import { getCollection } from "astro:content";
+import { listedDemos } from "../../lib/catalog";
 import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import TopicIcon from "../../components/TopicIcon.astro";
+import { TOPIC_LABEL, TOPIC_ORDER, TOPIC_SUMMARY, topicPath } from "../../lib/topics";
 
-const demos = await getCollection("demos");
+const demos = listedDemos(await getCollection("demos"));
 const base = import.meta.env.BASE_URL;
 const withBase = (path: string) => {
   const normalizedBase = base.endsWith("/") ? base : `${base}/`;
@@ -12,50 +14,12 @@ const withBase = (path: string) => {
   return `${normalizedBase}${normalizedPath}`;
 };
 
-const topicOrder = [
-  "EarthSky",
-  "Orbits",
-  "LightSpectra",
-  "Telescopes",
-  "DataInference",
-  "Stars",
-  "Galaxies",
-  "Cosmology"
-];
-
-const topicLabel: Record<string, string> = {
-  EarthSky: "Earth & Sky",
-  Orbits: "Orbits",
-  LightSpectra: "Light & Spectra",
-  Telescopes: "Telescopes",
-  DataInference: "Data & Inference",
-  Stars: "Stars",
-  Galaxies: "Galaxies",
-  Cosmology: "Cosmology"
-};
-
-const topicDescription: Record<string, string> = {
-  EarthSky: "Moon phases, seasons, and the view from Earth.",
-  Orbits: "Kepler\u2019s laws, retrograde motion, and gravitational dynamics.",
-  LightSpectra: "Blackbody radiation, electromagnetic spectrum, and spectral analysis.",
-  Telescopes: "Resolution, diffraction, and optical design.",
-  DataInference: "Statistics, measurement, and scientific reasoning.",
-  Stars: "Stellar structure, evolution, and equations of state.",
-  Galaxies: "Galaxy types, rotation, and large-scale structure.",
-  Cosmology: "Expansion, dark energy, and the cosmic microwave background."
-};
-
-const topics = topicOrder
-  .map((key) => {
-    const topicDemos = demos.filter((d) => d.data.topics.includes(key as any));
-    return {
-      key,
-      label: topicLabel[key],
-      description: topicDescription[key],
-      demoCount: topicDemos.length
-    };
-  })
-  .filter((t) => t.demoCount > 0);
+const topics = TOPIC_ORDER.map((key) => ({
+  key,
+  label: TOPIC_LABEL[key],
+  description: TOPIC_SUMMARY[key],
+  demoCount: demos.filter((d) => d.data.topics.includes(key)).length
+})).filter((t) => t.demoCount > 0);
 ---
 
 <Layout title="Topics — Cosmic Playground">
@@ -78,7 +42,7 @@ const topics = topicOrder
     {topics.map((topic) => (
       <a
         class="topic-card cp-card"
-        href={withBase(`topics/${topic.key.toLowerCase()}/`)}
+        href={withBase(topicPath(topic.key))}
       >
         <div class="topic-card__icon">
           <TopicIcon topic={topic.key} size={32} />

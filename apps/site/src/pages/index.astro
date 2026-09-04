@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import { listedDemos } from "../lib/catalog";
 import Layout from "../layouts/Layout.astro";
 import MiniCard from "../components/MiniCard.astro";
 import NebularHero from "../components/NebularHero.astro";
@@ -10,7 +11,7 @@ import TopicStrip from "../components/TopicStrip.astro";
 import DemoCanvasThumbnail from "../components/DemoCanvasThumbnail.astro";
 import { topicColor, primaryTopic } from "../lib/topicColors";
 
-const demos = await getCollection("demos");
+const demos = listedDemos(await getCollection("demos"));
 
 function parseIsoDate(iso: string) {
   const t = Date.parse(iso);
@@ -64,6 +65,10 @@ const base = import.meta.env.BASE_URL;
             Browse playlists
           </a>
         </div>
+        <p class="obs-hero__orient">
+          New here? <a href={`${base}welcome/`}>Answer two questions</a> and we will
+          point you at the right starting place.
+        </p>
       </div>
       <div class="obs-hero__orbit">
         <HeroOrbit />
@@ -260,6 +265,12 @@ const base = import.meta.env.BASE_URL;
     font-size: var(--cp-text-lg);
     color: var(--cp-text2);
     letter-spacing: 0.01em;
+  }
+
+  .obs-hero__orient {
+    margin: var(--cp-space-3) 0 0;
+    font-size: var(--cp-text-sm);
+    color: var(--cp-text2);
   }
 
   .obs-hero__actions {

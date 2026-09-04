@@ -170,6 +170,41 @@ export async function validateInvariants({ repoRoot = process.cwd() } = {}) {
     }
   }
 
+  // The suggested teaching sequence in `src/lib/topics.ts` names demos by slug. A typo, or
+  // a demo that gets renamed or deleted, silently drops that entry from the topic page,
+  // which is exactly the kind of quiet content rot the topic tree already suffered from.
+  {
+    const topicsModule = path.join(repoRoot, "apps", "site", "src", "lib", "topics.ts");
+    const demosDir = path.join(repoRoot, "apps", "site", "src", "content", "demos");
+    if ((await pathExists(topicsModule)) && (await pathExists(demosDir))) {
+      const text = await fs.readFile(topicsModule, "utf8");
+      const knownSlugs = new Set(
+        (await fs.readdir(demosDir))
+          .filter((f) => f.endsWith(".md"))
+          .map((f) => f.replace(/\.md$/, ""))
+      );
+
+      const sequenceBlock = text.match(
+        /TOPIC_SEQUENCE:\s*Record<TopicKey,\s*readonly string\[\]>\s*=\s*\{([\s\S]*?)\n\};/
+      );
+      if (sequenceBlock) {
+        const offset = text.indexOf(sequenceBlock[1]);
+        for (const match of sequenceBlock[1].matchAll(/"([a-z0-9-]+)"/g)) {
+          const slug = match[1];
+          if (knownSlugs.has(slug)) continue;
+          const where = lineColFromIndex(text, offset + (match.index ?? 0));
+          violations.push({
+            code: "site:topic-sequence-unknown-slug",
+            file: topicsModule,
+            line: where.line,
+            column: where.column,
+            message: `TOPIC_SEQUENCE names "${slug}", which has no entry in src/content/demos/.`
+          });
+        }
+      }
+    }
+  }
+
   // Content collections (markdown)
   if (await pathExists(siteContentRoot)) {
     const contentFiles = await listFiles(siteContentRoot, { includeExtensions: textExts });

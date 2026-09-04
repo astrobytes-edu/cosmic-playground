@@ -4,66 +4,29 @@ import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import DemoCard from "../../components/DemoCard.astro";
 import TopicIcon from "../../components/TopicIcon.astro";
-
-const topicOrder = [
-  "EarthSky",
-  "Orbits",
-  "LightSpectra",
-  "Telescopes",
-  "DataInference",
-  "Stars",
-  "Galaxies",
-  "Cosmology"
-];
-
-const topicLabel: Record<string, string> = {
-  EarthSky: "Earth & Sky",
-  Orbits: "Orbits",
-  LightSpectra: "Light & Spectra",
-  Telescopes: "Telescopes",
-  DataInference: "Data & Inference",
-  Stars: "Stars",
-  Galaxies: "Galaxies",
-  Cosmology: "Cosmology"
-};
-
-const topicDescription: Record<string, string> = {
-  EarthSky: "Moon phases, seasons, eclipses, and the geometry of what we see from Earth. These demos build intuition for how angles, distances, and illumination combine to produce the sky we observe.",
-  Orbits: "Kepler\u2019s laws, retrograde motion, binary systems, and gravitational dynamics. Interactive simulations that reveal how orbits shape planetary motion and timing.",
-  LightSpectra: "Blackbody radiation, the electromagnetic spectrum, and spectral analysis. Explore how temperature, wavelength, and energy are connected through the physics of light.",
-  Telescopes: "Resolution, diffraction, and what limits how much detail a telescope can see. Understand the relationship between aperture, wavelength, and angular resolution.",
-  DataInference: "Statistical reasoning, measurement uncertainty, and the connection between data and physical models. Learn how astronomers extract meaning from observations.",
-  Stars: "Stellar structure, equations of state, and the internal physics that determine how stars work. Explore the relationship between temperature, pressure, and density inside stars.",
-  Galaxies: "Galaxy morphology, rotation curves, and large-scale structure. Investigate how galaxies are organized and what their dynamics reveal about dark matter.",
-  Cosmology: "The expanding universe, dark energy, and the cosmic microwave background. Explore the observations and models that describe the universe on the largest scales."
-};
-
-const suggestedOrder: Record<string, string[]> = {
-  EarthSky: ["moon-phases", "eclipse-geometry", "seasons", "angular-size"],
-  Orbits: ["keplers-laws", "retrograde-motion", "binary-orbits", "planetary-conjunctions"],
-  LightSpectra: ["em-spectrum", "blackbody-radiation"],
-  Telescopes: ["telescope-resolution"],
-  DataInference: [],
-  Stars: ["stars-zams-hr", "eos-lab"],
-  Galaxies: [],
-  Cosmology: []
-};
+import {
+  TOPIC_DESCRIPTION,
+  TOPIC_LABEL,
+  TOPIC_ORDER,
+  TOPIC_SEQUENCE,
+  topicFilterPath
+} from "../../lib/topics";
+import type { TopicKey } from "../../lib/topics";
+import { listedDemos } from "../../lib/catalog";
 
 export async function getStaticPaths() {
-  const demos = await getCollection("demos");
-  const topicKeys = [
-    "EarthSky", "Orbits", "LightSpectra", "Telescopes",
-    "DataInference", "Stars", "Galaxies", "Cosmology"
-  ];
+  const demos = listedDemos(await getCollection("demos"));
 
-  return topicKeys
-    .filter((key) =>
-      demos.some((d) => d.data.topics.includes(key as any))
-    )
-    .map((key) => ({
-      params: { slug: key.toLowerCase() },
-      props: { topicKey: key }
-    }));
+  return TOPIC_ORDER.filter((key) =>
+    demos.some((d) => d.data.topics.includes(key))
+  ).map((key) => ({
+    params: { slug: key.toLowerCase() },
+    props: { topicKey: key }
+  }));
+}
+
+interface Props {
+  topicKey: TopicKey;
 }
 
 const { topicKey } = Astro.props;
@@ -74,15 +37,14 @@ const withBase = (path: string) => {
   return `${normalizedBase}${normalizedPath}`;
 };
 
-const demos = await getCollection("demos");
+const demos = listedDemos(await getCollection("demos"));
 const playlists = await getCollection("playlists");
 
-const topicDemos = demos.filter((d) =>
-  d.data.topics.includes(topicKey as any)
-);
+const topicDemos = demos.filter((d) => d.data.topics.includes(topicKey));
 
-// Sort by suggested order, then alphabetically
-const order = suggestedOrder[topicKey] ?? [];
+// Suggested sequence first, in the order it declares; anything not sequenced yet
+// follows alphabetically so a newly added demo is still listed.
+const order = TOPIC_SEQUENCE[topicKey];
 const sorted = [...topicDemos].sort((a, b) => {
   const ai = order.indexOf(a.slug);
   const bi = order.indexOf(b.slug);
@@ -91,6 +53,12 @@ const sorted = [...topicDemos].sort((a, b) => {
   if (bi >= 0) return 1;
   return a.data.title.localeCompare(b.data.title);
 });
+
+// A one-item "sequence" is noise, so only render it when it orders something.
+const sequence = order
+  .map((slug) => sorted.find((d) => d.slug === slug))
+  .filter((d): d is (typeof sorted)[number] => Boolean(d));
+const showSequence = sequence.length > 1;
 
 function excerptFromBody(body: string) {
   const firstLine = body
@@ -108,13 +76,12 @@ const allGoals = Array.from(
 
 // Find playlists that include demos from this topic
 const relatedPlaylists = playlists.filter((p) =>
-  p.data.demos.some((pd) =>
-    topicDemos.some((d) => d.slug === pd.slug)
-  )
+  p.data.demos.some((pd) => topicDemos.some((d) => d.slug === pd.slug))
 );
 
-const label = topicLabel[topicKey];
-const description = topicDescription[topicKey];
+const label = TOPIC_LABEL[topicKey];
+const description = TOPIC_DESCRIPTION[topicKey];
+const filterHref = withBase(topicFilterPath(topicKey));
 ---
 
 <Layout title={`${label} — Topics — Cosmic Playground`}>
@@ -148,28 +115,30 @@ const description = topicDescription[topicKey];
     Cosmic Playground is in active beta. Check each exhibit's status and readiness badges before assigning.
   </section>
 
-  {order.length > 0 && (
+  {showSequence && (
     <section class="topic-order" aria-label="Suggested order">
       <h2>Suggested sequence</h2>
       <p class="topic-order__note">
         Not mandatory, but this order builds concepts incrementally.
       </p>
       <ol class="topic-order__list">
-        {order
-          .map((slug) => sorted.find((d) => d.slug === slug))
-          .filter(Boolean)
-          .map((d) => (
-            <li>
-              <a href={withBase(`exhibits/${d!.slug}/`)}>{d!.data.title}</a>
-              <span class="topic-order__time">{d!.data.time_minutes} min</span>
-            </li>
-          ))}
+        {sequence.map((d) => (
+          <li>
+            <a href={withBase(`exhibits/${d.slug}/`)}>{d.data.title}</a>
+            <span class="topic-order__time">{d.data.time_minutes} min</span>
+          </li>
+        ))}
       </ol>
     </section>
   )}
 
   <section class="topic-demos" aria-label="Exhibits">
-    <h2>Exhibits</h2>
+    <div class="topic-demos__head">
+      <h2>Exhibits</h2>
+      <a class="topic-demos__filter" href={filterHref}>
+        Filter these in Explore
+      </a>
+    </div>
     <div class="topic-demos__grid">
       {sorted.map((d) => (
         <DemoCard
@@ -340,6 +309,19 @@ const description = topicDescription[topicKey];
     margin: 0 0 var(--cp-space-4);
   }
 
+  .topic-demos__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--cp-space-3);
+  }
+
+  .topic-demos__filter {
+    font-size: var(--cp-text-sm);
+    color: var(--cp-accent);
+  }
+
   .topic-demos__grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
@@ -439,7 +421,7 @@ const description = topicDescription[topicKey];
 
   .topic-playlist-card h3 {
     margin: 0;
-    font-size: var(--cp-text-base);
+    font-size: var(--cp-text-md);
     color: var(--cp-title);
   }
 

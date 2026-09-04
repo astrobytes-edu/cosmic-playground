@@ -101,9 +101,11 @@ test.describe("Cosmic Playground smoke", () => {
     await expect(
       page.locator('[data-demo-thumbnail][data-slug="hydrostatic-equilibrium-explorer"]')
     ).toHaveAttribute("data-scene", "stellar-core");
-    await expect(page.locator('[data-demo-thumbnail][data-slug="eos-lab"]')).toHaveAttribute(
+    // Was `eos-lab` / "regime-map". That demo is `unlisted: true` while its equation of
+    // state is reworked, so it is no longer on Explore by design -- see topics.spec.ts.
+    await expect(page.locator('[data-demo-thumbnail][data-slug="stars-zams-hr"]')).toHaveAttribute(
       "data-scene",
-      "regime-map"
+      "hr-track"
     );
   });
 
@@ -128,7 +130,11 @@ test.describe("Cosmic Playground smoke", () => {
     expect(heroBg).toContain("radial-gradient");
   });
 
-  test("Filter chips use theme chip class", async ({ page }) => {
+  // NOTE: this checks that *some* .cp-chip renders, which the quick-filter row and the
+  // topic jump-links always satisfy. It does not exercise the active-filter chips: the
+  // site builds with `output: "static"`, so `Astro.url.searchParams` is empty at build
+  // time and the `?topic=` filter never applies in production. Tracked in STATUS.md.
+  test("Chip styling is applied on the explore page", async ({ page }) => {
     await page.goto("explore/?topic=Orbits");
     const chip = page.locator(".cp-chip").first();
     await expect(chip).toBeVisible();

@@ -5,6 +5,7 @@ import IframeStage from "../../components/IframeStage.astro";
 import TagPill from "../../components/TagPill.astro";
 import PPEBlock from "../../components/PPEBlock.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
+import { TOPIC_LABEL, topicPath } from "../../lib/topics";
 
 export async function getStaticPaths() {
   const demos = await getCollection("demos");
@@ -55,12 +56,29 @@ const { Content } = await entry.render();
               ? "status-beta"
               : "status-draft"}
       />
-      {entry.data.topics.map((t) => <TagPill label={t} tone="blue" />)}
+      {entry.data.topics.map((t) => (
+        <TagPill
+          label={TOPIC_LABEL[t]}
+          tone="blue"
+          href={withBase(topicPath(t))}
+          ariaLabel={`Browse the ${TOPIC_LABEL[t]} topic`}
+        />
+      ))}
       {entry.data.levels.map((l) => <TagPill label={l} tone="default" />)}
       <TagPill label={`${entry.data.time_minutes} min`} tone="default" />
       {entry.data.has_math_mode ? <TagPill label="math mode" tone="violet" /> : null}
     </div>
   </header>
+
+  {entry.data.unlisted ? (
+    <section class="cp-callout" data-kind="warn" aria-label="On hold">
+      <strong>This exhibit is on hold and is not listed in the catalogue</strong>
+      <div>
+        {entry.data.unlistedReason ??
+          "Withheld from the catalogue while it is reworked. The demo still runs, but do not assign it."}
+      </div>
+    </section>
+  ) : null}
 
   {entry.data.status !== "stable" ? (
     <section class="cp-callout exhibit-state-callout" aria-label="Development status">

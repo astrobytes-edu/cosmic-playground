@@ -8,7 +8,15 @@ import HeroOrbit from "../../components/HeroOrbit.astro";
 import TopicIcon from "../../components/TopicIcon.astro";
 import { topicColor } from "../../lib/topicColors";
 import {
+  TOPIC_LABEL,
+  TOPIC_ORDER,
+  TOPIC_SUMMARY,
+  isTopicKey,
+  topicPath
+} from "../../lib/topics";
+import {
   demoKeyIdea,
+  listedDemos,
   demoLevelRank,
   demoTimeBucket,
   hasAstr101Level,
@@ -20,7 +28,7 @@ import {
   playlistMembershipMap
 } from "../../lib/catalog";
 
-const demos = await getCollection("demos");
+const demos = listedDemos(await getCollection("demos"));
 const playlists = await getCollection("playlists");
 
 const base = import.meta.env.BASE_URL;
@@ -39,28 +47,6 @@ const sort = Astro.url.searchParams.get("sort")?.trim() || "recommended";
 const topics = Array.from(new Set(demos.flatMap((d) => d.data.topics))).sort();
 const levels = Array.from(new Set(demos.flatMap((d) => d.data.levels))).sort();
 const statuses = Array.from(new Set(demos.map((d) => d.data.status))).sort();
-
-const topicOrder = [
-  "EarthSky",
-  "Orbits",
-  "LightSpectra",
-  "Telescopes",
-  "DataInference",
-  "Stars",
-  "Galaxies",
-  "Cosmology"
-];
-
-const topicLabel: Record<string, string> = {
-  EarthSky: "Earth & Sky",
-  Orbits: "Orbits",
-  LightSpectra: "Light & Spectra",
-  Telescopes: "Telescopes",
-  DataInference: "Data & Inference",
-  Stars: "Stars",
-  Galaxies: "Galaxies",
-  Cosmology: "Cosmology"
-};
 
 const playlistBySlug = new Map<string, (typeof playlists)[number]>(
   playlists.map((playlist) => [playlist.slug, playlist] as [string, (typeof playlists)[number]])
@@ -169,7 +155,7 @@ const quickLabels: Record<QuickFilterKey, string> = {
 };
 
 if (q) addChip("q", `Search: ${q}`);
-if (topic) addChip("topic", `Topic: ${topicLabel[topic] ?? topic}`);
+if (topic) addChip("topic", `Topic: ${isTopicKey(topic) ? TOPIC_LABEL[topic] : topic}`);
 if (level) addChip("level", `Course level: ${level}`);
 if (time) addChip("time", `Time budget: ${timeLabels[time] ?? time}`);
 if (status) addChip("status", `Status: ${status}`);
@@ -190,17 +176,6 @@ const quickFilterItems: Array<{ key: QuickFilterKey; label: string; href: string
     };
   });
 
-const topicDescription: Record<string, string> = {
-  EarthSky: "Moon phases, seasons, and the view from Earth.",
-  Orbits: "Kepler's laws, retrograde motion, and gravitational dynamics.",
-  LightSpectra: "Blackbody radiation, electromagnetic spectrum, and spectral analysis.",
-  Telescopes: "Resolution, diffraction, and optical design.",
-  DataInference: "Statistics, measurement, and scientific reasoning.",
-  Stars: "Stellar structure, evolution, and equations of state.",
-  Galaxies: "Galaxy types, rotation, and large-scale structure.",
-  Cosmology: "Expansion, dark energy, and the cosmic microwave background."
-};
-
 const allSlugs = demos.map((d) => d.slug);
 const randomSlug = allSlugs[Math.floor(Math.random() * allSlugs.length)];
 
@@ -209,10 +184,10 @@ const showFeatured = noFilters && featured.length > 0;
 const featuredSlugs = new Set(featured.map((d) => d.slug));
 
 const topicSections = noFilters
-  ? topicOrder
+  ? TOPIC_ORDER
       .map((key) => ({
         key,
-        label: topicLabel[key],
+        label: TOPIC_LABEL[key],
         demos: sorted.filter(
           (d) => d.data.topics.includes(key as any) && !featuredSlugs.has(d.slug)
         )
@@ -347,6 +322,7 @@ const startHere = startHereTiles.map((tile) => {
     </div>
   ) : null}
 
+
   {showFeatured && featured.length > 0 ? (
     <section class="featured" aria-label="Featured sequence">
       <div class="featured__header">
@@ -419,10 +395,10 @@ const startHere = startHereTiles.map((tile) => {
             <div class="topic-section__header" style={`--topic-color: ${topicColor(section.key)}`}>
               <TopicIcon topic={section.key} size={28} />
               <div>
-                <h2 class="topic-section__title">{section.label}</h2>
-                {topicDescription[section.key] && (
-                  <p class="topic-section__desc">{topicDescription[section.key]}</p>
-                )}
+                <h2 class="topic-section__title">
+                  <a href={withBase(topicPath(section.key))}>{section.label}</a>
+                </h2>
+                <p class="topic-section__desc">{TOPIC_SUMMARY[section.key]}</p>
               </div>
             </div>
             <div class="results__grid">
@@ -776,6 +752,17 @@ const startHere = startHereTiles.map((tile) => {
   .topic-section__title {
     margin: 0;
   }
+
+  .topic-section__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .topic-section__title a:hover,
+  .topic-section__title a:focus-visible {
+    text-decoration: underline;
+  }
+
 
   .topic-section__desc {
     margin: var(--cp-space-1) 0 0;

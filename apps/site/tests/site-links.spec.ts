@@ -92,3 +92,109 @@ test.describe("Site link integrity", () => {
     await expect(page.locator("h1")).toBeVisible();
   });
 });
+
+/**
+ * Reachability: every page the build emits must be findable by a human starting at "/".
+ *
+ * The /topics/* tree — index plus one page per topic — shipped for months with zero
+ * inbound links. Nothing caught it, because Astro's file-based routing makes "this page
+ * exists" and "you can get to this page" completely independent facts, and no test
+ * asserted the second one. This closes that gap: it walks the real link graph from the
+ * front door and diffs it against what `dist/` actually contains.
+ *
+ * Deliberate exceptions are declared in content, not here: a demo with `unlisted: true`
+ * in its frontmatter is withheld from the catalogue on purpose, so its detail routes are
+ * exempt. Re-listing the demo re-arms the assertion automatically.
+ */
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+/** Every route the build emitted, as base-relative paths like "topics/orbits/". */
+function builtRoutes(): string[] {
+  const distDir = path.join(siteRoot, "dist");
+  const routes: string[] = [];
+
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const full = path.join(dir, name);
+      if (statSync(full).isDirectory()) {
+        // _astro is build output; play/ holds the demo bundles, which are static
+        // artifacts rather than Astro routes and are covered by their own specs.
+        if (name === "_astro" || name === "play") continue;
+        walk(full);
+      } else if (name === "index.html") {
+        const rel = path.relative(distDir, dir).split(path.sep).join("/");
+        routes.push(rel === "" ? "" : `${rel}/`);
+      }
+    }
+  };
+
+  walk(distDir);
+  return routes;
+}
+
+/** Slugs of demos withheld from the catalogue on purpose. */
+function unlistedDemoSlugs(): string[] {
+  const dir = path.join(siteRoot, "src", "content", "demos");
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".md"))
+    .filter((f) => /^unlisted:\s*true\s*$/m.test(readFileSync(path.join(dir, f), "utf8")))
+    .map((f) => f.replace(/\.md$/, ""));
+}
+
+test.describe("Route reachability", () => {
+  test("every built page is reachable by following links from the home page", async ({
+    page,
+    baseURL
+  }) => {
+    const base = new URL(baseURL!);
+    const reached = new Set<string>();
+    const queue = [""];
+
+    while (queue.length > 0) {
+      const route = queue.shift()!;
+      if (reached.has(route)) continue;
+      reached.add(route);
+
+      const response = await page.goto(route, { waitUntil: "domcontentloaded" });
+      if (!response || response.status() >= 400) continue;
+
+      const hrefs = await page.$$eval("a[href]", (anchors) =>
+        anchors.map((a) => (a as HTMLAnchorElement).href)
+      );
+
+      for (const href of hrefs) {
+        const url = new URL(href);
+        if (url.origin !== base.origin) continue;
+        if (!url.pathname.startsWith(base.pathname)) continue;
+
+        let rel = url.pathname.slice(base.pathname.length);
+        if (rel.startsWith("/")) rel = rel.slice(1);
+        if (!isCrawlable(url.pathname)) continue;
+        // Only crawl directory-style routes; skip files like /rss.xml.
+        if (rel !== "" && !rel.endsWith("/")) continue;
+        if (!reached.has(rel)) queue.push(rel);
+      }
+    }
+
+    const exemptPrefixes = unlistedDemoSlugs().flatMap((slug) => [
+      `exhibits/${slug}/`,
+      `stations/${slug}/`,
+      `instructor/${slug}/`
+    ]);
+
+    const orphans = builtRoutes()
+      .filter((route) => !reached.has(route))
+      .filter((route) => !exemptPrefixes.includes(route))
+      .sort();
+
+    expect(
+      orphans,
+      `These pages are built but cannot be reached by following links from "/". ` +
+        `Either link to them, or mark the owning demo \`unlisted: true\`.`
+    ).toEqual([]);
+  });
+});

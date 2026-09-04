@@ -8,6 +8,8 @@ time_minutes: 12
 has_math_mode: false
 tags: ["stellar-structure", "equation-of-state", "pressure"]
 readiness: experimental
+unlisted: true
+unlistedReason: "On hold. The equation of state is incomplete: finite-temperature Fermi branches are implemented, but the neutron-rich and pair-dominated regimes are not, so the regime map is only trustworthy over part of the plane it draws. There is also no instructor bundle. Withheld from the catalogue until the EOS is complete and independently checked."
 readinessReason: "EOS core channels + diagnostics + regime map are implemented with finite-T Fermi branches; neutron/pair-rich extensions remain planned."
 parityAuditPath: "docs/audits/migrations/eos-lab-parity.md"
 lastVerifiedAt: "2026-09-03"

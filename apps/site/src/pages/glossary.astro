@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import { listedDemos } from "../lib/catalog";
 import Layout from "../layouts/Layout.astro";
 import Breadcrumb from "../components/Breadcrumb.astro";
 import { glossary as glossaryData, type GlossaryEntry } from "../data/glossary";
@@ -15,8 +16,10 @@ const glossary = [...glossaryData].sort((a, b) =>
   a.term.localeCompare(b.term)
 );
 
-const demos = await getCollection("demos");
-const demoTitleBySlug = new Map<string, string>(demos.map((d) => [d.slug, d.data.title]));
+const allDemos = await getCollection("demos");
+const demos = listedDemos(allDemos);
+const demoTitleBySlug = new Map<string, string>(allDemos.map((d) => [d.slug, d.data.title]));
+const listedSlugs = new Set<string>(demos.map((d) => d.slug));
 
 // Group by first letter
 const grouped = new Map<string, GlossaryEntry[]>();
@@ -68,14 +71,16 @@ const letters = Array.from(grouped.keys()).sort();
             <h3 class="glossary-entry__term">{entry.term}</h3>
             <p class="glossary-entry__def">{entry.definition}</p>
             <div class="glossary-entry__demos">
-              {entry.demos.map((slug: string) => (
-                <a
-                  class="glossary-entry__demo-link"
-                  href={withBase(`exhibits/${slug}/`)}
-                >
-                  {demoTitleBySlug.get(slug) ?? slug}
-                </a>
-              ))}
+              {entry.demos
+                .filter((slug: string) => listedSlugs.has(slug))
+                .map((slug: string) => (
+                  <a
+                    class="glossary-entry__demo-link"
+                    href={withBase(`exhibits/${slug}/`)}
+                  >
+                    {demoTitleBySlug.get(slug) ?? slug}
+                  </a>
+                ))}
             </div>
           </div>
         ))}

@@ -3,6 +3,7 @@ import TagPill from "./TagPill.astro";
 import TopicIcon from "./TopicIcon.astro";
 import DemoCanvasThumbnail from "./DemoCanvasThumbnail.astro";
 import { topicColor, primaryTopic } from "../lib/topicColors";
+import { TOPIC_LABEL, isTopicKey, topicPath } from "../lib/topics";
 
 export type DemoCardProps = {
   title: string;
@@ -46,6 +47,14 @@ const {
 
 const topic = primaryTopic(topics);
 const color = topicColor(topic);
+const cardBase = import.meta.env.BASE_URL;
+const topicLinks = topics.map((t) => ({
+  key: t,
+  label: isTopicKey(t) ? TOPIC_LABEL[t] : t,
+  href: isTopicKey(t)
+    ? `${cardBase.endsWith("/") ? cardBase : `${cardBase}/`}${topicPath(t)}`
+    : undefined
+}));
 const statusTone =
   status === "stable" ? "teal" : status === "beta" ? "status-beta" : "status-draft";
 const readinessTone =
@@ -92,9 +101,14 @@ const timeLabel =
       <div class="demo-card__badges" aria-label="Tags">
         <TagPill label={status} tone={statusTone} />
         <TagPill label={`readiness: ${readinessLabel}`} tone={readinessTone} />
-        {topics.map((t) => (
-          <TagPill label={t} tone="blue">
-            <TopicIcon slot="icon" topic={t} />
+        {topicLinks.map((t) => (
+          <TagPill
+            label={t.label}
+            tone="blue"
+            href={t.href}
+            ariaLabel={t.href ? `Browse the ${t.label} topic` : undefined}
+          >
+            <TopicIcon slot="icon" topic={t.key} />
           </TagPill>
         ))}
         <TagPill label={timeLabel} tone="default" />

@@ -1,33 +1,27 @@
 ---
 import TopicIcon from "./TopicIcon.astro";
 import { topicColor } from "../lib/topicColors";
+import { TOPIC_LABEL, TOPIC_ORDER, topicPath } from "../lib/topics";
 
 interface Props {
   baseUrl: string;
+  /** Topics to show. Defaults to the full taxonomy. */
+  topics?: readonly (typeof TOPIC_ORDER)[number][];
 }
 
-const { baseUrl } = Astro.props;
-
-const topics = [
-  { key: "EarthSky", label: "Earth & Sky" },
-  { key: "Orbits", label: "Orbits" },
-  { key: "LightSpectra", label: "Light & Spectra" },
-  { key: "Telescopes", label: "Telescopes" },
-  { key: "DataInference", label: "Data & Inference" },
-  { key: "Stars", label: "Stars" },
-];
+const { baseUrl, topics = TOPIC_ORDER } = Astro.props;
 ---
 
 <nav class="topic-strip" aria-label="Browse by topic">
   <div class="topic-strip__inner">
-    {topics.map((t) => (
+    {topics.map((key) => (
       <a
         class="topic-strip__chip"
-        href={`${baseUrl}explore/?topic=${t.key}`}
-        style={`--chip-color: ${topicColor(t.key)}`}
+        href={`${baseUrl}${topicPath(key)}`}
+        style={`--chip-color: ${topicColor(key)}`}
       >
-        <TopicIcon topic={t.key} size={16} />
-        <span>{t.label}</span>
+        <TopicIcon topic={key} size={16} />
+        <span>{TOPIC_LABEL[key]}</span>
       </a>
     ))}
   </div>
@@ -48,9 +42,8 @@ const topics = [
   .topic-strip__inner {
     display: flex;
     gap: var(--cp-space-3);
-    justify-content: center;
-    max-width: var(--cp-site-max);
-    margin: 0 auto;
+    width: max-content;
+    margin-inline: auto;
   }
 
   .topic-strip__chip {
@@ -79,11 +72,5 @@ const topics = [
     border-color: color-mix(in srgb, var(--chip-color) 45%, transparent);
     color: var(--cp-text);
     box-shadow: 0 0 12px color-mix(in srgb, var(--chip-color) 10%, transparent);
-  }
-
-  @media (max-width: 767px) {
-    .topic-strip__inner {
-      justify-content: flex-start;
-    }
   }
 </style>

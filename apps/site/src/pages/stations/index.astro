@@ -1,11 +1,12 @@
 ---
 import { getCollection } from "astro:content";
+import { listedDemos } from "../../lib/catalog";
 import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import DemoCanvasThumbnail from "../../components/DemoCanvasThumbnail.astro";
 import { topicColor, primaryTopic } from "../../lib/topicColors";
 
-const demos = await getCollection("demos");
+const demos = listedDemos(await getCollection("demos"));
 const stationEntries = await getCollection("stations");
 
 const base = import.meta.env.BASE_URL;

@@ -1,21 +1,51 @@
 ---
+/**
+ * A metadata badge. Renders a plain <span> by default; pass `href` to make it a link.
+ *
+ * Topic badges are the case that matters: the taxonomy sorts and colours the whole
+ * catalogue, so a topic badge should also be a way to get to that topic.
+ */
 interface Props {
   label: string;
   tone?: "default" | "teal" | "violet" | "blue" | "magenta" | "status-draft" | "status-beta";
+  href?: string;
+  /** Accessible name, when the visible label alone is ambiguous out of context. */
+  ariaLabel?: string;
 }
 
-const { label, tone = "default" } = Astro.props;
+const { label, tone = "default", href, ariaLabel } = Astro.props;
+const dataTone = tone === "default" ? undefined : tone;
 ---
 
-<span class="cp-badge" data-tone={tone === "default" ? undefined : tone}>
-  <slot name="icon" />
-  {label}
-</span>
+{href ? (
+  <a class="cp-badge cp-badge--link" data-tone={dataTone} href={href} aria-label={ariaLabel}>
+    <slot name="icon" />
+    {label}
+  </a>
+) : (
+  <span class="cp-badge" data-tone={dataTone} aria-label={ariaLabel}>
+    <slot name="icon" />
+    {label}
+  </span>
+)}
 
 <style>
   .cp-badge {
     display: inline-flex;
     gap: 4px;
     align-items: center;
+  }
+
+  .cp-badge--link {
+    text-decoration: none;
+    transition:
+      border-color var(--cp-transition-fast) var(--cp-ease-out),
+      background var(--cp-transition-fast) var(--cp-ease-out);
+  }
+
+  .cp-badge--link:hover,
+  .cp-badge--link:focus-visible {
+    border-color: currentColor;
+    background: color-mix(in srgb, currentColor 12%, transparent);
   }
 </style>

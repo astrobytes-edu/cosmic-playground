@@ -99,6 +99,12 @@ const isLightTheme =
             Explore
           </a>
           <a
+            href={withBase("topics/")}
+            aria-current={isActive("/topics/") ? "page" : undefined}
+          >
+            Topics
+          </a>
+          <a
             href={withBase("playlists/")}
             aria-current={isActive("/playlists/") ? "page" : undefined}
           >
@@ -126,6 +132,15 @@ const isLightTheme =
     </main>
     <footer class="site-footer cp-no-print">
       <div class="site-footer__inner">
+        <nav class="site-footer__nav" aria-label="Footer">
+          <a href={withBase("explore/")}>Explore</a>
+          <a href={withBase("topics/")}>Topics</a>
+          <a href={withBase("playlists/")}>Playlists</a>
+          <a href={withBase("stations/")}>Station cards</a>
+          <a href={withBase("glossary/")}>Glossary</a>
+          <a href={withBase("for-instructors/")}>For instructors</a>
+          <a href={withBase("about/")}>About</a>
+        </nav>
         <div class="site-footer__meta">
           <p class="site-footer__credit">Developed and designed by Anna Rosen.</p>
           <a class="site-footer__contact" href="mailto:alrosen@sdsu.edu">Contact</a>
@@ -148,5 +163,12 @@ const isLightTheme =
     .desktop-nav {
       display: none;
     }
+  }
+  .site-footer__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-2) var(--cp-space-4);
+    margin-bottom: var(--cp-space-3);
+    font-size: var(--cp-text-sm);
   }
 </style>
