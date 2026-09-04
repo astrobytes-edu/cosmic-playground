@@ -572,10 +572,30 @@ All ten P1 blockers fixed across seven commits. Gates now read:
 | P1-9 eos-lab NaN | Bracket seeded from `E_F/(k_B T)` and expanded geometrically; `logSafe()` replaces `Math.max(1e-30, …)`; `latexScientific` no longer renders a failed solve as `0`. 39 NaN grid points → 0. |
 | P1-10 HR clamping | Colour bracket clamped to its reachable range (102/400 pinned stars → 0); Torres BC_V clamped to its 3162 K validity floor; CMD axes widened; out-of-frame stars culled and counted in the caption. |
 
+### Follow-up (2026-09-04)
+
+Two further items from the P2 backlog are now closed:
+
+- **GR-1** — galaxy-rotation's visible-matter benchmark is rebuilt from the same physics as
+  the total curve (`hypot(vBulge, vDisk)` rather than a spherical `√(GM/R)`), and renamed
+  `vVisibleKmS` since it was never Keplerian. With the halo empty the phantom band measured
+  **22.11 km/s at R = 7 kpc**; it is now **0.000** at every radius. Regression tests assert
+  total ≡ visible with no halo, visible ≤ total always, and zero implied dark mass.
+  Copy about the *shape* of the outer curve ("Keplerian decline") is correct and was left
+  alone; the overclaim that a halo-free curve "matches the Keplerian prediction" is now
+  qualified to the far-field limit.
+- **Linter** — Biome added and wired into `pnpm lint` and CI, covering `apps/**/*.ts`,
+  `packages/**/*.ts` and `scripts/**/*.mjs` (the last of which was previously in no tsconfig
+  and no linter). Baseline adoption: error on rules already at zero so they cannot regress,
+  warn on the existing debt the audit counted. The formatter is deliberately off.
+  Finding a zero-error baseline surfaced a live bug: `$P \propto a^{3/2}$` inside a JS
+  template literal in `keplers-laws`, where `\p` is not an escape sequence, so students
+  were shown "P propto a^{3/2}". `.astro` is excluded — Biome cannot see component usage in
+  Astro templates and stripped 111 import lines across 25 files.
+
 ### Still open
 
-Everything in §3 not listed above, notably: **GR-1** (galaxy-rotation's dark-matter band is
-partly a formula artifact — the highest-value remaining physics fix), the `doppler-shift`
+Everything in §3 not listed above, notably: the `doppler-shift`
 arrow direction and cosmological-`z` labelling, `spectral-lines`' ad hoc line strengths,
 `stars-zams-hr`'s divergent evolution track, the orphaned `/topics/*` tree and `hubs`
 collection, `hasStationPath()`'s dead filter, the four missing/partial instructor bundles,
