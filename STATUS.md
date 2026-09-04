@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: keplers-laws and parallax-distance layouts (cp-field stacks), then the rest of the demos in docs/reviews/2026-09-04-layout-audit.md. Old note follows: fix the stars-zams-hr CMD colour saturation (30.3% of a default population still pegs at B-V = 2.2, because the Ballesteros bisection bracket only spans 2975-21707 K -- needs a colour-temperature relation valid below that), then its layout (2,654px of control cards, and it still carries the ZAMS clamping defect from the 2026-09-03 audit, so one combined pass), then keplers-laws and parallax-distance. See docs/reviews/2026-09-04-layout-audit.md. Also open: port the progenax/startrax cross-validation fixtures so the IMF, cluster, lifetime and post-main-sequence models are gated against an external reference (the largest gap in docs/reviews/cluster-census.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
+next: keplers-laws needs a real pass, not a few lines -- its orbit is an SVG with a viewBox and `height: auto`, so capping the stage does not shrink it, it just lets `overflow: hidden` cut up to 317px off the bottom. Sorting that means working through the wrapper chain. Then parallax-distance and the shorter demos, then the rest of the demos in docs/reviews/2026-09-04-layout-audit.md. Old note follows: fix the stars-zams-hr CMD colour saturation (30.3% of a default population still pegs at B-V = 2.2, because the Ballesteros bisection bracket only spans 2975-21707 K -- needs a colour-temperature relation valid below that), then its layout (2,654px of control cards, and it still carries the ZAMS clamping defect from the 2026-09-03 audit, so one combined pass), then keplers-laws and parallax-distance. See docs/reviews/2026-09-04-layout-audit.md. Also open: port the progenax/startrax cross-validation fixtures so the IMF, cluster, lifetime and post-main-sequence models are gated against an external reference (the largest gap in docs/reviews/cluster-census.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -79,6 +79,21 @@ silently doing nothing on any styled container — the DOM said hidden and the p
 disagreed. The theme had already patched this twice per-component
 (`.cp-tab-panel[hidden]`, `.cp-popover[hidden]`); a scan found **26 element/rule pairs
 across 14 demos** exposed to the same failure. Guarded by a token test.
+
+## cp-field hoist, 2026-09-04
+
+`.cp-field__value` stacked label / value / hint on separate rows, the same defect the
+shared `.control` component fixed, in different markup. Hoisted in the theme with the same
+`:has()` scoping: **275px off keplers-laws and parallax-distance**, no change to the other
+four demos that use `.cp-field` without a value, zero errors.
+
+**keplers-laws is not done.** I tried to constrain its stage so the readouts would fit, and
+introduced clipping: the orbit is an SVG with a viewBox and `height: auto`, so its
+intrinsic aspect ratio sets the height and a `max-height` on the stage does not shrink it
+-- it just lets `overflow: hidden` cut the bottom off, up to 317px of orbit measured.
+Reverted, with the reason recorded in its stylesheet. Its sidebar is 1,943px -> 1,663px
+from the hoist alone, and its 17 readouts stay below the fold until someone does the
+wrapper chain properly.
 
 ## stars-zams-hr: colour, then layout, 2026-09-04
 

@@ -71,3 +71,55 @@
   text-align: left;
   white-space: normal;
 }
+
+/* ============================================
+   cp-field — the same hoist, for the older field markup
+   ============================================
+   `.cp-field` predates `.control` and is used by six demos, four of which stack
+   label / value / hint / input on separate rows. Measured 2026-09-04 at 1440x900:
+   keplers-laws held 1,943px of sidebar in an 819px box with all 17 readouts below the
+   fold, and its three largest fields were 260, 227 and 206px -- each spending a row on
+   one number.
+
+   Same shape as `.control`, and the same two rules that made that one safe: it applies
+   only where there IS a value to hoist, and the rows are explicit because the input sits
+   between the label and the value in source order.
+
+   `.cp-field__hint` stays full width below the input. Hints are prose; putting one in an
+   auto-sized column would squeeze it to a word per line.
+   ============================================ */
+
+.cp-field:has(> .cp-field__value):not(.cp-field--stacked) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px var(--cp-space-2);
+}
+
+/* Everything spans by default; the label and value are the two that share row 1. */
+.cp-field:has(> .cp-field__value):not(.cp-field--stacked) > * {
+  grid-column: 1 / -1;
+}
+
+.cp-field:has(> .cp-field__value):not(.cp-field--stacked) > .cp-label,
+.cp-field:has(> .cp-field__value):not(.cp-field--stacked) > label {
+  grid-column: 1;
+  grid-row: 1;
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.cp-field:has(> .cp-field__value):not(.cp-field--stacked) > .cp-field__value {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-field:has(> .cp-field__value):not(.cp-field--stacked) > input,
+.cp-field:has(> .cp-field__value):not(.cp-field--stacked) > select,
+.cp-field:has(> .cp-field__value):not(.cp-field--stacked) > .cp-range {
+  grid-row: 2;
+}

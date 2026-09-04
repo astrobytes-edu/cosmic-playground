@@ -323,3 +323,59 @@
     animation: none;
   }
 }
+
+/* ── Stage and readout budget ────────────────────────────────────────────────
+ * Measured 2026-09-04 at 1440x900, before this: the stage was 787px and the readouts
+ * began at y=835, so all 17 sat below the fold. The sidebar held 1,943px in an 819px box.
+ *
+ * The stage and the readouts share one height budget. Below 745px of viewport the demo
+ * keeps its natural layout and the page scrolls, because squeezing an orbit diagram
+ * further makes it unreadable, which is worse. */
+
+/*
+ * NOT DONE: constraining the stage here.
+ *
+ * Tried 2026-09-04 and reverted. The orbit is an SVG with a viewBox and `height: auto`,
+ * so its intrinsic aspect ratio sets the height; capping the stage does not shrink it, it
+ * just lets `overflow: hidden` cut the bottom off -- up to 317px of the orbit, measured.
+ * Making it height-driven needs the wrapper chain sorted out too, which is a real pass on
+ * this demo rather than a few lines. Until then keplers-laws keeps its natural layout and
+ * the readouts stay below the fold; the layout ratchet records that.
+ */
+
+/* Six readout cards at 109-130px came to 347px. These are numbers to glance at while
+ * dragging a slider. */
+.cp-demo__readouts .cp-panel-body {
+  grid-template-columns: repeat(auto-fit, minmax(min(10.5rem, 100%), 1fr));
+  gap: var(--cp-space-2);
+}
+
+.cp-demo__readouts .cp-readout {
+  padding: var(--cp-space-2);
+}
+
+.cp-demo__readouts .cp-readout__label {
+  font-size: 0.7rem;
+  line-height: 1.25;
+}
+
+.cp-demo__readouts .cp-readout__value {
+  font-size: var(--cp-text-md);
+  line-height: 1.2;
+}
+
+.cp-demo__readouts .cp-readout__unit {
+  white-space: nowrap;
+}
+
+/* The mode note repeats what its own tooltip already says. */
+.kepler-mode-note {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  margin: 2px 0 0;
+}
+
+.cp-field__hint {
+  font-size: 0.78rem;
+  line-height: 1.35;
+}

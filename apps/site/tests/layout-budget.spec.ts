@@ -61,7 +61,7 @@ const BUDGETS: Record<string, Budget> = {
   "eos-lab": { readoutsBelowFold: 22, sidebarOverflowPx: 580 },
   "galaxy-rotation": { readoutsBelowFold: 22, sidebarOverflowPx: 360 },
   "doppler-shift": { readoutsBelowFold: 20, sidebarOverflowPx: 380 },
-  "keplers-laws": { readoutsBelowFold: 17, sidebarOverflowPx: 1160 },
+  "keplers-laws": { readoutsBelowFold: 17, sidebarOverflowPx: 880 },
   "conservation-laws": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
   "planetary-conjunctions": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
   "spectral-lines": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
@@ -74,7 +74,7 @@ const BUDGETS: Record<string, Budget> = {
   "telescope-resolution": { readoutsBelowFold: 8, sidebarOverflowPx: 120 },
   "blackbody-radiation": { readoutsBelowFold: 4, sidebarOverflowPx: 330 },
   "retrograde-motion": { readoutsBelowFold: 4, sidebarOverflowPx: 0 },
-  "parallax-distance": { readoutsBelowFold: 2, sidebarOverflowPx: 1090 },
+  "parallax-distance": { readoutsBelowFold: 2, sidebarOverflowPx: 920 },
   "eclipse-geometry": { readoutsBelowFold: 0, sidebarOverflowPx: 280 }
 };
 
