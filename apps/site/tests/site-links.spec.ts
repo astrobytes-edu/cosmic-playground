@@ -19,12 +19,28 @@ function isCrawlable(pathname: string): boolean {
   return !pathname.includes("/play/");
 }
 
+/**
+ * Both tests in this file crawl the whole site, so they need a bigger budget than the 30s
+ * default, which is sized for a test that touches one page.
+ *
+ * Measured 2026-09-04: the link-integrity crawl takes 4.0s and the reachability crawl 3.5s
+ * on their own. In a full run they share a preview server with eight workers and ~130
+ * concurrent tests, and the link crawl makes hundreds of sequential HTTP requests into that
+ * contention -- it exceeded 30s and failed in two of three full runs while passing every
+ * time in isolation. That is the flake STATUS.md recorded as unexplained.
+ *
+ * A generous ceiling rather than a tuned one: it still catches a genuine hang, and nothing
+ * here should ever approach two minutes.
+ */
+const CRAWL_TIMEOUT_MS = 120_000;
+
 test.describe("Site link integrity", () => {
   test("no internal link 404s anywhere reachable from the entry points", async ({
     page,
     request,
     baseURL
   }) => {
+    test.setTimeout(CRAWL_TIMEOUT_MS);
     const base = new URL(baseURL!);
     const seen = new Set<string>();
     const queue = [...SEEDS];
@@ -150,6 +166,7 @@ test.describe("Route reachability", () => {
     page,
     baseURL
   }) => {
+    test.setTimeout(CRAWL_TIMEOUT_MS);
     const base = new URL(baseURL!);
     const reached = new Set<string>();
     const queue = [""];
