@@ -18,8 +18,6 @@
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Blackbody Radiation: Color and Temperature</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">See how temperature shifts a thermal spectrum and perceived color.</p>
-
           <label class="control">
             <span>Temperature <i>T</i> [K]</span>
             <input
@@ -70,27 +68,6 @@
               <button class="cp-chip preset" data-temp-k="288" type="button" aria-pressed="false">Earth</button>
               <button class="cp-chip preset" data-temp-k="250" type="button" aria-pressed="false">Brown Dwarf</button>
               <button class="cp-chip preset" data-temp-k="2.725" type="button" aria-pressed="false">CMB</button>
-            </div>
-          </div>
-
-          <div class="star-preview" aria-label="Star preview">
-            <div id="starCircle" class="star-preview__circle" role="img" aria-label="Approximate star color"></div>
-            <div class="star-preview__label">
-              <span id="spectralClass"></span> · <span id="colorName"></span>
-            </div>
-          </div>
-
-          <div class="cp-readout">
-            <div class="cp-readout__label">Peak wavelength $\lambda_{\rm peak}$</div>
-            <div class="cp-readout__value">
-              <span id="peakNm"></span>
-              <span class="cp-readout__unit">nm</span>
-            </div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Luminosity ratio $L/L_{\odot}$</div>
-            <div class="cp-readout__value">
-              <span id="lumRatio"></span>
             </div>
           </div>
 
@@ -234,8 +211,41 @@
         </div>
       </section>
 
+      <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
+        <div class="star-preview" aria-label="Star preview">
+          <div id="starCircle" class="star-preview__circle" role="img" aria-label="Approximate star color"></div>
+          <div class="star-preview__label">
+            <span id="spectralClass"></span> · <span id="colorName"></span>
+          </div>
+        </div>
+
+        <div class="cp-readout">
+          <div class="cp-readout__label">Peak wavelength $\lambda_{\rm peak}$</div>
+          <div class="cp-readout__value">
+            <span id="peakNm"></span>
+            <span class="cp-readout__unit">nm</span>
+          </div>
+        </div>
+        <div class="cp-readout">
+          <div class="cp-readout__label">Luminosity ratio $L/L_{\odot}$</div>
+          <div class="cp-readout__value">
+            <span id="lumRatio"></span>
+          </div>
+        </div>
+      </div>
+
       <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
         <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">What this shows</span>
+              <span class="cp-accordion__meta">1 note</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p>See how temperature shifts a thermal spectrum and perceived color.</p>
+            </div>
+          </details>
+
           <details class="cp-accordion" open>
             <summary>
               <span class="cp-accordion__title">What to notice</span>

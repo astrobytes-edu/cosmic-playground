@@ -99,10 +99,20 @@
   }
 }
 
+/* The spectrum is 16:9 and `width: 100%`, so its height is nine sixteenths of its column's
+ * width -- 539px at a 1440 viewport, and the `max-width: 980px` only bit past 1920. With
+ * the readouts finally in their own row below the stage (see the grid note above), that
+ * height is what pushed them under the fold at 1366 and 1280.
+ *
+ * The cap goes on WIDTH: a canvas has no `preserveAspectRatio` and stretches its bitmap to
+ * whatever box it is given, so capping the height of a `width: 100%` canvas distorts the
+ * curve. Multiplying the viewport budget by 16/9 converts the height that is available into
+ * the width that produces it. */
 #spectrumCanvas {
   width: 100%;
   height: auto;
-  max-width: 980px;
+  max-width: clamp(400px, calc((100svh - 18rem) * 16 / 9), 980px);
+  margin-inline: auto;
   aspect-ratio: 16 / 9;
   display: block;
   border-radius: 18px;
@@ -141,11 +151,21 @@
   text-align: center;
 }
 
-/* Override default shell grid: no readouts column — stage is the centerpiece */
+/* The shell grid, minus the playbar this demo has no use for.
+ *
+ * It used to omit `readouts` as well, on the reasoning that the stage is the centrepiece --
+ * so the peak wavelength, the luminosity ratio and the star preview lived at the bottom of
+ * the CONTROLS sidebar instead, 289px past its visible box. Measured 2026-09-04 at
+ * 1440x900, the first of them sat at y=848 and neither number was fully on screen.
+ *
+ * A grid area that does not exist does not error: an element asking for `grid-area:
+ * readouts` is auto-placed into an implicit row after everything else. The strip landed at
+ * y=2237, below the drawer, which is how this was found. */
 .cp-demo {
   grid-template-areas:
     "sidebar viz"
-    "sidebar shelf";
+    "sidebar readouts"
+    "shelf   shelf";
 }
 
 @media (max-width: 1024px) {
@@ -153,6 +173,7 @@
     grid-template-columns: 1fr;
     grid-template-areas:
       "viz"
+      "readouts"
       "sidebar"
       "shelf";
   }

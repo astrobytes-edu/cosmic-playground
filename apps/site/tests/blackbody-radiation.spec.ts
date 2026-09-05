@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 test("blackbody mobile shell gives the visualization usable width", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -25,13 +26,20 @@ test.describe("Blackbody Radiation -- E2E", () => {
 
   // --- Layout & Visual ---
 
-  test("demo loads with shell sections visible (readouts in controls)", async ({ page }) => {
+  test("demo loads with shell sections visible, readouts under the stage", async ({ page }) => {
     await expect(page.locator(".cp-demo__controls")).toBeVisible();
     await expect(page.locator(".cp-demo__stage")).toBeVisible();
     await expect(page.locator(".cp-demo__drawer")).toBeVisible();
-    // Readouts are integrated into controls panel, not a separate column
-    await expect(page.locator(".cp-demo__controls .star-preview")).toBeVisible();
-    await expect(page.locator(".cp-demo__controls .cp-readout").first()).toBeVisible();
+    /*
+     * The star preview and the two numbers used to live at the bottom of the CONTROLS
+     * panel. Measured 2026-09-04 at 1440x900, that put the peak wavelength at y=848 and the
+     * luminosity ratio at y=957, in a sidebar whose visible box ends at 893 -- so this test
+     * asserted "visible" on elements a reader could not see, because `toBeVisible` is about
+     * rendering, not about being on screen. They sit in the shell's readouts row now.
+     */
+    await expect(page.locator(".cp-demo__readouts .star-preview")).toBeVisible();
+    await expect(page.locator(".cp-demo__readouts .cp-readout").first()).toBeVisible();
+    await expect(page.locator(".cp-demo__controls .cp-readout")).toHaveCount(0);
   });
 
   test("starfield canvas is present and visible", async ({ page }) => {
@@ -163,14 +171,21 @@ test.describe("Blackbody Radiation -- E2E", () => {
 
   // --- Accordion / Drawer ---
 
+  /*
+   * Select the drawer's accordions by name, not position. These were `.first()` and
+   * `.nth(1)`, so adding a panel ahead of them -- the sidebar's intro prose moved into one
+   * on 2026-09-04 -- broke both without either named panel changing. Same fix as
+   * telescope-resolution.
+   */
+  const accordion = (page: Page, title: string) =>
+    page.locator(".cp-accordion").filter({ hasText: title });
+
   test("What to notice accordion is open by default", async ({ page }) => {
-    const firstAccordion = page.locator(".cp-accordion").first();
-    await expect(firstAccordion).toHaveAttribute("open", "");
-    await expect(firstAccordion).toContainText("What to notice");
+    await expect(accordion(page, "What to notice")).toHaveAttribute("open", "");
   });
 
   test("Model notes accordion can be opened", async ({ page }) => {
-    const modelNotes = page.locator(".cp-accordion").nth(1);
+    const modelNotes = accordion(page, "Model notes");
     // The sticky sidebar (z-index:3) overlaps the drawer (z-index:2),
     // so we click via JS to bypass the pointer-intercept check.
     await modelNotes.locator("summary").evaluate((el: HTMLElement) => el.click());

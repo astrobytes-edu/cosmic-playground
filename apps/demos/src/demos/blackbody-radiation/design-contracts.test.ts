@@ -166,14 +166,35 @@ describe("Blackbody Radiation -- Design System Contracts", () => {
       expect(css).toMatch(/@media\s*\(max-width:\s*1024px\)[\s\S]*grid-template-areas/);
     });
 
-    it("readouts are integrated in controls panel (no separate readouts aside)", () => {
-      // Star preview and readouts should be inside the controls panel, not a separate aside
-      expect(html).not.toMatch(/<aside[^>]*cp-demo__readouts/);
-      // Controls panel should contain the readout elements
+    it("readouts sit under the stage, not at the bottom of the controls panel", () => {
+      /*
+       * This contract used to assert the opposite -- that the readouts and the star preview
+       * lived inside the controls panel, on the reasoning that the stage is the centrepiece
+       * and needs no readouts column.
+       *
+       * The intent was right and the placement was not. Measured 2026-09-04 at 1440x900,
+       * the sidebar held 1,083px of content in a 794px box: the peak wavelength sat at
+       * y=848 and the luminosity ratio at y=957, so neither number a reader came for was
+       * fully on screen, and the sidebar hid 289px behind an invisible scrollbar.
+       *
+       * A strip in the shell's `readouts` row keeps the stage the centrepiece and puts the
+       * numbers directly under the spectrum they describe.
+       */
+      const strip = html.match(/class="cp-readout-strip cp-demo__readouts[\s\S]*?<\/div>\s*<section/);
+      expect(strip, "expected a readout strip between the stage and the drawer").not.toBeNull();
+      expect(strip![0]).toContain('class="cp-readout"');
+      expect(strip![0]).toContain('class="star-preview"');
+
       const controlsSection = html.match(/class="cp-demo__controls[\s\S]*?<\/aside>/);
       expect(controlsSection).not.toBeNull();
-      expect(controlsSection![0]).toContain('class="cp-readout"');
-      expect(controlsSection![0]).toContain('class="star-preview"');
+      expect(controlsSection![0]).not.toContain('class="cp-readout"');
+    });
+
+    it("the custom shell grid has a readouts row for that strip to land in", () => {
+      // A grid area that does not exist does not error: an element asking for
+      // `grid-area: readouts` is auto-placed into an implicit row after everything else.
+      // The strip first landed at y=2237, below the drawer, which is how this was found.
+      expect(css).toMatch(/grid-template-areas:[\s\S]*?readouts/);
     });
   });
 

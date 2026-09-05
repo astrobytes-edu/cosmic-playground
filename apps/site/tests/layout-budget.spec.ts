@@ -96,7 +96,7 @@ const BUDGETS: Record<string, Budget> = {
   "stars-zams-hr": { readoutsBelowFold: 0, sidebarOverflowPx: 40 },
   seasons: { readoutsBelowFold: 10, sidebarOverflowPx: 80 },
 
-  "blackbody-radiation": { readoutsBelowFold: 4, sidebarOverflowPx: 330 },
+
   "retrograde-motion": { readoutsBelowFold: 4, sidebarOverflowPx: 0 },
   // parallax-distance was 2 below the fold at 1440x900 and 6 at 1366 and 1280. Fixed
   // 2026-09-04: the stage is height-bounded with both schematics made height-driven, and
