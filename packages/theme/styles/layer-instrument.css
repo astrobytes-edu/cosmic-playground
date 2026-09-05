@@ -96,11 +96,15 @@
   line-height: var(--cp-leading-tight);
 }
 
+/* A unit is one symbol, so it must not break across lines. conservation-laws rendered
+ * `AU$^2$/yr$^2$` as "AU2/yr" with the second exponent orphaned on the line below --
+ * KaTeX emits each piece as its own inline element and the line broke between them. */
 .cp-layer-instrument .cp-readout__unit {
   font-size: var(--cp-readout-unit-size);
   font-weight: var(--cp-readout-unit-weight);
   color: var(--cp-readout-unit-color);
   margin-left: 0.25em;
+  white-space: nowrap;
 }
 
 /* --- Callouts --- */

@@ -28,10 +28,22 @@
   padding: var(--cp-space-4);
 }
 
+/* -- Stage height budget -------------------------------------------------
+ * Measured 2026-09-04 at 1440x900, before this pass: a 1,016px stage with all six readouts
+ * below the fold, the first at y=1142.
+ *
+ * The orbit is square at `width: 100%`, so its height is its column's width -- 982px, and
+ * the existing `max-width: 980px` only stopped it past a 1920 viewport. A square drawing
+ * asks for the whole column's width as height, which is the most expensive shape there is
+ * when height is the scarce resource.
+ *
+ * The cap follows the viewport now, so what is left after the readouts is what the orbit
+ * gets, and it centres in the width it no longer needs. */
 .orbit {
   width: 100%;
   height: auto;
-  max-width: 980px;
+  max-width: clamp(280px, calc(100svh - 23rem), 700px);
+  margin-inline: auto;
   aspect-ratio: 1 / 1;
   display: block;
   border-radius: 18px;
@@ -93,4 +105,19 @@
 .cp-demo__drawer {
   animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 3);
+}
+
+/* NOT DONE: narrowing the readout columns to fit all six on one row. An 8.5rem floor gives
+ * six columns at 1440 and takes the panel from 324px to 255px, but only there: at 1366 and
+ * 1280 it gives five, so one card wraps to a second row anyway AND every card is narrower,
+ * so labels like "Specific angular momentum" wrap further. Measured 2026-09-04, the panel
+ * went 324px -> 344px at 1366 and 324px -> 364px at 1280. The shell's 200px floor is the
+ * better compromise; the reserve below is sized for it. */
+
+/* The shell floors every stage at `clamp(420px, 70svh, 820px)` -- 630px at a 900px viewport,
+ * more than this stage needs once the orbit is capped. Fifth demo running. */
+@media (min-width: 1025px) {
+  .cp-demo__stage {
+    min-height: 0;
+  }
 }

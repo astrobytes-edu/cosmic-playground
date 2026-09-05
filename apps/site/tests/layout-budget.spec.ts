@@ -86,7 +86,7 @@ const BUDGETS: Record<string, Budget> = {
   // Friendly/Advanced switch moved into the panel header, and the Conservation disclosure
   // spans the readouts row. The remaining overflow is the sidebar's own controls.
   "keplers-laws": { readoutsBelowFold: 0, sidebarOverflowPx: 880 },
-  "conservation-laws": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
+
   "planetary-conjunctions": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
   "spectral-lines": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
   // stars-zams-hr was 10 below the fold with 2,178px hidden. Fixed 2026-09-04: Start
