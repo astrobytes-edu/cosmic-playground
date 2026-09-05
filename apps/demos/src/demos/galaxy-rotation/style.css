@@ -203,3 +203,54 @@
     animation: none;
   }
 }
+
+/* Radius, concentration and virial radius are the sliders' own values restated; enclosed
+ * mass, visible mass and the baryon fraction are the mass budget behind the dark-to-visible
+ * ratio; the 21-cm shift is a side observation. Eleven readouts came to 418px, three rows
+ * deep, which the stage could not afford. Disclosed, the four that carry the demo's claim --
+ * total velocity against visible-matter velocity, and the dark mass that explains the gap --
+ * stay on one row. */
+.galaxy-secondary {
+  grid-column: 1 / -1;
+}
+
+.galaxy-secondary .cp-accordion__body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-3) var(--cp-space-4);
+}
+
+/* -- Stage height budget -------------------------------------------------
+ * Measured 2026-09-04 at 1440x900, before this pass: a 652px stage with all 22 readouts
+ * below the fold, the first at y=829.
+ *
+ * The galaxy schematic is the purest case of width-driven sizing in the project: a SQUARE
+ * viewBox at `width: 100%`, so its height is its column's width. At 1920 that column is
+ * 693px and the drawing became 693px tall, taking the stage to 828px -- a bigger monitor
+ * made the demo strictly worse. Meanwhile the column had ~240px of width to spare precisely
+ * because the drawing is square.
+ *
+ * Capping the height spends that spare width instead: the box stays column-width and
+ * `preserveAspectRatio` centres the drawing in it. The cap follows the viewport, so what is
+ * left after the transport bar and the readouts is what the drawing gets.
+ *
+ *     900px viewport -> 360px of drawing
+ *    1080px          -> 540px
+ *     720px          -> the 190px floor, and the page scrolls
+ *
+ * The shell's own floor has to go with it. `min-height: clamp(420px, 70svh, 820px)` is 630px
+ * at a 900px viewport, and this stage measured 632px -- that floor plus its border -- so
+ * once the prose moved out the floor was the only thing still setting the height. */
+@media (min-width: 1025px) {
+  .cp-demo__stage {
+    min-height: 0;
+  }
+
+  #galaxyView,
+  #rotationCanvas {
+    width: 100%;
+    height: auto;
+    max-height: max(190px, calc(100svh - 30rem));
+  }
+}

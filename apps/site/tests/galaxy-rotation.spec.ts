@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-function parseFirstNumber(text: string): number {
-  const match = text.match(/-?\d+(\.\d+)?/);
+function parseFirstNumber(text: string | null): number {
+  const match = text?.match(/-?\d+(\.\d+)?/);
   return match ? Number(match[0]) : Number.NaN;
 }
 
@@ -59,9 +59,13 @@ test.describe("Galaxy Rotation -- E2E", () => {
     await page.keyboard.press("4");
     await expect(page.locator("#presetSelect")).toHaveValue("no-dark-matter");
 
-    const before = parseFirstNumber(await page.locator("#radiusValue").innerText());
+    // `textContent`, not `innerText`: the radius readout moved into the "Inputs and mass
+    // budget" disclosure on 2026-09-04 -- it restates the radius-marker slider, whose value
+    // the sidebar already shows -- and `innerText` returns "" for content that is not
+    // rendered. The assertion is unchanged: pressing ] steps the marker outward.
+    const before = parseFirstNumber(await page.locator("#radiusValue").textContent());
     await page.keyboard.press("]");
-    const after = parseFirstNumber(await page.locator("#radiusValue").innerText());
+    const after = parseFirstNumber(await page.locator("#radiusValue").textContent());
     expect(after).toBeGreaterThan(before);
   });
 

@@ -54,10 +54,6 @@
             </div>
           </div>
 
-          <p class="cp-muted">
-            Build a galaxy mass model and compare the observed flat rotation curve to what the visible matter alone can produce.
-          </p>
-
           <label class="control" for="presetSelect">
             <span>Galaxy preset</span>
             <select id="presetSelect">
@@ -200,7 +196,6 @@
             <article class="viz-card galaxy-card">
               <header>
                 <h3>Galaxy schematic with slit</h3>
-                <p class="cp-muted">Face-on pedagogical view. Published curves are inclination-corrected intrinsic $V(R)$.</p>
               </header>
               <svg id="galaxyView" viewBox="0 0 600 600" role="img" aria-label="Galaxy schematic with slit and radius marker"></svg>
             </article>
@@ -208,7 +203,6 @@
             <article class="viz-card curve-card">
               <header>
                 <h3>Rotation and mass curves</h3>
-                <p class="cp-muted">Compare the total curve, the visible-matter-only curve, the individual components, and an optional MOND prediction.</p>
               </header>
               <canvas id="rotationCanvas" role="img" aria-label="Rotation curve showing velocity versus radius for galaxy model"></canvas>
               <p id="plotAria" class="sr-only">
@@ -286,24 +280,12 @@
         <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body readout-grid">
           <div class="cp-readout">
-            <div class="cp-readout__label">Radius</div>
-            <div class="cp-readout__value"><span id="radiusValue">10.0</span> <span class="cp-readout__unit">kpc</span></div>
-          </div>
-          <div class="cp-readout">
             <div class="cp-readout__label">Total velocity $V(R)$</div>
             <div class="cp-readout__value"><span id="vTotalValue">&mdash;</span> <span class="cp-readout__unit">km/s</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Visible-matter velocity</div>
             <div class="cp-readout__value"><span id="vVisibleValue">&mdash;</span> <span class="cp-readout__unit">km/s</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Enclosed mass $M(&lt;R)$</div>
-            <div class="cp-readout__value"><span id="mEnclosedValue">&mdash;</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Visible mass $M_{\rm vis}$</div>
-            <div class="cp-readout__value"><span id="mVisibleValue">&mdash;</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Dark mass $M_{\rm dark}$</div>
@@ -313,27 +295,59 @@
             <div class="cp-readout__label">Dark-to-visible ratio</div>
             <div class="cp-readout__value"><span id="darkVisRatioValue">&mdash;</span> <span class="cp-readout__unit">1</span></div>
           </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Baryon fraction $f_b$</div>
-            <div class="cp-readout__value"><span id="baryonFracValue">&mdash;</span> <span class="cp-readout__unit">1</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">21-cm Doppler shift</div>
-            <div class="cp-readout__value"><span id="deltaLambda21Value">&mdash;</span> <span class="cp-readout__unit">mm</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Concentration $c$</div>
-            <div class="cp-readout__value"><span id="concValue">&mdash;</span> <span class="cp-readout__unit">1</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Virial radius $R_{\rm vir}$</div>
-            <div class="cp-readout__value"><span id="rVirValue">&mdash;</span> <span class="cp-readout__unit">kpc</span></div>
-          </div>
+
+          <details class="cp-accordion galaxy-secondary">
+            <summary>
+              <span class="cp-accordion__title">Inputs and mass budget</span>
+              <span class="cp-accordion__meta">7 values</span>
+            </summary>
+            <div class="cp-accordion__body">
+            <div class="cp-readout">
+              <div class="cp-readout__label">Radius</div>
+              <div class="cp-readout__value"><span id="radiusValue">10.0</span> <span class="cp-readout__unit">kpc</span></div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Enclosed mass $M(&lt;R)$</div>
+              <div class="cp-readout__value"><span id="mEnclosedValue">&mdash;</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Visible mass $M_{\rm vis}$</div>
+              <div class="cp-readout__value"><span id="mVisibleValue">&mdash;</span> <span class="cp-readout__unit">$10^{10}\,M_\odot$</span></div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Baryon fraction $f_b$</div>
+              <div class="cp-readout__value"><span id="baryonFracValue">&mdash;</span> <span class="cp-readout__unit">1</span></div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">21-cm Doppler shift</div>
+              <div class="cp-readout__value"><span id="deltaLambda21Value">&mdash;</span> <span class="cp-readout__unit">mm</span></div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Concentration $c$</div>
+              <div class="cp-readout__value"><span id="concValue">&mdash;</span> <span class="cp-readout__unit">1</span></div>
+            </div>
+            <div class="cp-readout">
+              <div class="cp-readout__label">Virial radius $R_{\rm vir}$</div>
+              <div class="cp-readout__value"><span id="rVirValue">&mdash;</span> <span class="cp-readout__unit">kpc</span></div>
+            </div>
+            </div>
+          </details>
         </div>
       </aside>
 
       <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
         <div class="cp-panels">
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">How to read these panels</span>
+              <span class="cp-accordion__meta">2 notes</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p>Build a galaxy mass model and compare the observed flat rotation curve to what the visible matter alone can produce.</p>
+              <p><strong>Galaxy schematic.</strong> Face-on pedagogical view. Published curves are inclination-corrected intrinsic $V(R)$. <strong>Rotation and mass curves.</strong> Compare the total curve, the visible-matter-only curve, the individual components, and an optional MOND prediction.</p>
+            </div>
+          </details>
+
           <details class="cp-accordion" open>
             <summary>
               <span class="cp-accordion__title">What to notice</span>

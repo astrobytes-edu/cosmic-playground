@@ -69,7 +69,12 @@ const BUDGETS: Record<string, Budget> = {
   // behind a trigger, and the stage bounded with both surfaces made height-driven. The
   // remaining overflow is the sidebar's own controls.
   "eos-lab": { readoutsBelowFold: 0, sidebarOverflowPx: 240 },
-  "galaxy-rotation": { readoutsBelowFold: 22, sidebarOverflowPx: 360 },
+  // galaxy-rotation was 22 below the fold with 322px of sidebar hidden. Fixed 2026-09-04:
+  // its galaxy schematic is a SQUARE viewBox at `width: 100%`, so its height was its
+  // column's width -- 693px at a 1920 viewport. Capped so it letterboxes into the width the
+  // column has spare, the shell's stage floor released, prose to the drawer, and the seven
+  // inputs and mass-budget values behind a disclosure.
+  "galaxy-rotation": { readoutsBelowFold: 0, sidebarOverflowPx: 160 },
   // doppler-shift was 20 below the fold with 343px of sidebar hidden and a 955px stage.
   // Fixed 2026-09-04: the two viz cards sit side by side as cause and observable rather
   // than stacked, the shell's stage floor released so the stage is content-sized, prose and
