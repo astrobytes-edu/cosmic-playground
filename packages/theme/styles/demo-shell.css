@@ -213,12 +213,27 @@
   gap: var(--cp-space-3);
 }
 
+/*
+ * `overflow: clip`, not `hidden`, and the difference is load-bearing.
+ *
+ * `hidden` makes this a SCROLL CONTAINER, and a grid item that is a scroll
+ * container has an automatic minimum size of zero. The sidebar's `.cp-panel-body`
+ * is a grid, so once its content exceeded its height the auto track holding an
+ * accordion collapsed to 0 and the summary spilled out over whatever followed --
+ * clickable text sitting under another element. Measured 2026-09-05 at 1280x720:
+ * eos-lab had four collapsed accordions, keplers-laws one, retrograde-motion one,
+ * each a 2px box holding 245-594px of content.
+ *
+ * `clip` clips exactly the same way (this is here to keep content inside the
+ * border radius) but is not a scroll container, so the zero-minimum rule does not
+ * apply and the track sizes to the summary again.
+ */
 .cp-accordion {
   background: var(--cp-bg1);
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-r-3);
   box-shadow: var(--cp-shadow-1);
-  overflow: hidden;
+  overflow: clip;
 }
 
 .cp-accordion > summary {

@@ -479,6 +479,10 @@ test.describe("Retrograde Motion -- E2E", () => {
       filler.style.pointerEvents = "none";
       filler.style.opacity = "0";
       el.appendChild(filler);
+      // Start from a known position. Opening the accordion scrolls its summary
+      // into view, so `before` was only 0 while `.cp-accordion` collapsed to a
+      // 2px box -- which is the defect `overflow: clip` in demo-shell.css fixed.
+      el.scrollTop = 0;
       const before = el.scrollTop;
       el.scrollTop = 120;
       return {
