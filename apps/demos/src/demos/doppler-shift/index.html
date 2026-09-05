@@ -54,10 +54,6 @@
             </div>
           </div>
 
-          <p class="cp-muted">
-            Connect relative motion to shifted spectral lines with synchronized wave spacing and lab-vs-observed comparison strips.
-          </p>
-
           <label class="control control--stacked" for="velocitySlider">
             <span>Radial velocity $v_r$ (km/s)</span>
             <input
@@ -133,8 +129,16 @@
             Show all element lines (dense Fe catalog)
           </label>
 
-          <div class="presets">
-            <div class="presets__label">Presets (keys 1-8)</div>
+          <div class="presets cp-popover-anchor">
+            <button
+              class="cp-button cp-button--outline cp-popover-trigger presets__trigger"
+              type="button"
+              aria-expanded="false"
+              aria-controls="velocityPresetPopover"
+            >
+              Velocity presets (keys 1-8)
+            </button>
+            <div class="cp-popover presets__popover" id="velocityPresetPopover" hidden>
             <div class="cp-chip-group--grid presets__row presets__row--2col" role="group" aria-label="Velocity presets">
               <button class="cp-chip preset-chip" data-preset="1" type="button" aria-pressed="false">1: At rest</button>
               <button class="cp-chip preset-chip" data-preset="2" type="button" aria-pressed="false">2: Vega</button>
@@ -144,6 +148,7 @@
               <button class="cp-chip preset-chip" data-preset="6" type="button" aria-pressed="false">6: Coma</button>
               <button class="cp-chip preset-chip" data-preset="7" type="button" aria-pressed="false">7: 3C 273</button>
               <button class="cp-chip preset-chip" data-preset="8" type="button" aria-pressed="false">8: High-z</button>
+            </div>
             </div>
           </div>
 
@@ -193,7 +198,6 @@
             <article class="viz-card wave-card">
               <header>
                 <h3>Wave spacing at the observer</h3>
-                <p class="cp-muted">Observed crests are uniformly spaced at $\lambda_{\rm obs}$.</p>
               </header>
               <svg id="waveDiagram" viewBox="0 0 800 250" role="img" aria-label="Wave diagram showing Doppler shift of light"></svg>
             </article>
@@ -201,7 +205,6 @@
             <article class="viz-card spectrum-card">
               <header>
                 <h3>Lab vs observed spectral lines</h3>
-                <p class="cp-muted">Connectors show how each rest line shifts under $v_r$.</p>
               </header>
               <canvas id="spectrumCanvas" role="img" aria-label="Spectrum comparator with lab and observed line strips"></canvas>
               <div class="spectrum-actions">
@@ -212,23 +215,6 @@
               </div>
             </article>
 
-            <details id="soundVsLight" class="cp-notice misconception-callout">
-              <summary>Why don't waves bunch near the source?</summary>
-              <div class="callout-grid">
-                <section>
-                  <h4>Sound (medium)</h4>
-                  <p>
-                    Ripples compress ahead and stretch behind because air carries the disturbance.
-                  </p>
-                </section>
-                <section>
-                  <h4>Light (no medium)</h4>
-                  <p>
-                    Each crest travels at $c$ in vacuum. The spacing is set at emission and remains uniform when observed.
-                  </p>
-                </section>
-              </div>
-            </details>
           </div>
         </div>
 
@@ -332,32 +318,12 @@
             <p id="repLineRuleNote" class="cp-muted rep-line-rule-note" hidden></p>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Radial velocity $v_r$</div>
-            <div class="cp-readout__value"><span id="vrValue">0</span> <span class="cp-readout__unit">km/s</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Physical redshift $z_{\rm rel}$</div>
-            <div class="cp-readout__value"><span id="zValue">0</span></div>
-          </div>
-          <div class="cp-readout">
             <div class="cp-readout__label">Observed wavelength</div>
             <div class="cp-readout__value"><span id="lambdaObsValue">656.3</span> <span class="cp-readout__unit">nm</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Wavelength shift $\Delta\lambda$</div>
             <div class="cp-readout__value"><span id="deltaLambdaValue">0</span> <span class="cp-readout__unit">nm</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Observed frequency</div>
-            <div class="cp-readout__value"><span id="nuObsValue">456.8</span> <span class="cp-readout__unit">THz</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Frequency shift $\Delta\nu$</div>
-            <div class="cp-readout__value"><span id="deltaNuValue">0</span> <span class="cp-readout__unit">THz</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Band</div>
-            <div class="cp-readout__value"><span id="bandValue">Visible (red)</span></div>
           </div>
           <div class="cp-readout">
             <div class="cp-readout__label">Regime</div>
@@ -367,6 +333,35 @@
             <div class="cp-readout__label">NR divergence</div>
             <div class="cp-readout__value"><span id="divergenceValue">0</span> <span class="cp-readout__unit">%</span></div>
           </div>
+
+          <details class="cp-accordion doppler-secondary">
+            <summary>
+              <span class="cp-accordion__title">Inputs and frequency view</span>
+              <span class="cp-accordion__meta">5 values</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <div class="cp-readout">
+                <div class="cp-readout__label">Radial velocity $v_r$</div>
+                <div class="cp-readout__value"><span id="vrValue">0</span> <span class="cp-readout__unit">km/s</span></div>
+              </div>
+              <div class="cp-readout">
+                <div class="cp-readout__label">Physical redshift $z_{\rm rel}$</div>
+                <div class="cp-readout__value"><span id="zValue">0</span></div>
+              </div>
+              <div class="cp-readout">
+                <div class="cp-readout__label">Observed frequency</div>
+                <div class="cp-readout__value"><span id="nuObsValue">456.8</span> <span class="cp-readout__unit">THz</span></div>
+              </div>
+              <div class="cp-readout">
+                <div class="cp-readout__label">Frequency shift $\Delta\nu$</div>
+                <div class="cp-readout__value"><span id="deltaNuValue">0</span> <span class="cp-readout__unit">THz</span></div>
+              </div>
+              <div class="cp-readout">
+                <div class="cp-readout__label">Band</div>
+                <div class="cp-readout__value"><span id="bandValue">Visible (red)</span></div>
+              </div>
+            </div>
+          </details>
         </div>
         <div id="comparisonReadouts" class="comparison-readouts" hidden>
           <div class="cp-readout">
@@ -386,6 +381,35 @@
 
       <section class="cp-demo__drawer cp-drawer" aria-label="Panels">
         <div class="cp-panels">
+          <details id="soundVsLight" class="cp-notice misconception-callout">
+            <summary>Why don't waves bunch near the source?</summary>
+            <div class="callout-grid">
+              <section>
+                <h4>Sound (medium)</h4>
+                <p>
+                  Ripples compress ahead and stretch behind because air carries the disturbance.
+                </p>
+              </section>
+              <section>
+                <h4>Light (no medium)</h4>
+                <p>
+                  Each crest travels at $c$ in vacuum. The spacing is set at emission and remains uniform when observed.
+                </p>
+              </section>
+            </div>
+          </details>
+
+          <details class="cp-accordion" open>
+            <summary>
+              <span class="cp-accordion__title">How to read these panels</span>
+              <span class="cp-accordion__meta">2 notes</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p>Connect relative motion to shifted spectral lines with synchronized wave spacing and lab-vs-observed comparison strips.</p>
+              <p><strong>Wave spacing.</strong> Observed crests are uniformly spaced at $\lambda_{\rm obs}$. <strong>Lab vs observed.</strong> Connectors show how each rest line shifts under $v_r$.</p>
+            </div>
+          </details>
+
           <details class="cp-accordion" open>
             <summary>
               <span class="cp-accordion__title">What to notice</span>

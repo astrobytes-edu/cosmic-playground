@@ -414,3 +414,73 @@
     flex: 1 1 calc(50% - var(--cp-space-2));
   }
 }
+
+/* The eight velocity presets held 165px of a sidebar that was hiding 343px. A trigger costs
+ * a fixed ~44px however many presets sit behind it, and unlike a bar in the playbar row it
+ * takes nothing from the stage -- which in this demo is the budget that was already spent.
+ * The five element chips stay inline: they are one row, and choosing the element is a
+ * primary control rather than a jump to a named scenario. */
+.presets__trigger {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.presets__popover {
+  width: min(24rem, 90vw);
+  padding: var(--cp-space-3);
+}
+
+/* Radial velocity and physical redshift are the two sliders' own values, restated; observed
+ * frequency and its shift are the wavelength pair in other units; band is context. Ten
+ * readouts came to 451px, which the stage could not afford. Disclosed, the panel is two
+ * rows and the wavelength story -- which is what the demo is about -- stays on screen. */
+.doppler-secondary {
+  grid-column: 1 / -1;
+}
+
+.doppler-secondary .cp-accordion__body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-3) var(--cp-space-4);
+}
+
+/* -- Stage layout --------------------------------------------------------
+ * Measured 2026-09-04 at 1440x900, before this pass: the stage was 955px and every readout
+ * sat below the fold, the first at y=1084.
+ *
+ * Both drawings are `width: 100%` with an `aspect-ratio`, which is width-driven: the stage
+ * gets TALLER as the window gets wider, and it grew 134px between a 1280 and a 1920
+ * viewport. Stacked, the two cards demanded 875px of a column 1,020px wide -- while the
+ * drawings themselves are 3.2:1 and 4:1, so most of that column was being converted into
+ * height nobody asked for.
+ *
+ * Side by side they read as cause and observable, the pairing parallax-distance uses, and
+ * each card asks for roughly half the height. No cap is needed: the grid is bounded by the
+ * columns rather than by the viewport, so the stage stops growing on its own. */
+@media (min-width: 1025px) {
+  .stage-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  /* The shell floors every stage at `clamp(420px, 70svh, 820px)`. Side by side this demo's
+   * content comes to 446px, so that floor -- 630px at a 900px viewport -- became the thing
+   * setting the stage height, and it pushed the readouts back under the fold on its own.
+   * This stage is content-sized now, and the content is bounded by the columns. */
+  .cp-demo__stage {
+    min-height: 0;
+  }
+}
+
+/* NOT DONE: spanning the representative-line card across two columns. Its "Why this line?"
+ * chip stacks under the label in a 208px column and, because a grid row is as tall as its
+ * tallest cell, that turns every card in the row from 84px into 118px. Tried 2026-09-04 and
+ * reverted: the grid is three columns at 1280, so a two-column card leaves one behind it and
+ * costs a whole extra row -- the panel went 389px to 402px and two more readouts dropped
+ * below the fold. */
+
+/* One word does not need 49px of chrome. */
+.cp-demo__readouts .cp-panel-header {
+  padding-block: var(--cp-space-2);
+}

@@ -70,7 +70,12 @@ const BUDGETS: Record<string, Budget> = {
   // remaining overflow is the sidebar's own controls.
   "eos-lab": { readoutsBelowFold: 0, sidebarOverflowPx: 240 },
   "galaxy-rotation": { readoutsBelowFold: 22, sidebarOverflowPx: 360 },
-  "doppler-shift": { readoutsBelowFold: 20, sidebarOverflowPx: 380 },
+  // doppler-shift was 20 below the fold with 343px of sidebar hidden and a 955px stage.
+  // Fixed 2026-09-04: the two viz cards sit side by side as cause and observable rather
+  // than stacked, the shell's stage floor released so the stage is content-sized, prose and
+  // the misconception callout to the drawer, velocity presets behind a trigger, and the
+  // inputs and frequency restatement behind a disclosure.
+  "doppler-shift": { readoutsBelowFold: 0, sidebarOverflowPx: 60 },
   // keplers-laws was 7 below the fold. Fixed 2026-09-04: the stage is height-bounded and
   // its SVG made height-driven so the cap shrinks the orbit rather than cropping it, the
   // Friendly/Advanced switch moved into the panel header, and the Conservation disclosure

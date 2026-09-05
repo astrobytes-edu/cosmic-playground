@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 test.describe("Doppler Shift -- E2E", () => {
   test.beforeEach(async ({ page }) => {
@@ -30,8 +31,21 @@ test.describe("Doppler Shift -- E2E", () => {
     await expect(page.locator("#velocityClampIndicator")).toBeHidden();
   });
 
+  /**
+   * Choose a velocity preset the way a reader does.
+   *
+   * The eight preset chips moved behind a trigger on 2026-09-04: they held 165px of a
+   * sidebar that was hiding 343px, and a trigger costs a fixed ~44px however many presets
+   * sit behind it.
+   */
+  async function choosePreset(page: Page, preset: string): Promise<void> {
+    const trigger = page.locator(".presets__trigger");
+    if ((await trigger.getAttribute("aria-expanded")) !== "true") await trigger.click();
+    await page.locator(`button.preset-chip[data-preset="${preset}"]`).click();
+  }
+
   test("preset 8 clamps velocity slider and uses high redshift", async ({ page }) => {
-    await page.locator('button.preset-chip[data-preset="8"]').click();
+    await choosePreset(page, "8");
 
     await expect(page.locator("#velocityClampIndicator")).toBeVisible();
     await expect(page.locator("#redshiftValue")).toContainText("+2.");
@@ -127,7 +141,7 @@ test.describe("Doppler Shift -- E2E", () => {
   });
 
   test("copy results includes doppler export context", async ({ page }) => {
-    await page.locator('button.preset-chip[data-preset="7"]').click();
+    await choosePreset(page, "7");
     await page.locator("#formulaRel").click();
     await page.locator('button.element-chip[data-element="Na"]').click();
     await page.locator("#copyResults").click();
@@ -149,7 +163,8 @@ test.describe("Doppler Shift -- E2E", () => {
   });
 
   test("popover links resolve", async ({ page }) => {
-    await page.locator(".cp-popover-trigger").click();
+    // The velocity presets are behind a trigger too now, so name the one this test means.
+    await page.locator('.cp-popover-trigger[aria-controls="navPopover"]').click();
 
     const exhibitHref = await page.locator('a[href*="exhibits/doppler-shift"]').getAttribute("href");
     const stationHref = await page.locator('a[href*="stations/doppler-shift"]').getAttribute("href");
