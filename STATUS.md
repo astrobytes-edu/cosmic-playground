@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. Done: eos-lab (14 -> 0 below the fold, sidebar 540 -> 230), doppler-shift (20 -> 0, 343 -> 51), galaxy-rotation (22 -> 0, 322 -> 148), telescope-resolution (8 -> 0, 77 -> 0 -- first demo out of the BUDGETS map entirely). Next: conservation-laws and planetary-conjunctions (1,016px stages, sidebars already clean, so pure stage passes), then blackbody-radiation (289px hidden), eclipse-geometry (242px), binary-orbits (601px) and seasons (80px). CHECK THE SHELL'S STAGE FLOOR FIRST on each: `min-height: clamp(420px, 70svh, 820px)` is 630px at a 900px viewport and it was the binding constraint on four demos running once their content came down. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: continue the stage-first sidebar plan, demo by demo. Done: eos-lab (14 -> 0 below the fold, sidebar 540 -> 230), doppler-shift (20 -> 0, 343 -> 51), galaxy-rotation (22 -> 0, 322 -> 148), telescope-resolution and conservation-laws (both fully clean and out of the BUDGETS map). Next: planetary-conjunctions (1,016px stage, sidebar already clean -- another pure stage pass), then blackbody-radiation (289px hidden), eclipse-geometry (242px), binary-orbits (601px), seasons (80px), spectral-lines and stars-zams-hr. CHECK THE SHELL'S STAGE FLOOR FIRST on each: `min-height: clamp(420px, 70svh, 820px)` is 630px at a 900px viewport and it was the binding constraint on five demos running once their content came down. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -287,6 +287,28 @@ Two E2E tests selected drawer accordions by position (`.first()`, `.nth(1)`), so
 sidebar's intro prose into a new panel broke both without either named panel changing. They
 select by name now. Worth watching for on the remaining demos: this pass adds a drawer panel
 almost every time.
+
+## conservation-laws, 2026-09-04
+
+A 1,016px stage with all six readouts below the fold. Its orbit is square at `width: 100%`,
+already carrying `max-width: 980px` -- which only stopped it past a 1920 viewport. A square
+drawing asks for the whole column's width as height, the most expensive shape there is when
+height is what is scarce. Capped against the viewport, it centres in the width it no longer
+needs and the starfield shows through, which reads better than the full-bleed version did.
+
+**Readouts below the fold 12 -> 0** at all four sizes; the sidebar was already clean. Second
+demo out of the BUDGETS map.
+
+A theme fix this demo exposed: `.cp-readout__unit` had no `white-space`, so
+`AU$^2$/yr$^2$` rendered as "AU2/yr" with the second exponent orphaned on the line below --
+KaTeX emits each piece as its own inline element and the line broke between them. A unit is
+one symbol and must not break. That one was latent across every demo.
+
+Reverted and recorded: narrowing the readout columns so all six fit one row. An 8.5rem floor
+gives six columns at 1440 and takes the panel 324px -> 255px, but only there. At 1366 and
+1280 it gives five, so a card wraps anyway AND every card is narrower, so labels like
+"Specific angular momentum" wrap further: 324px -> 344px at 1366, -> 364px at 1280. Helping
+the measured viewport by hurting two real ones is not a trade worth making.
 
 ## The layout ratchet was measuring the wrong thing, 2026-09-04
 
