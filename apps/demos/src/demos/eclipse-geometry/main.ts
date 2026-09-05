@@ -345,6 +345,33 @@ function renderStage(args: {
   descNodeDot.setAttribute("cx", formatNumber(ex, 2));
   descNodeDot.setAttribute("cy", formatNumber(ey, 2));
 
+  /*
+   * Put each node's label beside its own dot.
+   *
+   * The two labels were pinned at x=0, y=-156 and y=170 -- fixed points at the top and
+   * bottom of the diagram -- while the dots they name move around the orbit with the node
+   * longitude. So "asc. node 210" sat at the top of the circle whatever the ascending node
+   * was actually doing, and at the default longitude the lower label landed on the
+   * schematic caption at y=392 and the two strings overlapped.
+   *
+   * `text-anchor` follows the side the node is on, so a label on the left of the diagram
+   * grows leftward instead of back across the orbit.
+   */
+  const labelR = r + 22;
+  const placeNodeLabel = (label: SVGTextElement, angle: number) => {
+    const lx = cx + labelR * Math.cos(angle);
+    const ly = cy + labelR * Math.sin(angle);
+    label.setAttribute("x", formatNumber(lx, 2));
+    // Nudge down by roughly half a cap height so the text centres on the dot's line.
+    label.setAttribute("y", formatNumber(ly + 4, 2));
+    label.setAttribute(
+      "text-anchor",
+      Math.cos(angle) > 0.2 ? "start" : Math.cos(angle) < -0.2 ? "end" : "middle"
+    );
+  };
+  placeNodeLabel(ascNodeLabel, ascAngle);
+  placeNodeLabel(descNodeLabel, descAngle);
+
   ascNodeLabel.textContent = `asc. node ${Math.round(nodeDisplayLonDeg)}\u00B0`;
   descNodeLabel.textContent = `desc. node ${Math.round(EclipseGeometryModel.normalizeAngleDeg(nodeDisplayLonDeg + 180))}\u00B0`;
 

@@ -148,15 +148,31 @@ describe("Eclipse Geometry -- Design System Contracts", () => {
       expect(html).toMatch(/cp-demo__readouts[^>]*aria-label="Readouts"/);
     });
 
-    it("model callout lives in sidebar, not readout strip", () => {
+    it("no callout prose in the readout strip", () => {
       // Extract readout strip section (it's a div, not aside)
       const readoutsSection = html.match(
         /cp-readout-strip[\s\S]*?<\/div>\s*\n\s*\n/
       );
       expect(readoutsSection).not.toBeNull();
       expect(readoutsSection![0]).not.toContain("cp-callout");
-      // But the model callout should exist somewhere (in the sidebar)
-      expect(html).toContain('data-kind="model"');
+    });
+
+    it("the two-conditions claim is in the shelf, where the demo explains itself", () => {
+      /*
+       * This used to also require a `data-kind="model"` callout in the sidebar. That
+       * callout was 206px of a 794px sidebar that was hiding 242px, and it said what the
+       * shelf's default tab already said: eclipses need the Moon near a node AND New or
+       * Full phase. Removing it was de-duplication, not demotion -- the node definition it
+       * carried moved into that bullet, which is the one thing the shelf had not said.
+       */
+      const notice = html.match(/id="tab-notice"[\s\S]*?<\/div>/);
+      expect(notice, "expected the What to notice tab panel").not.toBeNull();
+      expect(notice![0]).toContain("node");
+      expect(notice![0]).toMatch(/New or Full phase/);
+
+      const sidebar = html.match(/class="cp-demo__sidebar[\s\S]*?<\/aside>/);
+      expect(sidebar).not.toBeNull();
+      expect(sidebar![0]).not.toContain("cp-callout");
     });
 
     it("readout strip has 6 readout items", () => {

@@ -103,7 +103,7 @@ const BUDGETS: Record<string, Budget> = {
   // two of the strip's eight cards fold into the numbers they qualify. The remaining
   // overflow is the sidebar's own controls.
   "parallax-distance": { readoutsBelowFold: 0, sidebarOverflowPx: 920 },
-  "eclipse-geometry": { readoutsBelowFold: 0, sidebarOverflowPx: 280 }
+
 };
 
 const CLEAN: Budget = { readoutsBelowFold: 0, sidebarOverflowPx: 0 };
