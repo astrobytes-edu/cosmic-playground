@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: keplers-laws needs a real pass, not a few lines -- its orbit is an SVG with a viewBox and `height: auto`, so capping the stage does not shrink it, it just lets `overflow: hidden` cut up to 317px off the bottom. Sorting that means working through the wrapper chain. Then parallax-distance and the shorter demos, then the rest of the demos in docs/reviews/2026-09-04-layout-audit.md. Old note follows: fix the stars-zams-hr CMD colour saturation (30.3% of a default population still pegs at B-V = 2.2, because the Ballesteros bisection bracket only spans 2975-21707 K -- needs a colour-temperature relation valid below that), then its layout (2,654px of control cards, and it still carries the ZAMS clamping defect from the 2026-09-03 audit, so one combined pass), then keplers-laws and parallax-distance. See docs/reviews/2026-09-04-layout-audit.md. Also open: port the progenax/startrax cross-validation fixtures so the IMF, cluster, lifetime and post-main-sequence models are gated against an external reference (the largest gap in docs/reviews/cluster-census.md); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
+next: parallax-distance and keplers-laws are done; continue down docs/reviews/2026-09-04-layout-audit.md -- eos-lab (14 readouts below the fold), galaxy-rotation (22), doppler-shift (20), then conservation-laws, planetary-conjunctions, spectral-lines, seasons, telescope-resolution, blackbody-radiation, retrograde-motion, eclipse-geometry. The sidebars themselves are the next class of problem: keplers-laws still hides 844px and parallax-distance 882px of controls behind an inner scrollbar, which no demo-level fix has touched yet. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models (the lifetime and ZAMS ones landed 2026-09-04); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -87,13 +87,72 @@ shared `.control` component fixed, in different markup. Hoisted in the theme wit
 `:has()` scoping: **275px off keplers-laws and parallax-distance**, no change to the other
 four demos that use `.cp-field` without a value, zero errors.
 
-**keplers-laws is not done.** I tried to constrain its stage so the readouts would fit, and
-introduced clipping: the orbit is an SVG with a viewBox and `height: auto`, so its
-intrinsic aspect ratio sets the height and a `max-height` on the stage does not shrink it
--- it just lets `overflow: hidden` cut the bottom off, up to 317px of orbit measured.
-Reverted, with the reason recorded in its stylesheet. Its sidebar is 1,943px -> 1,663px
-from the hoist alone, and its 17 readouts stay below the fold until someone does the
-wrapper chain properly.
+## The layout ratchet was measuring the wrong thing, 2026-09-04
+
+It filtered readouts with `getBoundingClientRect().height > 0`, and its own comment claimed
+this excluded content inside a collapsed `<details>`. It does not. Chromium hides a closed
+details' contents with `content-visibility: hidden`: painting and descendant layout are
+skipped, but the element keeps a box and still reports a rect. keplers-laws' closed
+Conservation accordion measures **189x582 while `checkVisibility()` returns false**.
+
+So the ratchet had been counting readouts the reader had not opened. Three demos were
+over-reported: **binary-orbits 9 -> 1, eos-lab 22 -> 14, keplers-laws 17 -> 7**. Once the
+predicate was right the ratchet caught all three itself, by failing for being *better* than
+its budget.
+
+Worth keeping: `getBoundingClientRect()` is not a visibility test. `checkVisibility()` is.
+
+## keplers-laws and parallax-distance, 2026-09-04
+
+Both had the same shape of problem and the same root cause, which the previous session had
+diagnosed but not fixed: **an SVG with a viewBox and `height: auto` is width-driven.** Its
+intrinsic aspect ratio sets its height, so capping an ancestor does not shrink it -- it
+just lets `overflow: hidden` cut the bottom off, 317px of orbit measured.
+
+Three rules invert that, and they are the reusable part:
+
+1. the stage is a flex (or grid) column, so its children divide a bounded height;
+2. the surface takes what is left and **may shrink** -- `min-height: 0`, without which a
+   flex item refuses to go below its content size;
+3. the SVG gets an explicit height, leaving nothing for the ratio to decide.
+   `preserveAspectRatio="xMidYMid meet"` then letterboxes it: never cropped, never
+   distorted. Dragging still lands correctly because the pointer mapping already went
+   through `getScreenCTM().inverse()`, which accounts for letterboxing.
+
+**keplers-laws: 7 readouts below the fold -> 0**, at 1920x1080, 1440x900, 1366x768 and
+1280x720. The reserve the stage subtracts from the viewport is a single number because the
+readouts panel is now 254px at all four: the Friendly/Advanced switch moved into the panel
+header (as a grid cell it stretched to two 91x101px buttons to choose a detail level), and
+the Conservation disclosure spans the full row beneath the cards. That disclosure had been
+clipping its own meta to "ene".
+
+**parallax-distance: 2 below the fold at 1440 and 6 at 1366/1280 -> 0** at all four. Two of
+the strip's eight cards now read as sub-lines of the number they qualify -- the Jan-Jul
+shift under the parallax it doubles, the quality verdict under the signal-to-noise it
+grades -- which took the strip from 359px to 242px. Eight content-sized cards in a wrapping
+flex row packed raggedly: 214 + 307 + 221px on one row, a single 415px card on the next.
+
+Four things I got wrong on the way, all found by measuring:
+
+- **The root font-size in this project is 18px, not 16.** Every rem is 1.125x what a px
+  reading suggests, which silently invalidated two rounds of column arithmetic. `10.5rem`
+  is 189px.
+- **`justify-self: stretch` beats `aspect-ratio`.** A grid item with an auto width is
+  stretched to its area by default, so a 4:3 schematic came out 467x519 -- portrait.
+- **`max-height` on a replaced element is the primitive that shrinks it**, unlike a cap on
+  its container. Chromium keeps a specified `width: 100%` rather than shrinking it to
+  preserve the ratio, so the box letterboxes horizontally instead.
+- **The stage sizes as `content-box`**, so padding and border sit outside a set `height`.
+
+Two changes I tried and reverted rather than ship on mixed evidence:
+
+- **Gridding the shared `.cp-readout-strip`** (ten demos). Equal columns pack better but
+  force wrapping: measured across four widths it won at 1366 and 1440, lost at 1920, and
+  tied at 1280. Not worth changing ten demos for.
+- **Shortening "Inferred parallax uncertainty" to a sigma glyph** to save a line. A design
+  contract caught it -- that wording exists to distinguish the *inferred* uncertainty from
+  the `sigma_meas` the reader sets, and the test was written to stop exactly that
+  shortening. Kept the wording, found the space elsewhere.
 
 ## stars-zams-hr: colour, then layout, 2026-09-04
 

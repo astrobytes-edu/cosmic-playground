@@ -399,6 +399,77 @@
   animation-delay: calc(var(--cp-stagger) * 3);
 }
 
+/* -- Stage and readout budget ---------------------------------------------
+ * Measured 2026-09-04, before this: the stage grew to whatever its two schematics wanted
+ * (584px at 1440x900, 502px at 1366x768) and the readout strip started below it, so two
+ * readouts sat under the fold at 1440 and six at 1366 and 1280.
+ *
+ * The strip lost two cards first. "Equivalent Jan-Jul shift 2p" is twice the inferred
+ * parallax directly above it, and "Measurement quality" is a verdict on the signal-to-noise
+ * directly above it; both now read as sub-lines of the number they qualify, which is where
+ * they belong and which took the strip from 359px to 214px. Eight content-sized cards in a
+ * wrapping flex row packed raggedly -- 214 + 307 + 221px on one row, a single 415px card on
+ * the next.
+ *
+ * NOTE the root font-size here is 18px, not 16, so a rem is 1.125x what a px reading of
+ * these numbers suggests.
+ *
+ *                     <1440px    >=1440px
+ *   above the stage      24px        24px
+ *   two grid gaps        24px        24px
+ *   readout strip       328px       242px   (three rows of cards, then two)
+ *   ------------------------------------
+ *   reserved            376px       290px
+ *   declared          21.5rem     17rem
+ *
+ * Capping the stage only works because the schematics are made height-driven below. An SVG
+ * with a viewBox and `height: auto` takes its height from its intrinsic aspect ratio and
+ * ignores a cap on its container, so the cap would crop it instead of shrinking it. Giving
+ * each one the viewBox's own aspect ratio and a height from its grid row inverts that, and
+ * the panel then hugs its drawing rather than framing empty space.
+ *
+ * This starts at 1081px because below that the two panels stack (see the rule after it) and
+ * a bounded height would leave each of them a sliver. */
+@media (min-width: 1081px) {
+  .cp-demo__stage {
+    --parallax-readout-reserve: 21.5rem;
+    display: grid;
+    min-height: 0;
+    /* The stage sizes as content-box, so without this the 12px padding and 1px border sit
+     * outside the height and the reserve is 26px short. */
+    box-sizing: border-box;
+    height: clamp(320px, calc(100svh - var(--parallax-readout-reserve)), 820px);
+  }
+
+  .viz-layout {
+    min-height: 0;
+  }
+
+  .viz-panel {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    min-height: 0;
+  }
+
+  /* `max-height` rather than `height`, because for a replaced element with an intrinsic
+   * ratio a max-height violation shrinks the WIDTH to match -- the ratio survives. Setting
+   * `height: 100%` instead pinned the height to the row and left `max-width` to clamp the
+   * width, which gave a 467x493 portrait box holding a 4:3 drawing: 143px of empty panel.
+   * `min-height: 0` lets the grid row shrink under it. */
+  .stage__svg {
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+    min-height: 0;
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 1440px) {
+  .cp-demo__stage {
+    --parallax-readout-reserve: 17rem;
+  }
+}
+
 @media (max-width: 1080px) {
   .viz-layout {
     grid-template-columns: 1fr;

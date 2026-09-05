@@ -83,7 +83,11 @@ const BUDGETS: Record<string, Budget> = {
   "telescope-resolution": { readoutsBelowFold: 8, sidebarOverflowPx: 120 },
   "blackbody-radiation": { readoutsBelowFold: 4, sidebarOverflowPx: 330 },
   "retrograde-motion": { readoutsBelowFold: 4, sidebarOverflowPx: 0 },
-  "parallax-distance": { readoutsBelowFold: 2, sidebarOverflowPx: 920 },
+  // parallax-distance was 2 below the fold at 1440x900 and 6 at 1366 and 1280. Fixed
+  // 2026-09-04: the stage is height-bounded with both schematics made height-driven, and
+  // two of the strip's eight cards fold into the numbers they qualify. The remaining
+  // overflow is the sidebar's own controls.
+  "parallax-distance": { readoutsBelowFold: 0, sidebarOverflowPx: 920 },
   "eclipse-geometry": { readoutsBelowFold: 0, sidebarOverflowPx: 280 }
 };
 

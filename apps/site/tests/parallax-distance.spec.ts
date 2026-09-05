@@ -159,6 +159,62 @@ test.describe("Parallax Distance -- E2E", () => {
     expect(Number.isFinite(pHat)).toBe(true);
   });
 
+  const DESKTOP_VIEWPORTS = [
+    { width: 1920, height: 1080 },
+    { width: 1440, height: 900 },
+    { width: 1366, height: 768 },
+    { width: 1280, height: 720 }
+  ] as const;
+
+  test("both schematics shrink to fit the stage instead of being clipped", async ({
+    page
+  }) => {
+    /*
+     * The stage is height-bounded so the readout strip fits on screen, and `.cp-stage` is
+     * `overflow: hidden`. Each schematic is an SVG with a viewBox, which takes its height
+     * from its intrinsic aspect ratio unless told otherwise -- so a bounded stage crops it
+     * rather than shrinking it. Both panels have to survive the bound, not just the first.
+     */
+    for (const viewport of DESKTOP_VIEWPORTS) {
+      await page.setViewportSize(viewport);
+      await page.waitForTimeout(350);
+      const panels = await page.evaluate(() => {
+        const stage = document.querySelector(".cp-demo__stage")!.getBoundingClientRect();
+        return ["#orbitSvg", "#detectorSvg"].map((selector) => {
+          const svg = document.querySelector(selector)!.getBoundingClientRect();
+          return {
+            selector,
+            clipped: Math.round(Math.max(0, svg.bottom - stage.bottom)),
+            height: Math.round(svg.height)
+          };
+        });
+      });
+      for (const panel of panels) {
+        const where = `${viewport.width}x${viewport.height} ${panel.selector}`;
+        expect(panel.clipped, `${where}: ${panel.clipped}px cut off`).toBe(0);
+        expect(panel.height, `${where}: collapsed`).toBeGreaterThan(150);
+      }
+    }
+  });
+
+  test("the readout strip is fully on screen at every desktop size", async ({ page }) => {
+    // Two of the strip's cards were folded into the numbers they qualify -- the Jan-Jul
+    // shift into the parallax it doubles, the quality verdict into the signal-to-noise it
+    // grades -- which is what brought the strip inside the budget the stage reserves.
+    for (const viewport of DESKTOP_VIEWPORTS) {
+      await page.setViewportSize(viewport);
+      await page.waitForTimeout(350);
+      const overflow = await page.evaluate(() => {
+        const strip = document.querySelector(".cp-readout-strip")!.getBoundingClientRect();
+        return Math.round(Math.max(0, strip.bottom - window.innerHeight));
+      });
+      expect(
+        overflow,
+        `${viewport.width}x${viewport.height}: the strip runs ${overflow}px past the fold`
+      ).toBe(0);
+    }
+  });
+
   test("status region and readouts keep accessibility labels", async ({ page }) => {
     await expect(page.locator("#status")).toHaveAttribute("aria-live", "polite");
     await expect(page.locator("#status")).toHaveAttribute("role", "status");
