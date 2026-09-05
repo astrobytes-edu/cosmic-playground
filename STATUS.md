@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry. Readouts clean, sidebars still overflowing: eos-lab (230px), doppler-shift (51), galaxy-rotation (148), keplers-laws (844), parallax-distance (882), stars-zams-hr (40). Next: binary-orbits (601px hidden, 1 below the fold), seasons (80px, 10 below), spectral-lines (12 below), retrograde-motion (4 below). CHECK FIRST on each: the shell's stage floor (`min-height: clamp(420px, 70svh, 820px)`, 630px at a 900px viewport -- released individually on six demos so far); whether the demo's grid HAS a readouts row (blackbody's did not); and whether sidebar prose duplicates the shelf (eclipse's 206px callout said exactly what the shelf's default tab said). Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry. Readouts clean at 1440x900, sidebars still overflowing: keplers-laws (844px), parallax-distance (882), binary-orbits (314), eos-lab (230), galaxy-rotation (148), doppler-shift (51), stars-zams-hr (40). Next: seasons (80px, 10 below the fold), spectral-lines (12 below), retrograde-motion (4 below). CHECK FIRST on each: the shell's stage floor (`min-height: clamp(420px, 70svh, 820px)`, 630px at a 900px viewport); any media query gating a stage bound on VIEWPORT HEIGHT (binary-orbits' was gated on min-height 820px, so it switched itself off at 1366x768 and 1280x720); whether the demo's grid HAS a readouts row; and sidebar prose that duplicates the shelf. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -373,6 +373,28 @@ ascending node was doing, and at the default longitude the lower label landed on
 schematic caption and the two strings overlapped. Each label follows its own dot now, with
 `text-anchor` picked from the side it is on. The angles are the ones the dots already use,
 so no computed quantity changed.
+
+## binary-orbits, second pass, 2026-09-04
+
+This demo already had a stage bound from the earlier pass. It was gated on
+`and (min-height: 820px)` -- **which switched it off on exactly the viewports that need it
+most.** At 1440x900 the gate passed and the orbit canvas was 862x374 with one readout below
+the fold; at 1366x768 and 1280x720 it did not, so the id selector's `aspect-ratio: 4 / 3`
+took over, the canvas became 854x641, and all sixteen readouts went under the fold. A
+shorter window was getting a taller stage.
+
+The clamp inside the block already protects a short viewport from a crushed canvas -- that
+is what its 300px floors are for -- so the height gate was doing nothing but disabling the
+fix. **Worth grepping for on the rest: any media query gating a layout fix on viewport
+height.**
+
+Readouts below the fold 1 -> 0 at 1440 and 1920, 16 -> 0 at 1366, 16 -> 3 at 1280. Sidebar
+hidden 601 -> 314.
+
+What remains in that sidebar is live and control-adjacent, and stays: an inclination hint
+that computes sin(i) for the slider above it, and a Live response panel that answers the
+mass-ratio slider. 314px behind a working scroll fade is the honest stopping point for
+those -- the alternative is deleting content the demo teaches with.
 
 ## The layout ratchet was measuring the wrong thing, 2026-09-04
 
