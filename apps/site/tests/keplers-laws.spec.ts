@@ -508,21 +508,26 @@ test.describe("Kepler's Laws -- E2E", () => {
      */
     for (const viewport of DESKTOP_VIEWPORTS) {
       await page.setViewportSize(viewport);
-      await page.waitForTimeout(350);
-      const clipped = await page.evaluate(() => {
-        const stage = document.querySelector(".cp-demo__stage")!.getBoundingClientRect();
-        const svg = document.querySelector("#orbitSvg")!.getBoundingClientRect();
-        return {
-          bottom: Math.round(Math.max(0, svg.bottom - stage.bottom)),
-          right: Math.round(Math.max(0, svg.right - stage.right)),
-          height: Math.round(svg.height)
-        };
-      });
-      const where = `${viewport.width}x${viewport.height}`;
-      expect(clipped.bottom, `${where}: ${clipped.bottom}px of the orbit is cut off`).toBe(0);
-      expect(clipped.right, `${where}: ${clipped.right}px of the orbit is cut off`).toBe(0);
-      // A stage that collapsed to nothing would also pass the two checks above.
-      expect(clipped.height, `${where}: the orbit collapsed`).toBeGreaterThan(200);
+      // Poll rather than sleep-then-measure. A resize triggers layout, then the observers
+      // that re-fit the drawing, and a fixed wait that is long enough on an idle machine is
+      // not long enough under `--workers` contention -- which is how this test failed in a
+      // full run and passed on its own.
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(() => {
+              const stage = document.querySelector(".cp-demo__stage")!.getBoundingClientRect();
+              const svg = document.querySelector("#orbitSvg")!.getBoundingClientRect();
+              return {
+                cutOffBelow: Math.round(Math.max(0, svg.bottom - stage.bottom)),
+                cutOffRight: Math.round(Math.max(0, svg.right - stage.right)),
+                // A stage that collapsed to nothing would pass the two checks above.
+                collapsed: svg.height <= 200
+              };
+            }),
+          { message: `${viewport.width}x${viewport.height}: the orbit is cut off or collapsed` }
+        )
+        .toEqual({ cutOffBelow: 0, cutOffRight: 0, collapsed: false });
     }
   });
 
@@ -532,15 +537,18 @@ test.describe("Kepler's Laws -- E2E", () => {
     // Conservation disclosure spans the full width beneath them.
     for (const viewport of DESKTOP_VIEWPORTS) {
       await page.setViewportSize(viewport);
-      await page.waitForTimeout(350);
-      const overflow = await page.evaluate(() => {
-        const panel = document.querySelector(".cp-demo__readouts")!.getBoundingClientRect();
-        return Math.round(Math.max(0, panel.bottom - window.innerHeight));
-      });
-      expect(
-        overflow,
-        `${viewport.width}x${viewport.height}: the readouts panel runs ${overflow}px past the fold`
-      ).toBe(0);
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(() => {
+              const panel = document.querySelector(".cp-demo__readouts")!.getBoundingClientRect();
+              return Math.round(Math.max(0, panel.bottom - window.innerHeight));
+            }),
+          {
+            message: `${viewport.width}x${viewport.height}: the readouts panel runs past the fold`
+          }
+        )
+        .toBe(0);
     }
   });
 

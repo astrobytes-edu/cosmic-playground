@@ -177,23 +177,28 @@ test.describe("Parallax Distance -- E2E", () => {
      */
     for (const viewport of DESKTOP_VIEWPORTS) {
       await page.setViewportSize(viewport);
-      await page.waitForTimeout(350);
-      const panels = await page.evaluate(() => {
-        const stage = document.querySelector(".cp-demo__stage")!.getBoundingClientRect();
-        return ["#orbitSvg", "#detectorSvg"].map((selector) => {
-          const svg = document.querySelector(selector)!.getBoundingClientRect();
-          return {
-            selector,
-            clipped: Math.round(Math.max(0, svg.bottom - stage.bottom)),
-            height: Math.round(svg.height)
-          };
-        });
-      });
-      for (const panel of panels) {
-        const where = `${viewport.width}x${viewport.height} ${panel.selector}`;
-        expect(panel.clipped, `${where}: ${panel.clipped}px cut off`).toBe(0);
-        expect(panel.height, `${where}: collapsed`).toBeGreaterThan(150);
-      }
+      // Poll rather than sleep-then-measure: a fixed wait that is long enough on an idle
+      // machine is not long enough under `--workers` contention.
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(() => {
+              const stage = document.querySelector(".cp-demo__stage")!.getBoundingClientRect();
+              return ["#orbitSvg", "#detectorSvg"].map((selector) => {
+                const svg = document.querySelector(selector)!.getBoundingClientRect();
+                return {
+                  selector,
+                  cutOff: Math.round(Math.max(0, svg.bottom - stage.bottom)),
+                  collapsed: svg.height <= 150
+                };
+              });
+            }),
+          { message: `${viewport.width}x${viewport.height}: a schematic is cut off or collapsed` }
+        )
+        .toEqual([
+          { selector: "#orbitSvg", cutOff: 0, collapsed: false },
+          { selector: "#detectorSvg", cutOff: 0, collapsed: false }
+        ]);
     }
   });
 
@@ -203,15 +208,16 @@ test.describe("Parallax Distance -- E2E", () => {
     // grades -- which is what brought the strip inside the budget the stage reserves.
     for (const viewport of DESKTOP_VIEWPORTS) {
       await page.setViewportSize(viewport);
-      await page.waitForTimeout(350);
-      const overflow = await page.evaluate(() => {
-        const strip = document.querySelector(".cp-readout-strip")!.getBoundingClientRect();
-        return Math.round(Math.max(0, strip.bottom - window.innerHeight));
-      });
-      expect(
-        overflow,
-        `${viewport.width}x${viewport.height}: the strip runs ${overflow}px past the fold`
-      ).toBe(0);
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(() => {
+              const strip = document.querySelector(".cp-readout-strip")!.getBoundingClientRect();
+              return Math.round(Math.max(0, strip.bottom - window.innerHeight));
+            }),
+          { message: `${viewport.width}x${viewport.height}: the strip runs past the fold` }
+        )
+        .toBe(0);
     }
   });
 
