@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: parallax-distance and keplers-laws are done; continue down docs/reviews/2026-09-04-layout-audit.md -- eos-lab (14 readouts below the fold), galaxy-rotation (22), doppler-shift (20), then conservation-laws, planetary-conjunctions, spectral-lines, seasons, telescope-resolution, blackbody-radiation, retrograde-motion, eclipse-geometry. The sidebars themselves are the next class of problem: keplers-laws still hides 844px and parallax-distance 882px of controls behind an inner scrollbar, which no demo-level fix has touched yet. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models (the lifetime and ZAMS ones landed 2026-09-04); then the star-cluster dynamics demo. Also open: explore's filters are inert in the static build, instructor bundles for cluster-census + stars-zams-hr, and the novascope "lens" control grouping (docs/reviews/2026-09-04-novascope-port-survey.md)
+next: continue the stage-first sidebar plan, demo by demo. eos-lab is the worked example (readouts below fold 14 -> 0, sidebar hidden 540 -> 230). Next by combined damage: doppler-shift (stage 888-1022, 343px hidden, 20 readouts below fold), then galaxy-rotation (322px hidden, 22 below), telescope-resolution (stage 944 -> 1544 across viewport widths, the worst width-driven case in the project), conservation-laws and planetary-conjunctions (1016px stages). The rule is in docs/reviews/2026-09-04-layout-audit.md and the sidebar anatomy below. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -86,6 +86,113 @@ across 14 demos** exposed to the same failure. Guarded by a token test.
 shared `.control` component fixed, in different markup. Hoisted in the theme with the same
 `:has()` scoping: **275px off keplers-laws and parallax-distance**, no change to the other
 four demos that use `.cp-field` without a value, zero errors.
+
+## Why the sidebars overflow: the stages spend the budget, 2026-09-04
+
+Asked for a modular sidebar design, measured all twenty sidebars by the role each child
+plays, and found the answer is not in the sidebars at all.
+
+| Role | px across 20 demos | Home in the shell? |
+| --- | --- | --- |
+| Parameters | 5,340 | yes, the sidebar |
+| Prose | 3,732 | yes, the drawer |
+| Presets | 2,389 | **none** |
+| Utility toolbar + misc | 1,725 | yes |
+| Mode switches | 1,082 | yes, the sidebar |
+| Transport | 444 | yes, `.cp-playbar` |
+
+Total content is ~14,700px against ~16,000px of capacity, so the aggregate fits and the
+problem is distribution. **11 of 20 demos overflow, hiding 4,205px.**
+
+### The mechanism
+
+Stage height at a 1280 vs a 1920 viewport, same 900px tall window:
+
+| Demo | 1280 | 1920 | growth |
+| --- | --- | --- | --- |
+| telescope-resolution | 944 | 1544 | **+600** |
+| retrograde-motion | 629 | 917 | +288 |
+| galaxy-rotation | 632 | 892 | +260 |
+| moon-phases | 470 | 646 | +176 |
+| doppler-shift | 888 | 1022 | +134 |
+| binary-orbits, keplers-laws, parallax-distance | | | **0** |
+
+**Nine of twenty stages get taller as the window gets wider**, and the three that read zero
+are the three whose stages were bounded this week. The cause is one declaration, e.g.
+`telescope-resolution/style.css:53`: `width: 100%; height: auto` on a drawing with an
+intrinsic ratio means height = width / ratio. `height: auto` appears in 17 of the 20 demo
+stylesheets.
+
+Horizontal space is the abundant resource here -- the sidebar is 360px of a 1440px viewport
+-- and vertical space is the scarce one. Width-driven sizing spends the plentiful one on the
+scarce one, so a reader on a bigger monitor gets a worse demo.
+
+The grid's first row is `1fr`, but `.cp-demo` has `min-height: 100svh` rather than `height`,
+so `1fr` never constrains anything: the stage takes its full intrinsic height, the readouts
+take theirs, and the sidebar gets what is left, which is nothing.
+
+**So sidebar overflow is a symptom.** Bounding a stage is the only move that creates budget
+rather than shuffling it.
+
+### A recommendation I got wrong
+
+I screened demos for "room for a preset bar in the playbar row" as
+`viewport - stage bottom - padding`, forgetting the readouts panel occupies that same space.
+Recomputed honestly, only 3 of 15 preset-carrying demos have room, and the ones with the
+worst sidebars (eos-lab -644, doppler-shift -578, galaxy-rotation -242, keplers-laws -13,
+parallax-distance -8) all have none.
+
+Built it twice before believing the numbers. doppler-shift's sidebar overflow went 343 ->
+67px and its presets went from partly visible to entirely below the fold, because its stage
+is 955px tall. keplers-laws' went 844 -> 303px and the orbit went from 448x299 to **291x194**
+at 1280x720, where the perihelion and aphelion labels stop being readable. Both reverted.
+
+**The sidebar's independent scroll is a feature.** It isolates control overflow from the
+stage. Moving controls into the shared column makes them compete with the visualization, so
+for a demo already over budget the move relocates the problem instead of solving it.
+Presets go behind a trigger instead: a fixed ~44px however many sit behind it, and nothing
+taken from the stage.
+
+## Sidebars now say when they are hiding something, 2026-09-04
+
+All 20 reported a 0px scrollbar gutter -- macOS overlay scrollbars, invisible until you
+scroll -- so 4,205px was hidden with no signal at all. CSS cannot detect its own overflow,
+and neither `scrollbar-gutter: stable` nor styling `::-webkit-scrollbar` produced a gutter;
+both were tried and measured. `initScrollAffordance` in `@cosmic/runtime` publishes
+`data-scroll` and the stylesheet fades that edge. Every demo already calls it through
+`createInstrumentRuntime` -> `initDemoPolish`, so none had to opt in. The test is two-sided:
+a sidebar that fits must say "none" and carry no fade, because an affordance that is always
+on carries no information.
+
+## eos-lab, the worked example, 2026-09-04
+
+Worst demo in the audit on three counts at once: a 1,282px stage, 540px of hidden sidebar,
+every readout below the fold.
+
+Content moved before anything was resized -- both panel help paragraphs to the drawer, the
+three channel cards into the readout strip where they always belonged, the seven derived
+quantities behind a disclosure, the six presets behind a trigger -- and then the stage was
+bounded with both surfaces made height-driven.
+
+**Readouts below the fold 14 -> 0** at all four desktop sizes, **sidebar hidden 540 -> 230**,
+and the plots come out at 342px and 225px against the 370px and 321px they had when nothing
+else fit on screen.
+
+Three defects found on the way:
+
+- **A ResizeObserver feedback loop.** `flex-basis: auto` means the basis is the content
+  size, and uPlot puts an explicitly sized root inside its container -- so `setSize` grew
+  the container, which fired the observer, which called `setSize` again. It ran away to
+  3,812px tall. `flex: 1 1 0` plus `overflow: hidden` breaks the cycle.
+- **uPlot's height is its plotting area only**; its root also carries the legend below.
+  Passing the container's full height overflowed it by the legend and the container clipped,
+  taking the x-axis off the bottom of the chart.
+- **`renderMathIfChanged` read the source back off the element after the caller had written
+  it**, which is only safe while consecutive values differ. Writing the same value twice left
+  raw LaTeX on screen: KaTeX had replaced the contents, the cache still said "rendered", and
+  the guard skipped the render that would have fixed it. Latent while every call came from a
+  slider moving to a new value; a resize handler re-rendering identical state exposed it
+  immediately. `setMathText` owns the write now.
 
 ## The layout ratchet was measuring the wrong thing, 2026-09-04
 
