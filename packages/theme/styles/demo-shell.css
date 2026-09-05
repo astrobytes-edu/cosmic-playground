@@ -126,12 +126,60 @@
   }
 }
 
-/* --- Sidebar internals --- */
+/* --- Sidebar internals ---
+ * Measured 2026-09-04 at 1440x900: 11 of 20 demos hide sidebar content behind this
+ * scroller -- 4,205px of it, up to 882px in one demo -- and every one reported a 0px
+ * scrollbar gutter, meaning an overlay scrollbar that is invisible until you happen to
+ * scroll. The panel looks finished and the rest is simply gone, which is why nobody
+ * noticed for the life of the project.
+ *
+ * CSS cannot detect its own overflow, and neither `scrollbar-gutter: stable` nor styling
+ * `::-webkit-scrollbar` produced a visible gutter here -- both were tried and measured.
+ * `initScrollAffordance` in @cosmic/runtime publishes the state as `data-scroll` instead,
+ * and the edge with more behind it fades. Every demo calls it through
+ * `createInstrumentRuntime` -> `initDemoPolish`, so no demo has to opt in.
+ *
+ * This is an affordance, not a fix: content below the fold is still a design decision the
+ * layout ratchet records. It is here because it helps every demo, including the ones no
+ * one has restructured yet. */
 .cp-demo__controls .cp-panel-body,
 .cp-demo__sidebar .cp-panel-body {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
+  /* Firefox honours these; they cost nothing where they are ignored. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--cp-border) transparent;
+}
+
+.cp-demo__controls .cp-panel-body[data-scroll="bottom"],
+.cp-demo__sidebar .cp-panel-body[data-scroll="bottom"] {
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 2rem), transparent);
+  mask-image: linear-gradient(to bottom, black calc(100% - 2rem), transparent);
+}
+
+.cp-demo__controls .cp-panel-body[data-scroll="top"],
+.cp-demo__sidebar .cp-panel-body[data-scroll="top"] {
+  -webkit-mask-image: linear-gradient(to top, black calc(100% - 2rem), transparent);
+  mask-image: linear-gradient(to top, black calc(100% - 2rem), transparent);
+}
+
+.cp-demo__controls .cp-panel-body[data-scroll="both"],
+.cp-demo__sidebar .cp-panel-body[data-scroll="both"] {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 2rem,
+    black calc(100% - 2rem),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 2rem,
+    black calc(100% - 2rem),
+    transparent
+  );
 }
 
 /* --- Readouts grid (for old-style readout panels) --- */

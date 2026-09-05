@@ -219,8 +219,55 @@ export function initRipples(root: Root = document): void {
   }
 }
 
+/**
+ * Tell the reader when a sidebar has content they cannot see.
+ *
+ * Measured 2026-09-04 at 1440x900: 11 of 20 demos hide sidebar content behind the panel
+ * body's scroller -- 4,205px of it, up to 882px in one demo -- with no visual signal at
+ * all. The panel looks finished and the rest is simply gone.
+ *
+ * CSS alone cannot do this. `scrollbar-gutter: stable` reserves space only for a classic
+ * scrollbar and macOS gives overlay ones, so the gutter measured 0px wide; styling
+ * `::-webkit-scrollbar` did not produce one either in the browser this was tested in. The
+ * state has to be computed, so it is published as `data-scroll` and the stylesheet fades
+ * the edge that has more behind it.
+ *
+ * The observer watches the scroller and its children, which covers the case that matters
+ * in practice: a mode switch showing or hiding a control changes a child's height. It does
+ * not watch for children being added or removed.
+ */
+export function initScrollAffordance(root: Root = document): void {
+  if (!isBrowser()) return;
+  const demoRoot = resolveDemoRoot(root);
+  if (!demoRoot) return;
+
+  const scrollers = demoRoot.querySelectorAll<HTMLElement>(
+    ".cp-demo__controls .cp-panel-body, .cp-demo__sidebar .cp-panel-body"
+  );
+
+  for (const scroller of scrollers) {
+    const update = () => {
+      // A pixel of slack: fractional layout leaves scrollTop just shy of the true end.
+      const more = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 1;
+      const less = scroller.scrollTop > 1;
+      scroller.dataset.scroll = more && less ? "both" : more ? "bottom" : less ? "top" : "none";
+    };
+
+    scroller.addEventListener("scroll", update, { passive: true });
+
+    if (typeof ResizeObserver === "function") {
+      const observer = new ResizeObserver(update);
+      observer.observe(scroller);
+      for (const child of scroller.children) observer.observe(child);
+    }
+
+    update();
+  }
+}
+
 export function initDemoPolish(root: Root = document): void {
   initRangeProgress(root);
   initSliderTooltips(root);
   initRipples(root);
+  initScrollAffordance(root);
 }

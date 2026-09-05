@@ -159,6 +159,48 @@ test.describe("Layout budget", () => {
     });
   }
 
+  for (const slug of demoSlugsFromContent()) {
+    test(`${slug} tells the reader when its sidebar has more below`, async ({ page }) => {
+      /*
+       * 4,205px of sidebar content was hidden across 11 demos with no visual signal at
+       * all: macOS gives overlay scrollbars, so the panel looked finished and the rest was
+       * simply gone. `initScrollAffordance` publishes the state as `data-scroll` and the
+       * stylesheet fades that edge.
+       *
+       * The assertion is two-sided on purpose. A demo whose sidebar overflows must say so,
+       * and one whose sidebar fits must say "none" -- an affordance that is always on
+       * carries no information.
+       */
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto(`play/${slug}/`, { waitUntil: "load" });
+      await expect(page.locator("#cp-demo")).toBeVisible();
+      await page.waitForTimeout(600);
+
+      const state = await page.evaluate(() => {
+        const scroller = document.querySelector<HTMLElement>(
+          ".cp-demo__controls .cp-panel-body, .cp-demo__sidebar .cp-panel-body"
+        );
+        if (!scroller) return null;
+        return {
+          overflows: scroller.scrollHeight - scroller.clientHeight > 1,
+          scroll: scroller.dataset.scroll ?? "(unset)",
+          masked: getComputedStyle(scroller).maskImage !== "none"
+        };
+      });
+      test.skip(state === null, "no sidebar scroller");
+
+      if (state!.overflows) {
+        expect(state!.scroll, `${slug}: sidebar overflows but data-scroll is not set`).toBe(
+          "bottom"
+        );
+        expect(state!.masked, `${slug}: overflowing sidebar has no fade`).toBe(true);
+      } else {
+        expect(state!.scroll, `${slug}: sidebar fits but claims there is more`).toBe("none");
+        expect(state!.masked, `${slug}: sidebar fits but is faded anyway`).toBe(false);
+      }
+    });
+  }
+
   test("the budget map has no entries for demos that no longer exist", () => {
     // A stale allowance silently exempts nothing and hides that the list has shrunk.
     const slugs = new Set(demoSlugsFromContent());

@@ -35,7 +35,7 @@ export {
   renderInlineKatex,
   renderMath
 } from "./math";
-export { initDemoPolish } from "./polish";
+export { initDemoPolish, initScrollAffordance } from "./polish";
 export { setLiveRegionText } from "./liveRegion";
 export type {
   DemoHelpConfig,
