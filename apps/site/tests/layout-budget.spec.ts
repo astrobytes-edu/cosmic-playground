@@ -99,7 +99,6 @@ const BUDGETS: Record<string, Budget> = {
   // strip under the plot, and the demo's custom grid gained the `readouts` row it never
   // had. The sidebar's remaining overflow is the controls themselves.
   "stars-zams-hr": { readoutsBelowFold: 0, sidebarOverflowPx: 40 },
-  seasons: { readoutsBelowFold: 10, sidebarOverflowPx: 80 },
 
 
   "retrograde-motion": { readoutsBelowFold: 4, sidebarOverflowPx: 0 },

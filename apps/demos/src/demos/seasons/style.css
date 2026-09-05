@@ -91,9 +91,26 @@
   pointer-events: none;
 }
 
+/* -- Stage height budget -------------------------------------------------
+ * Measured 2026-09-04 at 1440x900, before this pass: a 664px stage with all ten readouts
+ * below the fold, the first at y=913.
+ *
+ * The stage sits above a 176px scrub-and-ladder row and a 131px readout strip, so it has
+ * less of the viewport to spend than most. Its SVG is `width: 100%` at a 920x420 viewBox,
+ * which is width-driven -- 452px tall at 1440 and 671px at 1920.
+ *
+ * The cap goes on width, multiplied by the viewBox's own ratio, so the bordered box keeps
+ * hugging the drawing instead of letterboxing a gradient around it. At 1440 the column is
+ * narrower than the cap, so nothing changes there; it bites at 1366 and below, which is
+ * where every readout was off screen.
+ *
+ * The shell's `min-height: clamp(420px, 70svh, 820px)` goes with it -- 630px at a 900px
+ * viewport against 513px of content, so it was setting the height on its own. Seventh demo
+ * running. */
 .stage__svg {
   width: 100%;
-  max-width: none;
+  max-width: max(420px, calc((100svh - 24.5rem) * 920 / 420));
+  margin-inline: auto;
   height: auto;
   border-radius: 18px;
   border: 1px solid var(--cp-border);
@@ -585,5 +602,11 @@
 @media (prefers-reduced-motion: reduce) {
   .stage__overlay {
     transition: none;
+  }
+}
+
+@media (min-width: 1025px) {
+  .cp-demo__stage {
+    min-height: 0;
   }
 }
