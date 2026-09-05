@@ -171,10 +171,12 @@
 }
 
 /* --- State badge --- */
+/* Was absolutely positioned at the panel's top right, where it sat on top of
+ * the focus button -- overlapping its top edge by 3px, and by 10px once the
+ * panel stopped being stretched taller than its content. It is a header item,
+ * so it now lives in the header flex row between the title and the button. */
 .retro__state-badge {
-  position: absolute;
-  top: var(--cp-space-3);
-  right: var(--cp-space-3);
+  flex: none;
   padding: 2px 10px;
   border-radius: 999px;
   font-size: 0.75rem;
@@ -257,7 +259,6 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.25rem;
-  margin-top: -0.2rem;
 }
 
 .retro__orbit-overlays .cp-check--inline {
@@ -506,5 +507,68 @@
   .cp-button,
   .retro-tip__content {
     transition: none;
+  }
+}
+
+/* ── Desktop stage budget ────────────────────────────────── */
+
+/*
+ * Measured 2026-09-05: 4 readouts below the fold at 1440x900 -- and all 12 at
+ * 1920x1080, 1366x768 and 1280x720, which the ratchet's single 1440 sample had
+ * hidden. The stage GREW with the viewport: 629px at 1280 and 917px at 1920,
+ * because `#orbitSvg` is a square viewBox at `width: 100%`, so its height was
+ * its column's width. The right column drove the whole stage.
+ *
+ * Three fixed costs came out first, so the drawing keeps as much room as
+ * possible: the overlay checkboxes moved to the sidebar (which had 0px of
+ * overflow at every viewport while the stage had none to give), the timeline
+ * row stopped stacking, and the state formula stopped reserving 11.5rem it
+ * never used.
+ */
+@media (min-width: 1025px) {
+  /* Two floors would otherwise become the binding constraint the moment the
+     content came down: the shell's clamp(420px, 70svh, 820px) -- 504px at a
+     720px viewport -- and this demo's own clamp(340px, 52svh, 580px). */
+  .cp-demo__stage {
+    min-height: 0;
+  }
+
+  /* Square viewBox, so the cap has to be on WIDTH: height follows from it. */
+  #orbitSvg {
+    max-width: clamp(275px, calc(100svh - 26rem), 560px);
+    margin-inline: auto;
+  }
+
+  /* The scrub and the stationary-point nav fit one row on a desktop width;
+     stacked they cost 98px of a budget the drawing needed. */
+  .cp-playbar.retro__timeline-row {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--cp-space-4);
+  }
+
+  .cp-playbar.retro__timeline-row .playbar-scrub {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .cp-playbar.retro__timeline-row .playbar-nav {
+    flex: none;
+  }
+
+  /* The badge this was clearing is absolutely positioned at the panel's top
+     right, y 38-64; the formula starts at y 119, below the header. The reserve
+     cleared nothing and wrapped the line into four. */
+  .retro__state-formula {
+    margin-right: 0;
+  }
+
+  /* The overlays moved into the sidebar, which then ran 32px over at 1280x720.
+     Body line-height on three checkbox rows was the avoidable part of that.
+     (The other candidate, the empty `.cp-status` live region, reserves
+     `min-height: 1.25em` in stub-demo.css on purpose, so the sidebar does not
+     jump when a status message appears. Left alone.) */
+  .retro__orbit-overlays .cp-check--inline {
+    line-height: 1.2;
   }
 }

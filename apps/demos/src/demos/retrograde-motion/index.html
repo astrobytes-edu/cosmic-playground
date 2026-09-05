@@ -109,6 +109,26 @@
             </div>
           </div>
 
+          <!-- These three toggle what the orbit panel draws. They lived inside that
+               panel, where three stacked checkboxes cost the stage 116px of height --
+               the scarce axis -- while the sidebar had none of its 720px spare. They
+               are controls; main.ts finds them by id. -->
+          <div class="retro__orbit-overlays" role="group" aria-label="Orbit overlays">
+            <div class="cp-label">Orbit overlays</div>
+              <label class="cp-check cp-check--inline">
+                <input id="showLineOfSight" type="checkbox" />
+                <span>Show line-of-sight</span>
+              </label>
+              <label class="cp-check cp-check--inline">
+                <input id="showReferenceAxis" type="checkbox" />
+                <span>Show 0 deg reference axis</span>
+              </label>
+              <label class="cp-check cp-check--inline">
+                <input id="showLambdaArc" type="checkbox" />
+                <span>Show lambda angle arc</span>
+              </label>
+          </div>
+
           <details class="cp-accordion">
             <summary>
               <span class="cp-accordion__title">Advanced</span>
@@ -232,11 +252,11 @@
                   </span>
                 </span>
               </div>
+              <span class="retro__state-badge" id="stateBadge">Direct</span>
               <button id="focusPlotBtn" class="cp-button cp-button--outline retro__focus-btn" type="button">
                 Focus plot (keyboard)
               </button>
             </div>
-            <span class="retro__state-badge" id="stateBadge">Direct</span>
             <div class="retro__state-formula" id="stateFormula">
               Direct: $d\tilde{\lambda}/dt &gt; 0$ | Stationary: $|d\tilde{\lambda}/dt| \le \epsilon$ | Retrograde: $d\tilde{\lambda}/dt &lt; 0$
             </div>
@@ -257,20 +277,6 @@
           <div class="retro__right-col">
             <div class="viz-panel retro__orbit-panel">
               <div class="panel-title">Orbit View (top-down)</div>
-              <div class="retro__orbit-overlays" role="group" aria-label="Orbit overlays">
-                <label class="cp-check cp-check--inline">
-                  <input id="showLineOfSight" type="checkbox" />
-                  <span>Show line-of-sight</span>
-                </label>
-                <label class="cp-check cp-check--inline">
-                  <input id="showReferenceAxis" type="checkbox" />
-                  <span>Show 0 deg reference axis</span>
-                </label>
-                <label class="cp-check cp-check--inline">
-                  <input id="showLambdaArc" type="checkbox" />
-                  <span>Show lambda angle arc</span>
-                </label>
-              </div>
               <svg id="orbitSvg" class="retro__svg" viewBox="0 0 420 420"></svg>
             </div>
             <div class="viz-panel retro__sky-panel">
