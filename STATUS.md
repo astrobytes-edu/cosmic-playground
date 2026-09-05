@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry, seasons, spectral-lines. Readouts clean at 1440x900, sidebars still overflowing: parallax-distance (882px), keplers-laws (844), binary-orbits (314), eos-lab (230), galaxy-rotation (148), doppler-shift (51), stars-zams-hr (40). Next: retrograde-motion (4 below the fold) -- the last demo with readouts under the fold. KNOWN NEXT DEFECT: stars-zams-hr gates its stage rules on `min-height: 745px`, so they switch off at 1280x720, the same bug binary-orbits had; cluster-census gates on 640px (harmless at the sizes measured). ALSO OPEN, cross-cutting: `.cp-readout__label` carries `text-transform: uppercase`, so KaTeX in a label renders the WRONG PHYSICAL SYMBOL -- frequency $\nu$ as "N", $\lambda$ as "\u039B", $E_\gamma$ as $E_\Gamma$ -- across 14 demos and 85 labels. The DOM text is correct, so screen readers are fine; this is sighted-reader only. Other checks: the shell's stage floor (630px at a 900px viewport, released on eight demos so far); whether the grid HAS a readouts row; sidebar prose that duplicates the shelf. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry, seasons, spectral-lines. Readouts clean at 1440x900, sidebars still overflowing: parallax-distance (882px), keplers-laws (844), binary-orbits (314), eos-lab (230), galaxy-rotation (148), doppler-shift (51), stars-zams-hr (40). Next: retrograde-motion (4 below the fold) -- the last demo with readouts under the fold. KNOWN NEXT DEFECT: stars-zams-hr gates its stage rules on `min-height: 745px`, so they switch off at 1280x720, the same bug binary-orbits had; cluster-census gates on 640px (harmless at the sizes measured). KNOWN, NOT MINE: two binary-orbits `visual` baselines (`binary-orbits-rv-inclination-30`, `binary-orbits-rv-sb1`) fail on the `#rvPanel` canvas; verified 2026-09-05 that they fail identically on a clean tree, so they are pre-existing baseline drift, not a regression. Other checks: the shell's stage floor (630px at a 900px viewport, released on eight demos so far); whether the grid HAS a readouts row; sidebar prose that duplicates the shelf. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -11,6 +11,39 @@ Research-grade interactive demos (physics unit-tested), deployed live, used in A
 
 ## Open
 - [ ] (no empirical learning data yet — assessment plan via CRMSE)
+
+## Rendered math was being re-cased, 2026-09-05
+
+Found while measuring spectral-lines: the readout labels showed frequency as "N".
+
+- **94 KaTeX nodes across 14 demos rendered the wrong physical symbol.** `.cp-readout__label`
+  carries `text-transform: uppercase`, and math inherited it. Not only Greek: lowercase
+  Latin variables are distinct quantities too, so keplers-laws showed specific angular
+  momentum $h$ as H (Hubble parameter, scale height) and $\mu$ as M (mass); parallax-distance
+  showed inferred parallax $\hat p$ as P (period); galaxy-rotation showed NFW concentration
+  $c$ as C; retrograde-motion showed time $t$ as T; eos-lab showed mean molecular weight
+  $\mu$ as M and gas-pressure fraction $\beta$ as B; conservation-laws showed eccentricity
+  $e$ as E in a demo that also reports energy.
+- **Nothing could have caught it.** `text-transform` is a rendering-time effect that never
+  touches the DOM, so `textContent` stayed correct: every E2E assertion about readout text
+  passed, and screen readers always got the right symbol. Sighted readers only.
+- **One rule fixes all of it.** The transform reaches math purely by INHERITANCE -- the ~20
+  uppercase declarations in the theme and demo stylesheets all target class-based ancestors,
+  never `.katex`. A declaration on the element beats an inherited value whatever its
+  specificity or source order, so `.cp-layer-instrument .katex { text-transform: none }`
+  holds for every such ancestor, including ones not written yet. The museum, paper and
+  component layers declare no `text-transform` at all, so the instrument layer is the whole
+  owner.
+- **New gate.** `apps/site/tests/math-rendering.spec.ts` asserts the computed value on the
+  math itself rather than any rule that might produce it. Proven RED: 14 of 20 demos fail
+  without the fix, 20 pass with it. It requires a demo that authors math to actually render
+  some, so a KaTeX failure cannot turn it into a vacuous pass -- stars-zams-hr is the one
+  demo with no math at all.
+
+Physics review: no symbol was changed, only a display transform removed, so what renders is
+the authored LaTeX -- which was already correct in all 94 cases. Checked each against the
+quantity its label names; no label was written lowercase expecting the transform to
+uppercase it. Gates: 136 theme, 1,833 demo, full suite 1,044 passed / 34 skipped / 0 failed.
 
 ## spectral-lines stage pass, 2026-09-05
 
