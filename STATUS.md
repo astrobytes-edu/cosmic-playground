@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. eos-lab is the worked example (readouts below fold 14 -> 0, sidebar hidden 540 -> 230). Next by combined damage: doppler-shift (stage 888-1022, 343px hidden, 20 readouts below fold), then galaxy-rotation (322px hidden, 22 below), telescope-resolution (stage 944 -> 1544 across viewport widths, the worst width-driven case in the project), conservation-laws and planetary-conjunctions (1016px stages). The rule is in docs/reviews/2026-09-04-layout-audit.md and the sidebar anatomy below. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: continue the stage-first sidebar plan, demo by demo. Done: eos-lab (14 -> 0 below the fold, sidebar 540 -> 230) and doppler-shift (20 -> 0, sidebar 343 -> 51). Next by combined damage: galaxy-rotation (322px hidden, 22 below the fold, stage grows 260px across viewport widths), then telescope-resolution (stage 944 -> 1544, the worst width-driven case in the project, though its sidebar only hides 77px), then conservation-laws and planetary-conjunctions (1,016px stages, sidebars already clean). Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -193,6 +193,40 @@ Three defects found on the way:
   the guard skipped the render that would have fixed it. Latent while every call came from a
   slider moving to a new value; a resize handler re-rendering identical state exposed it
   immediately. `setMathText` owns the write now.
+
+## doppler-shift, 2026-09-04
+
+955px stage, 343px of hidden sidebar, all 20 readouts below the fold.
+
+Two things did most of the work. **Side by side instead of stacked**: both drawings are
+3.2:1 and 4:1 with `width: 100%` and an `aspect-ratio`, so stacked they demanded 875px of a
+1,020px column -- most of that width was being converted into height nobody asked for. As
+cause and observable side by side, each card asks for about half, and the stage stops
+growing on its own because it is bounded by its columns rather than by the viewport. No cap
+needed.
+
+**Releasing the shell's stage floor mattered as much.** `min-height: clamp(420px, 70svh,
+820px)` is 630px at a 900px viewport, and once the content came down to 446px that floor was
+the only thing still setting the stage height. It pushed the readouts back under the fold by
+itself. Worth checking on every demo in this pass: a stage that no longer needs the floor is
+still paying for it.
+
+Content moved first, as on eos-lab: intro and both panel subtitles to the drawer with the
+sound-vs-light misconception callout, the eight velocity presets behind a trigger, and the
+two slider values plus the frequency restatement of the wavelength pair behind a disclosure.
+The five element chips stayed inline -- one row, and choosing the element is a primary
+control rather than a jump to a named scenario.
+
+**Readouts below the fold 20 -> 0** at 1920x1080 and 1440x900, 2 at 1366x768 and 1280x720
+where the demo genuinely cannot fit stage, transport and readouts at once. **Sidebar hidden
+343 -> 51.**
+
+Reverted and recorded in the stylesheet: spanning the representative-line card across two
+columns. Its "Why this line?" chip stacks under the label in a 208px column and, since a
+grid row is as tall as its tallest cell, that turns every card in the row from 84px into
+118px. But the grid is three columns at 1280, so a two-column card leaves one behind it and
+costs a whole extra row -- the panel went 389px to 402px and two more readouts dropped below
+the fold.
 
 ## The layout ratchet was measuring the wrong thing, 2026-09-04
 
