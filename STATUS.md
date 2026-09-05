@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: the stage-first campaign is DONE for readouts -- no demo has a readout below the fold at 1440x900, and retrograde-motion, the last one, is also clean at 1920x1080, 1366x768 and 1280x720. Out of the BUDGETS map entirely: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry, seasons, spectral-lines, retrograde-motion. What remains is SIDEBAR overflow, measured at 1440x900: parallax-distance (920px), keplers-laws (929), eos-lab (508), binary-orbits (330), galaxy-rotation (148), doppler-shift (60), stars-zams-hr (40), spectral-lines/retrograde-motion (0 at 1440, 113/69 at 1280x720). The eos-lab and keplers-laws figures rose on 2026-09-05 without either demo getting worse -- see the accordion note below; the content was always there, collapsed to a 2px box. KNOWN NEXT DEFECT: stars-zams-hr gates its stage rules on `min-height: 745px`, so they switch off at 1280x720, the same bug binary-orbits had; cluster-census gates on 640px (harmless at the sizes measured). KNOWN, NOT MINE: two binary-orbits `visual` baselines (`binary-orbits-rv-inclination-30`, `binary-orbits-rv-sb1`) fail on the `#rvPanel` canvas; verified 2026-09-05 that they fail identically on a clean tree, so they are pre-existing baseline drift. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: the stage-first campaign is DONE for readouts -- no demo has a readout below the fold at 1440x900, and retrograde-motion, the last one, is also clean at 1920x1080, 1366x768 and 1280x720. Out of the BUDGETS map entirely: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry, seasons, spectral-lines, retrograde-motion. What remains is SIDEBAR overflow, measured at 1440x900: parallax-distance (920px), keplers-laws (929), eos-lab (508), binary-orbits (330), galaxy-rotation (148), doppler-shift (60), stars-zams-hr (25), spectral-lines/retrograde-motion (0 at 1440, 113/69 at 1280x720). The eos-lab and keplers-laws figures rose on 2026-09-05 without either demo getting worse -- see the accordion note below; the content was always there, collapsed to a 2px box. cluster-census still gates its stage rules on `min-height: 640px`, harmless at the sizes measured but the same shape of defect. KNOWN, NOT MINE: two binary-orbits `visual` baselines (`binary-orbits-rv-inclination-30`, `binary-orbits-rv-sb1`) fail on the `#rvPanel` canvas; verified 2026-09-05 that they fail identically on a clean tree, so they are pre-existing baseline drift. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -11,6 +11,49 @@ Research-grade interactive demos (physics unit-tested), deployed live, used in A
 
 ## Open
 - [ ] (no empirical learning data yet — assessment plan via CRMSE)
+
+## stars-zams-hr height gate, 2026-09-05
+
+The defect recorded on 2026-09-04: stage rules gated `@media (min-width: 1025px) and
+(min-height: 745px)`, so at 1280x720 they switched off, `#hrCanvas` fell back to
+`aspect-ratio: 4/3` at `width: 100%`, and the stage grew to **856px with all ten readouts
+329px past the fold**. A shorter window got a taller stage -- the binary-orbits defect.
+
+The gate was deliberate and its premise was real: fitting the stage at 720 clipped 35px
+off the bottom of the plot. I confirmed that (my first measurement said otherwise because
+it compared the stage's CHILDREN, not the canvas overflowing inside `.hr-plot`). So the
+fix had to make the stage genuinely fit, not merely stop clipping.
+
+Four things were wrong underneath it:
+
+- **The floor the old comment defended never applied.** It was written as
+  `.cp-demo__stage` (0,1,0) against `.hr-lab .cp-demo__stage` (0,2,0) earlier in the file.
+  Specificity beats source order, so the base `clamp(360px, 48svh, 620px)` always won.
+  Removed rather than repaired -- at 720 a 525px floor pushes the last readout past the
+  fold.
+- **The cap landed on the content box.** `max-height` with no `box-sizing: border-box`
+  left the stage 26px taller than the number read, which is why it never bound.
+- **`.hr-plot` had no floor of its own.** It is the stage's `minmax(0, 1fr)` track, so it
+  settled at 275px while the canvas inside insisted on 300 -- overflowing onto the caption.
+- **The stage carried 81px of chrome that is not the plot**: a "Cosmic Playground" kicker
+  duplicating site branding inside the visualization, and a subtitle that wrapped to two
+  lines at 1280. The kicker is gone; the subtitle leads the Step Guide accordion.
+
+The cap is now `calc(100svh - 12rem)`, which is the measured cost of everything below the
+stage: 24px above it, the 32px gap to the strip, and the strip's 83px of chrome plus two
+30px readout rows.
+
+At 1280x720: stage **856 -> 504**, readouts below the fold **10 -> 0**, and the canvas is
+**341px with nothing clipped** -- larger than the 302px-with-35px-clipped that the gate
+existed to avoid. Clean at all four desktop viewports (slack +23 to +105). Sidebar
+overflow is unchanged at 25px at 1440x900, inside its 40px budget, so the demo stays in
+BUDGETS on that count.
+
+Not fixed, pre-existing: the guide-mode "White dwarf region" card overlaps the x-axis tick
+labels at every viewport, including 1440x900 before this change.
+
+Gates: site typecheck 0 errors, 1,833 demo tests, full suite 1,044 passed / 34 skipped / 0
+failed.
 
 ## retrograde-motion stage pass, and a collapsing accordion, 2026-09-05
 
