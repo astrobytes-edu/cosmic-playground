@@ -62,7 +62,12 @@ const BUDGETS: Record<string, Budget> = {
   // and the invariant quiz moved to the drawer, readouts filtered by view, the integrity
   // panel given the full grid width. Not yet clean -- the Energy view has the most
   // readouts of any -- but no longer the outlier.
-  "binary-orbits": { readoutsBelowFold: 1, sidebarOverflowPx: 650 },
+  // binary-orbits was 1 below the fold with 601px of sidebar hidden. Fixed 2026-09-04: its
+  // stage bound was gated on `min-height: 820px`, which switched it off at 1366x768 and
+  // 1280x720 -- the viewports that need it most, where all 16 readouts were below the fold.
+  // The remaining sidebar overflow is live content tied to its controls: an inclination
+  // hint that computes sin(i), and a Live response panel that answers the mass-ratio slider.
+  "binary-orbits": { readoutsBelowFold: 0, sidebarOverflowPx: 330 },
   // eos-lab was 14 below the fold with 540px of sidebar hidden and a 1,282px stage. Fixed
   // 2026-09-04: both panel help paragraphs to the drawer, the three channel cards into the
   // strip where they belong, the seven derived quantities behind a disclosure, presets

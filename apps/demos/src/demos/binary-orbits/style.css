@@ -563,7 +563,18 @@
  * worse than a page that scrolls. Below this height the demo keeps its natural layout and
  * the reader scrolls, which is the honest trade.
  */
-@media (min-width: 1025px) and (min-height: 820px) {
+/*
+ * This block used to be gated on `and (min-height: 820px)`, which switched the whole stage
+ * bound OFF on exactly the viewports that need it most. Measured 2026-09-04: at 1440x900
+ * the gate passed and the orbit canvas was 862x374 with one readout below the fold; at
+ * 1366x768 and 1280x720 it did not, so the id selector's `aspect-ratio: 4 / 3` took over,
+ * the canvas became 854x641, and ALL SIXTEEN readouts went under the fold. A shorter window
+ * was getting a taller stage.
+ *
+ * The clamp below already protects a short viewport from a crushed canvas -- that is what
+ * the 300px floors are for -- so the height gate was doing nothing but disabling the fix.
+ */
+@media (min-width: 1025px) {
   .cp-demo__stage {
     /*
      * min-height BEATS max-height in CSS, so the shell's `min-height: clamp(420px, 70svh,
@@ -572,7 +583,7 @@
      * not just capped.
      */
     min-height: clamp(300px, 42svh, 520px);
-    max-height: calc(100svh - 22rem);
+    max-height: calc(100svh - 24rem);
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
   }
