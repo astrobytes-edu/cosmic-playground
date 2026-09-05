@@ -56,6 +56,14 @@ interface Budget {
  * (see the note on `checkVisibility` below). Three demos had been over-reported because
  * their closed accordions were counted: binary-orbits 9 -> 1, eos-lab 22 -> 14,
  * keplers-laws 17 -> 7.
+ *
+ * 2026-09-05: the eos-lab and keplers-laws sidebar allowances went UP without either demo
+ * getting worse. `.cp-accordion` used `overflow: hidden`, which makes it a SCROLL CONTAINER,
+ * and a grid item that is a scroll container has an automatic minimum size of zero -- so once
+ * a sidebar grid overflowed, the track holding an accordion collapsed to 2px and its summary
+ * spilled out over whatever followed. eos-lab had four such accordions, keplers-laws one.
+ * Switching to `overflow: clip` (clips identically, but is not a scroll container) restored
+ * their real heights, and the scroller now reports content it had been hiding at zero height.
  */
 const BUDGETS: Record<string, Budget> = {
   // binary-orbits was 46 below the fold with 3,070px hidden. Fixed 2026-09-04: activities
@@ -73,7 +81,7 @@ const BUDGETS: Record<string, Budget> = {
   // strip where they belong, the seven derived quantities behind a disclosure, presets
   // behind a trigger, and the stage bounded with both surfaces made height-driven. The
   // remaining overflow is the sidebar's own controls.
-  "eos-lab": { readoutsBelowFold: 0, sidebarOverflowPx: 240 },
+  "eos-lab": { readoutsBelowFold: 0, sidebarOverflowPx: 520 },
   // galaxy-rotation was 22 below the fold with 322px of sidebar hidden. Fixed 2026-09-04:
   // its galaxy schematic is a SQUARE viewBox at `width: 100%`, so its height was its
   // column's width -- 693px at a 1920 viewport. Capped so it letterboxes into the width the
@@ -90,7 +98,7 @@ const BUDGETS: Record<string, Budget> = {
   // its SVG made height-driven so the cap shrinks the orbit rather than cropping it, the
   // Friendly/Advanced switch moved into the panel header, and the Conservation disclosure
   // spans the readouts row. The remaining overflow is the sidebar's own controls.
-  "keplers-laws": { readoutsBelowFold: 0, sidebarOverflowPx: 880 },
+  "keplers-laws": { readoutsBelowFold: 0, sidebarOverflowPx: 940 },
 
   // spectral-lines was 12 below the fold -- every readout, at every desktop width, because
   // its 833px stage never responded to width at all. Both diagrams capped on WIDTH (400px
@@ -104,8 +112,13 @@ const BUDGETS: Record<string, Budget> = {
   // had. The sidebar's remaining overflow is the controls themselves.
   "stars-zams-hr": { readoutsBelowFold: 0, sidebarOverflowPx: 40 },
 
-
-  "retrograde-motion": { readoutsBelowFold: 4, sidebarOverflowPx: 0 },
+  // retrograde-motion was 4 below the fold at 1440x900 -- and all 12 at 1920x1080, 1366x768
+  // and 1280x720, which this test's single 1440 sample could not see: its stage GREW with
+  // the viewport, 629px at 1280 to 917px at 1920, because `#orbitSvg` is a square viewBox at
+  // `width: 100%` and its height was its column's width. Fixed 2026-09-05: three fixed costs
+  // came out first so the drawing kept its size -- the overlay checkboxes to the sidebar, the
+  // timeline row unstacked, and a 11.5rem reserve that cleared nothing -- then the orbit was
+  // capped against a budget of `viewport - constants`. Clean, so it is gone from here.
   // parallax-distance was 2 below the fold at 1440x900 and 6 at 1366 and 1280. Fixed
   // 2026-09-04: the stage is height-bounded with both schematics made height-driven, and
   // two of the strip's eight cards fold into the numbers they qualify. The remaining
