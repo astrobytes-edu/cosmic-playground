@@ -317,6 +317,14 @@ and a different one each time**:
 Runs 2 and 3 pass in isolation and pass as their whole spec file, so those are flakes, not
 regressions. Run 1 was real and is fixed.
 
+A second, separate accounting gap turned up on 2026-09-04. A full `--project=desktop` run
+reported **911 passed + 34 skipped = 945**, but `--list` for that same project counts
+**969**. Twenty-four tests are in neither column, with exit code 0 and no failures. Some of
+it is conditional skipping that depends on run context -- `smoke.spec.ts:260` and `:543`
+were listed as skipped in the full run and both passed when the file ran alone -- but that
+has not been traced to the full 24. Worth knowing before quoting a suite total: the summary
+line is not a census.
+
 This is not new and was not introduced by the 2026-09-04 work, but it has been invisible
 because a suite that reports "1 failed" is easy to re-run until green. It matters because
 it makes every full-suite result ambiguous: a real single failure is indistinguishable from
