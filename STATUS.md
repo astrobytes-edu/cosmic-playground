@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. Done: eos-lab (14 -> 0 below the fold, sidebar 540 -> 230), doppler-shift (20 -> 0, 343 -> 51), galaxy-rotation (22 -> 0, 322 -> 148), telescope-resolution and conservation-laws (both fully clean and out of the BUDGETS map). Next: planetary-conjunctions (1,016px stage, sidebar already clean -- another pure stage pass), then blackbody-radiation (289px hidden), eclipse-geometry (242px), binary-orbits (601px), seasons (80px), spectral-lines and stars-zams-hr. CHECK THE SHELL'S STAGE FLOOR FIRST on each: `min-height: clamp(420px, 70svh, 820px)` is 630px at a 900px viewport and it was the binding constraint on five demos running once their content came down. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: continue the stage-first sidebar plan, demo by demo. Done and fully clean (out of the BUDGETS map): telescope-resolution, conservation-laws, planetary-conjunctions. Done with readouts clean but sidebars still overflowing: eos-lab (230px), doppler-shift (51), galaxy-rotation (148), keplers-laws (844), parallax-distance (882). Next: blackbody-radiation (289px hidden, 4 below the fold), eclipse-geometry (242px), binary-orbits (601px, 1 below), seasons (80px, 10 below), spectral-lines and stars-zams-hr. CHECK THE SHELL'S STAGE FLOOR FIRST on each: `min-height: clamp(420px, 70svh, 820px)` is 630px at a 900px viewport and it was the binding constraint on six demos running once their content came down -- it is a strong candidate for a shell-level change once enough demos have opted out individually. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -309,6 +309,20 @@ gives six columns at 1440 and takes the panel 324px -> 255px, but only there. At
 1280 it gives five, so a card wraps anyway AND every card is narrower, so labels like
 "Specific angular momentum" wrap further: 324px -> 344px at 1366, -> 364px at 1280. Helping
 the measured viewport by hurting two real ones is not a trade worth making.
+
+## planetary-conjunctions, 2026-09-04
+
+Structurally identical to conservation-laws -- a single square SVG at `width: 100%` filling
+a 982px column, `max-width: 980px` that only bit past 1920, and a sidebar that was already
+clean. Same cap, same floor release. **Readouts below the fold 12 -> 0** at all four sizes.
+Third demo out of the BUDGETS map.
+
+Worth noting for the remaining ones: **the shell's stage floor has now been released
+individually on six demos.** `min-height: clamp(420px, 70svh, 820px)` is 630px at a 900px
+viewport, which is more than a bounded stage needs, so every demo in this pass ends up
+opting out of it one at a time. That is the shape of a rule that wants to move into the
+shell -- but not before enough demos have opted out to show what the right default is, and
+not while five demos still rely on the floor to look reasonable.
 
 ## The layout ratchet was measuring the wrong thing, 2026-09-04
 
