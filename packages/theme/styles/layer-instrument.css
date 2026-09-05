@@ -87,6 +87,23 @@
   margin-bottom: var(--cp-space-1);
 }
 
+/* Rendered math is case-significant: in astronomy an uppercased symbol is a
+ * DIFFERENT quantity. Measured 2026-09-05 across the 20 demos, 94 KaTeX nodes
+ * inherited `uppercase` from a label and rendered the wrong symbol -- frequency
+ * `\nu` as "N", parallax `\hat p` as P, concentration `c` as C, time `t` as T,
+ * `\lambda` as an uppercase lambda. Only the rendering was affected; the DOM
+ * text stayed correct, so screen readers always had the right symbol and
+ * nothing caught it.
+ *
+ * The transform reaches math purely by INHERITANCE -- the ~20 uppercase rules
+ * across the theme and demo stylesheets all target class-based ancestors, never
+ * `.katex` itself. A declaration on the element beats an inherited value
+ * whatever its specificity or source order, so this one rule holds for every
+ * such ancestor, including ones not written yet. */
+.cp-layer-instrument .katex {
+  text-transform: none;
+}
+
 .cp-layer-instrument .cp-readout__value {
   font-size: var(--cp-readout-value-size);
   font-weight: var(--cp-readout-value-weight);
