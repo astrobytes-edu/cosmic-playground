@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 test.describe("Telescope Resolution -- E2E", () => {
   test.beforeEach(async ({ page }) => {
@@ -145,17 +146,22 @@ test.describe("Telescope Resolution -- E2E", () => {
 
   // --- Accordion / Drawer ---
 
+  /*
+   * Select the drawer's accordions by name, not position. These used to be `.first()` and
+   * `.nth(1)`, so adding a panel ahead of them -- the sidebar's intro prose moved into one
+   * on 2026-09-04 -- broke both tests without either of the panels they name changing.
+   */
+  const accordion = (page: Page, title: string) =>
+    page.locator(".cp-accordion").filter({ hasText: title });
+
   test("What to notice accordion is open by default", async ({ page }) => {
-    const firstAccordion = page.locator(".cp-accordion").first();
-    await expect(firstAccordion).toHaveAttribute("open", "");
-    await expect(firstAccordion).toContainText("What to notice");
+    await expect(accordion(page, "What to notice")).toHaveAttribute("open", "");
   });
 
   test("Model notes accordion can be opened", async ({ page }) => {
-    const modelNotes = page.locator(".cp-accordion").nth(1);
+    const modelNotes = accordion(page, "Model notes");
     await modelNotes.locator("summary").click();
     await expect(modelNotes).toHaveAttribute("open", "");
-    await expect(modelNotes).toContainText("Model notes");
   });
 
   // --- Station Mode ---

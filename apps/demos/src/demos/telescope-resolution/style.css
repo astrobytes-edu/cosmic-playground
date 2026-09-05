@@ -50,8 +50,28 @@
   align-items: center;
 }
 
+/* -- Stage height budget -------------------------------------------------
+ * Measured 2026-09-04: this was the worst width-driven stage in the project. The PSF canvas
+ * is SQUARE at `width: 100%`, so its height is its column's width -- 988px at a 1440
+ * viewport and 1,468px at 1920, taking the stage from 944px to 1,544px as the window got
+ * wider. Every readout sat below the fold at every size.
+ *
+ * The cap goes on WIDTH, not height. Unlike an SVG, a canvas has no `preserveAspectRatio`:
+ * it stretches its bitmap to whatever CSS box it is given, so capping the height of a
+ * `width: 100%` canvas would squash the Airy pattern into an ellipse. Constraining the
+ * width and leaving `height: auto` keeps the 1:1 ratio, and for a square drawing the
+ * vertical budget and the horizontal one are the same number -- which is why an `svh` term
+ * belongs in a max-width here.
+ *
+ * The 520px ceiling is the second reason. The backing store is 420x420 (`width="420"
+ * height="420"` on the element, and `drawPsf` fills `canvasEl.width` pixels), so every CSS
+ * pixel past ~420 is upscale, not detail: at 1440 the PSF was being stretched 2.35x and at
+ * 1920 3.5x. Capping at 520 keeps it near native. Raising the backing store instead would
+ * multiply a per-pixel loop that runs on every slider move. */
 .stage__canvas {
   width: 100%;
+  max-width: clamp(240px, calc(100svh - 20rem), 520px);
+  margin-inline: auto;
   height: auto;
   border-radius: 18px;
   border: 1px solid var(--cp-border);
@@ -78,3 +98,13 @@
   animation: cp-fade-in 0.8s ease-out 0.3s both;
 }
 
+
+/* The shell floors every stage at `clamp(420px, 70svh, 820px)` -- 630px at a 900px viewport.
+ * With the canvas capped this stage needs 598px, so that floor was the only thing still
+ * setting its height, exactly as on doppler-shift and galaxy-rotation. Fourth demo running:
+ * check it before anything else on the next one. */
+@media (min-width: 1025px) {
+  .cp-demo__stage {
+    min-height: 0;
+  }
+}
