@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry, seasons. Readouts clean at 1440x900, sidebars still overflowing: parallax-distance (882px), keplers-laws (844), binary-orbits (314), eos-lab (230), galaxy-rotation (148), doppler-shift (51), stars-zams-hr (40). Next: spectral-lines (12 below the fold) and retrograde-motion (4 below) -- the last two with readouts under the fold. KNOWN NEXT DEFECT: stars-zams-hr gates its stage rules on `min-height: 745px`, so they switch off at 1280x720, the same bug binary-orbits had; cluster-census gates on 640px (harmless at the sizes measured) and spectral-lines uses `max-height: 768px`. Other checks: the shell's stage floor (630px at a 900px viewport, released on seven demos so far); whether the grid HAS a readouts row; sidebar prose that duplicates the shelf. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry, seasons, spectral-lines. Readouts clean at 1440x900, sidebars still overflowing: parallax-distance (882px), keplers-laws (844), binary-orbits (314), eos-lab (230), galaxy-rotation (148), doppler-shift (51), stars-zams-hr (40). Next: retrograde-motion (4 below the fold) -- the last demo with readouts under the fold. KNOWN NEXT DEFECT: stars-zams-hr gates its stage rules on `min-height: 745px`, so they switch off at 1280x720, the same bug binary-orbits had; cluster-census gates on 640px (harmless at the sizes measured). ALSO OPEN, cross-cutting: `.cp-readout__label` carries `text-transform: uppercase`, so KaTeX in a label renders the WRONG PHYSICAL SYMBOL -- frequency $\nu$ as "N", $\lambda$ as "\u039B", $E_\gamma$ as $E_\Gamma$ -- across 14 demos and 85 labels. The DOM text is correct, so screen readers are fine; this is sighted-reader only. Other checks: the shell's stage floor (630px at a 900px viewport, released on eight demos so far); whether the grid HAS a readouts row; sidebar prose that duplicates the shelf. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -11,6 +11,45 @@ Research-grade interactive demos (physics unit-tested), deployed live, used in A
 
 ## Open
 - [ ] (no empirical learning data yet — assessment plan via CRMSE)
+
+## spectral-lines stage pass, 2026-09-05
+
+12 readouts below the fold -- every one, at every desktop width. The eleventh demo in the
+stage-first campaign, and the first whose stage did not respond to viewport width at all.
+
+- **The inverse of the usual width-driven bug.** The stage was a near-constant 833px
+  (833 at 1440, 833 at 1920, 820 at 1366, 808 at 1280) because both diagrams cap on
+  *width* -- `max-width: 400px` for the Bohr atom, `220px` for the energy ladder -- and
+  then take their height from that cap, since `height: auto` on a fixed-ratio viewBox
+  makes height a function of width. `.viz-top` spent 426px of vertical space to draw
+  620px of content inside a 980px row: 360px of horizontal space wasted while height was
+  the scarce resource. Both are now height-driven, widths following from their viewBox
+  ratios.
+- **A plain `svh` percentage was the wrong shape.** What the drawings compete with is a
+  stack of CONSTANTS -- 46px of stage tabs, 32px of panel padding, the 71px playbar, the
+  readouts strip -- ~25.5rem measured. `26svh` still asked for 187px at a 720px viewport
+  where ~150px was going spare. Subtract the constant first, then split the remainder
+  68/32 between the diagrams and the spectrum strip.
+- **The demo's own `.readout-grid` rule was dead code.** `repeat(auto-fit, minmax(160px, 1fr))`
+  at (0,1,0) never beat the shell's `.cp-demo__readouts .cp-panel-body` at (0,2,0), so six
+  readouts wrapped into four columns and two rows with two empty cells. Forced to one row.
+- **The two advanced tool panels moved to the drawer.** 981px of content behind a
+  disclosure that cost the stage 79px while closed. They are panels, not stage furniture;
+  main.ts finds them by id, so all 21 E2E tests passed unchanged.
+- **A regression I caused, and fixed.** Shrinking the drawings shrank their labels with
+  them: SVG text scales with the viewBox, so the 11-unit orbit labels landed at 3px at
+  1280x720. Compensating the font size alone was not enough -- both label stacks already
+  sit shoulder to shoulder at full size, so growing them just made them collide. The
+  drawings now convert an intended on-screen size into user units, shed the labels that no
+  longer have room (keeping the active transition, whose rings are the only amber ones),
+  ladder the survivors apart, grow the energy ladder's gutters so "n=3" stops clipping at
+  the viewBox edge, and paint labels after the orbits -- SVG has no z-index, so a label
+  appended inside the loop was overdrawn by the next ring.
+
+Readouts below the fold 12 -> 0 at 1440x900, 1920x1080, 1366x768 and 1280x720; stage
+833 -> 505px at 1440x900 with the Bohr atom at 274px. spectral-lines removed from BUDGETS
+-- the seventh demo to graduate. Gates: typecheck clean, 1,833 demo tests, 21 spectral-lines
+E2E, 41 ratchet, full suite 1,024 passed / 34 skipped / 0 failed.
 
 ## cluster-census UI/UX pass, 2026-09-04
 
