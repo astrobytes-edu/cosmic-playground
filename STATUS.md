@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. Done: eos-lab (14 -> 0 below the fold, sidebar 540 -> 230) and doppler-shift (20 -> 0, sidebar 343 -> 51). Next by combined damage: galaxy-rotation (322px hidden, 22 below the fold, stage grows 260px across viewport widths), then telescope-resolution (stage 944 -> 1544, the worst width-driven case in the project, though its sidebar only hides 77px), then conservation-laws and planetary-conjunctions (1,016px stages, sidebars already clean). Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: continue the stage-first sidebar plan, demo by demo. Done: eos-lab (14 -> 0 below the fold, sidebar 540 -> 230), doppler-shift (20 -> 0, 343 -> 51), galaxy-rotation (22 -> 0, 322 -> 148). Next: telescope-resolution (stage 944 -> 1544 across viewport widths, the worst width-driven case left; its sidebar only hides 77px so this is a stage pass), then conservation-laws and planetary-conjunctions (1,016px stages, sidebars already clean), then blackbody-radiation (289px hidden) and eclipse-geometry (242px). Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -227,6 +227,36 @@ grid row is as tall as its tallest cell, that turns every card in the row from 8
 118px. But the grid is three columns at 1280, so a two-column card leaves one behind it and
 costs a whole extra row -- the panel went 389px to 402px and two more readouts dropped below
 the fold.
+
+## galaxy-rotation, 2026-09-04
+
+652px stage, 322px of hidden sidebar, all 22 readouts below the fold.
+
+Its galaxy schematic is the purest case of width-driven sizing in the project: a **square**
+viewBox at `width: 100%`, so its height is its column's width. At a 1920 viewport that
+column is 693px and the drawing became 693px tall, taking the stage to 828px. Meanwhile the
+column had ~240px of width to spare precisely because the drawing is square -- the layout
+was converting the resource it had into the one it lacked.
+
+Capping the height spends that spare width instead: the box stays column-width and
+`preserveAspectRatio` centres the drawing in it. The cap follows the viewport, so what is
+left after the transport bar and the readouts is what the drawing gets -- 360px at a 900px
+viewport, 540px at 1080, a 190px floor below that.
+
+The shell's stage floor had to go with it, same as doppler-shift. Third demo in a row where
+that floor was still the binding constraint after the content came down.
+
+Seven of the eleven readouts went behind a disclosure: radius, concentration and virial
+radius restate the sliders' own values, enclosed and visible mass with the baryon fraction
+are the budget behind the dark-to-visible ratio, and the 21-cm shift is a side observation.
+What stays on one row is the demo's claim -- total velocity against visible-matter velocity,
+and the dark mass that explains the gap.
+
+**Readouts below the fold 22 -> 0** at 1920x1080, 1440x900 and 1366x768; still 8 at 1280x720.
+**Sidebar hidden 322 -> 148.**
+
+One E2E test read `#radiusValue` with `innerText`, which returns "" for content inside a
+closed disclosure. `textContent` is the right accessor once a readout is disclosed.
 
 ## The layout ratchet was measuring the wrong thing, 2026-09-04
 
@@ -457,6 +487,12 @@ and a different one each time**:
 
 Runs 2 and 3 pass in isolation and pass as their whole spec file, so those are flakes, not
 regressions. Run 1 was real and is fixed.
+
+**Solved 2026-09-04.** The recurring failure was `site-links` link integrity, and the log
+said plainly: "Test timeout of 30000ms exceeded". That test crawls the whole site with
+hundreds of sequential HTTP requests; it takes 4.0s alone and shares a preview server with
+eight workers and ~130 concurrent tests in a full run. Both crawls now carry a 120s ceiling
+instead of the 30s default, which is sized for a test that touches one page.
 
 A second, separate accounting gap turned up on 2026-09-04. A full `--project=desktop` run
 reported **911 passed + 34 skipped = 945**, but `--list` for that same project counts
