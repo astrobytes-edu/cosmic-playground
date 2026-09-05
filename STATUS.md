@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. Done: eos-lab (14 -> 0 below the fold, sidebar 540 -> 230), doppler-shift (20 -> 0, 343 -> 51), galaxy-rotation (22 -> 0, 322 -> 148). Next: telescope-resolution (stage 944 -> 1544 across viewport widths, the worst width-driven case left; its sidebar only hides 77px so this is a stage pass), then conservation-laws and planetary-conjunctions (1,016px stages, sidebars already clean), then blackbody-radiation (289px hidden) and eclipse-geometry (242px). Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: continue the stage-first sidebar plan, demo by demo. Done: eos-lab (14 -> 0 below the fold, sidebar 540 -> 230), doppler-shift (20 -> 0, 343 -> 51), galaxy-rotation (22 -> 0, 322 -> 148), telescope-resolution (8 -> 0, 77 -> 0 -- first demo out of the BUDGETS map entirely). Next: conservation-laws and planetary-conjunctions (1,016px stages, sidebars already clean, so pure stage passes), then blackbody-radiation (289px hidden), eclipse-geometry (242px), binary-orbits (601px) and seasons (80px). CHECK THE SHELL'S STAGE FLOOR FIRST on each: `min-height: clamp(420px, 70svh, 820px)` is 630px at a 900px viewport and it was the binding constraint on four demos running once their content came down. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -257,6 +257,36 @@ and the dark mass that explains the gap.
 
 One E2E test read `#radiusValue` with `innerText`, which returns "" for content inside a
 closed disclosure. `textContent` is the right accessor once a readout is disclosed.
+
+## telescope-resolution, 2026-09-04
+
+The worst width-driven stage in the project, and the first demo to come out of the BUDGETS
+map entirely.
+
+Its PSF canvas is square at `width: 100%`, so its height was its column's width -- 988px at
+a 1440 viewport, **1,468px at 1920**, taking the stage from 944px to 1,544px as the window
+got wider.
+
+**The cap goes on width, not height.** Unlike an SVG, a canvas has no
+`preserveAspectRatio`: it stretches its bitmap to whatever CSS box it is given, so capping
+the height of a `width: 100%` canvas squashes the Airy pattern into an ellipse. Constraining
+the width and leaving `height: auto` keeps the 1:1 ratio -- and for a square drawing the
+vertical budget and the horizontal one are the same number, which is why an `svh` term
+belongs in a max-width here.
+
+The 520px ceiling had a second reason worth recording: **the backing store is 420x420**
+(`width="420" height="420"` on the element, and `drawPsf` fills `canvasEl.width` pixels), so
+every CSS pixel past ~420 was upscale rather than detail. The PSF was being stretched 2.35x
+at 1440 and 3.5x at 1920. Raising the backing store instead would multiply a per-pixel loop
+that runs on every slider move.
+
+**Readouts below the fold 8 -> 0, sidebar overflow 77 -> 0**, and the stage is 598px at both
+1440 and 1920 -- it has stopped growing with the window.
+
+Two E2E tests selected drawer accordions by position (`.first()`, `.nth(1)`), so moving the
+sidebar's intro prose into a new panel broke both without either named panel changing. They
+select by name now. Worth watching for on the remaining demos: this pass adds a drawer panel
+almost every time.
 
 ## The layout ratchet was measuring the wrong thing, 2026-09-04
 
