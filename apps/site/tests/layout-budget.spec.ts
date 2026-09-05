@@ -110,6 +110,10 @@ const BUDGETS: Record<string, Budget> = {
   // Here and the Inference Log moved to the drawer, the 905px Selected Star card became a
   // strip under the plot, and the demo's custom grid gained the `readouts` row it never
   // had. The sidebar's remaining overflow is the controls themselves.
+  // 2026-09-05: its stage rules were gated `and (min-height: 745px)`, so at 1280x720 they
+  // switched off, `#hrCanvas` fell back to `aspect-ratio: 4/3` at full width, and the stage
+  // grew to 856px with all ten readouts 329px past the fold -- the binary-orbits defect
+  // again. This test only samples 1440x900, so it never saw it.
   "stars-zams-hr": { readoutsBelowFold: 0, sidebarOverflowPx: 40 },
 
   // retrograde-motion was 4 below the fold at 1440x900 -- and all 12 at 1920x1080, 1366x768

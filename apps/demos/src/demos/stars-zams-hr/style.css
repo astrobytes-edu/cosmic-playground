@@ -658,21 +658,31 @@
  * The plot and the strip that describes it share one height, so both fit on a laptop. */
 
 /*
- * 745px, not 700px. At 720 the fitted stage could not hold the plot: `overflow: hidden`
- * clipped 35px off the bottom of the diagram, axis and all. Below this the demo keeps its
- * natural layout and the page scrolls, which is the honest trade -- a clipped plot is
- * worse than a scroll.
+ * This was gated `and (min-height: 745px)` to avoid clipping the plot at 720. Re-measured
+ * 2026-09-05: nothing clips. The gate cost far more than it saved -- switched off at
+ * 1280x720, `#hrCanvas` fell back to `aspect-ratio: 4/3` at `width: 100%` and became
+ * 761x571, so the stage grew to 856px and put all ten readouts below the fold at 329px
+ * past it. A shorter window got a TALLER stage, the same defect binary-orbits had.
+ *
+ * The floor the old comment defended never took effect either: it was written as
+ * `.cp-demo__stage` (0,1,0) against the `.hr-lab .cp-demo__stage` (0,2,0) rule above,
+ * which sets `min-height: clamp(360px, 48svh, 620px)`. Specificity beats source order, so
+ * the base floor always won. Removed rather than repaired -- at 720 a 525px floor would
+ * push the last readout 17px past the fold, and the real floor is the canvas's own
+ * `min-height: 300px` below.
  */
-@media (min-width: 1025px) and (min-height: 745px) {
+@media (min-width: 1025px) {
   .cp-demo__stage {
     /*
-     * The floor has to clear everything above the canvas (about 173px of toolbar and
-     * legend) plus the canvas floor below. Set lower than that, the stage's
-     * `overflow: hidden` clipped 55px off the bottom of the diagram at 1280x720 -- a
-     * plot with its lower axis cut off, which is worse than a page that scrolls.
+     * 12rem is the measured cost of everything below the stage: 24px above it, the 32px
+     * gap to the strip, and the strip's own 83px of chrome plus two 30px readout rows.
+     * At 17rem this capped the stage 49px BELOW its own content floor at 1280x720, so the
+     * implicit caption and hint rows overlapped the plot instead of following it.
      */
-    min-height: clamp(525px, 48svh, 620px);
-    max-height: calc(100svh - 17rem);
+    max-height: calc(100svh - 12rem);
+    /* Without this the cap lands on the CONTENT box and the stage ends up 26px
+       taller than it reads -- its own padding and border sit outside. */
+    box-sizing: border-box;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
   }
@@ -684,6 +694,13 @@
     height: 100%;
     min-height: 300px;
     width: 100%;
+  }
+
+  /* The canvas's floor has to be the ROW's floor too. `.hr-plot` is the stage's
+     `minmax(0, 1fr)` track, so at 1280x720 it settled at 275px while the canvas
+     inside it insisted on 300 -- overflowing by 27px onto the caption below. */
+  .hr-plot {
+    min-height: 300px;
   }
 }
 
