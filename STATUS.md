@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry, seasons, spectral-lines. Readouts clean at 1440x900, sidebars still overflowing: parallax-distance (882px), keplers-laws (844), binary-orbits (314), eos-lab (230), galaxy-rotation (148), doppler-shift (51), stars-zams-hr (40). Next: retrograde-motion (4 below the fold) -- the last demo with readouts under the fold. KNOWN NEXT DEFECT: stars-zams-hr gates its stage rules on `min-height: 745px`, so they switch off at 1280x720, the same bug binary-orbits had; cluster-census gates on 640px (harmless at the sizes measured). KNOWN, NOT MINE: two binary-orbits `visual` baselines (`binary-orbits-rv-inclination-30`, `binary-orbits-rv-sb1`) fail on the `#rvPanel` canvas; verified 2026-09-05 that they fail identically on a clean tree, so they are pre-existing baseline drift, not a regression. Other checks: the shell's stage floor (630px at a 900px viewport, released on eight demos so far); whether the grid HAS a readouts row; sidebar prose that duplicates the shelf. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: the stage-first campaign is DONE for readouts -- no demo has a readout below the fold at 1440x900, and retrograde-motion, the last one, is also clean at 1920x1080, 1366x768 and 1280x720. Out of the BUDGETS map entirely: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry, seasons, spectral-lines, retrograde-motion. What remains is SIDEBAR overflow, measured at 1440x900: parallax-distance (920px), keplers-laws (929), eos-lab (508), binary-orbits (330), galaxy-rotation (148), doppler-shift (60), stars-zams-hr (40), spectral-lines/retrograde-motion (0 at 1440, 113/69 at 1280x720). The eos-lab and keplers-laws figures rose on 2026-09-05 without either demo getting worse -- see the accordion note below; the content was always there, collapsed to a 2px box. KNOWN NEXT DEFECT: stars-zams-hr gates its stage rules on `min-height: 745px`, so they switch off at 1280x720, the same bug binary-orbits had; cluster-census gates on 640px (harmless at the sizes measured). KNOWN, NOT MINE: two binary-orbits `visual` baselines (`binary-orbits-rv-inclination-30`, `binary-orbits-rv-sb1`) fail on the `#rvPanel` canvas; verified 2026-09-05 that they fail identically on a clean tree, so they are pre-existing baseline drift. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -11,6 +11,53 @@ Research-grade interactive demos (physics unit-tested), deployed live, used in A
 
 ## Open
 - [ ] (no empirical learning data yet — assessment plan via CRMSE)
+
+## retrograde-motion stage pass, and a collapsing accordion, 2026-09-05
+
+The last demo with readouts under the fold, and the one where the ratchet's single
+1440x900 sample was most misleading: 4 below the fold there, but all 12 at 1920x1080,
+1366x768 and 1280x720.
+
+- **The stage GREW with the viewport** -- 629px at 1280 to 917px at 1920 -- because
+  `#orbitSvg` is a square viewBox at `width: 100%`, so its height was its column's width.
+  The right column drove the entire stage.
+- **Three fixed costs came out before capping the drawing**, so it kept its size: the
+  three overlay checkboxes moved to the sidebar (116px, and the sidebar had 0px of
+  overflow at every viewport while the stage had nothing to give); the timeline row
+  stopped stacking (98 -> 71px); and `.retro__state-formula` stopped reserving
+  `margin-right: 11.5rem` that cleared nothing -- the badge it looked like it was
+  avoiding is at y 38-64, the formula starts at y 119.
+- **The state badge was overlapping the focus button** by 3px, and by 10px once the panel
+  stopped being stretched taller than its content. It was absolutely positioned at the
+  panel's top right, on top of an interactive control; it is a header item and now sits in
+  the header flex row.
+
+Readouts below the fold: 12 -> 0 at all four desktop viewports. Removed from BUDGETS --
+the eighth demo to graduate, and the last with readouts under the fold.
+
+### `.cp-accordion` was collapsing to 2px in three demos
+
+Turned up by an E2E failure: clicking the sidebar's "Advanced" summary was intercepted by
+the element after it.
+
+`.cp-accordion` used `overflow: hidden`, which makes it a **scroll container** -- and a
+grid item that is a scroll container has an automatic minimum size of **zero**. The
+sidebar's `.cp-panel-body` is a grid, so as soon as its content exceeded its height, the
+auto track holding an accordion collapsed to 2px and the summary spilled out over whatever
+followed: clickable text sitting underneath another element. Measured at 1280x720,
+**eos-lab had four collapsed accordions, keplers-laws one, retrograde-motion one**, each a
+2px box holding 245-594px of content.
+
+`overflow: clip` clips identically -- it is there to keep content inside the border radius
+-- but is not a scroll container, so the rule does not apply. One line in demo-shell.css.
+
+Two consequences worth recording: the eos-lab (240 -> 520) and keplers-laws (880 -> 940)
+sidebar budgets went up without either demo getting worse, because the scroller now
+measures content it had been hiding at zero height; and one retrograde-motion E2E test
+asserted `scrollTop` started at 0, which was only true while the accordion collapsed.
+
+Gates: site typecheck 0 errors, 136 theme, 1,833 demo, full suite 1,044 passed / 34 skipped
+/ 0 failed.
 
 ## Rendered math was being re-cased, 2026-09-05
 
