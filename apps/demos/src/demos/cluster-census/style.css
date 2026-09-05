@@ -582,12 +582,31 @@
  * ratios. Before this the three panels summed to 1,004px whatever the window was, which is
  * why a 900px-tall laptop could not show the plots and their numbers at the same time. */
 
-@media (min-width: 1025px) and (min-height: 640px) {
+/*
+ * This was gated `and (min-height: 640px)`, meaning to fall back to a scrolling page on a
+ * short screen. What it actually fell back to was the layout described above: the three
+ * canvases regained their fixed aspect ratios and summed to ~1,004px however short the
+ * window was. Measured 2026-09-05, dropping 1280x640 to 1280x600 grew the stage from 610px
+ * to 1003px and put all eight readouts below the fold -- a shorter window getting a taller
+ * stage, the same defect binary-orbits and stars-zams-hr had.
+ *
+ * The fallback is now what the comment always said it was. The rules stay on at every
+ * desktop width; the rows below carry floors so the panels keep their content, and the
+ * stage yields to them (`min-height: min-content` beats `max-height`) so the page scrolls
+ * rather than the panels colliding.
+ *
+ * Measured after: 1920x1080, 1440x900, 1366x768 and 1280x720 are unchanged to the pixel --
+ * same canvas heights, same fold slack. 1280x600 goes from a 1003px stage with all eight
+ * readouts 288px past the fold to a 570px stage with 33px to spare.
+ */
+@media (min-width: 1025px) {
   .cp-demo__stage {
     align-self: stretch;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     max-height: calc(100svh - 2 * var(--cp-space-4));
+    /* Yields to the content floor rather than clipping it. */
+    min-height: min-content;
   }
 
   .cp-demo__stage .cp-tab-panel[id="panel-explore"] {
@@ -602,7 +621,22 @@
     /* The cluster and the HR diagram are the comparison, so they get the room; the
      * histogram describes the draw and reads fine at two thirds their height. The strip
      * takes what it needs and no more. */
-    grid-template-rows: minmax(0, 1fr) minmax(0, 0.66fr) auto;
+    /*
+     * Floors on the ROWS as well as on the surfaces below. A row free to shrink to 0 let
+     * each panel's content overflow onto the next -- measured at 1280x600, the cluster
+     * panel needed 221px in a 172px row and painted over the histogram.
+     *
+     * These are px, not `min-content`: a <canvas> carries an intrinsic size from its
+     * backing store, so `min-content` here resolves to whatever the last render sized the
+     * bitmap to, not to the 120-170px floors below -- which blew the histogram up to 726px.
+     *
+     * They are deliberately below the panels' full content height. Raising the second to
+     * ~196px (title + canvas floor + axis title) does stop the histogram canvas overlapping
+     * its own legend, but it takes that room from the row above: the cluster and HR
+     * canvases lose 16-20px at 1366x768 and 1280x720, and the HR canvas starts overflowing
+     * instead. That legend overlap is older than this rule and is left alone here.
+     */
+    grid-template-rows: minmax(224px, 1fr) minmax(142px, 0.66fr) auto;
   }
 
   .census-panel {
