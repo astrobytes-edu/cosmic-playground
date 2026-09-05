@@ -753,10 +753,54 @@ function showOrbitTooltip(args: { text: string; xPx: number; yPx: number }) {
 
 // ── Draw Bohr atom ──────────────────────────────────────────
 
+/**
+ * Text inside a viewBox scales with the drawing. Sizing the Bohr atom and the
+ * energy ladder to clear the fold therefore took their labels down with them:
+ * at 1280x720 the 11-unit orbit labels rendered at 3px.
+ *
+ * Compensating the font size alone does not fix it, because both label stacks
+ * already sit shoulder to shoulder at full size -- growing them in user units
+ * just makes them collide. So convert the intended ON-SCREEN size into user
+ * units for the current render scale, AND drop the labels that no longer have
+ * room, keeping the ones that carry the current transition. The orbits stay
+ * interactive, so every level's energy is still reachable by hover or focus.
+ */
+function svgRenderScale(svg: SVGSVGElement, viewBoxWidth: number): number {
+  const rendered = svg.getBoundingClientRect().width;
+  return rendered > 0 ? rendered / viewBoxWidth : 1;
+}
+
+/**
+ * Full compensation is unbounded as the drawing shrinks, and a 400-unit box
+ * cannot carry a label worth 8% of its height. Cap the growth: past this the
+ * label falls below its target on screen, which beats crowding the geometry.
+ */
+const MAX_LABEL_GROWTH = 2.2;
+
+function unitsForScreenPx(scale: number, screenPx: number): string {
+  const compensated = screenPx / Math.max(scale, 0.05);
+  return formatNumber(Math.min(compensated, screenPx * MAX_LABEL_GROWTH), 2);
+}
+
+/** Below this render scale, only n=1 and the active levels keep their labels. */
+const FULL_LABEL_SCALE = 0.82;
+
 function drawBohrAtom() {
   clearSvg(bohrSvg);
   const cx = BOHR_VIEW_SIZE / 2;
   const cy = BOHR_VIEW_SIZE / 2;
+  const bohrScale = svgRenderScale(bohrSvg, BOHR_VIEW_SIZE);
+  const bohrLabelUnits = unitsForScreenPx(bohrScale, 11);
+  const bohrLabelsFit = bohrScale >= FULL_LABEL_SCALE;
+  // Labels sit on the -45 degree diagonal, so a radial separation d buys only
+  // d/sqrt(2) of vertical clearance. Walk outward and push each label past the
+  // last one when its own orbit is too close -- n=2 and n=3 are ~19 units
+  // apart, which a 16-unit label overruns.
+  const bohrLabelGap = 1.63 * Number(bohrLabelUnits);
+  let bohrLabelR = 0;
+  // Held back and appended after the loop: SVG paints in document order, so a
+  // label appended inside it was overdrawn by the next orbit's ring.
+  const bohrLabels: SVGTextElement[] = [];
 
   // Defs for glow filters
   const defs = svgEl("defs");
@@ -848,19 +892,26 @@ function drawBohrAtom() {
     orbit.addEventListener("blur", () => hideOrbitTooltip());
     bohrSvg.appendChild(orbit);
 
-    // Level label
-    const labelAngle = -Math.PI / 4;
-    const lx = cx + r * Math.cos(labelAngle);
-    const ly = cy + r * Math.sin(labelAngle);
-    const label = svgEl("text", {
-      x: lx + 6, y: ly - 4,
-      fill: isActive ? "var(--cp-accent-amber)" : "var(--cp-muted)",
-      "font-size": "11",
-      "font-family": "system-ui, sans-serif",
-      opacity: isActive ? 1 : 0.6,
-    });
-    label.textContent = `n=${n}`;
-    bohrSvg.appendChild(label);
+    // Level label. Thinned, the ladder below pushes labels off their own rings,
+    // so keep only the active pair: they are amber, the rings they name are the
+    // only amber rings, and the mapping stays unambiguous. Every other level's
+    // energy is still one hover or Tab away on the orbit itself.
+    if (isActive || bohrLabelsFit) {
+      const labelAngle = -Math.PI / 4;
+      const labelR = Math.max(r, bohrLabelR);
+      bohrLabelR = labelR + bohrLabelGap;
+      const lx = cx + labelR * Math.cos(labelAngle);
+      const ly = cy + labelR * Math.sin(labelAngle);
+      const label = svgEl("text", {
+        x: lx + 6, y: ly - 4,
+        fill: isActive ? "var(--cp-accent-amber)" : "var(--cp-muted)",
+        "font-size": bohrLabelUnits,
+        "font-family": "system-ui, sans-serif",
+        opacity: isActive ? 1 : 0.6,
+      });
+      label.textContent = `n=${n}`;
+      bohrLabels.push(label);
+    }
   }
 
   // Electron on the current level
@@ -934,7 +985,7 @@ function drawBohrAtom() {
   const photon = svgEl("text", {
     x: photonX, y: photonY,
     fill: photonColor,
-    "font-size": "16",
+    "font-size": unitsForScreenPx(bohrScale, 16),
     "font-family": "system-ui, sans-serif",
     filter: "url(#photonGlow)"
   });
@@ -946,12 +997,14 @@ function drawBohrAtom() {
   const scaleLabel = svgEl("text", {
     x: BOHR_VIEW_SIZE - 8, y: BOHR_VIEW_SIZE - 8,
     fill: "var(--cp-muted)",
-    "font-size": "9",
+    "font-size": unitsForScreenPx(bohrScale, 9),
     "text-anchor": "end",
     opacity: 0.5,
   });
   scaleLabel.textContent = "not to scale";
   bohrSvg.appendChild(scaleLabel);
+
+  for (const label of bohrLabels) bohrSvg.appendChild(label);
 }
 
 // ── Draw energy-level diagram ───────────────────────────────
@@ -959,8 +1012,21 @@ function drawBohrAtom() {
 function drawEnergyLevels() {
   clearSvg(energySvg);
 
-  const leftX = 60;
-  const rightX = ENERGY_SVG_W - 20;
+  const energyScale = svgRenderScale(energySvg, ENERGY_SVG_W);
+  const energyLabelUnits = unitsForScreenPx(energyScale, 10);
+  const energyTitleUnits = unitsForScreenPx(energyScale, 12);
+  const energyLabelsFit = energyScale >= FULL_LABEL_SCALE;
+  // The ionization captions sit directly under the axis title. Once the labels
+  // grow to stay readable there is no longer room for both; the dashed E = 0
+  // line still marks the limit.
+  const ionCaptionsFit = energyScale >= 0.5;
+
+  // The gutters hold "-13.60" on the left and "n=3" on the right. Both were
+  // sized for a 10-unit label; once the label grows to keep its on-screen size,
+  // a fixed 20-unit right gutter clips the level numbers at the viewBox edge.
+  const energyLabelWidth = Number(energyLabelUnits);
+  const leftX = Math.max(60, 3.4 * energyLabelWidth + 8);
+  const rightX = ENERGY_SVG_W - Math.max(20, 1.9 * energyLabelWidth + 6);
   const lineLen = rightX - leftX;
 
   // Ionization level (E = 0)
@@ -976,20 +1042,20 @@ function drawEnergyLevels() {
   const ionLabel = svgEl("text", {
     x: leftX - 6, y: yIon + 4,
     fill: "var(--cp-muted)",
-    "font-size": "10",
+    "font-size": energyLabelUnits,
     "text-anchor": "end",
   });
   ionLabel.textContent = "0 eV";
-  energySvg.appendChild(ionLabel);
+  if (ionCaptionsFit) energySvg.appendChild(ionLabel);
   const ionRight = svgEl("text", {
     x: rightX + 4, y: yIon + 4,
     fill: "var(--cp-muted)",
-    "font-size": "10",
+    "font-size": energyLabelUnits,
     "text-anchor": "start",
     opacity: 0.6,
   });
   ionRight.textContent = "\u221E";
-  energySvg.appendChild(ionRight);
+  if (ionCaptionsFit) energySvg.appendChild(ionRight);
 
   // Draw energy levels
   for (let n = 1; n <= N_MAX; n++) {
@@ -1005,25 +1071,28 @@ function drawEnergyLevels() {
     });
     energySvg.appendChild(line);
 
-    // Energy label (left)
-    const eLabel = svgEl("text", {
-      x: leftX - 6, y: y + 4,
-      fill: isActive ? "var(--cp-accent-amber)" : "var(--cp-muted)",
-      "font-size": "10",
-      "text-anchor": "end",
-    });
-    eLabel.textContent = `${eEv.toFixed(2)}`;
-    energySvg.appendChild(eLabel);
+    // Energy and n labels. The upper levels converge, so at small render
+    // scales only the ground state and the active transition keep theirs.
+    if (isActive || n === 1 || energyLabelsFit) {  // the ladder keeps its labels
+                                                   // beside their own levels
+      const eLabel = svgEl("text", {
+        x: leftX - 6, y: y + 4,
+        fill: isActive ? "var(--cp-accent-amber)" : "var(--cp-muted)",
+        "font-size": energyLabelUnits,
+        "text-anchor": "end",
+      });
+      eLabel.textContent = `${eEv.toFixed(2)}`;
+      energySvg.appendChild(eLabel);
 
-    // n label (right)
-    const nLabel = svgEl("text", {
-      x: rightX + 4, y: y + 4,
-      fill: isActive ? "var(--cp-accent-amber)" : "var(--cp-muted)",
-      "font-size": "10",
-      "text-anchor": "start",
-    });
-    nLabel.textContent = `n=${n}`;
-    energySvg.appendChild(nLabel);
+      const nLabel = svgEl("text", {
+        x: rightX + 4, y: y + 4,
+        fill: isActive ? "var(--cp-accent-amber)" : "var(--cp-muted)",
+        "font-size": energyLabelUnits,
+        "text-anchor": "start",
+      });
+      nLabel.textContent = `n=${n}`;
+      energySvg.appendChild(nLabel);
+    }
   }
 
   // Transition arrow between levels
@@ -1070,7 +1139,7 @@ function drawEnergyLevels() {
     x: midX + 14,
     y: (yUpper + yLower) / 2 + 4,
     fill: photonColor,
-    "font-size": "12",
+    "font-size": energyTitleUnits,
     "font-family": "system-ui, sans-serif",
   });
   photonLabel.textContent = "\u03B3";
@@ -1078,9 +1147,10 @@ function drawEnergyLevels() {
 
   // Title
   const title = svgEl("text", {
-    x: ENERGY_SVG_W / 2, y: 16,
+    // A baseline of 16 clipped the ascenders once the title grew past ~19 units.
+    x: ENERGY_SVG_W / 2, y: Math.max(16, 0.85 * Number(energyTitleUnits) + 2),
     fill: "var(--cp-text2)",
-    "font-size": "12",
+    "font-size": energyTitleUnits,
     "font-weight": "bold",
     "text-anchor": "middle",
   });

@@ -55,6 +55,13 @@
   padding: 0 var(--cp-space-2) var(--cp-space-2);
 }
 
+/* Moved to the drawer, so it uses the shell accordion body rather than
+   .advanced-block__body; it still needs the two panels spaced apart. */
+.advanced-stage-tools > .cp-accordion__body {
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
 .advanced-elements-controls {
   display: grid;
   gap: var(--cp-space-2);
@@ -516,5 +523,100 @@
 
   .advanced-block summary {
     padding: 0.55rem 0.6rem;
+  }
+}
+
+/* ── Desktop stage budget ────────────────────────────────── */
+
+/*
+ * Measured 2026-09-05 at 1440x900: the stage was 833px, which put the playbar
+ * half below the fold and all six readouts entirely below it -- at every
+ * desktop width, because nothing here responds to width at all.
+ *
+ * The cause is the inverse of the usual width-driven bug. Both diagrams cap on
+ * WIDTH (400px for the Bohr atom, 220px for the energy ladder) and then take
+ * their height from that cap, because `height: auto` on a fixed-ratio viewBox
+ * makes height a function of width. So `.viz-top` spent 426px of vertical
+ * space to draw 620px of content inside a 980px row: 360px of horizontal
+ * space wasted while height was the scarce resource.
+ *
+ * Drive both from height instead. The row gets a height budget in `svh`, the
+ * SVGs fill it, and their widths follow from their own viewBox ratios -- so a
+ * shorter screen gets smaller diagrams rather than a taller page.
+ */
+@media (min-width: 1025px) {
+  /* The shell's floor is clamp(420px, 70svh, 820px) = 630px here, which would
+     become the binding constraint the moment the content came down. */
+  .cp-demo__stage {
+    min-height: 0;
+  }
+
+  /*
+   * What is left for the drawings is the viewport minus a stack of CONSTANTS:
+   * 46px of stage tabs, 32px of panel padding, the 71px playbar, the readouts
+   * strip, and the grid gaps -- ~25.5rem all told, measured. A plain `svh`
+   * percentage is the wrong shape for that, because it shrinks too slowly on a
+   * short screen: 26svh still asked for 187px at 720px tall, where only ~150px
+   * was going spare. Subtract the constant first, then split what remains
+   * 68/32 between the diagrams and the spectrum strip.
+   */
+  .viz-top {
+    height: clamp(180px, calc(0.68 * (100svh - 25.5rem)), 340px);
+  }
+
+  /* Both panels were sized `1fr auto`, so the Bohr container took every spare
+     pixel of a 980px row to display a 274px square -- a small atom adrift in a
+     mostly empty panel. Let each hug its own drawing and centre the pair. */
+  .viz-top {
+    grid-template-columns: auto auto;
+    justify-content: center;
+  }
+
+  .energy-container {
+    min-width: 0;
+  }
+
+  .bohr-container,
+  .energy-container {
+    min-height: 0;
+  }
+
+  /* width: auto lets each viewBox ratio choose its own width from the shared
+     height. The Bohr atom is square, the energy ladder is 220/400. */
+  .bohr-container > svg,
+  .energy-container > svg {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+  }
+
+  /* The strip wants full width (it is a wavelength axis) and only as much
+     height as the two comparison rows need: plotH = height - 44px of margins,
+     split 0.44/0.44 when the H-reference row is showing. */
+  #spectrumCanvas {
+    aspect-ratio: auto;
+    height: clamp(88px, calc(0.32 * (100svh - 25.5rem)), 176px);
+  }
+
+  /* The panel already pads 16px; the layout's own block padding doubled it. */
+  .explore-layout {
+    padding-block: 0;
+  }
+
+  /* Six short readouts in a 1020px strip should be one row. The shell's
+     `repeat(auto-fit, minmax(200px, 1fr))` fits only four, leaving a second
+     row with two empty cells -- ~100px of fold pressure for nothing. The
+     demo's own `.readout-grid` (0,1,0) never applied against it (0,2,0). */
+  .cp-demo__readouts .cp-panel-body.readout-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  /* Six columns leaves ~128px of content per readout, and the 1.5rem value
+     token was sized for the ~213px a four-column strip gave it: `1.8887 eV`
+     and `n = 3 -> n = 2` both wrapped, so the row stood 119px tall instead of
+     85px. Re-scope the token rather than overriding font-size, so the label ->
+     value -> unit hierarchy still comes from one place. */
+  .cp-demo__readouts {
+    --cp-readout-value-size: 1.2rem;
   }
 }

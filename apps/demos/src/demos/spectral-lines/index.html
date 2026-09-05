@@ -288,51 +288,6 @@
                 Use pattern matching: compare strongest lines and spacing to identify element fingerprints.
               </p>
             </div>
-            <details id="advancedStageTools" class="cp-notice advanced-block advanced-stage-tools" data-hydrogen-only="true">
-              <summary>Advanced Hydrogen Tools</summary>
-              <div class="advanced-block__body">
-                <div id="microscopePanel" class="microscope-panel" data-hydrogen-only="true">
-                  <h3>Series Limit Microscope</h3>
-                  <p class="cp-muted">Zoom near the series limit to watch line spacing collapse as $n_{\text{upper}} \rightarrow \infty$.</p>
-                  <canvas id="seriesMicroscopeCanvas" role="img" aria-label="Microscope view near the selected series limit showing line pile-up density"></canvas>
-                  <label class="control" for="microscopeProbeSlider">
-                    <span>Probe upper level $n_{\text{upper}}$</span>
-                    <input id="microscopeProbeSlider" type="range" min="6" max="80" step="1" value="20" />
-                    <span class="control__value"><span id="microscopeProbeValue">20</span></span>
-                  </label>
-                  <label class="check">
-                    <input id="microscopeInfinity" type="checkbox" />
-                    Include $n_{\text{upper}}=\infty$ limit marker
-                  </label>
-                  <p id="scalingInsight" class="cp-muted">
-                    $\Delta E \approx \frac{27.2\ \text{eV}}{n^3}$ (large $n$) &mdash; adjacent levels compress as $1/n^3$.
-                  </p>
-                </div>
-                <div id="temperaturePanel" class="temperature-panel" data-hydrogen-only="true">
-                  <h3>Why Hydrogen Dominates A Stars</h3>
-                  <p class="temperature-equation">$\frac{n_2}{n_1} \propto e^{-\Delta E/kT}$</p>
-                  <label class="control" for="temperatureSlider">
-                    <span>Temperature (K)</span>
-                    <input id="temperatureSlider" type="range" min="4000" max="20000" step="100" value="9000" />
-                    <span class="control__value"><span id="temperatureValue">9000</span> K</span>
-                  </label>
-                  <p class="cp-muted temperature-proxy-note">These are normalized proxy populations over $n=1,2,3$ only.</p>
-                  <div class="temperature-readouts">
-                    <p>$n_1$ relative population proxy: <span id="tempN1">0.000</span></p>
-                    <p>$n_2$ relative population proxy: <span id="tempN2">0.000</span></p>
-                    <p>$n_3$ relative population proxy: <span id="tempN3">0.000</span></p>
-                    <p>Neutral-H proxy: <span id="tempNeutralProxy">0.000</span></p>
-                    <p>Balmer strength proxy: <span id="tempBalmerProxy">0.000</span></p>
-                  </div>
-                  <p class="cp-muted">Simplified single-slice proxy for excitation + ionization balance (qualitative, not full radiative transfer).</p>
-                  <ul>
-                    <li>Hydrogen Balmer lines diagnose A-type stars.</li>
-                    <li>Lyman lines dominate UV spectra of hot stars and quasars.</li>
-                    <li>Paschen lines probe embedded star-forming regions in IR.</li>
-                  </ul>
-                </div>
-              </div>
-            </details>
           </div>
         </div>
 
@@ -574,6 +529,57 @@
                 <li><strong>Doppler Shift:</strong> See how these same spectral lines shift when the source moves toward or away from you. <a href="../doppler-shift/">Open Doppler Shift →</a></li>
                 <li><strong>Galaxy Rotation:</strong> Astronomers measure galaxy rotation using the Doppler shift of the 21-cm hydrogen line. <a href="../galaxy-rotation/">Open Galaxy Rotation →</a></li>
               </ul>
+            </div>
+          </details>
+          <!-- These two are panels, not stage furniture. Closed, the disclosure cost
+               the stage 79px at every viewport; open, it adds 981px. main.ts finds
+               both by id, so they behave identically down here. -->
+          <details id="advancedStageTools" class="cp-accordion advanced-stage-tools" data-hydrogen-only="true">
+            <summary>
+              <span class="cp-accordion__title">Advanced Hydrogen Tools</span>
+              <span class="cp-accordion__meta">Series limit &amp; temperature</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <div id="microscopePanel" class="microscope-panel" data-hydrogen-only="true">
+                <h3>Series Limit Microscope</h3>
+                <p class="cp-muted">Zoom near the series limit to watch line spacing collapse as $n_{\text{upper}} \rightarrow \infty$.</p>
+                <canvas id="seriesMicroscopeCanvas" role="img" aria-label="Microscope view near the selected series limit showing line pile-up density"></canvas>
+                <label class="control" for="microscopeProbeSlider">
+                  <span>Probe upper level $n_{\text{upper}}$</span>
+                  <input id="microscopeProbeSlider" type="range" min="6" max="80" step="1" value="20" />
+                  <span class="control__value"><span id="microscopeProbeValue">20</span></span>
+                </label>
+                <label class="check">
+                  <input id="microscopeInfinity" type="checkbox" />
+                  Include $n_{\text{upper}}=\infty$ limit marker
+                </label>
+                <p id="scalingInsight" class="cp-muted">
+                  $\Delta E \approx \frac{27.2\ \text{eV}}{n^3}$ (large $n$) &mdash; adjacent levels compress as $1/n^3$.
+                </p>
+              </div>
+              <div id="temperaturePanel" class="temperature-panel" data-hydrogen-only="true">
+                <h3>Why Hydrogen Dominates A Stars</h3>
+                <p class="temperature-equation">$\frac{n_2}{n_1} \propto e^{-\Delta E/kT}$</p>
+                <label class="control" for="temperatureSlider">
+                  <span>Temperature (K)</span>
+                  <input id="temperatureSlider" type="range" min="4000" max="20000" step="100" value="9000" />
+                  <span class="control__value"><span id="temperatureValue">9000</span> K</span>
+                </label>
+                <p class="cp-muted temperature-proxy-note">These are normalized proxy populations over $n=1,2,3$ only.</p>
+                <div class="temperature-readouts">
+                  <p>$n_1$ relative population proxy: <span id="tempN1">0.000</span></p>
+                  <p>$n_2$ relative population proxy: <span id="tempN2">0.000</span></p>
+                  <p>$n_3$ relative population proxy: <span id="tempN3">0.000</span></p>
+                  <p>Neutral-H proxy: <span id="tempNeutralProxy">0.000</span></p>
+                  <p>Balmer strength proxy: <span id="tempBalmerProxy">0.000</span></p>
+                </div>
+                <p class="cp-muted">Simplified single-slice proxy for excitation + ionization balance (qualitative, not full radiative transfer).</p>
+                <ul>
+                  <li>Hydrogen Balmer lines diagnose A-type stars.</li>
+                  <li>Lyman lines dominate UV spectra of hot stars and quasars.</li>
+                  <li>Paschen lines probe embedded star-forming regions in IR.</li>
+                </ul>
+              </div>
             </div>
           </details>
         </div>

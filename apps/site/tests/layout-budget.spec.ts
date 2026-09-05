@@ -92,8 +92,12 @@ const BUDGETS: Record<string, Budget> = {
   // spans the readouts row. The remaining overflow is the sidebar's own controls.
   "keplers-laws": { readoutsBelowFold: 0, sidebarOverflowPx: 880 },
 
-
-  "spectral-lines": { readoutsBelowFold: 12, sidebarOverflowPx: 0 },
+  // spectral-lines was 12 below the fold -- every readout, at every desktop width, because
+  // its 833px stage never responded to width at all. Both diagrams capped on WIDTH (400px
+  // and 220px) and took their height from that cap, so `.viz-top` spent 426px of vertical
+  // space to draw 620px of content inside a 980px row. Fixed 2026-09-05: the drawings are
+  // height-driven from a budget of `viewport - constants`, the two advanced tool panels
+  // moved to the drawer, and the six readouts fit one row. Clean, so it is gone from here.
   // stars-zams-hr was 10 below the fold with 2,178px hidden. Fixed 2026-09-04: Start
   // Here and the Inference Log moved to the drawer, the 905px Selected Star card became a
   // strip under the plot, and the demo's custom grid gained the `readouts` row it never
