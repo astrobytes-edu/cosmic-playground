@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: the stage-first campaign is DONE for readouts -- no demo has a readout below the fold at 1440x900, and retrograde-motion, the last one, is also clean at 1920x1080, 1366x768 and 1280x720. Out of the BUDGETS map entirely: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry, seasons, spectral-lines, retrograde-motion. What remains is SIDEBAR overflow, measured at 1440x900: parallax-distance (920px), keplers-laws (929), eos-lab (508), binary-orbits (330), galaxy-rotation (148), doppler-shift (60), stars-zams-hr (25), spectral-lines/retrograde-motion (0 at 1440, 113/69 at 1280x720). The eos-lab and keplers-laws figures rose on 2026-09-05 without either demo getting worse -- see the accordion note below; the content was always there, collapsed to a 2px box. cluster-census still gates its stage rules on `min-height: 640px`, harmless at the sizes measured but the same shape of defect. KNOWN, NOT MINE: two binary-orbits `visual` baselines (`binary-orbits-rv-inclination-30`, `binary-orbits-rv-sb1`) fail on the `#rvPanel` canvas; verified 2026-09-05 that they fail identically on a clean tree, so they are pre-existing baseline drift. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: the stage-first campaign is DONE for readouts -- no demo has a readout below the fold at 1440x900, and retrograde-motion, the last one, is also clean at 1920x1080, 1366x768 and 1280x720. Out of the BUDGETS map entirely: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry, seasons, spectral-lines, retrograde-motion. What remains is SIDEBAR overflow, measured at 1440x900: parallax-distance (920px), keplers-laws (929), eos-lab (508), binary-orbits (330), galaxy-rotation (148), doppler-shift (60), stars-zams-hr (25), spectral-lines/retrograde-motion (0 at 1440, 113/69 at 1280x720). The eos-lab and keplers-laws figures rose on 2026-09-05 without either demo getting worse -- see the accordion note below; the content was always there, collapsed to a 2px box. No demo now gates its stage rules on viewport HEIGHT. KNOWN, NOT MINE: two binary-orbits `visual` baselines (`binary-orbits-rv-inclination-30`, `binary-orbits-rv-sb1`) fail on the `#rvPanel` canvas; verified 2026-09-05 that they fail identically on a clean tree, so they are pre-existing baseline drift. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -11,6 +11,40 @@ Research-grade interactive demos (physics unit-tested), deployed live, used in A
 
 ## Open
 - [ ] (no empirical learning data yet — assessment plan via CRMSE)
+
+## cluster-census height gate, 2026-09-05
+
+The last of the three height gates, and the one I had recorded as "harmless at the sizes
+measured". The four standard viewports were indeed clean; the cliff sat just below them.
+
+- **Dropping 1280x640 to 1280x600 grew the stage from 610px to 1003px** and put all eight
+  readouts 288px past the fold. Below the gate the three canvases regained their fixed
+  aspect ratios and summed to ~1,004px however short the window was -- the exact layout
+  the block above was written to replace. The gate's comment said the fallback was "the
+  grid overflows and the reader scrolls"; the fallback was actually the old bug.
+- **Floors on the drawing surfaces do not reach the grid rows.** At 1280x600 the cluster
+  panel needed 221px in a 172px row and painted over the histogram. The rows now carry
+  their own floors.
+- **`min-content` is the wrong floor for a row holding a canvas.** A `<canvas>` has an
+  intrinsic size from its backing store, so `minmax(min-content, 1fr)` resolved to whatever
+  the last render sized the bitmap to and blew the histogram up to 726px. It also measured
+  fine when injected into a settled page and only failed on a fresh load -- the backing
+  store had already been shrunk. Explicit px floors instead.
+
+1920x1080, 1440x900, 1366x768 and 1280x720 are unchanged to the pixel. 1280x600 goes from a
+1003px stage with eight readouts below the fold to a 570px stage with 33px to spare, and
+1280x640 from the same cliff to +73px.
+
+Found, pre-existing, NOT fixed: `.census-plot` centres its canvas in a row that can be
+shorter than the canvas's own 120px floor, so **the histogram canvas paints over its own
+legend** -- "bars are your draw; the line is the law", the line that names the orange
+curve's colour. Visible at 1366x768 (8px) and 1280x720 (18px) on the released build, and
+worse before this change at 640 (34px). Fixing it needs the whole row-floor chain: raising
+the histogram row to ~196px costs the cluster and HR canvases 16-20px at those two
+viewports and starts the HR canvas overflowing instead. That is a design trade, so it is
+recorded rather than taken.
+
+Gates: 1,833 demo tests, full suite 1,044 passed / 34 skipped / 0 failed.
 
 ## stars-zams-hr height gate, 2026-09-05
 
