@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry. Readouts clean at 1440x900, sidebars still overflowing: keplers-laws (844px), parallax-distance (882), binary-orbits (314), eos-lab (230), galaxy-rotation (148), doppler-shift (51), stars-zams-hr (40). Next: seasons (80px, 10 below the fold), spectral-lines (12 below), retrograde-motion (4 below). CHECK FIRST on each: the shell's stage floor (`min-height: clamp(420px, 70svh, 820px)`, 630px at a 900px viewport); any media query gating a stage bound on VIEWPORT HEIGHT (binary-orbits' was gated on min-height 820px, so it switched itself off at 1366x768 and 1280x720); whether the demo's grid HAS a readouts row; and sidebar prose that duplicates the shelf. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry, seasons. Readouts clean at 1440x900, sidebars still overflowing: parallax-distance (882px), keplers-laws (844), binary-orbits (314), eos-lab (230), galaxy-rotation (148), doppler-shift (51), stars-zams-hr (40). Next: spectral-lines (12 below the fold) and retrograde-motion (4 below) -- the last two with readouts under the fold. KNOWN NEXT DEFECT: stars-zams-hr gates its stage rules on `min-height: 745px`, so they switch off at 1280x720, the same bug binary-orbits had; cluster-census gates on 640px (harmless at the sizes measured) and spectral-lines uses `max-height: 768px`. Other checks: the shell's stage floor (630px at a 900px viewport, released on seven demos so far); whether the grid HAS a readouts row; sidebar prose that duplicates the shelf. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -395,6 +395,29 @@ What remains in that sidebar is live and control-adjacent, and stays: an inclina
 that computes sin(i) for the slider above it, and a Live response panel that answers the
 mass-ratio slider. 314px behind a working scroll fade is the honest stopping point for
 those -- the alternative is deleting content the demo teaches with.
+
+## seasons, 2026-09-04
+
+A 664px stage with all ten readouts below the fold. This demo has less viewport to spend
+than most: between its stage and its readouts sits a 176px row carrying the year scrub bar
+and the causal ladder.
+
+Its SVG is `width: 100%` at a 920x420 viewBox, so its height followed its column's width --
+452px at 1440, 671px at 1920. **The cap goes on width, multiplied by the viewBox's own
+ratio**, so the bordered box keeps hugging the drawing instead of letterboxing a gradient
+around it. At 1440 the column is narrower than the cap, so nothing changes there; it bites
+at 1366 and below, which is where every readout was off screen.
+
+Shell floor released with it, seventh demo running. The sidebar's one-line intro moved to
+the shelf's What to notice tab, clearing the last 40px.
+
+**Readouts below the fold 10 -> 0, sidebar 40 -> 0.** Sixth demo out of the map.
+
+Grepping for the binary-orbits bug found two more: **stars-zams-hr gates its stage rules on
+`min-height: 745px`**, so they switch off at 1280x720 exactly as binary-orbits' did;
+cluster-census gates on 640px, which is below every size measured here; spectral-lines uses
+`max-height: 768px`, a different shape. The stars-zams-hr one is a known defect waiting for
+its pass.
 
 ## The layout ratchet was measuring the wrong thing, 2026-09-04
 
