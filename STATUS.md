@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. Done and fully clean (out of the BUDGETS map): telescope-resolution, conservation-laws, planetary-conjunctions. Done with readouts clean but sidebars still overflowing: eos-lab (230px), doppler-shift (51), galaxy-rotation (148), keplers-laws (844), parallax-distance (882). Next: blackbody-radiation (289px hidden, 4 below the fold), eclipse-geometry (242px), binary-orbits (601px, 1 below), seasons (80px, 10 below), spectral-lines and stars-zams-hr. CHECK THE SHELL'S STAGE FLOOR FIRST on each: `min-height: clamp(420px, 70svh, 820px)` is 630px at a 900px viewport and it was the binding constraint on six demos running once their content came down -- it is a strong candidate for a shell-level change once enough demos have opted out individually. Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation. Readouts clean, sidebars still overflowing: eos-lab (230px), doppler-shift (51), galaxy-rotation (148), keplers-laws (844), parallax-distance (882). Next: eclipse-geometry (242px hidden, 0 below the fold), binary-orbits (601px, 1 below), seasons (80px, 10 below), spectral-lines (12 below), stars-zams-hr (40px). CHECK FIRST on each: the shell's stage floor (`min-height: clamp(420px, 70svh, 820px)`, 630px at a 900px viewport -- released individually on six demos so far), and whether the demo's grid even HAS a readouts row (blackbody's did not, so its strip auto-placed below the drawer at y=2237). Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -323,6 +323,35 @@ viewport, which is more than a bounded stage needs, so every demo in this pass e
 opting out of it one at a time. That is the shape of a rule that wants to move into the
 shell -- but not before enough demos have opted out to show what the right default is, and
 not while five demos still rely on the floor to look reasonable.
+
+## blackbody-radiation, 2026-09-04
+
+Its grid had no `readouts` area at all -- "no readouts column, the stage is the centrepiece"
+-- so the peak wavelength, the luminosity ratio and the star preview lived at the bottom of
+the **controls** panel. The sidebar held 1,083px in a 794px box: the peak wavelength sat at
+y=848 and the luminosity ratio at y=957, and neither number a reader comes for was fully on
+screen.
+
+The intent was right and the placement was not. A strip in the shell's readouts row keeps
+the stage the centrepiece and puts the numbers under the spectrum they describe.
+
+**A grid area that does not exist does not error.** An element asking for `grid-area:
+readouts` is auto-placed into an implicit row after everything else; the strip landed at
+y=2237, below the drawer. Worth checking on any demo with a custom `grid-template-areas`
+before moving anything into a shell row -- stars-zams-hr had the same gap.
+
+The spectrum canvas then needed capping -- 16:9 at `width: 100%`, `max-width: 980px` that
+only bit past 1920. Multiplying the viewport budget by 16/9 converts the height that is
+available into the width that produces it, which is how you cap a canvas without distorting
+it.
+
+**Readouts below the fold 4 -> 0, sidebar overflow 289 -> 0.** Fourth demo out of the map.
+
+One of the three E2E tests this broke had been asserting something false: "demo loads with
+shell sections visible (readouts in controls)" called `toBeVisible` on both readouts and
+passed the entire time they sat below the fold. `toBeVisible` is about rendering, not about
+being on screen -- the same class of thing as [[tests-encode-defects]], and a reminder that
+the layout ratchet exists because no ordinary assertion looks at geometry.
 
 ## The layout ratchet was measuring the wrong thing, 2026-09-04
 
