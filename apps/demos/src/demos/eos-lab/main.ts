@@ -122,10 +122,22 @@ function requestRegimeGridRebuild(): void {
 
 /** Cached renderMath — only re-renders KaTeX when text content changes. */
 const lastMathText = new WeakMap<HTMLElement, string>();
-function renderMathIfChanged(el: HTMLElement): void {
-  const text = el.textContent ?? "";
-  if (lastMathText.get(el) === text) return;
-  lastMathText.set(el, text);
+/**
+ * Set an element's text and typeset it, skipping the work when the source has not changed.
+ *
+ * This used to read the source back off the element after the caller had already written
+ * it, which is only safe while consecutive values differ. KaTeX replaces the element's
+ * contents, so once the caller writes the same source a second time the element holds raw
+ * LaTeX while the cache still says "already rendered", and the guard skips the render that
+ * would fix it. The bug was invisible while every call came from a slider moving to a new
+ * value; a resize handler re-rendering identical state made it visible immediately.
+ *
+ * Owning the write closes it: the cache is only updated on the path that also renders.
+ */
+function setMathText(el: HTMLElement, source: string): void {
+  if (lastMathText.get(el) === source) return;
+  lastMathText.set(el, source);
+  el.textContent = source;
   renderMath(el);
 }
 
@@ -632,13 +644,11 @@ function fermiRelativityRegimeLabelLatex(regime: StellarEosStateCgs["fermiRelati
 
 function renderAdvancedDiagnostics(model: StellarEosStateCgs): void {
   xFValue.textContent = formatScientific(model.fermiRelativityX, 5);
-  fermiRegimeValue.textContent = fermiRelativityRegimeLabelLatex(model.fermiRelativityRegime);
-  renderMathIfChanged(fermiRegimeValue);
+  setMathText(fermiRegimeValue, fermiRelativityRegimeLabelLatex(model.fermiRelativityRegime));
   finiteTCorrectionValue.textContent = Number.isFinite(model.finiteTemperatureDegeneracyCorrectionFactor)
     ? formatScientific(model.finiteTemperatureDegeneracyCorrectionFactor, 5)
     : "\u2014";
-  finiteTValidityValue.textContent = `${model.finiteTemperatureDegeneracyAssessment.label} (${electronDegeneracyMethodLabel(model.electronDegeneracyMethod)})`;
-  renderMathIfChanged(finiteTValidityValue);
+  setMathText(finiteTValidityValue, `${model.finiteTemperatureDegeneracyAssessment.label} (${electronDegeneracyMethodLabel(model.electronDegeneracyMethod)})`);
   neutronExtensionValue.textContent = formatScientific(model.neutronExtensionPressureDynePerCm2, 5);
 }
 
@@ -770,10 +780,11 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   // --- Regime map detail text ---
   const logT = Math.log10(model.input.temperatureK);
   const logRho = Math.log10(model.input.densityGPerCm3);
-  regimeDetail.textContent = `Point details: $\\log_{10}(T/\\mathrm{K})=${formatFraction(logT, 2)}$, $\\log_{10}(\\rho/(\\mathrm{g\\ cm^{-3}}))=${formatFraction(logRho, 2)}$, $P_{\\rm rad}/P_{\\rm gas}=${formatScientific(model.pressureRatios.radiationToGas, 3)}$, $P_{\\rm deg,e}/P_{\\rm tot}=${formatScientific(model.pressureRatios.degeneracyToTotal, 3)}$.`;
-  regimeSummary.textContent = `Interpretation: ${dominantChannelLabel(model)} dominates at the highlighted state; white markers show preset anchors.`;
-  renderMathIfChanged(regimeDetail);
-  renderMathIfChanged(regimeSummary);
+  setMathText(regimeDetail, `Point details: $\\log_{10}(T/\\mathrm{K})=${formatFraction(logT, 2)}$, $\\log_{10}(\\rho/(\\mathrm{g\\ cm^{-3}}))=${formatFraction(logRho, 2)}$, $P_{\\rm rad}/P_{\\rm gas}=${formatScientific(model.pressureRatios.radiationToGas, 3)}$, $P_{\\rm deg,e}/P_{\\rm tot}=${formatScientific(model.pressureRatios.degeneracyToTotal, 3)}$.`);
+  setMathText(
+    regimeSummary,
+    `Interpretation: ${dominantChannelLabel(model)} dominates at the highlighted state; white markers show preset anchors.`
+  );
 
   // --- Pressure cards ---
   const dominantP = dominantPressureValue(model);
@@ -811,8 +822,7 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   radGasValue.textContent = formatScientific(model.pressureRatios.radiationToGas, 5);
   degTotalValue.textContent = percent(model.pressureRatios.degeneracyToTotal, 2);
   chiDegValue.textContent = formatScientific(model.chiDegeneracy, 5);
-  degRegimeValue.textContent = degeneracyRegimeLabelLatex(model.degeneracyRegime);
-  renderMathIfChanged(degRegimeValue);
+  setMathText(degRegimeValue, degeneracyRegimeLabelLatex(model.degeneracyRegime));
 
   const gammaEff = adiabaticIndex({
     pGas: model.gasPressureDynePerCm2,
@@ -1420,6 +1430,43 @@ tabExplore?.addEventListener("click", () => {
     }
   });
 });
+
+/**
+ * Keep the two surfaces in step with the box the stage gives them.
+ *
+ * They used to be width-driven -- `aspect-ratio: 4 / 3` with `width: 100%` -- so they never
+ * needed this: their height followed their width, which followed layout. Now the stage is
+ * height-bounded and the surfaces take what is left, so a viewport change moves their
+ * height without moving their width, and neither uPlot nor a canvas notices that on its
+ * own. uPlot needs `setSize`; the regime map reads its element's CSS size on every render,
+ * so a plain re-render is enough.
+ */
+function initStageResize(): void {
+  if (typeof ResizeObserver !== "function") return;
+  let frame = 0;
+  const observer = new ResizeObserver(() => {
+    if (frame) cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      const { clientWidth, clientHeight } = pressureCurvePlotEl;
+      // uPlot's height is the plotting area only; its root also carries the legend below.
+      // Passing the container's full height therefore overflows it by the legend, and the
+      // container clips -- which took the x-axis off the bottom of the chart.
+      const legend = pressureCurvePlotEl.querySelector<HTMLElement>(".u-legend");
+      const legendHeight = legend ? Math.ceil(legend.getBoundingClientRect().height) : 0;
+      const height = clientHeight - legendHeight;
+      if (clientWidth > 0 && height > 60) {
+        pressurePlotHandle.plot.setSize({ width: clientWidth, height });
+      }
+      // The grid is cached by composition, so this repaints without recomputing it.
+      render({ deferGridRebuild: true });
+    });
+  });
+  observer.observe(pressureCurvePlotEl);
+  observer.observe(regimeMapCanvas);
+}
+
+initStageResize();
 
 // Comparison view (Tab 2) doesn't use uPlot charts, so no resize needed here.
 

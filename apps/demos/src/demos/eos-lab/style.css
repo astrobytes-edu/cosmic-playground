@@ -77,14 +77,17 @@
   display: none;
 }
 
+/* The three channel cards are readouts, and they now live in the readout strip rather than
+ * in the stage, where 222px of them competed with the plots. `min-height` was sized for a
+ * three-column grid inside the stage; in the strip it made every card 194px tall. */
 .pressure-card {
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-r-3);
   background: color-mix(in srgb, var(--cp-bg1) 92%, transparent);
-  padding: calc(var(--cp-space-3) + 1px);
+  padding: var(--cp-space-2);
   display: grid;
-  gap: var(--cp-space-2);
-  min-height: 10.75rem;
+  gap: var(--cp-space-1);
+  align-content: start;
   transition:
     border-color var(--cp-transition-slow) ease,
     box-shadow var(--cp-transition-slow) ease,
@@ -861,4 +864,129 @@
   color: var(--cp-bg0);
   border-color: var(--cp-accent-amber);
   font-weight: 600;
+}
+
+/* Presets behind a trigger.
+ *
+ * Measured 2026-09-04 at 1440x900: the six preset chips plus their note held 356px of a
+ * sidebar that was hiding 540px, the largest single block in any sidebar in the project. A
+ * trigger costs a fixed ~44px however many presets sit behind it, and unlike a bar in the
+ * playbar row it takes nothing from the stage -- which is the budget that was already
+ * spent. */
+.presets__trigger {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.presets__popover {
+  width: min(22rem, 90vw);
+  padding: var(--cp-space-3);
+  display: grid;
+  gap: var(--cp-space-2);
+}
+
+.presets__popover #presetButtons {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* -- Stage height budget -------------------------------------------------
+ * Measured 2026-09-04 at 1440x900, before this pass: the stage was 1,282px and all of the
+ * readouts sat below the fold. Both surfaces carried `aspect-ratio: 4 / 3` with
+ * `width: 100%`, which is width-driven: widen the window and the stage gets TALLER. Across
+ * the project nine of twenty stages behave that way, one of them growing 600px between a
+ * 1280 and a 1920 viewport. Horizontal space is the abundant resource here and vertical
+ * space is the scarce one, so that trade runs the wrong way.
+ *
+ * Three moves came first, because a bound alone would only have squeezed the plots:
+ *   - the two panel help paragraphs went to the drawer (209px);
+ *   - the three channel cards became readouts in the strip, where they belong (222px);
+ *   - the preset chips went behind a trigger (356px of sidebar).
+ *
+ * What is left is bounded and height-driven: each surface takes the height its column has
+ * rather than deriving height from width. `min-height: 0` is load-bearing -- a flex item
+ * refuses to shrink below its content size without it.
+ *
+ * uPlot and the regime canvas both size from their element, so `initStageResize` in main.ts
+ * re-renders them when the box changes. */
+@media (min-width: 1025px) {
+  .cp-demo__stage {
+    --eos-readout-reserve: 14rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-3);
+    min-height: 0;
+    box-sizing: border-box;
+    height: clamp(380px, calc(100svh - var(--eos-readout-reserve)), 900px);
+  }
+
+  .cp-demo__stage > .cp-tabs,
+  .stage-summary {
+    flex: none;
+  }
+
+  #panel-explore {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-3);
+  }
+
+  /* `align-items: start` from the base rule sizes each panel to its content, so the grid
+   * row never grows into the height the flex line hands it -- the surfaces stayed at their
+   * 120px floor. Stretch, with a row that is allowed to shrink. */
+  .eos-stage-grid {
+    flex: 1 1 0;
+    min-height: 0;
+    align-items: stretch;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .pressure-plot,
+  .regime-map {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .pressure-plot > *,
+  .regime-map > * {
+    flex: none;
+  }
+
+  /* `flex-basis: 0`, not `auto`. With `auto` the basis is the content size, and uPlot puts
+   * an explicitly sized root inside its container -- so `setSize` grew the container, which
+   * fired the ResizeObserver, which called `setSize` again. It ran away to 3,812px tall.
+   * A zero basis takes the height from the flex line instead, and `overflow: hidden` stops
+   * either surface's contents feeding back into the box that sizes them. */
+  .pressure-plot__surface,
+  .regime-map__surface {
+    flex: 1 1 0;
+    min-height: 120px;
+    overflow: hidden;
+    aspect-ratio: auto;
+    height: auto;
+  }
+}
+
+/* The four pressure numbers are what this demo is about; mu, mu_e, beta and the ratios are
+ * derived from them. Eleven readouts across the strip came to 326px, which the stage then
+ * could not afford -- its plots were down to 159px and 122px. Disclosed, the strip is one
+ * row and the plots get the difference back. */
+.eos-derived {
+  flex: 1 0 100%;
+}
+
+.eos-derived .cp-accordion__body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-3) var(--cp-space-5);
+  padding: var(--cp-space-3) var(--cp-space-4);
+}
+
+/* The crosshair's four numbers are the sliders' own values plus two of the ratios beside
+ * them, so they belong with the derived quantities rather than taking 80px of stage. */
+.eos-derived__detail {
+  flex: 1 0 100%;
+  margin: 0;
 }

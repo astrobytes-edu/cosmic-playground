@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 test.describe("EOS Lab -- E2E", () => {
   test.beforeEach(async ({ page }) => {
@@ -68,9 +69,21 @@ test.describe("EOS Lab -- E2E", () => {
     await expect(page.locator("#zValue")).toContainText("0.000");
   });
 
+  /**
+   * Choose a preset the way a reader does.
+   *
+   * The six preset chips moved behind a trigger on 2026-09-04: they held 356px of a sidebar
+   * that was hiding 540px, the largest single block of any sidebar in the project, and a
+   * trigger costs a fixed ~44px however many presets sit behind it.
+   */
+  async function choosePreset(page: Page, id: string): Promise<void> {
+    const trigger = page.locator(".presets__trigger");
+    if ((await trigger.getAttribute("aria-expanded")) !== "true") await trigger.click();
+    await page.locator(`button.cp-chip[data-preset-id="${id}"]`).first().click();
+  }
+
   test("white dwarf preset selects degeneracy-dominated state", async ({ page }) => {
-    // Use cp-chip class to target Tab 1 sidebar presets (Tab 2 also uses cp-chip + compare-preset)
-    await page.locator('button.cp-chip[data-preset-id="white-dwarf-core"]').first().click();
+    await choosePreset(page, "white-dwarf-core");
     await expect(page.locator("#dominantChannel")).toContainText("Electron degeneracy pressure");
   });
 
@@ -260,8 +273,8 @@ test.describe("EOS Lab -- E2E", () => {
     await expect(suggestion).toBeVisible();
     const before = await suggestion.textContent();
     expect(before!.length).toBeGreaterThan(10);
-    // Switch to white dwarf preset — dominant channel changes, suggestion should too
-    await page.locator('button.cp-chip[data-preset-id="white-dwarf-core"]').first().click();
+    // Switch to white dwarf preset -- dominant channel changes, suggestion should too
+    await choosePreset(page, "white-dwarf-core");
     const after = await suggestion.textContent();
     expect(after!.length).toBeGreaterThan(10);
     // White dwarf is degeneracy-dominated, so suggestion should differ from default gas

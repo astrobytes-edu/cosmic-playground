@@ -94,8 +94,14 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(html).toContain("$m_u$");
     expect(mainTs).toContain("x_F \\\\ll 1");
     expect(mainTs).toContain("T/T_F \\\\ll 1");
-    expect(mainTs).toContain("renderMathIfChanged(degRegimeValue)");
-    expect(mainTs).toContain("renderMathIfChanged(fermiRegimeValue)");
+    // `setMathText` replaced `renderMathIfChanged` on 2026-09-04. The old helper read the
+    // source back off the element AFTER the caller had written it, so writing the same
+    // value twice left raw LaTeX on screen: KaTeX had replaced the contents, the cache
+    // still said "rendered", and the guard skipped the render that would have fixed it.
+    // The helper owns the write now, so the cache is only set on the path that renders.
+    expect(mainTs).toContain("setMathText(degRegimeValue,");
+    expect(mainTs).toContain("setMathText(fermiRegimeValue,");
+    expect(mainTs).not.toContain("renderMathIfChanged");
   });
 
   it("exports advanced diagnostics in copy-results payload", () => {

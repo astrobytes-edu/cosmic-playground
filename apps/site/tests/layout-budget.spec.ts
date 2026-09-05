@@ -63,7 +63,12 @@ const BUDGETS: Record<string, Budget> = {
   // panel given the full grid width. Not yet clean -- the Energy view has the most
   // readouts of any -- but no longer the outlier.
   "binary-orbits": { readoutsBelowFold: 1, sidebarOverflowPx: 650 },
-  "eos-lab": { readoutsBelowFold: 14, sidebarOverflowPx: 580 },
+  // eos-lab was 14 below the fold with 540px of sidebar hidden and a 1,282px stage. Fixed
+  // 2026-09-04: both panel help paragraphs to the drawer, the three channel cards into the
+  // strip where they belong, the seven derived quantities behind a disclosure, presets
+  // behind a trigger, and the stage bounded with both surfaces made height-driven. The
+  // remaining overflow is the sidebar's own controls.
+  "eos-lab": { readoutsBelowFold: 0, sidebarOverflowPx: 240 },
   "galaxy-rotation": { readoutsBelowFold: 22, sidebarOverflowPx: 360 },
   "doppler-shift": { readoutsBelowFold: 20, sidebarOverflowPx: 380 },
   // keplers-laws was 7 below the fold. Fixed 2026-09-04: the stage is height-bounded and
