@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation. Readouts clean, sidebars still overflowing: eos-lab (230px), doppler-shift (51), galaxy-rotation (148), keplers-laws (844), parallax-distance (882). Next: eclipse-geometry (242px hidden, 0 below the fold), binary-orbits (601px, 1 below), seasons (80px, 10 below), spectral-lines (12 below), stars-zams-hr (40px). CHECK FIRST on each: the shell's stage floor (`min-height: clamp(420px, 70svh, 820px)`, 630px at a 900px viewport -- released individually on six demos so far), and whether the demo's grid even HAS a readouts row (blackbody's did not, so its strip auto-placed below the drawer at y=2237). Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
+next: continue the stage-first sidebar plan, demo by demo. Fully clean and out of the BUDGETS map: telescope-resolution, conservation-laws, planetary-conjunctions, blackbody-radiation, eclipse-geometry. Readouts clean, sidebars still overflowing: eos-lab (230px), doppler-shift (51), galaxy-rotation (148), keplers-laws (844), parallax-distance (882), stars-zams-hr (40). Next: binary-orbits (601px hidden, 1 below the fold), seasons (80px, 10 below), spectral-lines (12 below), retrograde-motion (4 below). CHECK FIRST on each: the shell's stage floor (`min-height: clamp(420px, 70svh, 820px)`, 630px at a 900px viewport -- released individually on six demos so far); whether the demo's grid HAS a readouts row (blackbody's did not); and whether sidebar prose duplicates the shelf (eclipse's 206px callout said exactly what the shelf's default tab said). Also open: port the progenax/startrax cross-validation fixtures for the IMF and cluster models; the star-cluster dynamics demo; explore's inert filters; instructor bundles for cluster-census + stars-zams-hr
 blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
 due:
 
@@ -352,6 +352,27 @@ shell sections visible (readouts in controls)" called `toBeVisible` on both read
 passed the entire time they sat below the fold. `toBeVisible` is about rendering, not about
 being on screen -- the same class of thing as [[tests-encode-defects]], and a reminder that
 the layout ratchet exists because no ordinary assertion looks at geometry.
+
+## eclipse-geometry, 2026-09-04
+
+Readouts already on screen; the sidebar hid 242px at 1440x900 and 483px at 1280x720. Two
+items were nearly all of it: a 91px intro and a **206px model callout**, both prose, in a
+794px box.
+
+The callout said what the shelf's default tab already said -- eclipses need the Moon near a
+node AND New or Full phase -- so removing it was de-duplication rather than demotion. The
+one thing it added, the definition of a node, moved into that bullet. **Worth checking on
+every remaining demo: sidebar prose that repeats the shelf.**
+
+**Sidebar hidden 242 -> 0.** Fifth demo out of the map.
+
+The screenshot then showed a defect nothing else would have: the two node labels were pinned
+at fixed points, x=0 with y=-156 and y=170, while the dots they name move around the orbit
+with the node longitude. So "asc. node 210" sat at the top of the circle whatever the
+ascending node was doing, and at the default longitude the lower label landed on the
+schematic caption and the two strings overlapped. Each label follows its own dot now, with
+`text-anchor` picked from the side it is on. The angles are the ones the dots already use,
+so no computed quantity changed.
 
 ## The layout ratchet was measuring the wrong thing, 2026-09-04
 
