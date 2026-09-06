@@ -483,7 +483,23 @@ test.describe("Cluster Census", () => {
         heaviestBottom: rect("#mostMassive").bottom,
         clusterHeight: rect("#clusterCanvas").height,
         hrHeight: rect("#hrCanvas").height,
-        imfHeight: rect("#imfCanvas").height
+        imfHeight: rect("#imfCanvas").height,
+        // How far each canvas escapes the box that is supposed to hold it, in either
+        // direction. `.census-plot` centres its items so a canvas taller than its row
+        // spills BOTH ways -- over the legend above and the axis title below.
+        canvasEscape: ["#clusterCanvas", "#hrCanvas", "#imfCanvas"]
+          .map((sel) => {
+            const el = q(sel);
+            const own = el.getBoundingClientRect();
+            const box = el.parentElement!.getBoundingClientRect();
+            return {
+              sel,
+              px: Math.round(
+                Math.max(0, box.top - own.top) + Math.max(0, own.bottom - box.bottom)
+              )
+            };
+          })
+          .filter((x) => x.px > 2)
       };
     });
   };
@@ -512,6 +528,11 @@ test.describe("Cluster Census", () => {
       expect(layout.clusterHeight).toBeGreaterThanOrEqual(160);
       // The cluster and the HR diagram are the comparison; the histogram supports them.
       expect(layout.clusterHeight).toBeGreaterThan(layout.imfHeight);
+      // A canvas that outgrows its row does not shrink -- it spills over the legend above
+      // and the axis title below, and nothing above catches it, because the heights are
+      // all still "readable". At 1280x720 the histogram covered the line naming the
+      // orange curve's colour, leaving "bars are" and nothing else.
+      expect(layout.canvasEscape).toEqual([]);
     });
   }
 

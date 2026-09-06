@@ -630,13 +630,12 @@
      * backing store, so `min-content` here resolves to whatever the last render sized the
      * bitmap to, not to the 120-170px floors below -- which blew the histogram up to 726px.
      *
-     * They are deliberately below the panels' full content height. Raising the second to
-     * ~196px (title + canvas floor + axis title) does stop the histogram canvas overlapping
-     * its own legend, but it takes that room from the row above: the cluster and HR
-     * canvases lose 16-20px at 1366x768 and 1280x720, and the HR canvas starts overflowing
-     * instead. That legend overlap is older than this rule and is left alone here.
+     * The numbers are each row's measured content: panel title 45 + gap 4 + the canvas
+     * floor below + gap 2 + axis title 24. Set lower, the row still fits but the CANVAS
+     * does not, and `align-items: center` on `.census-plot` spills it evenly over the
+     * legend above and the axis title below.
      */
-    grid-template-rows: minmax(224px, 1fr) minmax(142px, 0.66fr) auto;
+    grid-template-rows: minmax(226px, 1fr) minmax(176px, 0.66fr) auto;
   }
 
   .census-panel {
@@ -664,8 +663,30 @@
     aspect-ratio: auto;
   }
 
-  .census-plot {
-    grid-template-rows: minmax(0, 1fr) auto;
+  /*
+   * A panel title and its hint fit one line at these widths, and the hint stacked below
+   * cost each panel 21px of the height its plot needed. They wrap on their own when the
+   * panel is too narrow, so this buys the room back without hiding anything.
+   */
+  .census-panel__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.5rem;
+  }
+
+  /*
+   * The canvas row carries the canvas's own floor. Without it the row is free to shrink
+   * below the canvas, which then overflows -- and because `.census-plot` centres its items
+   * (for the vertical y-axis title), it overflows in BOTH directions: 18px over the legend
+   * above and 18px over the axis title below, at 1280x720.
+   */
+  .census-panel--hr .census-plot {
+    grid-template-rows: minmax(172px, 1fr) auto;
+  }
+
+  .census-panel--imf .census-plot {
+    grid-template-rows: minmax(122px, 1fr) auto;
   }
 
   .census-plot canvas,
