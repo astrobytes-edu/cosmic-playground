@@ -12,6 +12,41 @@ Research-grade interactive demos (physics unit-tested), deployed live, used in A
 ## Open
 - [ ] (no empirical learning data yet — assessment plan via CRMSE)
 
+## cluster-census: the histogram covered its own legend, 2026-09-05
+
+Followed the height-gate work. `.census-plot` centres its items (for the vertical y-axis
+title), so a canvas taller than its row spills BOTH ways -- over the legend above and the
+axis title below. At 1280x720 the histogram covered the line naming the orange curve's
+colour, leaving "bars are" and nothing else. Measured 18px at 1280x720, 8px at 1366x768.
+
+Three things had to be established before touching it:
+
+- **The 120px canvas floor is real.** Rendered the histogram at 86/92/100/110/120px: at 110
+  and below the 10^3 and 10^2 decade labels collide into a blob. The demo's own contract
+  test allows 110, which is a little optimistic; the CSS floor of 120 is the honest one.
+- **The panel titles were spending a line they did not need.** `.census-panel__hint` was
+  `display: block`, stacking the hint under the title for 21px per panel. At these widths
+  they fit one line; `flex-wrap` lets them stack again when the panel is narrow. That alone
+  gave every canvas 21px back -- the cluster and HR diagrams are now 345 and 321px at
+  1440x900, up from 324 and 300.
+- **The floors have to hold all the way up.** A floor on the canvas alone leaves the row
+  free to shrink under it. The plot row now carries the canvas's border-box (172/122) and
+  the grid row carries the whole panel (226/176).
+
+Measured after, against the demo's own contract at 1920x1080, 1440x900, 1366x768 and
+1280x720: no canvas escapes its container at any of them, and none below either, down to
+1280x600. Canvases 453/430/266 at 1920, 345/321/194 at 1440, 224/200/128 at 1366,
+180/174/124 at 1280x720. The one cost is the cluster canvas at 1280x720, 195 -> 180px,
+still well clear of the 160px the contract requires.
+
+**The contract could not see this.** It checked canvas heights and the strip's position,
+both of which stayed valid while the canvas sat on top of the legend. It now also checks
+that each canvas stays inside the box meant to hold it -- proven RED, failing at exactly
+1366x768 and 1280x720 on the pre-fix stylesheet.
+
+Gates: site typecheck 0 errors, 1,833 demo tests, cluster-census 41/41, full suite 1,044
+passed / 34 skipped / 0 failed.
+
 ## cluster-census height gate, 2026-09-05
 
 The last of the three height gates, and the one I had recorded as "harmless at the sizes
@@ -35,14 +70,8 @@ measured". The four standard viewports were indeed clean; the cliff sat just bel
 1003px stage with eight readouts below the fold to a 570px stage with 33px to spare, and
 1280x640 from the same cliff to +73px.
 
-Found, pre-existing, NOT fixed: `.census-plot` centres its canvas in a row that can be
-shorter than the canvas's own 120px floor, so **the histogram canvas paints over its own
-legend** -- "bars are your draw; the line is the law", the line that names the orange
-curve's colour. Visible at 1366x768 (8px) and 1280x720 (18px) on the released build, and
-worse before this change at 640 (34px). Fixing it needs the whole row-floor chain: raising
-the histogram row to ~196px costs the cluster and HR canvases 16-20px at those two
-viewports and starts the HR canvas overflowing instead. That is a design trade, so it is
-recorded rather than taken.
+The histogram-legend overlap this turned up was fixed the same day -- see the section
+above.
 
 Gates: 1,833 demo tests, full suite 1,044 passed / 34 skipped / 0 failed.
 
