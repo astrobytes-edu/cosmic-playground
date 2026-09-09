@@ -23,6 +23,12 @@ export type DemoCardProps = {
   instructorHref?: string;
   playlistCount?: number;
   playlistHref?: string;
+  /** ISO date; feeds the client-side "recently updated" facet. */
+  lastUpdated?: string;
+  /** Free-text haystack for the Explore search box (title, tags, learning goals). */
+  searchText?: string;
+  /** Also shown in the Explore featured strip, so this copy is hidden while unfiltered. */
+  featured?: boolean;
 };
 
 const {
@@ -42,7 +48,10 @@ const {
   stationHref,
   instructorHref,
   playlistCount = 0,
-  playlistHref
+  playlistHref,
+  lastUpdated = "",
+  searchText = "",
+  featured = false
 } = Astro.props as DemoCardProps;
 
 const topic = primaryTopic(topics);
@@ -77,7 +86,20 @@ const timeLabel =
   timeMinutes <= 10 ? "\u226410 min" : timeMinutes <= 20 ? "10\u201320 min" : "20+ min";
 ---
 
-<article class="demo-card cp-card" style={`--topic-color: ${color}`}>
+<article
+  class="demo-card cp-card"
+  style={`--topic-color: ${color}`}
+  data-slug={slug}
+  data-topics={topics.join(" ")}
+  data-levels={levels.join(" ")}
+  data-time={String(timeMinutes)}
+  data-status={status}
+  data-math={hasMathMode ? "yes" : "no"}
+  data-station={stationHref && stationHref.trim().length > 0 ? "yes" : "no"}
+  data-updated={lastUpdated}
+  data-search={`${title} ${searchText}`.toLowerCase()}
+  data-featured={featured ? "yes" : "no"}
+>
   <div class="demo-card__top">
     <a class="demo-card__illustration-link" href={href} aria-label={`Open exhibit: ${title}`}>
       <div class="demo-card__illustration">

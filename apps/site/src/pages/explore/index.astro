@@ -11,18 +11,11 @@ import {
   TOPIC_LABEL,
   TOPIC_ORDER,
   TOPIC_SUMMARY,
-  isTopicKey,
   topicPath
 } from "../../lib/topics";
 import {
   demoKeyIdea,
   listedDemos,
-  demoLevelRank,
-  demoTimeBucket,
-  hasAstr101Level,
-  hasNoMathMode,
-  hasStationPath,
-  isRecentlyUpdated,
   normalizeBasePathPath,
   parseIsoDate,
   playlistMembershipMap
@@ -35,18 +28,16 @@ const base = import.meta.env.BASE_URL;
 const withBase = (path: string) => normalizeBasePathPath(path, base);
 const exploreHref = withBase("explore/");
 
-const q = Astro.url.searchParams.get("q")?.trim() ?? "";
-const topic = Astro.url.searchParams.get("topic")?.trim() ?? "";
-const level = Astro.url.searchParams.get("level")?.trim() ?? "";
-const time = Astro.url.searchParams.get("time")?.trim() ?? "";
-const status = Astro.url.searchParams.get("status")?.trim() ?? "";
-const math = Astro.url.searchParams.get("math")?.trim() ?? "";
-const quick = Astro.url.searchParams.get("quick")?.trim() ?? "";
-const sort = Astro.url.searchParams.get("sort")?.trim() || "recommended";
-
+/*
+ * No `Astro.url.searchParams` here. This page is prerendered (`output: "static"`), so
+ * frontmatter runs once at build time with every parameter empty -- reading filters here
+ * is what made the entire filter bar inert. The page now renders the FULL catalogue and
+ * `explore/filters.ts` narrows it in the browser, where the query string actually exists.
+ */
 const topics = Array.from(new Set(demos.flatMap((d) => d.data.topics))).sort();
-const levels = Array.from(new Set(demos.flatMap((d) => d.data.levels))).sort();
 const statuses = Array.from(new Set(demos.map((d) => d.data.status))).sort();
+/* `Both` is a tag meaning "either course", not a course a reader can pick. */
+const levels = ["ASTR101", "ASTR201"];
 
 const playlistBySlug = new Map<string, (typeof playlists)[number]>(
   playlists.map((playlist) => [playlist.slug, playlist] as [string, (typeof playlists)[number]])
@@ -73,78 +64,19 @@ function excerptFromBody(body: string) {
 
 type QuickFilterKey = "astr101" | "lt10" | "noMath" | "labs" | "updated";
 
-function matchQuickFilter(slug: QuickFilterKey, demo: (typeof demos)[number]) {
-  if (slug === "astr101") return hasAstr101Level(demo.data.levels);
-  if (slug === "lt10") return demo.data.time_minutes <= 10;
-  if (slug === "noMath") return hasNoMathMode(demo);
-  if (slug === "labs") return hasStationPath(demo);
-  return isRecentlyUpdated(demo.data.last_updated);
-}
-
-const filtered = demos
-  .filter((d) => {
-    const hay = `${d.data.title} ${d.data.tags.join(" ")} ${d.data.learning_goals.join(" ")}`
-      .toLowerCase()
-      .trim();
-    const needle = q.toLowerCase().trim();
-    return needle.length === 0 ? true : hay.includes(needle);
-  })
-  .filter((d) => (topic ? d.data.topics.includes(topic as any) : true))
-  .filter((d) => (level ? d.data.levels.includes(level as any) : true))
-  .filter((d) => (status ? d.data.status === status : true))
-  .filter((d) => (math ? d.data.has_math_mode === (math === "yes") : true))
-  .filter((d) => (time ? demoTimeBucket(d.data.time_minutes) === time : true))
-  .filter((d) => {
-    if (!quick) return true;
-    return matchQuickFilter(quick as QuickFilterKey, d);
-  });
-
+/*
+ * Every demo is rendered, in the default "recommended" order, and the client script
+ * hides what the active filters exclude. A demo with two topics is rendered in both of
+ * its topic sections, so counts must be taken over distinct slugs, not over cards.
+ */
 const statusRank: Record<string, number> = { stable: 0, beta: 1, draft: 2 };
 
-const sorted = [...filtered].sort((a, b) => {
-  if (sort === "duration") return a.data.time_minutes - b.data.time_minutes;
-  if (sort === "level") {
-    return (
-      demoLevelRank(a.data.levels) - demoLevelRank(b.data.levels) ||
-      a.data.title.localeCompare(b.data.title)
-    );
-  }
-  if (sort === "updated") {
-    return parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated);
-  }
-
-  return (
+const sorted = [...demos].sort(
+  (a, b) =>
     (statusRank[a.data.status] ?? 99) - (statusRank[b.data.status] ?? 99) ||
     parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated) ||
     a.data.title.localeCompare(b.data.title)
-  );
-});
-
-const params = Astro.url.searchParams;
-const buildHref = (next: URLSearchParams) => {
-  const qs = next.toString();
-  return qs ? `${exploreHref}?${qs}` : exploreHref;
-};
-
-const chips: { label: string; href: string }[] = [];
-const addChip = (key: string, label: string) => {
-  const next = new URLSearchParams(params);
-  next.delete(key);
-  chips.push({ label, href: buildHref(next) });
-};
-
-const timeLabels: Record<string, string> = {
-  lt10: "\u226410 min",
-  "10to20": "10\u201320 min",
-  gt20: "20+ min"
-};
-
-const sortLabels: Record<string, string> = {
-  recommended: "Recommended",
-  duration: "Duration",
-  level: "Level",
-  updated: "Recently updated"
-};
+);
 
 const quickLabels: Record<QuickFilterKey, string> = {
   astr101: "ASTR 101",
@@ -154,46 +86,33 @@ const quickLabels: Record<QuickFilterKey, string> = {
   updated: "New / Updated"
 };
 
-if (q) addChip("q", `Search: ${q}`);
-if (topic) addChip("topic", `Topic: ${isTopicKey(topic) ? TOPIC_LABEL[topic] : topic}`);
-if (level) addChip("level", `Course level: ${level}`);
-if (time) addChip("time", `Time budget: ${timeLabels[time] ?? time}`);
-if (status) addChip("status", `Status: ${status}`);
-if (math) addChip("math", `Math required: ${math === "yes" ? "Yes" : "No"}`);
-if (quick && quick in quickLabels) addChip("quick", `Quick: ${quickLabels[quick as QuickFilterKey]}`);
-if (sort && sort !== "recommended") addChip("sort", `Sort: ${sortLabels[sort] ?? sort}`);
+/*
+ * Hrefs, not buttons: with JS disabled these are ordinary links to a URL the script reads
+ * on load, so the chips still communicate what they do. The script intercepts the click
+ * to filter in place rather than round-tripping to a page that cannot honour the query.
+ */
+const quickFilterItems: Array<{ key: QuickFilterKey; label: string; href: string }> = (
+  ["astr101", "lt10", "noMath", "labs", "updated"] as const
+).map((key) => ({
+  key,
+  label: quickLabels[key],
+  href: `${exploreHref}?quick=${key}`
+}));
 
-const quickFilterItems: Array<{ key: QuickFilterKey; label: string; href: string; active: boolean }> =
-  (["astr101", "lt10", "noMath", "labs", "updated"] as const).map((key) => {
-    const next = new URLSearchParams(params);
-    if (quick === key) next.delete("quick");
-    else next.set("quick", key);
-    return {
-      key,
-      label: quickLabels[key],
-      href: buildHref(next),
-      active: quick === key
-    };
-  });
+const featuredSlugs = new Set(featured.map((d) => d.slug));
+
+const topicSections = TOPIC_ORDER.map((key) => ({
+  key,
+  label: TOPIC_LABEL[key],
+  demos: sorted.filter((d) => d.data.topics.includes(key as any))
+})).filter((section) => section.demos.length > 0);
 
 const allSlugs = demos.map((d) => d.slug);
 const randomSlug = allSlugs[Math.floor(Math.random() * allSlugs.length)];
 
-const noFilters = chips.length === 0;
-const showFeatured = noFilters && featured.length > 0;
-const featuredSlugs = new Set(featured.map((d) => d.slug));
-
-const topicSections = noFilters
-  ? TOPIC_ORDER
-      .map((key) => ({
-        key,
-        label: TOPIC_LABEL[key],
-        demos: sorted.filter(
-          (d) => d.data.topics.includes(key as any) && !featuredSlugs.has(d.slug)
-        )
-      }))
-      .filter((section) => section.demos.length > 0)
-  : [];
+/** Free-text haystack for the search box; the card lowercases it with its own title. */
+const searchTextFor = (d: (typeof demos)[number]) =>
+  `${d.data.tags.join(" ")} ${d.data.learning_goals.join(" ")}`;
 
 type StartHereTile = {
   title: string;
@@ -287,44 +206,21 @@ const startHere = startHereTiles.map((tile) => {
     </div>
   </section>
 
-  <FilterBar
-    query={q}
-    topic={topic}
-    level={level}
-    time={time}
-    status={status}
-    math={math}
-    sort={sort}
-    topics={topics}
-    levels={levels}
-    statuses={statuses}
-  />
+  <FilterBar topics={topics} levels={levels} statuses={statuses} />
 
   <nav class="quick-filters" aria-label="Quick filters">
     {quickFilterItems.map((item) => (
-      <a
-        class:list={["cp-chip", "quick-filters__chip", { "quick-filters__chip--active": item.active }]}
-        href={item.href}
-      >
+      <a class="cp-chip quick-filters__chip" href={item.href} data-quick={item.key} aria-pressed="false">
         {item.label}
       </a>
     ))}
   </nav>
 
-  {chips.length > 0 ? (
-    <div class="filter-chips" aria-label="Active filters">
-      {chips.map((chip) => (
-        <a class="cp-chip" href={chip.href}>
-          {chip.label} <span aria-hidden="true">×</span>
-        </a>
-      ))}
-      <a class="cp-chip cp-chip--clear" href={exploreHref}>Clear all</a>
-    </div>
-  ) : null}
+  <div class="filter-chips" aria-label="Active filters" data-filter-chips hidden></div>
 
 
-  {showFeatured && featured.length > 0 ? (
-    <section class="featured" aria-label="Featured sequence">
+  {featured.length > 0 ? (
+    <section class="featured" aria-label="Featured sequence" data-unfiltered-only>
       <div class="featured__header">
         <h2>Featured sequence</h2>
         <p class="featured__lede">Begin with the core orbit ideas before branching out.</p>
@@ -354,20 +250,18 @@ const startHere = startHereTiles.map((tile) => {
     </section>
   ) : null}
 
-  {noFilters ? (
-    <div class="explore-onboard">
+  <div class="explore-onboard" data-unfiltered-only>
       <ul class="explore-onboard__cadence" aria-label="Predict, Play, Explain">
         <li>Predict</li>
         <li>Play</li>
         <li>Explain</li>
       </ul>
-      <p class="explore-onboard__lede">A simple loop for every exhibit.</p>
-    </div>
-  ) : null}
+    <p class="explore-onboard__lede">A simple loop for every exhibit.</p>
+  </div>
 
   <div class="results__count">
-    <span class="results__count-value">{sorted.length}</span>
-    <span class="results__count-unit">interactive exhibit{sorted.length === 1 ? "" : "s"}</span>
+    <span class="results__count-value" data-result-count>{sorted.length}</span>
+    <span class="results__count-unit" data-result-unit>interactive exhibits</span>
     <a
       class="cp-button cp-button--ghost results__surprise"
       href={withBase(`exhibits/${randomSlug}/`)}
@@ -377,60 +271,30 @@ const startHere = startHereTiles.map((tile) => {
     </a>
   </div>
 
-  {noFilters ? (
-    <nav class="topic-index" aria-label="Jump to topic">
+  <nav class="topic-index" aria-label="Jump to topic" data-unfiltered-only>
       {topicSections.map((section) => (
         <a class="cp-chip topic-index__link" href={`#topic-${section.key.toLowerCase()}`}>
           {section.label}
-        </a>
-      ))}
-    </nav>
-  ) : null}
+      </a>
+    ))}
+  </nav>
 
   <section class="results" aria-label="Demo results">
-    {noFilters ? (
-      <div class="cp-section">
-        {topicSections.map((section) => (
-          <div class="topic-section" id={`topic-${section.key.toLowerCase()}`}>
-            <div class="topic-section__header" style={`--topic-color: ${topicColor(section.key)}`}>
-              <TopicIcon topic={section.key} size={28} />
-              <div>
-                <h2 class="topic-section__title">
-                  <a href={withBase(topicPath(section.key))}>{section.label}</a>
-                </h2>
-                <p class="topic-section__desc">{TOPIC_SUMMARY[section.key]}</p>
-              </div>
+    <div class="cp-section">
+      {topicSections.map((section) => (
+        <div class="topic-section" id={`topic-${section.key.toLowerCase()}`} data-topic-section={section.key}>
+          <div class="topic-section__header" style={`--topic-color: ${topicColor(section.key)}`}>
+            <TopicIcon topic={section.key} size={28} />
+            <div>
+              <h2 class="topic-section__title">
+                <a href={withBase(topicPath(section.key))}>{section.label}</a>
+              </h2>
+              <p class="topic-section__desc">{TOPIC_SUMMARY[section.key]}</p>
             </div>
-            <div class="results__grid">
-              {section.demos.map((d) => (
-                <DemoCard
-                  title={d.data.title}
-                  slug={d.slug}
-                  href={withBase(`exhibits/${d.slug}/`)}
-                  description={excerptFromBody(d.body)}
-                  status={d.data.status}
-                  readiness={d.data.readiness}
-                  topics={d.data.topics}
-                  levels={d.data.levels}
-                  timeMinutes={d.data.time_minutes}
-                  hasMathMode={d.data.has_math_mode}
-                  keyIdea={demoKeyIdea(d)}
-                  playHref={normalizeBasePathPath(d.data.demo_path, base)}
-                  stationHref={normalizeBasePathPath(d.data.station_path, base)}
-                  instructorHref={normalizeBasePathPath(d.data.instructor_path, base)}
-                  playlistCount={playlistCounts.get(d.slug) ?? 0}
-                  playlistHref={`${withBase("playlists/")}?demo=${encodeURIComponent(d.slug)}`}
-                />
-              ))}
-            </div>
+            <span class="topic-section__count" data-section-count hidden></span>
           </div>
-        ))}
-      </div>
-    ) : (
-      <>
-        {sorted.length > 0 ? (
           <div class="results__grid">
-            {sorted.map((d) => (
+            {section.demos.map((d) => (
               <DemoCard
                 title={d.data.title}
                 slug={d.slug}
@@ -448,36 +312,316 @@ const startHere = startHereTiles.map((tile) => {
                 instructorHref={normalizeBasePathPath(d.data.instructor_path, base)}
                 playlistCount={playlistCounts.get(d.slug) ?? 0}
                 playlistHref={`${withBase("playlists/")}?demo=${encodeURIComponent(d.slug)}`}
+                lastUpdated={d.data.last_updated}
+                searchText={searchTextFor(d)}
+                featured={featuredSlugs.has(d.slug)}
               />
             ))}
           </div>
-        ) : (
-          <EmptyState />
-        )}
-      </>
-    )}
+        </div>
+      ))}
+    </div>
+
+    <div data-empty-state hidden>
+      <EmptyState />
+    </div>
   </section>
 </Layout>
 
 <script>
-  const form = document.querySelector("[data-filter-form]");
-  if (form instanceof HTMLFormElement) {
-    form.classList.add("is-enhanced");
-    const search = form.querySelector("input[name='q']");
-    const selects = form.querySelectorAll("select");
-    let timer = 0;
-    const submit = () => (form.requestSubmit ? form.requestSubmit() : form.submit());
+  import {
+    EMPTY_FILTERS,
+    FILTER_KEYS,
+    NARROWING_KEYS,
+    compareDemos,
+    facetCount,
+    hasNarrowingFilter,
+    matches,
+    readFilters,
+    toSearchParams
+  } from "../../lib/exploreFilter";
+  import type { DemoFacets, FilterKey, Filters, NarrowingKey } from "../../lib/exploreFilter";
 
-    if (search) {
-      search.addEventListener("input", () => {
-        clearTimeout(timer);
-        timer = window.setTimeout(submit, 300);
+  const results = document.querySelector(".results");
+  const form = document.querySelector("[data-filter-form]");
+
+  if (results instanceof HTMLElement && form instanceof HTMLFormElement) {
+    /* Narrowing does not reach hoisted function declarations, so pin the type here. */
+    const filterForm: HTMLFormElement = form;
+    /*
+     * Only cards inside a topic section are catalogue entries. The featured strip renders
+     * three of the same demos again as a presentation device; counting those would report
+     * 23 exhibits for a catalogue of 20.
+     */
+    const cards = [...results.querySelectorAll<HTMLElement>("[data-topic-section] .demo-card")];
+    const sections = [...results.querySelectorAll<HTMLElement>("[data-topic-section]")];
+    const unfilteredOnly = [...document.querySelectorAll<HTMLElement>("[data-unfiltered-only]")];
+    const chipBox = document.querySelector<HTMLElement>("[data-filter-chips]");
+    const emptyState = results.querySelector<HTMLElement>("[data-empty-state]");
+    const countValue = document.querySelector<HTMLElement>("[data-result-count]");
+    const countUnit = document.querySelector<HTMLElement>("[data-result-unit]");
+    const quickChips = [...document.querySelectorAll<HTMLAnchorElement>("[data-quick]")];
+    const resetButton = document.querySelector<HTMLElement>("[data-filter-reset]");
+    const searchInput = form.querySelector<HTMLInputElement>("input[name='q']");
+    const selects = [...form.querySelectorAll<HTMLSelectElement>("select")];
+
+    const facetsOf = (card: HTMLElement): DemoFacets => ({
+      slug: card.dataset.slug ?? "",
+      topics: (card.dataset.topics ?? "").split(" ").filter(Boolean),
+      levels: (card.dataset.levels ?? "").split(" ").filter(Boolean),
+      timeMinutes: Number(card.dataset.time ?? "0"),
+      status: card.dataset.status ?? "",
+      hasMath: card.dataset.math === "yes",
+      hasStation: card.dataset.station === "yes",
+      updated: card.dataset.updated ?? "",
+      search: card.dataset.search ?? ""
+    });
+
+    /* One entry per DISTINCT demo; a two-topic demo has a card in each of its sections. */
+    const catalogue = new Map<string, DemoFacets>();
+    for (const card of cards) {
+      const facets = facetsOf(card);
+      if (facets.slug) catalogue.set(facets.slug, facets);
+    }
+    const allDemos = [...catalogue.values()];
+
+    const CHIP_LABEL: Record<NarrowingKey, (value: string) => string> = {
+      q: (v) => `Search: ${v}`,
+      topic: (v) => `Topic: ${v}`,
+      level: (v) => `Course: ${v.replace(/^ASTR/, "ASTR ")}`,
+      time: (v) => `Time: ${optionLabel("time", v)}`,
+      status: (v) => `Status: ${v}`,
+      math: (v) => `Math required: ${v === "yes" ? "Yes" : "No"}`,
+      quick: (v) => `Quick: ${quickChips.find((c) => c.dataset.quick === v)?.dataset.label ?? v}`
+    };
+
+    function optionLabel(name: string, value: string): string {
+      const select = filterForm.querySelector<HTMLSelectElement>(`select[name='${name}']`);
+      const option = select?.querySelector<HTMLOptionElement>(`option[value='${value}']`);
+      return option?.dataset.label ?? value;
+    }
+
+    for (const chip of quickChips) chip.dataset.label = chip.textContent?.trim() ?? "";
+
+    let filters: Filters = { ...EMPTY_FILTERS };
+
+    function render() {
+      /*
+       * `now` is read per render, not captured once: "New / Updated" is a 30-day window
+       * measured from when the reader is looking. Evaluating it at build time -- which is
+       * what the prerendered version did -- freezes the answer on the deploy date and
+       * decays it to zero results as the published site ages.
+       */
+      const now = new Date();
+      const visible = new Set(
+        allDemos.filter((demo) => matches(demo, filters, now)).map((demo) => demo.slug)
+      );
+      const filtering = hasNarrowingFilter(filters);
+
+      for (const card of cards) card.hidden = !visible.has(card.dataset.slug ?? "");
+
+      /*
+       * While unfiltered the three featured demos are shown by the strip above, so their
+       * topic-section copies stay hidden -- the default view is unchanged. Filtering hides
+       * the strip, so those copies must come back or the demos would vanish entirely.
+       */
+      if (!filtering) {
+        for (const card of cards) {
+          if (card.dataset.featured === "yes") card.hidden = true;
+        }
+      }
+
+      for (const section of sections) {
+        /*
+         * A demo carries several topics and so has a card in each of their sections. When
+         * the reader has asked for one topic, the other sections those demos also live in
+         * must not appear -- asking for Orbits and getting an "Earth & Sky" heading reads
+         * as the filter having failed, even though every card under it does match.
+         */
+        const sectionCards = [...section.querySelectorAll<HTMLElement>(".demo-card")];
+        if (filters.topic !== "" && section.dataset.topicSection !== filters.topic) {
+          for (const card of sectionCards) card.hidden = true;
+        }
+        const shown = sectionCards.filter((c) => !c.hidden);
+        section.hidden = shown.length === 0;
+        const badge = section.querySelector<HTMLElement>("[data-section-count]");
+        if (badge) {
+          badge.hidden = !filtering;
+          badge.textContent = `${shown.length}`;
+        }
+      }
+
+      for (const element of unfilteredOnly) element.hidden = filtering;
+
+      if (emptyState) emptyState.hidden = visible.size > 0;
+      if (countValue) countValue.textContent = `${visible.size}`;
+      if (countUnit) {
+        countUnit.textContent = `interactive exhibit${visible.size === 1 ? "" : "s"}`;
+      }
+
+      sortSections();
+      renderChips();
+      renderFacetCounts(now);
+
+      for (const chip of quickChips) {
+        const key = chip.dataset.quick ?? "";
+        const active = filters.quick === key;
+        chip.classList.toggle("quick-filters__chip--active", active);
+        chip.setAttribute("aria-pressed", active ? "true" : "false");
+        /*
+         * Chips carry their yield too. It is the same honesty as the select counts, and
+         * on this catalogue it is worth having: every demo ships a Station-mode lab, so
+         * "Labs" narrows 19 to 19 -- a chip that reads (19) beside a total of 19 tells
+         * the reader not to bother, and starts meaning something the day that changes.
+         */
+        const n = facetCount(allDemos, filters, "quick", key, now);
+        chip.textContent = `${chip.dataset.label ?? ""} (${n})`;
+      }
+      if (resetButton) resetButton.hidden = !filtering && filters.sort === "recommended";
+    }
+
+    function sortSections() {
+      for (const section of sections) {
+        const grid = section.querySelector<HTMLElement>(".results__grid");
+        if (!grid) continue;
+        const ordered = [...grid.querySelectorAll<HTMLElement>(".demo-card")].sort((a, b) => {
+          const fa = catalogue.get(a.dataset.slug ?? "");
+          const fb = catalogue.get(b.dataset.slug ?? "");
+          if (!fa || !fb) return 0;
+          return compareDemos(fa, fb, filters.sort);
+        });
+        for (const card of ordered) grid.append(card);
+      }
+    }
+
+    function renderChips() {
+      if (!chipBox) return;
+      chipBox.textContent = "";
+      const active = NARROWING_KEYS.filter((key) => filters[key] !== "");
+      chipBox.hidden = active.length === 0;
+      if (active.length === 0) return;
+
+      for (const key of active) {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "cp-chip";
+        chip.dataset.removeFilter = key;
+        chip.innerHTML = `${escapeHtml(CHIP_LABEL[key](filters[key]))} <span aria-hidden="true">×</span>`;
+        chip.setAttribute("aria-label", `Remove filter ${CHIP_LABEL[key](filters[key])}`);
+        chipBox.append(chip);
+      }
+
+      const clear = document.createElement("button");
+      clear.type = "button";
+      clear.className = "cp-chip cp-chip--clear";
+      clear.dataset.clearFilters = "";
+      clear.textContent = "Clear all";
+      chipBox.append(clear);
+    }
+
+    /*
+     * Each option carries the number of demos it would yield with the other axes held as
+     * they are, and an option yielding none is disabled. This is what keeps the controls
+     * honest about a small catalogue: with 20 demos, "20+ min" and several status values
+     * match nothing at all, and the reader can see that without spending a click.
+     */
+    function renderFacetCounts(now: Date) {
+      for (const select of selects) {
+        const name = select.name as FilterKey;
+        if (name === "sort") continue;
+        for (const option of [...select.options]) {
+          const label = option.dataset.label;
+          if (!label) continue;
+          const n = facetCount(allDemos, filters, name as NarrowingKey, option.value, now);
+          option.textContent = `${label} (${n})`;
+          option.disabled = n === 0 && option.value !== filters[name];
+        }
+      }
+    }
+
+    function escapeHtml(value: string): string {
+      const div = document.createElement("div");
+      div.textContent = value;
+      return div.innerHTML;
+    }
+
+    function syncControls() {
+      if (searchInput) searchInput.value = filters.q;
+      for (const select of selects) {
+        const name = select.name as FilterKey;
+        if (FILTER_KEYS.includes(name)) select.value = filters[name];
+      }
+      /* An advanced filter arriving by URL must not stay folded away inside <details>. */
+      const advanced = filterForm.querySelector<HTMLDetailsElement>(".filter-bar__details");
+      if (advanced && (filters.level || filters.status || filters.math)) advanced.open = true;
+    }
+
+    function pushUrl(replace: boolean) {
+      const qs = toSearchParams(filters).toString();
+      const url = qs ? `${location.pathname}?${qs}` : location.pathname;
+      history[replace ? "replaceState" : "pushState"]({}, "", url);
+    }
+
+    function update(next: Partial<Filters>, replace = false) {
+      filters = { ...filters, ...next };
+      pushUrl(replace);
+      render();
+    }
+
+    function adopt(search: string) {
+      filters = readFilters(search);
+      syncControls();
+      render();
+    }
+
+    form.classList.add("is-enhanced");
+    /* The form used to navigate to a URL the prerendered page could not honour. */
+    form.addEventListener("submit", (event) => event.preventDefault());
+
+    let timer = 0;
+    searchInput?.addEventListener("input", () => {
+      clearTimeout(timer);
+      timer = window.setTimeout(() => update({ q: searchInput.value.trim() }, true), 250);
+    });
+
+    for (const select of selects) {
+      select.addEventListener("change", () => {
+        update({ [select.name as FilterKey]: select.value } as Partial<Filters>);
+        renderFacetCounts(new Date());
       });
     }
 
-    selects.forEach((select) => {
-      select.addEventListener("change", submit);
+    for (const chip of quickChips) {
+      chip.addEventListener("click", (event) => {
+        event.preventDefault();
+        update({ quick: filters.quick === chip.dataset.quick ? "" : chip.dataset.quick ?? "" });
+        syncControls();
+      });
+    }
+
+    chipBox?.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const remove = target.closest<HTMLElement>("[data-remove-filter]");
+      if (remove) {
+        update({ [remove.dataset.removeFilter as FilterKey]: "" } as Partial<Filters>);
+        syncControls();
+        return;
+      }
+      if (target.closest("[data-clear-filters]")) {
+        update({ ...EMPTY_FILTERS });
+        syncControls();
+      }
     });
+
+    resetButton?.addEventListener("click", () => {
+      update({ ...EMPTY_FILTERS });
+      syncControls();
+    });
+
+    window.addEventListener("popstate", () => adopt(location.search));
+
+    adopt(location.search);
   }
 
   const surpriseBtn = document.querySelector("[data-all-slugs]");
@@ -770,4 +914,29 @@ const startHere = startHereTiles.map((tile) => {
     color: var(--cp-text2);
     max-width: 60ch;
   }
+  /*
+   * `hidden` is a UA-stylesheet rule, so any author `display` on a card or section beats
+   * it. Filtering hides elements through this attribute, so it has to win here.
+   */
+  .results :global([hidden]),
+  .featured[hidden],
+  .explore-onboard[hidden],
+  .topic-index[hidden],
+  .filter-chips[hidden],
+  .topic-section[hidden] {
+    display: none !important;
+  }
+
+  /* How many of this topic's exhibits survived the filter; only shown while filtering. */
+  .topic-section__count {
+    margin-inline-start: auto;
+    align-self: center;
+    padding: 0.15rem 0.55rem;
+    border: 1px solid var(--cp-border);
+    border-radius: 999px;
+    font-size: var(--cp-text-xs);
+    font-variant-numeric: tabular-nums;
+    color: var(--cp-text2);
+  }
+
 </style>

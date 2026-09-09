@@ -1,31 +1,24 @@
 ---
 import Icon from "./Icon.astro";
 
+/*
+ * No current-value props. The page is prerendered, so any "selected" state computed here
+ * is computed with empty filters -- which is why the controls used to snap back to "All"
+ * after a filter navigation. The Explore script sets `.value` from the URL on load and
+ * writes the per-option result counts.
+ */
 export type FilterBarProps = {
-  query: string;
-  topic: string;
-  level: string;
-  time: string;
-  status: string;
-  math: string;
-  sort: string;
   topics: string[];
   levels: string[];
   statuses: string[];
 };
 
-const {
-  query,
-  topic,
-  level,
-  time,
-  status,
-  math,
-  sort,
-  topics,
-  levels,
-  statuses
-} = Astro.props as FilterBarProps;
+const { topics, levels, statuses } = Astro.props as FilterBarProps;
+
+const LEVEL_LABEL: Record<string, string> = {
+  ASTR101: "ASTR 101",
+  ASTR201: "ASTR 201"
+};
 ---
 
 <form class="filter-bar cp-card" method="get" action={`${import.meta.env.BASE_URL}explore/`} data-filter-form>
@@ -38,7 +31,6 @@ const {
           class="cp-input"
           name="q"
           type="search"
-          value={query}
           placeholder="Search demos…"
           autocomplete="off"
         />
@@ -50,9 +42,7 @@ const {
       <select class="cp-select" name="topic">
         <option value="">All</option>
         {topics.map((t) => (
-          <option value={t} selected={t === topic}>
-            {t}
-          </option>
+          <option value={t} data-label={t}>{t}</option>
         ))}
       </select>
     </label>
@@ -61,21 +51,19 @@ const {
       <span class="filter-bar__label">Time budget</span>
       <select class="cp-select" name="time">
         <option value="">Any</option>
-        <option value="lt10" selected={time === "lt10"}>≤10 min</option>
-        <option value="10to20" selected={time === "10to20"}>10–20 min</option>
-        <option value="gt20" selected={time === "gt20"}>20+ min</option>
+        <option value="lt10" data-label="≤10 min">≤10 min</option>
+        <option value="10to20" data-label="10–20 min">10–20 min</option>
+        <option value="gt20" data-label="20+ min">20+ min</option>
       </select>
     </label>
 
     <label class="filter-bar__field">
       <span class="filter-bar__label">Sort by</span>
       <select class="cp-select" name="sort">
-        <option value="recommended" selected={sort === "recommended"}>
-          Recommended
-        </option>
-        <option value="duration" selected={sort === "duration"}>Duration</option>
-        <option value="level" selected={sort === "level"}>Level</option>
-        <option value="updated" selected={sort === "updated"}>Recently updated</option>
+        <option value="recommended">Recommended</option>
+        <option value="duration">Duration</option>
+        <option value="level">Level</option>
+        <option value="updated">Recently updated</option>
       </select>
     </label>
   </div>
@@ -89,9 +77,7 @@ const {
           <select class="cp-select" name="level">
             <option value="">All</option>
             {levels.map((l) => (
-              <option value={l} selected={l === level}>
-                {l}
-              </option>
+              <option value={l} data-label={LEVEL_LABEL[l] ?? l}>{LEVEL_LABEL[l] ?? l}</option>
             ))}
           </select>
         </label>
@@ -101,9 +87,7 @@ const {
           <select class="cp-select" name="status">
             <option value="">Any</option>
             {statuses.map((s) => (
-              <option value={s} selected={s === status}>
-                {s}
-              </option>
+              <option value={s} data-label={s}>{s}</option>
             ))}
           </select>
         </label>
@@ -112,16 +96,21 @@ const {
           <span class="filter-bar__label">Math required?</span>
           <select class="cp-select" name="math">
             <option value="">Any</option>
-            <option value="yes" selected={math === "yes"}>Yes</option>
-            <option value="no" selected={math === "no"}>No</option>
+            <option value="yes" data-label="Yes">Yes</option>
+            <option value="no" data-label="No">No</option>
           </select>
         </label>
       </div>
     </details>
 
-    <button class="cp-button cp-button--ghost filter-bar__submit" type="submit">
-      Apply
-    </button>
+    <div class="filter-bar__actions">
+      <button class="cp-button cp-button--ghost filter-bar__submit" type="submit">
+        Apply
+      </button>
+      <button class="cp-button cp-button--ghost filter-bar__reset" type="button" data-filter-reset hidden>
+        Clear filters
+      </button>
+    </div>
   </div>
 </form>
 
@@ -197,7 +186,18 @@ const {
     gap: var(--cp-space-2);
   }
 
+  .filter-bar__actions {
+    display: flex;
+    gap: var(--cp-space-2);
+    align-items: center;
+  }
+
+  /*
+   * With the script running there is nothing to apply -- results update as you choose --
+   * so the cell carries the one control that still does something. Without the script the
+   * submit stays, because the form is then the only way to change the query string.
+   */
   .filter-bar.is-enhanced .filter-bar__submit {
-    opacity: 0.7;
+    display: none;
   }
 </style>
