@@ -541,6 +541,13 @@ for (const button of presetButtons) {
   });
 }
 
+// Both of these are read by render() (the visible-band fill and the peak marker),
+// but neither had a listener: toggling did nothing until some *other* interaction
+// triggered a redraw, at which point the band appeared or vanished for no reason
+// the reader could connect to their click.
+showVisibleBand.addEventListener("change", () => render());
+showPeakMarker.addEventListener("change", () => render());
+
 window.addEventListener("resize", () => render());
 tabExploreEl?.addEventListener("click", () => {
   window.requestAnimationFrame(() => render());

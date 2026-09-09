@@ -422,7 +422,61 @@ export async function validateInvariants({ repoRoot = process.cwd() } = {}) {
     return a.file.localeCompare(b.file);
   });
 
+  await checkTokensResolve({ repoRoot, violations });
+
   return violations;
+}
+
+/**
+ * theme:undefined-token -- every `var(--cp-*)` must name a token the theme defines.
+ *
+ * An undefined custom property has no value, so the whole declaration is dropped and
+ * the property falls back to its INITIAL value. For an SVG `fill` that is black.
+ * Measured 2026-09-09: 17 tokens were referenced and never defined, 40+ references.
+ * `--cp-accent-cyan` and `--cp-accent-red` are doppler-shift's blueshift/redshift
+ * semantics, nine references each, rendering black at 1.27:1 and 1.35:1 on the panel
+ * ground -- the demo's pedagogical point, invisible, with every gate green.
+ *
+ * The existing token rules check a token's KIND (a glow used in a colour context, a
+ * colour used as a glow). None of them checks that the name resolves at all.
+ */
+async function checkTokensResolve({ repoRoot, violations }) {
+  const themeDir = path.join(repoRoot, "packages", "theme", "styles");
+  const defined = new Set();
+  for (const file of await listFiles(themeDir, { includeExtensions: new Set([".css"]) })) {
+    if (!file.endsWith(".css")) continue;
+    const text = await fs.readFile(file, "utf8");
+    for (const m of text.matchAll(/^\s*(--cp-[a-z0-9-]+)\s*:/gm)) defined.add(m[1]);
+  }
+  if (defined.size === 0) return; // theme not present; nothing to assert against
+
+  const roots = ["apps/demos/src", "apps/site/src", "packages/runtime/src", "packages/theme/styles"];
+  const scanExts = new Set([".css", ".ts", ".tsx", ".astro", ".html"]);
+
+  for (const rel of roots) {
+    const dir = path.join(repoRoot, rel);
+    if (!(await pathExists(dir))) continue;
+    const files = await listFiles(dir, { includeExtensions: scanExts });
+    for (const filePath of files) {
+      if (!scanExts.has(path.extname(filePath).toLowerCase())) continue;
+      const text = await fs.readFile(filePath, "utf8");
+      const lines = text.split("\n");
+      lines.forEach((line, i) => {
+        for (const m of line.matchAll(/var\(\s*(--cp-[a-z0-9-]+)\s*(,|\))/g)) {
+          const name = m[1];
+          const hasFallback = m[2] === ",";
+          if (defined.has(name) || hasFallback) continue;
+          violations.push({
+            code: "theme:undefined-token",
+            file: filePath,
+            line: i + 1,
+            column: (m.index ?? 0) + 1,
+            message: `var(${name}) is not defined by packages/theme/styles; the declaration will be dropped and the property falls back to its initial value (black, for fill).`
+          });
+        }
+      });
+    }
+  }
 }
 
 function formatViolation(v, repoRoot) {

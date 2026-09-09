@@ -194,6 +194,44 @@
   --cp-bp-xl: 1280px;
 
   /* ---------- Radius ---------- */
+  /*
+   * Aliases and gap-fills for tokens that were REFERENCED but never DEFINED.
+   * Measured 2026-09-09: 17 of them, 40+ references. An undefined custom property
+   * has no value, so the declaration is dropped and the property falls back to its
+   * initial value -- for SVG `fill` that is BLACK. `--cp-accent-cyan` and
+   * `--cp-accent-red` are doppler-shift's blueshift/redshift semantics, referenced
+   * nine times each, and they were rendering at 1.27:1 and 1.35:1 on the panel
+   * ground: the demo's whole pedagogical point, invisible.
+   *
+   * `scripts/validate-invariants.mjs` now fails the build on any var(--cp-*) with
+   * no definition, which is the rule that was missing.
+   */
+
+  /* Doppler semantics -- deliberately distinct from --cp-accent-ice, which means
+     "unit" in readouts and would conflate the two meanings. */
+  --cp-accent-cyan: #67e8f9;
+  --cp-accent-red: #ff7b72;
+
+  --cp-accent-teal: var(--cp-accent);
+  --cp-accent-soft: color-mix(in srgb, var(--cp-accent) 55%, transparent);
+  /* Accents are light, so text sitting ON one has to be ink. */
+  --cp-on-accent: var(--cp-bg0);
+
+  --cp-text1: var(--cp-text);
+  --cp-text-muted: var(--cp-muted);
+  --cp-text-xs: 0.75rem;
+  --cp-text-base: 1rem;
+  --cp-font-ui: var(--cp-font-body, system-ui, sans-serif);
+
+  --cp-radius-sm: var(--cp-r-1);
+  --cp-radius-lg: var(--cp-r-3);
+  --cp-modal-z: var(--cp-z-modal);
+  --cp-site-max: 1180px;
+
+  --cp-celestial-earth-dark: color-mix(in srgb, var(--cp-celestial-earth) 55%, var(--cp-bg0));
+  --cp-celestial-star-core: var(--cp-celestial-star);
+  --cp-celestial-sun-mid: color-mix(in srgb, var(--cp-celestial-sun) 78%, var(--cp-celestial-sun-corona));
+
   --cp-r-1: 10px;
   --cp-r-2: 14px;
   --cp-r-3: 18px;

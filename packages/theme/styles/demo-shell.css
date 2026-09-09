@@ -252,7 +252,14 @@
 
 .cp-accordion > summary:focus-visible {
   outline: 3px solid var(--cp-focus);
-  outline-offset: 3px;
+  /*
+   * INSET. `.cp-accordion` clips (for the border radius), so a positive offset puts
+   * the ring outside the clip box and it is painted away -- measured as a 0.000%
+   * focused-vs-unfocused pixel difference on a closed accordion, i.e. completely
+   * invisible, across 45 of the 64 accordions in the set. This predates the
+   * `hidden` -> `clip` change; `hidden` clipped it identically.
+   */
+  outline-offset: -3px;
 }
 
 .cp-accordion__title {
