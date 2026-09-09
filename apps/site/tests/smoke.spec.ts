@@ -630,8 +630,10 @@ test.describe("Cosmic Playground smoke", () => {
   test("Buttons have focus-visible ring", async ({ page }) => {
     await page.goto("explore/");
 
-    // Find the button with cp-button class and focus it
-    const cpButton = page.locator(".cp-button").first();
+    // The first .cp-button in the DOM is the filter form's Apply, which the Explore
+    // script hides once it takes over filtering -- a hidden control cannot show a focus
+    // ring, and is not what this test is about. Take the first one a reader can reach.
+    const cpButton = page.locator(".cp-button:visible").first();
     await expect(cpButton).toBeVisible();
 
     // Focus the button programmatically then check its focus-visible styles
@@ -783,49 +785,15 @@ test.describe("Cosmic Playground smoke", () => {
   });
 
   test("Empty state shows when no results", async ({ page }) => {
-    await page.goto("explore/");
+    /*
+     * This used to build a `<div class="empty-state">` with JS, append it, and assert
+     * that the div it had just created was visible -- so it passed without the page
+     * having an empty state at all. Drive the real one instead: a search matching no
+     * demo must leave the reader an explanation, not a silently empty results region.
+     */
+    await page.goto("explore/?q=zzzznotademo");
 
-    // Verify the EmptyState component CSS is bundled (component exists in build)
-    const hasEmptyStateStyles = await page.evaluate(() => {
-      const styleSheets = Array.from(document.styleSheets);
-      for (const sheet of styleSheets) {
-        try {
-          const rules = Array.from(sheet.cssRules || []);
-          if (rules.some((rule) => rule.cssText?.includes(".empty-state"))) {
-            return true;
-          }
-        } catch {
-          // Cross-origin stylesheets may throw
-        }
-      }
-      return false;
-    });
-    expect(hasEmptyStateStyles).toBe(true);
-
-    // Verify explore page renders results (not empty state) when demos exist
-    const demoCards = page.locator(".cp-card");
-    expect(await demoCards.count()).toBeGreaterThan(0);
-
-    // Simulate empty state by hiding all cards and showing empty state via JS
-    // This tests the component renders correctly when made visible
-    await page.evaluate(() => {
-      const resultsGrid = document.querySelector(".results__grid");
-      if (resultsGrid) {
-        resultsGrid.remove();
-      }
-      const results = document.querySelector(".results");
-      if (results) {
-        const emptyState = document.createElement("div");
-        emptyState.className = "empty-state";
-        emptyState.innerHTML = `
-          <svg width="48" height="48" aria-hidden="true"></svg>
-          <h3>No demos found</h3>
-          <p>Try adjusting your filters or search query.</p>
-        `;
-        results.appendChild(emptyState);
-      }
-    });
-
+    await expect(page.locator("[data-topic-section] .demo-card:visible")).toHaveCount(0);
     const emptyState = page.locator(".empty-state");
     await expect(emptyState).toBeVisible();
     await expect(emptyState).toContainText("No demos found");
