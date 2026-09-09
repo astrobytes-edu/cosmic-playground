@@ -296,17 +296,46 @@ test.describe("Seasons -- E2E", () => {
 
   // --- Globe View ---
 
-  test("globe terminator moves when day changes", async ({ page }) => {
-    // Record terminator cx at default (day 80, equinox)
+  test("the terminator stays put and the AXIS carries the season", async ({ page }) => {
+    // This test used to assert the opposite -- that the terminator moves with the day --
+    // and it passed while the globe drew night on the SUNLIT side and changed the lit
+    // fraction of the whole planet with the season. A sphere lit by a distant source is
+    // always exactly half lit, and this view is edge-on to the terminator plane, so the
+    // terminator is a fixed line through the centre. The seasonal signal is the axis.
     const terminator = page.locator("#terminator");
-    const cxBefore = await terminator.getAttribute("cx");
+    const axis = page.locator("#globe-axis");
 
-    // Move to June solstice (day 172) — high declination shifts terminator
+    const termAtEquinox = await terminator.getAttribute("cx");
+    const axisAtEquinox = Number(await axis.getAttribute("x2"));
+
     await page.locator("#anchorJunSol").click();
     await page.waitForTimeout(700);
-    const cxAfter = await terminator.getAttribute("cx");
 
-    expect(cxBefore).not.toBe(cxAfter);
+    expect(await terminator.getAttribute("cx")).toBe(termAtEquinox);
+
+    // The Sun is drawn to the left, so at the June solstice the north pole leans
+    // toward it: x2 goes negative, having been ~0 at the equinox.
+    const axisAtSolstice = Number(await axis.getAttribute("x2"));
+    expect(Math.abs(axisAtEquinox)).toBeLessThan(1);
+    expect(axisAtSolstice).toBeLessThan(-30);
+  });
+
+  test("the Arctic circle is wholly sunlit at the June solstice", async ({ page }) => {
+    // Polar day, and the definition of the Arctic Circle: at the solstice the circle is
+    // tangent to the terminator, so its whole projection sits on the lit side (x <= 0).
+    await page.locator("#anchorJunSol").click();
+    await page.waitForTimeout(700);
+
+    const extent = await page.locator("#arctic-n").evaluate((el) => {
+      const cx = Number(el.getAttribute("cx"));
+      const rx = Number(el.getAttribute("rx"));
+      const ry = Number(el.getAttribute("ry"));
+      const m = /rotate\(([-\d.]+)/.exec(el.getAttribute("transform") ?? "");
+      const t = ((m ? Number(m[1]) : 0) * Math.PI) / 180;
+      return cx + Math.hypot(rx * Math.cos(t), ry * Math.sin(t));
+    });
+
+    expect(extent).toBeLessThanOrEqual(0.5);
   });
 
   test("globe axis line exists and has coordinates", async ({ page }) => {

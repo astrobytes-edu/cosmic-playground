@@ -123,8 +123,137 @@ export function formatDayLength(hours: number): string {
  * At solstice the lit hemisphere expands, pushing the terminator sideways.
  * Positive shift = more of the northern hemisphere is lit (summer solstice).
  */
-export function terminatorShiftX(declinationDeg: number, globeRadius: number): number {
-  return globeRadius * Math.sin((declinationDeg * Math.PI) / 180);
+/**
+ * Orthographic projection of the globe -- ONE convention for the whole panel.
+ *
+ * The Sun is drawn to the LEFT, in the screen plane (see `#sunlightRays`). Two
+ * consequences follow, and the panel had both of them wrong:
+ *
+ * 1. The terminator is the great circle perpendicular to the Sun direction. Viewed
+ *    from a point perpendicular to the Earth-Sun line it is edge-on, so it projects
+ *    to a straight line through the disc CENTRE and never moves. The old code
+ *    translated a full-radius circle by `R*sin(dec)`, which put the night side on
+ *    the SUNLIT half and made the lit fraction of the whole globe change with the
+ *    season -- geometrically impossible, since a sphere lit by a distant source is
+ *    always exactly half lit. It is now a static half-disc over the anti-solar side.
+ *
+ * 2. The seasonal signal therefore lives entirely in the AXIS, which tilts by the
+ *    solar declination: at the June solstice the north pole leans toward the Sun and
+ *    the Arctic circle lies wholly on the lit side, which is polar day. The old code
+ *    passed the fixed 23.44 deg obliquity instead of the declination, so the axis
+ *    never moved at all and the figure had no seasonal signal.
+ *
+ * A small fixed view elevation lifts the viewer off the equatorial plane so latitude
+ * circles read as ellipses instead of edge-on lines.
+ */
+export const GLOBE_VIEW_ELEVATION_DEG = 20;
+
+export interface ProjectedCircle {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  rotationDeg: number;
+}
+
+/**
+ * Project a circle of latitude to screen coordinates (SVG, y down, globe centred
+ * on the origin).
+ *
+ * Globe-to-world orientation is Rx(viewElevation) * Rz(declination); the projection
+ * drops z. The image of a circle under a linear map is an ellipse whose semi-axes
+ * are the singular values of that map and whose orientation is its left singular
+ * vector, so a closed-form 2x2 SVD gives rx, ry and the rotation directly.
+ */
+export function projectLatitudeCircle(
+  latDeg: number,
+  declinationDeg: number,
+  viewElevationDeg: number,
+  globeRadius: number,
+): ProjectedCircle {
+  const lat = (latDeg * Math.PI) / 180;
+  const dec = (declinationDeg * Math.PI) / 180;
+  const view = (viewElevationDeg * Math.PI) / 180;
+  const sd = Math.sin(dec);
+  const cd = Math.cos(dec);
+  const sv = Math.sin(view);
+  const cv = Math.cos(view);
+
+  const r = globeRadius * Math.cos(lat);
+
+  // Columns of the projected 2x2 map: the circle-plane basis vectors after rotation.
+  //   e1 = (1,0,0) -> (cd, sd*cv, sd*sv)
+  //   e2 = (0,0,1) -> ( 0,   -sv,   cv)
+  const m00 = r * cd;
+  const m01 = 0;
+  const m10 = r * sd * cv;
+  const m11 = -r * sv;
+
+  // Centre sits R*sin(lat) along the pole axis (0,1,0) -> (-sd, cd*cv, cd*sv).
+  const centreX = globeRadius * Math.sin(lat) * -sd;
+  const centreYMath = globeRadius * Math.sin(lat) * cd * cv;
+
+  // Closed-form SVD of [[m00, m01], [m10, m11]].
+  const e = (m00 + m11) / 2;
+  const f = (m00 - m11) / 2;
+  const g = (m10 + m01) / 2;
+  const h = (m10 - m01) / 2;
+  const q = Math.hypot(e, h);
+  const rr = Math.hypot(f, g);
+  // The LEFT singular vector -- the ellipse's major axis -- is the SUM of the two
+  // angles; the difference gives the right singular vector, which is the
+  // parameterisation of the source circle and is not what we want here.
+  const theta = (Math.atan2(h, e) + Math.atan2(g, f)) / 2;
+
+  return {
+    cx: centreX,
+    cy: -centreYMath, // SVG y is down
+    rx: q + rr,
+    ry: Math.abs(q - rr),
+    rotationDeg: (-theta * 180) / Math.PI,
+  };
+}
+
+/**
+ * Screen endpoints of the rotation axis, in the same projection.
+ * Foreshortens correctly: the axis is shortest when it points at the viewer.
+ */
+export function globeAxisScreen(
+  declinationDeg: number,
+  viewElevationDeg: number,
+  axisLength: number,
+): { x1: number; y1: number; x2: number; y2: number } {
+  const dec = (declinationDeg * Math.PI) / 180;
+  const view = (viewElevationDeg * Math.PI) / 180;
+  const px = -Math.sin(dec);
+  const py = Math.cos(dec) * Math.cos(view);
+  return {
+    x1: -axisLength * px,
+    y1: axisLength * py, // south pole end
+    x2: axisLength * px,
+    y2: -axisLength * py, // north pole end -- leans left, toward the Sun, when dec > 0
+  };
+}
+
+/**
+ * The observer marker, on the meridian facing the viewer at the given latitude.
+ */
+export function projectObserverMarker(
+  latDeg: number,
+  declinationDeg: number,
+  viewElevationDeg: number,
+  globeRadius: number,
+): { cx: number; cy: number } {
+  const lat = (latDeg * Math.PI) / 180;
+  const dec = (declinationDeg * Math.PI) / 180;
+  const view = (viewElevationDeg * Math.PI) / 180;
+  const sinLat = Math.sin(lat);
+  const cosLat = Math.cos(lat);
+  return {
+    cx: -globeRadius * sinLat * Math.sin(dec),
+    cy: -(globeRadius * sinLat * Math.cos(dec) * Math.cos(view)
+      - globeRadius * cosLat * Math.sin(view)),
+  };
 }
 
 /**

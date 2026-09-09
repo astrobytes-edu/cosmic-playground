@@ -229,32 +229,49 @@ export const SCALE_OBJECTS: Array<{ label: string; lambdaCm: number }> = [
  * not design tokens -- acceptable in JS per architecture rules.
  */
 export function spectrumGradientCSS(): string {
-  const stops: Array<[number, string]> = [
-    // Radio -- dark maroon to warm red
-    [0,    "#800000"],
-    [8,    "#993000"],
-    [15,   "#cc3300"],
-    [22,   "#ff3300"],
-    [28,   "#ff0000"],
-    // Near-IR edge / visible red
-    [32,   "#ff0000"],
-    [34,   "#ff4500"],
-    [37,   "#ffa500"],
-    [40,   "#ffff00"],
-    [44,   "#00ff00"],
-    [48,   "#00ffff"],
-    [52,   "#0000ff"],
-    [55,   "#4b0082"],
-    // UV
-    [58,   "#8b00ff"],
-    [65,   "#9932cc"],
-    // X-ray
-    [80,   "#4b0082"],
-    // Gamma -- deep purple to near-black
-    [100,  "#1a0033"],
+  // Anchors are WAVELENGTHS, not bar percentages, and their positions are computed
+  // through the same axis mapping the marker and band highlight use. Hard-coded
+  // percentages inherited from the legacy CSS put red at 32% of an 18-decade log
+  // axis -- which is 1.74 cm, a radio wavelength -- and left the real visible band
+  // (56.4%-57.9%) painted flat violet. The bar and the marker disagreed about where
+  // 550 nm is by 13 percentage points.
+  //
+  // The visible band is genuinely ~1.5% of this axis. Rendering it at its true width
+  // is the point: the demo exists to show how narrow it is.
+  const anchors: Array<[number, string]> = [
+    // lambda in cm      colour
+    [1e6, "#2a0808"], // 10 km  -- axis floor
+    [1e5, "#3a0d0d"], // 1 km   -- long radio, near-black maroon
+    [1e2, "#7a1f10"], // 1 m    -- radio
+    [1e0, "#b23a17"], // 1 cm   -- microwave
+    [1e-2, "#d95f2b"], // 100 um -- far IR
+    [1e-3, "#e8792f"], // 10 um  -- mid IR
+    [1e-4, "#f0913a"], // 1 um   -- near IR
+    // --- visible, at its true position and width ---
+    [7.0e-5, "#ff2d1a"], // 700 nm
+    [6.2e-5, "#ff7a00"], // 620 nm
+    [5.8e-5, "#ffd400"], // 580 nm
+    [5.3e-5, "#3ddc4a"], // 530 nm
+    [4.8e-5, "#2b8cff"], // 480 nm
+    [4.4e-5, "#4b3bd6"], // 440 nm
+    [3.8e-5, "#8b3bd6"], // 380 nm
+    // --- beyond the visible ---
+    [1e-5, "#7b3fbf"], // 100 nm -- UV
+    [1e-6, "#5a4fd0"], // 10 nm  -- EUV
+    [1e-8, "#7fb4e8"], // 0.1 nm -- X-ray, blue-white
+    [1e-10, "#cfd8e8"], // hard X-ray
+    [1e-12, "#f2f4f8"], // gamma, near-white
   ];
-  const parts = stops.map(([pos, color]) => `${color} ${pos}%`);
-  return `linear-gradient(to right, ${parts.join(", ")})`;
+
+  const stops = anchors
+    .map(([lambdaCm, color]) => {
+      const pos = wavelengthToPositionPercent(lambdaCm);
+      return { pos, color };
+    })
+    .sort((a, b) => a.pos - b.pos)
+    .map(({ pos, color }) => `${color} ${pos.toFixed(2)}%`);
+
+  return `linear-gradient(to right, ${stops.join(", ")})`;
 }
 
 /**

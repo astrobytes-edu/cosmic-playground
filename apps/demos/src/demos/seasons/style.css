@@ -188,9 +188,8 @@
 
 .stage__ray {
   fill: none;
-  stroke: var(--cp-celestial-sun);
-  stroke-opacity: 0.75;
-  stroke-width: 3px;
+  stroke: url(#rayGrad);
+  stroke-width: 2.5px;
   stroke-linecap: round;
 }
 
@@ -269,26 +268,35 @@
   filter: drop-shadow(var(--cp-glow-planet));
 }
 
+/* Bands on the far side read as construction lines, not features. */
+.stage__lat-band {
+  vector-effect: non-scaling-stroke;
+}
+
 .stage__lat-band {
   fill: none;
   stroke-width: 1;
 }
 
+/*
+ * Six full ellipses at the same weight read as a tangle. Give them a hierarchy:
+ * the equator is the reference line the reader measures against, the tropics and
+ * polar circles are the boundaries the season moves across, and everything is
+ * solid -- dashes at this density are noise, not information.
+ */
 .stage__lat-band--equator {
-  stroke: color-mix(in srgb, var(--cp-accent-green) 70%, transparent);
-  stroke-width: 1.5;
+  stroke: color-mix(in srgb, var(--cp-accent-green) 88%, transparent);
+  stroke-width: 2;
 }
 
 .stage__lat-band--tropic {
-  stroke: color-mix(in srgb, var(--cp-accent-amber) 60%, transparent);
-  stroke-width: 1;
-  stroke-dasharray: 6 4;
+  stroke: color-mix(in srgb, var(--cp-accent-amber) 46%, transparent);
+  stroke-width: 1.25;
 }
 
 .stage__lat-band--arctic {
-  stroke: color-mix(in srgb, var(--cp-accent-ice) 50%, transparent);
-  stroke-width: 1;
-  stroke-dasharray: 4 3;
+  stroke: color-mix(in srgb, var(--cp-accent-ice) 42%, transparent);
+  stroke-width: 1.25;
 }
 
 /* -- Globe: day-length arc ------------------------------ */
@@ -309,17 +317,24 @@
 }
 
 .stage__terminator {
-  fill: color-mix(in srgb, var(--cp-bg0) 60%, transparent);
+  fill: url(#terminatorGrad);
+}
+
+.stage__limbGlow {
+  pointer-events: none;
 }
 
 .stage__globe-axis {
-  stroke: color-mix(in srgb, var(--cp-muted) 60%, transparent);
-  stroke-width: 2;
-  stroke-dasharray: 5 4;
+  stroke: color-mix(in srgb, var(--cp-text2) 72%, transparent);
+  stroke-width: 2.25;
   stroke-linecap: round;
+  filter: drop-shadow(0 0 3px var(--cp-bg0));
 }
 
 .stage__globe-marker {
+  r: 6;
+  stroke: var(--cp-bg0);
+  stroke-width: 1.5;
   fill: var(--cp-accent-rose);
   filter: drop-shadow(0 0 4px var(--cp-accent-rose));
 }

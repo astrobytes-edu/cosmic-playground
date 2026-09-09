@@ -22,8 +22,6 @@ import { requiredContext2d } from "../../shared/dom";
 import { createClusterScene } from "./clusterScene";
 import type { ClusterViewMode, SceneStar } from "./clusterScene";
 import {
-  LSUN_SYMBOL,
-  MSUN_SYMBOL,
   ageMyrToSlider,
   axisFontPx,
   buildLogMassBins,

@@ -1,7 +1,7 @@
 import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, initTabs, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
-import { clamp, formatNumber, formatDateFromDayOfYear, formatDayLength, formatLatitude, seasonFromPhaseNorth, oppositeSeason, orbitPosition, terminatorShiftX, latitudeBandEllipse, globeAxisEndpoints, animationProgress, easeInOutCubic, shortestDayDelta, orbitSeasonLabelPositions, polarisIndicatorEndpoints, seasonColorClass, contextualMessage, dayLengthArcGeometry } from "./logic";
+import { clamp, formatNumber, formatDateFromDayOfYear, formatDayLength, formatLatitude, seasonFromPhaseNorth, oppositeSeason, orbitPosition, projectLatitudeCircle, globeAxisScreen, projectObserverMarker, GLOBE_VIEW_ELEVATION_DEG, animationProgress, easeInOutCubic, shortestDayDelta, orbitSeasonLabelPositions, polarisIndicatorEndpoints, seasonColorClass, contextualMessage, dayLengthArcGeometry } from "./logic";
 
 const dayOfYearEl = document.querySelector<HTMLInputElement>("#dayOfYear");
 const dayOfYearValueEl = document.querySelector<HTMLSpanElement>("#dayOfYearValue");
@@ -560,52 +560,53 @@ function renderGlobe(args: {
   dayLengthHours: number;
 }) {
   const tiltVal = args.axialTiltDeg;
+  const dec = args.declinationDeg;
+  const view = GLOBE_VIEW_ELEVATION_DEG;
 
   // --- Terminator ---
-  const tShift = terminatorShiftX(args.declinationDeg, GLOBE_R);
-  const termRx = GLOBE_R;
-  const termRy = GLOBE_R;
-  terminator.setAttribute("cx", formatNumber(-tShift - termRx, 2));
+  // Static half-disc over the anti-solar side. The Sun is drawn to the LEFT, so the
+  // night side is x > 0. Clipped to the globe, an R-radius circle centred at (R, 0)
+  // covers exactly that half. It does not move with the season: a sphere lit by a
+  // distant source is always exactly half lit, and this view is edge-on to the
+  // terminator plane. What moves is the axis, below.
+  terminator.setAttribute("cx", formatNumber(GLOBE_R, 2));
   terminator.setAttribute("cy", "0");
-  terminator.setAttribute("rx", formatNumber(termRx, 2));
-  terminator.setAttribute("ry", formatNumber(termRy, 2));
+  terminator.setAttribute("rx", formatNumber(GLOBE_R, 2));
+  terminator.setAttribute("ry", formatNumber(GLOBE_R, 2));
 
   // --- Latitude bands ---
   const tropicLat = tiltVal;
   const arcticLat = 90 - tiltVal;
 
-  const eqBand = latitudeBandEllipse(0, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
-  setEllipse(equatorBand, GLOBE_CX, eqBand.cy, eqBand.rx, eqBand.ry);
+  const setBand = (el: SVGEllipseElement, latDeg: number) => {
+    const e = projectLatitudeCircle(latDeg, dec, view, GLOBE_R);
+    el.setAttribute("cx", formatNumber(e.cx, 2));
+    el.setAttribute("cy", formatNumber(e.cy, 2));
+    el.setAttribute("rx", formatNumber(e.rx, 2));
+    el.setAttribute("ry", formatNumber(e.ry, 2));
+    el.setAttribute("transform", `rotate(${formatNumber(e.rotationDeg, 2)} ${formatNumber(e.cx, 2)} ${formatNumber(e.cy, 2)})`);
+  };
 
-  const tnBand = latitudeBandEllipse(tropicLat, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
-  setEllipse(tropicN, GLOBE_CX, tnBand.cy, tnBand.rx, tnBand.ry);
-
-  const tsBand = latitudeBandEllipse(-tropicLat, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
-  setEllipse(tropicS, GLOBE_CX, tsBand.cy, tsBand.rx, tsBand.ry);
-
-  const anBand = latitudeBandEllipse(arcticLat, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
-  setEllipse(arcticN, GLOBE_CX, anBand.cy, anBand.rx, anBand.ry);
-
-  const asBand = latitudeBandEllipse(-arcticLat, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
-  setEllipse(arcticS, GLOBE_CX, asBand.cy, asBand.rx, asBand.ry);
-
-  // --- Celestial equator ---
-  const ceq = latitudeBandEllipse(0, tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_R);
-  setEllipse(globeEquator, GLOBE_CX, ceq.cy, ceq.rx, ceq.ry);
+  setBand(equatorBand, 0);
+  setBand(tropicN, tropicLat);
+  setBand(tropicS, -tropicLat);
+  setBand(arcticN, arcticLat);
+  setBand(arcticS, -arcticLat);
+  setBand(globeEquator, 0);
 
   // --- Globe axis ---
-  const axis = globeAxisEndpoints(tiltVal, GLOBE_CX, GLOBE_CY, GLOBE_AXIS_LEN);
+  // Tilts by the solar DECLINATION, not the fixed obliquity: this is the only thing
+  // in the panel that carries the season.
+  const axis = globeAxisScreen(dec, view, GLOBE_AXIS_LEN);
   globeAxis.setAttribute("x1", formatNumber(axis.x1, 2));
   globeAxis.setAttribute("y1", formatNumber(axis.y1, 2));
   globeAxis.setAttribute("x2", formatNumber(axis.x2, 2));
   globeAxis.setAttribute("y2", formatNumber(axis.y2, 2));
 
   // --- Latitude marker ---
-  const latRad = (args.latitudeDeg * Math.PI) / 180;
-  const markerX = GLOBE_R * Math.cos(latRad) * 0.98;
-  const markerY = -GLOBE_R * Math.sin(latRad) * 0.98;
-  globeMarker.setAttribute("cx", formatNumber(markerX, 2));
-  globeMarker.setAttribute("cy", formatNumber(markerY, 2));
+  const marker = projectObserverMarker(args.latitudeDeg, dec, view, GLOBE_R);
+  globeMarker.setAttribute("cx", formatNumber(marker.cx, 2));
+  globeMarker.setAttribute("cy", formatNumber(marker.cy, 2));
 
   // --- Day-length arc ---
   const arcGeom = dayLengthArcGeometry({

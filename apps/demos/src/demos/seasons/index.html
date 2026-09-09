@@ -225,24 +225,57 @@
           <g class="globe" transform="translate(670, 210)">
             <defs>
               <clipPath id="globe-clip"><circle r="155"/></clipPath>
-              <radialGradient id="globeGrad" cx="35%" cy="35%">
-                <stop offset="0%" stop-color="var(--cp-celestial-earth)" stop-opacity="0.95"/>
-                <stop offset="100%" stop-color="var(--cp-celestial-earth)" stop-opacity="0.5"/>
+              <!-- The Sun is in the screen plane to the LEFT, so the highlight belongs on
+                   the left limb and the disc darkens toward the terminator. The old
+                   gradient sat at 35%/35%, which lights the globe from the front and
+                   reads as a flat circle. -->
+              <radialGradient id="globeGrad" cx="16%" cy="40%" r="84%">
+                <stop offset="0%" stop-color="var(--cp-celestial-earth)" stop-opacity="1"/>
+                <stop offset="38%" stop-color="var(--cp-celestial-earth)" stop-opacity="0.88"/>
+                <stop offset="72%" stop-color="var(--cp-celestial-earth)" stop-opacity="0.58"/>
+                <stop offset="100%" stop-color="var(--cp-celestial-earth)" stop-opacity="0.28"/>
               </radialGradient>
+              <!-- Twilight. A real terminator is a soft band, and the softness also stops
+                   the shading reading as a pasted-on shape. -->
+              <linearGradient id="terminatorGrad" gradientUnits="userSpaceOnUse"
+                              x1="-6" y1="0" x2="46" y2="0">
+                <stop offset="0%" stop-color="var(--cp-bg0)" stop-opacity="0"/>
+                <stop offset="40%" stop-color="var(--cp-bg0)" stop-opacity="0.46"/>
+                <stop offset="100%" stop-color="var(--cp-bg0)" stop-opacity="0.74"/>
+              </linearGradient>
+              <!-- Atmosphere on the sunlit limb only. -->
+              <clipPath id="lit-half"><rect x="-160" y="-160" width="160" height="320"/></clipPath>
+              <radialGradient id="limbGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="88%" stop-color="var(--cp-accent-ice)" stop-opacity="0"/>
+                <stop offset="97%" stop-color="var(--cp-accent-ice)" stop-opacity="0.42"/>
+                <stop offset="100%" stop-color="var(--cp-accent-ice)" stop-opacity="0"/>
+              </radialGradient>
+              <!-- Rays brighten as they approach the globe. -->
+              <linearGradient id="rayGrad" gradientUnits="userSpaceOnUse"
+                              x1="-262" y1="0" x2="-158" y2="0">
+                <stop offset="0%" stop-color="var(--cp-celestial-sun)" stop-opacity="0"/>
+                <stop offset="70%" stop-color="var(--cp-celestial-sun)" stop-opacity="0.55"/>
+                <stop offset="100%" stop-color="var(--cp-celestial-sun)" stop-opacity="0.95"/>
+              </linearGradient>
             </defs>
 
             <!-- Sunlight rays from left [S3] -->
             <g id="sunlightRays" class="stage__sunlightRays stage__overlay">
-              <line x1="-250" y1="-120" x2="-160" y2="-120" class="stage__ray" />
-              <line x1="-250" y1="-60" x2="-160" y2="-60" class="stage__ray" />
-              <line x1="-250" y1="0" x2="-160" y2="0" class="stage__ray" />
-              <line x1="-250" y1="60" x2="-160" y2="60" class="stage__ray" />
-              <line x1="-250" y1="120" x2="-160" y2="120" class="stage__ray" />
-              <text class="stage__rayLabel" x="-245" y="-140">Sunlight</text>
+              <line x1="-262" y1="-132" x2="-158" y2="-132" class="stage__ray" />
+              <line x1="-262" y1="-88" x2="-158" y2="-88" class="stage__ray" />
+              <line x1="-262" y1="-44" x2="-158" y2="-44" class="stage__ray" />
+              <line x1="-262" y1="0" x2="-158" y2="0" class="stage__ray" />
+              <line x1="-262" y1="44" x2="-158" y2="44" class="stage__ray" />
+              <line x1="-262" y1="88" x2="-158" y2="88" class="stage__ray" />
+              <line x1="-262" y1="132" x2="-158" y2="132" class="stage__ray" />
+              <text class="stage__rayLabel" x="-262" y="-152">Sunlight</text>
             </g>
 
             <!-- Globe body -->
             <circle class="stage__globe" r="155" fill="url(#globeGrad)"/>
+            <g clip-path="url(#lit-half)">
+              <circle class="stage__limbGlow" r="155" fill="url(#limbGlow)"/>
+            </g>
             <!-- Clipped group for internal features -->
             <g clip-path="url(#globe-clip)">
               <!-- Night-side terminator (drawn first so latitude bands show through) -->

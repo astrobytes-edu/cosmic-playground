@@ -10,7 +10,9 @@ import {
   diskMarkerY,
   formatDayLength,
   formatLatitude,
-  terminatorShiftX,
+  projectLatitudeCircle,
+  globeAxisScreen,
+  projectObserverMarker,
   latitudeToGlobeY,
   latitudeBandEllipse,
   globeAxisEndpoints,
@@ -246,36 +248,71 @@ describe("Seasons -- UI Logic", () => {
   // Globe projection helpers
   // -----------------------------------------------------------------------
 
-  describe("terminatorShiftX", () => {
-    it("returns 0 for zero declination (equinox)", () => {
-      expect(terminatorShiftX(0, 150)).toBeCloseTo(0, 5);
+  describe("globe projection", () => {
+    const R = 150;
+    const VIEW = 20;
+    const OBLIQUITY = 23.44;
+
+    /** Widest screen-x reached by a projected latitude circle. */
+    const maxX = (e: { cx: number; rx: number; ry: number; rotationDeg: number }) => {
+      const t = (e.rotationDeg * Math.PI) / 180;
+      return e.cx + Math.hypot(e.rx * Math.cos(t), e.ry * Math.sin(t));
+    };
+
+    it("puts the axis vertical at an equinox", () => {
+      const a = globeAxisScreen(0, VIEW, 180);
+      expect(a.x2).toBeCloseTo(0, 6);
+      expect(a.y2).toBeLessThan(0); // north pole is up
     });
 
-    it("shifts right (positive) for positive declination (summer solstice)", () => {
-      const shift = terminatorShiftX(23.5, 150);
-      expect(shift).toBeGreaterThan(0);
-      expect(shift).toBeLessThan(150);
+    it("leans the north pole TOWARD the Sun at the June solstice", () => {
+      // The Sun is drawn to the left, so toward it means negative x.
+      expect(globeAxisScreen(OBLIQUITY, VIEW, 180).x2).toBeLessThan(0);
     });
 
-    it("shifts left (negative) for negative declination (winter solstice)", () => {
-      const shift = terminatorShiftX(-23.5, 150);
-      expect(shift).toBeLessThan(0);
+    it("leans the north pole AWAY from the Sun at the December solstice", () => {
+      expect(globeAxisScreen(-OBLIQUITY, VIEW, 180).x2).toBeGreaterThan(0);
     });
 
-    it("is antisymmetric about zero declination", () => {
-      const pos = terminatorShiftX(23.5, 150);
-      const neg = terminatorShiftX(-23.5, 150);
-      expect(pos).toBeCloseTo(-neg, 5);
+    it("holds the Arctic circle exactly tangent to the terminator at the June solstice", () => {
+      // This is the definition of the Arctic Circle: at the solstice the Sun just
+      // fails to set there, so the whole circle is lit and touches the terminator
+      // (screen x = 0) at one point. Any drawing that moves the terminator off
+      // centre, or tilts the axis by the obliquity instead of the declination,
+      // breaks this.
+      const arctic = projectLatitudeCircle(90 - OBLIQUITY, OBLIQUITY, VIEW, R);
+      expect(maxX(arctic)).toBeCloseTo(0, 6);
     });
 
-    it("equals globeRadius at 90 deg declination", () => {
-      expect(terminatorShiftX(90, 150)).toBeCloseTo(150, 5);
+    it("keeps latitudes poleward of the Arctic circle wholly lit at the June solstice", () => {
+      expect(maxX(projectLatitudeCircle(80, OBLIQUITY, VIEW, R))).toBeLessThan(0);
+      expect(maxX(projectLatitudeCircle(90 - OBLIQUITY + 5, OBLIQUITY, VIEW, R))).toBeLessThan(0);
     });
 
-    it("scales linearly with globe radius", () => {
-      const s1 = terminatorShiftX(23.5, 100);
-      const s2 = terminatorShiftX(23.5, 200);
-      expect(s2).toBeCloseTo(s1 * 2, 5);
+    it("keeps the Arctic circle wholly DARK at the December solstice", () => {
+      const arctic = projectLatitudeCircle(90 - OBLIQUITY, -OBLIQUITY, VIEW, R);
+      const t = (arctic.rotationDeg * Math.PI) / 180;
+      const minX = arctic.cx - Math.hypot(arctic.rx * Math.cos(t), arctic.ry * Math.sin(t));
+      expect(minX).toBeCloseTo(0, 6);
+    });
+
+    it("splits the equator exactly in half at every season", () => {
+      for (const dec of [-OBLIQUITY, -10, 0, 10, OBLIQUITY]) {
+        const eq = projectLatitudeCircle(0, dec, VIEW, R);
+        expect(eq.cx).toBeCloseTo(0, 6); // centred on the terminator
+      }
+    });
+
+    it("shrinks a latitude circle toward the pole", () => {
+      const eq = projectLatitudeCircle(0, 0, VIEW, R);
+      const mid = projectLatitudeCircle(45, 0, VIEW, R);
+      const high = projectLatitudeCircle(80, 0, VIEW, R);
+      expect(eq.rx).toBeGreaterThan(mid.rx);
+      expect(mid.rx).toBeGreaterThan(high.rx);
+    });
+
+    it("places the observer marker on the lit side in local summer", () => {
+      expect(projectObserverMarker(45, OBLIQUITY, VIEW, R).cx).toBeLessThan(0);
     });
   });
 

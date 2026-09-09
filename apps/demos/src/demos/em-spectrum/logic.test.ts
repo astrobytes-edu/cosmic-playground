@@ -513,17 +513,36 @@ describe("EM Spectrum -- Logic", () => {
       expect(stops.length).toBeGreaterThanOrEqual(15);
     });
 
-    it("starts at 0% and ends at 100%", () => {
+    it("spans the whole axis", () => {
       const result = spectrumGradientCSS();
-      expect(result).toContain("0%");
-      expect(result).toContain("100%");
+      const stops = [...result.matchAll(/([\d.]+)%/g)].map((m) => Number(m[1]));
+      expect(Math.min(...stops)).toBeCloseTo(0, 1);
+      expect(Math.max(...stops)).toBeCloseTo(100, 1);
     });
 
-    it("contains visible spectrum colors", () => {
+    it("paints the rainbow where visible light actually is", () => {
+      // The stops used to be hard-coded percentages inherited from the legacy CSS,
+      // which put red at 32% of an 18-decade log axis -- 1.74 cm, a radio wavelength --
+      // while the marker, using the real mapping, put 550 nm at 57%. The bar and the
+      // marker disagreed about the same figure by 13 percentage points. Assert the
+      // property that was violated rather than the literals that violated it.
       const result = spectrumGradientCSS();
-      expect(result).toContain("#ff0000"); // red
-      expect(result).toContain("#00ff00"); // green
-      expect(result).toContain("#0000ff"); // blue
+      const stops = [...result.matchAll(/#[0-9a-fA-F]{6} ([\d.]+)%/g)].map((m) => Number(m[1]));
+
+      const redEdge = wavelengthToPositionPercent(7.0e-5); // 700 nm
+      const violetEdge = wavelengthToPositionPercent(3.8e-5); // 380 nm
+
+      // At least five stops inside the visible band, and it is a narrow band:
+      // ~1.5% of an 18-decade axis. Its narrowness is the point of the demo.
+      const inVisible = stops.filter((p) => p >= redEdge - 0.01 && p <= violetEdge + 0.01);
+      expect(inVisible.length).toBeGreaterThanOrEqual(5);
+      expect(violetEdge - redEdge).toBeLessThan(2);
+
+      // And nothing rainbow-coloured is painted decades away from it.
+      const greenStop = /#3ddc4a ([\d.]+)%/.exec(result);
+      expect(greenStop).not.toBeNull();
+      expect(Number(greenStop![1])).toBeGreaterThan(redEdge - 0.01);
+      expect(Number(greenStop![1])).toBeLessThan(violetEdge + 0.01);
     });
   });
 
