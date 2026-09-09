@@ -146,6 +146,39 @@ describe("token contrast, resolved from the CSS", () => {
     it("--cp-focus meets 3:1", () => {
       expect(check(instrument, "--cp-focus", "--cp-bg0")).toBeGreaterThanOrEqual(3);
     });
+
+    /*
+     * Text tokens on the grounds they are ACTUALLY used on.
+     *
+     * Every assertion above measures against --cp-bg0, which is the darkest ground in
+     * the system and therefore the most favourable. Measured 2026-09-09, --cp-muted at
+     * 46% white passed on --cp-bg0 (4.66:1) and failed on all four grounds it is really
+     * painted on -- bg1 4.25, bg2 3.89, the instrument panel 4.30, a readout 4.00 --
+     * across 1,032 of 1,111 sampled pairs. The suite was green throughout, because it
+     * only ever asked the easy question.
+     */
+    it.each([
+      ["--cp-bg1", 4.5],
+      ["--cp-bg2", 4.5]
+    ])("--cp-muted on %s meets %s:1", (ground, min) => {
+      expect(check(instrument, "--cp-muted", ground as string)).toBeGreaterThanOrEqual(
+        min as number
+      );
+    });
+
+    it.each([
+      ["--cp-text2", 4.5],
+      ["--cp-muted", 4.5]
+    ])("%s on --cp-bg2 meets %s:1", (token, min) => {
+      expect(check(base, token as string, "--cp-bg2")).toBeGreaterThanOrEqual(min as number);
+    });
+
+    it("--cp-muted stays visibly subordinate to --cp-text2", () => {
+      // Raising muted for contrast must not collapse the three-tier
+      // text / text2 / muted hierarchy the readouts rely on.
+      const separation = check(base, "--cp-text2", "--cp-muted");
+      expect(separation).toBeGreaterThan(1.2);
+    });
   });
 
   describe("paper layer", () => {

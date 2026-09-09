@@ -12,7 +12,23 @@
   /* ---------- Text (derived from ink, no chroma) ---------- */
   --cp-text: color-mix(in srgb, #ffffff 88%, var(--cp-bg0));
   --cp-text2: color-mix(in srgb, #ffffff 64%, var(--cp-bg0));
-  --cp-muted: color-mix(in srgb, #ffffff 46%, var(--cp-bg0));
+  /*
+   * 54%, not 46%. Measured 2026-09-09 against the grounds this token is ACTUALLY used
+   * on, rather than the one the contrast test checked:
+   *
+   *            46% (was)   54% (now)
+   *   bg0         4.66       5.87     <- the only ground the old test measured
+   *   bg1         4.25       5.36
+   *   bg2         3.89       4.90
+   *   panel       4.30       5.42
+   *   readout     4.00       5.21
+   *
+   * So it failed WCAG AA on four of five real grounds while the suite stayed green.
+   * 54% is the lowest value clearing 4.5:1 everywhere with headroom; going further to
+   * 58% also works but flattens the gap to --cp-text2 (64%) from 1.33 to 1.19, and the
+   * three-tier text / text2 / muted hierarchy is doing real work in the readouts.
+   */
+  --cp-muted: color-mix(in srgb, #ffffff 54%, var(--cp-bg0));
   --cp-faint: color-mix(in srgb, #ffffff 32%, var(--cp-bg0));
   --cp-text-3: var(--cp-muted);
 
