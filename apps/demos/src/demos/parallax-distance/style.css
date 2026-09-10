@@ -432,13 +432,29 @@
  * a bounded height would leave each of them a sliver. */
 @media (min-width: 1081px) {
   .cp-demo__stage {
-    --parallax-readout-reserve: 21.5rem;
+    --parallax-readout-reserve: 24rem;
     display: grid;
     min-height: 0;
     /* The stage sizes as content-box, so without this the 12px padding and 1px border sit
      * outside the height and the reserve is 26px short. */
     box-sizing: border-box;
-    height: clamp(320px, calc(100svh - var(--parallax-readout-reserve)), 820px);
+    /*
+     * The shell puts `sidebar` in all three of the first grid rows, so those rows together
+     * are as tall as the taller of the sidebar and (stage + gaps + readout strip), and the
+     * strip's bottom is that plus the shell's 24px padding.
+     *
+     * The sidebar's own cap is `100svh - 32px` -- a deterministic value, identical on every
+     * platform. So the strip clears the fold reliably exactly when the SIDEBAR is the taller
+     * of the two. When the stage-plus-strip term wins instead, clearance starts depending on
+     * how tall the text renders, and CI on Linux (wider, taller default face, ~80px more
+     * strip) ran 14px past the fold while macOS sat 6px inside it.
+     *
+     * These reserves are therefore sized so the stage-plus-strip term stays UNDER the
+     * sidebar at every desktop size on the Linux metrics, not the local ones. Measured
+     * 2026-09-10, 1440x900: sidebar 868, stage 558, strip 186 here and ~266 on CI, so the
+     * term is 808 against 868 -- 60px of slack where there used to be none.
+     */
+    height: clamp(296px, calc(100svh - var(--parallax-readout-reserve)), 820px);
   }
 
   .viz-layout {
@@ -466,7 +482,7 @@
 
 @media (min-width: 1440px) {
   .cp-demo__stage {
-    --parallax-readout-reserve: 17rem;
+    --parallax-readout-reserve: 19rem;
   }
 }
 

@@ -428,6 +428,30 @@ test.describe("Cosmic Playground smoke", () => {
     expect(after, "Mean anomaly should advance while animating.").not.toEqual(before);
   });
 
+  /**
+   * Wait out the shell's entry animation before clicking a utility button.
+   *
+   * The demo shell slides its panels in on load (`cp-slide-up`, 0.6s, one iteration) and
+   * #copyResults rides inside one of them, so for that window the button is a moving
+   * target. Playwright compares the bounding box on two consecutive frames and retries
+   * while it differs -- on a loaded CI runner it can keep missing until the 30s timeout,
+   * which is how this failed on 2026-09-10 with "element is not stable". eos-lab is the
+   * demo that hits it, because its regime-grid worker keeps the main thread busy enough
+   * to stretch the animation across many more frames than it takes locally.
+   *
+   * Bounded, so a genuinely endless animation cannot hang the test -- it just falls back
+   * to Playwright's own stability handling.
+   */
+  async function waitForEntryAnimations(page: any) {
+    await page.evaluate(async () => {
+      const running = document.getAnimations().filter((a) => a.playState === "running");
+      await Promise.race([
+        Promise.allSettled(running.map((a) => a.finished)),
+        new Promise((resolve) => setTimeout(resolve, 3000))
+      ]);
+    });
+  }
+
   async function installClipboardCapture(page: any) {
     await page.addInitScript(() => {
       (window as any).__cpLastClipboardText = null;
@@ -543,6 +567,7 @@ test.describe("Cosmic Playground smoke", () => {
 
       await page.goto(`play/${demo.slug}/`, { waitUntil: "domcontentloaded" });
       await expect(page.locator("#cp-demo")).toBeVisible();
+      await waitForEntryAnimations(page);
 
       await page.locator("#copyResults").click();
       await expect(page.locator("#status")).toContainText("Copied");
@@ -569,6 +594,7 @@ test.describe("Cosmic Playground smoke", () => {
 
       await page.goto(`play/${demo.slug}/`, { waitUntil: "domcontentloaded" });
       await expect(page.locator("#cp-demo")).toBeVisible();
+      await waitForEntryAnimations(page);
 
       const copyButton = page.locator("#copyResults");
       await expect(copyButton).toBeVisible();
