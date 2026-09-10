@@ -2,7 +2,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const runtimeSpies = {
   bindButtons: vi.fn(),
@@ -90,7 +90,59 @@ function captureEpoch(phaseDeg: number, label: "A" | "B") {
   button.click();
 }
 
-describe("Parallax Distance -- DOM integration", () => {
+/*
+ * Timeouts here are set from measurement, not taste. See the beforeAll note below for
+ * where the time goes; these are the ceilings, and they exist because this file is the
+ * one place in the demos suite whose cost is a module graph rather than a few assertions.
+ *
+ * Measured 2026-09-09 on a 12-core machine, idle vs. under a deliberately harsh stressor
+ * (the full Playwright E2E suite running concurrently PLUS 24 busy loops, so roughly 3x
+ * oversubscription -- harsher than the condition that first broke this):
+ *
+ *                idle     under load          stretch
+ *   beforeAll     180ms    12.5s/28.5s/12.5s  70-158x
+ *   slowest test   38ms    2.9s               ~75x
+ *
+ * 60s for the hook is ~2x the worst observed; 20s per test is ~7x. Both are far above
+ * anything the work can legitimately cost, so they trip only on a genuine hang -- which
+ * is what a timeout is for. The default 5s did not survive the stretch, and a test that
+ * fails for want of CPU costs a real investigation every time it happens.
+ */
+describe("Parallax Distance -- DOM integration", { timeout: 20000 }, () => {
+  /*
+   * Pay for the module graph once, in a hook, instead of billing it to whichever test
+   * happens to run first.
+   *
+   * Every test here does `vi.resetModules()` then `await import("./main")`, because each
+   * one needs a fresh module instance wired to a freshly mounted DOM. Only the FIRST of
+   * those imports is expensive: it transforms main.ts and everything it pulls in
+   * (@cosmic/physics, @cosmic/runtime, @cosmic/data-astr101). Measured 2026-09-09 inside
+   * the first test -- import 167.4ms, assertions 10.4ms. `resetModules` clears the module
+   * registry but not Vite's transform cache, so the other five imports cost 11-21ms.
+   *
+   * The effect was that "captures two epochs..." looked like a 406ms test when it is a
+   * 10ms test standing behind a 167ms import -- and at 406ms it was the slowest test in
+   * the repo by 18x (next slowest: 22ms) and 44% of the entire suite's 915ms of test
+   * time. On 2026-09-09 it stretched past the 5s default and failed, while the assertions
+   * it was timing had never stopped passing.
+   *
+   * Importing here concentrates that one-off cost in a single place with a single ceiling
+   * and leaves each test's budget covering only its own ~10-20ms of work: idle, the first
+   * test drops from 406ms to 38ms and the file stops being the suite's outlier. The
+   * instance this creates is discarded -- `beforeEach` resets the module registry and
+   * replaces document.body, so no test ever sees it.
+   *
+   * Worth recording that this hook ALONE did not fix the flake. Moving a load-sensitive
+   * 167ms from a 5s budget to the default 10s hook budget just relocated the failure, and
+   * made it quieter: a failed beforeAll SKIPS all six tests rather than failing two. Under
+   * the stressor it timed out 3 runs out of 3. The measured ceilings above are the other
+   * half of the fix, and neither half is sufficient on its own.
+   */
+  beforeAll(async () => {
+    mountDemoHtml();
+    await import("./main");
+  }, 60000);
+
   beforeEach(() => {
     vi.resetModules();
     for (const spy of Object.values(runtimeSpies)) {
