@@ -4,6 +4,7 @@ import TopicIcon from "./TopicIcon.astro";
 import DemoCanvasThumbnail from "./DemoCanvasThumbnail.astro";
 import { topicColor, primaryTopic } from "../lib/topicColors";
 import { TOPIC_LABEL, isTopicKey, topicPath } from "../lib/topics";
+import { readinessBadge } from "../lib/readiness";
 
 export type DemoCardProps = {
   title: string;
@@ -29,6 +30,8 @@ export type DemoCardProps = {
   searchText?: string;
   /** Also shown in the Explore featured strip, so this copy is hidden while unfiltered. */
   featured?: boolean;
+  /** Student-voiced misconceptions this exhibit targets; searchable from Explore. */
+  misconceptions?: string[];
 };
 
 const {
@@ -51,7 +54,8 @@ const {
   playlistHref,
   lastUpdated = "",
   searchText = "",
-  featured = false
+  featured = false,
+  misconceptions = []
 } = Astro.props as DemoCardProps;
 
 const topic = primaryTopic(topics);
@@ -64,24 +68,7 @@ const topicLinks = topics.map((t) => ({
     ? `${cardBase.endsWith("/") ? cardBase : `${cardBase}/`}${topicPath(t)}`
     : undefined
 }));
-const statusTone =
-  status === "stable" ? "teal" : status === "beta" ? "status-beta" : "status-draft";
-const readinessTone =
-  readiness === "launch-ready"
-    ? "teal"
-    : readiness === "candidate"
-      ? "violet"
-      : readiness === "experimental"
-        ? "status-beta"
-        : "status-draft";
-const readinessLabel =
-  readiness === "launch-ready"
-    ? "launch-ready"
-    : readiness === "candidate"
-      ? "candidate"
-      : readiness === "experimental"
-        ? "experimental"
-        : "stub";
+const badge = readinessBadge(readiness);
 const timeLabel =
   timeMinutes <= 10 ? "\u226410 min" : timeMinutes <= 20 ? "10\u201320 min" : "20+ min";
 ---
@@ -93,11 +80,12 @@ const timeLabel =
   data-topics={topics.join(" ")}
   data-levels={levels.join(" ")}
   data-time={String(timeMinutes)}
-  data-status={status}
+  data-readiness={readiness}
   data-math={hasMathMode ? "yes" : "no"}
   data-updated={lastUpdated}
   data-search={`${title} ${searchText}`.toLowerCase()}
   data-featured={featured ? "yes" : "no"}
+  data-misconceptions={JSON.stringify(misconceptions)}
 >
   <div class="demo-card__top">
     <a class="demo-card__illustration-link" href={href} aria-label={`Open exhibit: ${title}`}>
@@ -119,9 +107,14 @@ const timeLabel =
         </p>
       )}
       <p class="demo-card__desc">{description}</p>
+      {/*
+        * Why this card matched. Filled by the Explore script when the search term hits a
+        * misconception rather than the title or tags -- otherwise the reader gets a card
+        * with no visible connection to what they typed and has to guess.
+        */}
+      <p class="demo-card__match" data-match hidden></p>
       <div class="demo-card__badges" aria-label="Tags">
-        <TagPill label={status} tone={statusTone} />
-        <TagPill label={`readiness: ${readinessLabel}`} tone={readinessTone} />
+        {badge ? <TagPill label={badge.label} tone={badge.tone} ariaLabel={badge.ariaLabel} /> : null}
         {topicLinks.map((t) => (
           <TagPill
             label={t.label}
@@ -241,6 +234,30 @@ const timeLabel =
 
   .demo-card:hover .demo-card__title a {
     color: var(--cp-title-strong);
+  }
+
+  /*
+   * The misconception that matched the search. Quoted and set apart from the description,
+   * because it is a student's wrong idea rather than the site's own words -- reading it
+   * as a claim the card is making would be exactly backwards.
+   */
+  .demo-card__match {
+    margin: 0;
+    padding-inline-start: var(--cp-space-3);
+    border-inline-start: 2px solid var(--topic-color, var(--cp-border));
+    color: var(--cp-text2);
+    font-style: italic;
+    max-width: 72ch;
+  }
+
+  .demo-card__match[hidden] {
+    display: none;
+  }
+
+  .demo-card__match::before {
+    content: "Targets the idea that ";
+    font-style: normal;
+    color: var(--cp-muted);
   }
 
   .demo-card__desc {

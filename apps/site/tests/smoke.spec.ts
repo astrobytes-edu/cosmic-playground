@@ -151,12 +151,32 @@ test.describe("Cosmic Playground smoke", () => {
     expect(text).toMatch(/(≤|–|\+)/);
   });
 
-  test("Explore cards order badges with status first", async ({ page }) => {
+  test("Explore cards lead with readiness, and only when it needs saying", async ({ page }) => {
+    // One status vocabulary on the card, not three. `status` and `readiness` used to sit
+    // side by side saying near-identical things -- 14 of 19 demos read "draft" and
+    // "experimental" and content_verified:true at once. A launch-ready exhibit shows no
+    // badge at all, so the first badge is either a readiness level or the topic.
     await page.goto("explore/");
     const badges = page.locator(".demo-card .demo-card__badges .cp-badge");
     await expect(badges.first()).toBeVisible();
-    const firstText = (await badges.first().textContent())?.toLowerCase() ?? "";
-    expect(["stable", "beta", "draft"]).toContain(firstText.trim());
+    const firstText = (await badges.first().textContent())?.trim().toLowerCase() ?? "";
+    const readinessLabels = ["stub", "experimental", "near-ready"];
+
+    await expect(page.locator(".demo-card").first()).toHaveAttribute("data-readiness", /.+/);
+    const readiness = await page.locator(".demo-card").first().getAttribute("data-readiness");
+    if (readiness === "launch-ready") {
+      expect(readinessLabels).not.toContain(firstText);
+    } else {
+      expect(readinessLabels).toContain(firstText);
+    }
+    // The retired vocabulary must not come back alongside it. Checked per badge, since
+    // a container's text is every badge concatenated and would never match on its own.
+    const retired = await page.evaluate(() =>
+      [...document.querySelectorAll(".cp-badge")]
+        .map((b) => b.textContent?.trim().toLowerCase() ?? "")
+        .filter((t) => ["stable", "beta", "draft"].includes(t))
+    );
+    expect(retired).toEqual([]);
   });
 
   test("Explore filter uses invitational microcopy", async ({ page }) => {

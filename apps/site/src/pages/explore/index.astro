@@ -7,6 +7,7 @@ import EmptyState from "../../components/EmptyState.astro";
 import HeroOrbit from "../../components/HeroOrbit.astro";
 import TopicIcon from "../../components/TopicIcon.astro";
 import { topicColor } from "../../lib/topicColors";
+import { READINESS_ORDER, readinessRank } from "../../lib/readiness";
 import {
   TOPIC_LABEL,
   TOPIC_ORDER,
@@ -35,7 +36,7 @@ const exploreHref = withBase("explore/");
  * `explore/filters.ts` narrows it in the browser, where the query string actually exists.
  */
 const topics = Array.from(new Set(demos.flatMap((d) => d.data.topics))).sort();
-const statuses = Array.from(new Set(demos.map((d) => d.data.status))).sort();
+const readinesses = READINESS_ORDER.filter((r) => demos.some((d) => d.data.readiness === r));
 /* `Both` is a tag meaning "either course", not a course a reader can pick. */
 const levels = ["ASTR101", "ASTR201"];
 
@@ -69,11 +70,9 @@ type QuickFilterKey = "astr101" | "updated";
  * hides what the active filters exclude. A demo with two topics is rendered in both of
  * its topic sections, so counts must be taken over distinct slugs, not over cards.
  */
-const statusRank: Record<string, number> = { stable: 0, beta: 1, draft: 2 };
-
 const sorted = [...demos].sort(
   (a, b) =>
-    (statusRank[a.data.status] ?? 99) - (statusRank[b.data.status] ?? 99) ||
+    readinessRank(a.data.readiness) - readinessRank(b.data.readiness) ||
     parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated) ||
     a.data.title.localeCompare(b.data.title)
 );
@@ -112,9 +111,17 @@ const topicSections = TOPIC_ORDER.map((key) => ({
 const allSlugs = demos.map((d) => d.slug);
 const randomSlug = allSlugs[Math.floor(Math.random() * allSlugs.length)];
 
-/** Free-text haystack for the search box; the card lowercases it with its own title. */
+/*
+ * Free-text haystack for the search box; the card lowercases it with its own title.
+ *
+ * `misconceptions` is in here because it is the field a reader's own words are most
+ * likely to match. Every demo declares at least one -- 37 across the 19 listed on
+ * 2026-09-09 -- and they are written in the student's voice ("If something looks bigger,
+ * it must be physically bigger"). Someone looking for help with a class that believes
+ * summer happens because Earth is closer to the Sun types that, not "EarthSky".
+ */
 const searchTextFor = (d: (typeof demos)[number]) =>
-  `${d.data.tags.join(" ")} ${d.data.learning_goals.join(" ")}`;
+  `${d.data.tags.join(" ")} ${d.data.learning_goals.join(" ")} ${d.data.misconceptions.join(" ")}`;
 
 type StartHereTile = {
   title: string;
@@ -185,7 +192,7 @@ const startHere = startHereTiles.map((tile) => {
       </p>
       <p class="explore-hero__tagline">Play with the universe. Learn the physics.</p>
       <div class="site-state-note cp-card" role="note" aria-label="Project state">
-        Cosmic Playground is in active beta. Use status and readiness badges to judge classroom readiness.
+        Cosmic Playground is in active beta. A badge on an exhibit says how ready it is to assign; an exhibit with no badge is finished.
       </div>
     </div>
     <div class="explore-hero__motion" aria-hidden="true">
@@ -208,7 +215,7 @@ const startHere = startHereTiles.map((tile) => {
     </div>
   </section>
 
-  <FilterBar topics={topics} levels={levels} statuses={statuses} />
+  <FilterBar topics={topics} levels={levels} readinesses={readinesses} />
 
   <nav class="quick-filters" aria-label="Quick filters">
     {quickFilterItems.map((item) => (
@@ -316,6 +323,7 @@ const startHere = startHereTiles.map((tile) => {
                 playlistHref={`${withBase("playlists/")}?demo=${encodeURIComponent(d.slug)}`}
                 lastUpdated={d.data.last_updated}
                 searchText={searchTextFor(d)}
+                misconceptions={d.data.misconceptions}
                 featured={featuredSlugs.has(d.slug)}
               />
             ))}
@@ -339,6 +347,7 @@ const startHere = startHereTiles.map((tile) => {
     facetCount,
     hasNarrowingFilter,
     matches,
+    matchesQuery,
     readFilters,
     toSearchParams
   } from "../../lib/exploreFilter";
@@ -372,7 +381,7 @@ const startHere = startHereTiles.map((tile) => {
       topics: (card.dataset.topics ?? "").split(" ").filter(Boolean),
       levels: (card.dataset.levels ?? "").split(" ").filter(Boolean),
       timeMinutes: Number(card.dataset.time ?? "0"),
-      status: card.dataset.status ?? "",
+      readiness: card.dataset.readiness ?? "",
       hasMath: card.dataset.math === "yes",
       updated: card.dataset.updated ?? "",
       search: card.dataset.search ?? ""
@@ -391,7 +400,7 @@ const startHere = startHereTiles.map((tile) => {
       topic: (v) => `Topic: ${v}`,
       level: (v) => `Course: ${v.replace(/^ASTR/, "ASTR ")}`,
       time: (v) => `Time: ${optionLabel("time", v)}`,
-      status: (v) => `Status: ${v}`,
+      readiness: (v) => `Readiness: ${optionLabel("readiness", v)}`,
       math: (v) => `Math required: ${v === "yes" ? "Yes" : "No"}`,
       quick: (v) => `Quick: ${quickChips.find((c) => c.dataset.quick === v)?.dataset.label ?? v}`
     };
@@ -420,6 +429,7 @@ const startHere = startHereTiles.map((tile) => {
       const filtering = hasNarrowingFilter(filters);
 
       for (const card of cards) card.hidden = !visible.has(card.dataset.slug ?? "");
+      showSearchMatches();
 
       /*
        * While unfiltered the three featured demos are shown by the strip above, so their
@@ -479,6 +489,48 @@ const startHere = startHereTiles.map((tile) => {
         chip.textContent = `${chip.dataset.label ?? ""} (${n})`;
       }
       if (resetButton) resetButton.hidden = !filtering && filters.sort === "recommended";
+    }
+
+    /*
+     * Say why a card matched.
+     *
+     * Searching a misconception -- "closer to the sun", "bigger means closer" -- now
+     * returns exhibits whose title and tags contain nothing of the sort. Without this the
+     * reader gets a result they cannot connect to what they typed, which reads as the
+     * search misfiring. The matched misconception is shown on the card, verbatim, so the
+     * connection is explicit.
+     *
+     * Only shown when the term is NOT already visible in the title or description; if the
+     * card says "Seasons" and you searched "seasons", nothing needs explaining.
+     */
+    function showSearchMatches() {
+      const term = filters.q.toLowerCase().trim();
+      for (const card of cards) {
+        const slot = card.querySelector<HTMLElement>("[data-match]");
+        if (!slot) continue;
+        if (!term || card.hidden) {
+          slot.hidden = true;
+          continue;
+        }
+
+        const visibleText = `${card.querySelector(".demo-card__title")?.textContent ?? ""} ${
+          card.querySelector(".demo-card__desc")?.textContent ?? ""
+        }`.toLowerCase();
+        if (matchesQuery(visibleText, term)) {
+          slot.hidden = true;
+          continue;
+        }
+
+        let list: string[] = [];
+        try {
+          list = JSON.parse(card.dataset.misconceptions ?? "[]");
+        } catch {
+          list = [];
+        }
+        const hit = list.find((m) => matchesQuery(m.toLowerCase(), term));
+        slot.hidden = hit === undefined;
+        slot.textContent = hit ?? "";
+      }
     }
 
     function sortSections() {
@@ -554,7 +606,7 @@ const startHere = startHereTiles.map((tile) => {
       }
       /* An advanced filter arriving by URL must not stay folded away inside <details>. */
       const advanced = filterForm.querySelector<HTMLDetailsElement>(".filter-bar__details");
-      if (advanced && (filters.level || filters.status || filters.math)) advanced.open = true;
+      if (advanced && (filters.level || filters.readiness || filters.math)) advanced.open = true;
     }
 
     function pushUrl(replace: boolean) {

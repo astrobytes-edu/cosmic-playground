@@ -6,6 +6,7 @@
 import DemoCanvasThumbnail from "./DemoCanvasThumbnail.astro";
 import TopicIcon from "./TopicIcon.astro";
 import TagPill from "./TagPill.astro";
+import { readinessBadge } from "../lib/readiness";
 import { topicColor, primaryTopic } from "../lib/topicColors";
 
 interface Props {
@@ -20,16 +21,7 @@ interface Props {
 
 const { title, slug, href, topics, lastUpdated, status, readiness } = Astro.props;
 const color = topicColor(primaryTopic(topics));
-const statusTone =
-  status === "stable" ? "teal" : status === "beta" ? "status-beta" : "status-draft";
-const readinessTone =
-  readiness === "launch-ready"
-    ? "teal"
-    : readiness === "candidate"
-      ? "violet"
-      : readiness === "experimental"
-        ? "status-beta"
-        : "status-draft";
+const badge = readinessBadge(readiness);
 ---
 
 <a class="mini-card cp-card" href={href} style={`--topic-color: ${color}`}>
@@ -41,10 +33,11 @@ const readinessTone =
     {topics[0] && <TopicIcon topic={topics[0]} size={12} />}
     <time class="mini-card__date">{lastUpdated}</time>
   </span>
-  <span class="mini-card__state" aria-label="Demo state">
-    <TagPill label={status} tone={statusTone} />
-    <TagPill label={readiness} tone={readinessTone} />
-  </span>
+  {badge ? (
+    <span class="mini-card__state" aria-label="Demo state">
+      <TagPill label={badge.label} tone={badge.tone} ariaLabel={badge.ariaLabel} />
+    </span>
+  ) : null}
 </a>
 
 <style>

@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import IframeStage from "../../components/IframeStage.astro";
 import TagPill from "../../components/TagPill.astro";
+import { readinessBadge } from "../../lib/readiness";
 import PPEBlock from "../../components/PPEBlock.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import { TOPIC_LABEL, topicPath } from "../../lib/topics";
@@ -28,6 +29,8 @@ const stationHref = withBase(`stations/${entry.slug}/`);
 const instructorHref = withBase(`instructor/${entry.slug}/`);
 
 const { Content } = await entry.render();
+
+const badge = readinessBadge(entry.data.readiness);
 ---
 
 <Layout title={`${entry.data.title} — Exhibit`} hasMath={true}>
@@ -42,20 +45,7 @@ const { Content } = await entry.render();
   <header class="exhibit-header cp-hero">
     <h1>{entry.data.title}</h1>
     <div class="badges" aria-label="Demo badges">
-      <TagPill
-        label={entry.data.status}
-        tone={entry.data.status === "stable" ? "teal" : entry.data.status === "beta" ? "status-beta" : "status-draft"}
-      />
-      <TagPill
-        label={`readiness: ${entry.data.readiness}`}
-        tone={entry.data.readiness === "launch-ready"
-          ? "teal"
-          : entry.data.readiness === "candidate"
-            ? "violet"
-            : entry.data.readiness === "experimental"
-              ? "status-beta"
-              : "status-draft"}
-      />
+      {badge ? <TagPill label={badge.label} tone={badge.tone} ariaLabel={badge.ariaLabel} /> : null}
       {entry.data.topics.map((t) => (
         <TagPill
           label={TOPIC_LABEL[t]}

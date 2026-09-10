@@ -70,13 +70,13 @@ test.describe("Explore filters", () => {
   });
 
   test("a deep link restores every control, including the folded-away ones", async ({ page }) => {
-    await page.goto("explore/?q=orbit&level=ASTR201&status=draft&math=no&sort=duration", {
+    await page.goto("explore/?q=orbit&level=ASTR201&readiness=experimental&math=no&sort=duration", {
       waitUntil: "load"
     });
 
     await expect(page.locator("input[name='q']")).toHaveValue("orbit");
     await expect(page.locator("select[name='level']")).toHaveValue("ASTR201");
-    await expect(page.locator("select[name='status']")).toHaveValue("draft");
+    await expect(page.locator("select[name='readiness']")).toHaveValue("experimental");
     await expect(page.locator("select[name='math']")).toHaveValue("no");
     await expect(page.locator("select[name='sort']")).toHaveValue("duration");
     // A filter arriving by URL must not stay hidden inside the <details>.
@@ -126,6 +126,55 @@ test.describe("Explore filters", () => {
     expect(await resultCount(page)).toBe(await totalCount(page));
     await expect(page.locator("[data-filter-chips]")).toBeHidden();
     await expect(page.locator(".quick-filters .cp-chip")).toHaveCount(2);
+  });
+
+  test("a misconception in the reader's own words finds the exhibit", async ({ page }) => {
+    /*
+     * The seasons exhibit is titled "Seasons", tagged tilt/sunlight/insolation, and its
+     * learning goals talk about axial tilt. Nothing in any of that contains "closer" or
+     * "sun" as a phrase a reader would type. What does is its declared misconception --
+     * "Seasons are caused by Earth being closer/farther from the Sun" -- which is the
+     * field an instructor's actual question matches, and which search could not reach
+     * until 2026-09-10.
+     */
+    await page.goto("explore/?q=closer+to+the+sun", { waitUntil: "load" });
+
+    const card = page.locator("[data-topic-section] .demo-card[data-slug='seasons']").first();
+    await expect(card).toBeVisible();
+    // And it says WHY it matched, or the reader cannot connect the card to what they typed.
+    await expect(card.locator("[data-match]")).toBeVisible();
+    await expect(card.locator("[data-match]")).toContainText("closer/farther from the Sun");
+  });
+
+  test("search folds the punctuation a reader cannot type", async ({ page }) => {
+    // The authored text is "Phases are caused by Earth’s shadow" with U+2019. A keyboard
+    // produces U+0027, which matches none of it unless both sides are folded.
+    await page.goto("explore/?q=earth%27s+shadow", { waitUntil: "load" });
+
+    const card = page.locator("[data-topic-section] .demo-card[data-slug='moon-phases']").first();
+    await expect(card).toBeVisible();
+    await expect(card.locator("[data-match]")).toContainText("shadow");
+  });
+
+  test("a stopword in the query does not veto a match", async ({ page }) => {
+    // "Planets move at the same speed all along their orbits" has no "the same speed" gap,
+    // but a query sentence carries words the authored text need not contain. Matching is
+    // over content words, so an ordinary sentence still lands.
+    await page.goto("explore/?q=planets+move+at+the+same+speed", { waitUntil: "load" });
+
+    const card = page.locator("[data-topic-section] .demo-card[data-slug='keplers-laws']").first();
+    await expect(card).toBeVisible();
+    await expect(card.locator("[data-match]")).toContainText("same speed");
+  });
+
+  test("no match context when the card already explains itself", async ({ page }) => {
+    // Searching "seasons" and being told the card matched because it is about seasons is
+    // noise. The line appears only when the connection is not already on the card.
+    await page.goto("explore/?q=seasons", { waitUntil: "load" });
+
+    const card = page.locator("[data-topic-section] .demo-card[data-slug='seasons']").first();
+    await expect(card).toBeVisible();
+    await expect(card.locator("[data-match]")).toBeHidden();
   });
 
   test("removing a chip drops just that filter", async ({ page }) => {

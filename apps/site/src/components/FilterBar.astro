@@ -10,10 +10,18 @@ import Icon from "./Icon.astro";
 export type FilterBarProps = {
   topics: string[];
   levels: string[];
-  statuses: string[];
+  readinesses: string[];
 };
 
-const { topics, levels, statuses } = Astro.props as FilterBarProps;
+const { topics, levels, readinesses } = Astro.props as FilterBarProps;
+
+/* The badge on the card says "near-ready"; the filter that finds it must say so too. */
+const READINESS_LABEL: Record<string, string> = {
+  "launch-ready": "Ready to assign",
+  candidate: "Near-ready",
+  experimental: "Experimental",
+  stub: "Stub"
+};
 
 const LEVEL_LABEL: Record<string, string> = {
   ASTR101: "ASTR 101",
@@ -83,11 +91,11 @@ const LEVEL_LABEL: Record<string, string> = {
         </label>
 
         <label class="filter-bar__field">
-          <span class="filter-bar__label">Status</span>
-          <select class="cp-select" name="status">
+          <span class="filter-bar__label">Classroom readiness</span>
+          <select class="cp-select" name="readiness">
             <option value="">Any</option>
-            {statuses.map((s) => (
-              <option value={s} data-label={s}>{s}</option>
+            {readinesses.map((r) => (
+              <option value={r} data-label={READINESS_LABEL[r] ?? r}>{READINESS_LABEL[r] ?? r}</option>
             ))}
           </select>
         </label>

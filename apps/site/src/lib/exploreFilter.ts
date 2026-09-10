@@ -14,12 +14,14 @@
  * LOOKS at the page, not to when the site was built.
  */
 
-export const FILTER_KEYS = ["q", "topic", "level", "time", "status", "math", "quick", "sort"] as const;
+import { readinessRank } from "./readiness";
+
+export const FILTER_KEYS = ["q", "topic", "level", "time", "readiness", "math", "quick", "sort"] as const;
 export type FilterKey = (typeof FILTER_KEYS)[number];
 export type Filters = Record<FilterKey, string>;
 
 /** Axes that narrow the catalogue. `sort` reorders it and is deliberately not here. */
-export const NARROWING_KEYS = ["q", "topic", "level", "time", "status", "math", "quick"] as const;
+export const NARROWING_KEYS = ["q", "topic", "level", "time", "readiness", "math", "quick"] as const;
 export type NarrowingKey = (typeof NARROWING_KEYS)[number];
 
 export type TimeBucket = "lt10" | "10to20" | "gt20";
@@ -49,7 +51,7 @@ export interface DemoFacets {
   topics: string[];
   levels: string[];
   timeMinutes: number;
-  status: string;
+  readiness: string;
   hasMath: boolean;
   /** ISO date, as authored in the demo's frontmatter. */
   updated: string;
@@ -62,7 +64,7 @@ export const EMPTY_FILTERS: Filters = {
   topic: "",
   level: "",
   time: "",
-  status: "",
+  readiness: "",
   math: "",
   quick: "",
   sort: "recommended"
@@ -92,6 +94,63 @@ export function isRecent(isoDate: string, now: Date, windowDays = 30): boolean {
   return now.getTime() - updatedAt <= windowDays * 24 * 60 * 60 * 1000;
 }
 
+/**
+ * Fold the typographic characters a reader cannot easily type.
+ *
+ * The authored misconceptions use real punctuation -- "Phases are caused by Earth’s
+ * shadow", "Eclipses happen every time there’s a new or full Moon", "Electrons orbit
+ * like planets — the Bohr model...". Someone typing "earth's shadow" on a keyboard
+ * produces U+0027, which matches none of it. Both sides are folded so the search is about
+ * the words rather than about which apostrophe the author happened to use.
+ */
+export function normalizeSearchText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u02bc]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Every word present, anywhere -- not the whole phrase contiguously.
+ *
+ * Substring matching defeats the point of searching misconceptions. The seasons demo
+ * declares "Seasons are caused by Earth being closer/farther from the Sun"; a reader
+ * types "closer to the sun" and a substring test returns nothing, because the authored
+ * text says "closer/farther from". Requiring each word to appear somewhere in the
+ * haystack matches it, and matches "sun earth distance" too.
+ *
+ * Conjunctive, so adding a word always narrows -- the behaviour people expect from a
+ * search box. It is strictly more forgiving than the substring test it replaces: a
+ * single-word query behaves identically.
+ */
+/*
+ * Words that carry no signal but would otherwise veto a match.
+ *
+ * Measured case: searching "closer to the sun" against the seasons misconception,
+ * "Seasons are caused by Earth being closer/farther from the Sun." Every content word is
+ * there, but the sentence contains no "to", so a strict all-words test rejected it. The
+ * reader typed a sentence, as people do; the words that matter are `closer` and `sun`.
+ */
+const STOPWORDS = new Set([
+  "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "in", "is", "it",
+  "its", "of", "on", "or", "that", "the", "their", "they", "this", "to", "was", "with"
+]);
+
+/** The words worth matching on. Falls back to the raw tokens for an all-stopword query. */
+export function contentTokens(query: string): string[] {
+  const tokens = normalizeSearchText(query).split(" ").filter(Boolean);
+  const content = tokens.filter((token) => !STOPWORDS.has(token));
+  return content.length > 0 ? content : tokens;
+}
+
+export function matchesQuery(haystack: string, query: string): boolean {
+  const hay = normalizeSearchText(haystack);
+  return contentTokens(query).every((token) => hay.includes(token));
+}
+
 export function matchesQuick(demo: DemoFacets, quick: string, now: Date): boolean {
   if (quick === "astr101") return matchesLevel(demo.levels, "ASTR101");
   if (quick === "updated") return isRecent(demo.updated, now);
@@ -103,15 +162,15 @@ export function matchesAxis(demo: DemoFacets, key: NarrowingKey, value: string, 
   if (!value) return true;
   switch (key) {
     case "q":
-      return demo.search.includes(value.toLowerCase().trim());
+      return matchesQuery(demo.search, value);
     case "topic":
       return demo.topics.includes(value);
     case "level":
       return matchesLevel(demo.levels, value);
     case "time":
       return timeBucket(demo.timeMinutes) === value;
-    case "status":
-      return demo.status === value;
+    case "readiness":
+      return demo.readiness === value;
     case "math":
       return demo.hasMath === (value === "yes");
     case "quick":
@@ -156,7 +215,7 @@ export function readFilters(search: string): Filters {
     topic: read("topic"),
     level: read("level"),
     time: read("time"),
-    status: read("status"),
+    readiness: read("readiness"),
     math: read("math"),
     /*
      * A `?quick=labs` bookmark from before the trim would otherwise render a chip with no
@@ -179,7 +238,6 @@ export function toSearchParams(filters: Filters): URLSearchParams {
   return params;
 }
 
-const STATUS_RANK: Record<string, number> = { stable: 0, beta: 1, draft: 2 };
 const LEVEL_RANK: Record<string, number> = { ASTR101: 0, Both: 1, ASTR201: 2 };
 
 export function levelRank(levels: readonly string[]): number {
@@ -191,8 +249,13 @@ export function compareDemos(a: DemoFacets, b: DemoFacets, sort: string): number
   if (sort === "duration") return a.timeMinutes - b.timeMinutes || a.slug.localeCompare(b.slug);
   if (sort === "level") return levelRank(a.levels) - levelRank(b.levels) || a.slug.localeCompare(b.slug);
   if (sort === "updated") return Date.parse(b.updated) - Date.parse(a.updated) || a.slug.localeCompare(b.slug);
+  /*
+   * "Recommended" now leads with the most classroom-ready exhibits rather than the ones
+   * whose `status` happened to say "beta". Readiness is the vocabulary on the card, so it
+   * is the one the default order should follow.
+   */
   return (
-    (STATUS_RANK[a.status] ?? 99) - (STATUS_RANK[b.status] ?? 99) ||
+    readinessRank(a.readiness) - readinessRank(b.readiness) ||
     Date.parse(b.updated) - Date.parse(a.updated) ||
     a.slug.localeCompare(b.slug)
   );
