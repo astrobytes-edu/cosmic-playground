@@ -6,7 +6,7 @@ levels: [ASTR201]
 topics: [Stars]
 time_minutes: 12
 has_math_mode: false
-tags: ["stellar-structure", "equation-of-state", "pressure"]
+tags: ["stellar-structure", "equation-of-state", "pressure", "degeneracy pressure", "radiation pressure", "ideal gas", "white dwarf", "stellar interior"]
 readiness: experimental
 unlisted: true
 unlistedReason: "On hold. The equation of state is incomplete: finite-temperature Fermi branches are implemented, but the neutron-rich and pair-dominated regimes are not, so the regime map is only trustworthy over part of the plane it draws. There is also no instructor bundle. Withheld from the catalogue until the EOS is complete and independently checked."

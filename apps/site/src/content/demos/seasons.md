@@ -6,7 +6,7 @@ levels: [Both]
 topics: [EarthSky]
 time_minutes: 12
 has_math_mode: false
-tags: ["tilt", "sunlight", "insolation"]
+tags: ["tilt", "sunlight", "insolation", "summer", "winter", "solstice", "equinox", "day length", "sun angle", "axial tilt"]
 readiness: experimental
 readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/seasons-parity.md"

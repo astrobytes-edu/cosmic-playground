@@ -6,7 +6,7 @@ levels: [Both]
 topics: [EarthSky]
 time_minutes: 10
 has_math_mode: false
-tags: ["angles", "apparent size", "distance"]
+tags: ["angles", "apparent size", "distance", "arcminutes", "arcseconds", "angular diameter", "small angle"]
 readiness: experimental
 readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/angular-size-parity.md"

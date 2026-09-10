@@ -6,7 +6,7 @@ levels: [Both]
 topics: [Galaxies, Cosmology, DataInference]
 time_minutes: 16
 has_math_mode: false
-tags: ["rotation curves", "dark matter", "MOND", "NFW halo", "galaxy dynamics", "21-cm"]
+tags: ["rotation curves", "dark matter", "MOND", "NFW halo", "galaxy dynamics", "21-cm", "flat rotation curve", "missing mass", "dark matter halo", "enclosed mass", "spiral galaxy"]
 readiness: candidate
 readinessReason: "SoTA UX/pedagogy uplift is complete (playbar transport, deeper challenge deck, reduced-motion parity, challenge-mode control tuning, visual-token polish) and targeted contract tests are passing; launch-ready still requires classroom and screen-reader validation artifacts."
 parityAuditPath: "docs/audits/migrations/galaxy-rotation-parity.md"

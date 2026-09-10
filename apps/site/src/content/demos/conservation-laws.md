@@ -6,7 +6,7 @@ levels: [Both]
 topics: [Orbits]
 time_minutes: 10
 has_math_mode: false
-tags: ["energy", "momentum", "invariants"]
+tags: ["energy", "momentum", "invariants", "energy conservation", "momentum conservation", "closed system", "kinetic energy", "potential energy"]
 readiness: experimental
 readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/conservation-laws-parity.md"

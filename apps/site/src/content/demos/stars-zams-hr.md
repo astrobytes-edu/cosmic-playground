@@ -6,7 +6,7 @@ levels: [ASTR201]
 topics: [Stars]
 time_minutes: 14
 has_math_mode: false
-tags: ["stars", "zams", "hr-diagram", "metallicity"]
+tags: ["stars", "zams", "hr-diagram", "metallicity", "main sequence", "Hertzsprung-Russell diagram", "stellar luminosity", "effective temperature", "turnoff"]
 readiness: experimental
 readinessReason: "Tout-1996 ZAMS model and instrument workflow are implemented; classroom parity and launch-gate QA remain in progress."
 parityAuditPath: "docs/audits/migrations/stars-zams-hr-parity.md"

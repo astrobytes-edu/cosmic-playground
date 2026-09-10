@@ -6,7 +6,7 @@ levels: [Both]
 topics: [Stars, DataInference]
 time_minutes: 15
 has_math_mode: false
-tags: ["imf", "star-clusters", "hr-diagram", "sampling", "statistics"]
+tags: ["imf", "star-clusters", "hr-diagram", "sampling", "statistics", "initial mass function", "main sequence turnoff", "cluster age", "most massive star", "open cluster"]
 readiness: experimental
 readinessReason: "Physics is unit-tested end to end and the model's validity domain is handled explicitly, but the demo is new and has not been used in a classroom yet."
 parityAuditPath: "docs/reviews/2026-09-04-novascope-port-survey.md"

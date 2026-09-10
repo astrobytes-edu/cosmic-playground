@@ -6,7 +6,7 @@ levels: [Both]
 topics: [LightSpectra]
 time_minutes: 10
 has_math_mode: false
-tags: ["wavelength", "frequency", "spectrum"]
+tags: ["wavelength", "frequency", "spectrum", "radio", "microwave", "infrared", "ultraviolet", "x-ray", "gamma ray", "visible light", "light"]
 readiness: experimental
 readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/em-spectrum-parity.md"

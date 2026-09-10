@@ -6,7 +6,7 @@ levels: [Both]
 topics: [LightSpectra, DataInference]
 time_minutes: 14
 has_math_mode: false
-tags: ["doppler shift", "redshift", "blueshift", "spectral lines", "radial velocity"]
+tags: ["doppler shift", "redshift", "blueshift", "spectral lines", "radial velocity", "wavelength shift", "line-of-sight velocity", "approaching", "receding"]
 readiness: candidate
 readinessReason: "SoTA UX/pedagogy uplift is complete (playbar transport, deeper challenge deck, tooltip affordances, cross-demo scaffolding) and automated gates are passing; launch-ready now depends on classroom and screen-reader validation artifacts."
 parityAuditPath: "docs/audits/migrations/doppler-shift-parity.md"

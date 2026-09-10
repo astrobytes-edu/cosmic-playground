@@ -6,7 +6,7 @@ levels: [Both]
 topics: [EarthSky]
 time_minutes: 8
 has_math_mode: false
-tags: ["phases", "illumination", "geometry"]
+tags: ["phases", "illumination", "geometry", "full moon", "new moon", "crescent", "gibbous", "waxing", "waning", "first quarter", "lunar phases"]
 readiness: candidate
 readinessReason: "Beta demo with strong behavior and test coverage; final parity and launch-gate signoff pending."
 parityAuditPath: "docs/audits/migrations/moon-phases-parity.md"

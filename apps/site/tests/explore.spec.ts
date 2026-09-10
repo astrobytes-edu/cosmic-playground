@@ -177,6 +177,38 @@ test.describe("Explore filters", () => {
     await expect(card.locator("[data-match]")).toBeHidden();
   });
 
+  test("student vocabulary reaches the exhibit that teaches it", async ({ page }) => {
+    /*
+     * `tags` was expert vocabulary only -- seasons was tilt/sunlight/insolation, so the
+     * words a class actually uses ("summer", "solstice") found nothing. Widened across all
+     * 20 demos on 2026-09-10, grounded in each demo's own UI text and learning goals.
+     */
+    for (const term of ["summer", "solstice", "full moon", "x-ray", "parsec", "Balmer"]) {
+      await page.goto(`explore/?q=${encodeURIComponent(term)}`, { waitUntil: "load" });
+      expect(await resultCount(page), `"${term}" should find an exhibit`).toBeGreaterThan(0);
+    }
+  });
+
+  test("a question typed as a sentence finds the exhibit", async ({ page }) => {
+    // Function words, question words and contractions are dropped, and a query word also
+    // matches its own inflections -- "causes" against an authored "caused by". Each of
+    // these failed on exactly one such word before 2026-09-10.
+    const questions: Array<[string, string]> = [
+      ["why is it summer when earth is closer to the sun", "seasons"],
+      ["what causes the phases of the moon", "moon-phases"],
+      ["why don't we have an eclipse every month", "eclipse-geometry"],
+      ["why are some stars red and some blue", "blackbody-radiation"],
+      ["how far away are the stars", "parallax-distance"]
+    ];
+    for (const [question, slug] of questions) {
+      await page.goto(`explore/?q=${encodeURIComponent(question)}`, { waitUntil: "load" });
+      await expect(
+        page.locator(`[data-topic-section] .demo-card[data-slug='${slug}']`).first(),
+        `"${question}" should surface ${slug}`
+      ).toBeVisible();
+    }
+  });
+
   test("removing a chip drops just that filter", async ({ page }) => {
     await page.goto("explore/?topic=Orbits&time=lt10", { waitUntil: "load" });
     const both = await resultCount(page);

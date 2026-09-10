@@ -6,7 +6,7 @@ levels: [ASTR201]
 topics: [Stars]
 time_minutes: 14
 has_math_mode: true
-tags: ["stellar-structure", "hydrostatic-equilibrium", "pressure-scale-height", "ideal-gas", "core-temperature"]
+tags: ["stellar-structure", "hydrostatic-equilibrium", "pressure-scale-height", "ideal-gas", "core-temperature", "stellar interior", "core temperature", "pressure balance", "gravity", "stellar structure"]
 readiness: experimental
 readinessReason: "The demo is designed as a guided ASTR 201 structure explorer, but launch-gate classroom validation and accessibility evidence are still pending."
 parityAuditPath: "docs/audits/migrations/hydrostatic-equilibrium-explorer-parity.md"

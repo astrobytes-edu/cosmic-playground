@@ -6,7 +6,7 @@ levels: [Both]
 topics: [Orbits]
 time_minutes: 16
 has_math_mode: false
-tags: ["binaries", "center of mass", "radial velocity", "conservation laws"]
+tags: ["binaries", "center of mass", "radial velocity", "conservation laws", "barycenter", "mass ratio", "spectroscopic binary", "double star", "orbital period"]
 readiness: experimental
 readinessReason: "Core dynamics and RV-observable workflows are now implemented; parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/binary-orbits-parity.md"

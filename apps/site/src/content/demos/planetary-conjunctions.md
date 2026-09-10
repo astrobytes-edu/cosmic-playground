@@ -6,7 +6,7 @@ levels: [ASTR101]
 topics: [EarthSky, Orbits]
 time_minutes: 8
 has_math_mode: false
-tags: ["conjunctions", "opposition", "synodic period", "relative motion"]
+tags: ["conjunctions", "opposition", "synodic period", "relative motion", "alignment", "planetary alignment", "sky position"]
 readiness: experimental
 readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/planetary-conjunctions-parity.md"

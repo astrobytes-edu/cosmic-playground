@@ -6,7 +6,7 @@ levels: [Both]
 topics: [DataInference]
 time_minutes: 12
 has_math_mode: false
-tags: ["parallax", "triangles", "distance"]
+tags: ["parallax", "triangles", "distance", "arcseconds", "parsec", "stellar distance", "baseline", "far away", "how far"]
 readiness: experimental
 readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/parallax-distance-parity.md"

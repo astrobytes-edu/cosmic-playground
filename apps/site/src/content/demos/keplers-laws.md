@@ -6,7 +6,7 @@ levels: [Both]
 topics: [Orbits]
 time_minutes: 12
 has_math_mode: false
-tags: ["orbits", "period", "ellipses"]
+tags: ["orbits", "period", "ellipses", "perihelion", "aphelion", "orbital speed", "elliptical orbit", "eccentricity", "Kepler"]
 readiness: experimental
 readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/keplers-laws-parity.md"

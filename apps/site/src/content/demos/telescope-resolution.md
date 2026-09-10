@@ -6,7 +6,7 @@ levels: [Both]
 topics: [Telescopes]
 time_minutes: 10
 has_math_mode: false
-tags: ["resolution", "aperture", "diffraction"]
+tags: ["resolution", "aperture", "diffraction", "telescope", "Airy disk", "resolving power", "magnification", "angular resolution"]
 readiness: experimental
 readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/telescope-resolution-parity.md"

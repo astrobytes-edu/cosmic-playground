@@ -6,7 +6,7 @@ levels: [Both]
 topics: [LightSpectra]
 time_minutes: 12
 has_math_mode: false
-tags: ["blackbody", "temperature", "spectrum"]
+tags: ["blackbody", "temperature", "spectrum", "star color", "Wien's law", "Stefan-Boltzmann", "Planck curve", "thermal radiation", "peak wavelength"]
 readiness: experimental
 readinessReason: "Thermal-spectrum core is stable with Explore/Understand tabs; full launch-gate and parity signoff remain pending."
 parityAuditPath: "docs/audits/migrations/blackbody-radiation-parity.md"

@@ -6,7 +6,7 @@ levels: [Both]
 topics: [LightSpectra]
 time_minutes: 12
 has_math_mode: false
-tags: ["spectral lines", "Bohr atom", "emission", "absorption", "hydrogen", "energy levels"]
+tags: ["spectral lines", "Bohr atom", "emission", "absorption", "hydrogen", "energy levels", "Balmer series", "Lyman series", "Paschen series", "Rydberg formula", "hydrogen lines", "emission lines", "absorption lines", "atomic transitions"]
 readiness: candidate
 readinessReason: "SoTA UX/pedagogy uplift is complete (playbar transport, deeper challenge deck, tooltip affordances, misconception framing, expanded station snapshots) and regression gates are passing; launch-ready promotion now depends on classroom + screen-reader validation logs."
 parityAuditPath: "docs/audits/migrations/spectral-lines-parity.md"

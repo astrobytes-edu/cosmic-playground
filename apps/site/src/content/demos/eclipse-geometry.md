@@ -6,7 +6,7 @@ levels: [Both]
 topics: [EarthSky]
 time_minutes: 12
 has_math_mode: false
-tags: ["eclipses", "shadows", "alignment"]
+tags: ["eclipses", "shadows", "alignment", "solar eclipse", "lunar eclipse", "umbra", "penumbra", "new moon", "full moon", "nodes"]
 readiness: experimental
 readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
 parityAuditPath: "docs/audits/migrations/eclipse-geometry-parity.md"

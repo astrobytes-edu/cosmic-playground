@@ -135,9 +135,43 @@ export function normalizeSearchText(value: string): string {
  * reader typed a sentence, as people do; the words that matter are `closer` and `sun`.
  */
 const STOPWORDS = new Set([
-  "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "in", "is", "it",
-  "its", "of", "on", "or", "that", "the", "their", "they", "this", "to", "was", "with"
+  // Articles, conjunctions, prepositions, auxiliaries.
+  "a", "an", "and", "are", "as", "at", "be", "been", "being", "but", "by", "can", "could",
+  "did", "do", "does", "for", "from", "had", "has", "have", "if", "in", "into", "is", "it",
+  "its", "of", "on", "or", "so", "than", "that", "the", "their", "them", "then", "there",
+  "these", "they", "this", "those", "to", "was", "were", "will", "with", "would",
+  // Question words, and the pronouns a typed question carries. These are the ones that
+  // actually caused misses: "why is it summer when earth is closer to the sun" failed on
+  // "when" alone, because no authored sentence in the catalogue happens to contain it.
+  "how", "what", "when", "where", "which", "who", "why",
+  "i", "me", "my", "we", "our", "us", "you", "your",
+  // Quantifiers and intensifiers. "why are some stars red and some blue" failed on "some",
+  // though "red", "blue" and "stars" are all right there in the blackbody misconception.
+  "all", "also", "any", "each", "every", "just", "many", "more", "most", "much", "no",
+  "not", "only", "other", "same", "some", "such", "very",
+  // Contractions, folded to a straight apostrophe by normalizeSearchText before this set
+  // is consulted. "why don't we have an eclipse every month" failed on "don't" alone.
+  "can't", "didn't", "doesn't", "don't", "isn't", "aren't", "won't", "wasn't", "weren't",
+  "i'm", "it's", "that's", "there's", "we're", "what's", "you're"
 ]);
+
+/**
+ * A query word and the inflections of it worth trying.
+ *
+ * Two measured misses, both the same shape: "what causes the phases of the moon" against
+ * "Phases are caused by Earth's shadow" -- `causes` is not a substring of `caused`. The
+ * catalogue is 19 items, so an over-eager match costs a reader one glance while a miss
+ * costs them a blank page and the belief that the search is broken. This only ever widens:
+ * a token still matches whenever it matched before.
+ */
+function inflections(token: string): string[] {
+  const forms = [token];
+  if (token.length >= 6 && token.endsWith("ing")) forms.push(token.slice(0, -3));
+  if (token.length >= 5 && token.endsWith("es")) forms.push(token.slice(0, -2));
+  if (token.length >= 5 && token.endsWith("ed")) forms.push(token.slice(0, -2));
+  if (token.length >= 4 && token.endsWith("s")) forms.push(token.slice(0, -1));
+  return forms;
+}
 
 /** The words worth matching on. Falls back to the raw tokens for an all-stopword query. */
 export function contentTokens(query: string): string[] {
@@ -148,7 +182,9 @@ export function contentTokens(query: string): string[] {
 
 export function matchesQuery(haystack: string, query: string): boolean {
   const hay = normalizeSearchText(haystack);
-  return contentTokens(query).every((token) => hay.includes(token));
+  return contentTokens(query).every((token) =>
+    inflections(token).some((form) => hay.includes(form))
+  );
 }
 
 export function matchesQuick(demo: DemoFacets, quick: string, now: Date): boolean {
