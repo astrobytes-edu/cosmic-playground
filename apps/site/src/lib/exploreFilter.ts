@@ -23,7 +23,26 @@ export const NARROWING_KEYS = ["q", "topic", "level", "time", "status", "math", 
 export type NarrowingKey = (typeof NARROWING_KEYS)[number];
 
 export type TimeBucket = "lt10" | "10to20" | "gt20";
-export type QuickFilterKey = "astr101" | "lt10" | "noMath" | "labs" | "updated";
+
+/*
+ * Two chips, not five. The three that went were measured against the 19-demo catalogue on
+ * 2026-09-09 and could not earn their place:
+ *
+ *   labs    matched 19 of 19 -- every demo ships a Station-mode lab, so it narrowed nothing
+ *   lt10    identical to the Time budget select's "<=10 min", to the demo
+ *   noMath  identical to Math required = No, and 18 of 19 either way
+ *
+ * A control that cannot change the result is worse than absent: it invites a click, does
+ * nothing, and teaches the reader that the filters are decorative. The two survivors do
+ * something the selects cannot -- `astr101` is the one-click answer to the question most
+ * readers of this site arrive with, and `updated` is the only axis over `last_updated`.
+ */
+export const QUICK_FILTER_KEYS = ["astr101", "updated"] as const;
+export type QuickFilterKey = (typeof QUICK_FILTER_KEYS)[number];
+
+export function isQuickFilterKey(value: string): value is QuickFilterKey {
+  return (QUICK_FILTER_KEYS as readonly string[]).includes(value);
+}
 
 export interface DemoFacets {
   slug: string;
@@ -32,7 +51,6 @@ export interface DemoFacets {
   timeMinutes: number;
   status: string;
   hasMath: boolean;
-  hasStation: boolean;
   /** ISO date, as authored in the demo's frontmatter. */
   updated: string;
   /** Title + tags + learning goals, pre-lowercased. */
@@ -76,9 +94,6 @@ export function isRecent(isoDate: string, now: Date, windowDays = 30): boolean {
 
 export function matchesQuick(demo: DemoFacets, quick: string, now: Date): boolean {
   if (quick === "astr101") return matchesLevel(demo.levels, "ASTR101");
-  if (quick === "lt10") return demo.timeMinutes <= 10;
-  if (quick === "noMath") return !demo.hasMath;
-  if (quick === "labs") return demo.hasStation;
   if (quick === "updated") return isRecent(demo.updated, now);
   return true;
 }
@@ -143,7 +158,11 @@ export function readFilters(search: string): Filters {
     time: read("time"),
     status: read("status"),
     math: read("math"),
-    quick: read("quick"),
+    /*
+     * A `?quick=labs` bookmark from before the trim would otherwise render a chip with no
+     * matching control, no label and no effect. Unknown values are dropped on read.
+     */
+    quick: isQuickFilterKey(read("quick")) ? read("quick") : "",
     sort: read("sort") || "recommended"
   };
 }

@@ -22,6 +22,13 @@ async function resultCount(page: Page): Promise<number> {
   return Number(await page.locator("[data-result-count]").innerText());
 }
 
+/** The unfiltered catalogue size, read from the page rather than hard-coded. */
+async function totalCount(page: Page): Promise<number> {
+  const cards = await page.locator("[data-topic-section] .demo-card").all();
+  const slugs = await Promise.all(cards.map((c) => c.getAttribute("data-slug")));
+  return new Set(slugs).size;
+}
+
 function visibleCards(page: Page) {
   return page.locator("[data-topic-section] .demo-card:visible");
 }
@@ -109,6 +116,16 @@ test.describe("Explore filters", () => {
     expect(await resultCount(page)).toBe(0);
     await expect(visibleCards(page)).toHaveCount(0);
     await expect(page.locator("[data-empty-state] h3")).toBeVisible();
+  });
+
+  test("a retired quick filter in a bookmarked URL is ignored, not shown", async ({ page }) => {
+    // `?quick=labs` was a real link until 2026-09-09. Carrying it would render a chip with
+    // no matching control, no label and no effect, so an unknown value is dropped on read.
+    await page.goto("explore/?quick=labs", { waitUntil: "load" });
+
+    expect(await resultCount(page)).toBe(await totalCount(page));
+    await expect(page.locator("[data-filter-chips]")).toBeHidden();
+    await expect(page.locator(".quick-filters .cp-chip")).toHaveCount(2);
   });
 
   test("removing a chip drops just that filter", async ({ page }) => {

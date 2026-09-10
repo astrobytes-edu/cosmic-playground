@@ -171,24 +171,26 @@ test.describe("Cosmic Playground smoke", () => {
     await page.goto("explore/");
 
     await expect(page.locator(".start-here__tile")).toHaveCount(5);
-    await expect(page.locator(".quick-filters .cp-chip")).toHaveCount(5);
+    // Two chips since 2026-09-09: `lt10` and `noMath` duplicated a select exactly and
+    // `labs` matched all 19 demos. See QUICK_FILTER_KEYS in lib/exploreFilter.ts.
+    await expect(page.locator(".quick-filters .cp-chip")).toHaveCount(2);
     await expect(page.getByText("Looking for a guided path?")).toBeVisible();
   });
 
   test("Explore quick filter links use expected query params", async ({ page }) => {
     await page.goto("explore/");
 
-    await expect(page.getByRole("link", { name: "ASTR 101" })).toHaveAttribute(
+    // Chips are real links so they still say what they do with JS off; the script
+    // intercepts the click to filter in place. Located by data-quick rather than by name,
+    // because the script appends each chip's result count to its label ("ASTR 101 (17)").
+    await expect(page.locator("[data-quick='astr101']")).toHaveAttribute(
       "href",
       /quick=astr101/
     );
-    await expect(page.getByRole("link", { name: "<10 min" })).toHaveAttribute(
+    await expect(page.locator("[data-quick='updated']")).toHaveAttribute(
       "href",
-      /quick=lt10/
+      /quick=updated/
     );
-    await expect(
-      page.getByRole("link", { name: "Labs (Station mode)" })
-    ).toHaveAttribute("href", /quick=labs/);
   });
 
   test("Explore featured row shows lead text", async ({ page }) => {

@@ -62,7 +62,7 @@ function excerptFromBody(body: string) {
   return firstLine.replace(/^#+\s*/, "").slice(0, 140);
 }
 
-type QuickFilterKey = "astr101" | "lt10" | "noMath" | "labs" | "updated";
+type QuickFilterKey = "astr101" | "updated";
 
 /*
  * Every demo is rendered, in the default "recommended" order, and the client script
@@ -78,11 +78,13 @@ const sorted = [...demos].sort(
     a.data.title.localeCompare(b.data.title)
 );
 
+/*
+ * Two chips. `lt10`, `noMath` and `labs` were removed on 2026-09-09 -- see the note on
+ * QUICK_FILTER_KEYS in exploreFilter.ts for the counts that condemned them. The short
+ * version: two were exact duplicates of a select, and `labs` matched all 19 demos.
+ */
 const quickLabels: Record<QuickFilterKey, string> = {
   astr101: "ASTR 101",
-  lt10: "<10 min",
-  noMath: "No math",
-  labs: "Labs (Station mode)",
   updated: "New / Updated"
 };
 
@@ -92,7 +94,7 @@ const quickLabels: Record<QuickFilterKey, string> = {
  * to filter in place rather than round-tripping to a page that cannot honour the query.
  */
 const quickFilterItems: Array<{ key: QuickFilterKey; label: string; href: string }> = (
-  ["astr101", "lt10", "noMath", "labs", "updated"] as const
+  ["astr101", "updated"] as const
 ).map((key) => ({
   key,
   label: quickLabels[key],
@@ -372,7 +374,6 @@ const startHere = startHereTiles.map((tile) => {
       timeMinutes: Number(card.dataset.time ?? "0"),
       status: card.dataset.status ?? "",
       hasMath: card.dataset.math === "yes",
-      hasStation: card.dataset.station === "yes",
       updated: card.dataset.updated ?? "",
       search: card.dataset.search ?? ""
     });
