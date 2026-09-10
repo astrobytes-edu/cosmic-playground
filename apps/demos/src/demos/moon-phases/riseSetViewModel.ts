@@ -26,7 +26,11 @@ export function buildRiseSetViewModel(params: {
     return {
       riseText: "N/A",
       setText: "N/A",
-      statusText: "No rise/set at this latitude/season (polar day/night).",
+      // Naming the case is the teaching point -- see the note in main.ts.
+      statusText:
+        result.status === "polar-night"
+          ? "Never rises at this latitude and date."
+          : "Above the horizon all day at this latitude and date.",
       isPolar: true
     };
   }

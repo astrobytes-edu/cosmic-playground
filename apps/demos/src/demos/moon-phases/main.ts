@@ -322,7 +322,13 @@ function updateRiseSetReadouts() {
     });
 
     if (result.status !== "ok" || result.riseHour == null || result.setHour == null) {
-      riseSetTextEl.textContent = "No rise/set at this latitude (polar)";
+      // Which polar case it is carries the whole lesson: a full Moon at 70 N in June
+      // never clears the horizon, while the same Moon in December never leaves it.
+      // "No rise/set" alone reads as the second and is wrong half the time.
+      riseSetTextEl.textContent =
+        result.status === "polar-night"
+          ? "Never rises at this latitude and date"
+          : "Above the horizon all day at this latitude and date";
       return;
     }
 
