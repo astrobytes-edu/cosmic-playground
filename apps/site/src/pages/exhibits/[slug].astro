@@ -193,7 +193,19 @@ const badge = readinessBadge(entry.data.readiness);
 
   .exhibit-header h1 {
     margin: 0;
-    font-size: 1.9rem;
+    /*
+     * WCAG 1.4.10 reflow: at 320px this used to push the page sideways. 1.9rem on an 18px
+     * root is 34px, and "Electromagnetic Spectrum: Light Beyond Visible" leads with a
+     * fifteen-character word that cannot fit 320px at that size in any face -- CI on Linux
+     * measured the h1 reaching x=350 in a 320px viewport. macOS happened to squeak by,
+     * which is why it took the first Linux run to surface.
+     *
+     * The clamp scales the heading with the viewport instead of assuming a wide one, and
+     * break-word guarantees no single long word can overflow whatever the font metrics.
+     */
+    font-size: clamp(1.4rem, 5.5vw, 1.9rem);
+    overflow-wrap: break-word;
+    hyphens: auto;
   }
 
   .badges {

@@ -86,8 +86,16 @@ describe("Parallax Distance -- Design System Contracts", () => {
     it("uses measurement-framed uncertainty copy (sigma_meas) instead of ambiguous sigma_p copy", () => {
       expect(html).toContain("Astrometric measurement uncertainty $\\sigma_{\\rm meas}$");
       expect(html).not.toContain("Astrometric uncertainty $\\sigma_p$");
-      expect(html).toContain("Inferred parallax uncertainty $\\sigma_{\\hat p}$");
-      expect(html).toContain("Inferred distance uncertainty $\\sigma_{\\hat d}$");
+      /*
+       * The point of this contract is that the demo's THREE sigmas stay distinguishable:
+       * the measurement uncertainty you set, and the two inferred ones it propagates into.
+       * On 2026-09-10 the inferred pair moved out of their own sub-lines and in beside the
+       * values they qualify, as "12.4 +/- 0.8 mas" -- which reclaimed 56px of readout
+       * strip. The symbols must survive that move, or the reader is left with a bare +/-
+       * and no way to tell which sigma it is; they now live in the readout's label.
+       */
+      expect(html).toContain("Inferred parallax $\\hat p \\pm \\sigma_{\\hat p}$");
+      expect(html).toContain("Inferred distance (measured) $\\hat d \\pm \\sigma_{\\hat d}$");
       expect(html).toContain("Larger measurement uncertainty $\\sigma_{\\rm meas}$");
       expect(html).not.toContain("Larger uncertainty can dominate tiny shifts");
     });
@@ -130,9 +138,12 @@ describe("Parallax Distance -- Design System Contracts", () => {
 
     it("labels inferred p_hat and inferred d_hat with distance-first framing", () => {
       expect(html).toContain("Measured shift $\\Delta\\theta$");
-      expect(html).toContain("Inferred parallax $\\hat p$");
       expect(html).toContain("True distance (set) $d_{\\rm true}$");
-      expect(html).toContain("Inferred distance (measured) $\\hat d$");
+      // Asserted as a prefix, not a whole label: what this contract is protecting is the
+      // hatted "inferred" framing against the unhatted "true" one, and both labels now
+      // carry a trailing "\\pm \\sigma" (see the uncertainty-copy contract above).
+      expect(html).toContain("Inferred parallax $\\hat p");
+      expect(html).toContain("Inferred distance (measured) $\\hat d");
       expect(html).toContain("Equivalent Jan-Jul shift $2\\hat p$ (derived)");
     });
   });

@@ -460,12 +460,12 @@ const snrQualityValue = requireEl(
   "#snrQuality"
 );
 const sigmaPHatMasValue = requireEl(
-  document.querySelector<HTMLElement>("#sigmaPHatMas"),
-  "#sigmaPHatMas"
+  document.querySelector<HTMLElement>("#parallaxMasPm"),
+  "#parallaxMasPm"
 );
 const sigmaDHatPcValue = requireEl(
-  document.querySelector<HTMLElement>("#sigmaDHatPc"),
-  "#sigmaDHatPc"
+  document.querySelector<HTMLElement>("#distancePcPm"),
+  "#distancePcPm"
 );
 
 function setVisibility(element: Element, visible: boolean) {
@@ -920,14 +920,16 @@ function renderReadouts(snap: Snapshot) {
     snap.inference.snrPHat !== null ? formatNumber(snap.inference.snrPHat, 2) : "\u2014";
   snrQualityValue.textContent = snap.inference.quality;
 
+  // Inline "+/- sigma" beside the value it belongs to. Empty rather than an em dash when
+  // there is no inference yet, so the value does not read as "12.4 +/- nothing".
   sigmaPHatMasValue.textContent =
     snap.inference.sigmaPHatMas !== null
-      ? formatNumber(snap.inference.sigmaPHatMas, 3)
-      : "\u2014";
+      ? ` \u00B1 ${formatNumber(snap.inference.sigmaPHatMas, 3)}`
+      : "";
   sigmaDHatPcValue.textContent =
     snap.inference.sigmaDHatPc !== null
-      ? formatDistance(snap.inference.sigmaDHatPc)
-      : "\u2014";
+      ? ` \u00B1 ${formatDistance(snap.inference.sigmaDHatPc)}`
+      : "";
 }
 
 function render() {

@@ -517,3 +517,17 @@
     transition: none;
   }
 }
+
+/*
+ * Inline uncertainty. It sits inside .cp-readout__value so it shares the value's
+ * baseline, but at the unit's weight and colour -- it qualifies the number, it is not a
+ * second number. Folding the two sigma lines out of the signal-to-noise card and in
+ * beside the values they belong to took the readout strip from 242px to under 200px at
+ * 1440x900, which is what bought the fold-clearance headroom back.
+ */
+.cp-readout__pm {
+  font-size: 0.82em;
+  font-weight: 500;
+  color: var(--cp-readout-unit-color);
+  white-space: nowrap;
+}
