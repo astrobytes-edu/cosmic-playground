@@ -442,6 +442,10 @@ export async function validateInvariants({ repoRoot = process.cwd() } = {}) {
  */
 async function checkTokensResolve({ repoRoot, violations }) {
   const themeDir = path.join(repoRoot, "packages", "theme", "styles");
+  // The unit tests build a fixture repo with only the directories a case needs, so the
+  // theme may genuinely be absent. `listFiles` throws ENOENT on a missing directory --
+  // the `defined.size === 0` guard below was meant to cover this and never got the chance.
+  if (!(await pathExists(themeDir))) return;
   const defined = new Set();
   for (const file of await listFiles(themeDir, { includeExtensions: new Set([".css"]) })) {
     if (!file.endsWith(".css")) continue;
