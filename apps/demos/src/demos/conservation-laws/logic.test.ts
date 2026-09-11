@@ -220,8 +220,20 @@ describe("Conservation Laws -- UI Logic", () => {
   // viewRadiusAu
   // -----------------------------------------------------------------------
   describe("viewRadiusAu", () => {
-    it("fits a small closed orbit with the 1.5 AU floor", () => {
+    it("fits a small closed orbit with the 1.5 r0 floor", () => {
       expect(viewRadiusAu({ raAu: 1, r0Au: 1 })).toBe(1.5);
+    });
+
+    it("floors the window at 1.5 r0, not 1.5 AU, so a small orbit is not drawn inside the Sun (P6)", () => {
+      expect(viewRadiusAu({ raAu: 0.1, r0Au: 0.1 })).toBeCloseTo(0.15, 12);
+      expect(viewRadiusAu({ raAu: 10, r0Au: 10 })).toBeCloseTo(15, 12);
+      expect(viewRadiusAu({ raAu: Number.POSITIVE_INFINITY, r0Au: 10 })).toBe(50);
+    });
+
+    it("puts a circular orbit's start point 250/1.5 = 166.67 px from centre at every r0 (P6)", () => {
+      for (const r0Au of [0.1, 10 ** -0.5, 1, 10 ** 0.5, 10]) {
+        expect((r0Au * 250) / viewRadiusAu({ raAu: r0Au, r0Au })).toBeCloseTo(250 / 1.5, 6);
+      }
     });
 
     it("is continuous across escape: 1.40 (bound, ra = 49 AU) and 1.42 (open) share one window", () => {
@@ -237,9 +249,10 @@ describe("Conservation Laws -- UI Logic", () => {
       expect(viewRadiusAu({ raAu: 3.381308, r0Au: 1 })).toBeCloseTo(3.719438, 5);
     });
 
-    it("caps at 50 AU and floors at 1.5 AU", () => {
+    it("caps at 50 AU and floors at 1.5 r0", () => {
       expect(viewRadiusAu({ raAu: Number.POSITIVE_INFINITY, r0Au: 10 })).toBe(50);
-      expect(viewRadiusAu({ raAu: 0.642859, r0Au: 10 ** -0.3 })).toBe(1.5);
+      // Was 1.5 under the old 1.5 AU floor; the floor is now 1.5 r0 = 1.5 x 10^-0.3 AU.
+      expect(viewRadiusAu({ raAu: 0.642859, r0Au: 10 ** -0.3 })).toBeCloseTo(0.751781, 5);
     });
   });
 
@@ -291,7 +304,7 @@ describe("Conservation Laws -- UI Logic", () => {
     });
 
     it("caps the fastest arrow at 120 px, not to scale, when even one day overflows (L2)", () => {
-      // M = 10, r0 = 0.1 AU, speed factor 0.1: periapsis speed 1250 AU/yr, and one day is 570 px.
+      // M = 10, r0 = 0.1 AU, speed factor 0.1: periapsis speed 1250 AU/yr; at this 1.5 AU scale one day is 570 px.
       const s = arrowScale(1250, s15);
       expect(s.toScale).toBe(false);
       expect(s.dtDays).toBeNull();

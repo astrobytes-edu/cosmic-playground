@@ -20,6 +20,8 @@
   font-size: 0.9rem;
 }
 
+/* Two columns at every width. Four clipped all four chips at 1280px (measured 2026-09-11: "Hyperbolic"
+ * scrolled 77px in a 64px chip) and "Hyperbolic" at 1440px (82px in 74px). */
 .presets__row {
   display: grid;
   gap: var(--cp-space-2);
@@ -98,12 +100,6 @@
 
 .orbit__arrowhead {
   fill: var(--cp-accent-green);
-}
-
-@media (min-width: 900px) {
-  .presets__row {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
 }
 
 /* -- Entry animations -------------------------------- */

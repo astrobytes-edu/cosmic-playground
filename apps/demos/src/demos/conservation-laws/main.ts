@@ -71,11 +71,16 @@ const PATH_SAMPLES = 720;
 /** Teaching time scale: a circular orbit at 1 AU around 1 Msun takes about 3 s. */
 const SIM_YEARS_PER_SEC = 1 / 3;
 
+/**
+ * Circular and Elliptical are shape presets and start tangential. Escape and Hyperbolic are energy presets:
+ * they set only the speed (`directionDeg: null` keeps the student's direction), because escape depends on
+ * energy alone and the station card asks students to test that by changing the direction.
+ */
 const PRESETS = {
   circular: { label: "Circular", speedFactor: 1, directionDeg: 0 },
   elliptical: { label: "Elliptical", speedFactor: 0.75, directionDeg: 0 },
-  escape: { label: "Escape", speedFactor: Math.SQRT2, directionDeg: 0 },
-  hyperbolic: { label: "Hyperbolic", speedFactor: 1.8, directionDeg: 0 }
+  escape: { label: "Escape", speedFactor: Math.SQRT2, directionDeg: null },
+  hyperbolic: { label: "Hyperbolic", speedFactor: 1.8, directionDeg: null }
 } as const;
 type PresetName = keyof typeof PRESETS;
 
@@ -328,8 +333,9 @@ function setPresetPressed(name: PresetName | null) {
 }
 
 function applyPreset(name: PresetName) {
-  controls.speedFactor = PRESETS[name].speedFactor;
-  controls.directionDeg = PRESETS[name].directionDeg;
+  const preset = PRESETS[name];
+  controls.speedFactor = preset.speedFactor;
+  if (preset.directionDeg !== null) controls.directionDeg = preset.directionDeg;
   syncSlidersToControls();
   recomputeOrbit();
   setPresetPressed(name);
@@ -410,7 +416,7 @@ function exportResults(): ExportPayloadV1 {
     notes: [
       "Teaching units: AU / yr / Msun with G = 4*pi^2 AU^3/(yr^2 Msun).",
       "Bound or unbound follows the sign of eps = K + U; the conic shape follows the eccentricity.",
-      "Paths reaching beyond 6 r_0 (within 1.5 to 50 AU) are clipped to the plotted window."
+      "Paths reaching beyond 6 r_0 are clipped to the plotted window, which stays between 1.5 r_0 and 50 AU."
     ]
   };
 }
@@ -473,7 +479,8 @@ const demoModes = createDemoModes({
               massSolar: 1,
               r0Au: 1,
               speedFactor: PRESETS[name].speedFactor,
-              directionDeg: PRESETS[name].directionDeg
+              // Reference cases start tangential, whatever direction the screen shows.
+              directionDeg: PRESETS[name].directionDeg ?? 0
             })
           )
       }

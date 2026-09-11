@@ -174,8 +174,10 @@ export function buildPathD(
   return d;
 }
 
-export const VIEW_RADIUS_MIN_AU = 1.5;
 export const VIEW_RADIUS_MAX_AU = 50;
+/** The window's radius is at least this many r0, so a circular orbit's start point is 250/1.5 px from centre at
+ * every r0. A fixed 1.5 AU floor drew r0 = 0.1 AU 16.7 px out, inside the 10 px Sun and its glow. */
+export const VIEW_RADIUS_MIN_R0_MULTIPLE = 1.5;
 /** Orbits reaching farther than this many r0 are clipped, closed or open, so the view cannot jump at e = 1. */
 export const VIEW_R0_MULTIPLE = 6;
 
@@ -183,7 +185,11 @@ export const VIEW_R0_MULTIPLE = 6;
 export function viewRadiusAu(args: { raAu: number; r0Au: number }): number {
   const { raAu, r0Au } = args;
   const closedFit = Number.isFinite(raAu) ? Math.max(raAu, r0Au) * 1.1 : Number.POSITIVE_INFINITY;
-  return clamp(Math.min(closedFit, VIEW_R0_MULTIPLE * r0Au), VIEW_RADIUS_MIN_AU, VIEW_RADIUS_MAX_AU);
+  return clamp(
+    Math.min(closedFit, VIEW_R0_MULTIPLE * r0Au),
+    VIEW_RADIUS_MIN_R0_MULTIPLE * r0Au,
+    VIEW_RADIUS_MAX_AU
+  );
 }
 
 export const ARROW_DT_LADDER_DAYS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000] as const;
@@ -200,7 +206,7 @@ export function arrowLengthPx(vAuYr: number, dtDays: number, scalePxPerAu: numbe
 export function pickArrowDtDays(vMaxAuYr: number, scalePxPerAu: number, maxPx: number = ARROW_MAX_PX): number | null {
   if (!(vMaxAuYr > 0) || !(scalePxPerAu > 0)) return null;
   // If even one day overflows maxPx this still returns the smallest step. The sliders do reach that case
-  // (M = 10, r0 = 0.1 AU, speed factor 0.1: one day is 570 px at periapsis), so arrowScale checks for it.
+  // (M = 10, r0 = 0.1 AU, speed factor 0.1: one day is about 5,700 px at periapsis), so arrowScale checks for it.
   let best: number = ARROW_DT_LADDER_DAYS[0];
   for (const days of ARROW_DT_LADDER_DAYS) {
     if (arrowLengthPx(vMaxAuYr, days, scalePxPerAu) <= maxPx) best = days;

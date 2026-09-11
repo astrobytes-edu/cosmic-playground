@@ -261,7 +261,8 @@ describe("ConservationLawsModel.advanceTrueAnomalyByTime", () => {
   });
 
   describe("a near-radial hyperbolic pass (M = 0.1, r0 = 0.1 AU, speed factor 1.8, direction +/-85 deg)", () => {
-    // The demo's view rule clamp(min(closedFit, 6 r0), 1.5, 50) floors at 1.5 AU for an open orbit from r0 = 0.1 AU.
+    // The demo's old 1.5 AU view floor. Its floor is now 1.5 r0, which puts this orbit's edge at 6 r0 = 0.6 AU;
+    // the test keeps the longer pass to 1.5 AU, and the Kepler times below are for that edge.
     const rMaxAu = 1.5;
     // One animation frame: 1/60 s at the demo's 1/3 yr of orbital time per second.
     const frameYr = (1 / 60) * (1 / 3);

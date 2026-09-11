@@ -393,6 +393,10 @@ test.describe("Conservation Laws -- what the student sees", () => {
     await expect(page.locator("#kAu")).not.toHaveText("11.1033");
     await expect(page.locator("#uAu")).not.toHaveText("-39.4784");
     await expect(page.locator("#eps")).toHaveText(eps ?? "");
+    // #eps is written only when the orbit is recomputed, so the line above cannot see drift during playback.
+    // K and U are written every frame; their sum must still match it (three 4-decimal roundings: 0.00015).
+    const kPlusU = (await num(page, "kAu")) + (await num(page, "uAu"));
+    expect(Math.abs(kPlusU - (await num(page, "eps")))).toBeLessThanOrEqual(0.0002);
   });
 
   test("announces the orbit after a keyboard change and a preset (U1)", async ({ page }) => {
@@ -447,6 +451,76 @@ test.describe("Conservation Laws -- what the student sees", () => {
     await expect(page.locator("#massSlider")).toHaveAttribute("aria-valuetext", "1.00 solar masses");
     await page.locator('[data-preset="escape"]').click();
     await expect(page.locator("#speedFactor")).toHaveAttribute("aria-valuetext", "1.414 times circular speed");
+  });
+
+  test("a small orbit is drawn 250/1.5 px from the Sun, not inside it (P6)", async ({ page }) => {
+    await setSlider(page, "massSlider", 1);
+    await setSlider(page, "r0Slider", -1);
+    await expect(page.locator("#massValue")).toHaveText("10.00");
+    await expect(page.locator("#r0Value")).toHaveText("0.10");
+    const p = await particle(page);
+    expect(Math.abs(Math.hypot(p.x - CENTER, p.y - CENTER) - 250 / 1.5)).toBeLessThanOrEqual(1);
+  });
+
+  test("the speed-factor value does not overprint its label at 1025 px (U4)", async ({ page }) => {
+    await page.setViewportSize({ width: 1025, height: 768 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    await expect(page.locator("label.control", { has: page.locator("#speedFactor") }).locator(".katex").first()).toBeAttached();
+    const boxes = await page.locator("#speedFactor").evaluate((input) => {
+      const box = (r: DOMRect) => ({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+      const labelText = input.closest("label")?.firstElementChild as HTMLElement;
+      const range = document.createRange();
+      range.selectNodeContents(labelText);
+      return {
+        labelElement: box(labelText.getBoundingClientRect()),
+        labelText: box(range.getBoundingClientRect()),
+        value: box((document.getElementById("speedValue")?.parentElement as HTMLElement).getBoundingClientRect())
+      };
+    });
+    type Box = (typeof boxes)["value"];
+    const intersects = (a: Box, b: Box) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    expect(intersects(boxes.labelText, boxes.value), JSON.stringify(boxes)).toBe(false);
+    expect(intersects(boxes.labelElement, boxes.value), JSON.stringify(boxes)).toBe(false);
+  });
+
+  test("preset chips fit their text at 1280 px (U5)", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    const chips = await page
+      .locator("button.preset")
+      .evaluateAll((els) => els.map((el) => ({ text: el.textContent, scrollWidth: el.scrollWidth, clientWidth: el.clientWidth })));
+    expect(chips).toHaveLength(4);
+    for (const chip of chips) expect(chip.scrollWidth, JSON.stringify(chip)).toBeLessThanOrEqual(chip.clientWidth);
+  });
+
+  test("Escape and Hyperbolic keep the direction; Circular and Elliptical set 0 (U9)", async ({ page }) => {
+    await setSlider(page, "directionDeg", 60);
+    await page.locator('[data-preset="escape"]').click();
+    await expect(page.locator("#directionValue")).toHaveText("60");
+    await expect(page.locator("#orbitType")).toHaveText("parabolic (escape)");
+    await page.locator('[data-preset="hyperbolic"]').click();
+    await expect(page.locator("#directionValue")).toHaveText("60");
+    await expect(page.locator("#orbitType")).toHaveText("hyperbolic");
+    await page.locator('[data-preset="elliptical"]').click();
+    await expect(page.locator("#directionValue")).toHaveText("0");
+    await setSlider(page, "directionDeg", 60);
+    await page.locator('[data-preset="circular"]').click();
+    await expect(page.locator("#directionValue")).toHaveText("0");
+  });
+
+  test("Station Mode's preset rows stay reference cases at direction 0 (U9)", async ({ page }) => {
+    await setSlider(page, "directionDeg", 60);
+    await page.locator('[data-preset="escape"]').click();
+    await page.locator("#stationMode").click();
+    const dialog = page.getByRole("dialog", { name: /Station Mode/ });
+    await dialog.getByRole("button", { name: /Add row/ }).click();
+    await dialog.getByRole("button", { name: /preset cases/ }).click();
+    // Column 4 (from 0) is the direction.
+    await expect(dialog.locator("tr", { hasText: /^\s*Snapshot/ }).locator("td").nth(4)).toHaveText("60");
+    for (const label of ["Circular", "Elliptical", "Escape", "Hyperbolic"]) {
+      await expect(dialog.locator("tr", { hasText: new RegExp(`^\\s*${label}`) }).locator("td").nth(4)).toHaveText("0");
+    }
   });
 
   for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {

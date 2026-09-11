@@ -33,7 +33,9 @@
             <span class="control__value"><span id="r0Value"></span> <span class="control__unit">AU</span></span>
           </label>
 
-          <label class="control">
+          <!-- Stacked: on one line, the value and its "(escape at sqrt 2)" note overprinted the label from 1025 px
+               to at least 1101 px wide (measured 2026-09-11). -->
+          <label class="control control--stacked">
             <span>Speed factor $v/v_{\rm circ}$</span>
             <input id="speedFactor" type="range" min="0" max="2.5" step="0.01" value="1" />
             <span class="control__value"
@@ -201,7 +203,7 @@
                 <li>Teaching units: AU / yr / $M_{\odot}$ with $G=4\pi^2\,\mathrm{AU}^3/(\mathrm{yr}^2\,M_{\odot})$ and $\mu = GM$.</li>
                 <li>The body starts at $r_0$ on the $+x$ axis, moving at $v/v_{\rm circ}$ times the circular speed there, tilted from tangential (+ is outward).</li>
                 <li>The green arrow is the distance the body would cover in the stated number of days at its current velocity, drawn at the orbit's scale, unless the caption says it was shortened to fit.</li>
-                <li>Paths reaching beyond $6\,r_0$ (within 1.5 to 50 AU) are clipped to that window, bound or not; the caption gives how far a clipped bound orbit reaches.</li>
+                <li>Paths reaching beyond $6\,r_0$ are clipped to that window, bound or not, and the window stays between $1.5\,r_0$ and 50 AU; the caption gives how far a clipped bound orbit reaches.</li>
                 <li>With zero speed there is no angular momentum and no conic: the body falls straight in.</li>
               </ul>
             </div>
