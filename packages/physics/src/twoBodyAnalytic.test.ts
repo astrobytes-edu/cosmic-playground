@@ -101,3 +101,63 @@ describe("TwoBodyAnalytic teaching-unit relations (AU/yr/M☉)", () => {
     expect(state.aAu).toBeCloseTo(1, 10);
   });
 });
+
+describe("orbitElementsFromStateAuYr at the edges and off-axis", () => {
+  const mu = 4 * Math.PI * Math.PI;
+  const state = (r0Au: number, speedAuYr: number, directionDeg: number) => {
+    const a = (directionDeg * Math.PI) / 180;
+    return {
+      rVecAu: { xAu: r0Au, yAu: 0 },
+      vVecAuYr: { vxAuYr: speedAuYr * Math.sin(a), vyAuYr: speedAuYr * Math.cos(a) }
+    };
+  };
+
+  it("a body at rest is radial and bound, not parabolic", () => {
+    const el = TwoBodyAnalytic.orbitElementsFromStateAuYr({ ...state(1, 0, 0), muAu3Yr2: mu });
+    if (el.orbitType === "invalid") throw new Error("unexpected invalid orbit");
+    expect(el.orbitType).toBe("radial");
+    expect(el.epsAu2Yr2).toBeCloseTo(-mu, 10);
+    expect(el.hAbsAu2Yr).toBe(0);
+  });
+
+  it("purely radial outward motion is radial", () => {
+    const el = TwoBodyAnalytic.orbitElementsFromStateAuYr({ ...state(1, 3, 90), muAu3Yr2: mu });
+    if (el.orbitType === "invalid") throw new Error("unexpected invalid orbit");
+    expect(el.orbitType).toBe("radial");
+  });
+
+  it("exact escape speed, tangential, is parabolic with zero energy", () => {
+    const el = TwoBodyAnalytic.orbitElementsFromStateAuYr({ ...state(1, 2 * Math.PI * Math.SQRT2, 0), muAu3Yr2: mu });
+    if (el.orbitType === "invalid") throw new Error("unexpected invalid orbit");
+    expect(el.orbitType).toBe("parabolic");
+    expect(Math.abs(el.epsAu2Yr2)).toBeLessThan(1e-12);
+  });
+
+  it("a start below circular speed is at apoapsis (nu = pi)", () => {
+    const el = TwoBodyAnalytic.orbitElementsFromStateAuYr({ ...state(1, 0.75 * 2 * Math.PI, 0), muAu3Yr2: mu });
+    if (el.orbitType === "invalid") throw new Error("unexpected invalid orbit");
+    expect(Math.cos(el.nuRad)).toBeCloseTo(-1, 12);
+  });
+
+  it("an outward start (f = 1.2, +60 deg) is past periapsis", () => {
+    const el = TwoBodyAnalytic.orbitElementsFromStateAuYr({ ...state(1, 1.2 * 2 * Math.PI, 60), muAu3Yr2: mu });
+    if (el.orbitType === "invalid") throw new Error("unexpected invalid orbit");
+    expect(el.orbitType).toBe("elliptical");
+    expect(el.ecc).toBeCloseTo(0.893532, 5);
+    expect(el.epsAu2Yr2).toBeCloseTo(-11.053957, 5);
+    expect(el.nuRad).toBeCloseTo(2.369222, 5);
+  });
+
+  it("an inward start at an asymmetric state has negative true anomaly", () => {
+    const massSolar = 10 ** 0.4;
+    const r0Au = 10 ** -0.3;
+    const muHere = mu * massSolar;
+    const v = 0.9 * Math.sqrt(muHere / r0Au);
+    const el = TwoBodyAnalytic.orbitElementsFromStateAuYr({ ...state(r0Au, v, -30), muAu3Yr2: muHere });
+    if (el.orbitType === "invalid") throw new Error("unexpected invalid orbit");
+    expect(el.ecc).toBeCloseTo(0.526379, 5);
+    expect(el.epsAu2Yr2).toBeCloseTo(-117.727169, 4);
+    expect(el.hAbsAu2Yr).toBeCloseTo(5.494814, 5);
+    expect(el.nuRad).toBeCloseTo(-2.412321, 5);
+  });
+});

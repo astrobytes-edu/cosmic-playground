@@ -163,6 +163,8 @@ function arealVelocityAu2Yr(args: { hAu2Yr: number }): number {
   return 0.5 * args.hAu2Yr;
 }
 
+export type TwoBodyOrbitType = "elliptical" | "circular" | "parabolic" | "hyperbolic" | "radial";
+
 function orbitElementsFromStateAuYr(args: {
   rVecAu: Vec2Au;
   vVecAuYr: Vec2AuYr;
@@ -180,7 +182,8 @@ function orbitElementsFromStateAuYr(args: {
       pAu: number;
       aAu: number;
       omegaRad: number;
-      orbitType: "elliptical" | "circular" | "parabolic" | "hyperbolic";
+      nuRad: number;
+      orbitType: TwoBodyOrbitType;
     } {
   const { rVecAu, vVecAuYr, muAu3Yr2 } = args;
   if (!rVecAu || !vVecAuYr) return { orbitType: "invalid" };
@@ -220,10 +223,22 @@ function orbitElementsFromStateAuYr(args: {
   // Periapsis direction is along eccentricity vector.
   const omega = ecc < 1e-14 ? 0 : Math.atan2(ey, ex);
 
+  // True anomaly of this state: the angle from periapsis to r, measured in the direction of motion.
+  const cosO = Math.cos(omega);
+  const sinO = Math.sin(omega);
+  const along = x * cosO + y * sinO;
+  const ahead = -x * sinO + y * cosO;
+  const nuRad = Math.atan2(hz >= 0 ? ahead : -ahead, along);
+
+  // h = 0 (no sideways speed) is a straight-line fall or rise. Its eccentricity vector is -r_hat,
+  // so |e| = 1 would otherwise read as "parabolic" whatever the energy.
+  const RADIAL_TOL = 1e-12;
+  const isRadial = h <= RADIAL_TOL * r * Math.sqrt(v2 + muAu3Yr2 / r);
+
   const E_TOL = 1e-8;
-  let orbitType: "elliptical" | "circular" | "parabolic" | "hyperbolic" | "invalid" =
-    "elliptical";
+  let orbitType: TwoBodyOrbitType | "invalid" = "elliptical";
   if (!Number.isFinite(ecc)) orbitType = "invalid";
+  else if (isRadial) orbitType = "radial";
   else if (ecc < 1e-10) orbitType = "circular";
   else if (Math.abs(ecc - 1) < E_TOL) orbitType = "parabolic";
   else if (ecc > 1) orbitType = "hyperbolic";
@@ -241,6 +256,7 @@ function orbitElementsFromStateAuYr(args: {
     pAu: p,
     aAu: a,
     omegaRad: omega,
+    nuRad: isRadial ? Number.NaN : nuRad,
     orbitType
   };
 }
