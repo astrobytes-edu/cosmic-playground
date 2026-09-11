@@ -310,11 +310,25 @@ The moon-phases demo is the fully migrated reference. Every pattern established 
 
 All physics models MUST come from `@cosmic/physics` — no inline equations in demo code.
 
-## Agent skills
+## Agent skills, reviewer roles and hooks
 
-- Superpowers (Codex): discovered at startup from `~/.agents/skills/`; ensure `~/.agents/skills/superpowers -> ~/.codex/superpowers/skills/`. Do not call `superpowers-codex bootstrap` or `use-skill` (removed upstream). Activate a skill by naming it or by matching task intent.
-- Process skills: `superpowers:writing-plans`, `superpowers:executing-plans`, `superpowers:systematic-debugging`, `superpowers:test-driven-development`.
-- Project skills (`~/.codex/skills/`): `cosmic-frontend`, `cosmic-spec-to-implementation`, `cosmic-astro-site-engineering`, `cosmic-basepath-smoke-tests`, `cosmic-content-authoring`, `cosmic-instructor-materials-style`, `cosmic-demo-authoring`, `cosmic-runtime-instrumentation` (shared behaviour lives in `packages/runtime`, no per-demo forks), `cosmic-theme-tokens-and-components`, `cosmic-ui-ux`, `cosmic-export-contracts`, `cosmic-physics-modeling`, `cosmic-accessibility-audit`, `cosmic-ux-polish-pass`.
+One copy in the repo, shared by Claude and Codex.
+
+- **Skills** live in `.agents/skills/` (Codex's repo path); `.claude/skills` is a symlink to it. Every skill
+  starts from `.agents/references/invariants.md`. Skills: `cosmic-site-content`,
+  `cosmic-instructor-materials`, `cosmic-ui`, `cosmic-demo-contracts`, `cosmic-physics`, `cosmic-a11y`,
+  `cosmic-verification`, `cosmic-readiness`, `cosmic-adversarial-review`. In Codex, invoke with `$cosmic-...`.
+- **Reviewer roles** are written once in `.agents/roles/` and wrapped by `.claude/agents/` and
+  `.codex/agents/`: `physics-reviewer`, `adversarial-reviewer`, `visual-ux-reviewer`, `readiness-auditor`.
+  Run at most one reviewer agent at a time.
+- **Hooks** (`scripts/agent-hooks/`, wired in `.claude/settings.json` and `.codex/hooks.json`) block
+  `git add -A` / `git add .`, staging `.gitignore`, `git commit -a`, force pushes, `--no-verify` and a second
+  concurrent Playwright run; report math-formatting problems in files just edited; and remind about
+  STATUS.md at stop. Codex asks you to trust project hooks once via `/hooks`.
+- **Commands** (Claude): `/cp-gates`, `/cp-audit-demo <slug>`, `/cp-promote <slug>`, `/cp-fix <finding>`.
+  `corepack pnpm gates [names]` runs every gate in order with exit codes, for either agent.
+- Superpowers process skills (`superpowers:writing-plans`, `superpowers:executing-plans`,
+  `superpowers:systematic-debugging`, `superpowers:test-driven-development`) remain available where installed.
 
 ## Communication mode (explanatory default)
 

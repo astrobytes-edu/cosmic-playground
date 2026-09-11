@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: main 2026-09-10 -- readiness applied (parallax-distance stable; angular-size, binary-orbits, seasons, em-spectrum candidate; doppler-shift experimental), B2 citations published, moon rise/set waxing-waning swap fixed (5a57f5b). NEXT, diagnosed with file:line in 'Remaining demo fixes' below: announcements (U8) for angular-size/seasons/em-spectrum; seasons orbit direction; phone reflow via the shared playbar; moon-phases U2/B5; spectral-lines SL-4/5/6; galaxy-rotation GR-2..5 + U9; em-spectrum Station/Challenge modes.
+next: main 2026-09-10 -- readiness applied (parallax-distance stable; angular-size, binary-orbits, seasons, em-spectrum candidate; doppler-shift experimental), B2 citations published, moon rise/set waxing-waning swap fixed (5a57f5b). NEXT, diagnosed with file:line in 'Remaining demo fixes' below: announcements (U8) for angular-size/seasons/em-spectrum; seasons orbit direction; phone reflow via the shared playbar; moon-phases U2/B5; spectral-lines SL-4/5/6; galaxy-rotation GR-2..5 + U9; em-spectrum Station/Challenge modes. AGENT TOOLING (2026-09-11): the cosmic-* skills now live in the repo (.agents/skills, shared by Claude and Codex) with reviewer roles, hooks and commands -- docs/plans/2026-09-11-agent-skills-design.md; still unverified: Claude discovering skills through the .claude/skills symlink (CLI auth expired during the check).
 blocker: none -- two decisions are with Anna (B2 citations, readiness)
 due: 2026-09-18 (dossier)
 
