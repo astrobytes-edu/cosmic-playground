@@ -7,8 +7,8 @@ topics: [LightSpectra, DataInference]
 time_minutes: 14
 has_math_mode: false
 tags: ["doppler shift", "redshift", "blueshift", "spectral lines", "radial velocity", "wavelength shift", "line-of-sight velocity", "approaching", "receding"]
-readiness: candidate
-readinessReason: "SoTA UX/pedagogy uplift is complete (playbar transport, deeper challenge deck, tooltip affordances, cross-demo scaffolding) and automated gates are passing; launch-ready now depends on classroom and screen-reader validation artifacts."
+readiness: experimental
+readinessReason: "Being revised: the redshift presets still report a velocity, which is the misconception this exhibit is meant to address."
 parityAuditPath: "docs/audits/migrations/doppler-shift-parity.md"
 lastVerifiedAt: "2026-09-03"
 learning_goals:

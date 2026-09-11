@@ -1,14 +1,14 @@
 ---
 title: "Electromagnetic Spectrum: Light Beyond Visible"
-status: draft
+status: beta
 content_verified: true
 levels: [Both]
 topics: [LightSpectra]
 time_minutes: 10
 has_math_mode: false
 tags: ["wavelength", "frequency", "spectrum", "radio", "microwave", "infrared", "ultraviolet", "x-ray", "gamma ray", "visible light", "light"]
-readiness: experimental
-readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+readiness: candidate
+readinessReason: "Close to ready: the spectrum colours now sit at the right wavelengths and the page works on a phone. Still to come: announcing results to screen readers, and Station and Challenge modes."
 parityAuditPath: "docs/audits/migrations/em-spectrum-parity.md"
 lastVerifiedAt: "2026-02-02"
 learning_goals:

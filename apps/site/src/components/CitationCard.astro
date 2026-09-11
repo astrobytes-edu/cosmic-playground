@@ -10,9 +10,13 @@ interface Props {
   year: string;
   finding: string;
   connection: string;
+  /** Journal, volume and pages, as verified against the publisher or index. */
+  source?: string;
+  /** Only DOIs that have been checked; a wrong DOI is worse than none. */
+  doi?: string;
 }
 
-const { authors, year, finding, connection } = Astro.props;
+const { authors, year, finding, connection, source, doi } = Astro.props;
 ---
 
 <div class="citation-card">
@@ -22,6 +26,12 @@ const { authors, year, finding, connection } = Astro.props;
   </div>
   <blockquote class="citation-card__finding">{finding}</blockquote>
   <p class="citation-card__connection">{connection}</p>
+  {source ? (
+    <p class="citation-card__source">
+      {source}
+      {doi ? <> · <a href={`https://doi.org/${doi}`}>doi:{doi}</a></> : null}
+    </p>
+  ) : null}
 </div>
 
 <style>
@@ -62,6 +72,12 @@ const { authors, year, finding, connection } = Astro.props;
   .citation-card__connection {
     margin: 0;
     font-size: var(--cp-text-sm);
+    color: var(--cp-muted);
+  }
+
+  .citation-card__source {
+    margin: var(--cp-space-2) 0 0;
+    font-size: var(--cp-text-xs);
     color: var(--cp-muted);
   }
 </style>

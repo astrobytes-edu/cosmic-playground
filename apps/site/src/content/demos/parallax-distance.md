@@ -1,14 +1,14 @@
 ---
 title: "Parallax Distance: Measuring the Stars"
-status: draft
+status: stable
 content_verified: true
 levels: [Both]
 topics: [DataInference]
 time_minutes: 12
 has_math_mode: false
 tags: ["parallax", "triangles", "distance", "arcseconds", "parsec", "stellar distance", "baseline", "far away", "how far"]
-readiness: experimental
-readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+readiness: launch-ready
+readinessReason: "Physics and page checked in the September 2026 audits with nothing open: it works on a phone, announces changes to screen readers, and has full instructor notes and a station card."
 parityAuditPath: "docs/audits/migrations/parallax-distance-parity.md"
 lastVerifiedAt: "2026-02-09"
 learning_goals:

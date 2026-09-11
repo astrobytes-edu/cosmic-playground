@@ -1,14 +1,14 @@
 ---
 title: "Binary Orbits: Dynamical Reasoning Lab"
-status: draft
+status: beta
 content_verified: true
 levels: [Both]
 topics: [Orbits]
 time_minutes: 16
 has_math_mode: false
 tags: ["binaries", "center of mass", "radial velocity", "conservation laws", "barycenter", "mass ratio", "spectroscopic binary", "double star", "orbital period"]
-readiness: experimental
-readinessReason: "Core dynamics and RV-observable workflows are now implemented; parity and launch-gate signoff are still pending."
+readiness: candidate
+readinessReason: "Close to ready: every readout has been checked against an independent calculation. Still to come: the page is wider than a phone screen."
 parityAuditPath: "docs/audits/migrations/binary-orbits-parity.md"
 lastVerifiedAt: "2026-02-25"
 featured: true

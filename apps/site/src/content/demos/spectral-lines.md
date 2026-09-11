@@ -1,6 +1,6 @@
 ---
 title: "Spectral Lines & the Bohr Atom"
-status: draft
+status: beta
 content_verified: true
 levels: [Both]
 topics: [LightSpectra]
@@ -8,7 +8,7 @@ time_minutes: 12
 has_math_mode: false
 tags: ["spectral lines", "Bohr atom", "emission", "absorption", "hydrogen", "energy levels", "Balmer series", "Lyman series", "Paschen series", "Rydberg formula", "hydrogen lines", "emission lines", "absorption lines", "atomic transitions"]
 readiness: candidate
-readinessReason: "SoTA UX/pedagogy uplift is complete (playbar transport, deeper challenge deck, tooltip affordances, misconception framing, expanded station snapshots) and regression gates are passing; launch-ready promotion now depends on classroom + screen-reader validation logs."
+readinessReason: "Close to ready. Still to come: one wavelength value, the data attribution, and a remaining review item."
 parityAuditPath: "docs/audits/migrations/spectral-lines-parity.md"
 lastVerifiedAt: "2026-09-03"
 learning_goals:

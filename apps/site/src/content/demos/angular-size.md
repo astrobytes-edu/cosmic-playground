@@ -1,14 +1,14 @@
 ---
 title: "Angular Size: The Sky’s Ruler"
-status: draft
+status: beta
 content_verified: true
 levels: [Both]
 topics: [EarthSky]
 time_minutes: 10
 has_math_mode: false
 tags: ["angles", "apparent size", "distance", "arcminutes", "arcseconds", "angular diameter", "small angle"]
-readiness: experimental
-readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+readiness: candidate
+readinessReason: "Close to ready: the physics is checked and the page works on a phone. Still to come: announcing results to screen readers."
 parityAuditPath: "docs/audits/migrations/angular-size-parity.md"
 lastVerifiedAt: "2026-02-02"
 learning_goals:

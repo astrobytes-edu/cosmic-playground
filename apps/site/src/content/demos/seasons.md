@@ -1,14 +1,14 @@
 ---
 title: "Seasons: Why Tilt Matters"
-status: draft
+status: beta
 content_verified: true
 levels: [Both]
 topics: [EarthSky]
 time_minutes: 12
 has_math_mode: false
 tags: ["tilt", "sunlight", "insolation", "summer", "winter", "solstice", "equinox", "day length", "sun angle", "axial tilt"]
-readiness: experimental
-readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+readiness: candidate
+readinessReason: "Close to ready: the day-night boundary is fixed and the page works on a phone. Still to come: announcing results to screen readers, and the direction Earth is drawn orbiting."
 parityAuditPath: "docs/audits/migrations/seasons-parity.md"
 lastVerifiedAt: "2026-02-02"
 learning_goals:

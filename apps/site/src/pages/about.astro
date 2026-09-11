@@ -28,41 +28,49 @@ const citations = [
     authors: "Freeman et al.",
     year: "2014",
     finding:
-      "Active learning reduces failure rates by 1.5\u00d7 and increases exam scores by 0.47 standard deviations compared to traditional lecturing.",
+      "In a meta-analysis of 225 studies, students in traditional lectures were 1.5 times as likely to fail as students in active-learning sections, and scores on exams and concept inventories were 0.47 standard deviations higher under active learning.",
     connection:
       "Interactive simulations with structured inquiry are a core active learning strategy used throughout Cosmic Playground.",
+    source: "Proceedings of the National Academy of Sciences 111(23), 8410–8415",
+    doi: "10.1073/pnas.1319030111",
   },
   {
-    authors: "Mazur",
-    year: "1997",
+    authors: "Crouch, Fagen, Callan & Mazur",
+    year: "2004",
     finding:
-      "Conceptual understanding improves when students commit to predictions before receiving feedback.",
+      "Students who only watched a classroom demonstration understood it no better than students who never saw it; students who predicted the outcome first showed significantly greater understanding.",
     connection:
-      "The foundation of our Predict phase \u2014 every demo begins with a written prediction prompt.",
+      "The foundation of our Predict phase — every demo begins with a written prediction prompt.",
+    source: "American Journal of Physics 72, 835–838",
   },
   {
-    authors: "Bardar et al.",
+    authors: "Trundle, Atwood & Christopher",
     year: "2007",
     finding:
-      "Targeted interactive instruction produces statistically significant gains in understanding of moon phases.",
+      "Preservice teachers whose instruction included recording moon observations over time and modelling the phases were very likely to hold a scientific explanation shortly afterwards; most still did six months later, though some reverted.",
     connection:
       "Moon Phases was our first demo, specifically targeting this persistent misconception.",
+    source: "Journal of Research in Science Teaching 44(2), 303–326",
+    doi: "10.1002/tea.20121",
   },
   {
     authors: "White & Gunstone",
     year: "1992",
     finding:
-      "The Predict\u2013Observe\u2013Explain framework structures conceptual change by surfacing and confronting misconceptions.",
+      "The Predict–Observe–Explain framework structures conceptual change by surfacing and confronting misconceptions.",
     connection:
-      "We adapt POE by replacing passive \u201cObserve\u201d with active \u201cPlay\u201d \u2014 students manipulate parameters and collect data.",
+      "We adapt POE by replacing passive “Observe” with active “Play” — students manipulate parameters and collect data.",
+    source: "Probing Understanding (Falmer Press)",
   },
   {
-    authors: "Haynes et al.",
-    year: "2004",
+    authors: "Quellmalz, Timms, Silberglitt & Buckley",
+    year: "2012",
     finding:
-      "Embedding assessment directly within interactive simulations captures reasoning processes that traditional pre/post instruments miss, providing ecological validity for measuring conceptual change.",
+      "A six-state study of simulation-based science assessments examined their psychometric quality, feasibility and usefulness, both for formative use during a unit and as summative evidence at its end.",
     connection:
-      "Our assessment strategy prioritizes authentic, embedded measures \u2014 prediction accuracy, explanation quality, and reasoning under novelty \u2014 over standardized recall-based instruments.",
+      "Station Mode and Challenge Mode put assessment inside the simulation. This work shows how such measures can be made credible; Cosmic Playground has not yet collected that evidence.",
+    source: "Journal of Research in Science Teaching 49, 363–393",
+    doi: "10.1002/tea.21005",
   },
 ];
 ---
@@ -98,7 +106,7 @@ const citations = [
           </tr>
           <tr>
             <td>Predict before Play</td>
-            <td>Committing to a prediction activates prior knowledge (Mazur 1997)</td>
+            <td>Students who predict before they watch understand more than students who only watch (Crouch et al. 2004)</td>
           </tr>
           <tr>
             <td>Sanity checks on every card</td>
@@ -206,6 +214,8 @@ const citations = [
               year={c.year}
               finding={c.finding}
               connection={c.connection}
+              source={c.source}
+              doi={c.doi}
             />
           ))}
         </div>
