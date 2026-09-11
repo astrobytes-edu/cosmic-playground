@@ -553,6 +553,15 @@ describe("StellarEosModel", () => {
      *
      * The demo's log-safety floor is `Math.max(1e-30, value)`, and Math.max(1e-30, NaN)
      * is NaN, so nothing downstream caught it either: NaN reached a uPlot log axis.
+     *
+     * The timeout is set from measurement. The grid is 81 x 25 = 2,025 full EOS solves in
+     * the test body itself, so there is no setup to hoist -- the per-test budget IS the
+     * cost. Measured 2026-09-10 on a 12-core machine: 526-529ms idle; 1,211-1,335ms under
+     * 24 busy loops; 7,542-10,178ms with the full Playwright suite running as well. That
+     * last condition is past vitest's 5,000ms default, and there the test failed 2 of 2 runs
+     * with "Test timed out in 5000ms" -- while with this 30s limit it passed 2 of 2 under the
+     * same load (8.3s and 10.2s). 30s is about 3x the worst of those and over 30x idle, so it
+     * trips on a genuine hang rather than on a busy machine or a 2-core CI runner.
      */
     it("returns a finite total pressure across the whole slider domain", () => {
       const offenders: string[] = [];
@@ -572,7 +581,7 @@ describe("StellarEosModel", () => {
         }
       }
       expect(offenders.slice(0, 10), `${offenders.length} non-finite grid points`).toEqual([]);
-    });
+    }, 30_000);
 
     it.each([
       ["Solar envelope", 5800, 1e-7],
