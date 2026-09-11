@@ -181,6 +181,7 @@ export function arrowLengthPx(vAuYr: number, dtDays: number, scalePxPerAu: numbe
 /** Largest round step whose arrow at the fastest point fits `maxPx`; null when nothing moves. */
 export function pickArrowDtDays(vMaxAuYr: number, scalePxPerAu: number, maxPx: number = ARROW_MAX_PX): number | null {
   if (!(vMaxAuYr > 0) || !(scalePxPerAu > 0)) return null;
+  // If even one day overflows maxPx this returns the smallest step on purpose; the sliders cannot reach that case.
   let best: number = ARROW_DT_LADDER_DAYS[0];
   for (const days of ARROW_DT_LADDER_DAYS) {
     if (arrowLengthPx(vMaxAuYr, days, scalePxPerAu) <= maxPx) best = days;
