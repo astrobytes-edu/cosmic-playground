@@ -452,6 +452,31 @@ test.describe("Cosmic Playground smoke", () => {
     });
   }
 
+  /**
+   * Start as a returning visitor, so eos-lab's first-visit tour never opens.
+   *
+   * eos-lab starts a guided tour for anyone without `eos-lab-toured` in localStorage --
+   * `requestAnimationFrame` then `setTimeout(runTour, 600)` -- and every Playwright context
+   * is a first visit. The tour lays a full-page `.tour-overlay` over the controls, so a click
+   * on #copyResults only lands if it beats that timer. Reproduced 2026-09-10: clicking
+   * straight after load succeeds; clicking 1.5s after load is intercepted by the overlay;
+   * with the key set, the same late click succeeds. waitForEntryAnimations made this pass
+   * on a fast runner and still lose on a slow one -- the retry in CI run 34540167260 failed
+   * with "<div class="tour-overlay"></div> intercepts pointer events".
+   *
+   * These tests are about the export payload, not the tour. The tour blocking a student's
+   * first visit is its own defect (audit item U3) and is not hidden by this.
+   */
+  async function skipFirstVisitTours(page: any) {
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem("eos-lab-toured", "1");
+      } catch {
+        // Storage can be blocked; the tour then runs and the test reports it honestly.
+      }
+    });
+  }
+
   async function installClipboardCapture(page: any) {
     await page.addInitScript(() => {
       (window as any).__cpLastClipboardText = null;
@@ -564,6 +589,7 @@ test.describe("Cosmic Playground smoke", () => {
       page
     }) => {
       await installClipboardCapture(page);
+      await skipFirstVisitTours(page);
 
       await page.goto(`play/${demo.slug}/`, { waitUntil: "domcontentloaded" });
       await expect(page.locator("#cp-demo")).toBeVisible();
@@ -591,6 +617,7 @@ test.describe("Cosmic Playground smoke", () => {
       page
     }) => {
       await installClipboardCapture(page);
+      await skipFirstVisitTours(page);
 
       await page.goto(`play/${demo.slug}/`, { waitUntil: "domcontentloaded" });
       await expect(page.locator("#cp-demo")).toBeVisible();
