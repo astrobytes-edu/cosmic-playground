@@ -24,7 +24,7 @@ play_steps:
   - "Compare the effect of changing magnification vs changing aperture."
 explain_prompt: "Explain why resolution is limited and why aperture matters for detail."
 model_notes:
-  - 'Diffraction-limited scaling: $\\theta_\\mathrm{diff} \\approx 1.22\\,\\lambda/D$ (converted to arcseconds for readouts).'
+  - 'Diffraction-limited scaling: $\theta_\mathrm{diff} \approx 1.22\,\lambda/D$ (converted to arcseconds for readouts).'
   - "Atmosphere (toy model): seeing can dominate over diffraction; AO reduces the seeing contribution in the demo."
   - "The Copy Results export includes diffraction limit, effective resolution, and resolved/marginal/unresolved status (with explicit units)."
 demo_path: "/play/telescope-resolution/"

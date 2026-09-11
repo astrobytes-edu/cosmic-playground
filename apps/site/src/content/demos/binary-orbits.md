@@ -37,15 +37,15 @@ station_params:
     notice: "Lower $M_2/M_1$ shifts the barycenter toward $M_1$ and increases the secondary's speed/amplitude."
   - parameter: 'Separation ($a$, AU)'
     value: "________"
-    notice: 'At fixed masses, period follows $P \\propto a^{3/2}$.'
+    notice: 'At fixed masses, period follows $P \propto a^{3/2}$.'
   - parameter: 'Inclination ($i$, deg)'
     value: "________"
-    notice: 'RV amplitudes scale as $K \\propto \\sin i$ and vanish for face-on systems ($i=0^\\circ$).'
+    notice: 'RV amplitudes scale as $K \propto \sin i$ and vanish for face-on systems ($i=0^\circ$).'
 explain_prompt: "Explain, using one invariant, one observable, and one energy statement, how this model links conservation laws to stellar mass inference."
 model_notes:
   - "This model enforces Newton's laws for two point masses in circular orbit about a shared barycenter."
   - 'It conserves total linear momentum in the barycentric frame: $M_1v_1 = M_2v_2$.'
-  - 'Units: distance in $\\mathrm{AU}$, time in $\\mathrm{yr}$, and masses in $M_{\\odot}$ with $G = 4\\pi^2\\,\\mathrm{AU}^3/(\\mathrm{yr}^2 M_{\\odot})$. '
+  - 'Units: distance in $\mathrm{AU}$, time in $\mathrm{yr}$, and masses in $M_{\odot}$ with $G = 4\pi^2\,\mathrm{AU}^3/(\mathrm{yr}^2 M_{\odot})$. '
   - "Excluded physics: eccentricity, tides, relativity, and mass transfer."
   - "RV inversion challenge in this pass assumes a circular, double-lined case where $q = K_1/K_2$."
 demo_path: "/play/binary-orbits/"

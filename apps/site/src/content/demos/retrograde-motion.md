@@ -27,7 +27,7 @@ explain_prompt: "Use relative motion and the observer-to-target direction to exp
 model_notes:
   - "The model uses coplanar Keplerian ellipses around the Sun with elements $(a,e,\\varpi,L_0)$ defined at an epoch $t_0$; it is not ephemeris-grade."
   - "Apparent (sky) longitude is defined by $\\lambda_{\\mathrm{app}}(t)=\\operatorname{wrap}_{0..360}(\\arctan2(y_t-y_o,\\,x_t-x_o))$ and is unwrapped with the 180-deg jump rule to form $\\tilde{\\lambda}(t)$."
-  - "Retrograde is defined by $d\\tilde{\\lambda}/dt&lt;0$ using a central-difference derivative on an internal step of $\\Delta t_{\\mathrm{internal}}=0.25$ day (model day)."
+  - "Retrograde is defined by $d\\tilde{\\lambda}/dt<0$ using a central-difference derivative on an internal step of $\\Delta t_{\\mathrm{internal}}=0.25$ day (model day)."
   - "Time is model time only: $1$ model month $=30$ model days; do not interpret the output as calendar dates."
 demo_path: "/play/retrograde-motion/"
 station_path: "/stations/retrograde-motion/"
