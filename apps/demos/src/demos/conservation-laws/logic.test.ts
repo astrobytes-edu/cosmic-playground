@@ -13,6 +13,8 @@ import {
   buildPathD,
   velocityArrowSvg,
   viewRadiusAu,
+  pickArrowDtDays,
+  arrowLengthPx,
 } from "./logic";
 
 describe("Conservation Laws -- UI Logic", () => {
@@ -411,6 +413,54 @@ describe("Conservation Laws -- UI Logic", () => {
     it("caps at 50 AU and floors at 1.5 AU", () => {
       expect(viewRadiusAu({ raAu: Number.POSITIVE_INFINITY, r0Au: 10 })).toBe(50);
       expect(viewRadiusAu({ raAu: 0.642859, r0Au: 10 ** -0.3 })).toBe(1.5);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // arrow time step and length
+  // -----------------------------------------------------------------------
+  describe("arrow time step and length", () => {
+    const s15 = 250 / 1.5;
+    const s6 = 250 / 6;
+
+    it("default circular orbit: 20 days, 57.3 px", () => {
+      expect(pickArrowDtDays(2 * Math.PI, s15)).toBe(20);
+      expect(arrowLengthPx(2 * Math.PI, 20, s15)).toBeCloseTo(57.341, 3);
+    });
+
+    it("is exactly proportional to speed: periapsis / apoapsis = (1 + e)/(1 - e), no clamp", () => {
+      const dt = pickArrowDtDays(12.042772, s15)!;
+      expect(dt).toBe(20);
+      const apo = arrowLengthPx(0.75 * 2 * Math.PI, dt, s15);
+      const peri = arrowLengthPx(12.042772, dt, s15);
+      expect(apo).toBeCloseTo(43.006, 3);
+      expect(peri).toBeCloseTo(109.904, 3);
+      expect(peri / apo).toBeCloseTo(1.4375 / 0.5625, 5);
+    });
+
+    it("ten solar masses: per-day length is sqrt(10) times longer", () => {
+      const dt10 = pickArrowDtDays(19.869177, s15)!;
+      expect(dt10).toBe(10);
+      const perDay1 = arrowLengthPx(2 * Math.PI, 20, s15) / 20;
+      const perDay10 = arrowLengthPx(19.869177, dt10, s15) / dt10;
+      expect(perDay10 / perDay1).toBeCloseTo(Math.sqrt(10), 5);
+    });
+
+    it("escape, hyperbolic and slow zoomed-out orbits", () => {
+      expect(pickArrowDtDays(8.885766, s6)).toBe(100);
+      expect(pickArrowDtDays(11.309734, s6)).toBe(50);
+      expect(pickArrowDtDays(3.576452, 5)).toBe(2000);
+    });
+
+    it("returns null when nothing moves", () => {
+      expect(pickArrowDtDays(0, s15)).toBeNull();
+    });
+
+    it("never exceeds 120 px at the fastest point unless even one day would", () => {
+      for (const v of [0.5, 3, 12, 40, 150]) {
+        const dt = pickArrowDtDays(v, s15)!;
+        if (dt > 1) expect(arrowLengthPx(v, dt, s15)).toBeLessThanOrEqual(120);
+      }
     });
   });
 });

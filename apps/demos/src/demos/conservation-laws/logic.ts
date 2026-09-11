@@ -128,6 +128,26 @@ export function viewRadiusAu(args: { raAu: number; r0Au: number }): number {
   return clamp(Math.min(closedFit, VIEW_R0_MULTIPLE * r0Au), VIEW_RADIUS_MIN_AU, VIEW_RADIUS_MAX_AU);
 }
 
+export const ARROW_DT_LADDER_DAYS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000] as const;
+export const ARROW_MAX_PX = 120;
+/** Julian year in days, the same year as AstroConstants.TIME.YEAR_S / DAY_S. */
+const DAYS_PER_YEAR = 365.25;
+
+/** Pixels covered in `dtDays` at `vAuYr`, drawn at the orbit's scale. */
+export function arrowLengthPx(vAuYr: number, dtDays: number, scalePxPerAu: number): number {
+  return vAuYr * (dtDays / DAYS_PER_YEAR) * scalePxPerAu;
+}
+
+/** Largest round step whose arrow at the fastest point fits `maxPx`; null when nothing moves. */
+export function pickArrowDtDays(vMaxAuYr: number, scalePxPerAu: number, maxPx: number = ARROW_MAX_PX): number | null {
+  if (!(vMaxAuYr > 0) || !(scalePxPerAu > 0)) return null;
+  let best: number = ARROW_DT_LADDER_DAYS[0];
+  for (const days of ARROW_DT_LADDER_DAYS) {
+    if (arrowLengthPx(vMaxAuYr, days, scalePxPerAu) <= maxPx) best = days;
+  }
+  return best;
+}
+
 // ---------------------------------------------------------------------------
 // Orbital mechanics helpers (pure geometry, no physics imports)
 // ---------------------------------------------------------------------------
