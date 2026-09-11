@@ -5,6 +5,7 @@ import {
   animationTimeScaleYrPerSec,
   arrowScale,
   buildPathD,
+  captionTimeLine,
   clamp,
   DEFAULT_SIM_YEARS_PER_SEC,
   formatEccentricity,
@@ -14,6 +15,7 @@ import {
   formatSpecificEnergy,
   formatSpeedFactor,
   formatTimeScale,
+  leftViewMessage,
   logSliderToValue,
   orbitAnnouncement,
   toSvg,
@@ -70,13 +72,16 @@ const apoCaption = must<HTMLSpanElement>("#apoCaption");
 const raAuValue = must<HTMLSpanElement>("#raAu");
 const timeScaleValue = must<HTMLSpanElement>("#timeScale");
 const timeScaleSlowed = must<HTMLSpanElement>("#timeScaleSlowed");
+const timeCaption = must<HTMLSpanElement>("#timeCaption");
+const stepCaption = must<HTMLSpanElement>("#stepCaption");
+const stepDurationValue = must<HTMLSpanElement>("#stepDuration");
+const viewRadiusAuValue = must<HTMLSpanElement>("#viewRadiusAu");
 
 const CENTER = { x: 300, y: 300 };
 const VIEW_RADIUS_PX = 250;
 const PATH_SAMPLES = 720;
 /** Step moves the body this fraction of anim.characteristicYr per press: sixteen presses make one lap. */
 const STEPS_PER_ORBIT = 16;
-const LEFT_VIEW_MESSAGE = "The body has left the view. Press Play to run it again.";
 
 /**
  * Circular and Elliptical are shape presets and start tangential. Escape and Hyperbolic are energy presets:
@@ -198,7 +203,7 @@ function startAnimation() {
     renderBody();
     if (step.stopped) {
       stopAnimation();
-      setLiveRegionText(status, LEFT_VIEW_MESSAGE);
+      setLiveRegionText(status, leftViewMessage(prefersReducedMotion));
       return;
     }
     anim.frameId = requestAnimationFrame(tick);
@@ -216,7 +221,8 @@ function stepBody() {
   const wasPlaying = anim.playing;
   stopAnimation();
   // As on Play, an open orbit that already ran to the edge of the view starts again from the beginning.
-  if (o.ecc >= 1 && anim.nuRad >= anim.nuMax - 1e-9) anim.nuRad = o.nu0Rad;
+  const restarted = o.ecc >= 1 && anim.nuRad >= anim.nuMax - 1e-9;
+  if (restarted) anim.nuRad = o.nu0Rad;
   const step = ConservationLawsModel.advanceTrueAnomalyByTime({
     nuRad: anim.nuRad,
     ecc: o.ecc,
@@ -228,7 +234,9 @@ function stepBody() {
   });
   anim.nuRad = step.nuRad;
   renderBody();
-  if (step.stopped) setLiveRegionText(status, LEFT_VIEW_MESSAGE);
+  if (step.stopped) setLiveRegionText(status, leftViewMessage(prefersReducedMotion));
+  // Without this the status would still say the body has left the view while it moves again.
+  else if (restarted) setLiveRegionText(status, "Back to the start.");
   // Without this the status would still read "Playing." with the body stopped.
   else if (wasPlaying) setLiveRegionText(status, "Paused.");
 }
@@ -257,6 +265,7 @@ function recomputeOrbit() {
     for (const el of [eccValue, kValue, uValue, epsValue, hValue, vKmSValue, rpAuValue]) el.textContent = "—";
     orbitPath.setAttribute("d", "");
     velocityLine.style.display = "none";
+    viewRadiusAuValue.textContent = "—";
     anim.characteristicYr = Number.NaN;
     renderTimeScale();
     stopAnimation();
@@ -265,6 +274,8 @@ function recomputeOrbit() {
 
   const rMaxAu = viewRadiusAu({ raAu: o.raAu, r0Au: controls.r0Au });
   anim.scalePxPerAu = VIEW_RADIUS_PX / rMaxAu;
+  // The drawing zooms to fit, so a change of mass or r0 can leave it looking the same; the caption states the scale.
+  viewRadiusAuValue.textContent = formatNumber(rMaxAu, 2);
   // Periapsis is the fastest point on the drawn path, so it fixes the arrow scale for the whole orbit.
   anim.arrow = arrowScale(o.vPeriAuYr, anim.scalePxPerAu);
   anim.nuRad = o.nu0Rad;
@@ -321,11 +332,19 @@ function recomputeOrbit() {
   stopAnimation();
 }
 
-/** The caption's "1 s on screen =" line, and the scale the animation runs at, from anim.characteristicYr. */
+/**
+ * The scale the animation runs at, from anim.characteristicYr, and the caption's time line: "1 s on screen =" for
+ * playback or, under reduced motion where Play is disabled, "Each Step =". Radial motion shows neither.
+ */
 function renderTimeScale() {
   anim.timeScaleYrPerSec = animationTimeScaleYrPerSec(anim.characteristicYr);
   timeScaleValue.textContent = formatTimeScale(anim.timeScaleYrPerSec);
   timeScaleSlowed.hidden = !(anim.timeScaleYrPerSec < DEFAULT_SIM_YEARS_PER_SEC);
+  stepDurationValue.textContent =
+    anim.characteristicYr > 0 ? formatTimeScale(anim.characteristicYr / STEPS_PER_ORBIT) : "";
+  const line = captionTimeLine({ canStep: canStep(), reducedMotion: prefersReducedMotion });
+  timeCaption.hidden = line !== "playback";
+  stepCaption.hidden = line !== "step";
 }
 
 /** Particle, arrow, speed, K and U at the current true anomaly. Runs every animation frame. */

@@ -20,6 +20,8 @@ import {
   formatTimeScale,
   DEFAULT_SIM_YEARS_PER_SEC,
   MIN_ON_SCREEN_ORBIT_SEC,
+  leftViewMessage,
+  captionTimeLine,
 } from "./logic";
 
 describe("Conservation Laws -- UI Logic", () => {
@@ -155,8 +157,8 @@ describe("Conservation Laws -- UI Logic", () => {
       expect(formatOrbitType("foo")).toBe("invalid");
       expect(formatOrbitType("")).toBe("invalid");
     });
-    it("radial -> 'radial (straight line)'", () => {
-      expect(formatOrbitType("radial")).toBe("radial (straight line)");
+    it("radial -> 'radial', short enough not to wrap its readout card (V2)", () => {
+      expect(formatOrbitType("radial")).toBe("radial");
     });
   });
 
@@ -426,6 +428,25 @@ describe("Conservation Laws -- UI Logic", () => {
 
     it("states a scale under a day in hours, one decimal", () => {
       expect(formatTimeScale(0.0023747)).toBe("20.8 hours");
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // status and caption text that depend on reduced motion
+  // -----------------------------------------------------------------------
+  describe("leftViewMessage", () => {
+    it("names Play normally and Step under reduced motion, where Play is disabled (M1)", () => {
+      expect(leftViewMessage(false)).toBe("The body has left the view. Press Play to run it again.");
+      expect(leftViewMessage(true)).toBe("The body has left the view. Press Step to run it again.");
+    });
+  });
+
+  describe("captionTimeLine", () => {
+    it("states the playback scale normally, one Step's duration under reduced motion, and neither without a path (L2, V8)", () => {
+      expect(captionTimeLine({ canStep: true, reducedMotion: false })).toBe("playback");
+      expect(captionTimeLine({ canStep: true, reducedMotion: true })).toBe("step");
+      expect(captionTimeLine({ canStep: false, reducedMotion: false })).toBe("none");
+      expect(captionTimeLine({ canStep: false, reducedMotion: true })).toBe("none");
     });
   });
 });

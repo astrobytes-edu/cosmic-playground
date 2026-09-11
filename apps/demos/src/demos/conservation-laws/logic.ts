@@ -70,7 +70,7 @@ export function formatOrbitType(type: string): string {
     case "hyperbolic":
       return "hyperbolic";
     case "radial":
-      return "radial (straight line)";
+      return "radial";
     default:
       return "invalid";
   }
@@ -257,4 +257,23 @@ export function formatTimeScale(yrPerSec: number): string {
   }
   if (days >= 1) return `${days.toFixed(1)} days`;
   return `${(days * 24).toFixed(1)} hours`;
+}
+
+// ---------------------------------------------------------------------------
+// Status and caption text that depend on reduced motion
+// ---------------------------------------------------------------------------
+
+/** Status when the body reaches the edge of the view. Under reduced motion Play is disabled, so it names Step. */
+export function leftViewMessage(reducedMotion: boolean): string {
+  return `The body has left the view. Press ${reducedMotion ? "Step" : "Play"} to run it again.`;
+}
+
+/**
+ * Which time line the stage caption shows. Normally the playback scale, "1 s on screen = ...". Under reduced motion
+ * Play is disabled, so what one Step covers instead. Motion with no path to step along (radial or invalid) neither
+ * plays nor steps, so neither.
+ */
+export function captionTimeLine(args: { canStep: boolean; reducedMotion: boolean }): "playback" | "step" | "none" {
+  if (!args.canStep) return "none";
+  return args.reducedMotion ? "step" : "playback";
 }

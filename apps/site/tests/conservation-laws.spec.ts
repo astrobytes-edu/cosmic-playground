@@ -355,7 +355,7 @@ test.describe("Conservation Laws -- what the student sees", () => {
 
   test("speed factor 0 is radial motion, not escape (P3)", async ({ page }) => {
     await setSlider(page, "speedFactor", 0);
-    await expect(page.locator("#orbitType")).toHaveText("radial (straight line)");
+    await expect(page.locator("#orbitType")).toHaveText("radial");
     await expect(page.locator("#eps")).toHaveText("-39.4784");
     await expect(page.locator("#velocityLine")).toBeHidden();
     await expect(page.locator("#play")).toBeDisabled();
@@ -622,7 +622,7 @@ test.describe("Conservation Laws -- what the student sees", () => {
   test("Step is disabled for radial motion, which has no orbit to step along (S1)", async ({ page }) => {
     await expect(page.locator("#step")).toBeEnabled();
     await setSlider(page, "speedFactor", 0);
-    await expect(page.locator("#orbitType")).toHaveText("radial (straight line)");
+    await expect(page.locator("#orbitType")).toHaveText("radial");
     await expect(page.locator("#step")).toBeDisabled();
   });
 
@@ -645,6 +645,84 @@ test.describe("Conservation Laws -- what the student sees", () => {
       for (const b of bottoms) expect(b).toBeLessThanOrEqual(size.height);
     });
   }
+
+  /** Reload at `size`, then wait for fonts and the entry animations, so geometry is about the settled layout. */
+  const settleAt = async (page: Page, size: { width: number; height: number }) => {
+    await page.setViewportSize(size);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator("#orbitType")).toHaveText("circular");
+    await page.evaluate(() =>
+      Promise.all([
+        document.fonts.ready,
+        // Skip infinite animations (the starfield twinkle never finishes).
+        ...document
+          .getAnimations()
+          .filter((a) => a.effect?.getTiming().iterations !== Infinity)
+          .map((a) => a.finished)
+      ]).then(() => undefined)
+    );
+  };
+
+  for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {
+    test(`all readouts are above the fold for radial motion at ${size.width}x${size.height} (V2)`, async ({ page }) => {
+      await settleAt(page, size);
+      await setSlider(page, "speedFactor", 0);
+      await expect(page.locator("#eps")).toHaveText("-39.4784");
+      await expect(page.locator(".cp-readout")).toHaveCount(8);
+      const bottoms = await page.locator(".cp-readout").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().bottom));
+      for (const b of bottoms) expect(b, JSON.stringify(bottoms)).toBeLessThanOrEqual(size.height);
+    });
+
+    test(`Play, Pause, Step and Reset share one row inside the viewport at ${size.width}x${size.height} (V1)`, async ({ page }) => {
+      await settleAt(page, size);
+      const { buttons, innerHeight } = await page.evaluate(() => ({
+        buttons: Array.from(document.querySelectorAll(".cp-button-row > .cp-button")).map((el) => {
+          const r = el.getBoundingClientRect();
+          return { id: el.id, top: r.top, bottom: r.bottom };
+        }),
+        innerHeight: window.innerHeight
+      }));
+      expect(buttons.map((b) => b.id)).toEqual(["play", "pause", "step", "reset"]);
+      for (const b of buttons) {
+        expect(Math.abs(b.top - buttons[0].top), JSON.stringify(buttons)).toBeLessThanOrEqual(1);
+        expect(b.bottom, JSON.stringify({ buttons, innerHeight })).toBeLessThanOrEqual(innerHeight);
+      }
+    });
+
+    test(`the caption sits within 40 px of the orbit at ${size.width}x${size.height} (V4)`, async ({ page }) => {
+      await settleAt(page, size);
+      const box = await page.evaluate(() => ({
+        orbitRight: (document.getElementById("orbitSvg") as Element).getBoundingClientRect().right,
+        captionLeft: (document.getElementById("stageCaption") as Element).getBoundingClientRect().left
+      }));
+      const gap = box.captionLeft - box.orbitRight;
+      expect(gap, JSON.stringify(box)).toBeGreaterThanOrEqual(0);
+      expect(gap, JSON.stringify(box)).toBeLessThanOrEqual(40);
+    });
+  }
+
+  test("the caption states the view radius, since the drawing zooms to fit (V7)", async ({ page }) => {
+    await expect(page.locator("#viewRadiusAu")).toHaveText("1.50");
+    await setSlider(page, "r0Slider", -1);
+    await expect(page.locator("#r0Value")).toHaveText("0.10");
+    await expect(page.locator("#orbitType")).toHaveText("circular");
+    await expect(page.locator("#viewRadiusAu")).toHaveText("0.15");
+  });
+
+  test("by default the caption states the playback time scale, not the Step duration (L2, V8)", async ({ page }) => {
+    await expect(page.locator("#timeCaption")).toBeVisible();
+    await expect(page.locator("#stepCaption")).toBeAttached();
+    await expect(page.locator("#stepCaption")).toBeHidden();
+  });
+
+  test("radial motion neither plays nor steps, so the caption states neither time (V8)", async ({ page }) => {
+    await setSlider(page, "speedFactor", 0);
+    await expect(page.locator("#eps")).toHaveText("-39.4784");
+    await expect(page.locator("#timeCaption")).toBeAttached();
+    await expect(page.locator("#timeCaption")).toBeHidden();
+    await expect(page.locator("#stepCaption")).toBeAttached();
+    await expect(page.locator("#stepCaption")).toBeHidden();
+  });
 });
 
 // --- Reduced Motion (separate describe, no beforeEach) ---
@@ -688,5 +766,40 @@ test.describe("Conservation Laws -- Reduced Motion", () => {
     for (let i = 0; i < 15; i++) await page.locator("#step").click();
     const end = await particle();
     expect(Math.hypot(end.x - start.x, end.y - start.y), JSON.stringify({ start, end })).toBeLessThanOrEqual(0.5);
+  });
+
+  test("the caption states what one Step covers instead of the playback scale (L2, V8)", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("play/conservation-laws/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#orbitType")).toHaveText("circular");
+    await page.locator('[data-preset="elliptical"]').click();
+    await expect(page.locator("#orbitType")).toHaveText("elliptical");
+    // One sixteenth of the period T = 0.580214 yr: 0.580214 / 16 x 365.25 = 13.245 days.
+    await expect(page.locator("#stepDuration")).toHaveText("13.2 days");
+    await expect(page.locator("#stepCaption")).toBeVisible();
+    await expect(page.locator("#timeCaption")).toBeAttached();
+    await expect(page.locator("#timeCaption")).toBeHidden();
+
+    await page.locator("#speedFactor").evaluate((el: HTMLInputElement) => {
+      el.value = "0";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await expect(page.locator("#eps")).toHaveText("-39.4784");
+    await expect(page.locator("#stepCaption")).toBeHidden();
+    await expect(page.locator("#timeCaption")).toBeHidden();
+  });
+
+  test("Stepping an open orbit out of view says to press Step, and the next Step says it started again (M1, M2)", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("play/conservation-laws/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#orbitType")).toHaveText("circular");
+    await page.locator('[data-preset="hyperbolic"]').click();
+    await expect(page.locator("#orbitType")).toHaveText("hyperbolic");
+    // Sixteen Steps cover the run from the start to the view edge.
+    for (let i = 0; i < 16; i++) await page.locator("#step").click();
+    await expect(page.locator("#status")).toHaveText("The body has left the view. Press Step to run it again.");
+    await page.locator("#step").click();
+    await expect(page.locator("#status")).toHaveText("Back to the start.");
   });
 });

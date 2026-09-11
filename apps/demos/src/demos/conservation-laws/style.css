@@ -28,6 +28,20 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Play, Pause, Step and Reset on one row. With no layout rule the theme's 24px side padding made them 89, 107, 92
+ * and 103px wide, so they wrapped: at 1440x900 Reset took a second row, and at 1280x720 Step and Reset ended at
+ * 748px, below the panel's visible bottom at 713px (measured 2026-09-11). */
+.cp-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-1);
+}
+
+.cp-button-row > .cp-button {
+  flex: 1 1 auto;
+  padding-inline: var(--cp-space-2);
+}
+
 .stage {
   display: grid;
   place-items: center;
@@ -51,7 +65,10 @@
  * (see the media block at the end): 25rem is the smallest whole-rem budget that keeps every
  * readout above the fold at both sizes. At 1440x900 the lowest readout ends at 896px with a
  * 450px orbit (24rem gave 914px). At 1280x720 the budget meets the 270px floor and the
- * lowest readout ends at 716px (24rem gave 734px). */
+ * lowest readout ends at 716px (24rem gave 734px).
+ *
+ * The desktop stage grid sizes the orbit's column with this same clamp (see the media block at the end), so the
+ * caption sits beside the drawing. Change the two together. */
 .orbit {
   width: 100%;
   height: auto;
@@ -76,9 +93,17 @@
   text-align: center;
 }
 
-/* Its own line: the time scale is about playback, not the arrow. */
+/* Their own lines: the view radius and the time scale are about the whole drawing and playback, not the arrow. */
+.stage__caption-view,
 .stage__caption-time {
   display: block;
+}
+
+/* `.cp-starfield` is `position: fixed; z-index: 0`, so it painted over the unpositioned drawing and caption. */
+.orbit,
+.stage__caption {
+  position: relative;
+  z-index: 1;
 }
 
 .orbit__path {
@@ -141,8 +166,12 @@
     min-height: 0;
   }
 
+  /* The orbit's column is only as wide as the orbit (the clamp from `.orbit`'s max-width), and the two columns centre
+   * as a pair. A `minmax(0, 1fr)` column centred the orbit in its spare width, 149px from the caption at 1440x900
+   * and 179px at 1280x720 (measured 2026-09-11). */
   .stage {
-    grid-template-columns: minmax(0, 1fr) 14rem;
+    grid-template-columns: minmax(0, clamp(270px, calc(100svh - 25rem), 700px)) 14rem;
+    justify-content: center;
     column-gap: var(--cp-space-4);
   }
 

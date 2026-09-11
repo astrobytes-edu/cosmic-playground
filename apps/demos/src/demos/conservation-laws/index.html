@@ -152,7 +152,9 @@
           <span id="arrowCaption">Green arrow: distance covered in <span id="arrowDtDays"></span> <span id="arrowDtUnit">days</span> at the current velocity.</span>
           <span id="arrowCaptionNotToScale" hidden>Green arrow: speed and direction, shortened to fit this zoom.</span>
           <span id="apoCaption" hidden>This orbit reaches <span id="raAu"></span> AU, beyond the view.</span>
-          <span class="stage__caption-time">Time: 1 s on screen = <span id="timeScale"></span><span id="timeScaleSlowed" hidden> (slowed so this fast orbit is visible)</span>.</span>
+          <span class="stage__caption-view">View radius: <span id="viewRadiusAu"></span> AU.</span>
+          <span id="timeCaption" class="stage__caption-time">Time: 1 s on screen = <span id="timeScale"></span><span id="timeScaleSlowed" hidden> (slowed so this fast orbit is visible)</span>.</span>
+          <span id="stepCaption" class="stage__caption-time" hidden>Each Step = <span id="stepDuration"></span> of orbital time.</span>
         </p>
       </section>
 
@@ -168,15 +170,15 @@
             <div class="cp-readout__value"><span id="ecc"></span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Kinetic $K = v^2/2$</div>
+            <div class="cp-readout__label">Kinetic ${K = v^2/2}$</div>
             <div class="cp-readout__value"><span id="kAu"></span> <span class="cp-readout__unit">AU$^2$/yr$^2$</span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Potential $U = -\mu/r$</div>
+            <div class="cp-readout__label">Potential ${U = -\mu/r}$</div>
             <div class="cp-readout__value"><span id="uAu"></span> <span class="cp-readout__unit">AU$^2$/yr$^2$</span></div>
           </div>
           <div class="cp-readout">
-            <div class="cp-readout__label">Specific energy $\varepsilon = K + U$</div>
+            <div class="cp-readout__label">Specific energy ${\varepsilon = K + U}$</div>
             <div class="cp-readout__value"><span id="eps"></span> <span class="cp-readout__unit">AU$^2$/yr$^2$</span></div>
           </div>
           <div class="cp-readout">

@@ -252,4 +252,16 @@ describe("Conservation Laws -- Design System Contracts", () => {
       expect(exportResults).toContain("formatPeriapsis(");
     });
   });
+
+  describe("Contracts from the 2026-09-11 visual review", () => {
+    it("the orbit and its caption are positioned above the fixed starfield canvas (V5)", () => {
+      expect(css).toMatch(/\.orbit,\s*\.stage__caption\s*\{\s*position:\s*relative;\s*z-index:\s*1;\s*\}/);
+    });
+
+    it("each readout label's equation is one KaTeX group, so it cannot wrap mid-equation (V6)", () => {
+      expect(html).toMatch(/Kinetic \$\{K = v\^2\/2\}\$/);
+      expect(html).toMatch(/Potential \$\{U = -\\mu\/r\}\$/);
+      expect(html).toMatch(/Specific energy \$\{\\varepsilon = K \+ U\}\$/);
+    });
+  });
 });
