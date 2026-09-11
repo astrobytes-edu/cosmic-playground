@@ -252,14 +252,26 @@ test.describe("Cosmic Playground smoke", () => {
     // had 1 of 5 sections; that bundle is now complete, and as of 2026-09-04 NO bundle
     // is partial, so the "incomplete" branch has no instance to assert against. What
     // remains testable -- and what a lesson-planning instructor actually hits -- is the
-    // no-bundle fallback. Both branches are covered by unit tests on the section list.
-    const slugsWithNoBundle = ["eos-lab", "stars-zams-hr"];
+    // no-bundle fallback. The partial branch has no test of its own; what stops a bundle
+    // sliding into it unnoticed is "Complete instructor bundles show no incompleteness
+    // notice" below. (This comment used to claim unit tests covered both branches. As of
+    // 2026-09-10 no test file references the instructor section list at all.)
+    const slugsWithNoBundle = ["eos-lab", "stars-zams-hr", "cluster-census"];
 
     for (const slug of slugsWithNoBundle) {
       await page.goto(`instructor/${slug}/`);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      // The page must not silently look like real teaching material.
-      await expect(page.getByText(/scaffold/i).first()).toBeVisible();
+      // The page must not silently look like real teaching material -- and the notice has
+      // to be the page's labelled status region, not any stray word. This used to be
+      // getByText(/scaffold/i), and the only text it matched was an engineering TODO,
+      // "Add export-results scaffolding once runtime lands": the defect was passing the test.
+      const status = page.getByRole("region", { name: "Instructor bundle status" });
+      await expect(status).toBeVisible();
+      await expect(status).toContainText(/scaffold/i);
+      // Nor publish the site's own engineering TODOs as page content. The fallback used to
+      // render "Add a proper instructor content collection for richer notes" under a
+      // Backlog heading on all three of these pages (audit B8).
+      await expect(page.locator("body")).not.toContainText("Add a proper instructor content collection");
     }
   });
 

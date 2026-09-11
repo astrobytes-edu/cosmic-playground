@@ -122,11 +122,27 @@ const hasPartialInstructorBundle = hasInstructorContent && missingSections.lengt
     </>
   ) : (
     <>
+      {/*
+        * Say plainly that this page is a scaffold. Before 2026-09-10 the only text here that
+        * admitted it was an engineering TODO in a Backlog section ("Add export-results
+        * scaffolding once runtime lands") -- which is also the only thing the smoke test's
+        * old /scaffold/i check was matching. With that section gone, the page would read as
+        * finished teaching material without this.
+        */}
+      <section class="cp-callout" data-kind="warn" aria-label="Instructor bundle status">
+        <h2>Instructor notes not written yet</h2>
+        <p>
+          This page is a scaffold. No instructor bundle (activities, assessment items, timing
+          notes) has been written for this demo yet, so the outline below is drawn from the
+          demo's own description rather than from tested classroom material.
+        </p>
+      </section>
+
       <section class="block">
         <h2>Overview</h2>
         <div class="cp-prose">
           <p>
-            What this demo is for, how long it takes, and what misconception it targets.
+            The misconceptions this demo is built to surface:
           </p>
           <ul>
             {entry.data.misconceptions.map((m) => (
@@ -169,16 +185,13 @@ const hasPartialInstructorBundle = hasInstructorContent && missingSections.lengt
         </div>
       </section>
 
-      <section class="block">
-        <h2>Backlog</h2>
-        <div class="cp-prose">
-          <ul>
-            <li>Add a proper instructor content collection for richer notes.</li>
-            <li>Improve station card parameter table to be demo-driven.</li>
-            <li>Add export-results scaffolding once runtime lands.</li>
-          </ul>
-        </div>
-      </section>
+      {/*
+        * No Backlog section in this fallback. It renders only for demos without an authored
+        * instructor bundle, and it used to publish three engineering TODOs -- "Add a proper
+        * instructor content collection for richer notes" among them -- as page content, as
+        * if they were teaching material (audit B8). Authored bundles render their own
+        * sections from src/content/instructor/, which this does not touch.
+        */}
     </>
   )}
 </Layout>
