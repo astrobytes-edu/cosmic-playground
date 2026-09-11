@@ -36,7 +36,9 @@ The visualization is drawn in a Sun-fixed way by subtracting $\lambda_\odot$ for
 
 The demo defines the phase angle:
 
-$$\Delta = (\lambda_M - \lambda_\odot)\ \bmod\ 360^\circ$$
+$$
+\Delta = (\lambda_M - \lambda_\odot)\ \bmod\ 360^\circ
+$$
 
 Let’s unpack each piece:
 
@@ -54,7 +56,9 @@ In the long-run simulation, New/Full events are treated as exact conjunction/opp
 
 The key “tilt” calculation is the Moon’s ecliptic latitude $\beta$ (degrees):
 
-$$\beta = \arcsin\!\big(\sin i\ \sin(\lambda_M - \Omega)\big)$$
+$$
+\beta = \arcsin\!\big(\sin i\ \sin(\lambda_M - \Omega)\big)
+$$
 
 Let’s unpack each piece:
 
@@ -91,9 +95,13 @@ The demo uses a physically-motivated shadow model (similar triangles). A key sec
 
 At distance $x$ behind the shadowing body (along the anti-solar direction), the model uses:
 
-$$r_{\text{umbra}}(x) = R_{\text{body}} - x\,\frac{(R_\odot - R_{\text{body}})}{D_{ES}}$$
+$$
+r_{\text{umbra}}(x) = R_{\text{body}} - x\,\frac{(R_\odot - R_{\text{body}})}{D_{ES}}
+$$
 
-$$r_{\text{pen}}(x) = R_{\text{body}} + x\,\frac{(R_\odot + R_{\text{body}})}{D_{ES}}$$
+$$
+r_{\text{pen}}(x) = R_{\text{body}} + x\,\frac{(R_\odot + R_{\text{body}})}{D_{ES}}
+$$
 
 These are geometric cone formulas: the umbra narrows with distance; the penumbra widens.
 
@@ -101,7 +109,9 @@ These are geometric cone formulas: the umbra narrows with distance; the penumbra
 
 The model converts a geocentric ecliptic latitude $|\beta|$ into a transverse offset (“miss distance”) at the relevant distance:
 
-$$b \approx D_{EM}\,\sin|\beta|$$
+$$
+b \approx D_{EM}\,\sin|\beta|
+$$
 
 This is the quantity compared to shadow radii.
 

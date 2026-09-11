@@ -45,7 +45,7 @@ The pedagogical target is not memorizing the hydrostatic equation. It is learnin
 
 3. Shrink the radius at fixed mass. Ask: *“Does the same pressure now have to support more weight per unit area?”* Connect that to the core-temperature estimate.
 
-4. Change $\\mu$. Ask: *“If the same density has fewer particles per gram, what happens to the temperature required for the same pressure?”* Use the ideal gas readout to close the loop.
+4. Change $\mu$. Ask: *“If the same density has fewer particles per gram, what happens to the temperature required for the same pressure?”* Use the ideal gas readout to close the loop.
 
 5. Finish with a one-sentence explanation: gravity, scale height, and ideal-gas closure are the whole story the demo is trying to build.
 
@@ -65,7 +65,7 @@ The pedagogical target is not memorizing the hydrostatic equation. It is learnin
 - Gravity readout in cm s$^{-2}$ or equivalent local support units.
 - Pressure scale height $H_P$ in cm or km.
 - Pressure gradient or balance indicator as a sign of under-support or over-support.
-- Mean molecular weight $\\mu$ and its effect on the ideal-gas temperature estimate.
+- Mean molecular weight $\mu$ and its effect on the ideal-gas temperature estimate.
 - Core temperature $T_c$ in K as an inferred scale.
 
 ## Related pages

@@ -22,7 +22,9 @@ Given an initial position $\mathbf{r}_0$ and velocity $\mathbf{v}_0$ around a ce
 
 The specific (per unit mass) orbital energy is:
 
-$$\varepsilon = \frac{v^2}{2} - \frac{\mu}{r}$$
+$$
+\varepsilon = \frac{v^2}{2} - \frac{\mu}{r}
+$$
 
 Let’s unpack each piece:
 
@@ -43,7 +45,9 @@ What this equation is really saying: kinetic energy per mass ($v^2/2$) competes 
 
 The specific angular momentum is:
 
-$$h = |\mathbf{r}\times\mathbf{v}|$$
+$$
+h = |\mathbf{r}\times\mathbf{v}|
+$$
 
 Let’s unpack each piece:
 
@@ -65,13 +69,19 @@ Dimensional check:
 
 At a given radius $r$:
 
-$$v_{\rm circ} = \sqrt{\frac{\mu}{r}}$$
+$$
+v_{\rm circ} = \sqrt{\frac{\mu}{r}}
+$$
 
-$$v_{\rm esc} = \sqrt{\frac{2\mu}{r}}$$
+$$
+v_{\rm esc} = \sqrt{\frac{2\mu}{r}}
+$$
 
 So:
 
-$$v_{\rm esc} = \sqrt{2}\,v_{\rm circ}$$
+$$
+v_{\rm esc} = \sqrt{2}\,v_{\rm circ}
+$$
 
 What this is really saying: escape speed is only about 41% larger than circular speed at the same radius — a powerful intuition for why “a little extra speed” can unbind an orbit.
 
@@ -79,7 +89,9 @@ What this is really saying: escape speed is only about 41% larger than circular 
 
 The orbit is plotted using the conic-section polar form:
 
-$$r(\nu) = \frac{p}{1 + e\cos\nu}$$
+$$
+r(\nu) = \frac{p}{1 + e\cos\nu}
+$$
 
 Let’s unpack each piece:
 
@@ -89,11 +101,15 @@ Let’s unpack each piece:
 
 The demo computes:
 
-$$p = \frac{h^2}{\mu}$$
+$$
+p = \frac{h^2}{\mu}
+$$
 
 and the eccentricity vector:
 
-$$\mathbf{e} = \frac{\mathbf{v}\times\mathbf{h}}{\mu} - \hat{\mathbf{r}}$$
+$$
+\mathbf{e} = \frac{\mathbf{v}\times\mathbf{h}}{\mu} - \hat{\mathbf{r}}
+$$
 
 with $e = |\mathbf{e}|$. The direction of $\mathbf{e}$ points toward periapsis and sets the orbit’s orientation in the plot.
 
@@ -106,7 +122,9 @@ The demo’s UI uses:
 
 Internally, it uses the teaching normalization:
 
-$$G = 4\pi^2\ \frac{\mathrm{AU}^3}{\mathrm{yr}^2\,M_\odot}$$
+$$
+G = 4\pi^2\ \frac{\mathrm{AU}^3}{\mathrm{yr}^2\,M_\odot}
+$$
 
 So $\mu = GM$ is in AU^3/yr^2, and:
 

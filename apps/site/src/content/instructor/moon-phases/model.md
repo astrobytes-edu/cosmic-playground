@@ -57,7 +57,9 @@ This is a convention for the diagram, not a universal astronomy standard. The im
 
 The demo uses:
 
-$$f = \frac{1+\cos\alpha}{2}$$
+$$
+f = \frac{1+\cos\alpha}{2}
+$$
 
 Let’s unpack each piece:
 

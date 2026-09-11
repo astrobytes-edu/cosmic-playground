@@ -33,7 +33,9 @@ This demo is a **planar, two-body** Keplerian-orbit model (planet mass negligibl
 
 The demo uses true anomaly $\theta$ measured in the orbital plane with $\theta=0$ at **perihelion**. For visualization, we choose a coordinate convention where perihelion is drawn to the **right** of the star:
 
-$$x = r\cos\theta,\qquad y = r\sin\theta$$
+$$
+x = r\cos\theta,\qquad y = r\sin\theta
+$$
 
 This is purely a drawing convention. The physics is in $r(\theta)$ and in how $\theta$ evolves with time.
 
@@ -41,7 +43,9 @@ This is purely a drawing convention. The physics is in $r(\theta)$ and in how $\
 
 The key geometric quantity is the orbital radius (distance from the star to the planet):
 
-$$r(\theta) = \frac{a(1-e^2)}{1+e\cos\theta}$$
+$$
+r(\theta) = \frac{a(1-e^2)}{1+e\cos\theta}
+$$
 
 Let’s unpack each piece:
 
@@ -64,7 +68,9 @@ In the code:
 
 Kepler’s 2nd law is most cleanly stated as:
 
-$$\frac{dA}{dt}=\text{constant}$$
+$$
+\frac{dA}{dt}=\text{constant}
+$$
 
 where $A$ is the area swept out by the radius vector from star to planet.
 
@@ -74,11 +80,15 @@ In practice, the demo implements the correct “non-uniform motion” using the 
 
 Mean anomaly is linear in time:
 
-$$M(t)=\frac{2\pi}{P}t$$
+$$
+M(t)=\frac{2\pi}{P}t
+$$
 
 Kepler’s equation relates mean anomaly $M$ to eccentric anomaly $E$:
 
-$$M = E - e\sin E$$
+$$
+M = E - e\sin E
+$$
 
 The demo solves this equation numerically (Newton’s method) to get $E$, then converts to true anomaly $\theta$.
 
@@ -95,11 +105,15 @@ In the code (shared model):
 
 For a Keplerian orbit around a central mass $M$:
 
-$$P = 2\pi\sqrt{\frac{a^3}{GM}}$$
+$$
+P = 2\pi\sqrt{\frac{a^3}{GM}}
+$$
 
 In the “solar unit” system (with $a$ in AU, $P$ in years, and $M$ in solar masses), this becomes:
 
-$$P^2 = \frac{a^3}{M}$$
+$$
+P^2 = \frac{a^3}{M}
+$$
 
 The demo uses this solar-units form for the period readout.
 
@@ -109,7 +123,9 @@ Newton mode lets students vary $M$ (in $M_{\odot}$) and see how the same orbit s
 
 ### Vis-viva (speed along a Kepler orbit)
 
-$$v = \sqrt{GM\left(\frac{2}{r}-\frac{1}{a}\right)}$$
+$$
+v = \sqrt{GM\left(\frac{2}{r}-\frac{1}{a}\right)}
+$$
 
 In this instrument, the model state is computed in AU/yr and the speed is displayed (and exported) in **km/s** via a fixed unit conversion.
 

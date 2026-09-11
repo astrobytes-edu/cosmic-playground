@@ -11,7 +11,7 @@ has_math: true
 *Goal:* Use the demo to make a claim about retrograde motion supported by (1) at least one number/readout and (2) at least one sanity check.
 
 > **Station card: Retrograde Motion (8-10 minutes)**
-> **Demo setup:** Select **Earth $\\to$ Mars** as the observer/target pair. Set speed in the sidebar, then press **Play** in the sidebar transport controls.
+> **Demo setup:** Select **Earth $\to$ Mars** as the observer/target pair. Set speed in the sidebar, then press **Play** in the sidebar transport controls.
 > **Timeline tip:** Use the timeline row near the visualization stage for scrub and stationary navigation.
 > **Tip:** Click **Station Mode** to record stationary-point and opposition data into a table you can export.
 >
@@ -24,7 +24,7 @@ has_math: true
 
 ## Data Collection Tasks (Station Mode)
 
-1. Select **Earth $\\to$ Mars**. Press **Play** and let the animation run until you see the apparent longitude reverse direction (the longitude plot curves backward). Pause at the **first stationary point** (where the curve flattens before reversing).
+1. Select **Earth $\to$ Mars**. Press **Play** and let the animation run until you see the apparent longitude reverse direction (the longitude plot curves backward). Pause at the **first stationary point** (where the curve flattens before reversing).
 
 2. Click **Add Row** in Station Mode. Record model day $t$, $\lambda_\text{app}$, and motion state. Label this row **"Mars: start retrograde."**
 
@@ -32,7 +32,7 @@ has_math: true
 
 4. Find the midpoint of the retrograde arc; this is close to **opposition** (Sun-Earth-Mars alignment). Add a row: **"Mars: opposition."**
 
-5. Now switch to **Earth $\\to$ Venus**. Repeat steps 1-4, recording the **start**, **end**, and **inferior conjunction** midpoint. Venus retrogrades near inferior conjunction (Sun-Venus-Earth alignment).
+5. Now switch to **Earth $\to$ Venus**. Repeat steps 1-4, recording the **start**, **end**, and **inferior conjunction** midpoint. Venus retrogrades near inferior conjunction (Sun-Venus-Earth alignment).
 
 6. Optional advanced case: set **observer = Venus** and **target = Earth** to inspect the same geometry from Venus's frame.
 

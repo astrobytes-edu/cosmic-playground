@@ -98,7 +98,9 @@ Each group gives a 60-second pitch: band choice + one key piece of evidence + on
 >
 > **Key relationship (photon energy scaling):**
 >
-> $$E \propto \frac{1}{\lambda}$$
+> $$
+> E \propto \frac{1}{\lambda}
+> $$
 >
 > **Sanity checks:**
 > - Ordering: Radio (lowest energy) → … → Gamma (highest energy).

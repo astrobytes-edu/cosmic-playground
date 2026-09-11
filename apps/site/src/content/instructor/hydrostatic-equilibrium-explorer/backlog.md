@@ -25,6 +25,6 @@ last_updated: "2026-03-18"
 
 ## P2 (nice to have)
 
-- Add an optional “composition microscope” that shows how $\\mu$ changes the ideal-gas closure.
+- Add an optional “composition microscope” that shows how $\mu$ changes the ideal-gas closure.
 - Add a challenge prompt that compares two stars with the same mass but different radii.
 - Add a one-page worksheet variant for stations that need a faster turnaround.

@@ -31,7 +31,9 @@ has_math: true
 >
 > **Key relationship (period scaling):**
 >
-> $$P \propto a^{3/2}$$
+> $$
+> P \propto a^{3/2}
+> $$
 >
 > **Sanity checks:**
 > - If $e=0$, speed should be constant around the orbit.

@@ -33,4 +33,4 @@ instructor_path: "/instructor/conservation-laws/"
 last_updated: "2026-02-02"
 ---
 
-Start with a circular case ($v/v_{\\rm circ}=1$), then move toward escape ($\\sqrt{2}$) and beyond to see how $\\varepsilon$ changes sign.
+Start with a circular case ($v/v_{\rm circ}=1$), then move toward escape ($\sqrt{2}$) and beyond to see how $\varepsilon$ changes sign.

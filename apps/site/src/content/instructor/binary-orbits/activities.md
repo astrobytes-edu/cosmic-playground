@@ -48,7 +48,9 @@ has_math: true
 > 3) Use the readout to test the idea that period grows quickly with separation.
 >
 > **Key relationship (for discussion):**
-> $$P^2=\frac{a^3}{M_1+M_2}\qquad(\mathrm{AU}/\mathrm{yr}/M_\odot\ \text{teaching units})$$
+> $$
+> P^2=\frac{a^3}{M_1+M_2}\qquad(\mathrm{AU}/\mathrm{yr}/M_\odot\ \text{teaching units})
+> $$
 
 ## Station version (rotation lab)
 

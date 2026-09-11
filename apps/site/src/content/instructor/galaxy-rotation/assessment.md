@@ -14,7 +14,7 @@ has_math: true
 
 ## Clicker prompts
 
-1. **If $V(R)$ stays nearly constant from $20$ to $50\\,{\\rm kpc}$, then $M(<R)$ must:**  
+1. **If $V(R)$ stays nearly constant from $20$ to $50\,{\rm kpc}$, then $M(<R)$ must:**  
 A. stay constant  
 B. decrease  
 C. continue increasing  
@@ -44,5 +44,5 @@ D. Rotation curves are unrelated to Doppler measurements.
 ## Exit ticket
 
 1. Report one radius where your run transitioned to dark-matter dominance.
-2. Give your measured $f_b(50\\,{\\rm kpc})$ and compare to $0.157$.
+2. Give your measured $f_b(50\,{\rm kpc})$ and compare to $0.157$.
 3. Write one sentence claim supported by two readouts.

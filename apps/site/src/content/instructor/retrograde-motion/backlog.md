@@ -17,13 +17,13 @@ has_math: true
 
 2) **Story mode overlays (toggleable)**
    - Velocity arrows for observer + target at the current time (recommended by design spec).
-   - A small “sweep direction” indicator for the sign of $d\\tilde{\\lambda}/dt$ at the current time.
+   - A small “sweep direction” indicator for the sign of $d\tilde{\lambda}/dt$ at the current time.
    - A “line-of-sight history” overlay (fading) for the last $N$ model days.
 
 3) **Plot UX polish**
-   - Add axis ticks/labels: $t$ (day) and $\\tilde{\\lambda}_{\\mathrm{app}}$ (deg).
-   - Add a “zoom to retrograde interval” button (sets window to [start-$\\Delta$, end+$\\Delta$]).
-   - Add “hover/focus tooltip” at cursor: $t$, $\\lambda_{\\mathrm{app}}$, $d\\tilde{\\lambda}/dt$ (must work on keyboard focus, not hover-only).
+   - Add axis ticks/labels: $t$ (day) and $\tilde{\lambda}_{\mathrm{app}}$ (deg).
+   - Add a “zoom to retrograde interval” button (sets window to [start-$\Delta$, end+$\Delta$]).
+   - Add “hover/focus tooltip” at cursor: $t$, $\lambda_{\mathrm{app}}$, $d\tilde{\lambda}/dt$ (must work on keyboard focus, not hover-only).
 
 4) **Make it playful**
    - “Compare two targets” mode: same observer, two targets on the same plot (clearly labeled; no color-only meaning).
@@ -34,17 +34,17 @@ has_math: true
 
 1) **Configurable planet set**
    - Add Mercury (interior extreme case) and optionally Uranus/Neptune (outer slow case) with explicit “teaching model” notes.
-   - Allow “custom planet” elements entry $(a,e,\\varpi,L_0)$ (with validation) for sandboxed exploration.
+   - Allow “custom planet” elements entry $(a,e,\varpi,L_0)$ (with validation) for sandboxed exploration.
 
 2) **Better presets**
    - Add presets for:
-     - Earth $\\to$ Jupiter (slow retrograde)
-     - Earth $\\to$ Saturn (slow retrograde)
-     - Mars observer $\\to$ Jupiter target (advanced)
+     - Earth $\to$ Jupiter (slow retrograde)
+     - Earth $\to$ Saturn (slow retrograde)
+     - Mars observer $\to$ Jupiter target (advanced)
    - Each preset should include a “what to notice” sentence.
 
 3) **Export richness (still stable)**
-   - Add an optional “Copy CSV (series)” action with downsampled rows: $t$, $\\lambda_{\\mathrm{app}}$, $\\tilde{\\lambda}$, $d\\tilde{\\lambda}/dt$, state.
+   - Add an optional “Copy CSV (series)” action with downsampled rows: $t$, $\lambda_{\mathrm{app}}$, $\tilde{\lambda}$, $d\tilde{\lambda}/dt$, state.
    - Keep “Copy results” as the stable v1 summary payload.
 
 ## C) Physics / correctness hardening (SoTA honesty)
@@ -56,7 +56,7 @@ has_math: true
 2) **Numerical stability for far past/far future**
    - Ensure all angle computations avoid catastrophic precision for large $t$:
      - compute $M(t)$ using modular arithmetic (track integer turns separately) so trig inputs stay bounded.
-   - Add a regression test that `computeSeries` works for windows centered at large |t| (e.g. $t=\\pm 10^6$ day) without NaNs.
+   - Add a regression test that `computeSeries` works for windows centered at large |t| (e.g. $t=\pm 10^6$ day) without NaNs.
 
 3) **Sharper event detection**
    - Add tests that stationary refinement meets the spec tolerance (bracket width $<10^{-3}$ day) across multiple planet pairs.

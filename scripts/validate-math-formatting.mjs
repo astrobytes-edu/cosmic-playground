@@ -32,6 +32,41 @@ const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".html", ".ast
 // This guardrail is intentionally mechanical: if you need a symbol, use LaTeX (e.g. \\, \\pi, \\sigma, ^{\\circ}).
 const FORBIDDEN_UNICODE_MATH = /[°☉µμ′″×−∝≈∞αβγδεζηθικλμνξοπρστυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹]/u;
 
+/*
+ * Contract: display math in Markdown is fenced -- `$$` on a line of its own, above and below.
+ *
+ * remark-math (apps/site/astro.config.mjs) decides display mode from the fence lines, not
+ * from the number of dollars: `$$E = mc^2$$` written on one line is INLINE math, however it
+ * was meant. Until 2026-09-10 the browser-side renderer treated every `$$` as display, so
+ * 80 equations across 35 files were written that way; once Markdown math moved to build
+ * time all 80 rendered inline, and six ran past a 320px viewport.
+ *
+ * Markdown bodies only. Astro pages and frontmatter are still typeset by KatexAutoRender,
+ * which does treat `$$` as display, and fenced code blocks show source rather than math.
+ */
+const SINGLE_LINE_DISPLAY_MATH = /^\s*(?:>\s*)*(?:(?:[-*+]|\d+[.)])\s+)?\$\$.*\$\$\s*$/;
+const CODE_FENCE = /^\s*(?:>\s*)*(?:```|~~~)/;
+
+function singleLineDisplayMath(raw) {
+  const lines = raw.split(/\r?\n/);
+  let start = 0;
+  if (lines[0]?.trim() === "---") {
+    const end = lines.findIndex((line, i) => i > 0 && line.trim() === "---");
+    start = end === -1 ? lines.length : end + 1;
+  }
+
+  const hits = [];
+  let inCode = false;
+  for (let i = start; i < lines.length; i++) {
+    if (CODE_FENCE.test(lines[i])) {
+      inCode = !inCode;
+    } else if (!inCode && SINGLE_LINE_DISPLAY_MATH.test(lines[i])) {
+      hits.push({ line: i + 1, text: lines[i] });
+    }
+  }
+  return hits;
+}
+
 async function isDirectory(p) {
   try {
     return (await fs.stat(p)).isDirectory();
@@ -60,6 +95,7 @@ function relative(p) {
 
 async function main() {
   const violations = [];
+  const singleLineDisplay = [];
 
   for (const root of SCAN_ROOTS) {
     if (!(await isDirectory(root))) continue;
@@ -70,6 +106,11 @@ async function main() {
       if (!EXTENSIONS.has(ext)) continue;
 
       const raw = await fs.readFile(file, "utf8");
+      if ((ext === ".md" || ext === ".mdx") && raw.includes("$$")) {
+        for (const hit of singleLineDisplayMath(raw)) {
+          singleLineDisplay.push({ file: relative(file), ...hit });
+        }
+      }
       if (!FORBIDDEN_UNICODE_MATH.test(raw)) continue;
 
       const lines = raw.split(/\r?\n/);
@@ -87,10 +128,21 @@ async function main() {
     for (const v of violations) {
       console.error(`${v.file}:${v.line}: ${v.text}`);
     }
-    process.exit(1);
   }
 
-  console.log("OK: no unicode-math symbols found in demo/site/runtime sources.");
+  if (singleLineDisplay.length > 0) {
+    if (violations.length > 0) console.error("");
+    console.error(
+      "Display math written on one line in Markdown. remark-math renders `$$...$$` on a single line as INLINE math; put each `$$` on a line of its own:\n"
+    );
+    for (const v of singleLineDisplay) {
+      console.error(`${v.file}:${v.line}: ${v.text}`);
+    }
+  }
+
+  if (violations.length > 0 || singleLineDisplay.length > 0) process.exit(1);
+
+  console.log("OK: no unicode-math symbols in demo/site/runtime sources, and Markdown display math is fenced.");
 }
 
 main().catch((err) => {

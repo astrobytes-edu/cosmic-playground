@@ -16,22 +16,22 @@ has_math: true
 
 Component quadrature:
 $$
-V_{\\rm total}(R)=\\sqrt{V_{\\rm bulge}^2+V_{\\rm disk}^2+V_{\\rm halo}^2}
+V_{\rm total}(R)=\sqrt{V_{\rm bulge}^2+V_{\rm disk}^2+V_{\rm halo}^2}
 $$
 
 Dark-matter inference:
 $$
-M_{\\rm dark}(<R)=\\frac{V_{\\rm obs}^2R}{G}-M_{\\rm vis}(<R)
+M_{\rm dark}(<R)=\frac{V_{\rm obs}^2R}{G}-M_{\rm vis}(<R)
 $$
 
 Keplerian benchmark:
 $$
-V_{\\rm Kep}(R)\\propto R^{-1/2} \\quad (R\\gg R_d)
+V_{\rm Kep}(R)\propto R^{-1/2} \quad (R\gg R_d)
 $$
 
 MOND comparison (asymptotic form):
 $$
-V_{\\rm MOND}\\approx\\left(G\\,M_{\\rm vis}\\,a_0\\right)^{1/4}
+V_{\rm MOND}\approx\left(G\,M_{\rm vis}\,a_0\right)^{1/4}
 $$
 
 ## Implementation notes
@@ -40,13 +40,13 @@ $$
 - Mass components:
   - bulge: Hernquist enclosed mass
   - disk: exact exponential-disk rotation using modified Bessel $I_0,I_1,K_0,K_1$
-  - halo: NFW enclosed mass with derived $R_{\\rm vir}$ and concentration $c$
+  - halo: NFW enclosed mass with derived $R_{\rm vir}$ and concentration $c$
 - Units are explicit in API naming (`radiusKpc`, `velocityKmS`, `mass10`).
 - `G_{\\rm galaxy}=4.3009\\times10^4\\,\\text{kpc}\\,(\\text{km/s})^2\\,(10^{10}M_\\odot)^{-1}`.
-- NFW derived values use internal cosmology defaults ($H_0=67.4\\,{\\rm km\\,s^{-1}\\,Mpc^{-1}}$, $\\Omega_m=0.315$).
+- NFW derived values use internal cosmology defaults ($H_0=67.4\,{\rm km\,s^{-1}\,Mpc^{-1}}$, $\Omega_m=0.315$).
 - The 21-cm readout ties rotation speed to directly measurable wavelength shift:
 $$
-\\Delta\\lambda_{21}=\\lambda_0\\frac{V}{c},\\qquad \\lambda_0=21.106\\,{\\rm cm}
+\Delta\lambda_{21}=\lambda_0\frac{V}{c},\qquad \lambda_0=21.106\,{\rm cm}
 $$
 
 ## Pedagogical clarifications

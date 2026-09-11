@@ -30,7 +30,7 @@ has_math: true
 
 **Expected observation:** Students notice that the supported state is not flat; it has a specific gradient scale.
 
-**Instructor move:** Point to the local nature of the balance and connect it to $\\frac{dP}{dr}$.
+**Instructor move:** Point to the local nature of the balance and connect it to $\frac{dP}{dr}$.
 
 ## 6-10 min: Scale height reasoning
 
@@ -40,15 +40,15 @@ has_math: true
 
 **Expected observation:** $H_P$ decreases as gravity strengthens.
 
-**Instructor move:** Translate the visual change into the statement $H_P = P/(\\rho g)$.
+**Instructor move:** Translate the visual change into the statement $H_P = P/(\rho g)$.
 
 ## 10-13 min: Ideal gas and temperature
 
 **Prompt:** “If the same pressure must be carried by fewer particles per gram, what changes?”
 
-**Student action:** Adjust $\\mu$ and watch the inferred $T_c$.
+**Student action:** Adjust $\mu$ and watch the inferred $T_c$.
 
-**Expected observation:** Higher $\\mu$ requires a higher temperature for the same pressure support.
+**Expected observation:** Higher $\mu$ requires a higher temperature for the same pressure support.
 
 **Instructor move:** Make the composition link explicit and separate it from the gravity link.
 
@@ -60,7 +60,7 @@ has_math: true
 
 **Expected observation:** Students can usually say “stronger gravity needs a steeper pressure gradient,” but they may need help naming the scale-height step.
 
-**Instructor move:** Close with the support chain in order: gravity -> $\\frac{dP}{dr}$ -> $H_P$ -> ideal gas -> $T_c$.
+**Instructor move:** Close with the support chain in order: gravity -> $\frac{dP}{dr}$ -> $H_P$ -> ideal gas -> $T_c$.
 
 ## Station version (8-10 min)
 

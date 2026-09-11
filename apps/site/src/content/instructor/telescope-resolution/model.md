@@ -35,13 +35,15 @@ The shared model uses CGS-style internal units for convenience:
 - Aperture diameter $D$ stored in **cm** (UI commonly uses meters, then converts).
 - Angular resolution reported in **arcseconds**.
 
-The implementation computes $\theta$ in radians via $1.22\\lambda/D$, then converts to arcseconds using shared unit helpers.
+The implementation computes $\theta$ in radians via $1.22\lambda/D$, then converts to arcseconds using shared unit helpers.
 
 ## Key relationships to foreground (with meaning + units)
 
 ### Diffraction limit / Rayleigh scaling
 
-$$\theta = 1.22\,\frac{\lambda}{D}$$
+$$
+\theta = 1.22\,\frac{\lambda}{D}
+$$
 
 Let’s unpack each piece:
 
@@ -53,7 +55,9 @@ What this equation is really saying: resolution improves with **bigger** apertur
 
 In the demo, this is converted to arcseconds:
 
-$$\theta_{\text{arcsec}} \approx 251643.1\,\frac{\lambda(\text{cm})}{D(\text{cm})}$$
+$$
+\theta_{\text{arcsec}} \approx 251643.1\,\frac{\lambda(\text{cm})}{D(\text{cm})}
+$$
 
 > **Sanity checks**
 > - Units: $\lambda/D$ is dimensionless, so $\theta$ is in radians ✓
@@ -63,7 +67,9 @@ $$\theta_{\text{arcsec}} \approx 251643.1\,\frac{\lambda(\text{cm})}{D(\text{cm}
 
 The intensity profile for a circular aperture is modeled as:
 
-$$I(x) = \left[\frac{2J_1(x)}{x}\right]^2$$
+$$
+I(x) = \left[\frac{2J_1(x)}{x}\right]^2
+$$
 
 where $J_1$ is a Bessel function and $x$ is a dimensionless radial coordinate (implemented in the shared model). This is what makes the “rings” and central bright spot.
 

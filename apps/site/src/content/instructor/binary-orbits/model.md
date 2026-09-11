@@ -46,7 +46,9 @@ In this demo, we hold $M_1 = 1\,M_\odot$ fixed and set $M_2$ via the secondary-r
 
 For masses $M_1$ and $M_2$ separated by $a$:
 
-$$a_1 = a \cdot \frac{M_2}{M_1+M_2}, \qquad a_2 = a \cdot \frac{M_1}{M_1+M_2}$$
+$$
+a_1 = a \cdot \frac{M_2}{M_1+M_2}, \qquad a_2 = a \cdot \frac{M_1}{M_1+M_2}
+$$
 
 Sanity checks:
 - If $M_1=M_2$, then $a_1=a_2=a/2$.
@@ -56,7 +58,9 @@ Sanity checks:
 
 Using $G = 4\pi^2\,\mathrm{AU}^3/(\mathrm{yr}^2\,M_\odot)$:
 
-$$P^2 = \frac{a^3}{M_1 + M_2}$$
+$$
+P^2 = \frac{a^3}{M_1 + M_2}
+$$
 
 ## What’s simplified / not modeled (by design)
 

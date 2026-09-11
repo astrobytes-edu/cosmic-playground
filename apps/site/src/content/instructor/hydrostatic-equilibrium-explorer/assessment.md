@@ -28,7 +28,7 @@ C. the pressure gradient balances gravity locally
 D. the core temperature is directly measured  
 **Correct:** C
 
-3. **At fixed pressure and density, a larger $\\mu$ implies:**  
+3. **At fixed pressure and density, a larger $\mu$ implies:**  
 A. lower $T$  
 B. higher $T$  
 C. no change in $T$  
@@ -38,7 +38,7 @@ D. higher $g$
 ## Short-answer checks
 
 - Explain why a star can be in hydrostatic equilibrium and still have a large pressure gradient.
-- Use $H_P = P/(\\rho g)$ to explain what happens when gravity gets stronger.
+- Use $H_P = P/(\rho g)$ to explain what happens when gravity gets stronger.
 - Write one sentence showing how the ideal gas law turns a support problem into a temperature estimate.
 
 ## Exit ticket

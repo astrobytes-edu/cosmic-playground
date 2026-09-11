@@ -41,7 +41,9 @@ The demo uses:
 
 ### Distance definition: $d(\text{pc}) = 1/p(\text{arcsec})$
 
-$$d(\text{pc}) = \frac{1}{p(\text{arcsec})}$$
+$$
+d(\text{pc}) = \frac{1}{p(\text{arcsec})}
+$$
 
 Let’s unpack each piece:
 

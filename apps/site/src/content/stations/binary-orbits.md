@@ -34,7 +34,9 @@ has_math: true
 >
 > **Must-hold relationships:**
 >
-> $$a_1 + a_2 = a, \qquad M_1a_1 = M_2a_2, \qquad \frac{v_1}{v_2} = \frac{M_2}{M_1}, \qquad P_1 = P_2.$$
+> $$
+> a_1 + a_2 = a, \qquad M_1a_1 = M_2a_2, \qquad \frac{v_1}{v_2} = \frac{M_2}{M_1}, \qquad P_1 = P_2.
+> $$
 >
 > **Sanity checks:**
 > - If $M_1=M_2$, then $a_1=a_2$ and $v_1=v_2$.

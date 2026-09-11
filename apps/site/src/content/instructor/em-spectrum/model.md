@@ -47,7 +47,9 @@ Band boundaries are teaching conventions (approximate wavelength ranges) impleme
 
 ### Wave relationship: $c = \lambda \nu$
 
-$$c = \lambda \nu$$
+$$
+c = \lambda \nu
+$$
 
 Let’s unpack each piece:
 
@@ -63,7 +65,9 @@ What this equation is really saying: for light, **wavelength and frequency trade
 
 ### Photon relationship: $E = h\nu = hc/\lambda$
 
-$$E = h\nu = \frac{hc}{\lambda}$$
+$$
+E = h\nu = \frac{hc}{\lambda}
+$$
 
 Let’s unpack each piece:
 

@@ -27,7 +27,9 @@ has_math: true
 > - **Inferred parallax $\hat p$:** $\hat p=\Delta\theta/B_{\rm eff}$.
 > - **Parsec (pc):** defined so that:
 >
->   $$d\,(\mathrm{pc})=\frac{1}{p\,(\mathrm{arcsec})}$$
+>   $$
+>   d\,(\mathrm{pc})=\frac{1}{p\,(\mathrm{arcsec})}
+>   $$
 >
 > **Sanity checks:**
 > - If $d=1\,\mathrm{pc}$, then $p=1\,\mathrm{arcsec}=1000\,\mathrm{mas}$.

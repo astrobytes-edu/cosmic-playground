@@ -25,14 +25,14 @@ This instrument makes one central inference visible: measured orbital speed in g
 
 - Read $V(R)$ as the primary observable inferred from Doppler shifts.
 - Compare total and visible-only Keplerian predictions at fixed radius.
-- Interpret where $M_{\\rm dark}$ exceeds $M_{\\rm vis}$ and how $f_b(R)$ evolves.
+- Interpret where $M_{\rm dark}$ exceeds $M_{\rm vis}$ and how $f_b(R)$ evolves.
 - Distinguish "fits galaxy curves" from "explains all dark-matter evidence across scales."
 
 ## Recommended live sequence (12-15 min)
 
 1. Start with **No dark matter** and establish the Keplerian decline baseline.
 2. Switch to **Milky Way-like** and emphasize the persistent outer velocity.
-3. Increase halo mass while narrating how curve shape and $M_{\\rm dark}/M_{\\rm vis}$ respond.
+3. Increase halo mass while narrating how curve shape and $M_{\rm dark}/M_{\rm vis}$ respond.
 4. Toggle mass mode and locate the dark-dominance crossing.
 5. Show MOND overlay and close with scale-comparison caveat (clusters/CMB).
 

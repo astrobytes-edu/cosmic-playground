@@ -27,7 +27,9 @@ The model is **schematic**: orbit radii on screen are chosen for legibility, not
 
 Each target's semi-major axis $a$ feeds Kepler's third law with the Sun as the central mass:
 
-$$P = \sqrt{\frac{a^3}{M}}$$
+$$
+P = \sqrt{\frac{a^3}{M}}
+$$
 
 with $P$ in years, $a$ in AU and $M$ in solar masses, so $M = 1$ and $P = a^{3/2}$.
 
@@ -45,11 +47,15 @@ These derived periods reproduce the observed ones to better than a part in a tho
 
 The implementation computes
 
-$$P_{\text{syn}} = \left| \frac{P_1 P_2}{P_1 - P_2} \right|$$
+$$
+P_{\text{syn}} = \left| \frac{P_1 P_2}{P_1 - P_2} \right|
+$$
 
 which is algebraically the same as the form students usually derive:
 
-$$\frac{1}{P_{\text{syn}}} = \left| \frac{1}{P_1} - \frac{1}{P_2} \right|$$
+$$
+\frac{1}{P_{\text{syn}}} = \left| \frac{1}{P_1} - \frac{1}{P_2} \right|
+$$
 
 **The rate form is the one to teach.** It says directly that what matters is the difference in *angular rates*, and that the alignment repeats when the faster planet has gained exactly one full turn on the slower one. The product form is convenient for computing and actively unhelpful for understanding; students who memorise it tend to produce the "subtract the periods" error because the subtraction is sitting right there in the denominator.
 
@@ -59,7 +65,9 @@ The function returns `Infinity` when the two periods are equal. That is not a gu
 
 Students predict that a fast planet conjoins often and a slow one rarely. The rate form shows why that is wrong. Write $P_1 = 1$ year for Earth:
 
-$$\frac{1}{P_{\text{syn}}} = \left| 1 - \frac{1}{P_2} \right|$$
+$$
+\frac{1}{P_{\text{syn}}} = \left| 1 - \frac{1}{P_2} \right|
+$$
 
 - As $P_2 \to \infty$, the second term vanishes and $P_{\text{syn}} \to 1$ year. A very slow planet is *easy* to lap, because Earth does all the work in one of its own orbits.
 - As $P_2 \to 1$ year, the difference goes to zero and $P_{\text{syn}} \to \infty$. A planet with nearly Earth's period is nearly impossible to lap.

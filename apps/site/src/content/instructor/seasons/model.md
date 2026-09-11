@@ -50,7 +50,9 @@ The core “physics” in this demo is geometric. We treat Earth as a tilted sph
 
 The demo uses the standard obliquity geometry:
 
-$$\delta = \arcsin\!\big(\sin\varepsilon \,\sin L\big)$$
+$$
+\delta = \arcsin\!\big(\sin\varepsilon \,\sin L\big)
+$$
 
 Let’s unpack each piece:
 
@@ -60,7 +62,9 @@ Let’s unpack each piece:
 
 The demo approximates $L$ as uniformly increasing in time:
 
-$$L \approx 2\pi\,\frac{(\text{dayOfYear} - \text{dayOfMarchEquinox})}{\text{tropicalYearDays}}$$
+$$
+L \approx 2\pi\,\frac{(\text{dayOfYear} - \text{dayOfMarchEquinox})}{\text{tropicalYearDays}}
+$$
 
 What this is really saying: tilt matters because it changes the Sun’s north–south position over the year. When $\delta$ is large and positive, the Northern Hemisphere is tilted toward the Sun (more direct sunlight and longer days); when $\delta$ is large and negative, it is tilted away.
 
@@ -73,9 +77,13 @@ What this is really saying: tilt matters because it changes the Sun’s north–
 
 Day length comes from the hour-angle condition at sunrise/sunset (geometric horizon crossing):
 
-$$\cos H_0 = -\tan\phi\,\tan\delta$$
+$$
+\cos H_0 = -\tan\phi\,\tan\delta
+$$
 
-$$T_{\text{day}} = \frac{2H_0}{15^\circ/\text{hour}}$$
+$$
+T_{\text{day}} = \frac{2H_0}{15^\circ/\text{hour}}
+$$
 
 Let’s unpack each piece:
 
@@ -94,7 +102,9 @@ What this equation is really saying: when the Sun is far north (positive $\delta
 
 The demo uses the standard spherical-geometry relationship for the Sun’s altitude at local solar noon:
 
-$$h_\odot = 90^\circ - \left|\phi - \delta\right|$$
+$$
+h_\odot = 90^\circ - \left|\phi - \delta\right|
+$$
 
 Let’s unpack each piece:
 
@@ -111,7 +121,9 @@ What this is really saying: seasons change both **how long** the Sun shines and 
 
 The demo includes a simple distance variation model with eccentricity $e\approx0.017$ and perihelion around day $\approx 3$:
 
-$$r \approx 1 - e\cos\!\left(2\pi\,\frac{(\text{dayOfYear}-\text{perihelionDay})}{\text{tropicalYearDays}}\right)$$
+$$
+r \approx 1 - e\cos\!\left(2\pi\,\frac{(\text{dayOfYear}-\text{perihelionDay})}{\text{tropicalYearDays}}\right)
+$$
 
 This is *not* intended to be a precise orbital solution; it is there to support the key teaching move: Earth is closest to the Sun in early January, so distance cannot be the main cause of Northern Hemisphere summer.
 

@@ -19,7 +19,9 @@ has_math: true
 > 2) **Observable(s):** angular diameter $\theta$ (deg/arcmin/arcsec)  
 > 3) **Governing relationship:** write this equation in words:
 >
->    $$\theta = 2\arctan\!\left(\frac{D}{2d}\right)$$
+>    $$
+>    \theta = 2\arctan\!\left(\frac{D}{2d}\right)
+>    $$
 > 4) **Sanity check:** what happens to $\theta$ if $d$ doubles?  
 > 5) **Connection sentence:** “This matters for eclipses because…”
 

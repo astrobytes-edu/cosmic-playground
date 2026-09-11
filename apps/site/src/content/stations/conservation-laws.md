@@ -27,12 +27,16 @@ has_math: true
 >
 > **Key relationship (specific orbital energy):**
 >
-> $$\varepsilon=\frac{v^2}{2}-\frac{\mu}{r}$$
+> $$
+> \varepsilon=\frac{v^2}{2}-\frac{\mu}{r}
+> $$
 >
 > **Sanity checks:**
 > - Escape happens at:
 >
->   $$v_{\mathrm{esc}}=\sqrt{2}\,v_{\mathrm{circ}}$$
+>   $$
+>   v_{\mathrm{esc}}=\sqrt{2}\,v_{\mathrm{circ}}
+>   $$
 >
 >   (so speed factor $\approx 1.414$), regardless of direction.
 > - Changing direction changes $h$ (and therefore $r_p$), even if the speed magnitude stays the same.

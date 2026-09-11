@@ -12,6 +12,10 @@
         { left: "\\(", right: "\\)", display: false }
       ],
       ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+      // Markdown math is typeset at build time by rehype-katex (see astro.config.mjs), so
+      // this pass must not walk back into it. What is left for it is math that never goes
+      // through Markdown: frontmatter fields on the exhibit pages and Explore's excerpts.
+      ignoredClasses: ["katex", "katex-display"],
       throwOnError: false,
       katex
     });

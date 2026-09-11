@@ -72,7 +72,9 @@ has_math: true
 > 2) **Observable(s):** phase name, illumination fraction $f$  
 > 3) **Governing relationship:** write this equation in words:
 >
->    $$f=\frac{1+\cos\alpha}{2}$$
+>    $$
+>    f=\frac{1+\cos\alpha}{2}
+>    $$
 > 4) **Sanity check:** what is $f$ at $\alpha=90^\circ$?  
 > 5) **Connection sentence:** “This matters for eclipses/totality because…”
 

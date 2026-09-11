@@ -47,7 +47,9 @@ Key constants (as implemented in `packages/physics/src/blackbodyRadiationModel.t
 
 ### Wien’s displacement law: peak wavelength vs temperature
 
-$$\lambda_{\text{peak}} = \frac{b}{T}$$
+$$
+\lambda_{\text{peak}} = \frac{b}{T}
+$$
 
 Let’s unpack each piece:
 
@@ -63,7 +65,9 @@ What this equation is really saying: hotter objects peak at **shorter** waveleng
 
 ### Stefan–Boltzmann law: total emitted flux vs temperature
 
-$$F = \sigma T^4$$
+$$
+F = \sigma T^4
+$$
 
 Let’s unpack each piece:
 
@@ -78,7 +82,9 @@ What this equation is really saying: temperature has a **very steep** effect on 
 
 ### Planck function: the full spectrum shape (optional deep dive)
 
-$$B_\lambda(T) = \frac{2hc^2}{\lambda^5}\cdot\frac{1}{e^{hc/(\lambda k_B T)} - 1}$$
+$$
+B_\lambda(T) = \frac{2hc^2}{\lambda^5}\cdot\frac{1}{e^{hc/(\lambda k_B T)} - 1}
+$$
 
 Let’s unpack each piece (conceptually):
 

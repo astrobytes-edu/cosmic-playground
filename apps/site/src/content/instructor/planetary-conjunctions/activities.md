@@ -78,7 +78,9 @@ has_math: true
 >
 > **Stage 2 — Turn it into a formula (5 min).** Combine the two into an expression for the synodic period. You should reach
 >
-> $$\frac{1}{P_{\text{syn}}} = \left| \frac{1}{P_{\text{Earth}}} - \frac{1}{P_{\text{target}}} \right|$$
+> $$
+> \frac{1}{P_{\text{syn}}} = \left| \frac{1}{P_{\text{Earth}}} - \frac{1}{P_{\text{target}}} \right|
+> $$
 >
 > **Stage 3 — Test it (8 min).** Pick two targets. Predict the synodic period from the formula, then measure it in the demo. Record both and the percentage difference.
 >
@@ -100,7 +102,9 @@ has_math: true
 > 2) **Observable(s):** angular separation, conjunctions observed, days elapsed, synodic period
 > 3) **Governing relationship:** write this in words:
 >
->    $$\frac{1}{P_{\text{syn}}} = \left| \frac{1}{P_{\text{Earth}}} - \frac{1}{P_{\text{target}}} \right|$$
+>    $$
+>    \frac{1}{P_{\text{syn}}} = \left| \frac{1}{P_{\text{Earth}}} - \frac{1}{P_{\text{target}}} \right|
+>    $$
 > 4) **Sanity check:** which target gives the longest synodic period, and is that the fastest or the slowest planet?
 > 5) **Connection sentence:** "This matters for planning observations because..."
 

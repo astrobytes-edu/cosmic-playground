@@ -19,7 +19,9 @@ has_math: true
 > 2) **Observable(s):** $P_\text{gas}$ (dyn cm$^{-2}$), $P_\text{rad}$ (dyn cm$^{-2}$), $P_\text{deg}$ (dyn cm$^{-2}$), dominant channel, $T / T_F$, $\chi_\text{deg}$
 > 3) **Governing relationships:**
 >
->    $$P_\text{gas} = \frac{\rho k_B T}{\mu m_H}, \quad P_\text{rad} = \frac{1}{3} a T^4, \quad P_\text{deg} = K \left(\frac{\rho}{\mu_e m_H}\right)^{5/3}$$
+>    $$
+>    P_\text{gas} = \frac{\rho k_B T}{\mu m_H}, \quad P_\text{rad} = \frac{1}{3} a T^4, \quad P_\text{deg} = K \left(\frac{\rho}{\mu_e m_H}\right)^{5/3}
+>    $$
 > 4) **Sanity check:** The solar core should be gas-pressure dominated ($P_\text{gas} \gg P_\text{rad}, P_\text{deg}$). A white dwarf interior ($T \sim 10^7$ K, $\rho \sim 10^6$ g cm$^{-3}$) should be degeneracy-dominated.
 > 5) **Connection sentence:** "The dominant pressure channel matters for stellar structure because…"
 

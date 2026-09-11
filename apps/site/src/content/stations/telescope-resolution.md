@@ -32,7 +32,9 @@ has_math: true
 >
 > **Key relationship (diffraction-limited scaling):**
 >
-> $$\theta \propto \frac{\lambda}{D}$$
+> $$
+> \theta \propto \frac{\lambda}{D}
+> $$
 >
 > **Sanity checks:**
 > - Increasing $D$ should decrease the resolution number (better detail).

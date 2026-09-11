@@ -27,7 +27,9 @@ has_math: true
 >
 > **Key relationship (Wien scaling):**
 >
-> $$\lambda_{\text{peak}} \propto \frac{1}{T}$$
+> $$
+> \lambda_{\text{peak}} \propto \frac{1}{T}
+> $$
 >
 > **Sanity checks:**
 > - Hotter → $\lambda_{\text{peak}}$ shifts to *shorter* wavelength (toward blue/UV).

@@ -9,7 +9,9 @@
     "@cosmic/theme": "workspace:*",
     "@lucide/astro": "^0.563.0",
     "astro": "^4.16.0",
-    "katex": "^0.16.28"
+    "katex": "^0.16.28",
+    "rehype-katex": "7.0.1",
+    "remark-math": "6.0.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.0",

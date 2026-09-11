@@ -30,7 +30,9 @@ has_math: true
 >
 > **Key relationship (photon energy scaling):**
 >
-> $$E \propto \frac{1}{\lambda}$$
+> $$
+> E \propto \frac{1}{\lambda}
+> $$
 >
 > **Sanity checks:**
 > - Ordering: Radio (lowest energy) → … → Gamma (highest energy).

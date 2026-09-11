@@ -46,7 +46,9 @@ has_math: true
 >
 > **Key relationship:**
 >
-> $$\xi(m) \propto m^{-\alpha}$$
+> $$
+> \xi(m) \propto m^{-\alpha}
+> $$
 >
 > **Sanity checks:**
 > - Around 80 percent of the stars sit below $1\,M_\odot$. If your histogram does not fall

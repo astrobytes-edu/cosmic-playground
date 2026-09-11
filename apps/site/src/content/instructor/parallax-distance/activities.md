@@ -57,7 +57,7 @@ Fill in the table by using distance-first captures:
 1. Pick two uncertainty settings (e.g., $\sigma_p=1\,\mathrm{mas}$ and $\sigma_p=10\,\mathrm{mas}$).
 2. For each, find an approximate “reach” distance where inference becomes difficult (use $\hat p/\sigma_{\hat p}\lesssim 1$ as a discussion threshold).
 3. Create a short poster (or shared doc) with:
-   - Claim: “With $\sigma_p=____$, captures with $B_{\rm eff}=____$ are reliable out to about ____ pc.”
+   - Claim: “With $\sigma_p =$ ____, captures with $B_{\rm eff} =$ ____ are reliable out to about ____ pc.”
    - Evidence: at least 3 capture sets with $\Delta\theta$, $B_{\rm eff}$, $\hat d$, and $\hat p/\sigma_{\hat p}$.
    - Reasoning: connect tiny shifts and weak baseline projection to measurement challenge.
 
@@ -82,7 +82,9 @@ Use the discussion prompt: *“What if we could observe from Jupiter’s orbit?�
 > - **Inferred parallax $\hat p$:** measured quantity used to infer distance.
 > - **Parsec (pc):** defined so that:
 >
->   $$d\,(\mathrm{pc})=\frac{1}{p\,(\mathrm{arcsec})}$$
+>   $$
+>   d\,(\mathrm{pc})=\frac{1}{p\,(\mathrm{arcsec})}
+>   $$
 >
 > **Sanity checks:**
 > - If $d=1\,\mathrm{pc}$, then $p=1\,\mathrm{arcsec}$.

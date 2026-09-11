@@ -42,7 +42,9 @@ Each planet uses JPL approximate elements for the interval 1800 to 2050 (Standis
 
 With observer at $(x_o, y_o)$ and target at $(x_t, y_t)$, the apparent longitude is the direction of the sight line in the inertial frame:
 
-$$\lambda = \arctan2(y_t - y_o,\ x_t - x_o)$$
+$$
+\lambda = \arctan2(y_t - y_o,\ x_t - x_o)
+$$
 
 wrapped into $[0, 360)$ degrees. This is the quantity plotted in the lower panel, and it is what an observer on the observer planet would measure against the distant stars.
 
@@ -52,7 +54,9 @@ Because the wrapped value jumps by 360 degrees when it crosses the branch cut, t
 
 Retrograde is defined as the interval where the unwrapped longitude is decreasing:
 
-$$\frac{d\lambda}{dt} < 0$$
+$$
+\frac{d\lambda}{dt} < 0
+$$
 
 The derivative is evaluated by central difference on an internal step of $\Delta t = 0.25$ model days, independent of whatever step the user is scrubbing at. A **stationary point** is where this derivative crosses zero, located to a tolerance of $10^{-3}$ day.
 
@@ -67,7 +71,9 @@ This is the piece students most often get half right, so it is worth having the 
 
 For a circular orbit of radius $r$ around a mass $M$, the orbital speed is
 
-$$v = \sqrt{\frac{GM}{r}}$$
+$$
+v = \sqrt{\frac{GM}{r}}
+$$
 
 so a smaller orbit means a faster planet. The orbital period follows Kepler's third law, $P^2 \propto a^3$, so a smaller orbit also means a shorter period. Both statements point the same way: **the inner planet completes an orbit sooner and does the passing.**
 

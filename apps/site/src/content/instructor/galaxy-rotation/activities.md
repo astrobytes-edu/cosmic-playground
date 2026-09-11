@@ -16,7 +16,7 @@ has_math: true
 
 **Goal:** make the mismatch visible in one pass.
 
-1. Compare `No dark matter` vs `Milky Way-like` at $R=30$ and $50\\,{\\rm kpc}$.
+1. Compare `No dark matter` vs `Milky Way-like` at $R=30$ and $50\,{\rm kpc}$.
 2. Ask: "Which curve looks solar-system-like?"
 3. Toggle halo contribution and narrate mechanism.
 
@@ -25,9 +25,9 @@ has_math: true
 **Goal:** connect shape to mass decomposition.
 
 1. Keep Milky Way-like preset.
-2. Add radial profile rows ($R=2$ to $50\\,{\\rm kpc}$).
-3. Identify first radius where $M_{\\rm dark}>M_{\\rm vis}$.
-4. Compare $f_b(50\\,{\\rm kpc})$ to $0.157$ and discuss interpretation.
+2. Add radial profile rows ($R=2$ to $50\,{\rm kpc}$).
+3. Identify first radius where $M_{\rm dark}>M_{\rm vis}$.
+4. Compare $f_b(50\,{\rm kpc})$ to $0.157$ and discuss interpretation.
 
 ## Friday Lab (20-30 min)
 

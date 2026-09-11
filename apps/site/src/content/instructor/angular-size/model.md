@@ -35,7 +35,9 @@ The demo reports the angular diameter in a human-friendly unit:
 
 The demo uses the exact geometric relationship:
 
-$$\theta = 2\arctan\!\left(\frac{D}{2d}\right)$$
+$$
+\theta = 2\arctan\!\left(\frac{D}{2d}\right)
+$$
 
 Let’s unpack each piece:
 
@@ -54,7 +56,9 @@ Sometimes the teaching question is the inverse one: “If an object has diameter
 
 Solving the exact equation for $d$ gives:
 
-$$d = \frac{D}{2\tan(\theta/2)}$$
+$$
+d = \frac{D}{2\tan(\theta/2)}
+$$
 
 This inversion is implemented in the shared model as:
 
@@ -66,17 +70,23 @@ The demo uses this idea when it sets “perigee-like” and “apogee-like” en
 
 For small angles (most astronomy cases), $\tan x \approx x$ (when $x$ is in radians), so:
 
-$$\theta \approx \frac{D}{d}\quad(\text{radians})$$
+$$
+\theta \approx \frac{D}{d}\quad(\text{radians})
+$$
 
 This is the mental math version students should take away: angular size scales as $D/d$.
 
 ## Angle unit conversions (for classroom fluency)
 
-$$1^\circ = 60\,\mathrm{arcmin} \qquad\text{and}\qquad 1\,\mathrm{arcmin} = 60\,\mathrm{arcsec}$$
+$$
+1^\circ = 60\,\mathrm{arcmin} \qquad\text{and}\qquad 1\,\mathrm{arcmin} = 60\,\mathrm{arcsec}
+$$
 
 So:
 
-$$1^\circ = 3600\,\mathrm{arcsec}$$
+$$
+1^\circ = 3600\,\mathrm{arcsec}
+$$
 
 These conversions are what let students compare “planets (arcseconds) vs Moon (degrees).”
 
@@ -102,7 +112,9 @@ Those endpoints imply distances (computed by inverting the exact formula above):
 
 The demo’s recession-time mode uses a deliberately simple linear model:
 
-$$d(t) = d_0 + vt$$
+$$
+d(t) = d_0 + vt
+$$
 
 Let’s unpack each piece:
 
@@ -117,7 +129,9 @@ The code starts from a commonly quoted present-day mean recession rate:
 
 and converts it into km per million years:
 
-$$1\ \text{cm/yr} = 10\ \text{km/Myr} \;\;\Rightarrow\;\; 3.8\ \text{cm/yr} \approx 38\ \text{km/Myr}$$
+$$
+1\ \text{cm/yr} = 10\ \text{km/Myr} \;\;\Rightarrow\;\; 3.8\ \text{cm/yr} \approx 38\ \text{km/Myr}
+$$
 
 > **Why this is a ‘toy’ model**
 > The real Earth–Moon recession rate varies with time (tidal dissipation depends on ocean basins, etc.). The demo uses a linear model because the teaching goal is scaling: “farther away → smaller angular size.”

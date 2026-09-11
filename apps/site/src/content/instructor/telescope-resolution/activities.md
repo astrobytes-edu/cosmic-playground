@@ -38,7 +38,7 @@ Fill in the table using presets and wavelength buttons. Record the diffraction l
 | Hubble (2.4m) | Visible (550 nm) |  |  |
 | Hubble (2.4m) | Radio (21 cm) |  |  |
 | Keck (10m) | Visible (550 nm) |  |  |
-| Keck (10m) | Near-IR ($2.2\\,\\mu\\mathrm{m}$) |  |  |
+| Keck (10m) | Near-IR ($2.2\,\mu\mathrm{m}$) |  |  |
 
 **Synthesis prompt (2 min):** *“Why do radio astronomers build arrays instead of a single ‘normal-sized’ dish?”*
 
@@ -87,7 +87,9 @@ Fill in the table using presets and wavelength buttons. Record the diffraction l
 >
 > **Key relationship (diffraction-limited scaling):**
 >
-> $$\theta \propto \frac{\lambda}{D}$$
+> $$
+> \theta \propto \frac{\lambda}{D}
+> $$
 >
 > **Sanity checks:**
 > - Increasing $D$ should decrease the resolution number (better detail).
