@@ -13,6 +13,8 @@ import {
   arrowScale,
   formatSpeedFactor,
   formatSpecificEnergy,
+  formatEccentricity,
+  formatPeriapsis,
   orbitAnnouncement,
 } from "./logic";
 
@@ -334,6 +336,29 @@ describe("Conservation Laws -- UI Logic", () => {
     it("formats ordinary energies to four decimals", () => {
       expect(formatSpecificEnergy(-28.375113, 39.478418)).toBe("-28.3751");
       expect(formatSpecificEnergy(-0.2349, 39.478418)).toBe("-0.2349");
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // formatEccentricity / formatPeriapsis
+  // -----------------------------------------------------------------------
+  describe("formatEccentricity and formatPeriapsis", () => {
+    it("shows a circular orbit's round-off eccentricity as 0", () => {
+      expect(formatEccentricity("circular", 1.11e-16, 3)).toBe("0");
+      expect(formatEccentricity("circular", 1.11e-16, 6)).toBe("0");
+    });
+
+    it("shows an em dash for radial or invalid motion, which has no conic", () => {
+      expect(formatEccentricity("radial", 1, 6)).toBe("—");
+      expect(formatPeriapsis("radial", 0, 6)).toBe("—");
+      expect(formatEccentricity("invalid", NaN, 3)).toBe("—");
+      expect(formatPeriapsis("invalid", NaN, 3)).toBe("—");
+    });
+
+    it("formats an elliptical orbit's e and r_p to the requested digits", () => {
+      expect(formatEccentricity("elliptical", 0.4375, 3)).toBe("0.438");
+      expect(formatEccentricity("elliptical", 0.4375, 6)).toBe("0.437500");
+      expect(formatPeriapsis("elliptical", 0.391304, 3)).toBe("0.391");
     });
   });
 

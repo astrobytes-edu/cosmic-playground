@@ -240,5 +240,12 @@ describe("Conservation Laws -- Design System Contracts", () => {
         expect(mainTs).toContain(`${slider}.setAttribute("aria-valuetext"`);
       }
     });
+
+    it("the export formats e and r_p with the same helpers as the readouts and Station rows", () => {
+      const exportResults = mainTs.match(/function exportResults\(\)[^{]*\{[\s\S]*?\n\}\n/)?.[0] ?? "";
+      expect(exportResults.length).toBeGreaterThan(0);
+      expect(exportResults).toContain("formatEccentricity(");
+      expect(exportResults).toContain("formatPeriapsis(");
+    });
   });
 });

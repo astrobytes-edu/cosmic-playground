@@ -93,6 +93,23 @@ export function formatSpecificEnergy(epsAu2Yr2: number, potentialScaleAu2Yr2: nu
   return formatNumber(epsAu2Yr2, 4);
 }
 
+/**
+ * Eccentricity for display, the same on screen, in Station rows and in the export. Radial or invalid
+ * motion has no conic, so an em dash; a circular orbit's computed e is round-off (about 1e-16), so the
+ * exact 0 it stands for.
+ */
+export function formatEccentricity(orbitType: string, ecc: number, digits: number): string {
+  if (orbitType === "radial" || orbitType === "invalid") return "—";
+  if (orbitType === "circular") return "0";
+  return formatNumber(ecc, digits);
+}
+
+/** Periapsis distance for display; an em dash for radial or invalid motion, which has no periapsis. */
+export function formatPeriapsis(orbitType: string, rpAu: number, digits: number): string {
+  if (orbitType === "radial" || orbitType === "invalid") return "—";
+  return formatNumber(rpAu, digits);
+}
+
 /** Plain-words status for screen readers; call on `change` and preset clicks, never per frame. */
 export function orbitAnnouncement(args: { orbitType: string; ecc: number; epsAu2Yr2: number }): string {
   const e = formatNumber(args.ecc, 3);

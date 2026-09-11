@@ -5,8 +5,10 @@ import {
   arrowScale,
   buildPathD,
   clamp,
+  formatEccentricity,
   formatNumber,
   formatOrbitType,
+  formatPeriapsis,
   formatSpecificEnergy,
   formatSpeedFactor,
   logSliderToValue,
@@ -224,13 +226,11 @@ function recomputeOrbit() {
     orbitPath.setAttribute("d", buildPathD(points, CENTER, anim.scalePxPerAu));
   }
 
-  const radial = o.orbitType === "radial";
   orbitTypeValue.textContent = formatOrbitType(o.orbitType);
-  // A circular orbit's e is round-off (about 1e-16); show the exact 0 it stands for.
-  eccValue.textContent = radial ? "—" : o.orbitType === "circular" ? "0" : formatNumber(o.ecc, 3);
+  eccValue.textContent = formatEccentricity(o.orbitType, o.ecc, 3);
   epsValue.textContent = formatSpecificEnergy(o.epsAu2Yr2, o.muAu3Yr2 / controls.r0Au);
   hValue.textContent = formatNumber(o.hAbsAu2Yr, 4);
-  rpAuValue.textContent = radial ? "—" : formatNumber(o.rpAu, 3);
+  rpAuValue.textContent = formatPeriapsis(o.orbitType, o.rpAu, 3);
 
   arrowCaption.hidden = !anim.arrow.toScale;
   arrowDtDays.textContent = anim.arrow.dtDays === null ? "" : String(anim.arrow.dtDays);
@@ -376,13 +376,12 @@ function stationRow(caseLabel: string, c: Controls) {
     orbitType: formatOrbitType(o.orbitType)
   };
   if (o.orbitType === "invalid") return { ...base, e: "—", eps: "—", h: "—", rp: "—" };
-  const radial = o.orbitType === "radial";
   return {
     ...base,
-    e: radial ? "—" : o.orbitType === "circular" ? "0" : formatNumber(o.ecc, 3),
+    e: formatEccentricity(o.orbitType, o.ecc, 3),
     eps: formatSpecificEnergy(o.epsAu2Yr2, o.muAu3Yr2 / c.r0Au),
     h: formatNumber(o.hAbsAu2Yr, 4),
-    rp: radial ? "—" : formatNumber(o.rpAu, 3)
+    rp: formatPeriapsis(o.orbitType, o.rpAu, 3)
   };
 }
 
@@ -400,12 +399,12 @@ function exportResults(): ExportPayloadV1 {
     ],
     readouts: [
       { name: "Orbit type", value: formatOrbitType(orbit.orbitType) },
-      { name: "Eccentricity e", value: o ? formatNumber(o.ecc, 6) : "—" },
+      { name: "Eccentricity e", value: formatEccentricity(orbit.orbitType, o ? o.ecc : Number.NaN, 6) },
       { name: "Specific kinetic energy K (AU^2/yr^2)", value: kValue.textContent ?? "—" },
       { name: "Specific potential energy U (AU^2/yr^2)", value: uValue.textContent ?? "—" },
       { name: "Specific energy eps (AU^2/yr^2)", value: o ? formatSpecificEnergy(o.epsAu2Yr2, o.muAu3Yr2 / controls.r0Au) : "—" },
       { name: "Specific angular momentum |h| (AU^2/yr)", value: o ? formatNumber(o.hAbsAu2Yr, 8) : "—" },
-      { name: "Periapsis r_p (AU)", value: o ? formatNumber(o.rpAu, 8) : "—" },
+      { name: "Periapsis r_p (AU)", value: formatPeriapsis(orbit.orbitType, o ? o.rpAu : Number.NaN, 6) },
       { name: "Speed v (km/s)", value: vKmSValue.textContent ?? "—" }
     ],
     notes: [
