@@ -19,6 +19,8 @@ import {
   logSliderToValue,
   orbitAnnouncement,
   toSvg,
+  type TrailEntry,
+  trailSegments,
   valueToLogSlider,
   viewRadiusAu
 } from "./logic";
@@ -54,6 +56,7 @@ const helpButton = must<HTMLButtonElement>("#help");
 const copyResults = must<HTMLButtonElement>("#copyResults");
 const status = must<HTMLParagraphElement>("#status");
 const orbitPath = must<SVGPathElement>("#orbitPath");
+const orbitTrail = must<SVGGElement>("#orbitTrail");
 const particle = must<SVGCircleElement>("#particle");
 const velocityLine = must<SVGLineElement>("#velocityLine");
 const orbitTypeValue = must<HTMLSpanElement>("#orbitType");
@@ -82,6 +85,11 @@ const VIEW_RADIUS_PX = 250;
 const PATH_SAMPLES = 720;
 /** Step moves the body this fraction of anim.characteristicYr per press: sixteen presses make one lap. */
 const STEPS_PER_ORBIT = 16;
+/** The trail shows where the body was over this much time on screen, in this many fading segments. */
+const TRAIL_WINDOW_MS = 300;
+const TRAIL_SEGMENTS = 6;
+/** A Step's arc is recorded as if it had just been covered over this long, so all of it sits inside the trail window. */
+const STEP_TRAIL_AGE_MS = 290;
 
 /**
  * Circular and Elliptical are shape presets and start tangential. Escape and Hyperbolic are energy presets:
@@ -129,6 +137,58 @@ function validOrbit(): ValidOrbit | null {
   return orbit.orbitType === "invalid" ? null : orbit;
 }
 
+/**
+ * Where the body was, in time order. A very eccentric orbit can sweep most of the way round periapsis in one frame;
+ * the trail draws that arc along the orbit, so it reads as a fast sweep rather than a jump, and it is longer where
+ * the body is faster.
+ */
+const trailHistory: TrailEntry[] = [];
+const trailPaths = Array.from({ length: TRAIL_SEGMENTS }, () => {
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("class", "orbit__trail");
+  path.setAttribute("d", "");
+  path.style.display = "none";
+  orbitTrail.appendChild(path);
+  return path;
+});
+
+function clearTrail() {
+  trailHistory.length = 0;
+  for (const path of trailPaths) {
+    path.setAttribute("d", "");
+    path.style.display = "none";
+  }
+}
+
+/** Draw the trail segments for `nowMs` into the pre-created paths, hiding the unused ones. */
+function renderTrail(nowMs: number) {
+  // Bounds memory only; trailSegments applies the window itself. Index 0 stays the newest entry at or before the edge.
+  while (trailHistory.length > 1 && trailHistory[1].tMs <= nowMs - TRAIL_WINDOW_MS) trailHistory.shift();
+  const o = validOrbit();
+  const segments = o && o.orbitType !== "radial" ? trailSegments(trailHistory, nowMs, TRAIL_WINDOW_MS, TRAIL_SEGMENTS) : [];
+  for (let i = 0; i < trailPaths.length; i++) {
+    const path = trailPaths[i];
+    const segment = segments[i] as (typeof segments)[number] | undefined;
+    const d =
+      o && segment
+        ? buildPathD(
+            ConservationLawsModel.sampleConicArcAu({
+              ecc: o.ecc,
+              pAu: o.pAu,
+              omegaRad: o.omegaRad,
+              nuFromRad: segment.nuFromRad,
+              nuToRad: segment.nuToRad
+            }),
+            CENTER,
+            anim.scalePxPerAu
+          )
+        : "";
+    path.setAttribute("d", d);
+    if (segment && d) path.setAttribute("stroke-opacity", segment.opacity.toFixed(2));
+    path.style.display = d ? "" : "none";
+  }
+}
+
 /** Step needs a path to move along but no animation, so reduced motion keeps it. */
 function canStep(): boolean {
   const o = validOrbit();
@@ -155,6 +215,7 @@ function stopAnimation() {
 
 function resetAnimation() {
   stopAnimation();
+  clearTrail();
   const o = validOrbit();
   if (!o) return;
   anim.nuRad = o.nu0Rad;
@@ -171,7 +232,11 @@ function startAnimation() {
   const o = validOrbit();
   if (anim.playing || !o || o.orbitType === "radial") return;
   // An open orbit that already ran to the edge of the view starts again from the beginning.
-  if (o.ecc >= 1 && anim.nuRad >= anim.nuMax - 1e-9) anim.nuRad = o.nu0Rad;
+  // Its trail ends at the view edge, so it is cleared rather than drawn back across the view.
+  if (o.ecc >= 1 && anim.nuRad >= anim.nuMax - 1e-9) {
+    anim.nuRad = o.nu0Rad;
+    clearTrail();
+  }
 
   // Read before disabling: a focused button that becomes disabled drops focus to <body>.
   const playHadFocus = document.activeElement === playButton;
@@ -200,7 +265,9 @@ function startAnimation() {
       nuMax: anim.nuMax
     });
     anim.nuRad = step.nuRad;
+    trailHistory.push({ tMs: nowMs, nuRad: anim.nuRad });
     renderBody();
+    renderTrail(nowMs);
     if (step.stopped) {
       stopAnimation();
       setLiveRegionText(status, leftViewMessage(prefersReducedMotion));
@@ -223,6 +290,7 @@ function stepBody() {
   // As on Play, an open orbit that already ran to the edge of the view starts again from the beginning.
   const restarted = o.ecc >= 1 && anim.nuRad >= anim.nuMax - 1e-9;
   if (restarted) anim.nuRad = o.nu0Rad;
+  const nuBeforeRad = anim.nuRad;
   const step = ConservationLawsModel.advanceTrueAnomalyByTime({
     nuRad: anim.nuRad,
     ecc: o.ecc,
@@ -234,6 +302,15 @@ function stepBody() {
   });
   anim.nuRad = step.nuRad;
   renderBody();
+  // The trail shows the arc this Step covered, recorded as just finished, so it stays drawn without animation and under
+  // reduced motion. Clearing first keeps the history in time order, since a Play frame can be newer than
+  // now - STEP_TRAIL_AGE_MS. An open orbit that restarted jumped back to its start, so it draws no trail.
+  clearTrail();
+  if (!restarted) {
+    const nowMs = performance.now();
+    trailHistory.push({ tMs: nowMs - STEP_TRAIL_AGE_MS, nuRad: nuBeforeRad }, { tMs: nowMs, nuRad: anim.nuRad });
+    renderTrail(nowMs);
+  }
   if (step.stopped) setLiveRegionText(status, leftViewMessage(prefersReducedMotion));
   // Without this the status would still say the body has left the view while it moves again.
   else if (restarted) setLiveRegionText(status, "Back to the start.");
@@ -256,6 +333,7 @@ function renderControlValues() {
 
 function recomputeOrbit() {
   stopAnimation();
+  clearTrail();
   orbit = ConservationLawsModel.initialOrbit(controls);
   renderControlValues();
 

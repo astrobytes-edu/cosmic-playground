@@ -253,6 +253,17 @@ describe("Conservation Laws -- Design System Contracts", () => {
     });
   });
 
+  describe("Motion trail", () => {
+    it("the stage has a trail group, drawn over the orbit path and under the particle", () => {
+      expect(html).toContain('id="orbitTrail"');
+      expect(html).toMatch(/id="orbitPath"[\s\S]*id="orbitTrail"[\s\S]*id="particle"/);
+    });
+
+    it("the trail stroke uses a --cp-celestial- token", () => {
+      expect(css).toMatch(/\.orbit__trail\s*\{[^}]*var\(--cp-celestial-[a-z-]+\)/);
+    });
+  });
+
   describe("Contracts from the 2026-09-11 visual review", () => {
     it("the orbit and its caption are positioned above the fixed starfield canvas (V5)", () => {
       expect(css).toMatch(/\.orbit,\s*\.stage__caption\s*\{\s*position:\s*relative;\s*z-index:\s*1;\s*\}/);

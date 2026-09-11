@@ -22,6 +22,7 @@ import {
   MIN_ON_SCREEN_ORBIT_SEC,
   leftViewMessage,
   captionTimeLine,
+  trailSegments,
 } from "./logic";
 
 describe("Conservation Laws -- UI Logic", () => {
@@ -438,6 +439,57 @@ describe("Conservation Laws -- UI Logic", () => {
     it("names Play normally and Step under reduced motion, where Play is disabled (M1)", () => {
       expect(leftViewMessage(false)).toBe("The body has left the view. Press Play to run it again.");
       expect(leftViewMessage(true)).toBe("The body has left the view. Press Step to run it again.");
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // motion trail
+  // -----------------------------------------------------------------------
+  describe("trailSegments", () => {
+    it("draws nothing from an empty or one-entry history", () => {
+      expect(trailSegments([], 1000)).toEqual([]);
+      expect(trailSegments([{ tMs: 1000, nuRad: 1 }], 1000)).toEqual([]);
+    });
+
+    it("two entries give one segment at the newest opacity, 0.85", () => {
+      const segs = trailSegments([{ tMs: 984, nuRad: 1.0 }, { tMs: 1000, nuRad: 1.1 }], 1000);
+      expect(segs).toHaveLength(1);
+      expect(segs[0].nuFromRad).toBe(1.0);
+      expect(segs[0].nuToRad).toBe(1.1);
+      expect(segs[0].opacity).toBeCloseTo(0.85, 12);
+    });
+
+    it("entries spread evenly across the window give six contiguous segments, opacity rising linearly 0.15 to 0.85", () => {
+      // 13 entries 25 ms apart from the window edge (700 ms) to now (1000 ms): two intervals in each 50 ms bucket.
+      const history = Array.from({ length: 13 }, (_, i) => ({ tMs: 700 + 25 * i, nuRad: 0.7 + 0.025 * i }));
+      const segs = trailSegments(history, 1000, 300, 6);
+      expect(segs).toHaveLength(6);
+      for (let i = 0; i < segs.length; i++) {
+        expect(segs[i].nuFromRad).toBe(history[2 * i].nuRad);
+        expect(segs[i].nuToRad).toBe(history[2 * i + 2].nuRad);
+        expect(segs[i].opacity).toBeCloseTo(0.15 + 0.14 * i, 12);
+      }
+      for (let i = 1; i < segs.length; i++) {
+        expect(segs[i].opacity).toBeGreaterThan(segs[i - 1].opacity);
+        expect(segs[i].nuFromRad).toBe(segs[i - 1].nuToRad);
+      }
+    });
+
+    it("drops entries older than the window, keeping the newest one at or before its edge as the arc's start", () => {
+      const history = [
+        { tMs: 100, nuRad: 0.1 },
+        { tMs: 200, nuRad: 0.2 },
+        { tMs: 750, nuRad: 0.75 },
+        { tMs: 850, nuRad: 0.85 },
+        { tMs: 1000, nuRad: 1.0 },
+      ];
+      const segs = trailSegments(history, 1000);
+      expect(segs.length).toBeGreaterThan(0);
+      expect(segs[0].nuFromRad).toBe(0.2);
+      expect(segs[segs.length - 1].nuToRad).toBe(1.0);
+      expect(segs.some((s) => s.nuFromRad === 0.1 || s.nuToRad === 0.1)).toBe(false);
+      // Both entries are older than the window: only the start anchor survives, and one entry draws nothing.
+      expect(trailSegments([{ tMs: 100, nuRad: 0.1 }, { tMs: 200, nuRad: 0.2 }], 1000)).toEqual([]);
     });
   });
 

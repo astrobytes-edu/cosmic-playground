@@ -260,6 +260,64 @@ export function formatTimeScale(yrPerSec: number): string {
 }
 
 // ---------------------------------------------------------------------------
+// Motion trail
+// ---------------------------------------------------------------------------
+
+export type TrailEntry = { tMs: number; nuRad: number };
+export type TrailSegment = { nuFromRad: number; nuToRad: number; opacity: number };
+
+/** Opacity of the oldest and newest trail segments; the ones between rise linearly. */
+export const TRAIL_OPACITY_OLDEST = 0.15;
+export const TRAIL_OPACITY_NEWEST = 0.85;
+
+/**
+ * The fading trail behind the body, from a time-ordered history of where it was.
+ * Entries older than `nowMs - windowMs` are dropped, except the newest one at or before that edge, which starts the arc
+ * so the trail reaches the window edge. The window is cut into `segmentCount` buckets by age; each interval between
+ * consecutive entries joins the bucket of its newer end, and consecutive intervals in one bucket make one segment.
+ * Segments come oldest first and share their ends, with opacity by bucket: TRAIL_OPACITY_OLDEST in the oldest,
+ * TRAIL_OPACITY_NEWEST in the newest. A segment's true anomalies are raw; the arc sampler runs them forward.
+ */
+export function trailSegments(
+  history: TrailEntry[],
+  nowMs: number,
+  windowMs = 300,
+  segmentCount = 6,
+): TrailSegment[] {
+  if (!(windowMs > 0) || !(segmentCount >= 1)) return [];
+  const cutoffMs = nowMs - windowMs;
+  let start = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].tMs <= cutoffMs) {
+      start = i;
+      break;
+    }
+  }
+  if (history.length - start < 2) return [];
+
+  const buckets = Math.floor(segmentCount);
+  const bucketMs = windowMs / buckets;
+  const segments: TrailSegment[] = [];
+  let lastBucket = -1;
+  for (let i = start + 1; i < history.length; i++) {
+    const ageMs = nowMs - history[i].tMs;
+    const bucket = clamp(buckets - 1 - Math.floor(ageMs / bucketMs), 0, buckets - 1);
+    const current = segments[segments.length - 1];
+    if (current && bucket === lastBucket) {
+      current.nuToRad = history[i].nuRad;
+      continue;
+    }
+    const opacity =
+      buckets === 1
+        ? TRAIL_OPACITY_NEWEST
+        : TRAIL_OPACITY_OLDEST + ((TRAIL_OPACITY_NEWEST - TRAIL_OPACITY_OLDEST) * bucket) / (buckets - 1);
+    segments.push({ nuFromRad: history[i - 1].nuRad, nuToRad: history[i].nuRad, opacity });
+    lastBucket = bucket;
+  }
+  return segments;
+}
+
+// ---------------------------------------------------------------------------
 // Status and caption text that depend on reduced motion
 // ---------------------------------------------------------------------------
 

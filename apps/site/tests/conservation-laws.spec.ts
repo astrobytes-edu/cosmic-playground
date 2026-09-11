@@ -353,6 +353,48 @@ test.describe("Conservation Laws -- what the student sees", () => {
     expect(back.y).toBeCloseTo(start.y, 1);
   });
 
+  const trailPaths = (page: Page) =>
+    page
+      .locator("#orbitTrail path")
+      .evaluateAll((els) =>
+        els.map((el) => ({ d: (el.getAttribute("d") ?? "").trim(), hidden: getComputedStyle(el).display === "none" }))
+      );
+  const pathEnds = (d: string) => {
+    const n = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+    return { first: { x: n[0], y: n[1] }, last: { x: n[n.length - 2], y: n[n.length - 1] } };
+  };
+
+  test("Step leaves a trail along the arc it covered, and Reset clears it (trail)", async ({ page }) => {
+    await page.locator('[data-preset="elliptical"]').click();
+    await expect(page.locator("#orbitType")).toHaveText("elliptical");
+    const before = await particle(page);
+    await page.locator("#step").click();
+    const after = await particle(page);
+    expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeGreaterThan(5);
+
+    const drawn = (await trailPaths(page)).filter((p) => p.d.length > 0 && !p.hidden);
+    expect(drawn.length, JSON.stringify(drawn)).toBeGreaterThan(0);
+    const { first } = pathEnds(drawn[0].d);
+    const { last } = pathEnds(drawn[drawn.length - 1].d);
+    expect(Math.hypot(first.x - before.x, first.y - before.y), JSON.stringify({ first, before })).toBeLessThanOrEqual(1.5);
+    expect(Math.hypot(last.x - after.x, last.y - after.y), JSON.stringify({ last, after })).toBeLessThanOrEqual(1.5);
+
+    await page.locator("#reset").click();
+    const cleared = await trailPaths(page);
+    expect(cleared.length).toBeGreaterThan(0);
+    for (const p of cleared) expect(p.d === "" || p.hidden, JSON.stringify(p)).toBe(true);
+  });
+
+  test("a trail stays drawn after Play and Pause on a highly eccentric orbit (trail)", async ({ page }) => {
+    await setSlider(page, "speedFactor", 0.1);
+    await expect(page.locator("#ecc")).toHaveText("0.990");
+    await page.locator("#play").click();
+    await page.waitForTimeout(600);
+    await page.locator("#pause").click();
+    const drawn = (await trailPaths(page)).filter((p) => p.d.length > 0 && !p.hidden);
+    expect(drawn.length, JSON.stringify(drawn)).toBeGreaterThan(0);
+  });
+
   test("speed factor 0 is radial motion, not escape (P3)", async ({ page }) => {
     await setSlider(page, "speedFactor", 0);
     await expect(page.locator("#orbitType")).toHaveText("radial");

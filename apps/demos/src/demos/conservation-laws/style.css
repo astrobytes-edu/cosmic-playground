@@ -113,6 +113,14 @@
   opacity: 0.9;
 }
 
+/* The fading trail behind the body. main.ts sets each segment's stroke-opacity, newest brightest. */
+.orbit__trail {
+  fill: none;
+  stroke: var(--cp-celestial-earth);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
 .orbit__mass {
   fill: var(--cp-celestial-sun-core);
   filter: drop-shadow(var(--cp-glow-sun));
