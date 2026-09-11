@@ -2058,3 +2058,24 @@ for args in [(1, 1, 1, 0), (1, 1, 0.75, 0), (1, 1, 1.40, 0), (1, 1, math.sqrt(2)
 - Visual redesign (D4) and phone ordering (D3), as above.
 - `em-spectrum`, `planetary-conjunctions` and the other STATUS.md items: separate plans.
 - Fixing the 24 non-instructor lines that block `72f975a`: a follow-up recorded in STATUS.md.
+
+## Execution log and errata (2026-09-11)
+
+Recorded while executing this plan with subagents. The tasks above are left as written.
+
+**Errata**
+- Task 1 Step 4: `twoBodyAnalytic.test.ts` already had 11 tests, so green is 17, not 15.
+- Task 10 Step 1: `cb8f67b` changes four unit carets in `conservation-laws/model.md`, not three.
+- Task 7: the Station Mode row locators are anchored regexes (`/^\s*Escape/`), corrected before execution (`4d3188f`).
+
+**Decided during execution**
+- Fold at 1280x720 (Anna, 2026-09-11). With eight readouts and the caption below the orbit, the lowest readout ended at 758px. The caption now sits beside the orbit at >= 1025px (`minmax(0, 1fr) 14rem`), the orbit floor is 270px and the budget `calc(100svh - 25rem)`: 896px at 1440x900, 716px at 1280x720. The fold tests wait for finite animations before measuring.
+- Code review follow-ups: a test pinning the clockwise true-anomaly branch (`f60ab55`), a test for the outward radial announcement (`1a392b5`), and K and U defined on the instructor model page (`71dd7be`).
+- The mandatory physics review found M1 and L1-L5, fixed in `8043322`, `38e4d36` and `95a493e`:
+  - M1: an exact Escape after a mass change rounded e to 0.9999999999999996 and animated as a closed orbit. `initialOrbit` now returns e = 1 for parabolic orbits.
+  - L1: forward Euler stepping gave wrong periods at high e (speed factor 0.3: 0.553 s against Kepler's 1.137 s). Bound orbits now step the mean anomaly; open orbits sub-step dnu <= 0.01 rad (`advanceTrueAnomalyByTime`; `advanceTrueAnomalyRad` removed).
+  - L2: an arrow too fast for a 1-day step is capped at 120px with a "not to scale" caption (`arrowScale`).
+  - L3: `formatNumber` never emits e-notation; circular orbits show e = 0.
+  - L4: clockwise starts are `invalid` in `initialOrbit`.
+  - L5: mu = GM is stated in the Model notes; all four sliders carry `aria-valuetext`.
+- Environment: Playwright 1.58's browser install hung while unpacking under Node 26.5.0 and finished in 11 s under Node 24.18.0. The stricter math validator `72f975a` still waits on 24 non-instructor lines.
