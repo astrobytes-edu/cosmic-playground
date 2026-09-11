@@ -159,7 +159,19 @@ const isLightTheme =
     border-bottom: 2px solid currentColor;
   }
 
-  @media (max-width: 767px) {
+  /*
+   * The desktop nav needs 836px to sit on one line: 24px padding + 225px brand + 16px gap
+   * + 546px of links + 24px padding, measured 2026-09-10 on macOS once the self-hosted
+   * Source Sans 3 had loaded. Because that font ships with the site, the width does not
+   * hinge on which system fonts a platform has; the 64px of margin to 900px is there to
+   * absorb the smaller rendering differences that remain. It used to appear at 768px, so
+   * from 768 to 835 "For Instructors" wrapped and grew the sticky header, and at 768 the
+   * nav ran 11px past the viewport.
+   *
+   * MobileNav.astro shows its toggle behind the same width. The two must move together
+   * or a band of widths gets both navs or neither -- site-header.spec.ts checks that.
+   */
+  @media (max-width: 899px) {
     .desktop-nav {
       display: none;
     }

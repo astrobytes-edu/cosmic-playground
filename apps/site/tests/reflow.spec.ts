@@ -14,6 +14,15 @@ import { expect, test } from "@playwright/test";
 
 const REFLOW_WIDTH = 320;
 
+/*
+ * 320px is the width WCAG 1.4.10 names, and it is the only width this spec checks. The
+ * shared header's desktop/mobile nav handoff sits far above it -- 900px since 2026-09-10 --
+ * and is swept separately in site-header.spec.ts, which is what caught the nav running
+ * 11px past a 768px viewport. That check lives on one route rather than here because the
+ * header is identical on every page; multiplying tablet widths across all of these routes
+ * would test the same component dozens of times.
+ */
+
 function demoSlugs(): string[] {
   return readdirSync(join(process.cwd(), "src/content/demos"))
     .filter((f) => f.endsWith(".md"))

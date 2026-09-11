@@ -66,7 +66,9 @@ const links = [
     display: none;
   }
 
-  @media (max-width: 767px) {
+  /* Paired with the .desktop-nav breakpoint in Layout.astro -- see the note there for
+     why it is 899px. Change one and you must change the other. */
+  @media (max-width: 899px) {
     .mobile-nav {
       display: block;
       /* The panel is position: absolute; without this it resolved against some other
