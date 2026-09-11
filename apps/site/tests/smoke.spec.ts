@@ -918,3 +918,25 @@ test.describe("Cosmic Playground no-JS smoke", () => {
     ).toBeVisible();
   });
 });
+
+test.describe("Museum page text", () => {
+  test("Museum pages render no literal unicode escapes", async ({ page }) => {
+    /*
+     * An escape inside a JS string resolves to its character; the same six characters as a
+     * JSX text child are just six characters. The About page shipped its flagship heading as
+     * a literal backslash-u escape between "Predict", "Play" and "Explain" (audit B3) --
+     * confirmed in the built HTML on 2026-09-10 before the fix, on the page a committee
+     * reads most closely, and nothing in the suite read rendered text for it.
+     */
+    const routes = ["", "explore/", "playlists/", "topics/", "for-instructors/", "instructor/", "about/", "glossary/", "welcome/"];
+    const offenders: string[] = [];
+    for (const route of routes) {
+      await page.goto(route, { waitUntil: "domcontentloaded" });
+      const hits = await page.evaluate(() =>
+        (document.body.innerText.match(/\\u[0-9a-fA-F]{4}/g) ?? []).slice(0, 3)
+      );
+      if (hits.length > 0) offenders.push(`/${route}: ${hits.join(", ")}`);
+    }
+    expect(offenders, "pages showing a literal unicode escape").toEqual([]);
+  });
+});
