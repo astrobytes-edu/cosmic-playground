@@ -26,3 +26,8 @@ output/
 
 # Vite temporary bundled config artifacts
 **/vite.config.*.timestamp-*.mjs
+
+.adr/
+
+# Archived session material (see /cleanup-session)
+.claude-work/
