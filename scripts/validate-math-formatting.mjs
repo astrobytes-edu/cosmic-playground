@@ -3,9 +3,26 @@ import path from "node:path";
 
 const repoRoot = process.cwd();
 
+/*
+ * Everything that can end up as text a reader sees.
+ *
+ * The site's own pages, components and layouts were missing until 2026-09-10, so the
+ * rule held inside the demos and inside authored content while the chrome around them
+ * -- the homepage cards, the exhibit headers, Explore's filter chips -- went unchecked.
+ * One violation was living there: a multiplication sign used as a remove icon.
+ *
+ * `packages/physics` is deliberately NOT here. Its unicode is in comments and test
+ * names describing the maths (`G = 4*pi^2 AU^3/yr^2/M_sun` reads worse as ASCII than
+ * the symbols do), none of it reaches a rendered page, and mechanically rewriting 100
+ * lines of somebody's physics documentation is a separate decision from this contract.
+ */
 const SCAN_ROOTS = [
   path.join(repoRoot, "apps", "demos", "src", "demos"),
   path.join(repoRoot, "apps", "site", "src", "content"),
+  path.join(repoRoot, "apps", "site", "src", "pages"),
+  path.join(repoRoot, "apps", "site", "src", "components"),
+  path.join(repoRoot, "apps", "site", "src", "layouts"),
+  path.join(repoRoot, "apps", "site", "src", "lib"),
   path.join(repoRoot, "packages", "runtime", "src")
 ];
 

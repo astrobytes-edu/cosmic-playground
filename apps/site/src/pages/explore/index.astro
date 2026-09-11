@@ -559,7 +559,16 @@ const startHere = startHereTiles.map((tile) => {
         chip.type = "button";
         chip.className = "cp-chip";
         chip.dataset.removeFilter = key;
-        chip.innerHTML = `${escapeHtml(CHIP_LABEL[key](filters[key]))} <span aria-hidden="true">×</span>`;
+        /*
+         * An inline SVG cross, not a multiplication sign. The repo bans unicode math
+         * glyphs in rendered text -- see the Math authoring rule in CLAUDE.md -- and a
+         * remove affordance is an icon rather than an operator in any case.
+         */
+        chip.innerHTML =
+          `${escapeHtml(CHIP_LABEL[key](filters[key]))}` +
+          ` <svg class="cp-chip__remove" viewBox="0 0 16 16" width="12" height="12"` +
+          ` aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"` +
+          ` stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>`;
         chip.setAttribute("aria-label", `Remove filter ${CHIP_LABEL[key](filters[key])}`);
         chipBox.append(chip);
       }

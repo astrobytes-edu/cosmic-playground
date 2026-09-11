@@ -1,0 +1,105 @@
+---
+/**
+ * The facts a reader needs to decide whether to open an exhibit: how long it takes, which
+ * course it suits, and whether it is finished.
+ *
+ * Extracted because three card designs needed the same row -- DemoCard on Explore and the
+ * topic pages, MiniCard in the homepage's recent strip, and the homepage's featured
+ * cards -- and the time and level labels were about to be written a third time. The
+ * readiness badge already had one home in `lib/readiness.ts`; this gives the rest of the
+ * row one too, so a card cannot quietly disagree with its neighbour about what "10-20 min"
+ * means.
+ */
+import TagPill from "./TagPill.astro";
+import { readinessBadge, type Readiness } from "../lib/readiness";
+
+export type CardMetaProps = {
+  timeMinutes: number;
+  levels: string[];
+  readiness: Readiness;
+  hasMathMode?: boolean;
+  /** `compact` drops the level, for cards too narrow to carry it. */
+  variant?: "full" | "compact";
+};
+
+const {
+  timeMinutes,
+  levels,
+  readiness,
+  hasMathMode = false,
+  variant = "full"
+} = Astro.props as CardMetaProps;
+
+const badge = readinessBadge(readiness);
+
+/* `Both` is a tag meaning "either course"; a reader wants the courses, not the tag. */
+const levelLabel =
+  levels.includes("Both") || levels.length > 1
+    ? "ASTR 101 & 201"
+    : levels.includes("ASTR201")
+      ? "ASTR 201"
+      : "ASTR 101";
+---
+
+<ul class="card-meta" data-variant={variant}>
+  <li class="card-meta__item card-meta__item--time">
+    <span class="card-meta__num">{timeMinutes}</span>
+    <span class="card-meta__unit">min</span>
+  </li>
+  {variant === "full" ? <li class="card-meta__item">{levelLabel}</li> : null}
+  {variant === "full" && hasMathMode ? <li class="card-meta__item">math mode</li> : null}
+  {badge ? (
+    <li class="card-meta__item card-meta__item--badge">
+      <TagPill label={badge.label} tone={badge.tone} ariaLabel={badge.ariaLabel} />
+    </li>
+  ) : null}
+</ul>
+
+<style>
+  .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--cp-space-1) var(--cp-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--cp-text-xs);
+    color: var(--cp-text2);
+  }
+
+  .card-meta__item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25em;
+  }
+
+  /*
+   * A middot between items rather than a border or a pill each: the row is one sentence
+   * of facts, not a set of separate objects competing with the topic badge above it.
+   */
+  .card-meta__item + .card-meta__item::before {
+    content: "";
+    width: 3px;
+    height: 3px;
+    margin-inline-end: calc(var(--cp-space-2) - 0.25em);
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.45;
+    align-self: center;
+  }
+
+  .card-meta__item--badge::before {
+    display: none;
+  }
+
+  .card-meta__num {
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--cp-font-semibold);
+    color: var(--cp-text);
+  }
+
+  .card-meta__unit {
+    color: var(--cp-muted);
+  }
+</style>

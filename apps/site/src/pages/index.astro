@@ -3,6 +3,10 @@ import { getCollection } from "astro:content";
 import { listedDemos } from "../lib/catalog";
 import Layout from "../layouts/Layout.astro";
 import MiniCard from "../components/MiniCard.astro";
+import CardMeta from "../components/CardMeta.astro";
+import TopicIcon from "../components/TopicIcon.astro";
+import { TOPIC_LABEL, isTopicKey } from "../lib/topics";
+import { renderInlineMath } from "../lib/inlineMath";
 import NebularHero from "../components/NebularHero.astro";
 import HeroOrbit from "../components/HeroOrbit.astro";
 import PPEVisual from "../components/PPEVisual.astro";
@@ -32,15 +36,6 @@ const featured = demos
 const updated = [...demos]
   .sort((a, b) => parseIsoDate(b.data.last_updated) - parseIsoDate(a.data.last_updated))
   .slice(0, 8);
-
-function excerptFromBody(body: string) {
-  const firstLine = body
-    .split("\n")
-    .map((l) => l.trim())
-    .find((l) => l.length > 0 && !l.startsWith("---"));
-  if (!firstLine) return "\u2014";
-  return firstLine.replace(/^#+\s*/, "").slice(0, 140);
-}
 
 const base = import.meta.env.BASE_URL;
 ---
@@ -100,6 +95,9 @@ const base = import.meta.env.BASE_URL;
       {featured.map((d, i) => {
         const topic = primaryTopic(d.data.topics);
         const color = topicColor(topic);
+        const topicLabel = isTopicKey(topic) ? TOPIC_LABEL[topic] : topic;
+        /* Math-free across all 19 demos, so it needs no KaTeX pass; the prompt does. */
+        const keyIdea = d.data.short_key_idea ?? d.data.learning_goals[0];
         return (
           <article class="featured-card cp-card" style={`--card-i: ${i}; --topic-color: ${color}`}>
             <a class="featured-card__link" href={`${base}exhibits/${d.slug}/`}>
@@ -107,9 +105,28 @@ const base = import.meta.env.BASE_URL;
                 <DemoCanvasThumbnail slug={d.slug} />
               </div>
               <div class="featured-card__body">
-                <span class="featured-card__number">{i + 1}</span>
+                <div class="featured-card__eyebrow">
+                  <span class="featured-card__step">
+                    <span class="featured-card__step-num">{i + 1}</span>
+                    <span class="featured-card__step-word">of {featured.length}</span>
+                  </span>
+                  <span class="featured-card__topic">
+                    <TopicIcon topic={topic} size={14} />
+                    {topicLabel}
+                  </span>
+                </div>
                 <h3 class="featured-card__title">{d.data.title}</h3>
-                <p class="featured-card__desc">{excerptFromBody(d.body)}</p>
+                <p class="featured-card__idea">{keyIdea}</p>
+                <p class="featured-card__predict">
+                  <span class="featured-card__predict-label">Predict</span>
+                  <span set:html={renderInlineMath(d.data.predict_prompt)} />
+                </p>
+                <CardMeta
+                  timeMinutes={d.data.time_minutes}
+                  levels={d.data.levels}
+                  readiness={d.data.readiness}
+                  hasMathMode={d.data.has_math_mode}
+                />
               </div>
             </a>
           </article>
@@ -131,6 +148,9 @@ const base = import.meta.env.BASE_URL;
           lastUpdated={d.data.last_updated}
           status={d.data.status}
           readiness={d.data.readiness}
+          keyIdea={d.data.short_key_idea ?? d.data.learning_goals[0]}
+          timeMinutes={d.data.time_minutes}
+          levels={d.data.levels}
         />
       ))}
     </div>
@@ -335,24 +355,31 @@ const base = import.meta.env.BASE_URL;
   }
 
   /* ── Featured Grid (asymmetric) ────────────── */
+  /*
+   * Three equal cards, not a double-height hero beside two small ones.
+   *
+   * The asymmetric grid was built when these cards held a thumbnail, a title and a line of
+   * description -- the lead card needed the extra size to carry any weight. Now each one
+   * carries topic, title, key idea, the exhibit's own prediction prompt and a meta row, and
+   * spanning two rows just left the lead card with about 590px of empty space below its
+   * content at 1440px wide. The step eyebrow ("1 of 3") carries the sequence on its own.
+   */
   .featured-grid {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--cp-space-5);
+    align-items: stretch;
   }
 
-  .featured-card:first-child {
-    grid-row: 1 / -1;
+  @media (max-width: 1023px) {
+    .featured-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: 639px) {
     .featured-grid {
       grid-template-columns: 1fr;
-      grid-template-rows: auto;
-    }
-    .featured-card:first-child {
-      grid-row: auto;
     }
   }
 
@@ -417,38 +444,68 @@ const base = import.meta.env.BASE_URL;
     padding: var(--cp-space-4);
     background: none;
     border-bottom: 1px solid var(--cp-border-subtle);
-    flex: 1;
+    /*
+     * A fixed slice of the card, so three cards side by side keep their thumbnails on the
+     * same baseline however long their titles run.
+     */
+    flex: 0 0 auto;
+    height: 190px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
   .featured-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-2);
     padding: var(--cp-space-4);
-    position: relative;
   }
 
-  .featured-card__number {
-    position: absolute;
-    top: var(--cp-space-3);
-    right: var(--cp-space-3);
+  /*
+   * Eyebrow: where this exhibit sits in the sequence, and what it is about. "Start here"
+   * is an ordered path, so the number is real information -- but as a floating badge in
+   * the corner it read as decoration. Set inline with the topic, it reads as a position.
+   */
+  .featured-card__eyebrow {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--topic-color) 15%, transparent);
-    border: 1px solid color-mix(in srgb, var(--topic-color) 30%, transparent);
-    color: var(--topic-color);
+    justify-content: space-between;
+    gap: var(--cp-space-2);
+    font-size: var(--cp-text-xs);
+  }
+
+  .featured-card__step {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cp-muted);
+  }
+
+  .featured-card__step-num {
     font-family: var(--cp-font-display);
-    font-size: var(--cp-text-sm);
+    font-size: var(--cp-text-base);
     font-weight: var(--cp-font-semibold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    color: var(--topic-color);
+  }
+
+  .featured-card__topic {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    color: var(--topic-color);
+    font-weight: var(--cp-font-medium);
   }
 
   .featured-card__title {
     margin: 0;
     font-size: var(--cp-text-xl);
+    line-height: 1.25;
+    text-wrap: balance;
     color: var(--cp-title);
   }
 
@@ -456,14 +513,45 @@ const base = import.meta.env.BASE_URL;
     color: var(--cp-title-strong);
   }
 
-  .featured-card__desc {
-    margin: var(--cp-space-2) 0 0;
+  /* What the reader will be able to do afterwards -- the demo's own first learning goal. */
+  .featured-card__idea {
+    margin: 0;
     color: var(--cp-text2);
     font-size: var(--cp-text-sm);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /*
+   * The question the exhibit opens with, quoted from its own `predict_prompt`. The site
+   * teaches a Predict / Play / Explain loop and says so two sections above; leading the
+   * card with the actual prediction makes that promise concrete instead of abstract, and
+   * it is the one line that makes a reader want to open the thing.
+   */
+  .featured-card__predict {
+    margin: var(--cp-space-1) 0 0;
+    padding-inline-start: var(--cp-space-3);
+    border-inline-start: 2px solid color-mix(in srgb, var(--topic-color) 55%, transparent);
+    color: var(--cp-text2);
+    font-size: var(--cp-text-sm);
+    line-height: 1.5;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .featured-card__predict-label {
+    display: block;
+    margin-bottom: 0.15em;
+    font-size: var(--cp-text-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--topic-color);
+    opacity: 0.85;
   }
 
   /* ── Recent Scroll ────────────────────────── */

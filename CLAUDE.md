@@ -112,7 +112,36 @@ You can keep PR overhead low but still get value:
 - Use `import.meta.env.BASE_URL` for internal links/asset URLs (GitHub Pages base path support).
 - Keep units explicit and consistent everywhere (UI labels, exports, docs).
   - Do **not** use `G=1` or "natural units" phrasing.
-  - When orbital mechanics units matter pedagogically, prefer AU / yr / M☉ with `G = 4π² AU³/(yr²·M☉)`.
+  - When orbital mechanics units matter pedagogically, prefer AU / yr / solar masses with
+    `$G = 4\pi^2\ \mathrm{AU}^3/(\mathrm{yr}^2 M_\odot)$`.
+
+### Math authoring: KaTeX, never Unicode
+
+**Every equation, symbol, unit and operator that a reader sees is authored as LaTeX and
+rendered by KaTeX. Unicode math glyphs are not acceptable in rendered text.**
+
+Not `θ`, `λ`, `M☉`, `π`, `°`, `×`, `−`, `≈`, `∝`, `∞`, `²`, `₁`, `′`, `µ` — write
+`$\theta$`, `$\lambda$`, `$M_\odot$`, `$\pi$`, `$^{\circ}$`, `$\times$`, `$-$`,
+`$\approx$`, `$\propto$`, `$\infty$`, `$^2$`, `$_1$`, `$\prime$`, `$\mu$`.
+
+Why it matters here and not everywhere: a Unicode glyph inherits whatever the surrounding
+CSS does to it. On 2026-09-05, 94 KaTeX nodes across 14 demos were being uppercased by an
+inherited `text-transform`, turning frequency `$\nu$` into "N" and mean molecular weight
+`$\mu$` into "M" -- different physical quantities, silently, with every test green. Real
+math nodes can be checked; a stray `θ` in a string cannot.
+
+**Where the rule applies**
+
+| Surface | Rule |
+|---|---|
+| Demo HTML, site pages, components, layouts, authored content | LaTeX only. Enforced by `scripts/validate-math-formatting.mjs`, which fails the build. |
+| Astro/TS that emits reader-visible strings | LaTeX only. Render it with `renderInlineMath()` from `apps/site/src/lib/inlineMath.ts` (build-time KaTeX, no client JS) or `renderMath()` from `@cosmic/runtime` in the demos. |
+| Canvas 2D / uPlot axis labels | The one exemption -- KaTeX cannot render into a canvas. Use ASCII (`lambda`, `deg`, `M_sun`), never Unicode. |
+| `packages/physics` comments and test names | Not scanned today; the maths there is documentation, not rendered output. Prefer ASCII in new code. |
+
+**Adding a new reader-visible surface?** Add its directory to `SCAN_ROOTS` in
+`scripts/validate-math-formatting.mjs`. The site's own pages, components, layouts and lib
+were missing from that list until 2026-09-10, which is how a `×` reached a filter chip.
 
 ### WebGL demos (three.js)
 

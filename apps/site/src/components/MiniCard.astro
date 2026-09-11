@@ -1,13 +1,18 @@
 ---
 /**
  * Compact demo card for horizontal scroll strips.
- * Shows: DemoCanvasThumbnail + title + primary topic + update date.
+ *
+ * Carries the same facts as the full card, in the space a scroll strip allows: what the
+ * exhibit is about (topic), what it teaches (key idea), how long it takes, and whether it
+ * is finished. It used to show only a thumbnail, a title, a topic icon with no label, and
+ * a raw ISO date -- which told a reader nothing they could act on, and made the strip read
+ * as decoration next to the "Start here" cards above it.
  */
 import DemoCanvasThumbnail from "./DemoCanvasThumbnail.astro";
 import TopicIcon from "./TopicIcon.astro";
-import TagPill from "./TagPill.astro";
-import { readinessBadge } from "../lib/readiness";
+import CardMeta from "./CardMeta.astro";
 import { topicColor, primaryTopic } from "../lib/topicColors";
+import { TOPIC_LABEL, isTopicKey } from "../lib/topics";
 
 interface Props {
   title: string;
@@ -17,27 +22,54 @@ interface Props {
   lastUpdated: string;
   status: "stable" | "beta" | "draft";
   readiness: "stub" | "experimental" | "candidate" | "launch-ready";
+  /** The exhibit's first learning goal; math-free across the catalogue. */
+  keyIdea?: string;
+  timeMinutes: number;
+  levels: string[];
 }
 
-const { title, slug, href, topics, lastUpdated, status, readiness } = Astro.props;
-const color = topicColor(primaryTopic(topics));
-const badge = readinessBadge(readiness);
+const {
+  title,
+  slug,
+  href,
+  topics,
+  lastUpdated,
+  readiness,
+  keyIdea,
+  timeMinutes,
+  levels
+} = Astro.props;
+const topic = primaryTopic(topics);
+const color = topicColor(topic);
+const topicLabel = isTopicKey(topic) ? TOPIC_LABEL[topic] : topic;
+
+/* "Updated 4 Sep" beats "2026-09-04" on a card whose whole job is to be skimmed. */
+const updatedLabel = (() => {
+  const parsed = new Date(lastUpdated);
+  if (Number.isNaN(parsed.getTime())) return lastUpdated;
+  return parsed.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+})();
 ---
 
 <a class="mini-card cp-card" href={href} style={`--topic-color: ${color}`}>
   <div class="mini-card__illustration">
     <DemoCanvasThumbnail slug={slug} />
   </div>
-  <span class="mini-card__title">{title}</span>
-  <span class="mini-card__meta">
-    {topics[0] && <TopicIcon topic={topics[0]} size={12} />}
-    <time class="mini-card__date">{lastUpdated}</time>
-  </span>
-  {badge ? (
-    <span class="mini-card__state" aria-label="Demo state">
-      <TagPill label={badge.label} tone={badge.tone} ariaLabel={badge.ariaLabel} />
+  <div class="mini-card__body">
+    <span class="mini-card__topic">
+      <TopicIcon topic={topic} size={12} />
+      {topicLabel}
     </span>
-  ) : null}
+    <span class="mini-card__title">{title}</span>
+    {keyIdea ? <span class="mini-card__idea">{keyIdea}</span> : null}
+    <CardMeta
+      timeMinutes={timeMinutes}
+      levels={levels}
+      readiness={readiness}
+      variant="compact"
+    />
+    <time class="mini-card__date" datetime={lastUpdated}>Updated {updatedLabel}</time>
+  </div>
 </a>
 
 <style>
@@ -45,8 +77,8 @@ const badge = readinessBadge(readiness);
     display: flex;
     flex-direction: column;
     gap: var(--cp-space-2);
-    min-width: 180px;
-    max-width: 220px;
+    min-width: 232px;
+    max-width: 256px;
     text-decoration: none;
     flex-shrink: 0;
     overflow: clip;
@@ -80,6 +112,23 @@ const badge = readinessBadge(readiness);
     border-bottom: 1px solid var(--cp-border-subtle);
   }
 
+  .mini-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-1);
+    padding: var(--cp-space-3);
+    flex: 1;
+  }
+
+  .mini-card__topic {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    font-size: var(--cp-text-xs);
+    font-weight: var(--cp-font-medium);
+    color: var(--topic-color);
+  }
+
   .mini-card__title {
     font-weight: var(--cp-font-semibold);
     font-size: var(--cp-text-sm);
@@ -89,31 +138,27 @@ const badge = readinessBadge(readiness);
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    padding: 0 var(--cp-space-3);
   }
 
   .mini-card:hover .mini-card__title {
     color: var(--cp-title-strong);
   }
 
-  .mini-card__meta {
-    display: flex;
-    align-items: center;
-    gap: var(--cp-space-1);
-    color: var(--cp-faint);
-    font-size: 0.75rem;
-    margin-top: auto;
-    padding: 0 var(--cp-space-3) var(--cp-space-3);
+  .mini-card__idea {
+    font-size: var(--cp-text-xs);
+    line-height: 1.45;
+    color: var(--cp-text2);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
-  .mini-card__state {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 0 var(--cp-space-3) var(--cp-space-3);
-  }
-
+  /* The date is the least of the facts here, so it sits last and lightest. */
   .mini-card__date {
+    margin-top: auto;
+    padding-top: var(--cp-space-1);
+    color: var(--cp-faint);
     font-family: var(--cp-font-mono);
     font-size: 0.7rem;
   }
