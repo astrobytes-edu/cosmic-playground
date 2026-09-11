@@ -35,6 +35,14 @@ Let’s unpack each piece:
 
 What this equation is really saying: kinetic energy per mass ($v^2/2$) competes with gravitational potential per mass ($-\mu/r$). Their sum stays constant in a two‑body Newtonian system.
 
+The demo shows the two pieces as separate readouts:
+
+$$
+K = \frac{v^2}{2}, \qquad U = -\frac{\mu}{r}, \qquad \varepsilon = K + U
+$$
+
+During Play, $K$ and $U$ change as the body moves while $\varepsilon$ stays fixed: the conservation law made visible.
+
 **Orbit classification from $\varepsilon$:**
 
 - If **$\varepsilon < 0$**, the motion is **bound** (ellipse; includes the circular case).
