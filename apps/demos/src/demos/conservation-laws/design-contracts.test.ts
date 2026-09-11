@@ -175,6 +175,10 @@ describe("Conservation Laws -- Design System Contracts", () => {
       expect(html).toContain("cp-button--ghost");
     });
 
+    it("has a Step button, so the energy trade can be followed without animation", () => {
+      expect(html).toContain('id="step"');
+    });
+
     it("uses cp-utility-toolbar for actions", () => {
       expect(html).toContain("cp-utility-toolbar");
     });

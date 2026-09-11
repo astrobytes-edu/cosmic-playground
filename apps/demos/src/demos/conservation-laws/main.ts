@@ -45,6 +45,7 @@ const directionValue = must<HTMLSpanElement>("#directionValue");
 const presetButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("button.preset[data-preset]"));
 const playButton = must<HTMLButtonElement>("#play");
 const pauseButton = must<HTMLButtonElement>("#pause");
+const stepButton = must<HTMLButtonElement>("#step");
 const resetButton = must<HTMLButtonElement>("#reset");
 const stationModeButton = must<HTMLButtonElement>("#stationMode");
 const helpButton = must<HTMLButtonElement>("#help");
@@ -73,6 +74,9 @@ const timeScaleSlowed = must<HTMLSpanElement>("#timeScaleSlowed");
 const CENTER = { x: 300, y: 300 };
 const VIEW_RADIUS_PX = 250;
 const PATH_SAMPLES = 720;
+/** Step moves the body this fraction of anim.characteristicYr per press: sixteen presses make one lap. */
+const STEPS_PER_ORBIT = 16;
+const LEFT_VIEW_MESSAGE = "The body has left the view. Press Play to run it again.";
 
 /**
  * Circular and Elliptical are shape presets and start tangential. Escape and Hyperbolic are energy presets:
@@ -120,9 +124,14 @@ function validOrbit(): ValidOrbit | null {
   return orbit.orbitType === "invalid" ? null : orbit;
 }
 
-function canAnimate(): boolean {
+/** Step needs a path to move along but no animation, so reduced motion keeps it. */
+function canStep(): boolean {
   const o = validOrbit();
-  return !prefersReducedMotion && o !== null && o.orbitType !== "radial";
+  return o !== null && o.orbitType !== "radial";
+}
+
+function canAnimate(): boolean {
+  return !prefersReducedMotion && canStep();
 }
 
 function stopAnimation() {
@@ -135,6 +144,7 @@ function stopAnimation() {
   }
   playButton.disabled = !canAnimate();
   pauseButton.disabled = true;
+  stepButton.disabled = !canStep();
   if (pauseHadFocus && !playButton.disabled) playButton.focus();
 }
 
@@ -150,7 +160,7 @@ function resetAnimation() {
 
 function startAnimation() {
   if (prefersReducedMotion) {
-    setLiveRegionText(status, "Reduced motion is enabled; animation is disabled.");
+    setLiveRegionText(status, "Reduced motion is enabled; use Step to move the body.");
     return;
   }
   const o = validOrbit();
@@ -188,12 +198,39 @@ function startAnimation() {
     renderBody();
     if (step.stopped) {
       stopAnimation();
-      setLiveRegionText(status, "The body has left the view. Press Play to run it again.");
+      setLiveRegionText(status, LEFT_VIEW_MESSAGE);
       return;
     }
     anim.frameId = requestAnimationFrame(tick);
   };
   anim.frameId = requestAnimationFrame(tick);
+}
+
+/**
+ * Stop any playback, then move the body 1/STEPS_PER_ORBIT of anim.characteristicYr along its path. Stepping needs no
+ * animation, so it is how a reader with reduced motion follows K and U trading while eps stays fixed.
+ */
+function stepBody() {
+  const o = validOrbit();
+  if (!o || o.orbitType === "radial" || !(anim.characteristicYr > 0)) return;
+  const wasPlaying = anim.playing;
+  stopAnimation();
+  // As on Play, an open orbit that already ran to the edge of the view starts again from the beginning.
+  if (o.ecc >= 1 && anim.nuRad >= anim.nuMax - 1e-9) anim.nuRad = o.nu0Rad;
+  const step = ConservationLawsModel.advanceTrueAnomalyByTime({
+    nuRad: anim.nuRad,
+    ecc: o.ecc,
+    pAu: o.pAu,
+    hAbsAu2Yr: o.hAbsAu2Yr,
+    muAu3Yr2: o.muAu3Yr2,
+    dtYr: anim.characteristicYr / STEPS_PER_ORBIT,
+    nuMax: anim.nuMax
+  });
+  anim.nuRad = step.nuRad;
+  renderBody();
+  if (step.stopped) setLiveRegionText(status, LEFT_VIEW_MESSAGE);
+  // Without this the status would still read "Playing." with the body stopped.
+  else if (wasPlaying) setLiveRegionText(status, "Paused.");
 }
 
 function renderControlValues() {
@@ -412,6 +449,7 @@ pauseButton.addEventListener("click", () => {
   stopAnimation();
   setLiveRegionText(status, "Paused.");
 });
+stepButton.addEventListener("click", stepBody);
 resetButton.addEventListener("click", resetAnimation);
 
 /** One row from exact controls, through the same derivation as the screen. */
@@ -486,6 +524,7 @@ const demoModes = createDemoModes({
           "Start at $M = 1\\,M_{\\odot}$, $r_0 = 1$ AU, $v/v_{\\rm circ} = 1$, direction $0^{\\circ}$: a circular orbit.",
           "Press Escape to set $v/v_{\\rm circ} = \\sqrt{2}$ exactly and watch $\\varepsilon$ read 0.",
           "Press Play on the Elliptical preset: $K$ and $U$ change while $\\varepsilon = K + U$ does not.",
+          "Press Step to move the body one sixteenth of an orbit at a time.",
           "Tilt the direction to lower $|h|$ at the same speed and watch $r_p$ shrink."
         ]
       }
@@ -545,7 +584,7 @@ copyResults.addEventListener("click", () => {
 syncSlidersToControls();
 recomputeOrbit();
 if (prefersReducedMotion) {
-  setLiveRegionText(status, "Reduced motion is enabled; animation is disabled.");
+  setLiveRegionText(status, "Reduced motion is enabled; use Step to move the body.");
 }
 initMath(document);
 

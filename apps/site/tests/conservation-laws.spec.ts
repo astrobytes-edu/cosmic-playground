@@ -619,6 +619,13 @@ test.describe("Conservation Laws -- what the student sees", () => {
     await expect(page.locator("#timeScaleSlowed")).toBeHidden();
   });
 
+  test("Step is disabled for radial motion, which has no orbit to step along (S1)", async ({ page }) => {
+    await expect(page.locator("#step")).toBeEnabled();
+    await setSlider(page, "speedFactor", 0);
+    await expect(page.locator("#orbitType")).toHaveText("radial (straight line)");
+    await expect(page.locator("#step")).toBeDisabled();
+  });
+
   for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {
     test(`all readouts are above the fold at ${size.width}x${size.height}`, async ({ page }) => {
       await page.setViewportSize(size);
@@ -651,5 +658,35 @@ test.describe("Conservation Laws -- Reduced Motion", () => {
     expect(playDisabled).toBe(true);
     const statusText = await page.locator("#status").textContent();
     expect(statusText).toContain("Reduced motion");
+  });
+
+  test("Step moves the body a sixteenth of an orbit, so K and U can be followed without animation (S1)", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("play/conservation-laws/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#orbitType")).toHaveText("circular");
+    await expect(page.locator("#play")).toBeDisabled();
+    await expect(page.locator("#step")).toBeEnabled();
+
+    const particle = async () => ({
+      x: Number(await page.locator("#particle").getAttribute("cx")),
+      y: Number(await page.locator("#particle").getAttribute("cy"))
+    });
+    const num = async (id: string) => Number.parseFloat((await page.locator(`#${id}`).textContent()) ?? "NaN");
+
+    await page.locator('[data-preset="elliptical"]').click();
+    await expect(page.locator("#orbitType")).toHaveText("elliptical");
+    const start = await particle();
+    const kStart = (await page.locator("#kAu").textContent()) ?? "";
+    const uStart = (await page.locator("#uAu").textContent()) ?? "";
+
+    await page.locator("#step").click();
+    await expect(page.locator("#kAu")).not.toHaveText(kStart);
+    await expect(page.locator("#uAu")).not.toHaveText(uStart);
+    // Three 4-decimal roundings: K + U matches eps to 0.00015.
+    expect(Math.abs((await num("kAu")) + (await num("uAu")) - (await num("eps")))).toBeLessThanOrEqual(0.0002);
+
+    for (let i = 0; i < 15; i++) await page.locator("#step").click();
+    const end = await particle();
+    expect(Math.hypot(end.x - start.x, end.y - start.y), JSON.stringify({ start, end })).toBeLessThanOrEqual(0.5);
   });
 });
