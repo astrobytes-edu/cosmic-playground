@@ -1,16 +1,16 @@
 ---
 title: "Conservation Laws: Energy & Momentum"
-status: draft
-content_verified: false
+status: beta
+content_verified: true
 levels: [Both]
 topics: [Orbits]
 time_minutes: 10
 has_math_mode: false
 tags: ["energy", "momentum", "invariants", "energy conservation", "angular momentum", "closed system", "kinetic energy", "potential energy"]
-readiness: experimental
-readinessReason: "Core demo behavior is implemented, but parity and launch-gate signoff are still pending."
+readiness: candidate
+readinessReason: "Presets, starting state, energy readouts, orbit timing and screen-reader announcements were checked against independent calculations on 2026-09-11; awaiting classroom use before stable."
 parityAuditPath: "docs/audits/migrations/conservation-laws-parity.md"
-lastVerifiedAt: "2026-02-02"
+lastVerifiedAt: "2026-09-11"
 learning_goals:
   - "Identify quantities that remain constant under specific assumptions."
   - "Use conservation ideas to predict qualitative outcomes."

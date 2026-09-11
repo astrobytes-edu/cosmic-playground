@@ -45,11 +45,21 @@ const MUSEUM_ROUTES = [
   "welcome/"
 ];
 
+/**
+ * Play routes are added one demo at a time, for demos at `candidate` readiness or above
+ * whose `/play/` page has been separately verified not to scroll sideways at 320px.
+ * `binary-orbits` is candidate but currently DOES scroll sideways at 320px (its drawer
+ * accordions take their minimum from unbreakable KaTeX display equations), so it stays out
+ * until that is fixed.
+ */
+const PLAY_ROUTES = ["play/conservation-laws/"];
+
 const CONTENT_ROUTES = [
   ...MUSEUM_ROUTES,
   ...slugs.map((s) => `exhibits/${s}/`),
   ...slugs.map((s) => `stations/${s}/`),
-  ...slugs.map((s) => `instructor/${s}/`)
+  ...slugs.map((s) => `instructor/${s}/`),
+  ...PLAY_ROUTES
 ];
 
 test.describe("Reflow at 320px (WCAG 1.4.10)", () => {
