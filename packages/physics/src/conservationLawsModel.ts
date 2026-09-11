@@ -11,6 +11,8 @@
  * - Conic parameters: p in AU, angles in radians
  */
 
+import { TwoBodyAnalytic, type TwoBodyOrbitType } from "./twoBodyAnalytic";
+
 export type Vec2Au = { xAu: number; yAu: number };
 export type Vec2AuYr = { vxAuYr: number; vyAuYr: number };
 
@@ -242,6 +244,76 @@ function specificEnergyPartsAu2Yr2(args: { rAu: number; vAuYr: number; muAu3Yr2:
   return { kAu2Yr2, uAu2Yr2, epsAu2Yr2: kAu2Yr2 + uAu2Yr2 };
 }
 
+export type InitialOrbit =
+  | { orbitType: "invalid" }
+  | {
+      orbitType: TwoBodyOrbitType;
+      muAu3Yr2: number;
+      vCircAuYr: number;
+      v0AuYr: number;
+      rVecAu: Vec2Au;
+      ecc: number;
+      pAu: number;
+      omegaRad: number;
+      hAbsAu2Yr: number;
+      epsAu2Yr2: number;
+      /** True anomaly of the starting point; wrapped to [0, 2pi) for closed orbits. 0 for radial. */
+      nu0Rad: number;
+      /** Periapsis distance; 0 for radial motion. */
+      rpAu: number;
+      /** Farthest distance reached; Infinity for open orbits. */
+      raAu: number;
+      /** Speed at periapsis, the fastest point on the drawn path; 0 for radial motion. */
+      vPeriAuYr: number;
+    };
+
+/**
+ * Everything the instrument shows, from the four controls. The display, Station Mode and the
+ * announcements must all read this, so an exact preset (speedFactor = Math.SQRT2) cannot be
+ * classified one way on screen and another in the table.
+ */
+function initialOrbit(args: {
+  massSolar: number;
+  r0Au: number;
+  speedFactor: number;
+  directionDeg: number;
+}): InitialOrbit {
+  const { massSolar, r0Au, speedFactor, directionDeg } = args;
+  const muAu3Yr2 = TwoBodyAnalytic.muAu3Yr2FromMassSolar(massSolar);
+  const vCircAuYr = TwoBodyAnalytic.circularSpeedAuPerYr({ muAu3Yr2, rAu: r0Au });
+  if (!Number.isFinite(vCircAuYr) || !Number.isFinite(speedFactor) || speedFactor < 0) {
+    return { orbitType: "invalid" };
+  }
+
+  const v0AuYr = speedFactor * vCircAuYr;
+  const init = initialStateAuYr({ r0Au, speedAuYr: v0AuYr, directionDeg });
+  if (!init.rVecAu || !init.vVecAuYr) return { orbitType: "invalid" };
+
+  const el = TwoBodyAnalytic.orbitElementsFromStateAuYr({ rVecAu: init.rVecAu, vVecAuYr: init.vVecAuYr, muAu3Yr2 });
+  if (el.orbitType === "invalid") return { orbitType: "invalid" };
+
+  const radial = el.orbitType === "radial";
+  const closed = !radial && el.ecc < 1 && el.orbitType !== "parabolic";
+  return {
+    orbitType: el.orbitType,
+    muAu3Yr2,
+    vCircAuYr,
+    v0AuYr,
+    rVecAu: init.rVecAu,
+    ecc: el.ecc,
+    pAu: el.pAu,
+    omegaRad: el.omegaRad,
+    hAbsAu2Yr: el.hAbsAu2Yr,
+    epsAu2Yr2: el.epsAu2Yr2,
+    nu0Rad: radial ? 0 : closed ? wrap2Pi(el.nuRad) : el.nuRad,
+    rpAu: radial ? 0 : el.pAu / (1 + el.ecc),
+    raAu: radial
+      ? el.epsAu2Yr2 < 0 ? -muAu3Yr2 / el.epsAu2Yr2 : Number.POSITIVE_INFINITY
+      : closed ? el.pAu / (1 - el.ecc) : Number.POSITIVE_INFINITY,
+    vPeriAuYr: el.hAbsAu2Yr > 0 ? (muAu3Yr2 * (1 + el.ecc)) / el.hAbsAu2Yr : 0
+  };
+}
+
 export const ConservationLawsModel = {
   velocityFromSpeedAndDirectionAuYr,
   initialStateAuYr,
@@ -252,6 +324,7 @@ export const ConservationLawsModel = {
   orbitalRadiusAu,
   conicPositionAndTangentAu,
   instantaneousSpeedAuPerYr,
-  specificEnergyPartsAu2Yr2
+  specificEnergyPartsAu2Yr2,
+  initialOrbit
 } as const;
 

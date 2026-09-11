@@ -96,3 +96,67 @@ describe("ConservationLawsModel conic helpers", () => {
   });
 });
 
+describe("ConservationLawsModel.initialOrbit", () => {
+  const at = (o: ReturnType<typeof ConservationLawsModel.initialOrbit>) => {
+    if (o.orbitType === "invalid") throw new Error("unexpected invalid orbit");
+    return o;
+  };
+  const startPoint = (o: ReturnType<typeof at>) =>
+    ConservationLawsModel.conicPositionAndTangentAu({ ecc: o.ecc, pAu: o.pAu, omegaRad: o.omegaRad, nuRad: o.nu0Rad })!;
+
+  it("elliptical preset starts where the student put it: r0 on +x, at apoapsis", () => {
+    const o = at(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: 0.75, directionDeg: 0 }));
+    expect(o.orbitType).toBe("elliptical");
+    expect(o.nu0Rad).toBeCloseTo(Math.PI, 12);
+    expect(startPoint(o).xAu).toBeCloseTo(1, 12);
+    expect(startPoint(o).yAu).toBeCloseTo(0, 12);
+    expect(o.rpAu).toBeCloseTo(0.391304, 6);
+    expect(o.raAu).toBeCloseTo(1, 12);
+    expect(o.vPeriAuYr).toBeCloseTo(12.042772, 5);
+  });
+
+  it("the start speed is the speed that was set, not the periapsis speed", () => {
+    const o = at(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: 1.2, directionDeg: 60 }));
+    const vStart = ConservationLawsModel.instantaneousSpeedAuPerYr({
+      muAu3Yr2: o.muAu3Yr2, hAbsAu2Yr: o.hAbsAu2Yr, ecc: o.ecc, nuRad: o.nu0Rad
+    });
+    expect(vStart).toBeCloseTo(1.2 * 2 * Math.PI, 10);
+    expect(o.nu0Rad).toBeCloseTo(2.369222, 5);
+    expect(o.raAu).toBeCloseTo(3.381308, 5);
+  });
+
+  it("an inward asymmetric start reproduces r0 and wraps nu0 into [0, 2pi)", () => {
+    const r0Au = 10 ** -0.3;
+    const o = at(ConservationLawsModel.initialOrbit({ massSolar: 10 ** 0.4, r0Au, speedFactor: 0.9, directionDeg: -30 }));
+    expect(o.nu0Rad).toBeCloseTo(3.870864, 5);
+    expect(startPoint(o).xAu).toBeCloseTo(r0Au, 10);
+    expect(startPoint(o).yAu).toBeCloseTo(0, 10);
+    expect(o.vPeriAuYr).toBeCloseTo(27.546673, 4);
+  });
+
+  it("speedFactor = Math.SQRT2 is exactly parabolic with no apoapsis", () => {
+    const o = at(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: Math.SQRT2, directionDeg: 0 }));
+    expect(o.orbitType).toBe("parabolic");
+    expect(Math.abs(o.epsAu2Yr2)).toBeLessThan(1e-12);
+    expect(o.raAu).toBe(Number.POSITIVE_INFINITY);
+  });
+
+  it("the slider's nearest values are honestly bound and unbound", () => {
+    expect(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: 1.41, directionDeg: 0 }).orbitType).toBe("elliptical");
+    expect(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: 1.42, directionDeg: 0 }).orbitType).toBe("hyperbolic");
+  });
+
+  it("speed factor 0 is radial and bound, with no periapsis speed", () => {
+    const o = at(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: 0, directionDeg: 0 }));
+    expect(o.orbitType).toBe("radial");
+    expect(o.epsAu2Yr2).toBeCloseTo(-4 * Math.PI * Math.PI, 10);
+    expect(o.vPeriAuYr).toBe(0);
+    expect(o.raAu).toBeCloseTo(1, 12);
+  });
+
+  it("rejects a non-positive radius or mass", () => {
+    expect(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 0, speedFactor: 1, directionDeg: 0 }).orbitType).toBe("invalid");
+    expect(ConservationLawsModel.initialOrbit({ massSolar: 0, r0Au: 1, speedFactor: 1, directionDeg: 0 }).orbitType).toBe("invalid");
+  });
+});
+
