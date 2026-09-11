@@ -16,6 +16,10 @@ import {
   formatEccentricity,
   formatPeriapsis,
   orbitAnnouncement,
+  animationTimeScaleYrPerSec,
+  formatTimeScale,
+  DEFAULT_SIM_YEARS_PER_SEC,
+  MIN_ON_SCREEN_ORBIT_SEC,
 } from "./logic";
 
 describe("Conservation Laws -- UI Logic", () => {
@@ -387,6 +391,41 @@ describe("Conservation Laws -- UI Logic", () => {
       expect(orbitAnnouncement({ orbitType: "radial", ecc: 1, epsAu2Yr2: -39.5 })).toBe("Radial motion: with no sideways speed the body falls straight in.");
       expect(orbitAnnouncement({ orbitType: "radial", ecc: 1, epsAu2Yr2: 5 })).toBe("Radial motion: the body moves straight out and escapes.");
       expect(orbitAnnouncement({ orbitType: "invalid", ecc: NaN, epsAu2Yr2: NaN })).toBe("No valid orbit for these settings.");
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // animation time scale and its caption
+  // -----------------------------------------------------------------------
+  describe("animationTimeScaleYrPerSec", () => {
+    it("keeps 1/3 yr per s for an orbit lasting at least 1.5 s on screen (1 yr takes 3 s)", () => {
+      expect(DEFAULT_SIM_YEARS_PER_SEC).toBe(1 / 3);
+      expect(MIN_ON_SCREEN_ORBIT_SEC).toBe(1.5);
+      expect(animationTimeScaleYrPerSec(1)).toBe(1 / 3);
+    });
+
+    it("keeps 1/3 yr per s when there is no characteristic time (radial motion)", () => {
+      expect(animationTimeScaleYrPerSec(NaN)).toBe(1 / 3);
+      expect(animationTimeScaleYrPerSec(0)).toBe(1 / 3);
+    });
+
+    it("slows a 0.01 yr orbit (M = 10, r0 = 0.1 AU, circular) so one lap takes 1.5 s", () => {
+      expect(animationTimeScaleYrPerSec(0.01)).toBeCloseTo(0.006667, 6);
+    });
+  });
+
+  describe("formatTimeScale", () => {
+    it("states the default scale in whole months", () => {
+      expect(formatTimeScale(1 / 3)).toBe("4 months");
+    });
+
+    it("states a slowed scale in days, one decimal", () => {
+      expect(formatTimeScale(0.0066667)).toBe("2.4 days");
+      expect(formatTimeScale(0.05)).toBe("18.3 days");
+    });
+
+    it("states a scale under a day in hours, one decimal", () => {
+      expect(formatTimeScale(0.0023747)).toBe("20.8 hours");
     });
   });
 });

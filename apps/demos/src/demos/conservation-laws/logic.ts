@@ -226,3 +226,35 @@ export function arrowScale(vMaxAuYr: number, scalePxPerAu: number): ArrowScale {
   }
   return { dtDays: null, pxPerAuYr: ARROW_MAX_PX / vMaxAuYr, toScale: false };
 }
+
+// ---------------------------------------------------------------------------
+// Animation time scale
+// ---------------------------------------------------------------------------
+
+/** Orbital years per second on screen by default: a circular orbit at 1 AU around 1 Msun takes 3 s. */
+export const DEFAULT_SIM_YEARS_PER_SEC = 1 / 3;
+/** Shortest on-screen time for one lap of a bound orbit, or for an open orbit's run to the view edge. At the default
+ * scale the fastest orbits the sliders reach last about 30 ms, so the body strobes and can appear to orbit backwards. */
+export const MIN_ON_SCREEN_ORBIT_SEC = 1.5;
+
+/**
+ * Orbital years per second on screen. `characteristicYr` is a bound orbit's period, or an open orbit's time from its
+ * start to the view edge. The default holds while that lasts at least MIN_ON_SCREEN_ORBIT_SEC on screen; a faster
+ * orbit is slowed to take exactly that long. No usable time (radial motion) keeps the default.
+ */
+export function animationTimeScaleYrPerSec(characteristicYr: number): number {
+  if (!Number.isFinite(characteristicYr) || !(characteristicYr > 0)) return DEFAULT_SIM_YEARS_PER_SEC;
+  return Math.min(DEFAULT_SIM_YEARS_PER_SEC, characteristicYr / MIN_ON_SCREEN_ORBIT_SEC);
+}
+
+/** Orbital time shown in one second on screen: "4 months", "2.4 days" or "20.8 hours". */
+export function formatTimeScale(yrPerSec: number): string {
+  const days = yrPerSec * DAYS_PER_YEAR;
+  if (days >= 60) {
+    const months = days / (DAYS_PER_YEAR / 12);
+    const whole = Math.round(months);
+    return `${Math.abs(months - whole) <= 0.05 ? String(whole) : months.toFixed(1)} months`;
+  }
+  if (days >= 1) return `${days.toFixed(1)} days`;
+  return `${(days * 24).toFixed(1)} hours`;
+}

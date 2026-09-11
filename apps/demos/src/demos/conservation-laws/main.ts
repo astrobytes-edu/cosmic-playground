@@ -2,15 +2,18 @@ import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initS
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { ConservationLawsModel, TwoBodyAnalytic } from "@cosmic/physics";
 import {
+  animationTimeScaleYrPerSec,
   arrowScale,
   buildPathD,
   clamp,
+  DEFAULT_SIM_YEARS_PER_SEC,
   formatEccentricity,
   formatNumber,
   formatOrbitType,
   formatPeriapsis,
   formatSpecificEnergy,
   formatSpeedFactor,
+  formatTimeScale,
   logSliderToValue,
   orbitAnnouncement,
   toSvg,
@@ -64,12 +67,12 @@ const arrowDtUnit = must<HTMLSpanElement>("#arrowDtUnit");
 const arrowCaptionNotToScale = must<HTMLSpanElement>("#arrowCaptionNotToScale");
 const apoCaption = must<HTMLSpanElement>("#apoCaption");
 const raAuValue = must<HTMLSpanElement>("#raAu");
+const timeScaleValue = must<HTMLSpanElement>("#timeScale");
+const timeScaleSlowed = must<HTMLSpanElement>("#timeScaleSlowed");
 
 const CENTER = { x: 300, y: 300 };
 const VIEW_RADIUS_PX = 250;
 const PATH_SAMPLES = 720;
-/** Teaching time scale: a circular orbit at 1 AU around 1 Msun takes about 3 s. */
-const SIM_YEARS_PER_SEC = 1 / 3;
 
 /**
  * Circular and Elliptical are shape presets and start tangential. Escape and Hyperbolic are energy presets:
@@ -106,7 +109,11 @@ const anim = {
   nuMax: 2 * Math.PI,
   scalePxPerAu: VIEW_RADIUS_PX / 1.5,
   /** Set once per orbit by recomputeOrbit; this placeholder (nothing moving) draws no arrow. */
-  arrow: arrowScale(0, VIEW_RADIUS_PX / 1.5)
+  arrow: arrowScale(0, VIEW_RADIUS_PX / 1.5),
+  /** One lap of a bound orbit, or an open orbit's run from its start to nuMax; NaN for radial motion. */
+  characteristicYr: Number.NaN,
+  /** Orbital years per second on screen; slowed from the default when characteristicYr would pass too fast. */
+  timeScaleYrPerSec: DEFAULT_SIM_YEARS_PER_SEC
 };
 
 function validOrbit(): ValidOrbit | null {
@@ -174,7 +181,7 @@ function startAnimation() {
       pAu: o.pAu,
       hAbsAu2Yr: o.hAbsAu2Yr,
       muAu3Yr2: o.muAu3Yr2,
-      dtYr: dtSec * SIM_YEARS_PER_SEC,
+      dtYr: dtSec * anim.timeScaleYrPerSec,
       nuMax: anim.nuMax
     });
     anim.nuRad = step.nuRad;
@@ -213,6 +220,8 @@ function recomputeOrbit() {
     for (const el of [eccValue, kValue, uValue, epsValue, hValue, vKmSValue, rpAuValue]) el.textContent = "—";
     orbitPath.setAttribute("d", "");
     velocityLine.style.display = "none";
+    anim.characteristicYr = Number.NaN;
+    renderTimeScale();
     stopAnimation();
     return;
   }
@@ -240,6 +249,22 @@ function recomputeOrbit() {
     orbitPath.setAttribute("d", buildPathD(points, CENTER, anim.scalePxPerAu));
   }
 
+  // Radial motion does not animate. A bound orbit's time is one lap; an open orbit's is the run from its start
+  // to anim.nuMax, the view edge set just above.
+  anim.characteristicYr =
+    o.orbitType === "radial"
+      ? Number.NaN
+      : o.ecc < 1
+        ? ConservationLawsModel.orbitalPeriodYr({ ecc: o.ecc, pAu: o.pAu, muAu3Yr2: o.muAu3Yr2 })
+        : ConservationLawsModel.timeBetweenTrueAnomaliesYr({
+            ecc: o.ecc,
+            pAu: o.pAu,
+            muAu3Yr2: o.muAu3Yr2,
+            nuFromRad: o.nu0Rad,
+            nuToRad: anim.nuMax
+          });
+  renderTimeScale();
+
   orbitTypeValue.textContent = formatOrbitType(o.orbitType);
   eccValue.textContent = formatEccentricity(o.orbitType, o.ecc, 3);
   epsValue.textContent = formatSpecificEnergy(o.epsAu2Yr2, o.muAu3Yr2 / controls.r0Au);
@@ -257,6 +282,13 @@ function recomputeOrbit() {
   // Not redundant: the call at the top ran canAnimate() against the old orbit. This one re-runs it
   // against the new orbit, so Play's disabled state is right.
   stopAnimation();
+}
+
+/** The caption's "1 s on screen =" line, and the scale the animation runs at, from anim.characteristicYr. */
+function renderTimeScale() {
+  anim.timeScaleYrPerSec = animationTimeScaleYrPerSec(anim.characteristicYr);
+  timeScaleValue.textContent = formatTimeScale(anim.timeScaleYrPerSec);
+  timeScaleSlowed.hidden = !(anim.timeScaleYrPerSec < DEFAULT_SIM_YEARS_PER_SEC);
 }
 
 /** Particle, arrow, speed, K and U at the current true anomaly. Runs every animation frame. */

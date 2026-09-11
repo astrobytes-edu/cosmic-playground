@@ -568,6 +568,57 @@ test.describe("Conservation Laws -- what the student sees", () => {
     }
   });
 
+  test("the caption states the time scale: 1 s on screen is 4 months by default (T1)", async ({ page }) => {
+    await expect(page.locator("#timeScale")).toHaveText("4 months");
+    await expect(page.locator("#timeScaleSlowed")).toBeHidden();
+  });
+
+  test("a very fast orbit is slowed to a 1.5 s lap, says so, and never appears to run backwards (T1)", async ({ page }) => {
+    // M = 10, r0 = 0.1 AU, circular: the period is 0.01 yr, which lasts 30 ms at 4 months per second.
+    await setSlider(page, "massSlider", 1);
+    await setSlider(page, "r0Slider", -1);
+    await expect(page.locator("#orbitType")).toHaveText("circular");
+    await expect(page.locator("#timeScale")).toHaveText("2.4 days");
+    await expect(page.locator("#timeScaleSlowed")).toBeVisible();
+
+    await page.locator("#play").click();
+    const stepsDeg = await page.evaluate(
+      () =>
+        new Promise<number[]>((resolve) => {
+          const body = document.querySelector("#particle") as Element;
+          // Math convention, counter-clockwise positive: SVG y points down, so it is flipped.
+          const angle = () => Math.atan2(300 - Number(body.getAttribute("cy")), Number(body.getAttribute("cx")) - 300);
+          const samples: number[] = [];
+          const sample = () => {
+            samples.push(angle());
+            if (samples.length < 20) {
+              requestAnimationFrame(sample);
+              return;
+            }
+            resolve(
+              samples.slice(1).map((a, i) => {
+                const d = a - samples[i];
+                return (Math.atan2(Math.sin(d), Math.cos(d)) * 180) / Math.PI;
+              })
+            );
+          };
+          requestAnimationFrame(sample);
+        })
+    );
+    await page.locator("#pause").click();
+    expect(stepsDeg).toHaveLength(19);
+    for (const step of stepsDeg) {
+      expect(step, JSON.stringify(stepsDeg)).toBeGreaterThan(0);
+      expect(step, JSON.stringify(stepsDeg)).toBeLessThan(20);
+    }
+
+    await setSlider(page, "massSlider", 0);
+    await setSlider(page, "r0Slider", 0);
+    await page.locator('[data-preset="elliptical"]').click();
+    await expect(page.locator("#timeScale")).toHaveText("4 months");
+    await expect(page.locator("#timeScaleSlowed")).toBeHidden();
+  });
+
   for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {
     test(`all readouts are above the fold at ${size.width}x${size.height}`, async ({ page }) => {
       await page.setViewportSize(size);

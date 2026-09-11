@@ -76,6 +76,11 @@
   text-align: center;
 }
 
+/* Its own line: the time scale is about playback, not the arrow. */
+.stage__caption-time {
+  display: block;
+}
+
 .orbit__path {
   fill: none;
   stroke: var(--cp-celestial-orbit);
