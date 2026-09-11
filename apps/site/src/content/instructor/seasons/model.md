@@ -69,9 +69,9 @@ $$
 What this is really saying: tilt matters because it changes the Sun’s north–south position over the year. When $\delta$ is large and positive, the Northern Hemisphere is tilted toward the Sun (more direct sunlight and longer days); when $\delta$ is large and negative, it is tilted away.
 
 > **Declination sanity checks**
-> - If $\varepsilon = 0^\circ$, then $\sin\varepsilon = 0$ and $\delta = 0^\circ$ all year → no seasons from tilt.
-> - If $\text{dayOfYear} = \text{dayOfMarchEquinox}$, then $L=0$ and $\delta = 0^\circ$ → equinox.
-> - The maximum magnitude is $|\delta| \le \varepsilon$ → solstices.
+> - If $\varepsilon = 0^\circ$, then $\sin\varepsilon = 0$ and $\delta = 0^\circ$ all year $\rightarrow$ no seasons from tilt.
+> - If $\text{dayOfYear} = \text{dayOfMarchEquinox}$, then $L=0$ and $\delta = 0^\circ$ $\rightarrow$ equinox.
+> - The maximum magnitude is $|\delta| \le \varepsilon$ $\rightarrow$ solstices.
 
 ## Day length $T_{\text{day}}$ (hours)
 
@@ -95,7 +95,7 @@ Let’s unpack each piece:
 What this equation is really saying: when the Sun is far north (positive $\delta$), northern latitudes have the Sun above the horizon for a larger fraction of the day; when the Sun is far south, they have shorter days.
 
 > **Day-length sanity checks**
-> - At the equator ($\phi=0^\circ$), $\tan\phi=0$ so $\cos H_0 = 0$ → $H_0 = 90^\circ$ → $T_{\text{day}} = 12\text{ h}$ (always).
+> - At the equator ($\phi=0^\circ$), $\tan\phi=0$ so $\cos H_0 = 0$ $\rightarrow$ $H_0 = 90^\circ$ $\rightarrow$ $T_{\text{day}} = 12\text{ h}$ (always).
 > - Near the poles, the formula naturally saturates to 24 h (midnight sun) or 0 h (polar night) when $|\tan\phi\,\tan\delta| > 1$.
 
 ## Noon Sun altitude $h_\odot$ (degrees)

@@ -64,7 +64,7 @@ has_math: true
 ## Station version (for the Cosmic Playground capstone rotation)
 
 > **Station card: Moon Phases (6–8 minutes)**
-> **Demo setup:** start at New → First Quarter → Full → Third Quarter.  
+> **Demo setup:** start at New $\rightarrow$ First Quarter $\rightarrow$ Full $\rightarrow$ Third Quarter.  
 > **Tip:** Click **Station Mode** to add key-phase rows and print/copy your table.
 >
 > **Your station artifact (fill in):**
@@ -83,8 +83,8 @@ has_math: true
 > - **Phase:** the shape we see from Earth; it’s the overlap of the Moon’s lit half and the half facing Earth.
 > - **Illumination fraction $f$ (0–1):** fraction of the visible disk that is lit (0 = New, 1 = Full).
 > - **Moon angle $\alpha$ (degrees, this demo):** $0^\circ$ = Full, $180^\circ$ = New; quarter phases are at $90^\circ$ and $270^\circ$.
-> - **Waxing:** the illuminated fraction is increasing (after New → toward Full).
-> - **Waning:** the illuminated fraction is decreasing (after Full → toward New).
+> - **Waxing:** the illuminated fraction is increasing (after New $\rightarrow$ toward Full).
+> - **Waning:** the illuminated fraction is decreasing (after Full $\rightarrow$ toward New).
 > - **Quarter phase:** about 50% illuminated; “quarter” refers to the orbit position, not the lit fraction.
 >
 > **Sanity checks:**

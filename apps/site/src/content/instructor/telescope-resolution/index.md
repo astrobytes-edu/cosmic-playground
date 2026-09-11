@@ -28,7 +28,7 @@ has_math: true
 > **Why This Matters**
 > “Bigger telescope” is not just about collecting more light; it is also about seeing finer detail. This demo helps students replace the common “magnification = detail” model with the correct constraint: **wave diffraction** sets a best-case angular resolution that depends on **wavelength** and **aperture**.
 
-This demo is structured as Observable → Model → Inference:
+This demo is structured as Observable $\rightarrow$ Model $\rightarrow$ Inference:
 
 - **Observable:** whether two close point sources look like one blur or two distinct peaks.
 - **Model:** diffraction (Airy pattern) and the Rayleigh criterion scaling $\theta \propto \lambda/D$.
@@ -39,7 +39,7 @@ This demo is structured as Observable → Model → Inference:
 By the end of this demo, students should be able to:
 
 - Explain why **magnification alone** cannot reveal more detail beyond a limit.
-- State the qualitative scaling: larger $D$ → smaller (better) $\theta$; longer $\lambda$ → larger (worse) $\theta$.
+- State the qualitative scaling: larger $D$ $\rightarrow$ smaller (better) $\theta$; longer $\lambda$ $\rightarrow$ larger (worse) $\theta$.
 - Use “resolved vs unresolved” as a measurement concept (an observational constraint, not a personal failure of eyesight).
 - Give at least one reason radio astronomy uses huge dishes/arrays (long wavelengths).
 
@@ -61,9 +61,9 @@ Students should be able to:
 
 4. **Change aperture (holding wavelength fixed).** Move the **Aperture** slider upward and ask students to predict: *“Does increasing diameter make the blur bigger or smaller?”* Confirm by watching the PSF shrink and the status indicator move toward “resolved.”
 
-5. **Change wavelength (holding aperture fixed).** Click the wavelength buttons (visible → IR → radio) and ask: *“What happens to resolution at longer wavelength?”* Use this to motivate why ALMA-style instruments need large baselines.
+5. **Change wavelength (holding aperture fixed).** Click the wavelength buttons (visible $\rightarrow$ IR $\rightarrow$ radio) and ask: *“What happens to resolution at longer wavelength?”* Use this to motivate why ALMA-style instruments need large baselines.
 
-6. **Use telescope presets as narrative anchors.** Click a few presets (Human Eye → Hubble → Keck/JWST). Ask: *“Which change matters most for resolution: being in space, or being big?”* Reinforce: space removes atmosphere, but the diffraction limit still depends on aperture and wavelength.
+6. **Use telescope presets as narrative anchors.** Click a few presets (Human Eye $\rightarrow$ Hubble $\rightarrow$ Keck/JWST). Ask: *“Which change matters most for resolution: being in space, or being big?”* Reinforce: space removes atmosphere, but the diffraction limit still depends on aperture and wavelength.
 
 7. **Close with inference language.** Say explicitly: *“Resolution is a constraint on what we can infer. If two things are unresolved, it doesn’t mean they aren’t there; it means your instrument can’t separate them.”*
 

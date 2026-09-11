@@ -15,14 +15,14 @@ has_math: true
 ## MW Quick (3–5 min)
 
 **Type:** Demo-driven  
-**Goal:** Force “longer wavelength → lower energy” to become a *prediction*, not a memorized phrase.
+**Goal:** Force “longer wavelength $\rightarrow$ lower energy” to become a *prediction*, not a memorized phrase.
 
 1. Open the student demo: `/play/em-spectrum/`
 2. Click **Visible**. Then use the slider to choose:
    - a wavelength near the **red** end of visible, and
    - a wavelength near the **blue/violet** end of visible.
 3. **Prediction prompt (10–20 s):** *“Which choice should have higher photon energy?”*
-4. Reveal by reading the **Energy** value for both. Name the relationship out loud: shorter wavelength → higher photon energy.
+4. Reveal by reading the **Energy** value for both. Name the relationship out loud: shorter wavelength $\rightarrow$ higher photon energy.
 5. **One-sentence debrief:** “Energy per photon is not brightness; it’s ‘how energetic each photon is.’”
 
 ## MW Short (8–12 min)
@@ -52,7 +52,7 @@ Expected: physics is continuous; our **detectors** and atmosphere constraints di
 ## Friday Lab (20–30+ min)
 
 **Type:** Demo-driven investigation (small groups)  
-**Goal:** Practice Observable → Model → Inference by choosing the right band for a science question and defending it with evidence.
+**Goal:** Practice Observable $\rightarrow$ Model $\rightarrow$ Inference by choosing the right band for a science question and defending it with evidence.
 
 ### Setup (2–3 min)
 - Each group picks (or is assigned) one science question:
@@ -94,7 +94,7 @@ Each group gives a 60-second pitch: band choice + one key piece of evidence + on
 > **Word bank:**
 > - **Wavelength $\lambda$:** “size” of the wave; longer $\lambda$ $\to$ lower photon energy.
 > - **Photon energy:** energy per photon (not the same thing as brightness).
-> - **Band names:** labels we give to wavelength ranges (radio → gamma).
+> - **Band names:** labels we give to wavelength ranges (radio $\rightarrow$ gamma).
 >
 > **Key relationship (photon energy scaling):**
 >
@@ -103,6 +103,6 @@ Each group gives a 60-second pitch: band choice + one key piece of evidence + on
 > $$
 >
 > **Sanity checks:**
-> - Ordering: Radio (lowest energy) → … → Gamma (highest energy).
+> - Ordering: Radio (lowest energy) $\rightarrow$ … $\rightarrow$ Gamma (highest energy).
 > - Shorter wavelength should correspond to larger energy readouts.
 > - Use convenient units: nm/$\mu\mathrm{m}$/mm/m for $\lambda$; eV/keV/MeV for energy.

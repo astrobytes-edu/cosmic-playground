@@ -69,7 +69,7 @@ Let’s unpack each piece:
 What this equation is really saying: the Moon is in the ecliptic plane at the nodes ($\lambda_M=\Omega$ or $\Omega+180^\circ$), and farthest from the plane about $90^\circ$ away from a node.
 
 > **Latitude sanity checks**
-> - At the node: $\lambda_M=\Omega$ → $\sin(\lambda_M-\Omega)=0$ → $\beta=0^\circ$.
+> - At the node: $\lambda_M=\Omega$ $\rightarrow$ $\sin(\lambda_M-\Omega)=0$ $\rightarrow$ $\beta=0^\circ$.
 > - Max magnitude: $|\beta| \le i$.
 
 ## Eclipse “how close is close enough?” (shadow geometry)

@@ -15,7 +15,7 @@ last_updated: "2026-02-02"
 
 - **Docs correctness:** verify the student-facing `demos/em-spectrum/README.md` matches the current UI (Objects/Telescopes panels, unit dropdowns) and update any mismatches.
 - **Classroom reliability:** add a short “if the tab grids don’t load” troubleshooting note (likely data load order) to the instructor guide.
-- **Assessment alignment:** convert the 6 clickers into a one-page “rapid clicker sequence” (setup → ask → reveal) for live use.
+- **Assessment alignment:** convert the 6 clickers into a one-page “rapid clicker sequence” (setup $\rightarrow$ ask $\rightarrow$ reveal) for live use.
 
 ## P1 (important)
 

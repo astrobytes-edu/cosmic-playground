@@ -27,7 +27,7 @@ has_math: true
 > **Why This Matters**
 > “Color” is one of the most information-dense measurements we can make in astronomy. This demo helps students build the correct mapping between **temperature** and the spectrum of thermal light: hotter objects emit *more* light overall and peak at *shorter* wavelengths. That turns an observable (spectrum/color) into a physical inference (temperature, and—when combined with radius—luminosity).
 
-This demo makes the Observable → Model → Inference pattern explicit:
+This demo makes the Observable $\rightarrow$ Model $\rightarrow$ Inference pattern explicit:
 
 - **Observable:** the shape and peak position of a spectrum as temperature changes.
 - **Model:** blackbody radiation laws (Planck shape; Wien peak shift; Stefan–Boltzmann total power).
@@ -37,7 +37,7 @@ This demo makes the Observable → Model → Inference pattern explicit:
 
 By the end of this demo, students should be able to:
 
-- State the qualitative rules: hotter → peak at shorter wavelength (“bluer” peak) and larger total emitted power.
+- State the qualitative rules: hotter $\rightarrow$ peak at shorter wavelength (“bluer” peak) and larger total emitted power.
 - Explain why “red” stars are cooler than “blue” stars (astronomy vs fire analogy).
 - Recognize stars as approximate blackbodies (useful first model).
 - Use the visible band highlight to explain why some objects are “invisible” to our eyes but visible to IR telescopes.
@@ -59,7 +59,7 @@ Students should be able to:
 3. **Change temperature and watch two things at once.** Move to a cooler preset (e.g., **M dwarf**) and ask students to predict what happens to:
    - the peak wavelength location, and
    - the overall height/area of the curve.
-   Then reveal and narrate: cooler → peak shifts to longer wavelengths and total emission drops.
+   Then reveal and narrate: cooler $\rightarrow$ peak shifts to longer wavelengths and total emission drops.
 
 4. **Then go hotter.** Click the **A/B star** preset. Ask: *“Should the peak move toward the UV or toward the IR?”* Confirm with the peak marker and the visible-band highlight.
 
@@ -75,7 +75,7 @@ Use these to trigger cognitive conflict:
   **Prompt:** *“If ‘red = hot,’ then would a red star be more energetic than a blue star?”* Use the spectrum peak shift to show red stars peak at longer wavelengths (cooler).
 
 - **Misconception:** “Blue stars are young.”  
-  **Prompt:** *“What physical property does this demo actually control?”* (Temperature.) Emphasize: color ↔ temperature; age is a separate inference.
+  **Prompt:** *“What physical property does this demo actually control?”* (Temperature.) Emphasize: color $\leftrightarrow$ temperature; age is a separate inference.
 
 - **Misconception:** “The Sun is yellow.”  
   **Prompt:** *“What does the spectrum say about where the Sun emits most strongly?”* Use the peak marker and the visible band highlight to separate “spectrum” from “how it looks from Earth.”

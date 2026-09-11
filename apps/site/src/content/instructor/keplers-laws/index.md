@@ -26,7 +26,7 @@ has_math: true
 ## Why this demo exists
 
 > **Why This Matters**
-> Kepler’s laws are one of the cleanest examples of “pattern → mechanism” in physics. Students can *see* the patterns (ellipses, equal areas, period–distance scaling), then flip to Newton mode and watch how a single inverse‑square force implies those patterns.
+> Kepler’s laws are one of the cleanest examples of “pattern $\rightarrow$ mechanism” in physics. Students can *see* the patterns (ellipses, equal areas, period–distance scaling), then flip to Newton mode and watch how a single inverse‑square force implies those patterns.
 
 ## Learning goals (ASTR 201)
 

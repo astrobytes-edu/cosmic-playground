@@ -41,7 +41,7 @@ C. They are equal energy
 D. It depends on brightness, not wavelength
 
 **Correct:** B  
-**Why:** Shorter wavelength ↔ higher frequency ↔ higher photon energy.  
+**Why:** Shorter wavelength $\leftrightarrow$ higher frequency $\leftrightarrow$ higher photon energy.  
 **Misconception targeted:** “Red is more energetic because it ‘feels hotter’ in everyday contexts.”
 
 ### Clicker 3 — Same physics across categories

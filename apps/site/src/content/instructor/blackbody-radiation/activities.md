@@ -54,8 +54,8 @@ has_math: true
    - $\lambda_{\text{peak}}$ from the peak marker/readout,
    - the luminosity/flux indicator readout (if shown) or a qualitative “more/less area” statement.
 3. Make two claims with evidence:
-   - Claim A (Wien): “Hotter → peak shifts to shorter wavelength.”
-   - Claim B (Stefan): “Hotter → much more total emission.”
+   - Claim A (Wien): “Hotter $\rightarrow$ peak shifts to shorter wavelength.”
+   - Claim B (Stefan): “Hotter $\rightarrow$ much more total emission.”
 4. Write one paragraph connecting the results to stellar color:
    - “Why are cool stars red?”
    - “Why might cool objects be ‘invisible’ to our eyes but visible in IR?”
@@ -87,6 +87,6 @@ Use the **log vs linear** display toggle and discuss: “Which view makes the lo
 > $$
 >
 > **Sanity checks:**
-> - Hotter → $\lambda_{\text{peak}}$ shifts to *shorter* wavelength (toward blue/UV).
-> - Cooler → $\lambda_{\text{peak}}$ shifts to *longer* wavelength (toward red/IR).
+> - Hotter $\rightarrow$ $\lambda_{\text{peak}}$ shifts to *shorter* wavelength (toward blue/UV).
+> - Cooler $\rightarrow$ $\lambda_{\text{peak}}$ shifts to *longer* wavelength (toward red/IR).
 > - In astronomy, “redder” blackbodies are **cooler**, not hotter.

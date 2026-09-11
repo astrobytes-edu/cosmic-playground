@@ -92,7 +92,7 @@ These conversions are what let students compare “planets (arcseconds) vs Moon 
 
 ## Moon special modes (orbit vs recession time)
 
-### Mode 1: Orbit variation (perigee ↔ apogee)
+### Mode 1: Orbit variation (perigee $\leftrightarrow$ apogee)
 
 The demo includes an orbit-mode control that varies the Moon’s distance between two endpoints chosen to match the course “sanity range”:
 
@@ -134,7 +134,7 @@ $$
 $$
 
 > **Why this is a ‘toy’ model**
-> The real Earth–Moon recession rate varies with time (tidal dissipation depends on ocean basins, etc.). The demo uses a linear model because the teaching goal is scaling: “farther away → smaller angular size.”
+> The real Earth–Moon recession rate varies with time (tidal dissipation depends on ocean basins, etc.). The demo uses a linear model because the teaching goal is scaling: “farther away $\rightarrow$ smaller angular size.”
 
 ## Connection to eclipses (total vs annular)
 

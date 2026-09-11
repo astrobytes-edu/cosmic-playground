@@ -25,9 +25,9 @@ has_math: true
 > **Pair (60 s):** Decide whether either condition alone is sufficient.
 >
 > **Share (1–2 min):** Use the demo:
-> 1) Click **New Moon** (phase correct) but keep the Moon away from nodes → no eclipse.  
-> 2) Drag the Moon near a node but away from New/Full → no eclipse.  
-> 3) Do both → eclipse.
+> 1) Click **New Moon** (phase correct) but keep the Moon away from nodes $\rightarrow$ no eclipse.  
+> 2) Drag the Moon near a node but away from New/Full $\rightarrow$ no eclipse.  
+> 3) Do both $\rightarrow$ eclipse.
 >
 > **Debrief script:** “Eclipses are constrained by *two* geometric conditions: phase + node proximity.”
 
@@ -85,5 +85,5 @@ has_math: true
 >
 > **Sanity checks:**
 > - You need BOTH: (1) New/Full Moon and (2) near a node (small $|\beta|$). One condition alone is not enough.
-> - If $i=0^\circ$, then $\beta=0^\circ$ always → eclipses happen every month.
+> - If $i=0^\circ$, then $\beta=0^\circ$ always $\rightarrow$ eclipses happen every month.
 > - Changing Earth–Moon distance can change whether a solar eclipse is total or annular (size matters too).

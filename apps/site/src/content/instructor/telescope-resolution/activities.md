@@ -22,7 +22,7 @@ has_math: true
 3. Ensure **Binary star mode** is on.
 4. Set a moderate binary separation (so students can see the transition).
 5. **Prediction prompt:** *“If we increase the telescope diameter, should the two stars become easier or harder to separate?”*
-6. Increase aperture (e.g., Hubble → Keck). Watch the **resolution readout** drop and the status move toward resolved.
+6. Increase aperture (e.g., Hubble $\rightarrow$ Keck). Watch the **resolution readout** drop and the status move toward resolved.
 7. One-sentence debrief: “Magnification doesn’t change the diffraction limit; $D$ and $\lambda$ do.”
 
 ## MW Short (8–12 min)
@@ -81,8 +81,8 @@ Fill in the table using presets and wavelength buttons. Record the diffraction l
 > **Word bank + sanity checks**
 > **Word bank:**
 > - **Resolution (diffraction limit):** the smallest angular separation a telescope can distinguish.
-> - **Aperture $D$:** bigger $D$ → better (smaller) diffraction limit.
-> - **Wavelength $\lambda$:** longer $\lambda$ → worse (larger) diffraction limit.
+> - **Aperture $D$:** bigger $D$ $\rightarrow$ better (smaller) diffraction limit.
+> - **Wavelength $\lambda$:** longer $\lambda$ $\rightarrow$ worse (larger) diffraction limit.
 > - **Seeing (atmosphere):** turbulence can blur images beyond the diffraction limit; AO can partially correct.
 >
 > **Key relationship (diffraction-limited scaling):**

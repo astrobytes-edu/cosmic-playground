@@ -14,7 +14,7 @@ has_math: true
 
 ## Observable keys used in prompts
 
-- `deltaTheta`: measured A→B detector shift (mas)
+- `deltaTheta`: measured A$\rightarrow$B detector shift (mas)
 - `B_eff`: effective baseline along the parallax axis (AU)
 - `p_hat`: inferred parallax from captures (mas)
 - `d_hat`: inferred distance from `p_hat` (pc)

@@ -33,15 +33,15 @@ The shared model uses CGS internally:
 
 - Wavelength $\lambda$ in **cm**
 - Temperature $T$ in **K**
-- Spectral radiance $B_\lambda$ in **erg/s/cm^2/sr/cm** (theoretical units; the UI may plot in relative scaling for readability)
+- Spectral radiance $B_\lambda$ in **$\mathrm{erg}/\mathrm{s}/\mathrm{cm}^2/\mathrm{sr}/\mathrm{cm}$** (theoretical units; the UI may plot in relative scaling for readability)
 
 Key constants (as implemented in `packages/physics/src/blackbodyRadiationModel.ts`):
 
 - $c = 2.998\times 10^{10}\ \text{cm/s}$
-- $h = 6.626\times 10^{-27}\ \text{erg·s}$
+- $h = 6.626\times 10^{-27}\ \text{erg}\cdot\text{s}$
 - $k_B = 1.381\times 10^{-16}\ \text{erg/K}$
 - $\sigma = 5.670\times 10^{-5}\ \text{erg}/(\text{cm}^2\cdot\text{s}\cdot\text{K}^4)$
-- $b = 0.2898\ \text{cm·K}$ (Wien displacement constant in cm·K)
+- $b = 0.2898\ \text{cm}\cdot\text{K}$ (Wien displacement constant in $\mathrm{cm}\cdot\mathrm{K}$)
 
 ## Key relationships to foreground (with meaning + units)
 
@@ -54,13 +54,13 @@ $$
 Let’s unpack each piece:
 
 - **$\lambda_{\text{peak}}$** is the wavelength of peak emission (cm).
-- **$b$** is Wien’s displacement constant (cm·K).
+- **$b$** is Wien’s displacement constant ($\mathrm{cm}\cdot\mathrm{K}$).
 - **$T$** is temperature (K).
 
 What this equation is really saying: hotter objects peak at **shorter** wavelengths.
 
 > **Sanity checks**
-> - Units: (cm·K)/K = cm ✓
+> - Units: $(\mathrm{cm}\cdot\mathrm{K})/\mathrm{K} = \mathrm{cm}$ ✓
 > - Scaling: if $T$ doubles, $\lambda_{\text{peak}}$ halves ✓
 
 ### Stefan–Boltzmann law: total emitted flux vs temperature
@@ -71,7 +71,7 @@ $$
 
 Let’s unpack each piece:
 
-- **$F$** is total emitted energy per unit area per unit time (erg/s/cm^2).
+- **$F$** is total emitted energy per unit area per unit time ($\mathrm{erg}/\mathrm{s}/\mathrm{cm}^2$).
 - **$\sigma$** is the Stefan–Boltzmann constant.
 - **$T$** is temperature (K).
 

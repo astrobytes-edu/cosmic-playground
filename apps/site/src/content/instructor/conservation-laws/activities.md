@@ -22,7 +22,7 @@ has_math: true
 
 **Key takeaway:** the sign of $\varepsilon$ changes at escape.
 
-## MW Short (8–12 min): Why √2?
+## MW Short (8–12 min): Why $\sqrt{2}$?
 
 **Goal:** students discover $v_{\rm esc}=\sqrt{2}\,v_{\rm circ}$ using the demo’s readouts.
 

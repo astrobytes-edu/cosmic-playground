@@ -21,7 +21,7 @@ has_math: true
 ## P1 (important)
 
 - **Stefan–Boltzmann intuition:** add an “area under the curve” visualization toggle (matches README future ideas) to make $T^4$ scaling more visceral.
-- **Approximations clarity:** keep “temperature → color” language explicitly perceptual/approximate (see `packages/physics/src/blackbodyRadiationModel.ts` notes).
+- **Approximations clarity:** keep “temperature $\rightarrow$ color” language explicitly perceptual/approximate (see `packages/physics/src/blackbodyRadiationModel.ts` notes).
 - **Answer keys:** add suggested “ideal student responses” to the activities protocols to reduce TA variability.
 
 ## P2 (nice to have)

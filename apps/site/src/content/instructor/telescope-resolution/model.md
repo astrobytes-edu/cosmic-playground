@@ -31,7 +31,7 @@ The core physics utilities live in `packages/physics/src/telescopeResolutionMode
 
 The shared model uses CGS-style internal units for convenience:
 
-- Wavelength $\lambda$ stored in **cm** (e.g., 550 nm → $5.5\times 10^{-5}$ cm).
+- Wavelength $\lambda$ stored in **cm** (e.g., 550 nm $\rightarrow$ $5.5\times 10^{-5}$ cm).
 - Aperture diameter $D$ stored in **cm** (UI commonly uses meters, then converts).
 - Angular resolution reported in **arcseconds**.
 

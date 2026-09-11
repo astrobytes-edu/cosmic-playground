@@ -22,7 +22,7 @@ has_math: true
 This demo is a **planar, two-body** Keplerian-orbit model (planet mass negligible; no perturbations). It is designed to make these ideas concrete:
 
 - Orbit geometry (Kepler 1): ellipses with a focus at the star
-- Orbit timing (Kepler 2): equal areas in equal times → faster near perihelion
+- Orbit timing (Kepler 2): equal areas in equal times $\rightarrow$ faster near perihelion
 - Period scaling (Kepler 3): $P^2 \propto a^3$ for fixed central mass
 - Newton’s mechanism: inverse-square gravity explains the Kepler patterns
 

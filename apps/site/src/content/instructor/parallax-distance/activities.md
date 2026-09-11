@@ -15,13 +15,13 @@ has_math: true
 ## MW Quick (3–5 min)
 
 **Type:** Demo-driven  
-**Goal:** Make “closer → larger parallax” a prediction students test.
+**Goal:** Make “closer $\rightarrow$ larger parallax” a prediction students test.
 
 1. Open: `/play/parallax-distance/`
 2. Point to target direction and parallax axis in the orbit panel. Ask: *“What changes when Earth moves?”* (Line-of-sight.)
 3. Set $d_{\rm true}=10\,\mathrm{pc}$, capture A and B, and read $\Delta\theta$ and inferred $\hat d$.
 4. Increase distance to $100\,\mathrm{pc}$, repeat captures at similar phases. **Prediction prompt (10–20 s):** *“Will the measured shift be larger or smaller?”*
-5. Reveal by comparing readouts. Say explicitly: **smaller inferred parallax → greater inferred distance**.
+5. Reveal by comparing readouts. Say explicitly: **smaller inferred parallax $\rightarrow$ greater inferred distance**.
 
 ## MW Short (8–12 min)
 
@@ -41,7 +41,7 @@ Fill in the table by using distance-first captures:
 **Instructions:**
 1. Keep $\sigma_p=1\,\mathrm{mas}$ at first, then increase it and record how $\hat p/\sigma_{\hat p}$ changes.
 2. Compare cases with similar chord but different $B_{\rm eff}$ to see geometry effects.
-3. Use difference mode to interpret the signed A→B shift direction.
+3. Use difference mode to interpret the signed A$\rightarrow$B shift direction.
 
 **Synthesis prompt (2 minutes):** *“If we want distances across the whole Milky Way, why can’t parallax be the only method?”*
 

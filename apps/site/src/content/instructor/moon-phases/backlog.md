@@ -16,7 +16,7 @@ last_updated: "2026-02-02"
 
 | Priority | Impact | Effort | Category | Notes | Code entrypoint |
 |---|---|---|---|---|---|
-| P0 | High | Low | UX | **DONE (2026-01-30):** Added an explicit on-screen Sun direction cue (“Sunlight → from the Sun”) in the top view. | `demos/moon-phases/index.html` |
+| P0 | High | Low | UX | **DONE (2026-01-30):** Added an explicit on-screen Sun direction cue (“Sunlight $\rightarrow$ from the Sun”) in the top view. | `demos/moon-phases/index.html` |
 | P0 | High | Medium | Physics | **DONE (2026-01-29):** Load and use `demos/_assets/moon-phases-model.js` in the demo (single source of truth for illumination equation). | `demos/moon-phases/index.html` + `demos/moon-phases/moon-phases.js` |
 | P1 | High | Medium | Pedagogy | Add built-in “prediction checkpoints” in Challenge Mode aligned to common misconceptions. | `demos/moon-phases/moon-phases.js` |
 | P1 | Medium | Medium | Physics | Add a simple 3D inclination toggle that hands off to Eclipse Geometry concepts (“phases vs eclipses”). | `demos/moon-phases/moon-phases.js` |

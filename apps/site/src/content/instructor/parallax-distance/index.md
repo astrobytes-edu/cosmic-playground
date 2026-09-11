@@ -29,7 +29,7 @@ has_math: true
 > **Why This Matters**
 > Parallax is the first “rung” of the distance ladder: a distance measurement built from **geometry** rather than assumptions about a star’s brightness or physics. This demo helps students see the core astronomy move: use a baseline (Earth’s orbit), measure a tiny angle, and infer an otherwise unreachable distance.
 
-This demo is built to emphasize **cause → observable → inference**:
+This demo is built to emphasize **cause $\rightarrow$ observable $\rightarrow$ inference**:
 
 - **Cause:** Earth moves along its orbit and changes the observing geometry.
 - **Observable:** the target’s detector position shifts against fixed background stars.
@@ -40,7 +40,7 @@ This demo is built to emphasize **cause → observable → inference**:
 By the end of this demo, students should be able to:
 
 - Explain parallax as an *apparent shift* caused by viewing geometry, not a “property of the star.”
-- State the direction of the relationship: **smaller parallax angle → greater distance**.
+- State the direction of the relationship: **smaller parallax angle $\rightarrow$ greater distance**.
 - Use the parallax-distance relationship conceptually (and optionally numerically) in the parsec system.
 - Describe why parallax measurements are limited by **angular resolution/precision**.
 

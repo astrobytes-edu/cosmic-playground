@@ -25,8 +25,8 @@ has_math: true
 > **Pair (60 s):** Decide whether you expect their angular sizes to differ by a lot, a little, or be about the same.
 >
 > **Share (1–2 min):** Use the demo:
-> 1) Select **Sun** preset → read the angular size.  
-> 2) Select **Moon (Today)** preset → read the angular size.  
+> 1) Select **Sun** preset $\rightarrow$ read the angular size.  
+> 2) Select **Moon (Today)** preset $\rightarrow$ read the angular size.  
 > 3) Ask: “What does this imply about total solar eclipses?”
 >
 > **Debrief script:** “It’s a coincidence: the Sun is about $400\times$ larger but also about $400\times$ farther, so the ratios nearly cancel.”
@@ -86,7 +86,7 @@ has_math: true
 > - **Angular size $\theta$ (degrees/arcmin/arcsec):** how big an object looks on the sky (an angle).
 > - **Physical diameter $D$ (km in this demo):** the object’s actual size.
 > - **Distance $d$ (km in this demo):** how far the object is from the observer.
-> - **Small-angle idea:** larger $D$ → larger $\theta$; larger $d$ → smaller $\theta$.
+> - **Small-angle idea:** larger $D$ $\rightarrow$ larger $\theta$; larger $d$ $\rightarrow$ smaller $\theta$.
 > - **Unit ladder:** $1^\circ = 60\,\mathrm{arcmin}$ and $1\,\mathrm{arcmin} = 60\,\mathrm{arcsec}$.
 >
 > **Sanity checks:**

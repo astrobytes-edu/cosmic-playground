@@ -71,7 +71,7 @@ C. Infrared / microwave
 D. Ultraviolet
 
 **Correct:** C  
-**Why:** Cooler → longer peak wavelength. The demo shows cool spectra peaking outside visible.  
+**Why:** Cooler $\rightarrow$ longer peak wavelength. The demo shows cool spectra peaking outside visible.  
 **Misconception targeted:** “If we can’t see it with eyes, it isn’t emitting.”
 
 ### Clicker 5 — The Sun’s “color”

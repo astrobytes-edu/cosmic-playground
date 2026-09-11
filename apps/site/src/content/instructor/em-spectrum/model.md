@@ -60,7 +60,7 @@ Let’s unpack each piece:
 What this equation is really saying: for light, **wavelength and frequency trade off**. If you increase $\lambda$, $\nu$ must decrease so their product stays $c$.
 
 > **Sanity checks**
-> - Units: (cm)·(1/s) = cm/s ✓
+> - Units: $(\mathrm{cm})\cdot(1/\mathrm{s}) = \mathrm{cm}/\mathrm{s}$ ✓
 > - Scaling: if $\lambda$ doubles, $\nu$ halves.
 
 ### Photon relationship: $E = h\nu = hc/\lambda$
@@ -72,7 +72,7 @@ $$
 Let’s unpack each piece:
 
 - **$E$** is energy per photon (erg).
-- **$h$** is Planck’s constant (erg·s).
+- **$h$** is Planck’s constant ($\mathrm{erg}\cdot\mathrm{s}$).
 - **$\nu$** is frequency (1/s).
 - **$c$** is the speed of light (cm/s).
 - **$\lambda$** is wavelength (cm).
@@ -80,7 +80,7 @@ Let’s unpack each piece:
 What this equation is really saying: shorter wavelengths correspond to **higher-energy photons**, even if the total brightness (number of photons) is a separate question.
 
 > **Sanity checks**
-> - Units: (erg·s)·(1/s) = erg ✓
+> - Units: $(\mathrm{erg}\cdot\mathrm{s})\cdot(1/\mathrm{s}) = \mathrm{erg}$ ✓
 > - Scaling: if $\lambda$ gets $10\times$ smaller, $E$ gets $10\times$ larger.
 
 ## Assumptions, limitations, and sanity checks

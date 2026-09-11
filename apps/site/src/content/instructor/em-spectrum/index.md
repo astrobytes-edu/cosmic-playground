@@ -29,7 +29,7 @@ has_math: true
 > **Why This Matters**
 > In astronomy we mostly observe **photons**, not the objects directly. This demo helps students build a correct mental model of what “different kinds of light” means: same physics, different **wavelength** $\lambda$, **frequency** $\nu$, and **photon energy** $E$. That matters because the Universe looks different in different bands, and because *what you can measure depends on the detector you build*.
 
-This demo is designed to reinforce the ASTR 101 throughline: **observable → model → inference**.
+This demo is designed to reinforce the ASTR 101 throughline: **observable $\rightarrow$ model $\rightarrow$ inference**.
 
 - **Observable:** the wavelength slider (and band buttons) change what part of the spectrum you are “observing.”
 - **Model:** the wave + photon relationships connect wavelength to frequency and energy.
@@ -39,7 +39,7 @@ This demo is designed to reinforce the ASTR 101 throughline: **observable → mo
 
 By the end of this demo, students should be able to:
 
-- State the core relationships qualitatively: longer wavelength ↔ lower frequency ↔ lower photon energy.
+- State the core relationships qualitatively: longer wavelength $\leftrightarrow$ lower frequency $\leftrightarrow$ lower photon energy.
 - Recognize that **visible light is a tiny slice** of the electromagnetic spectrum.
 - Explain why we need **different telescopes/detectors** for different wavelength bands.
 - Predict which bands are best for “cold dust,” “hot gas,” or “violent events,” at a basic descriptive level.
@@ -63,11 +63,11 @@ Students should be able to:
    - Then ask: *“If frequency drops, what happens to photon energy?”*
    Use the live updating readouts to confirm each step.
 
-4. **Detector reality check (measurement constraints).** Click bands that are familiar (Radio → Microwave → Visible → X-ray) and ask: *“Could you build a detector for this band and use it from the ground?”* Use this to motivate atmosphere + instrument design (space telescopes for UV/X-ray/gamma; radio can pass through clouds; infrared often needs cooled detectors).
+4. **Detector reality check (measurement constraints).** Click bands that are familiar (Radio $\rightarrow$ Microwave $\rightarrow$ Visible $\rightarrow$ X-ray) and ask: *“Could you build a detector for this band and use it from the ground?”* Use this to motivate atmosphere + instrument design (space telescopes for UV/X-ray/gamma; radio can pass through clouds; infrared often needs cooled detectors).
 
 5. **Astronomy examples (inference).** Use the examples/objects mode to show that “different light = different physics.” Ask: *“If you want to see through dust to star-forming regions, which band would you choose?”* Then *“What band reveals extremely hot gas around black holes?”*
 
-6. **Wrap with Observable → Model → Inference.** Say explicitly: *“We measure photons at some wavelength; the physics model tells us what energies/temperatures/processes could produce them; then we infer what’s happening in places we can’t touch.”*
+6. **Wrap with Observable $\rightarrow$ Model $\rightarrow$ Inference.** Say explicitly: *“We measure photons at some wavelength; the physics model tells us what energies/temperatures/processes could produce them; then we infer what’s happening in places we can’t touch.”*
 
 ## Misconceptions + prediction prompts
 
@@ -87,5 +87,5 @@ Use these as quick “wrong-model first” prompts:
 
 ## Suggested connections to other demos
 
-- **Blackbody radiation:** temperature shifts the peak wavelength; this demo supplies the spectrum vocabulary needed to interpret “hotter → bluer peak.”
+- **Blackbody radiation:** temperature shifts the peak wavelength; this demo supplies the spectrum vocabulary needed to interpret “hotter $\rightarrow$ bluer peak.”
 - **Telescope resolution:** diffraction limit depends on wavelength; this demo helps students accept that “same telescope” behaves differently across bands.

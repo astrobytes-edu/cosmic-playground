@@ -50,7 +50,7 @@ Write down the specific energy equation and explain how its sign classifies orbi
 - $\varepsilon = v^2/2 - \mu/r$
 - $\varepsilon<0$ bound, $\varepsilon=0$ escape, $\varepsilon>0$ unbound
 
-### SA2: Why √2?
+### SA2: Why $\sqrt{2}$?
 
 Derive $v_{\rm esc}=\sqrt{2}\,v_{\rm circ}$ at fixed $r$.
 

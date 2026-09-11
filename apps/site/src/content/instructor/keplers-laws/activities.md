@@ -44,7 +44,7 @@ has_math: true
 
 ## Friday Astro Lab (20–30+ min, groups of 3–4)
 
-> **Astro Lab: Kepler’s laws → Newton’s law**
+> **Astro Lab: Kepler’s laws $\rightarrow$ Newton’s law**
 > **Deliverable:** A short lab write-up (table + claim + reasoning).
 >
 > **Part A (Kepler):** Choose an eccentric orbit (e.g., $e\sim0.6$). Turn on **Equal areas** and record:
@@ -79,7 +79,7 @@ has_math: true
 > - **Semi-major axis $a$ (AU):** the orbit’s size scale.
 > - **Eccentricity $e$ (unitless):** orbit shape (0 = circle; larger = more stretched).
 > - **Perihelion / aphelion:** closest / farthest point from the star.
-> - **Kepler 2:** equal areas in equal times (a timing law → speed changes).
+> - **Kepler 2:** equal areas in equal times (a timing law $\rightarrow$ speed changes).
 > - **Kepler 3:** bigger orbits have longer periods (for the same central mass).
 >
 > **Key relationship (period scaling):**
