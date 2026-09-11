@@ -156,6 +156,32 @@ test.describe("Angular Size -- E2E", () => {
     expect(thetaAfter).not.toBe(thetaBefore);
   });
 
+  test("the Moon preset opens at the Moon's mean distance, not perigee", async ({ page }) => {
+    /*
+     * "Moon (Today)" declares 384,400 km -- the mean distance. setFromPreset used to pin the
+     * orbit angle to 0, which the model maps to perigee (355,440 km), and overwrite the
+     * distance the preset had just set. At perigee the Moon reads 0.5600 deg, LARGER than
+     * the Sun's 0.5331 deg, which erases the near-equality that lets both total and annular
+     * eclipses happen. At the mean it reads 0.5178 deg. The readout is formatSci(theta, 4),
+     * i.e. toPrecision(4), so these are the strings the page renders.
+     */
+    await page.locator("#preset").selectOption("sun");
+    const sunDeg = parseFloat((await page.locator("#thetaDeg").textContent()) ?? "NaN");
+
+    await page.locator("#preset").selectOption("moon");
+    const moonDeg = parseFloat((await page.locator("#thetaDeg").textContent()) ?? "NaN");
+
+    expect(moonDeg).toBeCloseTo(0.5178, 3);
+    expect(moonDeg, "the mean-distance Moon is slightly smaller than the Sun").toBeLessThan(sunDeg);
+
+    // The slider has to agree with the distance on screen. 384,400 km sits near 98 deg on
+    // the model's perigee (0) to apogee (180) scale; asserted as a band, not an exact integer,
+    // so the test pins the physics rather than a rounding.
+    const angle = Number(await page.locator("#moonOrbitAngle").inputValue());
+    expect(angle).toBeGreaterThanOrEqual(95);
+    expect(angle).toBeLessThanOrEqual(101);
+  });
+
   test("moon recession mode: switch and adjust time", async ({ page }) => {
     await page.locator("#preset").selectOption("moon");
     // Click the recession radio and fire the change event

@@ -272,9 +272,23 @@ function setFromPreset(presetId: keyof typeof AngularSizeModel.presets) {
 
   if (presetId === "moon") {
     state.moonTimeMode = "orbit";
-    state.moonOrbitAngleDeg = 0;
     state.moonRecessionTimeMyr = 0;
-    state.distanceKm = AngularSizeModel.moonDistanceAtOrbitAngleDeg(0);
+    /*
+     * Open at the preset's own declared distance -- the mean, 384,400 km -- not at
+     * perigee. This used to pin the orbit angle to 0, which the model maps to perigee
+     * (355,440 km), and then overwrite the distance the preset had just set. So "Moon
+     * (Today)" showed 0.560 deg against the Sun's 0.533 deg: the Moon visibly LARGER than
+     * the Sun, which erases the near-equality that lets both total and annular eclipses
+     * happen. At the mean distance it is 0.518 deg, slightly smaller, as it should be.
+     *
+     * The angle is recovered through the model's own inverse, so the slider, the distance
+     * and the readout all agree; 384,400 km sits at about 98 deg. The slider is written
+     * here because the preset-change handler does not write it -- the old angle of 0 only
+     * ever matched the slider because 0 is also the input's HTML default.
+     */
+    state.moonOrbitAngleDeg = AngularSizeModel.orbitAngleDegFromMoonDistance(p.distance);
+    state.distanceKm = AngularSizeModel.moonDistanceAtOrbitAngleDeg(state.moonOrbitAngleDeg);
+    moonOrbitAngle.value = String(Math.round(state.moonOrbitAngleDeg));
   }
 }
 
