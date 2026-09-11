@@ -12,6 +12,7 @@ import {
   instantaneousSpeedAuPerYr,
   buildPathD,
   velocityArrowSvg,
+  viewRadiusAu,
 } from "./logic";
 
 describe("Conservation Laws -- UI Logic", () => {
@@ -383,6 +384,33 @@ describe("Conservation Laws -- UI Logic", () => {
       const { ux, uy } = velocityArrowSvg(0, 0, 100, 1, 1);
       expect(ux).toBe(0);
       expect(uy).toBe(0);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // viewRadiusAu
+  // -----------------------------------------------------------------------
+  describe("viewRadiusAu", () => {
+    it("fits a small closed orbit with the 1.5 AU floor", () => {
+      expect(viewRadiusAu({ raAu: 1, r0Au: 1 })).toBe(1.5);
+    });
+
+    it("is continuous across escape: 1.40 (bound, ra = 49 AU) and 1.42 (open) share one window", () => {
+      expect(viewRadiusAu({ raAu: 49, r0Au: 1 })).toBe(6);
+      expect(viewRadiusAu({ raAu: Number.POSITIVE_INFINITY, r0Au: 1 })).toBe(6);
+    });
+
+    it("keeps the start point well clear of the 10 px Sun near escape", () => {
+      expect((1 * 250) / viewRadiusAu({ raAu: 49, r0Au: 1 })).toBeGreaterThan(41);
+    });
+
+    it("fits a moderately eccentric orbit with a 10% margin", () => {
+      expect(viewRadiusAu({ raAu: 3.381308, r0Au: 1 })).toBeCloseTo(3.719438, 5);
+    });
+
+    it("caps at 50 AU and floors at 1.5 AU", () => {
+      expect(viewRadiusAu({ raAu: Number.POSITIVE_INFINITY, r0Au: 10 })).toBe(50);
+      expect(viewRadiusAu({ raAu: 0.642859, r0Au: 10 ** -0.3 })).toBe(1.5);
     });
   });
 });

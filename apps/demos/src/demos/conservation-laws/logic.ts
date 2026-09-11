@@ -116,6 +116,18 @@ export function toSvg(
   };
 }
 
+export const VIEW_RADIUS_MIN_AU = 1.5;
+export const VIEW_RADIUS_MAX_AU = 50;
+/** Orbits reaching farther than this many r0 are clipped, closed or open, so the view cannot jump at e = 1. */
+export const VIEW_R0_MULTIPLE = 6;
+
+/** Radius of the plotted window in AU. `raAu` is Infinity for open orbits. */
+export function viewRadiusAu(args: { raAu: number; r0Au: number }): number {
+  const { raAu, r0Au } = args;
+  const closedFit = Number.isFinite(raAu) ? Math.max(raAu, r0Au) * 1.1 : Number.POSITIVE_INFINITY;
+  return clamp(Math.min(closedFit, VIEW_R0_MULTIPLE * r0Au), VIEW_RADIUS_MIN_AU, VIEW_RADIUS_MAX_AU);
+}
+
 // ---------------------------------------------------------------------------
 // Orbital mechanics helpers (pure geometry, no physics imports)
 // ---------------------------------------------------------------------------
