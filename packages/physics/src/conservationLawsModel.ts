@@ -350,12 +350,25 @@ function orbitalPeriodYr(args: { ecc: number; pAu: number; muAu3Yr2: number }): 
 }
 
 /**
+ * sinh(x) - x. Direct subtraction cancels for small |x| (relative error about 1e-15 / x^2), so below |x| = 0.1 this
+ * sums x^3/3! + x^5/5! + ... + x^11/11!, whose first omitted term is below 1e-19 relative there.
+ */
+function sinhMinusX(x: number): number {
+  if (Math.abs(x) >= 0.1) return Math.sinh(x) - x;
+  const x2 = x * x;
+  return ((x * x2) / 6) * (1 + (x2 / 20) * (1 + (x2 / 42) * (1 + (x2 / 72) * (1 + x2 / 110))));
+}
+
+/**
  * Orbital time to go from true anomaly nuFromRad to nuToRad on an open orbit (e >= 1); NaN for a bound one.
  * Both branches measure t(nu) from periapsis, so the result is negative when nuToRad < nuFromRad.
  * - Parabolic (ecc === 1, as initialOrbit sets it): Barker's equation, t(nu) = (1/2) sqrt(p^3 / mu) (D + D^3 / 3),
  *   with D = tan(nu / 2).
- * - Hyperbolic: a = p / (e^2 - 1), F(nu) = sign(nu) acosh((e + cos nu) / (1 + e cos nu)), and
- *   t(nu) = sqrt(a^3 / mu) (e sinh F - F). The max(1, ...) keeps round-off near periapsis out of acosh's domain error.
+ * - Hyperbolic: a = p / (e^2 - 1), F(nu) = 2 atanh(sqrt((e - 1)/(e + 1)) tan(nu / 2)), and
+ *   t(nu) = sqrt(a^3 / mu) (e sinh F - F); NaN past the asymptote, where the atanh argument exceeds 1.
+ *   Each piece keeps its precision when e - 1 is tiny on a short arc near periapsis: the atanh form carries the sign
+ *   of nu, e^2 - 1 is taken as (e - 1)(e + 1), and e sinh F - F as (e - 1) sinh F + (sinh F - F). For nu from -0.001
+ *   to 0.001 at e - 1 = 1e-8, an acosh form of F was off by 1.2e-2; the atanh form alone by 5.7e-9.
  */
 function timeBetweenTrueAnomaliesYr(args: {
   ecc: number;
@@ -375,11 +388,11 @@ function timeBetweenTrueAnomaliesYr(args: {
     };
     return 0.5 * Math.sqrt((pAu * pAu * pAu) / muAu3Yr2) * (barker(nuToRad) - barker(nuFromRad));
   }
-  const aAu = pAu / (ecc * ecc - 1);
+  const aAu = pAu / ((ecc - 1) * (ecc + 1));
+  const tanHalfNuScale = Math.sqrt((ecc - 1) / (ecc + 1));
   const hyperbolicKepler = (nuRad: number) => {
-    const cosNu = Math.cos(nuRad);
-    const f = Math.sign(nuRad) * Math.acosh(Math.max(1, (ecc + cosNu) / (1 + ecc * cosNu)));
-    return ecc * Math.sinh(f) - f;
+    const f = 2 * Math.atanh(tanHalfNuScale * Math.tan(nuRad / 2));
+    return (ecc - 1) * Math.sinh(f) + sinhMinusX(f);
   };
   return Math.sqrt((aAu * aAu * aAu) / muAu3Yr2) * (hyperbolicKepler(nuToRad) - hyperbolicKepler(nuFromRad));
 }

@@ -412,6 +412,28 @@ describe("ConservationLawsModel orbital time: the period of a bound orbit and th
     });
   });
 
+  describe("a short arc through periapsis with e just above 1 (L1)", () => {
+    // p = 0.01 AU, mu = 4 pi^2 x 0.1, nu from -0.001 to 0.001 rad. References computed in Python with mpmath at
+    // 50 digits from these exact float64 inputs, two ways that agree to 1e-43: the hyperbolic Kepler equation
+    // with F = 2 atanh(sqrt((e - 1)/(e + 1)) tan(nu / 2)), and quadrature of dt = (r^2 / h) dnu.
+    // The acosh form of F was off by 1.2e-2 at e - 1 = 1e-8 and 1.7e-6 at e - 1 = 1e-4.
+    const pAu = 0.01;
+    const muAu3Yr2 = 4 * Math.PI * Math.PI * 0.1;
+    const cases = [
+      { label: "1 + 1e-8", ecc: 1 + 1e-8, referenceYr: 2.516460999469918e-7 },
+      { label: "1 + 1e-4", ecc: 1 + 1e-4, referenceYr: 2.51620939742523e-7 }
+    ];
+
+    for (const { label, ecc, referenceYr } of cases) {
+      it(`e = ${label}: agrees with the 50-digit reference to 1e-9 relative, and reversing the arc flips the sign`, () => {
+        const yr = ConservationLawsModel.timeBetweenTrueAnomaliesYr({ ecc, pAu, muAu3Yr2, nuFromRad: -0.001, nuToRad: 0.001 });
+        expect(Math.abs(yr - referenceYr) / referenceYr, `${yr} yr vs ${referenceYr} yr`).toBeLessThan(1e-9);
+        const back = ConservationLawsModel.timeBetweenTrueAnomaliesYr({ ecc, pAu, muAu3Yr2, nuFromRad: 0.001, nuToRad: -0.001 });
+        expect(Math.abs(back + referenceYr) / referenceYr, `${back} yr vs ${-referenceYr} yr`).toBeLessThan(1e-9);
+      });
+    }
+  });
+
   it("each is NaN outside its domain: a bound orbit has no open-orbit travel time, an open orbit no period", () => {
     const o = valid(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: 0.75, directionDeg: 0 }));
     const yr = ConservationLawsModel.timeBetweenTrueAnomaliesYr({
