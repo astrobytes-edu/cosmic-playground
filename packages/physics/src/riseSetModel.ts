@@ -93,7 +93,10 @@ export function solarRiseSetLocalTimeHours({
 export function moonDeclinationDeg(dayOfYear: number, elongationDeg: number): number {
   const n = clamp(dayOfYear, 1, 365);
   const lambdaSunDeg = (360 * (n - 80)) / 365;
-  return SOLAR_OBLIQUITY_DEG * Math.sin(toRadians(lambdaSunDeg + elongationDeg));
+  const lambdaMoon = toRadians(lambdaSunDeg + elongationDeg);
+  // Exact for zero ecliptic latitude. The small-angle eps*sin(lambda) is 0.23 deg high at
+  // lambda = 45 and is only exact at the equinoxes and solstices.
+  return (Math.asin(Math.sin(toRadians(SOLAR_OBLIQUITY_DEG)) * Math.sin(lambdaMoon)) * 180) / Math.PI;
 }
 
 /**
@@ -122,9 +125,13 @@ export function moonRiseSetLocalTimeHours({
   dayOfYear: number;
   useAdvanced: boolean;
 }): RiseSetResult {
-  // Demo convention: phase angle 0 is full, 180 is new. Elongation is the Sun-Earth-Moon
-  // angle, so it runs the other way -- 180 at full, 0 at new.
-  const elongationDeg = 180 - phaseAngleDeg;
+  // Demo convention: phase angle 0 is full, 90 third quarter, 180 new, 270 first quarter,
+  // and the angle advances with time (moonPhasesModel). Elongation is how far east of the
+  // Sun the Moon sits: 0 at new, 90 at first quarter, 180 at full, 270 at third quarter.
+  // That is (alpha - 180) mod 360. It was written as 180 - alpha, which agrees at full and
+  // new only, and swapped waxing and waning everywhere else: first quarter transited at 6 h
+  // instead of 18 h and took the declination of the opposite side of the sky.
+  const elongationDeg = (((phaseAngleDeg - 180) % 360) + 360) % 360;
   const baseDay = useAdvanced ? dayOfYear : 80;
   const declinationDeg = moonDeclinationDeg(baseDay, elongationDeg);
 

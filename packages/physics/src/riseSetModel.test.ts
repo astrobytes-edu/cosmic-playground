@@ -165,3 +165,31 @@ describe("riseSetModel", () => {
     }
   });
 });
+
+describe("moon rise/set at quarter phases", () => {
+  // Full and new are the only phases where 180 - alpha and (alpha - 180) mod 360 agree, which
+  // is why a waxing/waning swap passed every test above. Values worked by hand: at the March
+  // equinox the Sun's longitude is 0, so the Moon's longitude is its elongation.
+  test("first quarter at the March equinox rides high and transits at 18 h; third quarter mirrors it", () => {
+    const fq = moonRiseSetLocalTimeHours({ phaseAngleDeg: 270, latitudeDeg: 45, dayOfYear: 80, useAdvanced: true });
+    expect(fq.declinationDeg).toBeCloseTo(23.44, 1);
+    expect(fq.dayLengthHours).toBeCloseTo(15.43, 1); // cos H0 = -tan 45 tan 23.44
+    expect(fq.riseHour).toBeCloseTo(10.29, 1);
+    expect(fq.setHour).toBeCloseTo(1.71, 1);
+    const tq = moonRiseSetLocalTimeHours({ phaseAngleDeg: 90, latitudeDeg: 45, dayOfYear: 80, useAdvanced: true });
+    expect(tq.declinationDeg).toBeCloseTo(-23.44, 1);
+    expect(tq.riseHour).toBeCloseTo(1.71, 1);
+  });
+
+  test("at the equator every phase rises at (18 + alpha/15) mod 24", () => {
+    for (let a = 0; a < 360; a += 15) {
+      const r = moonRiseSetLocalTimeHours({ phaseAngleDeg: a, latitudeDeg: 0, dayOfYear: 80, useAdvanced: false });
+      expect(r.riseHour).toBeCloseTo((18 + a / 15) % 24, 6);
+    }
+  });
+
+  test("uses the exact declination, asin(sin eps sin lambda), not eps sin lambda", () => {
+    const r = moonRiseSetLocalTimeHours({ phaseAngleDeg: 225, latitudeDeg: 0, dayOfYear: 80, useAdvanced: true });
+    expect(r.declinationDeg).toBeCloseTo(16.34, 1); // the small-angle form gives 16.57
+  });
+});
