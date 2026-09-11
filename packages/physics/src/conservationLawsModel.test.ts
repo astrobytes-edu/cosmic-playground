@@ -210,6 +210,14 @@ describe("ConservationLawsModel.advanceTrueAnomalyByTime", () => {
       expect(Math.abs(Math.cos(step.nuRad) + 1)).toBeLessThan(1e-9);
     });
 
+    it("a quarter period from periapsis lands at nu = 2.939665, not pi/2 (asymmetric point)", () => {
+      // Mean anomaly pi/2. Newton on M = E - e sin E gives E = 2.268277, then
+      // nu = 2 atan(sqrt((1 + e)/(1 - e)) tan(E/2)). A uniform angular rate would give pi/2.
+      const step = advance(0, periodYr / 4);
+      expect(step.stopped).toBe(false);
+      expect(step.nuRad).toBeCloseTo(2.939665, 5);
+    });
+
     it("300 equal steps summing to one period return to the start", () => {
       let nu = o.nu0Rad;
       for (let i = 0; i < 300; i++) nu = advance(nu, periodYr / 300).nuRad;
@@ -250,6 +258,65 @@ describe("ConservationLawsModel.advanceTrueAnomalyByTime", () => {
     expect(stopped).toBe(true);
     expect(Math.abs(elapsedYr - barkerYr) / barkerYr).toBeLessThan(0.01);
     expect(nu).toBe(nuMax);
+  });
+
+  describe("a near-radial hyperbolic pass (M = 0.1, r0 = 0.1 AU, speed factor 1.8, direction +/-85 deg)", () => {
+    // The demo's view rule clamp(min(closedFit, 6 r0), 1.5, 50) floors at 1.5 AU for an open orbit from r0 = 0.1 AU.
+    const rMaxAu = 1.5;
+    // One animation frame: 1/60 s at the demo's 1/3 yr of orbital time per second.
+    const frameYr = (1 / 60) * (1 / 3);
+    // Time from nu0 to the view edge, computed independently in Python from the hyperbolic Kepler equation:
+    //   a = p / (e^2 - 1), F(nu) = sign(nu) acosh((e + cos nu) / (1 + e cos nu)),
+    //   t(nu) = sqrt(a^3 / mu) (e sinh F - F), elapsed = t(nuMax) - t(nu0).
+    // Simpson quadrature of dt = (r^2 / h) dnu over the same range agrees to 2e-11.
+    const cases = [
+      { directionDeg: 85, keplerYr: 0.176959125 },
+      { directionDeg: -85, keplerYr: 0.190052887 }
+    ];
+
+    it("reaches the view edge within 1% of Kepler's time in the worse direction", () => {
+      const relErrors = cases.map(({ directionDeg, keplerYr }) => {
+        const o = valid(ConservationLawsModel.initialOrbit({ massSolar: 0.1, r0Au: 0.1, speedFactor: 1.8, directionDeg }));
+        expect(o.orbitType).toBe("hyperbolic");
+        const { nuMax } = ConservationLawsModel.conicTrueAnomalyDomainRadForPlot({ ecc: o.ecc, pAu: o.pAu, rMaxAu });
+        const advance = (nuRad: number, dtYr: number) =>
+          ConservationLawsModel.advanceTrueAnomalyByTime({
+            nuRad,
+            ecc: o.ecc,
+            pAu: o.pAu,
+            hAbsAu2Yr: o.hAbsAu2Yr,
+            muAu3Yr2: o.muAu3Yr2,
+            dtYr,
+            nuMax
+          });
+        let nu = o.nu0Rad;
+        let elapsedYr = 0;
+        let stopped = false;
+        for (let i = 0; i < 1000 && !stopped; i++) {
+          const step = advance(nu, frameYr);
+          if (!step.stopped) {
+            nu = step.nuRad;
+            elapsedYr += frameYr;
+            continue;
+          }
+          // Count only the part of the last frame used before the stop: one whole frame is 3% of this trip,
+          // more than the tolerance. The nu reached grows with the time step, so bisection finds it.
+          let lo = 0;
+          let hi = frameYr;
+          for (let k = 0; k < 50; k++) {
+            const mid = 0.5 * (lo + hi);
+            if (advance(nu, mid).stopped) hi = mid;
+            else lo = mid;
+          }
+          elapsedYr += hi;
+          stopped = true;
+        }
+        expect(stopped).toBe(true);
+        return (elapsedYr - keplerYr) / keplerYr;
+      });
+      const worst = Math.max(...relErrors.map(Math.abs));
+      expect(worst, `relative timing errors (+85, -85): ${relErrors.map((x) => x.toFixed(5)).join(", ")}`).toBeLessThan(0.01);
+    });
   });
 });
 

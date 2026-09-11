@@ -289,11 +289,15 @@ function initialOrbit(args: {
 }
 
 const MAX_OPEN_ORBIT_DNU_RAD = 0.01;
+/** Largest fractional change in the rate h / r^2 across one open-orbit sub-step. */
+const MAX_OPEN_ORBIT_RATE_CHANGE = 1e-3;
 
 /**
  * Advance the true anomaly by dtYr of orbital time, in the direction of motion.
  * Closed orbits step the mean anomaly, so the timing is Kepler's exactly for any step size.
- * Open orbits integrate dnu/dt = h / r^2 in sub-steps of at most MAX_OPEN_ORBIT_DNU_RAD and stop at nuMax.
+ * Open orbits integrate dnu/dt = h / r^2 and stop at nuMax. Each sub-step moves nu by at most
+ * MAX_OPEN_ORBIT_DNU_RAD and changes the rate by at most MAX_OPEN_ORBIT_RATE_CHANGE: on a near-radial
+ * pass the rate is steep in nu, and a cap on nu alone let the body reach the view edge 7% early.
  */
 function advanceTrueAnomalyByTime(args: {
   nuRad: number;
@@ -320,7 +324,14 @@ function advanceTrueAnomalyByTime(args: {
     const rAu = orbitalRadiusAu({ ecc, pAu, nuRad: nu });
     if (!(rAu > 0)) return { nuRad: nu, stopped: true };
     const rateRadPerYr = hAbsAu2Yr / (rAu * rAu);
-    const stepYr = Math.min(remainingYr, MAX_OPEN_ORBIT_DNU_RAD / rateRadPerYr);
+    // |d ln(h / r^2) / d nu| = |2 e sin nu / (1 + e cos nu)|; rAu > 0 above keeps the denominator positive.
+    // It is zero at periapsis (sin nu = 0), where only the nu cap applies.
+    const rateLogSlope = Math.abs((2 * ecc * Math.sin(nu)) / (1 + ecc * Math.cos(nu)));
+    const maxDnuRad =
+      rateLogSlope > 0
+        ? Math.min(MAX_OPEN_ORBIT_DNU_RAD, MAX_OPEN_ORBIT_RATE_CHANGE / rateLogSlope)
+        : MAX_OPEN_ORBIT_DNU_RAD;
+    const stepYr = Math.min(remainingYr, maxDnuRad / rateRadPerYr);
     nu += rateRadPerYr * stepYr;
     remainingYr -= stepYr;
     if (nu >= nuMax) return { nuRad: nuMax, stopped: true };
