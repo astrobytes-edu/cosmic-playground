@@ -171,12 +171,87 @@ function sampleConicOrbitAu(args: {
   return points;
 }
 
+/** r(nu) = p / (1 + e cos nu). NaN where the conic does not reach (hyperbola past its asymptote). */
+function orbitalRadiusAu(args: { ecc: number; pAu: number; nuRad: number }): number {
+  const { ecc, pAu, nuRad } = args;
+  if (!Number.isFinite(ecc) || ecc < 0) return NaN;
+  if (!Number.isFinite(pAu) || !(pAu > 0)) return NaN;
+  if (!Number.isFinite(nuRad)) return NaN;
+  const denom = 1 + ecc * Math.cos(nuRad);
+  return denom > 0 ? pAu / denom : NaN;
+}
+
+/** Position and d(position)/d(nu) in the plot frame (orbit rotated by omega). */
+function conicPositionAndTangentAu(args: {
+  ecc: number;
+  pAu: number;
+  omegaRad: number;
+  nuRad: number;
+}): { xAu: number; yAu: number; dxAu: number; dyAu: number } | null {
+  const { ecc, pAu, omegaRad, nuRad } = args;
+  if (!Number.isFinite(ecc) || ecc < 0) return null;
+  if (!Number.isFinite(pAu) || !(pAu > 0)) return null;
+  if (!Number.isFinite(omegaRad) || !Number.isFinite(nuRad)) return null;
+
+  const cosNu = Math.cos(nuRad);
+  const sinNu = Math.sin(nuRad);
+  const denom = 1 + ecc * cosNu;
+  if (!(denom > 0)) return null;
+
+  const r = pAu / denom;
+  const drDnu = (pAu * ecc * sinNu) / (denom * denom);
+  const xOrb = r * cosNu;
+  const yOrb = r * sinNu;
+  const dxOrb = drDnu * cosNu - r * sinNu;
+  const dyOrb = drDnu * sinNu + r * cosNu;
+
+  const cosO = Math.cos(omegaRad);
+  const sinO = Math.sin(omegaRad);
+  return {
+    xAu: xOrb * cosO - yOrb * sinO,
+    yAu: xOrb * sinO + yOrb * cosO,
+    dxAu: dxOrb * cosO - dyOrb * sinO,
+    dyAu: dxOrb * sinO + dyOrb * cosO
+  };
+}
+
+/** v(nu) = (mu / h) sqrt(1 + 2 e cos nu + e^2). */
+function instantaneousSpeedAuPerYr(args: {
+  muAu3Yr2: number;
+  hAbsAu2Yr: number;
+  ecc: number;
+  nuRad: number;
+}): number {
+  const { muAu3Yr2, hAbsAu2Yr, ecc, nuRad } = args;
+  if (!Number.isFinite(muAu3Yr2) || !(muAu3Yr2 > 0)) return NaN;
+  if (!Number.isFinite(hAbsAu2Yr) || !(hAbsAu2Yr > 0)) return NaN;
+  if (!Number.isFinite(ecc) || ecc < 0 || !Number.isFinite(nuRad)) return NaN;
+  const q = 1 + 2 * ecc * Math.cos(nuRad) + ecc * ecc;
+  return (muAu3Yr2 / hAbsAu2Yr) * Math.sqrt(Math.max(0, q));
+}
+
+/** Specific kinetic and potential energy and their sum, AU^2/yr^2. */
+function specificEnergyPartsAu2Yr2(args: { rAu: number; vAuYr: number; muAu3Yr2: number }): {
+  kAu2Yr2: number;
+  uAu2Yr2: number;
+  epsAu2Yr2: number;
+} {
+  const { rAu, vAuYr, muAu3Yr2 } = args;
+  const kAu2Yr2 = Number.isFinite(vAuYr) ? 0.5 * vAuYr * vAuYr : NaN;
+  const uAu2Yr2 = rAu > 0 && muAu3Yr2 > 0 ? -muAu3Yr2 / rAu : NaN;
+  return { kAu2Yr2, uAu2Yr2, epsAu2Yr2: kAu2Yr2 + uAu2Yr2 };
+}
+
 export const ConservationLawsModel = {
   velocityFromSpeedAndDirectionAuYr,
   initialStateAuYr,
   conicTrueAnomalyDomainRad,
   conicTrueAnomalyDomainRadForPlot,
   advanceTrueAnomalyRad,
-  sampleConicOrbitAu
+  sampleConicOrbitAu,
+  orbitalRadiusAu,
+  conicPositionAndTangentAu,
+  instantaneousSpeedAuPerYr,
+  specificEnergyPartsAu2Yr2
 } as const;
 

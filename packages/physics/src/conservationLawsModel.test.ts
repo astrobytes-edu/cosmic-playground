@@ -44,3 +44,55 @@ describe("ConservationLawsModel", () => {
   });
 });
 
+describe("ConservationLawsModel conic helpers", () => {
+  const mu = 4 * Math.PI * Math.PI;
+
+  it("orbitalRadiusAu: periapsis at nu = 0, apoapsis at nu = pi, NaN past the asymptote", () => {
+    expect(ConservationLawsModel.orbitalRadiusAu({ ecc: 0.5, pAu: 1, nuRad: 0 })).toBeCloseTo(1 / 1.5, 12);
+    expect(ConservationLawsModel.orbitalRadiusAu({ ecc: 0.5, pAu: 1, nuRad: Math.PI })).toBeCloseTo(2, 12);
+    expect(ConservationLawsModel.orbitalRadiusAu({ ecc: 2, pAu: 1, nuRad: Math.acos(-0.5) })).toBeNaN();
+  });
+
+  it("conicPositionAndTangentAu: omega rotates the orbit, tangent is perpendicular on a circle", () => {
+    const rot = ConservationLawsModel.conicPositionAndTangentAu({ ecc: 0, pAu: 2, omegaRad: Math.PI / 2, nuRad: 0 });
+    expect(rot!.xAu).toBeCloseTo(0, 12);
+    expect(rot!.yAu).toBeCloseTo(2, 12);
+    const p = ConservationLawsModel.conicPositionAndTangentAu({ ecc: 0, pAu: 2, omegaRad: 0, nuRad: Math.PI / 4 });
+    expect(p!.xAu * p!.dxAu + p!.yAu * p!.dyAu).toBeCloseTo(0, 10);
+    expect(ConservationLawsModel.conicPositionAndTangentAu({ ecc: -1, pAu: 1, omegaRad: 0, nuRad: 0 })).toBeNull();
+  });
+
+  it("instantaneousSpeedAuPerYr: circular speed everywhere on a circle, faster at periapsis", () => {
+    const h = 2 * Math.PI;
+    expect(ConservationLawsModel.instantaneousSpeedAuPerYr({ muAu3Yr2: mu, hAbsAu2Yr: h, ecc: 0, nuRad: 2 })).toBeCloseTo(2 * Math.PI, 10);
+    const hEll = 0.75 * 2 * Math.PI;
+    const vPeri = ConservationLawsModel.instantaneousSpeedAuPerYr({ muAu3Yr2: mu, hAbsAu2Yr: hEll, ecc: 0.4375, nuRad: 0 });
+    const vApo = ConservationLawsModel.instantaneousSpeedAuPerYr({ muAu3Yr2: mu, hAbsAu2Yr: hEll, ecc: 0.4375, nuRad: Math.PI });
+    expect(vPeri).toBeCloseTo(12.042772, 5);
+    expect(vApo).toBeCloseTo(0.75 * 2 * Math.PI, 10);
+  });
+
+  it("specificEnergyPartsAu2Yr2: K = v^2/2, U = -mu/r, eps = K + U", () => {
+    const parts = ConservationLawsModel.specificEnergyPartsAu2Yr2({ rAu: 1, vAuYr: 0.75 * 2 * Math.PI, muAu3Yr2: mu });
+    expect(parts.kAu2Yr2).toBeCloseTo(11.103305, 5);
+    expect(parts.uAu2Yr2).toBeCloseTo(-39.478418, 5);
+    expect(parts.epsAu2Yr2).toBeCloseTo(-28.375113, 5);
+  });
+
+  it("K + U is the same at every point of an asymmetric orbit (conservation)", () => {
+    const muHere = mu * 10 ** 0.4;
+    const ecc = 0.526379;
+    const pAu = 0.304471;
+    const hAbsAu2Yr = Math.sqrt(muHere * pAu);
+    const epsAt = (nuRad: number) => {
+      const rAu = ConservationLawsModel.orbitalRadiusAu({ ecc, pAu, nuRad });
+      const vAuYr = ConservationLawsModel.instantaneousSpeedAuPerYr({ muAu3Yr2: muHere, hAbsAu2Yr, ecc, nuRad });
+      return ConservationLawsModel.specificEnergyPartsAu2Yr2({ rAu, vAuYr, muAu3Yr2: muHere }).epsAu2Yr2;
+    };
+    const eps0 = epsAt(0.3);
+    for (const nu of [1.1, 2.2, 3.3, 4.4, 5.5]) {
+      expect(epsAt(nu)).toBeCloseTo(eps0, 9);
+    }
+  });
+});
+
