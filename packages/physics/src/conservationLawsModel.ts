@@ -104,38 +104,6 @@ function wrap2Pi(rad: number) {
   return ((rad % twoPi) + twoPi) % twoPi;
 }
 
-/**
- * Animation helper: advance ν for a simple parameter-sweep animation.
- *
- * - For elliptical orbits, wraps ν into [0, 2π).
- * - For open orbits, clamps at the plotting domain edge and returns stopped=true.
- */
-function advanceTrueAnomalyRad(args: {
-  nuRad: number;
-  ecc: number;
-  nuMin: number;
-  nuMax: number;
-  dir: number;
-  dtSec: number;
-  nuSpeedRadPerSec: number;
-}): { nuRad: number; dir: number; stopped: boolean } {
-  const { ecc, nuMin, nuMax } = args;
-  const dir = Number.isFinite(args.dir) ? args.dir : 1;
-  if (!Number.isFinite(args.nuRad)) return { nuRad: NaN, dir, stopped: true };
-
-  const dt = Number.isFinite(args.dtSec) ? args.dtSec : 0;
-  const speed = Number.isFinite(args.nuSpeedRadPerSec) ? args.nuSpeedRadPerSec : 0;
-  const next = args.nuRad + dir * speed * dt;
-
-  if (!Number.isFinite(ecc) || ecc < 0) return { nuRad: next, dir, stopped: true };
-  if (ecc < 1) return { nuRad: wrap2Pi(next), dir, stopped: false };
-
-  if (!Number.isFinite(nuMin) || !Number.isFinite(nuMax)) return { nuRad: next, dir, stopped: true };
-  if (next > nuMax) return { nuRad: nuMax, dir, stopped: true };
-  if (next < nuMin) return { nuRad: nuMin, dir, stopped: true };
-  return { nuRad: next, dir, stopped: false };
-}
-
 function sampleConicOrbitAu(args: {
   ecc: number;
   pAu: number;
@@ -365,7 +333,6 @@ export const ConservationLawsModel = {
   initialStateAuYr,
   conicTrueAnomalyDomainRad,
   conicTrueAnomalyDomainRadForPlot,
-  advanceTrueAnomalyRad,
   advanceTrueAnomalyByTime,
   sampleConicOrbitAu,
   orbitalRadiusAu,

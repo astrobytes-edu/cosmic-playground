@@ -410,6 +410,45 @@ test.describe("Conservation Laws -- what the student sees", () => {
     await expect(dialog).not.toContainText("sqrt(");
   });
 
+  test("an exact Escape stays open after a mass change (M1)", async ({ page }) => {
+    await page.locator('[data-preset="escape"]').click();
+    await setSlider(page, "massSlider", -0.96);
+    await expect(page.locator("#orbitType")).toHaveText("parabolic (escape)");
+    const box = await page.locator("#orbitPath").evaluate((el: SVGPathElement) => {
+      const b = el.getBBox();
+      return { x0: b.x, y0: b.y, x1: b.x + b.width, y1: b.y + b.height };
+    });
+    for (const edge of [box.x0, box.y0, box.x1, box.y1]) {
+      expect(edge).toBeGreaterThanOrEqual(-1);
+      expect(edge).toBeLessThanOrEqual(601);
+    }
+  });
+
+  test("readouts never use e-notation, and a circular orbit reads e = 0 (L3)", async ({ page }) => {
+    await setSlider(page, "massSlider", -1);
+    await setSlider(page, "r0Slider", -0.8);
+    await expect(page.locator("#ecc")).toHaveText("0");
+    await expect(page.locator("#h")).not.toHaveText(/e[+-]/);
+    await expect(page.locator("#rpAu")).not.toHaveText(/e[+-]/);
+  });
+
+  test("an arrow too long for the zoom is capped and captioned as not to scale (L2)", async ({ page }) => {
+    await setSlider(page, "massSlider", 1);
+    await setSlider(page, "r0Slider", -1);
+    await setSlider(page, "speedFactor", 0.1);
+    await expect(page.locator("#arrowCaptionNotToScale")).toBeVisible();
+    await page.locator("#play").click();
+    await page.waitForTimeout(300);
+    await page.locator("#pause").click();
+    expect(await arrowPx(page)).toBeLessThanOrEqual(120.5);
+  });
+
+  test("sliders tell a screen reader the physical value (slider text)", async ({ page }) => {
+    await expect(page.locator("#massSlider")).toHaveAttribute("aria-valuetext", "1.00 solar masses");
+    await page.locator('[data-preset="escape"]').click();
+    await expect(page.locator("#speedFactor")).toHaveAttribute("aria-valuetext", "1.414 times circular speed");
+  });
+
   for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {
     test(`all readouts are above the fold at ${size.width}x${size.height}`, async ({ page }) => {
       await page.setViewportSize(size);

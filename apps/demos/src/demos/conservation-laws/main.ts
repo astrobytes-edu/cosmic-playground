@@ -2,7 +2,7 @@ import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initS
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { ConservationLawsModel, TwoBodyAnalytic } from "@cosmic/physics";
 import {
-  arrowLengthPx,
+  arrowScale,
   buildPathD,
   clamp,
   formatNumber,
@@ -11,7 +11,6 @@ import {
   formatSpeedFactor,
   logSliderToValue,
   orbitAnnouncement,
-  pickArrowDtDays,
   toSvg,
   valueToLogSlider,
   viewRadiusAu
@@ -59,6 +58,8 @@ const vKmSValue = must<HTMLSpanElement>("#vKmS");
 const rpAuValue = must<HTMLSpanElement>("#rpAu");
 const arrowCaption = must<HTMLSpanElement>("#arrowCaption");
 const arrowDtDays = must<HTMLSpanElement>("#arrowDtDays");
+const arrowDtUnit = must<HTMLSpanElement>("#arrowDtUnit");
+const arrowCaptionNotToScale = must<HTMLSpanElement>("#arrowCaptionNotToScale");
 const apoCaption = must<HTMLSpanElement>("#apoCaption");
 const raAuValue = must<HTMLSpanElement>("#raAu");
 
@@ -94,11 +95,11 @@ const anim = {
   frameId: null as number | null,
   lastTimeMs: 0,
   nuRad: 0,
-  nuMin: 0,
+  /** Where an open orbit leaves the view; closed orbits ignore it. */
   nuMax: 2 * Math.PI,
-  dir: 1,
   scalePxPerAu: VIEW_RADIUS_PX / 1.5,
-  dtDays: null as number | null
+  /** Set once per orbit by recomputeOrbit; this placeholder (nothing moving) draws no arrow. */
+  arrow: arrowScale(0, VIEW_RADIUS_PX / 1.5)
 };
 
 function validOrbit(): ValidOrbit | null {
@@ -124,7 +125,6 @@ function resetAnimation() {
   stopAnimation();
   const o = validOrbit();
   if (!o) return;
-  anim.dir = 1;
   anim.nuRad = o.nu0Rad;
   renderBody();
 }
@@ -146,30 +146,24 @@ function startAnimation() {
 
   const tick = (nowMs: number) => {
     if (!anim.playing) return;
-    let dtRemain = Math.min((nowMs - anim.lastTimeMs) / 1000, 0.1);
+    // A backgrounded tab's long gap is clamped to 0.1 s. The first frame's timestamp can precede the
+    // performance.now() taken on Play, so a negative gap counts as zero instead of running time backwards.
+    const dtSec = Math.max(0, Math.min((nowMs - anim.lastTimeMs) / 1000, 0.1));
     anim.lastTimeMs = nowMs;
-    let stopped = false;
-    // Kepler's second law: h = r^2 dnu/dt, so dnu/dt = h / r^2.
-    while (dtRemain > 1e-9 && !stopped) {
-      const dtSec = Math.min(dtRemain, 0.02);
-      const rAu = ConservationLawsModel.orbitalRadiusAu({ ecc: o.ecc, pAu: o.pAu, nuRad: anim.nuRad });
-      const nuRadPerYr = rAu > 0 ? o.hAbsAu2Yr / (rAu * rAu) : 0;
-      const step = ConservationLawsModel.advanceTrueAnomalyRad({
-        nuRad: anim.nuRad,
-        ecc: o.ecc,
-        nuMin: anim.nuMin,
-        nuMax: anim.nuMax,
-        dir: anim.dir,
-        dtSec,
-        nuSpeedRadPerSec: nuRadPerYr * SIM_YEARS_PER_SEC
-      });
-      anim.nuRad = step.nuRad;
-      anim.dir = step.dir;
-      stopped = step.stopped;
-      dtRemain -= dtSec;
-    }
+    // Bound orbits follow Kepler's equation and open orbits take bounded steps, so the timing
+    // does not depend on the frame rate.
+    const step = ConservationLawsModel.advanceTrueAnomalyByTime({
+      nuRad: anim.nuRad,
+      ecc: o.ecc,
+      pAu: o.pAu,
+      hAbsAu2Yr: o.hAbsAu2Yr,
+      muAu3Yr2: o.muAu3Yr2,
+      dtYr: dtSec * SIM_YEARS_PER_SEC,
+      nuMax: anim.nuMax
+    });
+    anim.nuRad = step.nuRad;
     renderBody();
-    if (stopped) {
+    if (step.stopped) {
       stopAnimation();
       setLiveRegionText(status, "The body has left the view. Press Play to run it again.");
       return;
@@ -184,6 +178,12 @@ function renderControlValues() {
   r0Value.textContent = formatNumber(controls.r0Au, 2);
   speedValue.textContent = formatSpeedFactor(controls.speedFactor);
   directionValue.textContent = String(Math.round(controls.directionDeg));
+  // The mass and r0 sliders' native values are log10, and the speed slider snaps an exact Escape to
+  // 1.41, so without these a screen reader announces a number the student did not set.
+  massSlider.setAttribute("aria-valuetext", `${formatNumber(controls.massSolar, 2)} solar masses`);
+  r0Slider.setAttribute("aria-valuetext", `${formatNumber(controls.r0Au, 2)} AU`);
+  speedSlider.setAttribute("aria-valuetext", `${formatSpeedFactor(controls.speedFactor)} times circular speed`);
+  directionSlider.setAttribute("aria-valuetext", `${Math.round(controls.directionDeg)} degrees from tangential`);
 }
 
 function recomputeOrbit() {
@@ -203,18 +203,16 @@ function recomputeOrbit() {
 
   const rMaxAu = viewRadiusAu({ raAu: o.raAu, r0Au: controls.r0Au });
   anim.scalePxPerAu = VIEW_RADIUS_PX / rMaxAu;
-  anim.dtDays = pickArrowDtDays(o.vPeriAuYr, anim.scalePxPerAu);
-  anim.dir = 1;
+  // Periapsis is the fastest point on the drawn path, so it fixes the arrow scale for the whole orbit.
+  anim.arrow = arrowScale(o.vPeriAuYr, anim.scalePxPerAu);
   anim.nuRad = o.nu0Rad;
 
   if (o.orbitType === "radial") {
-    anim.nuMin = 0;
     anim.nuMax = 0;
     const start = toSvg(o.rVecAu.xAu, o.rVecAu.yAu, CENTER, anim.scalePxPerAu);
     orbitPath.setAttribute("d", `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} L ${CENTER.x} ${CENTER.y}`);
   } else {
     const domain = ConservationLawsModel.conicTrueAnomalyDomainRadForPlot({ ecc: o.ecc, pAu: o.pAu, rMaxAu });
-    anim.nuMin = domain.nuMin;
     anim.nuMax = domain.nuMax;
     const points = ConservationLawsModel.sampleConicOrbitAu({
       ecc: o.ecc,
@@ -228,17 +226,22 @@ function recomputeOrbit() {
 
   const radial = o.orbitType === "radial";
   orbitTypeValue.textContent = formatOrbitType(o.orbitType);
-  eccValue.textContent = radial ? "—" : formatNumber(o.ecc, 3);
+  // A circular orbit's e is round-off (about 1e-16); show the exact 0 it stands for.
+  eccValue.textContent = radial ? "—" : o.orbitType === "circular" ? "0" : formatNumber(o.ecc, 3);
   epsValue.textContent = formatSpecificEnergy(o.epsAu2Yr2, o.muAu3Yr2 / controls.r0Au);
   hValue.textContent = formatNumber(o.hAbsAu2Yr, 4);
   rpAuValue.textContent = radial ? "—" : formatNumber(o.rpAu, 3);
 
-  arrowCaption.hidden = anim.dtDays === null;
-  arrowDtDays.textContent = anim.dtDays === null ? "" : String(anim.dtDays);
+  arrowCaption.hidden = !anim.arrow.toScale;
+  arrowDtDays.textContent = anim.arrow.dtDays === null ? "" : String(anim.arrow.dtDays);
+  arrowDtUnit.textContent = anim.arrow.dtDays === 1 ? "day" : "days";
+  arrowCaptionNotToScale.hidden = anim.arrow.toScale || !(anim.arrow.pxPerAuYr > 0);
   apoCaption.hidden = !(Number.isFinite(o.raAu) && o.raAu > rMaxAu);
   raAuValue.textContent = Number.isFinite(o.raAu) ? formatNumber(o.raAu, 1) : "";
 
   renderBody();
+  // Not redundant: the call at the top ran canAnimate() against the old orbit. This one re-runs it
+  // against the new orbit, so Play's disabled state is right.
   stopAnimation();
 }
 
@@ -268,10 +271,11 @@ function renderBody() {
       ecc: o.ecc,
       nuRad: anim.nuRad
     });
+    // initialOrbit admits only counter-clockwise starts, so increasing nu is the direction of motion.
     const mag = Math.hypot(pos.dxAu, pos.dyAu);
     if (mag > 0) {
-      ux = (pos.dxAu / mag) * anim.dir;
-      uy = (pos.dyAu / mag) * anim.dir;
+      ux = pos.dxAu / mag;
+      uy = pos.dyAu / mag;
     }
   }
 
@@ -279,7 +283,7 @@ function renderBody() {
   particle.setAttribute("cx", p.x.toFixed(2));
   particle.setAttribute("cy", p.y.toFixed(2));
 
-  const lengthPx = anim.dtDays === null ? 0 : arrowLengthPx(vAuYr, anim.dtDays, anim.scalePxPerAu);
+  const lengthPx = vAuYr * anim.arrow.pxPerAuYr;
   velocityLine.style.display = lengthPx > 0 ? "" : "none";
   velocityLine.setAttribute("x1", p.x.toFixed(2));
   velocityLine.setAttribute("y1", p.y.toFixed(2));
@@ -375,7 +379,7 @@ function stationRow(caseLabel: string, c: Controls) {
   const radial = o.orbitType === "radial";
   return {
     ...base,
-    e: radial ? "—" : formatNumber(o.ecc, 3),
+    e: radial ? "—" : o.orbitType === "circular" ? "0" : formatNumber(o.ecc, 3),
     eps: formatSpecificEnergy(o.epsAu2Yr2, o.muAu3Yr2 / c.r0Au),
     h: formatNumber(o.hAbsAu2Yr, 4),
     rp: radial ? "—" : formatNumber(o.rpAu, 3)

@@ -10,6 +10,7 @@ import {
   viewRadiusAu,
   pickArrowDtDays,
   arrowLengthPx,
+  arrowScale,
   formatSpeedFactor,
   formatSpecificEnergy,
   orbitAnnouncement,
@@ -90,11 +91,17 @@ describe("Conservation Laws -- UI Logic", () => {
     it("formats normal numbers with fixed digits", () => {
       expect(formatNumber(3.14159, 3)).toBe("3.142");
     });
-    it("uses exponential for large numbers", () => {
-      expect(formatNumber(1.5e8, 3)).toBe("1.50e+8");
+    it("writes large numbers out in full, never e-notation", () => {
+      expect(formatNumber(1.5e8, 3)).toBe("150000000.000");
     });
-    it("uses exponential for small numbers", () => {
-      expect(formatNumber(0.00012, 3)).toBe("1.20e-4");
+    it("keeps `digits` significant figures for small numbers, as decimals", () => {
+      expect(formatNumber(0.00012, 3)).toBe("0.000120");
+      expect(formatNumber(3.8e-8, 3)).toBe("0.0000000380");
+    });
+    it("never uses e-notation for values the readouts can reach", () => {
+      for (const v of [1e-12, 3.3e-7, 5.476e-4, 1.631e7, -1.632e7]) {
+        expect(formatNumber(v, 3)).not.toMatch(/e[+-]/);
+      }
     });
     it("returns em-dash for NaN", () => {
       expect(formatNumber(NaN)).toBe("\u2014");
@@ -112,13 +119,13 @@ describe("Conservation Laws -- UI Logic", () => {
       expect(formatNumber(-2.5, 2)).toBe("-2.50");
     });
     it("handles negative very large", () => {
-      expect(formatNumber(-1e7, 3)).toBe("-1.00e+7");
+      expect(formatNumber(-1e7, 3)).toBe("-10000000.000");
     });
     it("uses digits default of 3", () => {
       expect(formatNumber(1.23456)).toBe("1.235");
     });
-    it("digits=0 gives 0 decimal places for exponential", () => {
-      expect(formatNumber(1e8, 0)).toBe("1e+8");
+    it("digits=0 gives no decimal places for a large number", () => {
+      expect(formatNumber(1e8, 0)).toBe("100000000");
     });
   });
 
@@ -279,6 +286,27 @@ describe("Conservation Laws -- UI Logic", () => {
         const dt = pickArrowDtDays(v, s15)!;
         if (dt > 1) expect(arrowLengthPx(v, dt, s15)).toBeLessThanOrEqual(120);
       }
+    });
+
+    it("caps the fastest arrow at 120 px, not to scale, when even one day overflows (L2)", () => {
+      // M = 10, r0 = 0.1 AU, speed factor 0.1: periapsis speed 1250 AU/yr, and one day is 570 px.
+      const s = arrowScale(1250, s15);
+      expect(s.toScale).toBe(false);
+      expect(s.dtDays).toBeNull();
+      expect(1250 * s.pxPerAuYr).toBeCloseTo(120, 10);
+    });
+
+    it("stays to scale with the round step whenever that step fits", () => {
+      const s = arrowScale(2 * Math.PI, s15);
+      expect(s.dtDays).toBe(20);
+      expect(s.toScale).toBe(true);
+      expect(2 * Math.PI * s.pxPerAuYr).toBeCloseTo(57.341, 3);
+    });
+
+    it("draws no arrow when nothing moves", () => {
+      const s = arrowScale(0, 100);
+      expect(s.dtDays).toBeNull();
+      expect(s.pxPerAuYr).toBe(0);
     });
   });
 

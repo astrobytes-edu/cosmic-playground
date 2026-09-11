@@ -130,7 +130,8 @@
           ></line>
         </svg>
         <p id="stageCaption" class="stage__caption">
-          <span id="arrowCaption">Green arrow: distance covered in <span id="arrowDtDays"></span> days at the current velocity.</span>
+          <span id="arrowCaption">Green arrow: distance covered in <span id="arrowDtDays"></span> <span id="arrowDtUnit">days</span> at the current velocity.</span>
+          <span id="arrowCaptionNotToScale" hidden>Green arrow: speed and direction, shortened to fit this zoom.</span>
           <span id="apoCaption" hidden>This orbit reaches <span id="raAu"></span> AU, beyond the view.</span>
         </p>
       </section>
@@ -197,7 +198,7 @@
             </summary>
             <div class="cp-accordion__body">
               <ul>
-                <li>Teaching units: AU / yr / $M_{\odot}$ with $G=4\pi^2\,\mathrm{AU}^3/(\mathrm{yr}^2\,M_{\odot})$.</li>
+                <li>Teaching units: AU / yr / $M_{\odot}$ with $G=4\pi^2\,\mathrm{AU}^3/(\mathrm{yr}^2\,M_{\odot})$ and $\mu = GM$.</li>
                 <li>The body starts at $r_0$ on the $+x$ axis, moving at $v/v_{\rm circ}$ times the circular speed there, tilted from tangential (+ is outward).</li>
                 <li>The green arrow is the distance the body would cover in the stated number of days at its current velocity, drawn at the orbit's scale.</li>
                 <li>Paths reaching beyond $6\,r_0$ (within 1.5 to 50 AU) are clipped to that window, bound or not; the caption gives how far a clipped bound orbit reaches.</li>

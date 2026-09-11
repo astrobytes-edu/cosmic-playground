@@ -229,4 +229,16 @@ describe("Conservation Laws -- Design System Contracts", () => {
       }
     });
   });
+
+  describe("Contracts from the 2026-09-11 physics review", () => {
+    it("model notes define mu, which the potential readout uses", () => {
+      expect(html).toContain("\\mu = GM");
+    });
+
+    it("every slider carries aria-valuetext with its physical value", () => {
+      for (const slider of ["massSlider", "r0Slider", "speedSlider", "directionSlider"]) {
+        expect(mainTs).toContain(`${slider}.setAttribute("aria-valuetext"`);
+      }
+    });
+  });
 });

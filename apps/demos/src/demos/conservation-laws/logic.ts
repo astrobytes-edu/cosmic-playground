@@ -34,17 +34,21 @@ export function valueToLogSlider(value: number): number {
 // ---------------------------------------------------------------------------
 
 /**
- * Format a number for display in readouts.
+ * Format a number for display in readouts. Never e-notation: teaching copy writes powers of ten
+ * as 10^n, and a readout such as "1.11e-16" means nothing to a student.
  * - Non-finite values -> em-dash
  * - Zero -> "0"
- * - Very large (>=1e6) or very small (<1e-3) -> exponential notation
+ * - |value| < 1e-3 -> decimals keeping max(1, digits) significant figures (0.00012 -> "0.000120")
  * - Otherwise -> fixed-point with `digits` decimal places
  */
 export function formatNumber(value: number, digits = 3): string {
   if (!Number.isFinite(value)) return "\u2014";
   if (value === 0) return "0";
   const abs = Math.abs(value);
-  if (abs >= 1e6 || abs < 1e-3) return value.toExponential(Math.max(0, digits - 1));
+  if (abs < 1e-3) {
+    const decimals = Math.min(20, Math.max(1, digits) - 1 - Math.floor(Math.log10(abs)));
+    return value.toFixed(decimals);
+  }
   return value.toFixed(digits);
 }
 
@@ -178,10 +182,24 @@ export function arrowLengthPx(vAuYr: number, dtDays: number, scalePxPerAu: numbe
 /** Largest round step whose arrow at the fastest point fits `maxPx`; null when nothing moves. */
 export function pickArrowDtDays(vMaxAuYr: number, scalePxPerAu: number, maxPx: number = ARROW_MAX_PX): number | null {
   if (!(vMaxAuYr > 0) || !(scalePxPerAu > 0)) return null;
-  // If even one day overflows maxPx this returns the smallest step on purpose; the sliders cannot reach that case.
+  // If even one day overflows maxPx this still returns the smallest step. The sliders do reach that case
+  // (M = 10, r0 = 0.1 AU, speed factor 0.1: one day is 570 px at periapsis), so arrowScale checks for it.
   let best: number = ARROW_DT_LADDER_DAYS[0];
   for (const days of ARROW_DT_LADDER_DAYS) {
     if (arrowLengthPx(vMaxAuYr, days, scalePxPerAu) <= maxPx) best = days;
   }
   return best;
+}
+
+export type ArrowScale = { dtDays: number | null; pxPerAuYr: number; toScale: boolean };
+
+/** Normally the arrow is the distance covered in a round time step. If even the smallest step overflows
+ * ARROW_MAX_PX at periapsis, lengths stay proportional to speed but the fastest is capped at ARROW_MAX_PX. */
+export function arrowScale(vMaxAuYr: number, scalePxPerAu: number): ArrowScale {
+  const dtDays = pickArrowDtDays(vMaxAuYr, scalePxPerAu);
+  if (dtDays === null) return { dtDays: null, pxPerAuYr: 0, toScale: false };
+  if (arrowLengthPx(vMaxAuYr, dtDays, scalePxPerAu) <= ARROW_MAX_PX) {
+    return { dtDays, pxPerAuYr: arrowLengthPx(1, dtDays, scalePxPerAu), toScale: true };
+  }
+  return { dtDays: null, pxPerAuYr: ARROW_MAX_PX / vMaxAuYr, toScale: false };
 }
