@@ -1,0 +1,8 @@
+name = "visual_ux_reviewer"
+description = "Screenshots a Cosmic Playground demo or page at four viewport sizes and measures layout, contrast, focus, reflow and dead controls; use before and after UI work."
+# Needs to write screenshots, so not read-only; the role restricts writes to output/playwright/.
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Read .agents/roles/visual-ux-reviewer.md from the repository root and follow it exactly.
+Do not edit source files; write screenshots only under output/playwright/.
+"""

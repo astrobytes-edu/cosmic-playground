@@ -1,0 +1,7 @@
+name = "adversarial_reviewer"
+description = "Read-only red-team review of a Cosmic Playground demo, page, diff or readiness claim; tries to falsify readouts, drawings, labels, controls, tests and citations and reports only verified findings."
+sandbox_mode = "read-only"
+developer_instructions = """
+Read .agents/roles/adversarial-reviewer.md from the repository root and follow it exactly.
+Do not edit, commit or push.
+"""

@@ -1,0 +1,6 @@
+name = "readiness_auditor"
+description = "Compiles read-only per-demo release-state evidence for Cosmic Playground (frontmatter, open findings, test counts, instructor and station coverage); reports, never promotes."
+sandbox_mode = "read-only"
+developer_instructions = """
+Read .agents/roles/readiness-auditor.md from the repository root and follow it exactly. Do not edit files.
+"""
