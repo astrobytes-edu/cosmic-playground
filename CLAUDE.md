@@ -1,6 +1,6 @@
 # Cosmic Playground — Claude / LLM working notes
 
-This repo uses `AGENTS.md` as the authoritative agent instructions. Read and follow it first.
+This file is the single source of truth for agent instructions in this repo (Claude, Codex or any other agent). `AGENTS.md` only points here — edit this file, not that one.
 
 ## Git workflow (solo maintainer)
 
@@ -13,6 +13,7 @@ If the user asks about Git (or seems unsure), prefer a “teach while doing” s
 - Use **safe defaults** (`git pull --ff-only`, `git merge --ff-only`) unless the user explicitly asks for rebases/force pushes.
 - Explain *why* a command is being run in one sentence before running it.
 - When something fails, explain the failure as a concept first (“the repo changed upstream” / “you have local edits”), then give the smallest next command.
+- Never force-push or hard-reset without an explicit request and a clear warning that it is destructive.
 
 ### The two “merge directions” (what they mean)
 
@@ -80,6 +81,22 @@ You can keep PR overhead low but still get value:
 - Site checks: `corepack pnpm -C apps/site typecheck`
 - E2E (Playwright): `CP_BASE_PATH=/cosmic-playground/ corepack pnpm -C apps/site test:e2e` (or leave `CP_BASE_PATH` unset)
 - Python (conda env with PyYAML): `conda run -n astro python <script.py> ...`
+- Contract tests (optional): `corepack pnpm test:datasets`, `corepack pnpm test:physics-contract`
+- If E2E 404s on `/explore/` or `/play/<slug>/`, check `CP_BASE_PATH` first.
+- Targeted unit runs: `corepack pnpm -C packages/physics exec vitest run src/<file>.test.ts`; `corepack pnpm -C apps/demos exec vitest run src/demos/<slug>`
+
+## Verification gotchas
+
+- Capture gate exit codes directly (`cmd > log 2>&1; echo EXIT=$?`), never through a pipe.
+- Never run two Playwright runs at once: they share port 4321 and `test-results/` is wiped at start.
+- A RED must fail on assertions. "Tests  no tests" means the file failed to load (e.g. `it` where the file imports `test`).
+- Test physics at asymmetric points, not only symmetric ones: a waxing/waning swap passed because tests checked only full and new moon.
+- Moon phase convention: 0 = full, 90 = third quarter, 180 = new, 270 = first quarter; elongation = (alpha - 180) mod 360.
+- SVG y points down: a north-up (counter-clockwise) orbit needs `cy - r*sin(theta)`. seasons and eclipse-geometry are still clockwise.
+- Reflow: test whether the page actually scrolls (`scrollTo(2000,0)`, then `scrollX > 0`), not `scrollWidth`. A `1fr` track grows to its widest item — use `minmax(0,1fr)` + `min-width: 0`. `/play/` routes are not yet in reflow.spec.ts.
+- eos-lab's first-visit tour blocks clicks in E2E unless localStorage `eos-lab-toured` is set.
+- Pushing to main cancels an in-progress deploy (`deploy.yml` concurrency, `cancel-in-progress: true`).
+- Readiness: only `launch-ready` removes the card badge (`readiness.ts:59`); only `status: stable` removes the exhibit's "Active development" callout. Move both together; `readinessReason` is public copy.
 
 ## Dependency notes
 
@@ -109,6 +126,9 @@ You can keep PR overhead low but still get value:
 ## Hard constraints / conventions
 
 - Prefer static + fast pages; minimal client JS on museum pages.
+- Contracts: `docs/specs/cosmic-playground-site-spec.md` (site), `docs/specs/cosmic-playground-data-contract.md` (data-heavy demos), `docs/specs/cosmic-playground-model-contract.md` (physics: correctness, explicit units, required tests).
+- Instructor pages are public; optionally `noindex` and omitted from primary nav.
+- Symbols in UI copy, model notes, exports and docs: **D** = physical diameter, **d** = distance. Never reuse D/d for other quantities — name them (e.g. `dEarthMoonKm`, `distanceToSunKm`).
 - Use `import.meta.env.BASE_URL` for internal links/asset URLs (GitHub Pages base path support).
 - Keep units explicit and consistent everywhere (UI labels, exports, docs).
   - Do **not** use `G=1` or "natural units" phrasing.
@@ -135,6 +155,7 @@ math nodes can be checked; a stray `θ` in a string cannot.
 | Surface | Rule |
 |---|---|
 | Demo HTML, site pages, components, layouts, authored content | LaTeX only. Enforced by `scripts/validate-math-formatting.mjs`, which fails the build. |
+| Markdown bodies (`src/content/**/*.md`) | Typeset at build by remark-math + rehype-katex. Display math must be fenced — `$$` alone on the lines above and below; single-line `$$…$$` renders INLINE (the validator rejects it). Frontmatter and `.astro` pages still use client auto-render, where `$$` is display. |
 | Astro/TS that emits reader-visible strings | LaTeX only. Render it with `renderInlineMath()` from `apps/site/src/lib/inlineMath.ts` (build-time KaTeX, no client JS) or `renderMath()` from `@cosmic/runtime` in the demos. |
 | Canvas 2D / uPlot axis labels | The one exemption -- KaTeX cannot render into a canvas. Use ASCII (`lambda`, `deg`, `M_sun`), never Unicode. |
 | `packages/physics` comments and test names | Not scanned today; the maths there is documentation, not rendered output. Prefer ASCII in new code. |
@@ -142,6 +163,11 @@ math nodes can be checked; a stray `θ` in a string cannot.
 **Adding a new reader-visible surface?** Add its directory to `SCAN_ROOTS` in
 `scripts/validate-math-formatting.mjs`. The site's own pages, components, layouts and lib
 were missing from that list until 2026-09-10, which is how a `×` reached a filter chip.
+
+**Notation defaults**
+- Inline math `$...$`; display math `$$...$$`, fenced on its own lines in Markdown.
+- Solar notation: `$L/L_{\odot}$`, `$R/R_{\odot}$`, `$T_{\rm eff}$`.
+- Powers of ten as `$10^n$`; no `e` notation in teaching-facing copy.
 
 ### WebGL demos (three.js)
 
@@ -283,6 +309,26 @@ The moon-phases demo is the fully migrated reference. Every pattern established 
 ### Physics imports
 
 All physics models MUST come from `@cosmic/physics` — no inline equations in demo code.
+
+## Agent skills
+
+- Superpowers (Codex): discovered at startup from `~/.agents/skills/`; ensure `~/.agents/skills/superpowers -> ~/.codex/superpowers/skills/`. Do not call `superpowers-codex bootstrap` or `use-skill` (removed upstream). Activate a skill by naming it or by matching task intent.
+- Process skills: `superpowers:writing-plans`, `superpowers:executing-plans`, `superpowers:systematic-debugging`, `superpowers:test-driven-development`.
+- Project skills (`~/.codex/skills/`): `cosmic-frontend`, `cosmic-spec-to-implementation`, `cosmic-astro-site-engineering`, `cosmic-basepath-smoke-tests`, `cosmic-content-authoring`, `cosmic-instructor-materials-style`, `cosmic-demo-authoring`, `cosmic-runtime-instrumentation` (shared behaviour lives in `packages/runtime`, no per-demo forks), `cosmic-theme-tokens-and-components`, `cosmic-ui-ux`, `cosmic-export-contracts`, `cosmic-physics-modeling`, `cosmic-accessibility-audit`, `cosmic-ux-polish-pass`.
+
+## Communication mode (explanatory default)
+
+- Give educational, repo-specific explanations while completing tasks.
+- Before and after non-trivial code changes, include a concise insight block in chat (never in repo files unless asked):
+  - `` `★ Insight ─────────────────────────────────────` ``
+  - 2-3 points tied to this codebase and the current change (choices, tradeoffs, invariants — not generic trivia)
+  - `` `─────────────────────────────────────────────────` ``
+
+## Playwright QA (Kepler's Laws)
+
+- Capture QA screenshots for `keplers-laws` under `output/playwright/`, from `http://127.0.0.1:4173/cosmic-playground/play/keplers-laws/` (preview: `corepack pnpm -C apps/site preview --host 127.0.0.1 --port 4173`).
+- Use MCP Playwright first; if it fails (e.g. `net::ERR_BLOCKED_BY_CLIENT`), fall back to CLI `@playwright/test` (no test files required).
+- Required captures: default view; Newton mode with vectors on; equal areas on; 201 unit system; Jupiter or High-e preset.
 
 <!-- brain-status-convention -->
 ## Brain status updates
