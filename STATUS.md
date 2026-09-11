@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: Critical path to Sep 18 -- main at 0719a09 (2026-09-10). Done: lint, EOS timeout, land + deploy, wrong science P1/P2/P5/P7/P8, reviewer-visible B3/B8/B9/B10. WAITING ON ANNA: (1) B2 citation wording, drafted and not published; (2) readiness -- recommended parallax-distance to stable/launch-ready; angular-size, binary-orbits, seasons, em-spectrum to candidate; doppler-shift down to experimental (per-demo evidence in the readiness audit artifact; no frontmatter changed). Then: open wrong science P3, P4, P6, P9, P10, P11; U3 eos-lab first-visit tour.
+next: main 2026-09-10 -- readiness applied (parallax-distance stable; angular-size, binary-orbits, seasons, em-spectrum candidate; doppler-shift experimental), B2 citations published, moon rise/set waxing-waning swap fixed (5a57f5b). NEXT, diagnosed with file:line in 'Remaining demo fixes' below: announcements (U8) for angular-size/seasons/em-spectrum; seasons orbit direction; phone reflow via the shared playbar; moon-phases U2/B5; spectral-lines SL-4/5/6; galaxy-rotation GR-2..5 + U9; em-spectrum Station/Challenge modes.
 blocker: none -- two decisions are with Anna (B2 citations, readiness)
 due: 2026-09-18 (dossier)
 
@@ -11,6 +11,47 @@ Research-grade interactive demos (physics unit-tested), deployed live, used in A
 
 ## Open
 - [ ] (no empirical learning data yet — assessment plan via CRMSE)
+
+## Remaining demo fixes, diagnosed 2026-09-10 (not yet implemented)
+
+Read-only diagnoses; each fix should start with a test that fails first.
+
+- **Phone reflow (U7).** `/play/` routes are not in reflow.spec.ts. Below 1024px `.cp-demo` is one `1fr`
+  column (demo-shell.css:323); stage/readouts/drawer set `min-width: 0` but `.cp-playbar` does not and
+  cannot wrap (playbar.css:5-16), so its ~540-570px minimum widens the page -- likely galaxy-rotation
+  572, spectral-lines 600, moon-phases 501 (moon-phases also `.playbar-transport` style.css:207).
+  binary-orbits is different: drawer accordions (`.cp-panels`, `overflow: clip`, `min-width: auto`) take
+  their minimum from unbreakable KaTeX display equations (389-410px) -- measured live. Injecting
+  `minmax(0,1fr)` + accordion `min-width:0` + scrolling `.katex-display` cut sideways scroll 128->49px
+  there, so more remains. Add `play/<slug>/` routes for demos at candidate or above.
+- **Announcements (U8).** `setLiveRegionText` (runtime liveRegion.ts); announce on `change` and preset
+  clicks, never in render() (seasons render runs every animation frame). Status text is visible, so
+  plain words. angular-size handlers main.ts:950-1003; seasons 1192-1241 + keys 1327-1379;
+  em-spectrum initSlider/initBandButtons (main.ts ~358-377), renderReadouts returns w/f/e.
+- **seasons orbit direction.** Clockwise on screen (day 80 at y=+134.7). Fix: logic.ts:77
+  `y: -r sin`, logic.ts:408 labels `centerY - labelR sin`, main.ts:1159 `atan2(-local.y, local.x)`,
+  polarisIndicatorEndpoints must point the axis shadow toward the Sun at the June solstice
+  (`-length sin(eps) (cos thJ, -sin thJ)`, thJ = orbit angle of day 80+365.2422/4; length ~60),
+  index.html:173 title "viewed from above the North Pole". logic.test.ts:127-131 locks the old
+  direction. E2E: y80 < 0 and x80*y172 - y80*x172 < 0.
+- **em-spectrum modes.** createDemoModes (runtime demoModes.ts:701) + ChallengeEngine, following
+  angular-size main.ts:506-613/813-944; station columns per stations/em-spectrum.md; challenges from
+  PhotonModel (1 eV -> ~1240 nm; 1000x energy) with >=5% tolerance (slider steps ~4.2%).
+- **moon-phases U2.** snapToCardinalPhase (logic.ts:94) pulls back every 1-deg arrow step; snap only
+  when the step moves toward the key phase (pass fromDeg). **B5:** latitude/day only affect the
+  rise/set line, which is off by default (main.ts:312); make Advanced imply it and show declination and
+  hours above the horizon, noting the Moon's 5.1 deg orbital tilt is ignored.
+- **spectral-lines.** Demo is vacuum throughout (656.46 H-alpha from RYDBERG_EV); SL-4 index.html:351
+  -> 364.7 nm, :346 R_H = 1.0968e5 cm^-1, :439 placeholder 656.5. SL-5 :497 and logic.ts:560 claim NIST
+  line data; hydrogen is computed, other lines are air values rounded to 0.1 nm, strengths are
+  illustrative -- say so. SL-6: Balmer proxy (spectralLineModel.ts:420-422) reads 0.000 on 33% of the
+  slider; replace with a Saha fraction at a stated electron pressure -- Anna to choose P_e.
+- **galaxy-rotation.** GR-2 index.html:227 M_dark card should be (V_obs^2 - V_bulge^2 - V_disk^2)R/G.
+  GR-3 index.html:374 "deep-MOND limit" is wrong (the curve is the simple interpolating function);
+  also galaxyRotationModel.ts:454 uses spherical g_N instead of g_bar = V_bar^2/R (MOND curve +9% at
+  8 kpc) -- physics change. GR-4: slit on a "face-on" disk sees no Doppler shift; draw i=60.
+  GR-5: constants uncited (ts:254-261). U9: disabled range sliders have no style (form.css:79-178)
+  and no hint.
 
 ## Critical path to Sep 18, 2026-09-10
 
