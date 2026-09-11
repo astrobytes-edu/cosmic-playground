@@ -160,4 +160,12 @@ describe("orbitElementsFromStateAuYr at the edges and off-axis", () => {
     expect(el.hAbsAu2Yr).toBeCloseTo(5.494814, 5);
     expect(el.nuRad).toBeCloseTo(-2.412321, 5);
   });
+
+  it("a clockwise start (f = 1.2, 120 deg) mirrors the 60 deg case, nu measured along the motion", () => {
+    const el = TwoBodyAnalytic.orbitElementsFromStateAuYr({ ...state(1, 1.2 * 2 * Math.PI, 120), muAu3Yr2: mu });
+    if (el.orbitType === "invalid") throw new Error("unexpected invalid orbit");
+    expect(el.hAu2Yr).toBeLessThan(0);
+    expect(el.ecc).toBeCloseTo(0.893532, 5);
+    expect(el.nuRad).toBeCloseTo(2.369222, 5);
+  });
 });
