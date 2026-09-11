@@ -1,7 +1,7 @@
 # Cosmic Playground — status
 
-next: main 2026-09-10 -- readiness applied (parallax-distance stable; angular-size, binary-orbits, seasons, em-spectrum candidate; doppler-shift experimental), B2 citations published, moon rise/set waxing-waning swap fixed (5a57f5b). NEXT, diagnosed with file:line in 'Remaining demo fixes' below: announcements (U8) for angular-size/seasons/em-spectrum; seasons orbit direction; phone reflow via the shared playbar; moon-phases U2/B5; spectral-lines SL-4/5/6; galaxy-rotation GR-2..5 + U9; em-spectrum Station/Challenge modes. AGENT TOOLING (2026-09-11): the cosmic-* skills now live in the repo (.agents/skills, shared by Claude and Codex) with reviewer roles, hooks and commands -- docs/plans/2026-09-11-agent-skills-design.md; verified 2026-09-11: Claude lists all 9 cosmic-* skills, the 4 cp-* commands and the 4 reviewer agents through the .claude/skills symlink; Codex still needs its project hooks trusted once via /hooks and a first run.
-blocker: none -- two decisions are with Anna (B2 citations, readiness)
+next: main 2026-09-11 -- conservation-laws refactor landed on branch claude/conservation-laws-refactor (HEAD 9d41f89, not pushed): exact start state, Kepler-timed animation (bound orbits step mean anomaly, open orbits sub-step by rate change), energy/momentum readouts (K, U, eps, h, r_p), a Step button, a fading motion trail, change/preset announcements and teaching copy matched to what the instrument shows, plus instructor-page math retyped from Unicode/ASCII to KaTeX and contained inside scrolling tables. Promoted status: beta / readiness: candidate (not stable/launch-ready -- needs Anna). Gates green: physics 479, demo unit 117, desktop E2E 81 passed/3 skipped, full E2E 1192 passed/34 skipped/0 failed. Push to main awaits Anna's approval. NEXT: Anna's design brief for a shared WebGPU orbit stage (in progress: stage + instrument + dock layout, effective-potential energy landscape, direct manipulation, 3D camera), then the planetary-conjunctions audit.
+blocker: none -- push approval is with Anna
 due: 2026-09-18 (dossier)
 
 ## Current focus
@@ -52,6 +52,44 @@ Read-only diagnoses; each fix should start with a test that fails first.
   8 kpc) -- physics change. GR-4: slit on a "face-on" disk sees no Doppler shift; draw i=60.
   GR-5: constants uncited (ts:254-261). U9: disabled range sliders have no style (form.css:79-178)
   and no hint.
+
+## conservation-laws refactor, 2026-09-11
+
+Full refactor of the demo from `docs/plans/2026-09-11-conservation-laws-refactor.md`, executed
+end to end with subagent review gates. Promoted to `status: beta` / `readiness: candidate` in
+`9d41f89`; not pushed to main.
+
+**Fixed.** The adversarial audit's P1-P5, B1-B5, U1 and H1-H3 findings, all re-marked fixed by the
+re-review. Plus, from the mandatory physics review: an exact Escape preset stayed open (e = 1, not
+rounded to 0.9999...) after a mass change at any mass; animation timing matched Kepler's equation
+instead of drifting with frame rate under forward-Euler stepping; the velocity arrow is capped
+rather than running off the stage at high speed; readouts never fall back to e-notation; and
+clockwise starts are rejected rather than silently accepted.
+
+**Decisions.** The arrow reads as the distance covered in a stated number of days, not a fixed
+pixel length. The view window floors at 1.5 r0 so a tight orbit never vanishes into a point. The
+orbit's caption sits beside the drawing, not under it, once there is room (>= 1025px). Orbits too
+fast to watch are slowed to a 1.5 s lap with the time scale stated on screen rather than sped
+through unreadably. A Step button advances one frame for readers who want to watch K and U trade
+place by place. A fading motion trail marks where the orbit has already been.
+
+**Measurements.** Bound-orbit timing on the page matches Kepler's equation to within 0.03 ms.
+Readouts stay above the fold: the stage+readouts fold bottoms out at 894.7px at 1440x900 and
+714.7px at 1280x720. The motion trail costs at most 0.3 ms per animation frame.
+
+**Follow-ups (not done here).**
+- The stricter math-formatting validator, `72f975a` on branch `claude/instructor-math-formatting`,
+  still waits on 24 non-instructor lines it would newly fail.
+- Raw TeX sits inside inline `<code>` on 4 instructor pages, plus 17 ASCII `->` arrows in
+  instructor prose, both left unchanged by this pass.
+- Phone control order (controls below readouts) waits for the shared shell's bottom-sheet layout.
+- Playwright's browser install hangs unpacking under Node 26.5.0; install under Node 24 instead.
+- `packages/runtime/src/liveRegion.ts` may skip a re-render when identical text is written twice
+  in a row -- worth a dedicated look, not chased down here.
+- Add `play/<slug>/` reflow routes for the other candidate-or-above demos once their phone reflow
+  is fixed (binary-orbits currently scrolls sideways at 320px).
+- Very eccentric orbits can still skip across periapsis within one animation frame; the motion
+  trail mitigates it but does not fix it.
 
 ## Critical path to Sep 18, 2026-09-10
 

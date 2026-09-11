@@ -2079,3 +2079,10 @@ Recorded while executing this plan with subagents. The tasks above are left as w
   - L4: clockwise starts are `invalid` in `initialOrbit`.
   - L5: mu = GM is stated in the Model notes; all four sliders carry `aria-valuetext`.
 - Environment: Playwright 1.58's browser install hung while unpacking under Node 26.5.0 and finished in 11 s under Node 24.18.0. The stricter math validator `72f975a` still waits on 24 non-instructor lines.
+
+**Later commits**
+- `d423318`, `ff62e06`, `950cb4b`: adversarial re-review fixes -- view floor at 1.5 r0, presets keep their direction, a stacked control, focus and announcement fixes, plainly named sliders, and a parity-audit correction.
+- `2591692`, `57cfdcc`, `e547b0a`: Anna's decisions -- orbital period and open-orbit travel time, a stated time scale with caption, and a Step button.
+- `2a7342a`, `f4d7c23`, `9c8d0ab`: visual review and physics check -- stable hyperbolic travel time, layout fixes, captions and status text, and instructor-table reflow.
+- `3c8451e`, `b54b3d7`: the fading motion trail.
+- `9d41f89`: the readiness commit from Task 1 (this session) -- promoted to `status: beta` / `readiness: candidate` and gated `play/conservation-laws/` for reflow.
