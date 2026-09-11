@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 test.describe("Conservation Laws -- E2E", () => {
   test.beforeEach(async ({ page }) => {
@@ -94,13 +94,6 @@ test.describe("Conservation Laws -- E2E", () => {
     expect(text).toBe("elliptical");
   });
 
-  test("clicking escape preset shows orbit type near parabolic", async ({ page }) => {
-    await page.locator('[data-preset="escape"]').click();
-    const text = await page.locator("#orbitType").textContent();
-    // sqrt(2) is numerically fragile: may classify as parabolic or barely-elliptical
-    expect(text).toMatch(/parabolic|elliptical/);
-  });
-
   test("clicking hyperbolic preset shows orbit type hyperbolic", async ({ page }) => {
     await page.locator('[data-preset="hyperbolic"]').click();
     const text = await page.locator("#orbitType").textContent();
@@ -180,13 +173,6 @@ test.describe("Conservation Laws -- E2E", () => {
     expect(ecc).toBeLessThan(0.05);
   });
 
-  test("after escape preset, orbit type is near parabolic", async ({ page }) => {
-    await page.locator('[data-preset="escape"]').click();
-    const text = await page.locator("#orbitType").textContent();
-    // sqrt(2) is numerically fragile at the parabolic boundary
-    expect(text).toMatch(/parabolic|elliptical/);
-  });
-
   test("after hyperbolic preset, orbit type is hyperbolic", async ({ page }) => {
     await page.locator('[data-preset="hyperbolic"]').click();
     const text = await page.locator("#orbitType").textContent();
@@ -226,16 +212,20 @@ test.describe("Conservation Laws -- E2E", () => {
     await expect(readouts).toHaveAttribute("aria-label", "Readouts panel");
   });
 
-  test("readout units in .cp-readout__unit spans (count >= 4)", async ({ page }) => {
+  test("readout units in .cp-readout__unit spans (count >= 6)", async ({ page }) => {
     const units = page.locator(".cp-readout__unit");
     const count = await units.count();
-    expect(count).toBeGreaterThanOrEqual(4);
+    expect(count).toBeGreaterThanOrEqual(6);
   });
 
-  test("tab navigation reaches play button", async ({ page }) => {
-    await page.locator("#play").focus();
-    const focused = await page.evaluate(() => document.activeElement?.id);
-    expect(focused).toBe("play");
+  test("Tab from the top of the page reaches the play button", async ({ page }) => {
+    await page.locator("body").click({ position: { x: 1, y: 1 } });
+    let reached = false;
+    for (let i = 0; i < 40 && !reached; i++) {
+      await page.keyboard.press("Tab");
+      reached = (await page.evaluate(() => document.activeElement?.id)) === "play";
+    }
+    expect(reached).toBe(true);
   });
 
   // --- Export ---
@@ -276,6 +266,169 @@ test.describe("Conservation Laws -- E2E", () => {
       maxDiffPixelRatio: 0.05,
     });
   });
+});
+
+test.describe("Conservation Laws -- what the student sees", () => {
+  const CENTER = 300;
+  const setSlider = async (page: Page, id: string, value: number) => {
+    await page.locator(`#${id}`).evaluate((el: HTMLInputElement, v: number) => {
+      el.value = String(v);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }, value);
+  };
+  const particle = async (page: Page) => ({
+    x: Number(await page.locator("#particle").getAttribute("cx")),
+    y: Number(await page.locator("#particle").getAttribute("cy"))
+  });
+  const arrowPx = async (page: Page) => {
+    const l = page.locator("#velocityLine");
+    const [x1, y1, x2, y2] = await Promise.all(["x1", "y1", "x2", "y2"].map((a) => l.getAttribute(a).then(Number)));
+    return Math.hypot(x2 - x1, y2 - y1);
+  };
+  const num = async (page: Page, id: string) => Number.parseFloat((await page.locator(`#${id}`).textContent()) ?? "NaN");
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto("play/conservation-laws/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#orbitType")).toHaveText("circular");
+  });
+
+  test("Escape preset is exactly parabolic with zero energy (P1)", async ({ page }) => {
+    await page.locator('[data-preset="escape"]').click();
+    await expect(page.locator("#orbitType")).toHaveText("parabolic (escape)");
+    await expect(page.locator("#ecc")).toHaveText("1.000");
+    await expect(page.locator("#eps")).toHaveText("0");
+    await expect(page.locator("#speedValue")).toHaveText("1.414");
+  });
+
+  test("the slider's nearest values straddle escape honestly", async ({ page }) => {
+    await setSlider(page, "speedFactor", 1.41);
+    await expect(page.locator("#orbitType")).toHaveText("elliptical");
+    await setSlider(page, "speedFactor", 1.42);
+    await expect(page.locator("#orbitType")).toHaveText("hyperbolic");
+  });
+
+  test("Station Mode's Escape rows agree with the screen (P1)", async ({ page }) => {
+    await page.locator('[data-preset="escape"]').click();
+    await page.locator("#stationMode").click();
+    const dialog = page.getByRole("dialog", { name: /Station Mode/ });
+    await dialog.getByRole("button", { name: /Add row/ }).click();
+    await dialog.getByRole("button", { name: /preset cases/ }).click();
+    // Anchor on the first cell: the Snapshot row's "(escape)" would also match a bare "Escape".
+    const snapshot = dialog.locator("tr", { hasText: /^\s*Snapshot/ });
+    const reference = dialog.locator("tr", { hasText: /^\s*Escape/ });
+    await expect(snapshot).toContainText("parabolic (escape)");
+    await expect(reference).toContainText("parabolic (escape)");
+    await expect(snapshot).toContainText("1.414");
+  });
+
+  test("Elliptical preset starts at r0 on +x with the speed that was set (P2)", async ({ page }) => {
+    await page.locator('[data-preset="elliptical"]').click();
+    const p = await particle(page);
+    expect(p.x).toBeCloseTo(CENTER + 250 / 1.5, 0);
+    expect(p.y).toBeCloseTo(CENTER, 0);
+    expect(await num(page, "vKmS")).toBeCloseTo(0.75 * 29.785, 1);
+  });
+
+  test("an outward 60 deg start is also on +x (asymmetric state)", async ({ page }) => {
+    await setSlider(page, "speedFactor", 1.2);
+    await setSlider(page, "directionDeg", 60);
+    const p = await particle(page);
+    expect(p.x).toBeCloseTo(CENTER + 250 / 3.719438, 0);
+    expect(p.y).toBeCloseTo(CENTER, 0);
+    expect(await num(page, "vKmS")).toBeCloseTo(1.2 * 29.785, 1);
+  });
+
+  test("Reset returns the body to where it started", async ({ page }) => {
+    await page.locator('[data-preset="elliptical"]').click();
+    const start = await particle(page);
+    await page.locator("#play").click();
+    await page.waitForTimeout(400);
+    await page.locator("#pause").click();
+    const moved = await particle(page);
+    expect(Math.hypot(moved.x - start.x, moved.y - start.y)).toBeGreaterThan(5);
+    await page.locator("#reset").click();
+    const back = await particle(page);
+    expect(back.x).toBeCloseTo(start.x, 1);
+    expect(back.y).toBeCloseTo(start.y, 1);
+  });
+
+  test("speed factor 0 is radial motion, not escape (P3)", async ({ page }) => {
+    await setSlider(page, "speedFactor", 0);
+    await expect(page.locator("#orbitType")).toHaveText("radial (straight line)");
+    await expect(page.locator("#eps")).toHaveText("-39.4784");
+    await expect(page.locator("#velocityLine")).toBeHidden();
+    await expect(page.locator("#play")).toBeDisabled();
+    const p = await particle(page);
+    expect(p.x).toBeCloseTo(CENTER + 250 / 1.5, 0);
+  });
+
+  test("the view does not jump across escape (P4)", async ({ page }) => {
+    for (const f of [1.4, 1.42]) {
+      await setSlider(page, "speedFactor", f);
+      const p = await particle(page);
+      expect(Math.hypot(p.x - CENTER, p.y - CENTER)).toBeCloseTo(250 / 6, 0);
+    }
+    await setSlider(page, "speedFactor", 1.4);
+    await expect(page.locator("#apoCaption")).toBeVisible();
+    await expect(page.locator("#raAu")).toHaveText("49.0");
+  });
+
+  test("the arrow is distance covered in the stated time (P5)", async ({ page }) => {
+    await expect(page.locator("#arrowDtDays")).toHaveText("20");
+    expect(await arrowPx(page)).toBeCloseTo(57.341, 0);
+    await setSlider(page, "massSlider", 1);
+    await expect(page.locator("#arrowDtDays")).toHaveText("10");
+    expect(await arrowPx(page)).toBeCloseTo(90.665, 0);
+  });
+
+  test("K and U trade while the specific energy stays fixed (B2)", async ({ page }) => {
+    await page.locator('[data-preset="elliptical"]').click();
+    await expect(page.locator("#kAu")).toHaveText("11.1033");
+    await expect(page.locator("#uAu")).toHaveText("-39.4784");
+    const eps = await page.locator("#eps").textContent();
+    await page.locator("#play").click();
+    await page.waitForTimeout(300);
+    await page.locator("#pause").click();
+    await expect(page.locator("#kAu")).not.toHaveText("11.1033");
+    await expect(page.locator("#uAu")).not.toHaveText("-39.4784");
+    await expect(page.locator("#eps")).toHaveText(eps ?? "");
+  });
+
+  test("announces the orbit after a keyboard change and a preset (U1)", async ({ page }) => {
+    await page.locator("#speedFactor").focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator("#status")).toHaveText("Elliptical orbit: bound, eccentricity 0.020.");
+    await page.locator('[data-preset="hyperbolic"]').click();
+    await expect(page.locator("#status")).toHaveText("Hyperbolic orbit: unbound, eccentricity 2.240.");
+  });
+
+  test("help text is typeset, not ASCII (B5)", async ({ page }) => {
+    await page.locator("#help").click();
+    const dialog = page.getByRole("dialog", { name: /Help/ });
+    await expect(dialog.locator(".katex").first()).toBeVisible();
+    await expect(dialog).not.toContainText("sqrt(");
+  });
+
+  for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {
+    test(`all readouts are above the fold at ${size.width}x${size.height}`, async ({ page }) => {
+      await page.setViewportSize(size);
+      await page.reload({ waitUntil: "domcontentloaded" });
+      // Entry animations slide panels up by ~10px; the fold is about the settled layout.
+      // Skip infinite animations (the starfield twinkle never finishes).
+      await page.evaluate(() =>
+        Promise.all(
+          document
+            .getAnimations()
+            .filter((a) => a.effect?.getTiming().iterations !== Infinity)
+            .map((a) => a.finished)
+        )
+      );
+      await expect(page.locator(".cp-readout")).toHaveCount(8);
+      const bottoms = await page.locator(".cp-readout").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().bottom));
+      for (const b of bottoms) expect(b).toBeLessThanOrEqual(size.height);
+    });
+  }
 });
 
 // --- Reduced Motion (separate describe, no beforeEach) ---

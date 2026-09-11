@@ -2,122 +2,82 @@ import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initS
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { ConservationLawsModel, TwoBodyAnalytic } from "@cosmic/physics";
 import {
+  arrowLengthPx,
+  buildPathD,
   clamp,
-  logSliderToValue,
-  valueToLogSlider,
   formatNumber,
   formatOrbitType,
+  formatSpecificEnergy,
+  formatSpeedFactor,
+  logSliderToValue,
+  orbitAnnouncement,
+  pickArrowDtDays,
   toSvg,
-  orbitalRadiusAu,
-  conicPositionAndTangentAu,
-  instantaneousSpeedAuPerYr,
-  buildPathD,
-  velocityArrowSvg,
+  valueToLogSlider,
+  viewRadiusAu
 } from "./logic";
+
+type Controls = { massSolar: number; r0Au: number; speedFactor: number; directionDeg: number };
+type Orbit = ReturnType<typeof ConservationLawsModel.initialOrbit>;
+type ValidOrbit = Exclude<Orbit, { orbitType: "invalid" }>;
+
+function must<T extends Element>(selector: string): T {
+  const el = document.querySelector<T>(selector);
+  if (!el) throw new Error(`conservation-laws: missing ${selector}`);
+  return el;
+}
 
 const starfieldCanvas = document.querySelector<HTMLCanvasElement>(".cp-starfield");
 if (starfieldCanvas) initStarfield({ canvas: starfieldCanvas });
 
-const massSliderEl = document.querySelector<HTMLInputElement>("#massSlider");
-const massValueEl = document.querySelector<HTMLSpanElement>("#massValue");
-const r0SliderEl = document.querySelector<HTMLInputElement>("#r0Slider");
-const r0ValueEl = document.querySelector<HTMLSpanElement>("#r0Value");
-const speedFactorEl = document.querySelector<HTMLInputElement>("#speedFactor");
-const speedValueEl = document.querySelector<HTMLSpanElement>("#speedValue");
-const directionDegEl = document.querySelector<HTMLInputElement>("#directionDeg");
-const directionValueEl = document.querySelector<HTMLSpanElement>("#directionValue");
-
-const presetButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('button.preset[data-preset]'));
-
-const playEl = document.querySelector<HTMLButtonElement>("#play");
-const pauseEl = document.querySelector<HTMLButtonElement>("#pause");
-const resetEl = document.querySelector<HTMLButtonElement>("#reset");
-
-const stationModeEl = document.querySelector<HTMLButtonElement>("#stationMode");
-const helpEl = document.querySelector<HTMLButtonElement>("#help");
-
-const copyResultsEl = document.querySelector<HTMLButtonElement>("#copyResults");
-const statusEl = document.querySelector<HTMLParagraphElement>("#status");
-
-const orbitPathEl = document.querySelector<SVGPathElement>("#orbitPath");
-const particleEl = document.querySelector<SVGCircleElement>("#particle");
-const velocityLineEl = document.querySelector<SVGLineElement>("#velocityLine");
-
-const orbitTypeEl = document.querySelector<HTMLSpanElement>("#orbitType");
-const eccEl = document.querySelector<HTMLSpanElement>("#ecc");
-const epsEl = document.querySelector<HTMLSpanElement>("#eps");
-const hEl = document.querySelector<HTMLSpanElement>("#h");
-const vKmSEl = document.querySelector<HTMLSpanElement>("#vKmS");
-const rpAuEl = document.querySelector<HTMLSpanElement>("#rpAu");
-
-if (
-  !massSliderEl ||
-  !massValueEl ||
-  !r0SliderEl ||
-  !r0ValueEl ||
-  !speedFactorEl ||
-  !speedValueEl ||
-  !directionDegEl ||
-  !directionValueEl ||
-  !playEl ||
-  !pauseEl ||
-  !resetEl ||
-  !stationModeEl ||
-  !helpEl ||
-  !copyResultsEl ||
-  !statusEl ||
-  !orbitPathEl ||
-  !particleEl ||
-  !velocityLineEl ||
-  !orbitTypeEl ||
-  !eccEl ||
-  !epsEl ||
-  !hEl ||
-  !vKmSEl ||
-  !rpAuEl
-) {
-  throw new Error("Missing required DOM elements for conservation-laws demo.");
-}
-
-const massSlider = massSliderEl;
-const massValue = massValueEl;
-const r0Slider = r0SliderEl;
-const r0Value = r0ValueEl;
-const speedFactor = speedFactorEl;
-const speedValue = speedValueEl;
-const directionDeg = directionDegEl;
-const directionValue = directionValueEl;
-const playButton = playEl;
-const pauseButton = pauseEl;
-const resetButton = resetEl;
-const stationModeButton = stationModeEl;
-const helpButton = helpEl;
-const copyResults = copyResultsEl;
-const status = statusEl;
-
-const orbitPath = orbitPathEl;
-const particle = particleEl;
-const velocityLine = velocityLineEl;
-
-const orbitTypeValue = orbitTypeEl;
-const eccValue = eccEl;
-const epsValue = epsEl;
-const hValue = hEl;
-const vKmSValue = vKmSEl;
-const rpAuValue = rpAuEl;
+const massSlider = must<HTMLInputElement>("#massSlider");
+const r0Slider = must<HTMLInputElement>("#r0Slider");
+const speedSlider = must<HTMLInputElement>("#speedFactor");
+const directionSlider = must<HTMLInputElement>("#directionDeg");
+const massValue = must<HTMLSpanElement>("#massValue");
+const r0Value = must<HTMLSpanElement>("#r0Value");
+const speedValue = must<HTMLSpanElement>("#speedValue");
+const directionValue = must<HTMLSpanElement>("#directionValue");
+const presetButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("button.preset[data-preset]"));
+const playButton = must<HTMLButtonElement>("#play");
+const pauseButton = must<HTMLButtonElement>("#pause");
+const resetButton = must<HTMLButtonElement>("#reset");
+const stationModeButton = must<HTMLButtonElement>("#stationMode");
+const helpButton = must<HTMLButtonElement>("#help");
+const copyResults = must<HTMLButtonElement>("#copyResults");
+const status = must<HTMLParagraphElement>("#status");
+const orbitPath = must<SVGPathElement>("#orbitPath");
+const particle = must<SVGCircleElement>("#particle");
+const velocityLine = must<SVGLineElement>("#velocityLine");
+const orbitTypeValue = must<HTMLSpanElement>("#orbitType");
+const eccValue = must<HTMLSpanElement>("#ecc");
+const kValue = must<HTMLSpanElement>("#kAu");
+const uValue = must<HTMLSpanElement>("#uAu");
+const epsValue = must<HTMLSpanElement>("#eps");
+const hValue = must<HTMLSpanElement>("#h");
+const vKmSValue = must<HTMLSpanElement>("#vKmS");
+const rpAuValue = must<HTMLSpanElement>("#rpAu");
+const arrowCaption = must<HTMLSpanElement>("#arrowCaption");
+const arrowDtDays = must<HTMLSpanElement>("#arrowDtDays");
+const apoCaption = must<HTMLSpanElement>("#apoCaption");
+const raAuValue = must<HTMLSpanElement>("#raAu");
 
 const CENTER = { x: 300, y: 300 };
 const VIEW_RADIUS_PX = 250;
 const PATH_SAMPLES = 720;
-
-// Teaching time scale: simulation time in years per real second.
-// Calibrated so that a circular orbit at 1 AU around 1 Msun completes in ~3 s.
+/** Teaching time scale: a circular orbit at 1 AU around 1 Msun takes about 3 s. */
 const SIM_YEARS_PER_SEC = 1 / 3;
 
+const PRESETS = {
+  circular: { label: "Circular", speedFactor: 1, directionDeg: 0 },
+  elliptical: { label: "Elliptical", speedFactor: 0.75, directionDeg: 0 },
+  escape: { label: "Escape", speedFactor: Math.SQRT2, directionDeg: 0 },
+  hyperbolic: { label: "Hyperbolic", speedFactor: 1.8, directionDeg: 0 }
+} as const;
+type PresetName = keyof typeof PRESETS;
+
 const prefersReducedMotion =
-  typeof window !== "undefined" &&
-  typeof window.matchMedia !== "undefined" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const runtime = createInstrumentRuntime({
   hasMathMode: false,
@@ -125,79 +85,48 @@ const runtime = createInstrumentRuntime({
   url: new URL(window.location.href)
 });
 
-const state: {
-  massSolar: number;
-  r0Au: number;
-  speedFactor: number;
-  directionDeg: number;
-  playing: boolean;
-  animationId: number | null;
-} = {
-  massSolar: 1,
-  r0Au: 1,
-  speedFactor: 1,
-  directionDeg: 0,
+/** Exact values. The sliders display these; a slider is read only when the student moves it. */
+const controls: Controls = { massSolar: 1, r0Au: 1, speedFactor: 1, directionDeg: 0 };
+let orbit: Orbit = ConservationLawsModel.initialOrbit(controls);
+
+const anim = {
   playing: false,
-  animationId: null
-};
-
-const anim: {
-  nuRad: number;
-  startNuRad: number;
-  nuMin: number;
-  nuMax: number;
-  dir: number;
-
-  orbitType: "invalid" | "circular" | "elliptical" | "parabolic" | "hyperbolic";
-  ecc: number;
-  pAu: number;
-  omegaRad: number;
-  hAbsAu2Yr: number;
-  epsAu2Yr2: number;
-  muAu3Yr2: number;
-  vCirc0AuYr: number;
-  rpAu: number;
-
-  rMaxAu: number;
-  scalePxPerAu: number;
-  lastTimeMs: number;
-} = {
+  frameId: null as number | null,
+  lastTimeMs: 0,
   nuRad: 0,
-  startNuRad: 0,
   nuMin: 0,
   nuMax: 2 * Math.PI,
   dir: 1,
-
-  orbitType: "invalid",
-  ecc: NaN,
-  pAu: NaN,
-  omegaRad: NaN,
-  hAbsAu2Yr: NaN,
-  epsAu2Yr2: NaN,
-  muAu3Yr2: NaN,
-  vCirc0AuYr: NaN,
-  rpAu: NaN,
-
-  rMaxAu: 3,
-  scalePxPerAu: 1,
-  lastTimeMs: 0
+  scalePxPerAu: VIEW_RADIUS_PX / 1.5,
+  dtDays: null as number | null
 };
 
+function validOrbit(): ValidOrbit | null {
+  return orbit.orbitType === "invalid" ? null : orbit;
+}
+
+function canAnimate(): boolean {
+  const o = validOrbit();
+  return !prefersReducedMotion && o !== null && o.orbitType !== "radial";
+}
+
 function stopAnimation() {
-  state.playing = false;
-  if (state.animationId !== null) {
-    cancelAnimationFrame(state.animationId);
-    state.animationId = null;
+  anim.playing = false;
+  if (anim.frameId !== null) {
+    cancelAnimationFrame(anim.frameId);
+    anim.frameId = null;
   }
-  playButton.disabled = false;
+  playButton.disabled = !canAnimate();
   pauseButton.disabled = true;
 }
 
 function resetAnimation() {
   stopAnimation();
+  const o = validOrbit();
+  if (!o) return;
   anim.dir = 1;
-  anim.nuRad = anim.startNuRad;
-  renderParticleAndVelocity();
+  anim.nuRad = o.nu0Rad;
+  renderBody();
 }
 
 function startAnimation() {
@@ -205,250 +134,280 @@ function startAnimation() {
     setLiveRegionText(status, "Reduced motion is enabled; animation is disabled.");
     return;
   }
-  if (state.playing) return;
-  if (!Number.isFinite(anim.ecc) || !Number.isFinite(anim.pAu) || !Number.isFinite(anim.omegaRad)) return;
-  if (!Number.isFinite(anim.nuMin) || !Number.isFinite(anim.nuMax)) return;
-  if (anim.orbitType === "invalid") return;
+  const o = validOrbit();
+  if (anim.playing || !o || o.orbitType === "radial") return;
+  // An open orbit that already ran to the edge of the view starts again from the beginning.
+  if (o.ecc >= 1 && anim.nuRad >= anim.nuMax - 1e-9) anim.nuRad = o.nu0Rad;
 
-  state.playing = true;
+  anim.playing = true;
   playButton.disabled = true;
   pauseButton.disabled = false;
+  anim.lastTimeMs = performance.now();
 
-  anim.lastTimeMs = typeof performance !== "undefined" ? performance.now() : Date.now();
-
-  function tick(nowMs: number) {
-    if (!state.playing) return;
-    const dt = (nowMs - anim.lastTimeMs) / 1000;
+  const tick = (nowMs: number) => {
+    if (!anim.playing) return;
+    let dtRemain = Math.min((nowMs - anim.lastTimeMs) / 1000, 0.1);
     anim.lastTimeMs = nowMs;
-
-    // Advance using Kepler's 2nd law (constant areal velocity):
-    // h = r^2 d(nu)/dt  =>  d(nu)/dt = h/r^2.
-    let dtRemain = Math.min(dt, 0.1);
     let stopped = false;
+    // Kepler's second law: h = r^2 dnu/dt, so dnu/dt = h / r^2.
     while (dtRemain > 1e-9 && !stopped) {
-      const dtStep = Math.min(dtRemain, 0.02);
-      const rAu = orbitalRadiusAu(anim.ecc, anim.pAu, anim.nuRad);
-      const nuSpeedRadPerYr =
-        Number.isFinite(anim.hAbsAu2Yr) && Number.isFinite(rAu) && rAu > 0 ? anim.hAbsAu2Yr / (rAu * rAu) : 0;
+      const dtSec = Math.min(dtRemain, 0.02);
+      const rAu = ConservationLawsModel.orbitalRadiusAu({ ecc: o.ecc, pAu: o.pAu, nuRad: anim.nuRad });
+      const nuRadPerYr = rAu > 0 ? o.hAbsAu2Yr / (rAu * rAu) : 0;
       const step = ConservationLawsModel.advanceTrueAnomalyRad({
         nuRad: anim.nuRad,
-        ecc: anim.ecc,
+        ecc: o.ecc,
         nuMin: anim.nuMin,
         nuMax: anim.nuMax,
         dir: anim.dir,
-        dtSec: dtStep,
-        nuSpeedRadPerSec: nuSpeedRadPerYr * SIM_YEARS_PER_SEC
+        dtSec,
+        nuSpeedRadPerSec: nuRadPerYr * SIM_YEARS_PER_SEC
       });
       anim.nuRad = step.nuRad;
       anim.dir = step.dir;
       stopped = step.stopped;
-      dtRemain -= dtStep;
+      dtRemain -= dtSec;
     }
-
-    renderParticleAndVelocity();
+    renderBody();
     if (stopped) {
       stopAnimation();
+      setLiveRegionText(status, "The body has left the view. Press Play to run it again.");
       return;
     }
-    state.animationId = requestAnimationFrame(tick);
-  }
-
-  state.animationId = requestAnimationFrame(tick);
+    anim.frameId = requestAnimationFrame(tick);
+  };
+  anim.frameId = requestAnimationFrame(tick);
 }
 
-function setPreset(name: string) {
-  switch (name) {
-    case "circular":
-      state.speedFactor = 1;
-      state.directionDeg = 0;
-      break;
-    case "elliptical":
-      state.speedFactor = 0.75;
-      state.directionDeg = 0;
-      break;
-    case "escape":
-      state.speedFactor = Math.SQRT2;
-      state.directionDeg = 0;
-      break;
-    case "hyperbolic":
-      state.speedFactor = 1.8;
-      state.directionDeg = 0;
-      break;
-    default:
-      return;
-  }
-
-  speedFactor.value = String(state.speedFactor);
-  directionDeg.value = String(state.directionDeg);
-  stopAnimation();
-  recomputeOrbit();
-
-  for (const btn of presetButtons) {
-    btn.setAttribute("aria-pressed", btn.getAttribute("data-preset") === name ? "true" : "false");
-  }
+function renderControlValues() {
+  massValue.textContent = formatNumber(controls.massSolar, 2);
+  r0Value.textContent = formatNumber(controls.r0Au, 2);
+  speedValue.textContent = formatSpeedFactor(controls.speedFactor);
+  directionValue.textContent = String(Math.round(controls.directionDeg));
 }
 
 function recomputeOrbit() {
-  const massSolar = clamp(logSliderToValue(Number(massSlider.value)), 0.1, 10);
-  const r0Au = clamp(logSliderToValue(Number(r0Slider.value)), 0.1, 10);
-  const speedFactorValue = clamp(Number(speedFactor.value), 0, 2.5);
-  const directionDegValue = clamp(Number(directionDeg.value), -85, 85);
+  stopAnimation();
+  orbit = ConservationLawsModel.initialOrbit(controls);
+  renderControlValues();
 
-  state.massSolar = massSolar;
-  state.r0Au = r0Au;
-  state.speedFactor = speedFactorValue;
-  state.directionDeg = directionDegValue;
-
-  massValue.textContent = `${formatNumber(massSolar, 2)} Msun`;
-  r0Value.textContent = `${formatNumber(r0Au, 2)} AU`;
-  speedValue.textContent = `${formatNumber(speedFactorValue, 2)}x`;
-  directionValue.textContent = `${Math.round(directionDegValue)} deg`;
-
-  anim.muAu3Yr2 = TwoBodyAnalytic.muAu3Yr2FromMassSolar(massSolar);
-  anim.vCirc0AuYr = TwoBodyAnalytic.circularSpeedAuPerYr({ muAu3Yr2: anim.muAu3Yr2, rAu: r0Au });
-  const v0AuYr = speedFactorValue * anim.vCirc0AuYr;
-
-  const init = ConservationLawsModel.initialStateAuYr({
-    r0Au,
-    speedAuYr: v0AuYr,
-    directionDeg: directionDegValue
-  });
-
-  const elements = init.rVecAu && init.vVecAuYr ? TwoBodyAnalytic.orbitElementsFromStateAuYr({
-    rVecAu: init.rVecAu,
-    vVecAuYr: init.vVecAuYr,
-    muAu3Yr2: anim.muAu3Yr2
-  }) : { orbitType: "invalid" as const };
-
-  if (elements.orbitType === "invalid") {
-    anim.orbitType = "invalid";
-    anim.ecc = NaN;
-    anim.pAu = NaN;
-    anim.omegaRad = NaN;
-    anim.hAbsAu2Yr = NaN;
-    anim.rpAu = NaN;
-    orbitTypeValue.textContent = "invalid";
-    eccValue.textContent = "\u2014";
-    epsValue.textContent = "\u2014";
-    hValue.textContent = "\u2014";
-    vKmSValue.textContent = "\u2014";
-    rpAuValue.textContent = "\u2014";
+  const o = validOrbit();
+  if (!o) {
+    orbitTypeValue.textContent = formatOrbitType("invalid");
+    for (const el of [eccValue, kValue, uValue, epsValue, hValue, vKmSValue, rpAuValue]) el.textContent = "—";
     orbitPath.setAttribute("d", "");
+    velocityLine.style.display = "none";
+    stopAnimation();
     return;
   }
 
-  anim.orbitType = elements.orbitType;
-  anim.ecc = elements.ecc;
-  anim.pAu = elements.pAu;
-  anim.omegaRad = elements.omegaRad;
-  anim.hAbsAu2Yr = elements.hAbsAu2Yr;
-  anim.epsAu2Yr2 = elements.epsAu2Yr2;
-  anim.startNuRad = 0;
-  anim.nuRad = anim.startNuRad;
+  const rMaxAu = viewRadiusAu({ raAu: o.raAu, r0Au: controls.r0Au });
+  anim.scalePxPerAu = VIEW_RADIUS_PX / rMaxAu;
+  anim.dtDays = pickArrowDtDays(o.vPeriAuYr, anim.scalePxPerAu);
+  anim.dir = 1;
+  anim.nuRad = o.nu0Rad;
 
-  // View window radius.
-  let rMaxAu = 6 * r0Au;
-  if (elements.orbitType === "elliptical" || elements.orbitType === "circular") {
-    const ra = elements.ecc < 1 ? elements.pAu / (1 - elements.ecc) : rMaxAu;
-    rMaxAu = Math.max(ra, r0Au) * 1.1;
+  if (o.orbitType === "radial") {
+    anim.nuMin = 0;
+    anim.nuMax = 0;
+    const start = toSvg(o.rVecAu.xAu, o.rVecAu.yAu, CENTER, anim.scalePxPerAu);
+    orbitPath.setAttribute("d", `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} L ${CENTER.x} ${CENTER.y}`);
+  } else {
+    const domain = ConservationLawsModel.conicTrueAnomalyDomainRadForPlot({ ecc: o.ecc, pAu: o.pAu, rMaxAu });
+    anim.nuMin = domain.nuMin;
+    anim.nuMax = domain.nuMax;
+    const points = ConservationLawsModel.sampleConicOrbitAu({
+      ecc: o.ecc,
+      pAu: o.pAu,
+      omegaRad: o.omegaRad,
+      numPoints: PATH_SAMPLES,
+      rMaxAu
+    });
+    orbitPath.setAttribute("d", buildPathD(points, CENTER, anim.scalePxPerAu));
   }
-  anim.rMaxAu = clamp(rMaxAu, 1.5, 50);
-  anim.scalePxPerAu = VIEW_RADIUS_PX / anim.rMaxAu;
 
-  const dom = ConservationLawsModel.conicTrueAnomalyDomainRadForPlot({ ecc: anim.ecc, pAu: anim.pAu, rMaxAu: anim.rMaxAu });
-  anim.nuMin = dom.nuMin;
-  anim.nuMax = dom.nuMax;
+  const radial = o.orbitType === "radial";
+  orbitTypeValue.textContent = formatOrbitType(o.orbitType);
+  eccValue.textContent = radial ? "—" : formatNumber(o.ecc, 3);
+  epsValue.textContent = formatSpecificEnergy(o.epsAu2Yr2, o.muAu3Yr2 / controls.r0Au);
+  hValue.textContent = formatNumber(o.hAbsAu2Yr, 4);
+  rpAuValue.textContent = radial ? "—" : formatNumber(o.rpAu, 3);
 
-  const rpAu = anim.pAu / (1 + anim.ecc);
-  anim.rpAu = rpAu;
+  arrowCaption.hidden = anim.dtDays === null;
+  arrowDtDays.textContent = anim.dtDays === null ? "" : String(anim.dtDays);
+  apoCaption.hidden = !(Number.isFinite(o.raAu) && o.raAu > rMaxAu);
+  raAuValue.textContent = Number.isFinite(o.raAu) ? formatNumber(o.raAu, 1) : "";
 
-  const vAuYr = instantaneousSpeedAuPerYr(
-    anim.muAu3Yr2,
-    anim.hAbsAu2Yr,
-    anim.ecc,
-    anim.nuRad
-  );
-  const vKmS = TwoBodyAnalytic.speedKmPerSFromAuPerYr(vAuYr);
-
-  orbitTypeValue.textContent = formatOrbitType(elements.orbitType);
-  eccValue.textContent = formatNumber(anim.ecc, 3);
-  epsValue.textContent = formatNumber(elements.epsAu2Yr2, 4);
-  hValue.textContent = formatNumber(elements.hAbsAu2Yr, 4);
-  vKmSValue.textContent = formatNumber(vKmS, 3);
-  rpAuValue.textContent = formatNumber(rpAu, 3);
-
-  const points = ConservationLawsModel.sampleConicOrbitAu({
-    ecc: anim.ecc,
-    pAu: anim.pAu,
-    omegaRad: anim.omegaRad,
-    numPoints: PATH_SAMPLES,
-    rMaxAu: anim.rMaxAu
-  });
-  orbitPath.setAttribute("d", buildPathD(points, CENTER, anim.scalePxPerAu));
-  renderParticleAndVelocity();
+  renderBody();
+  stopAnimation();
 }
 
-function renderParticleAndVelocity() {
-  const pos = conicPositionAndTangentAu(
-    anim.ecc,
-    anim.pAu,
-    anim.omegaRad,
-    anim.nuRad
+/** Particle, arrow, speed, K and U at the current true anomaly. Runs every animation frame. */
+function renderBody() {
+  const o = validOrbit();
+  if (!o) return;
+
+  let xAu = o.rVecAu.xAu;
+  let yAu = o.rVecAu.yAu;
+  let vAuYr = o.v0AuYr;
+  let ux = 0;
+  let uy = 0;
+  if (o.orbitType !== "radial") {
+    const pos = ConservationLawsModel.conicPositionAndTangentAu({
+      ecc: o.ecc,
+      pAu: o.pAu,
+      omegaRad: o.omegaRad,
+      nuRad: anim.nuRad
+    });
+    if (!pos) return;
+    xAu = pos.xAu;
+    yAu = pos.yAu;
+    vAuYr = ConservationLawsModel.instantaneousSpeedAuPerYr({
+      muAu3Yr2: o.muAu3Yr2,
+      hAbsAu2Yr: o.hAbsAu2Yr,
+      ecc: o.ecc,
+      nuRad: anim.nuRad
+    });
+    const mag = Math.hypot(pos.dxAu, pos.dyAu);
+    if (mag > 0) {
+      ux = (pos.dxAu / mag) * anim.dir;
+      uy = (pos.dyAu / mag) * anim.dir;
+    }
+  }
+
+  const p = toSvg(xAu, yAu, CENTER, anim.scalePxPerAu);
+  particle.setAttribute("cx", p.x.toFixed(2));
+  particle.setAttribute("cy", p.y.toFixed(2));
+
+  const lengthPx = anim.dtDays === null ? 0 : arrowLengthPx(vAuYr, anim.dtDays, anim.scalePxPerAu);
+  velocityLine.style.display = lengthPx > 0 ? "" : "none";
+  velocityLine.setAttribute("x1", p.x.toFixed(2));
+  velocityLine.setAttribute("y1", p.y.toFixed(2));
+  // SVG y points down, so the tangent's y component flips.
+  velocityLine.setAttribute("x2", (p.x + ux * lengthPx).toFixed(2));
+  velocityLine.setAttribute("y2", (p.y - uy * lengthPx).toFixed(2));
+
+  const energy = ConservationLawsModel.specificEnergyPartsAu2Yr2({
+    rAu: Math.hypot(xAu, yAu),
+    vAuYr,
+    muAu3Yr2: o.muAu3Yr2
+  });
+  vKmSValue.textContent = formatNumber(TwoBodyAnalytic.speedKmPerSFromAuPerYr(vAuYr), 3);
+  kValue.textContent = formatNumber(energy.kAu2Yr2, 4);
+  uValue.textContent = formatNumber(energy.uAu2Yr2, 4);
+}
+
+function announce() {
+  const o = validOrbit();
+  setLiveRegionText(
+    status,
+    orbitAnnouncement({
+      orbitType: orbit.orbitType,
+      ecc: o ? o.ecc : Number.NaN,
+      epsAu2Yr2: o ? o.epsAu2Yr2 : Number.NaN
+    })
   );
-  if (!pos) return;
+}
 
-  const pSvg = toSvg(pos.xAu, pos.yAu, CENTER, anim.scalePxPerAu);
-  particle.setAttribute("cx", pSvg.x.toFixed(2));
-  particle.setAttribute("cy", pSvg.y.toFixed(2));
+function syncSlidersToControls() {
+  massSlider.value = String(valueToLogSlider(controls.massSolar));
+  r0Slider.value = String(valueToLogSlider(controls.r0Au));
+  // The browser snaps these to the slider step for display; `controls` keeps the exact value.
+  speedSlider.value = String(controls.speedFactor);
+  directionSlider.value = String(controls.directionDeg);
+}
 
-  const vAuYr = instantaneousSpeedAuPerYr(
-    anim.muAu3Yr2,
-    anim.hAbsAu2Yr,
-    anim.ecc,
-    anim.nuRad
-  );
-  const vKmS = TwoBodyAnalytic.speedKmPerSFromAuPerYr(vAuYr);
-  vKmSValue.textContent = formatNumber(vKmS, 3);
-  const vRatio = Number.isFinite(vAuYr) && Number.isFinite(anim.vCirc0AuYr) && anim.vCirc0AuYr > 0 ? vAuYr / anim.vCirc0AuYr : 1;
+function setPresetPressed(name: PresetName | null) {
+  for (const btn of presetButtons) {
+    btn.setAttribute("aria-pressed", btn.dataset.preset === name ? "true" : "false");
+  }
+}
 
-  const arrow = velocityArrowSvg(pos.dxAu, pos.dyAu, anim.scalePxPerAu, anim.dir, vRatio);
+function applyPreset(name: PresetName) {
+  controls.speedFactor = PRESETS[name].speedFactor;
+  controls.directionDeg = PRESETS[name].directionDeg;
+  syncSlidersToControls();
+  recomputeOrbit();
+  setPresetPressed(name);
+  announce();
+}
 
-  velocityLine.setAttribute("x1", pSvg.x.toFixed(2));
-  velocityLine.setAttribute("y1", pSvg.y.toFixed(2));
-  velocityLine.setAttribute("x2", (pSvg.x + arrow.ux * arrow.vLenPx).toFixed(2));
-  velocityLine.setAttribute("y2", (pSvg.y + arrow.uy * arrow.vLenPx).toFixed(2));
+const sliderReaders: Array<[HTMLInputElement, () => void]> = [
+  [massSlider, () => { controls.massSolar = clamp(logSliderToValue(Number(massSlider.value)), 0.1, 10); }],
+  [r0Slider, () => { controls.r0Au = clamp(logSliderToValue(Number(r0Slider.value)), 0.1, 10); }],
+  [speedSlider, () => { controls.speedFactor = clamp(Number(speedSlider.value), 0, 2.5); }],
+  [directionSlider, () => { controls.directionDeg = clamp(Number(directionSlider.value), -85, 85); }]
+];
+
+for (const [slider, readInto] of sliderReaders) {
+  slider.addEventListener("input", () => {
+    readInto();
+    setPresetPressed(null);
+    recomputeOrbit();
+  });
+  // Announce once the value settles: `input` fires on every drag step, `change` once.
+  slider.addEventListener("change", announce);
+}
+
+for (const button of presetButtons) {
+  button.addEventListener("click", () => {
+    const name = button.dataset.preset;
+    if (name && name in PRESETS) applyPreset(name as PresetName);
+  });
+}
+
+playButton.addEventListener("click", startAnimation);
+pauseButton.addEventListener("click", stopAnimation);
+resetButton.addEventListener("click", resetAnimation);
+
+/** One row from exact controls, through the same derivation as the screen. */
+function stationRow(caseLabel: string, c: Controls) {
+  const o = ConservationLawsModel.initialOrbit(c);
+  const base = {
+    case: caseLabel,
+    mSolar: formatNumber(c.massSolar, 3),
+    r0Au: formatNumber(c.r0Au, 3),
+    speedFactor: formatSpeedFactor(c.speedFactor),
+    directionDeg: String(Math.round(c.directionDeg)),
+    orbitType: formatOrbitType(o.orbitType)
+  };
+  if (o.orbitType === "invalid") return { ...base, e: "—", eps: "—", h: "—", rp: "—" };
+  const radial = o.orbitType === "radial";
+  return {
+    ...base,
+    e: radial ? "—" : formatNumber(o.ecc, 3),
+    eps: formatSpecificEnergy(o.epsAu2Yr2, o.muAu3Yr2 / c.r0Au),
+    h: formatNumber(o.hAbsAu2Yr, 4),
+    rp: radial ? "—" : formatNumber(o.rpAu, 3)
+  };
 }
 
 function exportResults(): ExportPayloadV1 {
-  const vAuYr = instantaneousSpeedAuPerYr(
-    anim.muAu3Yr2,
-    anim.hAbsAu2Yr,
-    anim.ecc,
-    anim.nuRad
-  );
-  const vKmS = TwoBodyAnalytic.speedKmPerSFromAuPerYr(vAuYr);
+  const o = validOrbit();
   return {
     version: 1,
     timestamp: new Date().toISOString(),
     parameters: [
       { name: "Mode", value: runtime.mode },
-      { name: "Central mass M (Msun)", value: formatNumber(state.massSolar, 4) },
-      { name: "Initial radius r_0 (AU)", value: formatNumber(state.r0Au, 4) },
-      { name: "Speed factor v/v_circ", value: formatNumber(state.speedFactor, 4) },
-      { name: "Direction from tangential (deg)", value: String(Math.round(state.directionDeg)) }
+      { name: "Central mass M (Msun)", value: formatNumber(controls.massSolar, 4) },
+      { name: "Initial radius r_0 (AU)", value: formatNumber(controls.r0Au, 4) },
+      { name: "Speed factor v/v_circ", value: formatNumber(controls.speedFactor, 6) },
+      { name: "Direction from tangential (deg, + outward)", value: String(Math.round(controls.directionDeg)) }
     ],
     readouts: [
-      { name: "Orbit type", value: formatOrbitType(anim.orbitType) },
-      { name: "Eccentricity e", value: formatNumber(anim.ecc, 6) },
-      { name: "Specific energy eps (AU^2/yr^2)", value: formatNumber(anim.epsAu2Yr2, 8) },
-      { name: "Specific angular momentum |h| (AU^2/yr)", value: formatNumber(anim.hAbsAu2Yr, 8) },
-      { name: "Periapsis r_p (AU)", value: formatNumber(anim.rpAu, 8) },
-      { name: "Speed v (km/s)", value: formatNumber(vKmS, 6) }
+      { name: "Orbit type", value: formatOrbitType(orbit.orbitType) },
+      { name: "Eccentricity e", value: o ? formatNumber(o.ecc, 6) : "—" },
+      { name: "Specific kinetic energy K (AU^2/yr^2)", value: kValue.textContent ?? "—" },
+      { name: "Specific potential energy U (AU^2/yr^2)", value: uValue.textContent ?? "—" },
+      { name: "Specific energy eps (AU^2/yr^2)", value: o ? formatSpecificEnergy(o.epsAu2Yr2, o.muAu3Yr2 / controls.r0Au) : "—" },
+      { name: "Specific angular momentum |h| (AU^2/yr)", value: o ? formatNumber(o.hAbsAu2Yr, 8) : "—" },
+      { name: "Periapsis r_p (AU)", value: o ? formatNumber(o.rpAu, 8) : "—" },
+      { name: "Speed v (km/s)", value: vKmSValue.textContent ?? "—" }
     ],
     notes: [
       "Teaching units: AU / yr / Msun with G = 4*pi^2 AU^3/(yr^2 Msun).",
-      "Orbit type is determined by conserved specific energy eps and angular momentum |h|.",
-      "For open orbits, the plotted path is clipped to a finite radius window."
+      "Bound or unbound follows the sign of eps = K + U; the conic shape follows the eccentricity.",
+      "Paths reaching beyond 6 r_0 (within 1.5 to 50 AU) are clipped to the plotted window."
     ]
   };
 }
@@ -467,12 +426,14 @@ const demoModes = createDemoModes({
         ]
       },
       {
+        // Typeset by renderMath(modal) each time the dialog opens (runtime demoModes.ts:389).
         heading: "How to use this instrument",
         type: "bullets",
         items: [
-          "Start at M=1, r0=1 AU, v/v_circ=1, direction=0 deg and observe a circular orbit.",
-          "Increase v/v_circ to sqrt(2) (escape) and notice eps approaches 0.",
-          "Change direction to increase/decrease |h| and watch periapsis change."
+          "Start at $M = 1\\,M_{\\odot}$, $r_0 = 1$ AU, $v/v_{\\rm circ} = 1$, direction $0^{\\circ}$: a circular orbit.",
+          "Press Escape to set $v/v_{\\rm circ} = \\sqrt{2}$ exactly and watch $\\varepsilon$ read 0.",
+          "Press Play on the Elliptical preset: $K$ and $U$ change while $\\varepsilon = K + U$ does not.",
+          "Tilt the direction to lower $|h|$ at the same speed and watch $r_p$ shrink."
         ]
       }
     ]
@@ -481,10 +442,11 @@ const demoModes = createDemoModes({
     title: "Station Mode: Conservation Laws",
     subtitle: "Add snapshot rows, then copy CSV or print.",
     steps: [
-      "Record a circular case (v/v_circ=1).",
-      "Record an escape case (v/v_circ=sqrt(2)).",
-      "Record a hyperbolic case (v/v_circ>sqrt(2)) and compare eps."
+      "Record a circular case (speed factor 1).",
+      "Press Escape and record it (speed factor exactly the square root of 2).",
+      "Record a hyperbolic case (speed factor above 1.42) and compare the specific energy."
     ],
+    // ASCII on purpose: the runtime writes these labels into the CSV header (decision D2).
     columns: [
       { key: "case", label: "Case" },
       { key: "mSolar", label: "M (Msun)" },
@@ -497,60 +459,20 @@ const demoModes = createDemoModes({
       { key: "h", label: "|h| (AU^2/yr)" },
       { key: "rp", label: "r_p (AU)" }
     ],
-    getSnapshotRow() {
-      return {
-        case: "Snapshot",
-        mSolar: formatNumber(state.massSolar, 3),
-        r0Au: formatNumber(state.r0Au, 3),
-        speedFactor: formatNumber(state.speedFactor, 3),
-        directionDeg: String(Math.round(state.directionDeg)),
-        orbitType: formatOrbitType(anim.orbitType),
-        e: formatNumber(anim.ecc, 3),
-        eps: epsValue.textContent ?? "\u2014",
-        h: hValue.textContent ?? "\u2014",
-        rp: formatNumber(anim.rpAu, 3)
-      };
-    },
+    getSnapshotRow: () => stationRow("Snapshot", { ...controls }),
     snapshotLabel: "Add row (snapshot)",
     rowSets: [
       {
-        label: "Add reference cases (M=1, r0=1)",
-        getRows() {
-          const cases = [
-            { label: "Circular", speedFactor: 1, directionDeg: 0 },
-            { label: "Elliptical", speedFactor: 0.75, directionDeg: 0 },
-            { label: "Escape", speedFactor: Math.SQRT2, directionDeg: 0 },
-            { label: "Hyperbolic", speedFactor: 1.8, directionDeg: 0 }
-          ];
-          return cases.map((c) => {
-            const mu = TwoBodyAnalytic.muAu3Yr2FromMassSolar(1);
-            const vCirc0AuYr = TwoBodyAnalytic.circularSpeedAuPerYr({ muAu3Yr2: mu, rAu: 1 });
-            const v0AuYr = c.speedFactor * vCirc0AuYr;
-            const init = ConservationLawsModel.initialStateAuYr({
+        label: "Add the four preset cases (1 solar mass, 1 AU)",
+        getRows: () =>
+          (Object.keys(PRESETS) as PresetName[]).map((name) =>
+            stationRow(PRESETS[name].label, {
+              massSolar: 1,
               r0Au: 1,
-              speedAuYr: v0AuYr,
-              directionDeg: c.directionDeg
-            });
-            const el = init.rVecAu && init.vVecAuYr ? TwoBodyAnalytic.orbitElementsFromStateAuYr({
-              rVecAu: init.rVecAu,
-              vVecAuYr: init.vVecAuYr,
-              muAu3Yr2: mu
-            }) : { orbitType: "invalid" as const };
-            const rpAu = el.orbitType === "invalid" ? NaN : el.pAu / (1 + el.ecc);
-            return {
-              case: c.label,
-              mSolar: "1.000",
-              r0Au: "1.000",
-              speedFactor: formatNumber(c.speedFactor, 3),
-              directionDeg: String(c.directionDeg),
-              orbitType: formatOrbitType(el.orbitType),
-              e: el.orbitType === "invalid" ? "\u2014" : formatNumber(el.ecc, 3),
-              eps: el.orbitType === "invalid" ? "\u2014" : formatNumber(el.epsAu2Yr2, 4),
-              h: el.orbitType === "invalid" ? "\u2014" : formatNumber(el.hAbsAu2Yr, 4),
-              rp: formatNumber(rpAu, 3)
-            };
-          });
-        }
+              speedFactor: PRESETS[name].speedFactor,
+              directionDeg: PRESETS[name].directionDeg
+            })
+          )
       }
     ]
   }
@@ -558,70 +480,20 @@ const demoModes = createDemoModes({
 
 demoModes.bindButtons({ helpButton, stationButton: stationModeButton });
 
-massSlider.value = String(valueToLogSlider(state.massSolar));
-r0Slider.value = String(valueToLogSlider(state.r0Au));
-
-function clearPresetPressed() {
-  for (const btn of presetButtons) {
-    btn.setAttribute("aria-pressed", "false");
-  }
-}
-
-massSlider.addEventListener("input", () => {
-  stopAnimation();
-  clearPresetPressed();
-  recomputeOrbit();
-});
-r0Slider.addEventListener("input", () => {
-  stopAnimation();
-  clearPresetPressed();
-  recomputeOrbit();
-});
-speedFactor.addEventListener("input", () => {
-  stopAnimation();
-  clearPresetPressed();
-  recomputeOrbit();
-});
-directionDeg.addEventListener("input", () => {
-  stopAnimation();
-  clearPresetPressed();
-  recomputeOrbit();
-});
-
-for (const button of presetButtons) {
-  button.addEventListener("click", () => {
-    const preset = button.getAttribute("data-preset");
-    if (!preset) return;
-    setPreset(preset);
-  });
-}
-
-playButton.addEventListener("click", () => startAnimation());
-pauseButton.addEventListener("click", () => stopAnimation());
-resetButton.addEventListener("click", () => resetAnimation());
-
 copyResults.addEventListener("click", () => {
-  setLiveRegionText(status, "Copying\u2026");
+  setLiveRegionText(status, "Copying…");
   void runtime
     .copyResults(exportResults())
-    .then(() => {
-      setLiveRegionText(status, "Copied results to clipboard.");
-    })
-    .catch((err) => {
-      setLiveRegionText(status, err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed.");
-    });
+    .then(() => setLiveRegionText(status, "Copied results to clipboard."))
+    .catch((err) => setLiveRegionText(status, err instanceof Error ? `Copy failed: ${err.message}` : "Copy failed."));
 });
 
+syncSlidersToControls();
+recomputeOrbit();
 if (prefersReducedMotion) {
-  playButton.disabled = true;
-  pauseButton.disabled = true;
   setLiveRegionText(status, "Reduced motion is enabled; animation is disabled.");
 }
-
-recomputeOrbit();
 initMath(document);
 
 const demoRoot = document.getElementById("cp-demo");
-if (demoRoot) {
-  initPopovers(demoRoot);
-}
+if (demoRoot) initPopovers(demoRoot);

@@ -6,6 +6,10 @@
   font-size: 0.95rem;
 }
 
+.control__unit {
+  color: var(--cp-muted);
+}
+
 .presets {
   display: grid;
   gap: var(--cp-space-2);
@@ -38,11 +42,18 @@
  * when height is the scarce resource.
  *
  * The cap follows the viewport now, so what is left after the readouts is what the orbit
- * gets, and it centres in the width it no longer needs. */
+ * gets, and it centres in the width it no longer needs.
+ *
+ * Measured 2026-09-11 on the settled layout (entry animations finished), root font 18px,
+ * eight readouts in two rows of four, and the arrow caption beside the orbit above 1025px
+ * (see the media block at the end): 25rem is the smallest whole-rem budget that keeps every
+ * readout above the fold at both sizes. At 1440x900 the lowest readout ends at 896px with a
+ * 450px orbit (24rem gave 914px). At 1280x720 the budget meets the 270px floor and the
+ * lowest readout ends at 716px (24rem gave 734px). */
 .orbit {
   width: 100%;
   height: auto;
-  max-width: clamp(280px, calc(100svh - 23rem), 700px);
+  max-width: clamp(270px, calc(100svh - 25rem), 700px);
   margin-inline: auto;
   aspect-ratio: 1 / 1;
   display: block;
@@ -53,6 +64,14 @@
     var(--cp-tint-teal),
     color-mix(in srgb, var(--cp-bg0) 75%, transparent)
   );
+}
+
+.stage__caption {
+  margin: var(--cp-space-2) 0 0;
+  max-width: 60ch;
+  color: var(--cp-muted);
+  font-size: 0.9rem;
+  text-align: center;
 }
 
 .orbit__path {
@@ -119,5 +138,17 @@
 @media (min-width: 1025px) {
   .cp-demo__stage {
     min-height: 0;
+  }
+
+  .stage {
+    grid-template-columns: minmax(0, 1fr) 14rem;
+    column-gap: var(--cp-space-4);
+  }
+
+  .stage__caption {
+    margin: 0;
+    align-self: end;
+    justify-self: start;
+    text-align: left;
   }
 }
