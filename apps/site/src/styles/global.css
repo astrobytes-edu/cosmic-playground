@@ -230,6 +230,10 @@ body {
    (WCAG 2.2 SC 1.4.10). The container is focusable, so it needs a focus indicator
    (WCAG 2.4.7) and must be reachable by keyboard (2.1.1). */
 .cp-table-scroll {
+  /* A containing block for positioned descendants. KaTeX's `span.katex-mathml` is `position: absolute`, and a
+     static scroller let it be placed against an ancestor outside the clip, so instructor pages with math in a
+     table scrolled sideways on a phone. */
+  position: relative;
   overflow-x: auto;
   max-width: 100%;
   border-radius: var(--cp-r-2);

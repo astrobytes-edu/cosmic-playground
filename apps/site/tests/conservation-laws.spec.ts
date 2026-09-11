@@ -803,3 +803,17 @@ test.describe("Conservation Laws -- Reduced Motion", () => {
     await expect(page.locator("#status")).toHaveText("Back to the start.");
   });
 });
+
+test.describe("Conservation Laws -- instructor page", () => {
+  test("does not scroll sideways at 390 px, with KaTeX inside a scrolling table (V3)", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    // "load", not "domcontentloaded": the escape comes from KaTeX's stylesheet, so it must have applied.
+    await page.goto("instructor/conservation-laws/", { waitUntil: "load" });
+    await expect(page.locator(".cp-table-scroll .katex").first()).toBeAttached();
+    const scroll = await page.evaluate(() => {
+      window.scrollTo(2000, 0);
+      return { scrollX: window.scrollX, scrollWidth: document.documentElement.scrollWidth };
+    });
+    expect(scroll.scrollX, JSON.stringify(scroll)).toBe(0);
+  });
+});
