@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "node \"$(git rev-parse --show-toplevel)/scripts/agent-hooks/pre-bash-guard.mjs\" --codex", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "node \"$(git rev-parse --show-toplevel)/scripts/agent-hooks/post-edit-math.mjs\" --codex", "timeout": 30 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"$(git rev-parse --show-toplevel)/scripts/agent-hooks/stop-status-reminder.mjs\" --codex", "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}

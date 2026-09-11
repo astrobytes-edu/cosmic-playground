@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "corepack pnpm -C apps/site dev",
     "build": "node scripts/build.mjs",
+    "gates": "node scripts/gates.mjs",
     "assets:katex": "node scripts/copy-katex-assets.mjs",
     "lint:invariants": "node scripts/validate-invariants.mjs",
     "lint": "biome check --max-diagnostics=10 && node scripts/validate-invariants.mjs && node scripts/validate-math-formatting.mjs && node scripts/validate-datasets.mjs && node scripts/validate-physics-models.mjs && node scripts/validate-plot-contract.mjs",
