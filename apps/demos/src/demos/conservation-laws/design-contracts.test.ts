@@ -193,4 +193,40 @@ describe("Conservation Laws -- Design System Contracts", () => {
       expect(missing, "cp-chip buttons missing aria-pressed").toEqual([]);
     });
   });
+
+  describe("Contracts from the 2026-09-11 review", () => {
+    it("K and U readouts exist with separated units", () => {
+      expect(html).toMatch(/id="kAu"><\/span> <span class="cp-readout__unit">/);
+      expect(html).toMatch(/id="uAu"><\/span> <span class="cp-readout__unit">/);
+      expect((html.match(/class="cp-readout__unit"/g) || []).length).toBeGreaterThanOrEqual(6);
+    });
+
+    it("slider values carry typeset units, never ASCII Msun or deg", () => {
+      expect(html).toMatch(/id="massValue"><\/span> <span class="control__unit">\$M_\{\\odot\}\$/);
+      expect(html).toMatch(/id="directionValue"><\/span><span class="control__unit">\$\^\{\\circ\}\$/);
+      expect(mainTs).not.toMatch(/textContent = `[^`]*\b(Msun|deg)\b/);
+    });
+
+    it("the stage names the arrow's time step", () => {
+      expect(html).toContain('id="arrowDtDays"');
+    });
+
+    it("announcements happen on change and presets, never inside the per-frame renderBody", () => {
+      const renderBody = mainTs.match(/function renderBody\(\) \{[\s\S]*?\n\}\n/)?.[0] ?? "";
+      expect(renderBody.length).toBeGreaterThan(0);
+      expect(renderBody).not.toContain("setLiveRegionText");
+      expect(mainTs).toContain('addEventListener("change", announce)');
+    });
+
+    it("help text is LaTeX, not ASCII math", () => {
+      expect(mainTs).not.toContain("sqrt(2)");
+    });
+
+    it("the old conic helpers and dead classifier are gone from logic.ts", () => {
+      const logicTs = fs.readFileSync(path.resolve(__dirname, "logic.ts"), "utf-8");
+      for (const name of ["classifyOrbit", "orbitalRadiusAu", "conicPositionAndTangentAu", "instantaneousSpeedAuPerYr", "velocityArrowSvg"]) {
+        expect(logicTs).not.toContain(`function ${name}`);
+      }
+    });
+  });
 });
