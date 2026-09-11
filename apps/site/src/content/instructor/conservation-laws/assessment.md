@@ -7,7 +7,7 @@ last_updated: "2026-01-30"
 has_math: true
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](../../instructor/)
+> - Instructor hub: [All instructor notes](../../instructor/)
 > - Back to this demo guide: [Guide](#index)
 > - Student demo: [/play/conservation-laws/](../../play/conservation-laws/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
@@ -21,11 +21,11 @@ At what value does the orbit stop being bound?
 
 A. 1.00  
 B. 1.20  
-C. 1.41  
+C. $\sqrt{2}\approx 1.414$  
 D. 2.00
 
 **Answer:** C  
-**Why:** escape occurs at $v_{\rm esc}=\sqrt{2}\,v_{\rm circ}\approx 1.414\,v_{\rm circ}$.
+**Why:** escape occurs at $v_{\rm esc}=\sqrt{2}\,v_{\rm circ}$. On the slider the orbit is still elliptical at 1.41 and already hyperbolic at 1.42; the Escape preset sets the exact value.
 
 ### Q2: Direction and angular momentum
 
@@ -37,7 +37,7 @@ C. $60^\circ$
 D. $85^\circ$ (near radial)
 
 **Answer:** D  
-**Why:** $h=|\mathbf{r}\times\mathbf{v}|=rv\sin\phi$ is smallest when motion is nearly radial (small sideways component).
+**Why:** $h = r v\cos\theta$, where $\theta$ is the direction from tangential, so only the sideways part of the velocity counts; at $85^\circ$ that is $\cos 85^\circ \approx 0.09$ of the speed.
 
 ## Short-answer (ASTR 201)
 

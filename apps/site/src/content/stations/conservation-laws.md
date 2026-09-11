@@ -1,7 +1,7 @@
 ---
 title: "Station card: conservation-laws"
 demo_slug: "conservation-laws"
-last_updated: "2026-01-30"
+last_updated: "2026-09-11"
 has_math: true
 ---
 **Name:** ________________________________  **Section:** __________  **Date:** __________
@@ -14,7 +14,7 @@ has_math: true
 > **Setup:** Use $M=1\,M_\odot$ and $r_0=1\,\mathrm{AU}$ (defaults).
 >
 > **Your station artifact (fill in):**
-> 1) **Escape test:** Find the speed factor where the orbit becomes “escape/parabolic” (about $\sqrt{2}$).  
+> 1) **Escape test:** Raise the speed factor until the orbit type changes from elliptical to hyperbolic. Record the last elliptical and first hyperbolic values, then press **Escape** and record the exact value it sets.  
 > 2) **Direction check:** Change direction to $60^\circ$. Does the escape speed factor change?  
 > 3) **What does change:** At a fixed speed factor, compare $h$ and periapsis $r_p$ at $0^\circ$ vs $60^\circ$.  
 > 4) **Explanation (1–2 sentences):** Use “energy sets bound vs unbound” and “angular momentum sets closest approach.”
@@ -24,6 +24,7 @@ has_math: true
 > - **Speed factor ($v/v_{\mathrm{circ}}$):** speed compared to circular speed at the same $r_0$.
 > - **Specific energy $\varepsilon$:** determines bound ($\varepsilon<0$) vs escape ($\varepsilon=0$) vs hyperbolic ($\varepsilon>0$).
 > - **Angular momentum $h$:** depends on the tangential part of the velocity; it controls how close the orbit swings in ($r_p$).
+> - **Kinetic $K$ and potential $U$:** they trade places as the body moves; their sum $\varepsilon$ does not change.
 >
 > **Key relationship (specific orbital energy):**
 >
@@ -38,6 +39,6 @@ has_math: true
 >   v_{\mathrm{esc}}=\sqrt{2}\,v_{\mathrm{circ}}
 >   $$
 >
->   (so speed factor $\approx 1.414$), regardless of direction.
+>   (so speed factor $\approx 1.414$; the slider steps from 1.41 to 1.42), regardless of direction.
 > - Changing direction changes $h$ (and therefore $r_p$), even if the speed magnitude stays the same.
 > - “Bound vs unbound” tracks the sign of $\varepsilon$.

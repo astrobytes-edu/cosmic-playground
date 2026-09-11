@@ -7,7 +7,7 @@ last_updated: "2026-02-02"
 has_math: true
 ---
 > **Navigation**
-> - Instructor hub: [/demos/_instructor/](../../instructor/)
+> - Instructor hub: [All instructor notes](../../instructor/)
 > - Student demo: [/play/conservation-laws/](../../play/conservation-laws/)
 > - This demo: [Model](#model) · [Activities](#activities) · [Assessment](#assessment) · [Backlog](#backlog)
 
@@ -57,9 +57,9 @@ Students should also be able to:
 
 2. **Decrease speed:** set $v/v_{\rm circ}\approx 0.75$.
    Ask: *“Does it still stay at the same radius?”* (No — it becomes elliptical.)
+   Press Play and ask: *"Which readouts change, and which stays fixed?"* ($K$ and $U$ change; $\varepsilon$ does not.)
 
-3. **Go to escape:** set $v/v_{\rm circ}=\sqrt{2}\approx 1.414$.
-   Ask: *“What changes qualitatively?”* (It no longer returns; it’s the escape boundary.)
+3. **Go to escape:** press the **Escape** preset, which sets $v/v_{\rm circ}=\sqrt{2}\approx 1.414$ exactly (the slider alone steps from 1.41, still bound, to 1.42, unbound).
 
 4. **Go beyond escape:** set $v/v_{\rm circ}\approx 1.8$.
    Ask: *“What should the orbit do now?”* (Hyperbolic flyby.)
