@@ -1,5 +1,7 @@
 # Score 100/100: All Categories to 20/20 — Implementation Plan
 
+> **Superseded 2026-09-10.** This plan aimed every category at 20/20 against a self-assessed grade. The adversarial audit of 2026-09-03 regraded the project C (59/100). Kept as a historical work order; the scores it targets are not current grades. See [the 2026-09-03 audit](../audits/2026-09-03-comprehensive-adversarial-audit.md).
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Raise every quality-audit category to 20/20 (test coverage, design system, physics correctness, accessibility, architecture) — making Cosmic Playground the first fully-tested, WCAG-compliant, contract-driven interactive astronomy education suite.

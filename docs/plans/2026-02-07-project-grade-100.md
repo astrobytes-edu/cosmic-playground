@@ -1,5 +1,7 @@
 # Project Grade 100/100 Implementation Plan
 
+> **Superseded 2026-09-10.** This plan set out to move a self-assessed grade from 92/100 to 100/100. The adversarial audit of 2026-09-03 regraded the project C (59/100). Kept as a historical work order; the target it was written against is not a current grade. See [the 2026-09-03 audit](../audits/2026-09-03-comprehensive-adversarial-audit.md).
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Bring the Cosmic Playground project from 92/100 (A) to 100/100 (A+) by closing all five grading gaps: E2E test coverage, physics reviews, accessibility, and architecture.

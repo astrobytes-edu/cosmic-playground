@@ -16,6 +16,7 @@ Each review documents:
 | Demo | Status | Date |
 |------|--------|------|
 | [novascope-port-survey](2026-09-04-novascope-port-survey.md) | Survey | 2026-09-04 |
+| [comprehensive-adversarial-audit](../audits/2026-09-03-comprehensive-adversarial-audit.md) | Current grade: C (59/100) | 2026-09-03 |
 | [retrograde-motion](retrograde-motion.md) | Complete | 2026-02-07 |
 | [eos-lab](eos-lab.md) | Complete | 2026-02-07 |
 | [component-consolidation](2026-02-07-component-consolidation.md) | Complete | 2026-02-07 |
@@ -36,9 +37,9 @@ Each review documents:
 | [planetary-conjunctions](planetary-conjunctions.md) | Physics review | 2026-02-07 |
 | [seasons](seasons.md) | Physics review | 2026-02-07 |
 | [telescope-resolution](telescope-resolution.md) | Physics review | 2026-02-07 |
-| [**Grade A+ (100/100)**](2026-02-07-grade-100.md) | Final audit | 2026-02-07 |
-| [comprehensive-review](2026-02-07-comprehensive-review.md) | Independent verification | 2026-02-07 |
-| [post-hardening-audit](2026-02-07-post-hardening-audit.md) | Follow-up gap analysis | 2026-02-07 |
+| [grade-100](2026-02-07-grade-100.md) | Superseded self-grade (A+); see 2026-09-03 audit | 2026-02-07 |
+| [comprehensive-review](2026-02-07-comprehensive-review.md) | Superseded self-grade (A+); see 2026-09-03 audit | 2026-02-07 |
+| [post-hardening-audit](2026-02-07-post-hardening-audit.md) | Superseded self-grade (A+); see 2026-09-03 audit | 2026-02-07 |
 
 ## Template
 

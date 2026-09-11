@@ -1,5 +1,7 @@
 # Project Review: Post-Hardening Follow-Up Audit
 
+> **Superseded 2026-09-10.** This follow-up reconfirmed a self-assessed A+ (100/100). The adversarial audit of 2026-09-03 regraded the project C (59/100). Its list of next improvements may still be useful; its grade is not current. See [the 2026-09-03 audit](../audits/2026-09-03-comprehensive-adversarial-audit.md).
+
 **Date:** 2026-02-07
 **Scope:** Follow-up audit after P1/P2 backlog fixes (aria-pressed, contract tests, dead code removal). Deep analysis of remaining gaps, enhancement opportunities, and hardening candidates across all 14 demos.
 **Commits:** `3a97680` (a11y fixes), `0199cb2` (dead code removal), `e8f464b` (review update)

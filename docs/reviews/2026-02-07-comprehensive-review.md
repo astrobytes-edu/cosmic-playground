@@ -1,5 +1,7 @@
 # Project Review: Comprehensive Quality Audit
 
+> **Superseded 2026-09-10.** This review graded the project A+ (100/100). The adversarial audit of 2026-09-03 regraded it C (59/100) on evidence this review did not examine -- what the demos actually render, rather than what the source and the test counts say. Kept unedited as a record of that earlier self-assessment, not as a current grade. See [the 2026-09-03 audit](../audits/2026-09-03-comprehensive-adversarial-audit.md).
+
 **Date:** 2026-02-07
 **Scope:** Independent verification of full project state after 18-commit hardening sprint (2,039 tests across 69 files). Spot-checks 5 recent commits. Architecture gap analysis across all 14 demos.
 **Commits:** `9094a19` through `5e8ca5a` (most recent 5)
