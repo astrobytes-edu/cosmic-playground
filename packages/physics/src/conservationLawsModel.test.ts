@@ -96,6 +96,60 @@ describe("ConservationLawsModel conic helpers", () => {
   });
 });
 
+describe("ConservationLawsModel.sampleConicArcAu", () => {
+  const maxStep = Math.PI / 90;
+  const angleBetween = (a: { xAu: number; yAu: number }, b: { xAu: number; yAu: number }) =>
+    Math.abs(Math.atan2(a.xAu * b.yAu - a.yAu * b.xAu, a.xAu * b.xAu + a.yAu * b.yAu));
+
+  it("a quarter circle (p = 1, omega = 0, nu 0 to pi/2) runs from (1, 0) to (0, 1) in steps of at most 2 deg", () => {
+    const pts = ConservationLawsModel.sampleConicArcAu({ ecc: 0, pAu: 1, omegaRad: 0, nuFromRad: 0, nuToRad: Math.PI / 2 });
+    expect(pts.length).toBeGreaterThan(2);
+    expect(pts[0].xAu).toBeCloseTo(1, 12);
+    expect(pts[0].yAu).toBeCloseTo(0, 12);
+    expect(pts[pts.length - 1].xAu).toBeCloseTo(0, 12);
+    expect(pts[pts.length - 1].yAu).toBeCloseTo(1, 12);
+    for (const p of pts) expect(Math.hypot(p.xAu, p.yAu)).toBeCloseTo(1, 12);
+    for (let i = 1; i < pts.length; i++) expect(angleBetween(pts[i - 1], pts[i])).toBeLessThanOrEqual(maxStep + 1e-12);
+  });
+
+  it("a closed arc from 6.0 to 0.2 rad runs forward through periapsis, on the conic (e = 0.5, p = 1)", () => {
+    const ecc = 0.5;
+    const pAu = 1;
+    const delta = 0.2 + 2 * Math.PI - 6.0;
+    const pts = ConservationLawsModel.sampleConicArcAu({ ecc, pAu, omegaRad: 0, nuFromRad: 6.0, nuToRad: 0.2 });
+    expect(pts).toHaveLength(Math.ceil(delta / maxStep) + 1);
+    const nus = pts.map((p) => Math.atan2(p.yAu, p.xAu));
+    for (let i = 0; i < pts.length; i++) {
+      expect(Math.hypot(pts[i].xAu, pts[i].yAu)).toBeCloseTo(pAu / (1 + ecc * Math.cos(nus[i])), 12);
+    }
+    expect(nus[0]).toBeCloseTo(6.0 - 2 * Math.PI, 12);
+    expect(nus[nus.length - 1]).toBeCloseTo(0.2, 12);
+    // Forward: the recovered anomaly rises through 0 rather than falling the long way round.
+    for (let i = 1; i < nus.length; i++) expect(nus[i]).toBeGreaterThan(nus[i - 1]);
+  });
+
+  it("a near-full forward sweep at e = 0.9999 (nu 0.01 to 0.0, about 2 pi) gives at least 180 points", () => {
+    const pts = ConservationLawsModel.sampleConicArcAu({ ecc: 0.9999, pAu: 1, omegaRad: 0, nuFromRad: 0.01, nuToRad: 0 });
+    expect(pts.length).toBeGreaterThanOrEqual(180);
+  });
+
+  it("an open orbit (e = 1.5) samples a forward arc and returns nothing for a backward one", () => {
+    const forward = ConservationLawsModel.sampleConicArcAu({ ecc: 1.5, pAu: 1, omegaRad: 0, nuFromRad: -1, nuToRad: 1 });
+    expect(forward.length).toBeGreaterThan(2);
+    expect(Math.atan2(forward[0].yAu, forward[0].xAu)).toBeCloseTo(-1, 12);
+    expect(Math.atan2(forward[forward.length - 1].yAu, forward[forward.length - 1].xAu)).toBeCloseTo(1, 12);
+    expect(ConservationLawsModel.sampleConicArcAu({ ecc: 1.5, pAu: 1, omegaRad: 0, nuFromRad: 1, nuToRad: -1 })).toEqual([]);
+  });
+
+  it("returns nothing for invalid input", () => {
+    const base = { ecc: 0.5, pAu: 1, omegaRad: 0, nuFromRad: 0, nuToRad: 1 };
+    expect(ConservationLawsModel.sampleConicArcAu({ ...base, ecc: -0.1 })).toEqual([]);
+    expect(ConservationLawsModel.sampleConicArcAu({ ...base, pAu: 0 })).toEqual([]);
+    expect(ConservationLawsModel.sampleConicArcAu({ ...base, nuToRad: Number.NaN })).toEqual([]);
+    expect(ConservationLawsModel.sampleConicArcAu({ ...base, maxStepRad: 0 })).toEqual([]);
+  });
+});
+
 describe("ConservationLawsModel.initialOrbit", () => {
   const at = (o: ReturnType<typeof ConservationLawsModel.initialOrbit>) => {
     if (o.orbitType === "invalid") throw new Error("unexpected invalid orbit");

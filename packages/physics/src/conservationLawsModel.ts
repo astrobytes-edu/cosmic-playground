@@ -141,6 +141,50 @@ function sampleConicOrbitAu(args: {
   return points;
 }
 
+/**
+ * Points along the conic from nuFromRad to nuToRad, in the direction of motion (increasing nu), both ends included.
+ * A closed orbit (ecc < 1) always runs forward: an end before the start wraps once, so 0 <= delta < 2 pi. An open
+ * orbit cannot wrap, so an end before the start returns []. The arc takes max(1, ceil(delta / maxStepRad)) equal steps
+ * in nu, with the same geometry as sampleConicOrbitAu: r = p / (1 + e cos nu), rotated by omega. Points where the
+ * conic does not reach (1 + e cos nu <= 0) are skipped.
+ */
+function sampleConicArcAu(args: {
+  ecc: number;
+  pAu: number;
+  omegaRad: number;
+  nuFromRad: number;
+  nuToRad: number;
+  maxStepRad?: number;
+}): Vec2Au[] {
+  const { ecc, pAu, omegaRad, nuFromRad, nuToRad, maxStepRad = Math.PI / 90 } = args;
+  if (!Number.isFinite(ecc) || ecc < 0) return [];
+  if (!Number.isFinite(pAu) || !(pAu > 0)) return [];
+  if (![omegaRad, nuFromRad, nuToRad].every(Number.isFinite)) return [];
+  if (!Number.isFinite(maxStepRad) || !(maxStepRad > 0)) return [];
+
+  let deltaRad = nuToRad - nuFromRad;
+  if (ecc < 1) deltaRad = wrap2Pi(deltaRad);
+  else if (deltaRad < 0) return [];
+
+  const steps = Math.max(1, Math.ceil(deltaRad / maxStepRad));
+  const cosO = Math.cos(omegaRad);
+  const sinO = Math.sin(omegaRad);
+  const points: Vec2Au[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const nu = nuFromRad + (i / steps) * deltaRad;
+    const denom = 1 + ecc * Math.cos(nu);
+    if (denom <= 0) continue;
+    const r = pAu / denom;
+    const xOrb = r * Math.cos(nu);
+    const yOrb = r * Math.sin(nu);
+    points.push({
+      xAu: xOrb * cosO - yOrb * sinO,
+      yAu: xOrb * sinO + yOrb * cosO
+    });
+  }
+  return points;
+}
+
 /** r(nu) = p / (1 + e cos nu). NaN where the conic does not reach (hyperbola past its asymptote). */
 function orbitalRadiusAu(args: { ecc: number; pAu: number; nuRad: number }): number {
   const { ecc, pAu, nuRad } = args;
@@ -406,6 +450,7 @@ export const ConservationLawsModel = {
   orbitalPeriodYr,
   timeBetweenTrueAnomaliesYr,
   sampleConicOrbitAu,
+  sampleConicArcAu,
   orbitalRadiusAu,
   conicPositionAndTangentAu,
   instantaneousSpeedAuPerYr,
