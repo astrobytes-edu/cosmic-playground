@@ -321,3 +321,108 @@ describe("ConservationLawsModel.advanceTrueAnomalyByTime", () => {
   });
 });
 
+describe("ConservationLawsModel orbital time: the period of a bound orbit and the time to the view edge", () => {
+  const valid = (o: ReturnType<typeof ConservationLawsModel.initialOrbit>) => {
+    if (o.orbitType === "invalid") throw new Error("unexpected invalid orbit");
+    return o;
+  };
+
+  it("orbitalPeriodYr: the Elliptical preset (M = 1, r0 = 1 AU, speed factor 0.75) takes 0.580214 yr", () => {
+    // a = p / (1 - e^2) = 0.5625 / (1 - 0.4375^2) = 0.695652 AU, and T = 2 pi sqrt(a^3 / mu) = a^(3/2) yr at M = 1.
+    const o = valid(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: 0.75, directionDeg: 0 }));
+    expect(ConservationLawsModel.orbitalPeriodYr({ ecc: o.ecc, pAu: o.pAu, muAu3Yr2: o.muAu3Yr2 })).toBeCloseTo(0.580214, 5);
+  });
+
+  it("timeBetweenTrueAnomaliesYr: an exact Escape at M = 1 (p = 2 AU, e = 1) takes 1.342112 yr from nu = 0 to acos(-2/3)", () => {
+    const o = valid(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: Math.SQRT2, directionDeg: 0 }));
+    expect(o.ecc).toBe(1);
+    expect(o.pAu).toBeCloseTo(2, 12);
+    const yr = ConservationLawsModel.timeBetweenTrueAnomaliesYr({
+      ecc: o.ecc,
+      pAu: o.pAu,
+      muAu3Yr2: o.muAu3Yr2,
+      nuFromRad: 0,
+      nuToRad: Math.acos(-2 / 3)
+    });
+    expect(yr).toBeCloseTo(1.342112, 5);
+  });
+
+  describe("a near-radial hyperbolic pass (M = 0.1, r0 = 0.1 AU, speed factor 1.8, direction -85 deg)", () => {
+    const o = valid(ConservationLawsModel.initialOrbit({ massSolar: 0.1, r0Au: 0.1, speedFactor: 1.8, directionDeg: -85 }));
+    // Expected times computed independently in Python: the hyperbolic Kepler equation, scipy quadrature of
+    // dt = (r^2 / h) dnu, and an ODE integration of dnu/dt = h / r^2 all agree to 1e-9 yr.
+    const toEdge = (rMaxAu: number) => {
+      const { nuMax } = ConservationLawsModel.conicTrueAnomalyDomainRadForPlot({ ecc: o.ecc, pAu: o.pAu, rMaxAu });
+      const yr = ConservationLawsModel.timeBetweenTrueAnomaliesYr({
+        ecc: o.ecc,
+        pAu: o.pAu,
+        muAu3Yr2: o.muAu3Yr2,
+        nuFromRad: o.nu0Rad,
+        nuToRad: nuMax
+      });
+      return { nuMax, yr };
+    };
+
+    it("takes 0.190053 yr from its start to a 1.5 AU edge", () => {
+      expect(o.orbitType).toBe("hyperbolic");
+      expect(toEdge(1.5).yr).toBeCloseTo(0.190053, 5);
+    });
+
+    it("takes 0.070763 yr to the demo's 6 r0 = 0.6 AU edge", () => {
+      expect(toEdge(0.6).yr).toBeCloseTo(0.070763, 5);
+    });
+
+    it("stepping advanceTrueAnomalyByTime to the 0.6 AU edge takes the same time within 0.1%", () => {
+      const { nuMax, yr } = toEdge(0.6);
+      const advance = (nuRad: number, dtYr: number) =>
+        ConservationLawsModel.advanceTrueAnomalyByTime({
+          nuRad,
+          ecc: o.ecc,
+          pAu: o.pAu,
+          hAbsAu2Yr: o.hAbsAu2Yr,
+          muAu3Yr2: o.muAu3Yr2,
+          dtYr,
+          nuMax
+        });
+      // 90 equal steps: one 60 Hz frame each when the trip is shown in 1.5 s.
+      const stepYr = yr / 90;
+      let nu = o.nu0Rad;
+      let elapsedYr = 0;
+      let stopped = false;
+      for (let i = 0; i < 1000 && !stopped; i++) {
+        const step = advance(nu, stepYr);
+        if (!step.stopped) {
+          nu = step.nuRad;
+          elapsedYr += stepYr;
+          continue;
+        }
+        // Count only the part of the last step used before the stop; the nu reached grows with the step.
+        let lo = 0;
+        let hi = stepYr;
+        for (let k = 0; k < 50; k++) {
+          const mid = 0.5 * (lo + hi);
+          if (advance(nu, mid).stopped) hi = mid;
+          else lo = mid;
+        }
+        elapsedYr += hi;
+        stopped = true;
+      }
+      expect(stopped).toBe(true);
+      expect(Math.abs(elapsedYr - yr) / yr, `stepped ${elapsedYr} yr, Kepler ${yr} yr`).toBeLessThan(0.001);
+    });
+  });
+
+  it("each is NaN outside its domain: a bound orbit has no open-orbit travel time, an open orbit no period", () => {
+    const o = valid(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: 0.75, directionDeg: 0 }));
+    const yr = ConservationLawsModel.timeBetweenTrueAnomaliesYr({
+      ecc: o.ecc,
+      pAu: o.pAu,
+      muAu3Yr2: o.muAu3Yr2,
+      nuFromRad: 0,
+      nuToRad: 1
+    });
+    expect(yr).toBeNaN();
+    expect(ConservationLawsModel.orbitalPeriodYr({ ecc: 1, pAu: 2, muAu3Yr2: o.muAu3Yr2 })).toBeNaN();
+  });
+});
+

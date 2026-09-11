@@ -339,12 +339,59 @@ function advanceTrueAnomalyByTime(args: {
   return { nuRad: nu, stopped: false };
 }
 
+/** Kepler's third law, T = 2 pi sqrt(a^3 / mu) with a = p / (1 - e^2). NaN unless the orbit is bound (0 <= e < 1). */
+function orbitalPeriodYr(args: { ecc: number; pAu: number; muAu3Yr2: number }): number {
+  const { ecc, pAu, muAu3Yr2 } = args;
+  if (![ecc, pAu, muAu3Yr2].every(Number.isFinite) || !(ecc >= 0 && ecc < 1) || !(pAu > 0) || !(muAu3Yr2 > 0)) {
+    return NaN;
+  }
+  const aAu = pAu / (1 - ecc * ecc);
+  return 2 * Math.PI * Math.sqrt((aAu * aAu * aAu) / muAu3Yr2);
+}
+
+/**
+ * Orbital time to go from true anomaly nuFromRad to nuToRad on an open orbit (e >= 1); NaN for a bound one.
+ * Both branches measure t(nu) from periapsis, so the result is negative when nuToRad < nuFromRad.
+ * - Parabolic (ecc === 1, as initialOrbit sets it): Barker's equation, t(nu) = (1/2) sqrt(p^3 / mu) (D + D^3 / 3),
+ *   with D = tan(nu / 2).
+ * - Hyperbolic: a = p / (e^2 - 1), F(nu) = sign(nu) acosh((e + cos nu) / (1 + e cos nu)), and
+ *   t(nu) = sqrt(a^3 / mu) (e sinh F - F). The max(1, ...) keeps round-off near periapsis out of acosh's domain error.
+ */
+function timeBetweenTrueAnomaliesYr(args: {
+  ecc: number;
+  pAu: number;
+  muAu3Yr2: number;
+  nuFromRad: number;
+  nuToRad: number;
+}): number {
+  const { ecc, pAu, muAu3Yr2, nuFromRad, nuToRad } = args;
+  if (![ecc, pAu, muAu3Yr2, nuFromRad, nuToRad].every(Number.isFinite) || !(ecc >= 1) || !(pAu > 0) || !(muAu3Yr2 > 0)) {
+    return NaN;
+  }
+  if (ecc === 1) {
+    const barker = (nuRad: number) => {
+      const d = Math.tan(nuRad / 2);
+      return d + (d * d * d) / 3;
+    };
+    return 0.5 * Math.sqrt((pAu * pAu * pAu) / muAu3Yr2) * (barker(nuToRad) - barker(nuFromRad));
+  }
+  const aAu = pAu / (ecc * ecc - 1);
+  const hyperbolicKepler = (nuRad: number) => {
+    const cosNu = Math.cos(nuRad);
+    const f = Math.sign(nuRad) * Math.acosh(Math.max(1, (ecc + cosNu) / (1 + ecc * cosNu)));
+    return ecc * Math.sinh(f) - f;
+  };
+  return Math.sqrt((aAu * aAu * aAu) / muAu3Yr2) * (hyperbolicKepler(nuToRad) - hyperbolicKepler(nuFromRad));
+}
+
 export const ConservationLawsModel = {
   velocityFromSpeedAndDirectionAuYr,
   initialStateAuYr,
   conicTrueAnomalyDomainRad,
   conicTrueAnomalyDomainRadForPlot,
   advanceTrueAnomalyByTime,
+  orbitalPeriodYr,
+  timeBetweenTrueAnomaliesYr,
   sampleConicOrbitAu,
   orbitalRadiusAu,
   conicPositionAndTangentAu,
