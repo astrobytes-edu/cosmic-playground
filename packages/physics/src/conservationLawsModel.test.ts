@@ -158,5 +158,18 @@ describe("ConservationLawsModel.initialOrbit", () => {
     expect(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 0, speedFactor: 1, directionDeg: 0 }).orbitType).toBe("invalid");
     expect(ConservationLawsModel.initialOrbit({ massSolar: 0, r0Au: 1, speedFactor: 1, directionDeg: 0 }).orbitType).toBe("invalid");
   });
+
+  it("an exact Escape after a mass change stays open (e = 1, plot domain inside pi)", () => {
+    const o = ConservationLawsModel.initialOrbit({ massSolar: 10 ** -0.96, r0Au: 1, speedFactor: Math.SQRT2, directionDeg: 0 });
+    if (o.orbitType === "invalid") throw new Error("invalid");
+    expect(o.orbitType).toBe("parabolic");
+    expect(o.ecc).toBe(1);
+    const dom = ConservationLawsModel.conicTrueAnomalyDomainRadForPlot({ ecc: o.ecc, pAu: o.pAu, rMaxAu: 6 });
+    expect(dom.nuMax).toBeLessThan(Math.PI);
+  });
+
+  it("rejects a clockwise start, which the conic helpers cannot place", () => {
+    expect(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: 1.2, directionDeg: 120 }).orbitType).toBe("invalid");
+  });
 });
 

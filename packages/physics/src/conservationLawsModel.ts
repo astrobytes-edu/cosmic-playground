@@ -271,6 +271,9 @@ export type InitialOrbit =
  * Everything the instrument shows, from the four controls. The display, Station Mode and the
  * announcements must all read this, so an exact preset (speedFactor = Math.SQRT2) cannot be
  * classified one way on screen and another in the table.
+ *
+ * It models counter-clockwise starts from +x only: the conic helpers place the body by
+ * counter-clockwise true anomaly, so a clockwise start (h < 0) is returned as invalid.
  */
 function initialOrbit(args: {
   massSolar: number;
@@ -290,27 +293,30 @@ function initialOrbit(args: {
   if (!init.rVecAu || !init.vVecAuYr) return { orbitType: "invalid" };
 
   const el = TwoBodyAnalytic.orbitElementsFromStateAuYr({ rVecAu: init.rVecAu, vVecAuYr: init.vVecAuYr, muAu3Yr2 });
-  if (el.orbitType === "invalid") return { orbitType: "invalid" };
+  if (el.orbitType === "invalid" || el.hAu2Yr < 0) return { orbitType: "invalid" };
 
   const radial = el.orbitType === "radial";
-  const closed = !radial && el.ecc < 1 && el.orbitType !== "parabolic";
+  // Round-off leaves an exact escape at e = 1 - 4e-16 for some masses and radii. Every e >= 1
+  // branch (plot domain, animation) must see it as open, so a parabolic orbit is e = 1 exactly.
+  const ecc = el.orbitType === "parabolic" ? 1 : el.ecc;
+  const closed = !radial && ecc < 1;
   return {
     orbitType: el.orbitType,
     muAu3Yr2,
     vCircAuYr,
     v0AuYr,
     rVecAu: init.rVecAu,
-    ecc: el.ecc,
+    ecc,
     pAu: el.pAu,
     omegaRad: el.omegaRad,
     hAbsAu2Yr: el.hAbsAu2Yr,
     epsAu2Yr2: el.epsAu2Yr2,
     nu0Rad: radial ? 0 : closed ? wrap2Pi(el.nuRad) : el.nuRad,
-    rpAu: radial ? 0 : el.pAu / (1 + el.ecc),
+    rpAu: radial ? 0 : el.pAu / (1 + ecc),
     raAu: radial
       ? el.epsAu2Yr2 < 0 ? -muAu3Yr2 / el.epsAu2Yr2 : Number.POSITIVE_INFINITY
-      : closed ? el.pAu / (1 - el.ecc) : Number.POSITIVE_INFINITY,
-    vPeriAuYr: el.hAbsAu2Yr > 0 ? (muAu3Yr2 * (1 + el.ecc)) / el.hAbsAu2Yr : 0
+      : closed ? el.pAu / (1 - ecc) : Number.POSITIVE_INFINITY,
+    vPeriAuYr: el.hAbsAu2Yr > 0 ? (muAu3Yr2 * (1 + ecc)) / el.hAbsAu2Yr : 0
   };
 }
 
