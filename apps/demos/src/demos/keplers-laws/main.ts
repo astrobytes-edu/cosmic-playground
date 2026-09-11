@@ -423,18 +423,31 @@ function updateEqualAreas() {
 
   const currentM = state.meanAnomalyRad;
   const startM = currentM - (sweepTime / period) * TAU;
-  const startTheta = TwoBodyAnalytic.meanToTrueAnomalyRad({ meanAnomalyRad: startM, e: state.e });
 
+  /*
+   * Sample the wedge in MEAN anomaly, which is uniform in time, and convert each sample.
+   *
+   * This used to interpolate TRUE anomaly linearly between the start of the sweep and the
+   * planet's current angle. Those two angles come from different places and can sit on
+   * opposite sides of the +/-pi wrap, so across aphelion the path went the long way round
+   * the orbit. Measured 2026-09-10 on the Earth preset (e = 0.017): median wedge 7,067 px^2,
+   * max 63,230 px^2 (8.95x) at M = 216 deg, 10 of 101 frames broken between M = 184 and
+   * 216 deg -- and 0.00% spread everywhere else. The physics was right; the drawing was not.
+   *
+   * startM to currentM is always exactly 10% of the period, so this sweep is monotonic, and
+   * meanToTrueAnomalyRad deliberately does not normalize M, so the angles stay continuous
+   * across 0 / 2pi without any unwrapping here.
+   */
   const numPoints = 30;
   let pathD = `M ${SVG_CENTER.x} ${SVG_CENTER.y}`;
   for (let i = 0; i <= numPoints; i++) {
-    const t = i / numPoints;
-    const theta = startTheta + t * (state.thetaRad - startTheta);
+    const meanAnomalyRad = startM + (i / numPoints) * (currentM - startM);
+    const theta = TwoBodyAnalytic.meanToTrueAnomalyRad({ meanAnomalyRad, e: state.e });
     const rAu = KeplersLawsModel.stateAtMeanAnomalyRad({
       aAu: state.aAu,
       e: state.e,
       centralMassSolar: state.massSolar,
-      meanAnomalyRad: TwoBodyAnalytic.trueToMeanAnomalyRad({ thetaRad: theta, e: state.e })
+      meanAnomalyRad
     }).rAu;
     const pos = orbitalToSvg(rAu, theta);
     pathD += ` L ${pos.x} ${pos.y}`;

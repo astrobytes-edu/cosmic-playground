@@ -573,3 +573,69 @@ test.describe("Kepler's Laws -- Reduced Motion", () => {
     await expect(page.locator("#play")).toBeDisabled();
   });
 });
+
+test.describe("Kepler's second law wedge", () => {
+  test("the equal-areas wedge keeps the same area all the way round the orbit", async ({ page }) => {
+    /*
+     * Audit P5. The wedge sweeps the most recent 10% of the period, so by Kepler's second
+     * law its area must be the same wherever the planet is. It used to be drawn by
+     * interpolating TRUE anomaly between two angles that could straddle the +/-pi wrap, so
+     * near aphelion the path went the long way round the orbit. Measured 2026-09-10 on the
+     * Earth preset (e = 0.017), sweeping the timeline in 101 steps: median 7,067 px^2, max
+     * 63,230 px^2 (8.95x) at M = 216 deg, 10 frames broken between M = 184 and 216 deg --
+     * and 0.00% spread everywhere else.
+     */
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("play/keplers-laws/", { waitUntil: "load" });
+    await expect(page.locator("#cp-demo")).toBeVisible();
+
+    const result = await page.evaluate(() => {
+      const toggle = document.querySelector<HTMLInputElement>("#toggleEqualAreas");
+      if (toggle && !toggle.checked) {
+        toggle.checked = true;
+        toggle.dispatchEvent(new Event("change", { bubbles: true }));
+        toggle.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      const scrub = document.querySelector<HTMLInputElement>("#timelineScrub");
+      const wedge = document.querySelector<SVGPathElement>("#equalAreasWedge");
+      const meanAnomaly = document.querySelector<HTMLInputElement>("#meanAnomalyDeg");
+      if (!scrub || !wedge || !meanAnomaly) return null;
+
+      // Shoelace area of the wedge polygon: the star, then the sampled arc.
+      const area = (d: string) => {
+        const n = (d.match(/-?\d+(?:\.\d+)?(?:e-?\d+)?/gi) ?? []).map(Number);
+        const points = Math.floor(n.length / 2);
+        let twice = 0;
+        for (let i = 0; i < points; i++) {
+          const j = (i + 1) % points;
+          twice += n[2 * i] * n[2 * j + 1] - n[2 * j] * n[2 * i + 1];
+        }
+        return Math.abs(twice) / 2;
+      };
+
+      const frames: Array<{ meanDeg: number; area: number }> = [];
+      for (let v = 0; v <= 1000; v += 10) {
+        scrub.value = String(v);
+        scrub.dispatchEvent(new Event("input", { bubbles: true }));
+        frames.push({ meanDeg: Number(meanAnomaly.value), area: area(wedge.getAttribute("d") ?? "") });
+      }
+      return {
+        active: document.querySelector("[data-equal-areas-active]")?.getAttribute("data-equal-areas-active"),
+        frames
+      };
+    });
+
+    expect(result, "wedge, timeline scrub and mean-anomaly readout all present").not.toBeNull();
+    expect(result!.active).toBe("true");
+
+    const sorted = result!.frames.map((f) => f.area).sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    expect(median).toBeGreaterThan(0);
+
+    const worst = result!.frames.reduce((w, f) => (f.area > w.area ? f : w));
+    expect(
+      worst.area / median,
+      `wedge area reaches ${(worst.area / median).toFixed(2)}x the median at M = ${worst.meanDeg} deg`
+    ).toBeLessThan(1.05);
+  });
+});
