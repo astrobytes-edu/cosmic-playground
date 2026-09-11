@@ -119,6 +119,8 @@ function canAnimate(): boolean {
 }
 
 function stopAnimation() {
+  // Read before disabling: a focused button that becomes disabled drops focus to <body>.
+  const pauseHadFocus = document.activeElement === pauseButton;
   anim.playing = false;
   if (anim.frameId !== null) {
     cancelAnimationFrame(anim.frameId);
@@ -126,6 +128,7 @@ function stopAnimation() {
   }
   playButton.disabled = !canAnimate();
   pauseButton.disabled = true;
+  if (pauseHadFocus && !playButton.disabled) playButton.focus();
 }
 
 function resetAnimation() {
@@ -134,6 +137,8 @@ function resetAnimation() {
   if (!o) return;
   anim.nuRad = o.nu0Rad;
   renderBody();
+  // Play announces "Playing."; without this, that would stay in the status after Reset stops the body.
+  setLiveRegionText(status, "Reset to the start.");
 }
 
 function startAnimation() {
@@ -146,9 +151,13 @@ function startAnimation() {
   // An open orbit that already ran to the edge of the view starts again from the beginning.
   if (o.ecc >= 1 && anim.nuRad >= anim.nuMax - 1e-9) anim.nuRad = o.nu0Rad;
 
+  // Read before disabling: a focused button that becomes disabled drops focus to <body>.
+  const playHadFocus = document.activeElement === playButton;
   anim.playing = true;
-  playButton.disabled = true;
   pauseButton.disabled = false;
+  playButton.disabled = true;
+  if (playHadFocus) pauseButton.focus();
+  setLiveRegionText(status, "Playing.");
   anim.lastTimeMs = performance.now();
 
   const tick = (nowMs: number) => {
@@ -367,7 +376,10 @@ for (const button of presetButtons) {
 }
 
 playButton.addEventListener("click", startAnimation);
-pauseButton.addEventListener("click", stopAnimation);
+pauseButton.addEventListener("click", () => {
+  stopAnimation();
+  setLiveRegionText(status, "Paused.");
+});
 resetButton.addEventListener("click", resetAnimation);
 
 /** One row from exact controls, through the same derivation as the screen. */

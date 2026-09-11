@@ -23,13 +23,13 @@
 
           <label class="control">
             <span>Central mass $M$</span>
-            <input id="massSlider" type="range" min="-1" max="1" step="0.01" value="0" />
+            <input id="massSlider" type="range" min="-1" max="1" step="0.01" value="0" aria-label="Central mass" />
             <span class="control__value"><span id="massValue"></span> <span class="control__unit">$M_{\odot}$</span></span>
           </label>
 
           <label class="control">
             <span>Initial radius $r_0$</span>
-            <input id="r0Slider" type="range" min="-1" max="1" step="0.01" value="0" />
+            <input id="r0Slider" type="range" min="-1" max="1" step="0.01" value="0" aria-label="Initial radius" />
             <span class="control__value"><span id="r0Value"></span> <span class="control__unit">AU</span></span>
           </label>
 
@@ -37,7 +37,15 @@
                to at least 1101 px wide (measured 2026-09-11). -->
           <label class="control control--stacked">
             <span>Speed factor $v/v_{\rm circ}$</span>
-            <input id="speedFactor" type="range" min="0" max="2.5" step="0.01" value="1" />
+            <input
+              id="speedFactor"
+              type="range"
+              min="0"
+              max="2.5"
+              step="0.01"
+              value="1"
+              aria-label="Speed factor, speed divided by circular speed"
+            />
             <span class="control__value"
               ><span id="speedValue"></span><span class="control__unit">$\times$</span>
               <span class="cp-muted">(escape at $\sqrt{2}$)</span></span
@@ -46,7 +54,15 @@
 
           <label class="control">
             <span>Direction from tangential (+ is outward)</span>
-            <input id="directionDeg" type="range" min="-85" max="85" step="1" value="0" />
+            <input
+              id="directionDeg"
+              type="range"
+              min="-85"
+              max="85"
+              step="1"
+              value="0"
+              aria-label="Direction from tangential, positive is outward"
+            />
             <span class="control__value"><span id="directionValue"></span><span class="control__unit">$^{\circ}$</span></span>
           </label>
 

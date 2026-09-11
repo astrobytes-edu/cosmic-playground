@@ -494,6 +494,51 @@ test.describe("Conservation Laws -- what the student sees", () => {
     for (const chip of chips) expect(chip.scrollWidth, JSON.stringify(chip)).toBeLessThanOrEqual(chip.clientWidth);
   });
 
+  test("Enter on Play and on Pause keeps focus on the playback controls and says so (U6, U1)", async ({ page }) => {
+    const focusedId = () => page.evaluate(() => document.activeElement?.id ?? "");
+    await page.locator("#play").focus();
+    await page.keyboard.press("Enter");
+    await expect.poll(focusedId).toBe("pause");
+    await expect(page.locator("#status")).toHaveText("Playing.");
+    await page.keyboard.press("Enter");
+    await expect.poll(focusedId).toBe("play");
+    await expect(page.locator("#status")).toHaveText("Paused.");
+  });
+
+  test("Reset after Play says so, so the status never reads Playing while stopped (U1)", async ({ page }) => {
+    await page.locator("#play").click();
+    await expect(page.locator("#status")).toHaveText("Playing.");
+    await page.locator("#reset").click();
+    await expect(page.locator("#play")).toBeEnabled();
+    await expect(page.locator("#status")).toHaveText("Reset to the start.");
+  });
+
+  test("focus moves from Pause to Play when an open orbit leaves the view (U6)", async ({ page }) => {
+    const focusedId = () => page.evaluate(() => document.activeElement?.id ?? "");
+    await page.locator('[data-preset="hyperbolic"]').click();
+    await page.locator("#play").click();
+    await page.locator("#pause").focus();
+    await expect.poll(focusedId).toBe("pause");
+    await expect(page.locator("#status")).toHaveText("The body has left the view. Press Play to run it again.", {
+      timeout: 10_000
+    });
+    await expect.poll(focusedId).toBe("play");
+  });
+
+  test("each slider's accessible name is plain words, without its value (U7)", async ({ page }) => {
+    const names: Record<string, string> = {
+      massSlider: "Central mass",
+      r0Slider: "Initial radius",
+      speedFactor: "Speed factor, speed divided by circular speed",
+      directionDeg: "Direction from tangential, positive is outward"
+    };
+    for (const [id, name] of Object.entries(names)) {
+      await expect(page.getByRole("slider", { name, exact: true })).toHaveAttribute("id", id);
+    }
+    await expect(page.locator("#r0Slider")).toHaveAttribute("aria-valuetext", "1.00 AU");
+    await expect(page.locator("#directionDeg")).toHaveAttribute("aria-valuetext", "0 degrees from tangential");
+  });
+
   test("Escape and Hyperbolic keep the direction; Circular and Elliptical set 0 (U9)", async ({ page }) => {
     await setSlider(page, "directionDeg", 60);
     await page.locator('[data-preset="escape"]').click();
