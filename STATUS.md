@@ -1,8 +1,8 @@
 # Cosmic Playground — status
 
-next: MERGED TO MAIN 2026-09-10 and deployed. This session: Explore filters made to work at all (all eight axes were read at build time under output:"static", so the server returned byte-identical HTML for every query); --cp-muted raised to clear WCAG AA on the four grounds the contrast suite never measured; three status vocabularies collapsed to `readiness` alone on cards (14 of 19 demos read draft + experimental + content_verified:true at once); the 37 declared misconceptions made searchable with per-word matching, punctuation folding, stopword and inflection handling; demo tags widened from expert to student vocabulary across all 20; a lunar declination sign error fixed (the model gave the Moon the SUN's declination, so the midsummer full moon got a 16-hour arc instead of 8.6). Adversarial sweep of all 20 demos on 2026-09-10: 429 controls exercised, every one alive, zero page errors, zero failed requests, no horizontal page scroll at 1440x900 (the only width that sweep used -- see the 768px nav finding below). ON BRANCH codex/nav-reflow-768, NOT YET MERGED (2026-09-10): the site header scrolled the page 11px sideways at 768px -- the desktop nav appeared at 768 but needs 836px to sit on one line, so from 768 to 835 'For Instructors' also wrapped and grew the sticky header. Both nav breakpoints (Layout.astro and MobileNav.astro) raised from 767px to 899px; new site-header.spec.ts sweeps 13 widths from 640 to 1280 and checks one nav, nothing past the viewport, and single-line links. RED failed exactly 768/800/820/834; GREEN 13/13; full E2E 1075 passed, 0 failed. OPEN: (1) no demo is readiness:launch-ready, so every card still carries a badge -- the code is ready for silence, the frontmatter pass is not done, and 18 of 19 say content_verified:true while reading `experimental`; (2) two binary-orbits `visual` baselines fail on a clean tree (darwin-only project, not in the CI desktop/mobile run); (3) remaining audit physics items P3-P11 are untouched and predate this branch.
-blocker: none — cluster-census shipped 2026-09-04 (20th demo) and had a UI/UX pass the same day; typecheck/build/invariants green
-due:
+next: Critical path to Sep 18 -- main at 0719a09 (2026-09-10). Done: lint, EOS timeout, land + deploy, wrong science P1/P2/P5/P7/P8, reviewer-visible B3/B8/B9/B10. WAITING ON ANNA: (1) B2 citation wording, drafted and not published; (2) readiness -- recommended parallax-distance to stable/launch-ready; angular-size, binary-orbits, seasons, em-spectrum to candidate; doppler-shift down to experimental (per-demo evidence in the readiness audit artifact; no frontmatter changed). Then: open wrong science P3, P4, P6, P9, P10, P11; U3 eos-lab first-visit tour.
+blocker: none -- two decisions are with Anna (B2 citations, readiness)
+due: 2026-09-18 (dossier)
 
 ## Current focus
 _Seeded 2026-06-07 by the brain STATUS.md convention (`~/brain/work/meta/status-convention.md`). Update in your cosmic-playground session; the brain pulls `next:`/`blocker:`/`due:` via `federate.py`._
@@ -11,6 +11,49 @@ Research-grade interactive demos (physics unit-tested), deployed live, used in A
 
 ## Open
 - [ ] (no empirical learning data yet — assessment plan via CRMSE)
+
+## Critical path to Sep 18, 2026-09-10
+
+Working from section 02 of the September readiness audit (the claude.ai artifact "Cosmic
+Playground Readiness Audit").
+
+- **Steps 1-3 done.** lint exits 0; the EOS grid test has a 30 s timeout sized from
+  measurement (about 0.5 s idle, 7.5-10.2 s under full E2E load, RED 2 of 2 at vitest's 5 s
+  default); main is deployed with the verify job green.
+- **Wrong science.** Fixed: P1 seasons terminator, P2 em-spectrum gradient, P5 Kepler
+  equal-area wedge (interpolate in mean anomaly), P7 Moon preset at mean distance, P8 lunar
+  declination. Open: P3 retrograde window-clipped durations, P4 eclipse-geometry clockwise
+  orbit (still `cy + r*sin` at main.ts:331), P6 Kepler fixed-length arrows, P9 telescope
+  radio presets, P10 blackbody swatch, P11 conservation-laws escape preset.
+- **Reviewer-visible.** B3 About escapes, B8 instructor fallback, B9 A+ documents superseded
+  and B10 math have landed. B2's citation wording is drafted and NOT published: it is a
+  scholarly claim under Anna's name.
+
+### B10: Markdown was corrupting the math before KaTeX saw it
+
+- Markdown ran first. CommonMark backslash-escapes ASCII punctuation, so `\,` became `,`, and
+  `_..._` inside `$...$` became emphasis; 74 of 74 Markdown math spans measured had been
+  altered. remark-math + rehype-katex now typeset at build and KatexAutoRender skips `.katex`.
+- 96 spans written with doubled backslashes, to survive the old escaping, are single again.
+- **The regression the gate caught.** 80 display equations in 35 files were written as
+  `$$...$$` on one line. remark-math takes display mode from the fence lines, not from the
+  number of dollars, so all 80 rendered inline and six overflowed a 320px viewport (6 reflow
+  failures). My first verification compared TeX strings, 1,495 of 1,495, and never checked
+  display mode -- that is how it got past me. Fenced by script; validate-math-formatting now
+  fails the build on the single-line form (RED: 80 lines, the same 80 the script targeted).
+- After: the 80 equations went 0 -> 80 in display mode (the other 10 matches are authored
+  inline), 1,495 annotations, 0 katex-error; full E2E 1,147 passed, 0 failed.
+
+### Readiness
+
+Per-demo evidence is in the artifact; nothing in frontmatter has changed. parallax-distance is
+the one demo with no open finding: no sideways scroll at 320px, its live region announced a
+distance change, full instructor bundle and station card. angular-size (live region empty
+after a slider move, U8) and binary-orbits (`details.cp-accordion` pushes /play/ to 447px at
+320px, U7) are one fix each from the same place. seasons and em-spectrum have the same U8 gap
+plus the orbit-chirality decision and missing Station/Challenge modes respectively.
+doppler-shift should drop to experimental: its z-defined presets still report a radial
+velocity (B7), the misconception its exhibit page lists.
 
 ## cluster-census: the histogram covered its own legend, 2026-09-05
 
