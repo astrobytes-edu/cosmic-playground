@@ -173,3 +173,83 @@ describe("ConservationLawsModel.initialOrbit", () => {
   });
 });
 
+describe("ConservationLawsModel.advanceTrueAnomalyByTime", () => {
+  const valid = (o: ReturnType<typeof ConservationLawsModel.initialOrbit>) => {
+    if (o.orbitType === "invalid") throw new Error("unexpected invalid orbit");
+    return o;
+  };
+
+  describe("a bound orbit at speed factor 0.3 (e = 0.91, starts at apoapsis)", () => {
+    const o = valid(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: 0.3, directionDeg: 0 }));
+    // Kepler's third law: T = 2 pi sqrt(a^3 / mu), with a = p / (1 - e^2).
+    const aAu = o.pAu / (1 - o.ecc * o.ecc);
+    const periodYr = 2 * Math.PI * Math.sqrt((aAu * aAu * aAu) / o.muAu3Yr2);
+    const advance = (nuRad: number, dtYr: number) =>
+      ConservationLawsModel.advanceTrueAnomalyByTime({
+        nuRad,
+        ecc: o.ecc,
+        pAu: o.pAu,
+        hAbsAu2Yr: o.hAbsAu2Yr,
+        muAu3Yr2: o.muAu3Yr2,
+        dtYr,
+        nuMax: 2 * Math.PI
+      });
+
+    it("one Kepler period (0.378834 yr) in a single call returns to the start", () => {
+      expect(o.ecc).toBeCloseTo(0.91, 12);
+      expect(periodYr).toBeCloseTo(0.378834, 5);
+      const step = advance(o.nu0Rad, periodYr);
+      expect(step.stopped).toBe(false);
+      // Compare cos and sin: the start is at nu = pi, where a wrapped angle may land on either side.
+      expect(Math.abs(Math.cos(step.nuRad) - Math.cos(o.nu0Rad))).toBeLessThan(1e-9);
+      expect(Math.abs(Math.sin(step.nuRad) - Math.sin(o.nu0Rad))).toBeLessThan(1e-9);
+    });
+
+    it("half a period from periapsis lands at apoapsis", () => {
+      const step = advance(0, periodYr / 2);
+      expect(Math.abs(Math.cos(step.nuRad) + 1)).toBeLessThan(1e-9);
+    });
+
+    it("300 equal steps summing to one period return to the start", () => {
+      let nu = o.nu0Rad;
+      for (let i = 0; i < 300; i++) nu = advance(nu, periodYr / 300).nuRad;
+      const wrappedDiff = Math.atan2(Math.sin(nu - o.nu0Rad), Math.cos(nu - o.nu0Rad));
+      expect(Math.abs(wrappedDiff)).toBeLessThan(1e-6);
+    });
+  });
+
+  it("an exact Escape runs from periapsis to r = 6 AU in Barker's time, then stops there", () => {
+    const o = valid(ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1, speedFactor: Math.SQRT2, directionDeg: 0 }));
+    expect(o.ecc).toBe(1);
+    expect(o.pAu).toBeCloseTo(2, 12);
+    // r = p / (1 + cos nu) = 6 AU at cos nu = -2/3.
+    const nuMax = Math.acos(-2 / 3);
+    const dtYr = 0.02 / 3;
+    let nu = 0;
+    let elapsedYr = 0;
+    let stopped = false;
+    for (let i = 0; i < 10000 && !stopped; i++) {
+      const step = ConservationLawsModel.advanceTrueAnomalyByTime({
+        nuRad: nu,
+        ecc: o.ecc,
+        pAu: o.pAu,
+        hAbsAu2Yr: o.hAbsAu2Yr,
+        muAu3Yr2: o.muAu3Yr2,
+        dtYr,
+        nuMax
+      });
+      nu = step.nuRad;
+      stopped = step.stopped;
+      elapsedYr += dtYr;
+    }
+    // Barker's equation: t = (1/2) sqrt(p^3 / mu) (D + D^3 / 3), with D = tan(nu / 2) = sqrt(5).
+    const D = Math.tan(nuMax / 2);
+    const barkerYr = 0.5 * Math.sqrt(o.pAu ** 3 / o.muAu3Yr2) * (D + D ** 3 / 3);
+    expect(D).toBeCloseTo(Math.sqrt(5), 12);
+    expect(barkerYr).toBeCloseTo(1.342112, 5);
+    expect(stopped).toBe(true);
+    expect(Math.abs(elapsedYr - barkerYr) / barkerYr).toBeLessThan(0.01);
+    expect(nu).toBe(nuMax);
+  });
+});
+

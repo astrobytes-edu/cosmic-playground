@@ -320,12 +320,53 @@ function initialOrbit(args: {
   };
 }
 
+const MAX_OPEN_ORBIT_DNU_RAD = 0.01;
+
+/**
+ * Advance the true anomaly by dtYr of orbital time, in the direction of motion.
+ * Closed orbits step the mean anomaly, so the timing is Kepler's exactly for any step size.
+ * Open orbits integrate dnu/dt = h / r^2 in sub-steps of at most MAX_OPEN_ORBIT_DNU_RAD and stop at nuMax.
+ */
+function advanceTrueAnomalyByTime(args: {
+  nuRad: number;
+  ecc: number;
+  pAu: number;
+  hAbsAu2Yr: number;
+  muAu3Yr2: number;
+  dtYr: number;
+  nuMax: number;
+}): { nuRad: number; stopped: boolean } {
+  const { nuRad, ecc, pAu, hAbsAu2Yr, muAu3Yr2, dtYr, nuMax } = args;
+  if (![nuRad, ecc, pAu, hAbsAu2Yr, muAu3Yr2, dtYr].every(Number.isFinite) || !(pAu > 0) || !(hAbsAu2Yr > 0)) {
+    return { nuRad, stopped: true };
+  }
+  if (ecc < 1) {
+    const aAu = pAu / (1 - ecc * ecc);
+    const meanMotionRadPerYr = Math.sqrt(muAu3Yr2 / (aAu * aAu * aAu));
+    const meanAnomalyRad = TwoBodyAnalytic.trueToMeanAnomalyRad({ thetaRad: nuRad, e: ecc }) + meanMotionRadPerYr * dtYr;
+    return { nuRad: wrap2Pi(TwoBodyAnalytic.meanToTrueAnomalyRad({ meanAnomalyRad, e: ecc })), stopped: false };
+  }
+  let nu = nuRad;
+  let remainingYr = dtYr;
+  for (let i = 0; i < 100000 && remainingYr > 0; i++) {
+    const rAu = orbitalRadiusAu({ ecc, pAu, nuRad: nu });
+    if (!(rAu > 0)) return { nuRad: nu, stopped: true };
+    const rateRadPerYr = hAbsAu2Yr / (rAu * rAu);
+    const stepYr = Math.min(remainingYr, MAX_OPEN_ORBIT_DNU_RAD / rateRadPerYr);
+    nu += rateRadPerYr * stepYr;
+    remainingYr -= stepYr;
+    if (nu >= nuMax) return { nuRad: nuMax, stopped: true };
+  }
+  return { nuRad: nu, stopped: false };
+}
+
 export const ConservationLawsModel = {
   velocityFromSpeedAndDirectionAuYr,
   initialStateAuYr,
   conicTrueAnomalyDomainRad,
   conicTrueAnomalyDomainRadForPlot,
   advanceTrueAnomalyRad,
+  advanceTrueAnomalyByTime,
   sampleConicOrbitAu,
   orbitalRadiusAu,
   conicPositionAndTangentAu,
