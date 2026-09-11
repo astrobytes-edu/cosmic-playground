@@ -15,6 +15,9 @@ import {
   viewRadiusAu,
   pickArrowDtDays,
   arrowLengthPx,
+  formatSpeedFactor,
+  formatSpecificEnergy,
+  orbitAnnouncement,
 } from "./logic";
 
 describe("Conservation Laws -- UI Logic", () => {
@@ -176,6 +179,9 @@ describe("Conservation Laws -- UI Logic", () => {
     it("unknown -> 'invalid'", () => {
       expect(formatOrbitType("foo")).toBe("invalid");
       expect(formatOrbitType("")).toBe("invalid");
+    });
+    it("radial -> 'radial (straight line)'", () => {
+      expect(formatOrbitType("radial")).toBe("radial (straight line)");
     });
   });
 
@@ -461,6 +467,47 @@ describe("Conservation Laws -- UI Logic", () => {
         const dt = pickArrowDtDays(v, s15)!;
         if (dt > 1) expect(arrowLengthPx(v, dt, s15)).toBeLessThanOrEqual(120);
       }
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // formatSpeedFactor
+  // -----------------------------------------------------------------------
+  describe("formatSpeedFactor", () => {
+    it("shows three decimals so the exact escape preset reads differently from the slider's 1.41", () => {
+      expect(formatSpeedFactor(Math.SQRT2)).toBe("1.414");
+      expect(formatSpeedFactor(1.41)).toBe("1.410");
+      expect(formatSpeedFactor(1)).toBe("1.000");
+      expect(formatSpeedFactor(0)).toBe("0");
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // formatSpecificEnergy
+  // -----------------------------------------------------------------------
+  describe("formatSpecificEnergy", () => {
+    it("shows round-off at exact escape as 0, never e-notation", () => {
+      expect(formatSpecificEnergy(3.5e-15, 39.478418)).toBe("0");
+      expect(formatSpecificEnergy(-1.4e-14, 197.860789)).toBe("0");
+    });
+
+    it("formats ordinary energies to four decimals", () => {
+      expect(formatSpecificEnergy(-28.375113, 39.478418)).toBe("-28.3751");
+      expect(formatSpecificEnergy(-0.2349, 39.478418)).toBe("-0.2349");
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // orbitAnnouncement
+  // -----------------------------------------------------------------------
+  describe("orbitAnnouncement", () => {
+    it("says bound, at escape or unbound in words", () => {
+      expect(orbitAnnouncement({ orbitType: "circular", ecc: 0, epsAu2Yr2: -19.7 })).toBe("Circular orbit: bound, eccentricity 0.");
+      expect(orbitAnnouncement({ orbitType: "elliptical", ecc: 0.4375, epsAu2Yr2: -28.4 })).toBe("Elliptical orbit: bound, eccentricity 0.438.");
+      expect(orbitAnnouncement({ orbitType: "parabolic", ecc: 1, epsAu2Yr2: 0 })).toBe("Parabolic orbit: exactly at escape, specific energy 0.");
+      expect(orbitAnnouncement({ orbitType: "hyperbolic", ecc: 2.24, epsAu2Yr2: 24.5 })).toBe("Hyperbolic orbit: unbound, eccentricity 2.240.");
+      expect(orbitAnnouncement({ orbitType: "radial", ecc: 1, epsAu2Yr2: -39.5 })).toBe("Radial motion: with no sideways speed the body falls straight in.");
+      expect(orbitAnnouncement({ orbitType: "invalid", ecc: NaN, epsAu2Yr2: NaN })).toBe("No valid orbit for these settings.");
     });
   });
 });

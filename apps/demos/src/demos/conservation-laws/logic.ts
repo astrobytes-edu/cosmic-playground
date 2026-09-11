@@ -86,8 +86,48 @@ export function formatOrbitType(type: string): string {
       return "parabolic (escape)";
     case "hyperbolic":
       return "hyperbolic";
+    case "radial":
+      return "radial (straight line)";
     default:
       return "invalid";
+  }
+}
+
+/** Three decimals, so the exact escape preset (1.414) is distinguishable from the slider's 1.41. */
+export function formatSpeedFactor(value: number): string {
+  return formatNumber(value, 3);
+}
+
+/** Specific energy for display. Round-off below 1e-9 of the potential scale mu/r0 shows as 0. */
+export function formatSpecificEnergy(epsAu2Yr2: number, potentialScaleAu2Yr2: number): string {
+  if (
+    Number.isFinite(epsAu2Yr2) &&
+    Number.isFinite(potentialScaleAu2Yr2) &&
+    Math.abs(epsAu2Yr2) <= 1e-9 * Math.abs(potentialScaleAu2Yr2)
+  ) {
+    return "0";
+  }
+  return formatNumber(epsAu2Yr2, 4);
+}
+
+/** Plain-words status for screen readers; call on `change` and preset clicks, never per frame. */
+export function orbitAnnouncement(args: { orbitType: string; ecc: number; epsAu2Yr2: number }): string {
+  const e = formatNumber(args.ecc, 3);
+  switch (args.orbitType) {
+    case "circular":
+      return "Circular orbit: bound, eccentricity 0.";
+    case "elliptical":
+      return `Elliptical orbit: bound, eccentricity ${e}.`;
+    case "parabolic":
+      return "Parabolic orbit: exactly at escape, specific energy 0.";
+    case "hyperbolic":
+      return `Hyperbolic orbit: unbound, eccentricity ${e}.`;
+    case "radial":
+      return args.epsAu2Yr2 < 0
+        ? "Radial motion: with no sideways speed the body falls straight in."
+        : "Radial motion: the body moves straight out and escapes.";
+    default:
+      return "No valid orbit for these settings.";
   }
 }
 
