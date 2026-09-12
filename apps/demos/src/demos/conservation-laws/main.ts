@@ -606,6 +606,12 @@ function renderEnergyInstrument(o: ValidOrbit, rAu: number, energy: { kAu2Yr2: n
     energyBarEps.style.left = `${bar.epsPx.toFixed(1)}px`;
   }
 
+  // Past the drawn window (a bound orbit reaching beyond the view) the dot and drop line would land off the plot, since
+  // both SVGs overflow visibly; hide them there, as the stage caption says the orbit leaves the view (physics review).
+  const inView = rAu <= viewRadiusAu({ raAu: o.raAu, r0Au: controls.r0Au }) * (1 + 1e-9);
+  for (const el of [ueffDot, ueffDrop]) el.style.display = ueff && inView ? "" : "none";
+  for (const el of [potentialBody, potentialDrop]) el.style.display = profile && inView ? "" : "none";
+
   if (ueff) {
     const x = ueff.xPx(rAu);
     ueffDot.setAttribute("cx", x.toFixed(2));

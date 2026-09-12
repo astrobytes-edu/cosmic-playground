@@ -1096,6 +1096,19 @@ test.describe("Conservation Laws -- orbit shell and energy instrument", () => {
     await expect(page.locator(".cp-demo__readouts .cp-panel-body")).toHaveAttribute("data-scroll", "bottom");
   });
 
+  test("a bound orbit reaching past the view hides the potential dots out there instead of drawing them off the plot (physics review)", async ({ page }) => {
+    // Speed factor 1.40 starts at periapsis (1 AU) and reaches r_a = 49 AU in a 6 AU view; 8 Steps are half a period.
+    await setSlider(page, "speedFactor", 1.4);
+    await expect(page.locator("#orbitType")).toHaveText("elliptical");
+    await expect(page.locator("#ueffDot")).toBeVisible();
+    for (let i = 0; i < 8; i++) await page.locator("#step").click();
+    await expect(page.locator("#ueffDot")).toBeHidden();
+    await expect(page.locator("#ueffDrop")).toBeHidden();
+    await page.getByRole("tab", { name: "Potential" }).click();
+    await expect(page.locator("#potentialBody")).toBeHidden();
+    await expect(page.locator("#potentialDrop")).toBeHidden();
+  });
+
   for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {
     test(`the instrument never covers the drawer when the page is scrolled to the bottom at ${size.width}x${size.height}`, async ({ page }) => {
       // Visual review 2026-09-11: a sticky instrument slid over "What to notice", 346x443px at 1440x900.
