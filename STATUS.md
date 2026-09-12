@@ -1,7 +1,7 @@
 # Cosmic Playground — status
 
-next: main 2026-09-11 -- conservation-laws refactor landed on branch claude/conservation-laws-refactor (HEAD 9d41f89, not pushed): exact start state, Kepler-timed animation (bound orbits step mean anomaly, open orbits sub-step by rate change), energy/momentum readouts (K, U, eps, h, r_p), a Step button, a fading motion trail, change/preset announcements and teaching copy matched to what the instrument shows, plus instructor-page math retyped from Unicode/ASCII to KaTeX and contained inside scrolling tables. Promoted status: beta / readiness: candidate (not stable/launch-ready -- needs Anna). Gates green: physics 479, demo unit 117, desktop E2E 81 passed/3 skipped, full E2E 1192 passed/34 skipped/0 failed. Push to main awaits Anna's approval. NEXT: Anna's design brief for a shared WebGPU orbit stage (in progress: stage + instrument + dock layout, effective-potential energy landscape, direct manipulation, 3D camera), then the planetary-conjunctions audit.
-blocker: none -- push approval is with Anna
+next: claude/orbit-stage 2026-09-11 -- conservation-laws refactor is on main and deployed (9d446e4). Orbit stage design approved by Anna (B's effective-potential landscape in A's glass, on the existing theme; Observatory/Potential view switch, Observatory default, activity sends students to Potential): docs/plans/2026-09-11-orbit-stage-design.md. Execute docs/plans/2026-09-11-orbit-stage-phase1.md (Tasks 0-12) in a separate session with superpowers:executing-plans; hand off to Anna before any push. Then Phase 2 (three.js Potential landscape), then the planetary-conjunctions audit.
+blocker: none -- Phase 1 not started
 due: 2026-09-18 (dossier)
 
 ## Current focus
