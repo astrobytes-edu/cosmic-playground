@@ -1,116 +1,78 @@
 @import "../../shared/stub-demo.css";
 
-
-.control__value {
-  color: var(--cp-muted);
-  font-size: 0.95rem;
-}
-
-.control__unit {
-  color: var(--cp-muted);
-}
-
-.presets {
-  display: grid;
-  gap: var(--cp-space-2);
-}
-
-.presets__label {
-  color: var(--cp-muted);
-  font-size: 0.9rem;
-}
-
-/* Two columns at every width. Four clipped all four chips at 1280px (measured 2026-09-11: "Hyperbolic"
- * scrolled 77px in a 64px chip) and "Hyperbolic" at 1440px (82px in 74px). */
-.presets__row {
-  display: grid;
-  gap: var(--cp-space-2);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-/* Play, Pause, Step and Reset on one row. With no layout rule the theme's 24px side padding made them 89, 107, 92
- * and 103px wide, so they wrapped: at 1440x900 Reset took a second row, and at 1280x720 Step and Reset ended at
- * 748px, below the panel's visible bottom at 713px (measured 2026-09-11). */
-.cp-button-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--cp-space-1);
-}
-
-.cp-button-row > .cp-button {
-  flex: 1 1 auto;
-  padding-inline: var(--cp-space-2);
-}
-
+/* ===== Stage: open sky, no card (orbit-stage design 3.1) ===== */
 .stage {
   display: grid;
-  place-items: center;
-  padding: var(--cp-space-4);
+  grid-template-rows: auto auto auto;
+  gap: var(--cp-space-3);
+  padding: var(--cp-space-2) var(--cp-space-2) 0;
 }
 
-/* -- Stage height budget -------------------------------------------------
- * Measured 2026-09-04 at 1440x900, before this pass: a 1,016px stage with all six readouts
- * below the fold, the first at y=1142.
- *
- * The orbit is square at `width: 100%`, so its height is its column's width -- 982px, and
- * the existing `max-width: 980px` only stopped it past a 1920 viewport. A square drawing
- * asks for the whole column's width as height, which is the most expensive shape there is
- * when height is the scarce resource.
- *
- * The cap follows the viewport now, so what is left after the readouts is what the orbit
- * gets, and it centres in the width it no longer needs.
- *
- * Measured 2026-09-11 on the settled layout (entry animations finished), root font 18px,
- * eight readouts in two rows of four, and the arrow caption beside the orbit above 1025px
- * (see the media block at the end): 25rem is the smallest whole-rem budget that keeps every
- * readout above the fold at both sizes. At 1440x900 the lowest readout ends at 896px with a
- * 450px orbit (24rem gave 914px). At 1280x720 the budget meets the 270px floor and the
- * lowest readout ends at 716px (24rem gave 734px).
- *
- * The desktop stage grid sizes the orbit's column with this same clamp (see the media block at the end), so the
- * caption sits beside the drawing. Change the two together. */
-.orbit {
-  width: 100%;
-  height: auto;
-  max-width: clamp(270px, calc(100svh - 25rem), 700px);
-  margin-inline: auto;
-  aspect-ratio: 1 / 1;
-  display: block;
-  border-radius: 18px;
-  border: 1px solid var(--cp-border);
-  background: radial-gradient(
-    circle at 20% 20%,
-    var(--cp-tint-teal),
-    color-mix(in srgb, var(--cp-bg0) 75%, transparent)
-  );
-}
-
-.stage__caption {
-  margin: var(--cp-space-2) 0 0;
-  max-width: 60ch;
-  color: var(--cp-muted);
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-/* Their own lines: the view radius and the time scale are about the whole drawing and playback, not the arrow. */
-.stage__caption-view,
-.stage__caption-time {
-  display: block;
-}
-
-/* `.cp-starfield` is `position: fixed; z-index: 0`, so it painted over the unpositioned drawing and caption. */
+/* `.cp-starfield` is position: fixed with z-index 0, so everything drawn over it is positioned above it. */
+.stage__head,
 .orbit,
 .stage__caption {
   position: relative;
   z-index: 1;
 }
 
+.stage__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cp-space-2) var(--cp-space-4);
+}
+
+.stage__title {
+  margin: 0;
+  font-family: var(--cp-font-display);
+  font-size: 1.1rem;
+  font-weight: var(--cp-font-semibold);
+  color: var(--cp-text);
+}
+
+.stage__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-0) var(--cp-space-3);
+  border: 1px solid var(--cp-border);
+  border-radius: 999px;
+  background: var(--cp-chip-bg);
+  color: var(--cp-text2);
+  font-size: 0.85rem;
+}
+
+.stage__chip::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cp-energy-total);
+}
+
+.presets {
+  margin-left: auto;
+}
+
+.presets__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-1);
+}
+
+/* Height-driven: a square drawing at width 100% asks for its column's width as height. The rem budget is set by
+ * measurement in Task 9; the SVG's default preserveAspectRatio (xMidYMid meet) centres the drawing in the box. */
+.orbit {
+  display: block;
+  width: 100%;
+  height: clamp(270px, calc(100svh - 16rem), 760px);
+}
+
 .orbit__path {
   fill: none;
   stroke: var(--cp-celestial-orbit);
-  stroke-width: 2;
-  opacity: 0.9;
+  stroke-width: 2.5;
 }
 
 /* The fading trail behind the body. main.ts sets each segment's stroke-opacity, newest brightest. */
@@ -140,17 +102,306 @@
   fill: var(--cp-accent-green);
 }
 
-/* -- Entry animations -------------------------------- */
-.cp-demo__controls {
-  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+.stage__caption {
+  margin: 0 auto;
+  max-width: 70ch;
+  color: var(--cp-muted);
+  font-size: 0.85rem;
+  text-align: center;
 }
 
+.stage__caption-view,
+.stage__caption-time {
+  display: block;
+}
+
+/* ===== Instrument column (design 7) ===== */
+.instrument .cp-panel-body {
+  display: grid;
+  gap: var(--cp-space-5);
+}
+
+.instrument__section {
+  display: grid;
+  gap: var(--cp-space-2);
+  min-width: 0;
+}
+
+.instrument__title {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--cp-space-2);
+  font-family: var(--cp-font-display);
+  font-size: 1rem;
+  font-weight: var(--cp-font-semibold);
+  color: var(--cp-text);
+}
+
+.instrument__unit {
+  font-family: var(--cp-font-sans);
+  font-size: 0.8rem;
+  font-weight: var(--cp-font-normal);
+  color: var(--cp-readout-unit-color);
+  white-space: nowrap;
+}
+
+.instrument__equation {
+  margin: 0;
+  overflow-x: auto;
+  color: var(--cp-text2);
+}
+
+.instrument__caption {
+  margin: 0;
+  color: var(--cp-muted);
+  font-size: 0.85rem;
+}
+
+.instrument .cp-readout__value {
+  font-size: 1.15rem;
+}
+
+.instrument__energy-values {
+  display: grid;
+  gap: var(--cp-space-1);
+}
+
+.instrument__energy-values .cp-readout {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0 var(--cp-space-2);
+}
+
+.instrument__values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--cp-space-3) var(--cp-space-4);
+}
+
+/* A 3px swatch in the quantity's colour, so no quantity relies on the amber value colour alone (design 3.3). */
+.cp-readout[data-energy] .cp-readout__label::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 0.9em;
+  margin-right: var(--cp-space-2);
+  vertical-align: -0.1em;
+  border-radius: 2px;
+  background: var(--cp-energy-total);
+}
+
+.cp-readout[data-energy="kinetic"] .cp-readout__label::before {
+  background: var(--cp-energy-kinetic);
+}
+
+.cp-readout[data-energy="potential"] .cp-readout__label::before {
+  background: var(--cp-energy-potential);
+}
+
+/* ===== Energy bar: U from 0 down to U, K from U to eps (design 7) ===== */
+.energy-bar {
+  --bar-row: 1.4rem;
+  --bar-head: 1.1rem;
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr);
+  gap: var(--cp-space-2);
+}
+
+.energy-bar__labels {
+  display: grid;
+  grid-template-rows: repeat(2, var(--bar-row));
+  row-gap: var(--cp-space-2);
+  align-items: center;
+  padding-top: var(--bar-head);
+  font-weight: var(--cp-font-semibold);
+}
+
+.energy-bar__label--u {
+  color: var(--cp-energy-potential);
+}
+
+.energy-bar__label--k {
+  color: var(--cp-energy-kinetic);
+}
+
+.energy-bar__tracks {
+  position: relative;
+  height: calc(var(--bar-head) + 2 * var(--bar-row) + var(--cp-space-2));
+}
+
+.energy-bar__fill {
+  position: absolute;
+  left: 0;
+  width: 0;
+  height: var(--bar-row);
+  border-radius: 4px;
+}
+
+.energy-bar__fill--u {
+  top: var(--bar-head);
+  background: var(--cp-energy-potential);
+}
+
+.energy-bar__fill--k {
+  top: calc(var(--bar-head) + var(--bar-row) + var(--cp-space-2));
+  background: var(--cp-energy-kinetic);
+}
+
+.energy-bar__marker {
+  position: absolute;
+  top: calc(var(--bar-head) - 3px);
+  bottom: 0;
+  left: 0;
+}
+
+.energy-bar__marker--zero {
+  width: 1px;
+  background: var(--cp-muted);
+}
+
+.energy-bar__marker--eps {
+  width: 2px;
+  margin-left: -1px;
+  background: var(--cp-energy-total);
+}
+
+.energy-bar__tick {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--cp-muted);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* ===== Effective-potential plot (design 6.2) ===== */
+.ueff {
+  position: relative;
+  height: 9rem;
+  padding-bottom: 1.1rem;
+}
+
+.ueff__plot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ueff__allowed {
+  fill: color-mix(in srgb, var(--cp-energy-kinetic) 18%, transparent);
+  stroke: none;
+}
+
+.ueff__zero {
+  stroke: var(--cp-faint);
+  stroke-dasharray: 3 4;
+}
+
+.ueff__curve {
+  fill: none;
+  stroke: var(--cp-energy-potential);
+  stroke-width: 2;
+}
+
+.ueff__eps {
+  stroke: var(--cp-energy-total);
+  stroke-width: 1.5;
+}
+
+.ueff__drop {
+  stroke: var(--cp-energy-kinetic);
+  stroke-width: 2;
+}
+
+.ueff__dot {
+  fill: var(--cp-energy-total);
+}
+
+.ueff__label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-50%);
+  color: var(--cp-muted);
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+/* ===== Dock (design 4) ===== */
+.dock .cp-panel-body {
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--cp-space-3) var(--cp-space-5);
+  align-items: end;
+}
+
+.dock__bar,
+.dock .cp-status {
+  grid-column: 1 / -1;
+}
+
+.dock__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cp-space-2);
+}
+
+.dock .cp-status {
+  margin: 0;
+}
+
+.control__value,
+.control__unit {
+  color: var(--cp-muted);
+}
+
+.cp-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-1);
+}
+
+.cp-button-row > .cp-button {
+  flex: 1 1 auto;
+  padding-inline: var(--cp-space-3);
+}
+
+/* ===== Drawer ===== */
+.drawer__equation {
+  overflow-x: auto;
+  text-align: center;
+}
+
+/* ===== Phones and tablets: stage, instrument, dock, drawer (grid in demo-shell.css) ===== */
+@media (max-width: 1024px) {
+  .orbit {
+    height: min(88vw, 60svh);
+  }
+
+  .presets {
+    margin-left: 0;
+  }
+}
+
+/* ===== Entry animations ===== */
 .cp-demo__stage {
   animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
-  animation-delay: calc(var(--cp-stagger) * 1);
 }
 
 .cp-demo__readouts {
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 1);
+}
+
+.cp-demo__controls {
   animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 2);
 }
@@ -158,35 +409,4 @@
 .cp-demo__drawer {
   animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 3);
-}
-
-/* NOT DONE: narrowing the readout columns to fit all six on one row. An 8.5rem floor gives
- * six columns at 1440 and takes the panel from 324px to 255px, but only there: at 1366 and
- * 1280 it gives five, so one card wraps to a second row anyway AND every card is narrower,
- * so labels like "Specific angular momentum" wrap further. Measured 2026-09-04, the panel
- * went 324px -> 344px at 1366 and 324px -> 364px at 1280. The shell's 200px floor is the
- * better compromise; the reserve below is sized for it. */
-
-/* The shell floors every stage at `clamp(420px, 70svh, 820px)` -- 630px at a 900px viewport,
- * more than this stage needs once the orbit is capped. Fifth demo running. */
-@media (min-width: 1025px) {
-  .cp-demo__stage {
-    min-height: 0;
-  }
-
-  /* The orbit's column is only as wide as the orbit (the clamp from `.orbit`'s max-width), and the two columns centre
-   * as a pair. A `minmax(0, 1fr)` column centred the orbit in its spare width, 149px from the caption at 1440x900
-   * and 179px at 1280x720 (measured 2026-09-11). */
-  .stage {
-    grid-template-columns: minmax(0, clamp(270px, calc(100svh - 25rem), 700px)) 14rem;
-    justify-content: center;
-    column-gap: var(--cp-space-4);
-  }
-
-  .stage__caption {
-    margin: 0;
-    align-self: end;
-    justify-self: start;
-    text-align: left;
-  }
 }

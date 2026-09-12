@@ -37,8 +37,11 @@ describe("Conservation Laws -- Design System Contracts", () => {
     });
 
     it("particle uses --cp-celestial-earth, not legacy color-mix", () => {
-      expect(css).toMatch(/\.orbit__particle[\s\S]*?--cp-celestial-earth/);
-      expect(css).not.toMatch(/\.orbit__particle[\s\S]*?color-mix/);
+      // Scoped to the rule body: an unscoped `.orbit__particle[\s\S]*?color-mix` matched any color-mix later in the
+      // file, such as the effective-potential plot's allowed-region fill.
+      const particleRule = /\.orbit__particle\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+      expect(particleRule).toContain("var(--cp-celestial-earth)");
+      expect(particleRule).not.toContain("color-mix");
     });
 
     it("particle has planet glow effect", () => {
@@ -328,13 +331,13 @@ describe("Conservation Laws -- Design System Contracts", () => {
   });
 
   describe("Orbit shell styling (orbit-stage design, Phase 1)", () => {
-    it.todo("colours energy by meaning, from the energy tokens", () => {
+    it("colours energy by meaning, from the energy tokens", () => {
       expect(css).toContain("var(--cp-energy-kinetic)");
       expect(css).toContain("var(--cp-energy-potential)");
       expect(css).toContain("var(--cp-energy-total)");
     });
 
-    it.todo("drops the boxed stage: no border, radius or gradient on the orbit drawing", () => {
+    it("drops the boxed stage: no border, radius or gradient on the orbit drawing", () => {
       const orbitRule = /\.orbit\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
       expect(orbitRule).not.toMatch(/border|radial-gradient/);
     });
