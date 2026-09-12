@@ -682,7 +682,8 @@ test.describe("Conservation Laws -- what the student sees", () => {
             .map((a) => a.finished)
         )
       );
-      await expect(page.locator(".cp-readout")).toHaveCount(8);
+      // Seven since the orbit shell: the orbit type moved from a readout card to the stage chip.
+      await expect(page.locator(".cp-readout")).toHaveCount(7);
       const bottoms = await page.locator(".cp-readout").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().bottom));
       for (const b of bottoms) expect(b).toBeLessThanOrEqual(size.height);
     });
@@ -710,7 +711,8 @@ test.describe("Conservation Laws -- what the student sees", () => {
       await settleAt(page, size);
       await setSlider(page, "speedFactor", 0);
       await expect(page.locator("#eps")).toHaveText("-39.4784");
-      await expect(page.locator(".cp-readout")).toHaveCount(8);
+      // Seven since the orbit shell: the orbit type moved from a readout card to the stage chip.
+      await expect(page.locator(".cp-readout")).toHaveCount(7);
       const bottoms = await page.locator(".cp-readout").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().bottom));
       for (const b of bottoms) expect(b, JSON.stringify(bottoms)).toBeLessThanOrEqual(size.height);
     });
@@ -731,15 +733,18 @@ test.describe("Conservation Laws -- what the student sees", () => {
       }
     });
 
-    test(`the caption sits within 40 px of the orbit at ${size.width}x${size.height} (V4)`, async ({ page }) => {
+    // The orbit shell puts the caption under the drawing, inside the stage (orbit-stage design section 4), not beside it.
+    test(`the caption sits within 40 px under the orbit at ${size.width}x${size.height} (V4)`, async ({ page }) => {
       await settleAt(page, size);
-      const box = await page.evaluate(() => ({
-        orbitRight: (document.getElementById("orbitSvg") as Element).getBoundingClientRect().right,
-        captionLeft: (document.getElementById("stageCaption") as Element).getBoundingClientRect().left
-      }));
-      const gap = box.captionLeft - box.orbitRight;
+      const box = await page.evaluate(() => {
+        const orbit = (document.getElementById("orbitSvg") as Element).getBoundingClientRect();
+        const caption = (document.getElementById("stageCaption") as Element).getBoundingClientRect();
+        return { orbitLeft: orbit.left, orbitRight: orbit.right, orbitBottom: orbit.bottom, captionLeft: caption.left, captionRight: caption.right, captionTop: caption.top };
+      });
+      const gap = box.captionTop - box.orbitBottom;
       expect(gap, JSON.stringify(box)).toBeGreaterThanOrEqual(0);
       expect(gap, JSON.stringify(box)).toBeLessThanOrEqual(40);
+      expect(box.captionLeft < box.orbitRight && box.captionRight > box.orbitLeft, JSON.stringify(box)).toBe(true);
     });
   }
 
@@ -857,5 +862,129 @@ test.describe("Conservation Laws -- instructor page", () => {
       return { scrollX: window.scrollX, scrollWidth: document.documentElement.scrollWidth };
     });
     expect(scroll.scrollX, JSON.stringify(scroll)).toBe(0);
+  });
+});
+
+test.describe("Conservation Laws -- orbit shell and energy instrument", () => {
+  const MU = 4 * Math.PI * Math.PI; // M = 1 solar mass
+  const setSlider = async (page: Page, id: string, value: number) => {
+    await page.locator(`#${id}`).evaluate((el: HTMLInputElement, v: number) => {
+      el.value = String(v);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }, value);
+  };
+  const num = async (page: Page, id: string) => Number.parseFloat((await page.locator(`#${id}`).textContent()) ?? "NaN");
+  const rect = (page: Page, sel: string) =>
+    page.locator(sel).evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height };
+    });
+
+  test.beforeEach(async ({ page }) => {
+    // Reduced motion switches off the entry slide, so boxes are measured where they settle.
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("play/conservation-laws/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#orbitType")).toHaveText("circular");
+  });
+
+  test("lays out stage left, instrument right and dock under the stage at 1440x900", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const stage = await rect(page, ".cp-demo__stage");
+    const inst = await rect(page, ".cp-demo__readouts");
+    const dock = await rect(page, ".cp-demo__controls");
+    expect(inst.left).toBeGreaterThanOrEqual(stage.right - 1);
+    expect(dock.top).toBeGreaterThanOrEqual(stage.bottom - 1);
+    expect(dock.right).toBeLessThanOrEqual(inst.left + 1);
+  });
+
+  test("glass panels blur what is behind them", async ({ page }) => {
+    const filter = await page.locator(".cp-demo__readouts").evaluate((el) => getComputedStyle(el).backdropFilter);
+    expect(filter).toBe("blur(16px)");
+  });
+
+  test("K ends on the total-energy marker, which stays put while K and U trade (Elliptical)", async ({ page }) => {
+    await page.locator('[data-preset="elliptical"]').click();
+    // Read once the drawing has settled. Under reduced motion the theme sets `transition-duration: 0.01ms` on every
+    // element, and `transition-property` defaults to `all`, so each new left/width starts a CSS transition: a read
+    // right after the click returned the previous orbit's bars (41.6px off, 2026-09-11). Two animation frames were not
+    // enough under a loaded parallel run, so this waits for the transitions themselves (getAnimations() also flushes
+    // style, which starts any that are pending).
+    const read = () =>
+      page.evaluate(async () => {
+        const transitions = document.getAnimations().filter((an) => an.constructor.name === "CSSTransition");
+        await Promise.all(transitions.map((an) => an.finished.catch(() => undefined)));
+        await new Promise<void>((done) => requestAnimationFrame(() => done()));
+        const r = (id: string) => (document.getElementById(id) as HTMLElement).getBoundingClientRect();
+        return {
+          uLeft: r("energyBarU").left,
+          uRight: r("energyBarU").right,
+          kLeft: r("energyBarK").left,
+          kRight: r("energyBarK").right,
+          zero: r("energyBarZero").left,
+          eps: r("energyBarEps").left + r("energyBarEps").width / 2,
+          // Context for failures: a page scroll or a track resize moves every bar, not just the marker.
+          scrollX: window.scrollX,
+          scrollY: window.scrollY,
+          trackLeft: r("energyBar").left,
+          trackWidth: r("energyBar").width,
+          epsStyleLeft: (document.getElementById("energyBarEps") as HTMLElement).style.left
+        };
+      });
+    const a = await read();
+    expect(a.uRight - a.uLeft, JSON.stringify(a)).toBeGreaterThan(10);
+    expect(Math.abs(a.uRight - a.zero), JSON.stringify(a)).toBeLessThanOrEqual(1);
+    expect(Math.abs(a.kLeft - a.uLeft), JSON.stringify(a)).toBeLessThanOrEqual(1);
+    expect(Math.abs(a.kRight - a.eps), JSON.stringify(a)).toBeLessThanOrEqual(1.5);
+    for (let i = 0; i < 3; i++) await page.locator("#step").click();
+    const b = await read();
+    expect(Math.abs(b.eps - a.eps), JSON.stringify({ a, b })).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(b.kRight - b.eps), JSON.stringify({ a, b })).toBeLessThanOrEqual(1.5);
+    expect(Math.abs(b.uLeft - a.uLeft), JSON.stringify({ a, b })).toBeGreaterThan(2);
+  });
+
+  test("the drop line is the radial kinetic energy: zero at both turning points, not between (Elliptical)", async ({ page }) => {
+    // Elliptical starts tangential at speed factor 0.75, so the start is apoapsis; 8 Steps are half an orbit.
+    await page.locator('[data-preset="elliptical"]').click();
+    const drop = async () => {
+      const l = page.locator("#ueffDrop");
+      const [y1, y2, kr] = await Promise.all([l.getAttribute("y1"), l.getAttribute("y2"), l.getAttribute("data-radial-kinetic")]);
+      return { kr: Number(kr), len: Math.abs(Number(y2) - Number(y1)) };
+    };
+    const apo = await drop();
+    expect(apo.kr).toBeLessThan(1e-6);
+    expect(apo.len).toBeLessThan(0.5);
+    for (let i = 0; i < 4; i++) await page.locator("#step").click();
+    const between = await drop();
+    expect(between.kr).toBeGreaterThan(1);
+    expect(between.len).toBeGreaterThan(3);
+    for (let i = 0; i < 4; i++) await page.locator("#step").click();
+    const peri = await drop();
+    expect(peri.kr).toBeLessThan(1e-6);
+    expect(peri.len).toBeLessThan(0.5);
+  });
+
+  test("the plot's r_p and r_a labels sit where independent arithmetic from the readouts puts them (tilted start)", async ({ page }) => {
+    await setSlider(page, "speedFactor", 0.9);
+    await setSlider(page, "directionDeg", 30);
+    const rp = await num(page, "rpAu");
+    const eps = await num(page, "eps");
+    const rMax = await num(page, "viewRadiusAu");
+    const ra = -MU / eps - rp; // 2a - r_p, with a = -mu / (2 eps)
+    const plot = await rect(page, "#ueffPlot");
+    const left = async (id: string) => Number.parseFloat(await page.locator(`#${id}`).evaluate((el) => (el as HTMLElement).style.left));
+    const rMin = 0.55 * rp;
+    expect(Math.abs((await left("ueffRpLabel")) - ((rp - rMin) / (rMax - rMin)) * plot.width)).toBeLessThanOrEqual(2);
+    expect(Math.abs((await left("ueffRaLabel")) - ((ra - rMin) / (rMax - rMin)) * plot.width)).toBeLessThanOrEqual(2);
+  });
+
+  test("radial motion hides the energy bar and the plot rather than drawing nonsense", async ({ page }) => {
+    // Drawn first: Playwright counts a zero-size box as hidden, so without this the test passes on an empty instrument.
+    await expect(page.locator("#energyBarK")).toBeVisible();
+    await expect(page.locator("#ueffCurve")).toBeVisible();
+    await setSlider(page, "speedFactor", 0);
+    await expect(page.locator("#orbitType")).toHaveText("radial");
+    await expect(page.locator("#energyBarK")).toBeHidden();
+    await expect(page.locator("#ueffCurve")).toBeHidden();
   });
 });

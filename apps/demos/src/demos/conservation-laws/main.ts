@@ -8,6 +8,9 @@ import {
   captionTimeLine,
   clamp,
   DEFAULT_SIM_YEARS_PER_SEC,
+  type EffectivePotentialPlot,
+  effectivePotentialPlot,
+  energyBarLayout,
   formatEccentricity,
   formatNumber,
   formatOrbitType,
@@ -21,6 +24,7 @@ import {
   toSvg,
   type TrailEntry,
   trailSegments,
+  turningPointsText,
   valueToLogSlider,
   viewRadiusAu
 } from "./logic";
@@ -79,6 +83,20 @@ const timeCaption = must<HTMLSpanElement>("#timeCaption");
 const stepCaption = must<HTMLSpanElement>("#stepCaption");
 const stepDurationValue = must<HTMLSpanElement>("#stepDuration");
 const viewRadiusAuValue = must<HTMLSpanElement>("#viewRadiusAu");
+const energyBarTracks = must<HTMLDivElement>("#energyBar");
+const energyBarU = must<HTMLSpanElement>("#energyBarU");
+const energyBarK = must<HTMLSpanElement>("#energyBarK");
+const energyBarZero = must<HTMLSpanElement>("#energyBarZero");
+const energyBarEps = must<HTMLSpanElement>("#energyBarEps");
+const ueffPlot = must<SVGSVGElement>("#ueffPlot");
+const ueffCurve = must<SVGPathElement>("#ueffCurve");
+const ueffAllowed = must<SVGPathElement>("#ueffAllowed");
+const ueffZero = must<SVGLineElement>("#ueffZero");
+const ueffEps = must<SVGLineElement>("#ueffEps");
+const ueffDrop = must<SVGLineElement>("#ueffDrop");
+const ueffDot = must<SVGCircleElement>("#ueffDot");
+const ueffRpLabel = must<HTMLSpanElement>("#ueffRpLabel");
+const ueffRaLabel = must<HTMLSpanElement>("#ueffRaLabel");
 
 const CENTER = { x: 300, y: 300 };
 const VIEW_RADIUS_PX = 250;
@@ -132,6 +150,26 @@ const anim = {
   /** Orbital years per second on screen; slowed from the default when characteristicYr would pass too fast. */
   timeScaleYrPerSec: DEFAULT_SIM_YEARS_PER_SEC
 };
+
+/** The effective-potential plot for the current orbit and box; null when there is nothing to draw. */
+let ueff: EffectivePotentialPlot | null = null;
+
+function setLine(line: SVGLineElement, x1: number, y1: number, x2: number, y2: number) {
+  line.setAttribute("x1", x1.toFixed(2));
+  line.setAttribute("y1", y1.toFixed(2));
+  line.setAttribute("x2", x2.toFixed(2));
+  line.setAttribute("y2", y2.toFixed(2));
+}
+
+function placeFill(el: HTMLElement, xPx: number, widthPx: number) {
+  el.style.left = `${xPx.toFixed(1)}px`;
+  el.style.width = `${Math.max(0, widthPx).toFixed(1)}px`;
+}
+
+/** U_eff at r for this orbit, from the model. */
+function uEffAt(o: ValidOrbit, rAu: number): number {
+  return ConservationLawsModel.effectivePotentialAu2Yr2({ rAu, hAbsAu2Yr: o.hAbsAu2Yr, muAu3Yr2: o.muAu3Yr2 });
+}
 
 function validOrbit(): ValidOrbit | null {
   return orbit.orbitType === "invalid" ? null : orbit;
@@ -347,6 +385,8 @@ function recomputeOrbit() {
     anim.characteristicYr = Number.NaN;
     renderTimeScale();
     stopAnimation();
+    hideEnergyInstrument();
+    renderPotentialPlot();
     return;
   }
 
@@ -404,6 +444,7 @@ function recomputeOrbit() {
   apoCaption.hidden = !(Number.isFinite(o.raAu) && o.raAu > rMaxAu);
   raAuValue.textContent = Number.isFinite(o.raAu) ? formatNumber(o.raAu, 1) : "";
 
+  renderPotentialPlot();
   renderBody();
   // Not redundant: the call at the top ran canAnimate() against the old orbit. This one re-runs it
   // against the new orbit, so Play's disabled state is right.
@@ -479,6 +520,76 @@ function renderBody() {
   vKmSValue.textContent = formatNumber(TwoBodyAnalytic.speedKmPerSFromAuPerYr(vAuYr), 3);
   kValue.textContent = formatNumber(energy.kAu2Yr2, 4);
   uValue.textContent = formatNumber(energy.uAu2Yr2, 4);
+  renderEnergyInstrument(o, Math.hypot(xAu, yAu), energy);
+}
+
+/** The plot's curve, allowed region, lines and turning-point labels. Runs when the orbit or the plot's box changes. */
+function renderPotentialPlot() {
+  const o = validOrbit();
+  const box = ueffPlot.getBoundingClientRect();
+  ueffPlot.setAttribute("viewBox", `0 0 ${Math.max(1, box.width).toFixed(0)} ${Math.max(1, box.height).toFixed(0)}`);
+  ueff = null;
+  if (o && o.orbitType !== "radial") {
+    const rc = ConservationLawsModel.circularOrbitRadiusAu({ hAbsAu2Yr: o.hAbsAu2Yr, muAu3Yr2: o.muAu3Yr2 });
+    ueff = effectivePotentialPlot({
+      uEff: (rAu) => uEffAt(o, rAu),
+      epsAu2Yr2: o.epsAu2Yr2,
+      uEffMinAu2Yr2: uEffAt(o, rc),
+      rpAu: o.rpAu,
+      raAu: o.raAu,
+      rMaxAu: viewRadiusAu({ raAu: o.raAu, r0Au: controls.r0Au }),
+      widthPx: box.width,
+      heightPx: box.height
+    });
+  }
+  for (const el of [ueffCurve, ueffAllowed, ueffZero, ueffEps, ueffDrop, ueffDot]) el.style.display = ueff ? "" : "none";
+  ueffRpLabel.hidden = !ueff;
+  ueffRaLabel.hidden = !ueff || ueff.raXPx === null;
+  ueffPlot.setAttribute(
+    "aria-label",
+    o
+      ? `Effective potential against distance. ${turningPointsText({ orbitType: o.orbitType, rpAu: o.rpAu, raAu: o.raAu })}`
+      : "Effective potential against distance."
+  );
+  if (!ueff) return;
+  ueffCurve.setAttribute("d", ueff.curveD);
+  ueffAllowed.setAttribute("d", ueff.allowedD);
+  setLine(ueffZero, 0, ueff.zeroYPx, box.width, ueff.zeroYPx);
+  setLine(ueffEps, 0, ueff.epsYPx, box.width, ueff.epsYPx);
+  ueffRpLabel.style.left = `${ueff.rpXPx.toFixed(1)}px`;
+  if (ueff.raXPx !== null) ueffRaLabel.style.left = `${ueff.raXPx.toFixed(1)}px`;
+}
+
+/** Energy bar, and the plot's dot and drop line, at the body's current r. Runs every animation frame. */
+function renderEnergyInstrument(o: ValidOrbit, rAu: number, energy: { kAu2Yr2: number; uAu2Yr2: number }) {
+  const bar = energyBarLayout({
+    kAu2Yr2: energy.kAu2Yr2,
+    uAu2Yr2: energy.uAu2Yr2,
+    epsAu2Yr2: o.epsAu2Yr2,
+    // The deepest potential on the orbit is at periapsis; NaN for radial motion (r_p = 0), which hides the bar.
+    uDeepestAu2Yr2: ConservationLawsModel.specificEnergyPartsAu2Yr2({ rAu: o.rpAu, vAuYr: 0, muAu3Yr2: o.muAu3Yr2 }).uAu2Yr2,
+    widthPx: energyBarTracks.clientWidth
+  });
+  for (const el of [energyBarU, energyBarK, energyBarZero, energyBarEps]) el.style.display = bar ? "" : "none";
+  if (bar) {
+    placeFill(energyBarU, bar.uBar.xPx, bar.uBar.widthPx);
+    placeFill(energyBarK, bar.kBar.xPx, bar.kBar.widthPx);
+    energyBarZero.style.left = `${bar.zeroPx.toFixed(1)}px`;
+    energyBarEps.style.left = `${bar.epsPx.toFixed(1)}px`;
+  }
+
+  if (!ueff) return;
+  const x = ueff.xPx(rAu);
+  ueffDot.setAttribute("cx", x.toFixed(2));
+  ueffDot.setAttribute("cy", ueff.epsYPx.toFixed(2));
+  setLine(ueffDrop, x, ueff.epsYPx, x, ueff.yPx(uEffAt(o, rAu)));
+  ueffDrop.dataset.radialKinetic = String(
+    ConservationLawsModel.radialKineticAu2Yr2({ rAu, hAbsAu2Yr: o.hAbsAu2Yr, muAu3Yr2: o.muAu3Yr2, epsAu2Yr2: o.epsAu2Yr2 })
+  );
+}
+
+function hideEnergyInstrument() {
+  for (const el of [energyBarU, energyBarK, energyBarZero, energyBarEps]) el.style.display = "none";
 }
 
 function announce() {
@@ -680,6 +791,11 @@ copyResults.addEventListener("click", () => {
 
 syncSlidersToControls();
 recomputeOrbit();
+// The plot is sized to its box, and the box is only known after layout; redraw whenever it changes.
+new ResizeObserver(() => {
+  renderPotentialPlot();
+  renderBody();
+}).observe(ueffPlot);
 if (prefersReducedMotion) {
   setLiveRegionText(status, "Reduced motion is enabled; use Step to move the body.");
 }

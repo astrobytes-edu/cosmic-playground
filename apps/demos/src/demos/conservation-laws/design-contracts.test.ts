@@ -328,6 +328,14 @@ describe("Conservation Laws -- Design System Contracts", () => {
     it("moves the orbit type into the stage header as a chip", () => {
       expect(html).toMatch(/class="stage__chip"[\s\S]*?id="orbitType"/);
     });
+
+    it("renders the energy bar and plot from logic.ts helpers and the physics model", () => {
+      expect(mainTs).toContain("energyBarLayout(");
+      expect(mainTs).toContain("effectivePotentialPlot(");
+      expect(mainTs).toContain("ConservationLawsModel.effectivePotentialAu2Yr2");
+      expect(mainTs).toContain("ConservationLawsModel.circularOrbitRadiusAu");
+      expect(mainTs).toContain("ConservationLawsModel.radialKineticAu2Yr2");
+    });
   });
 
   describe("Orbit shell styling (orbit-stage design, Phase 1)", () => {
