@@ -575,5 +575,25 @@ describe("ConservationLawsModel effective potential", () => {
   it("has no circular radius without angular momentum", () => {
     expect(ConservationLawsModel.circularOrbitRadiusAu({ hAbsAu2Yr: 0, muAu3Yr2: mu })).toBeNaN();
   });
+
+  it("reads 0, not NaN, at periapsis of exact escape orbits, where eps is round-off (physics review)", () => {
+    // eps is ~1e-15 while the cancelling terms are ~mu/r, so a tolerance scaled by max(|eps|, |U_eff|) was ~1e-24.
+    const nanCases: string[] = [];
+    for (const massSolar of [0.1, 1, 10]) {
+      for (const r0Au of [0.1, 1, 10]) {
+        for (const directionDeg of [0, 10, 30, 60, -45]) {
+          const esc = ConservationLawsModel.initialOrbit({ massSolar, r0Au, speedFactor: Math.SQRT2, directionDeg });
+          if (esc.orbitType === "invalid" || esc.orbitType === "radial") throw new Error(`no conic at ${massSolar}/${r0Au}/${directionDeg}`);
+          const args = { hAbsAu2Yr: esc.hAbsAu2Yr, muAu3Yr2: esc.muAu3Yr2, epsAu2Yr2: esc.epsAu2Yr2 };
+          for (const rAu of [esc.rpAu, r0Au]) {
+            const kr = ConservationLawsModel.radialKineticAu2Yr2({ ...args, rAu });
+            if (!Number.isFinite(kr)) nanCases.push(`M=${massSolar} r0=${r0Au} dir=${directionDeg} r=${rAu}`);
+          }
+          expect(ConservationLawsModel.radialKineticAu2Yr2({ ...args, rAu: esc.rpAu * 0.5 })).toBeNaN();
+        }
+      }
+    }
+    expect(nanCases).toEqual([]);
+  });
 });
 

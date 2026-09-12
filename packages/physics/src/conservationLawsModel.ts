@@ -278,12 +278,14 @@ function circularOrbitRadiusAu(args: { hAbsAu2Yr: number; muAu3Yr2: number }): n
  * Radial kinetic energy per unit mass, v_r^2/2 = eps - U_eff(r), AU^2/yr^2.
  * Round-off at a turning point reads as 0. A radius clearly outside the allowed region is NaN rather
  * than a clamped 0, so a caller that passes an impossible radius finds out.
+ * The round-off scale is mu/r, the size of the terms that cancel: near escape eps and U_eff(r_p) are both
+ * about 1e-15, and a tolerance scaled by them returned NaN at periapsis of exact escape orbits.
  */
 function radialKineticAu2Yr2(args: { rAu: number; hAbsAu2Yr: number; muAu3Yr2: number; epsAu2Yr2: number }): number {
   const uEff = effectivePotentialAu2Yr2(args);
   if (!Number.isFinite(uEff) || !Number.isFinite(args.epsAu2Yr2)) return Number.NaN;
   const d = args.epsAu2Yr2 - uEff;
-  if (d < -1e-9 * Math.max(Math.abs(args.epsAu2Yr2), Math.abs(uEff))) return Number.NaN;
+  if (d < -1e-9 * Math.max(Math.abs(args.epsAu2Yr2), args.muAu3Yr2 / args.rAu)) return Number.NaN;
   return Math.max(0, d);
 }
 
