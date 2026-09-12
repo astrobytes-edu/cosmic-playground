@@ -668,7 +668,10 @@ test.describe("Conservation Laws -- what the student sees", () => {
     await expect(page.locator("#step")).toBeDisabled();
   });
 
-  for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {
+  // 1440x900 only since the orbit shell. At 1280x720 design section 4 requires the stage view, energy bar and dock above
+  // the fold, not every value under the effective-potential plot; that check is in the orbit-shell describe below
+  // (Anna, 2026-09-11).
+  for (const size of [{ width: 1440, height: 900 }]) {
     test(`all readouts are above the fold at ${size.width}x${size.height}`, async ({ page }) => {
       await page.setViewportSize(size);
       await page.reload({ waitUntil: "domcontentloaded" });
@@ -707,15 +710,18 @@ test.describe("Conservation Laws -- what the student sees", () => {
   };
 
   for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {
-    test(`all readouts are above the fold for radial motion at ${size.width}x${size.height} (V2)`, async ({ page }) => {
-      await settleAt(page, size);
-      await setSlider(page, "speedFactor", 0);
-      await expect(page.locator("#eps")).toHaveText("-39.4784");
-      // Seven since the orbit shell: the orbit type moved from a readout card to the stage chip.
-      await expect(page.locator(".cp-readout")).toHaveCount(7);
-      const bottoms = await page.locator(".cp-readout").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().bottom));
-      for (const b of bottoms) expect(b, JSON.stringify(bottoms)).toBeLessThanOrEqual(size.height);
-    });
+    // 1440x900 only, as for the readouts test above (Anna, 2026-09-11).
+    if (size.width === 1440) {
+      test(`all readouts are above the fold for radial motion at ${size.width}x${size.height} (V2)`, async ({ page }) => {
+        await settleAt(page, size);
+        await setSlider(page, "speedFactor", 0);
+        await expect(page.locator("#eps")).toHaveText("-39.4784");
+        // Seven since the orbit shell: the orbit type moved from a readout card to the stage chip.
+        await expect(page.locator(".cp-readout")).toHaveCount(7);
+        const bottoms = await page.locator(".cp-readout").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().bottom));
+        for (const b of bottoms) expect(b, JSON.stringify(bottoms)).toBeLessThanOrEqual(size.height);
+      });
+    }
 
     test(`Play, Pause, Step and Reset share one row inside the viewport at ${size.width}x${size.height} (V1)`, async ({ page }) => {
       await settleAt(page, size);
@@ -1041,5 +1047,52 @@ test.describe("Conservation Laws -- orbit shell and energy instrument", () => {
     // At the start r = r0 = 1 AU. The caption's view radius has 2 decimals, worth about 1px here.
     expect(Math.abs(g.bodyX - (g.w / 2 + (1 / rMax) * (g.w / 2)))).toBeLessThanOrEqual(2);
     expect(Math.abs(g.rpLeft - (g.w / 2 + (rp / rMax) * (g.w / 2)))).toBeLessThanOrEqual(2);
+  });
+
+  // Option A (Anna, 2026-09-11): at 1440x900 the stage view, energy bar and whole dock are on screen and the instrument
+  // needs no inner scroll; at 1280x720 the stage view, energy bar and Play/Step row are, and the instrument is capped
+  // at the viewport rather than pushing the dock down.
+  // Wait for the finite entry animations: reduced motion shortens their duration but not their stagger delay, so with
+  // `both` fill a panel sits at the keyframe's 10px offset until the delay ends (the instrument measured top 34px
+  // against the stage's 24px, 2026-09-11). Infinite ones (the starfield twinkle) never finish, so they are skipped.
+  const settleEntry = (page: Page) =>
+    page.evaluate(() =>
+      Promise.all([
+        document.fonts.ready,
+        ...document
+          .getAnimations()
+          .filter((a) => a.effect?.getTiming().iterations !== Infinity)
+          .map((a) => a.finished.catch(() => undefined))
+      ]).then(() => undefined)
+    );
+
+  test("at 1440x900 the stage view, energy bar and whole dock are on screen, and the instrument does not scroll", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator("#orbitType")).toHaveText("circular");
+    await settleEntry(page);
+    expect((await rect(page, ".stage__view:not([hidden])")).bottom).toBeLessThanOrEqual(900);
+    expect((await rect(page, "#energyBar")).bottom).toBeLessThanOrEqual(900);
+    expect((await rect(page, ".cp-demo__controls")).bottom).toBeLessThanOrEqual(900);
+    const body = await page.locator(".cp-demo__readouts .cp-panel-body").evaluate((el) => el.scrollHeight - el.clientHeight);
+    expect(body).toBeLessThanOrEqual(1);
+  });
+
+  test("at 1280x720 the stage view, energy bar and Play/Step row are on screen, with the dock right under the stage", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator("#orbitType")).toHaveText("circular");
+    await settleEntry(page);
+    const stage = await rect(page, ".cp-demo__stage");
+    const dock = await rect(page, ".cp-demo__controls");
+    const box = { stage, dock, view: await rect(page, ".stage__view:not([hidden])"), bar: await rect(page, "#energyBar"), row: await rect(page, ".cp-button-row"), inst: await rect(page, ".cp-demo__readouts") };
+    expect(box.view.bottom, JSON.stringify(box)).toBeLessThanOrEqual(720);
+    expect(box.bar.bottom, JSON.stringify(box)).toBeLessThanOrEqual(720);
+    expect(box.row.bottom, JSON.stringify(box)).toBeLessThanOrEqual(720);
+    expect(box.inst.bottom, JSON.stringify(box)).toBeLessThanOrEqual(720);
+    // Decoupled: the gap is the shell's row gap, not a band the instrument's height opened (137px before, 2026-09-11).
+    expect(dock.top - stage.bottom, JSON.stringify(box)).toBeLessThanOrEqual(16);
+    // The values below the plot scroll inside the instrument here, and macOS scrollbars are invisible, so its edge fades.
+    await expect(page.locator(".cp-demo__readouts .cp-panel-body")).toHaveAttribute("data-scroll", "bottom");
   });
 });

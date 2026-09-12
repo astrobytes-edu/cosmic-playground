@@ -241,8 +241,9 @@ export function initScrollAffordance(root: Root = document): void {
   const demoRoot = resolveDemoRoot(root);
   if (!demoRoot) return;
 
+  // The orbit shell caps its instrument column at the viewport, so on short screens that body scrolls too.
   const scrollers = demoRoot.querySelectorAll<HTMLElement>(
-    ".cp-demo__controls .cp-panel-body, .cp-demo__sidebar .cp-panel-body"
+    '.cp-demo__controls .cp-panel-body, .cp-demo__sidebar .cp-panel-body, .cp-demo[data-shell="orbit"] .cp-demo__readouts .cp-panel-body'
   );
 
   for (const scroller of scrollers) {

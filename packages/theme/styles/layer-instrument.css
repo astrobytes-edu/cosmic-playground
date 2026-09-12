@@ -215,12 +215,16 @@
   color: var(--cp-text2);
 }
 
+/* No card: no background, padding or margins. The stub stylesheet's `.cp-readout { margin-top: 12px }` spaced cards;
+ * in the instrument's grids it added 12-16px between rows the grids already space (measured 2026-09-11). */
 .cp-layer-instrument[data-shell="orbit"] .cp-readout {
   background: none;
   padding: 0;
+  margin: 0;
 }
 
 .cp-layer-instrument[data-shell="orbit"] .cp-readout__label {
   text-transform: none;
   letter-spacing: 0;
+  margin-bottom: 0;
 }
