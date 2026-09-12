@@ -21,6 +21,7 @@ misconceptions:
 predict_prompt: "A planet on an elliptical orbit moves closer to its star. What happens to its speed, its kinetic energy and its total energy?"
 play_steps:
   - "Press Play (or Step) on the Elliptical preset and watch $K$ and $U$ trade places while $\\varepsilon$ stays fixed."
+  - "Switch the stage from Observatory to Potential and press Play again. Where does the gold line down to $U_{\\rm eff}(r)$ shrink to zero, and what is the orbit doing there?"
   - "Drag $v/v_{\\rm circ}$ from 1.41 to 1.42: the orbit switches from elliptical to hyperbolic. Press Escape for exactly $\\sqrt{2}$, where $\\varepsilon = 0$."
   - "Set the direction to $60^\\circ$ and compare $|h|$ and periapsis $r_p$ with $0^\\circ$ at the same speed factor."
 explain_prompt: "Which quantities stayed constant while the body moved, which changed, and what assumptions make that true?"

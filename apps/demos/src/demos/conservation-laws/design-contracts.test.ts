@@ -341,6 +341,12 @@ describe("Conservation Laws -- Design System Contracts", () => {
       expect(mainTs).toContain("potentialProfile(");
     });
 
+    it("the activity sends students from Observatory to Potential", () => {
+      const notice = /What to notice[\s\S]*?<\/details>/.exec(html)?.[0] ?? "";
+      expect(notice).toContain("Potential");
+      expect(notice).toContain("\\tfrac{1}{2}v_r^2");
+    });
+
     it("labels the Potential view as energy, not space", () => {
       expect(html).toMatch(/data-kind="misconception"[^>]*>\s*Height is energy per unit mass, not depth in space\./);
     });

@@ -863,6 +863,15 @@ test.describe("Conservation Laws -- instructor page", () => {
     });
     expect(scroll.scrollX, JSON.stringify(scroll)).toBe(0);
   });
+
+  test("the station card and instructor activities send students to the Potential view", async ({ page }) => {
+    await page.goto("stations/conservation-laws/", { waitUntil: "domcontentloaded" });
+    await expect(page.getByText("Turning points:").first()).toBeVisible();
+    // Case-insensitive: the card reads "Then switch the stage to Potential", lower-case mid-sentence.
+    await expect(page.getByText(/switch the stage to\s+Potential/i).first()).toBeVisible();
+    await page.goto("instructor/conservation-laws/", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: /Where does the orbit turn around\?/ })).toBeVisible();
+  });
 });
 
 test.describe("Conservation Laws -- orbit shell and energy instrument", () => {
