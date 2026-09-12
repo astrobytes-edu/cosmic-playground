@@ -370,11 +370,12 @@
 /* Capped at the viewport, with the body scrolling. The instrument spans the stage and dock rows, so uncapped it made
  * those rows at least its own height: measured 2026-09-11, the dock's bottom sat on the instrument's at every stage
  * budget (1045.5px at 1280x720 from 16rem to 30rem, with a 137px empty band under the stage). Capped, it no longer
- * sets the dock's position; at 1440x900 its content fits without scrolling. */
+ * sets the dock's position; at 1440x900 its content fits without scrolling.
+ * Not sticky: a sticky grid item is confined by the whole grid, not its area, so scrolling slid it over the drawer
+ * row and hid "What to notice" (visual review 2026-09-11, 346x443px at 1440x900). */
 .cp-demo[data-shell="orbit"] .cp-demo__readouts {
   align-self: start;
-  position: sticky;
-  top: var(--cp-space-4);
+  position: relative;
   z-index: 3;
   display: flex;
   flex-direction: column;

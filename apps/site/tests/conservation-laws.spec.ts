@@ -1095,4 +1095,25 @@ test.describe("Conservation Laws -- orbit shell and energy instrument", () => {
     // The values below the plot scroll inside the instrument here, and macOS scrollbars are invisible, so its edge fades.
     await expect(page.locator(".cp-demo__readouts .cp-panel-body")).toHaveAttribute("data-scroll", "bottom");
   });
+
+  for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {
+    test(`the instrument never covers the drawer when the page is scrolled to the bottom at ${size.width}x${size.height}`, async ({ page }) => {
+      // Visual review 2026-09-11: a sticky instrument slid over "What to notice", 346x443px at 1440x900.
+      await page.setViewportSize(size);
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await expect(page.locator("#orbitType")).toHaveText("circular");
+      await settleEntry(page);
+      await page.evaluate(async () => {
+        window.scrollTo(0, document.documentElement.scrollHeight);
+        await new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+      });
+      const box = { inst: await rect(page, ".cp-demo__readouts"), drawer: await rect(page, ".cp-demo__drawer") };
+      const overlaps =
+        box.inst.left < box.drawer.right &&
+        box.drawer.left < box.inst.right &&
+        box.inst.top < box.drawer.bottom &&
+        box.drawer.top < box.inst.bottom;
+      expect(overlaps, JSON.stringify(box)).toBe(false);
+    });
+  }
 });
