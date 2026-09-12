@@ -26,6 +26,8 @@ import {
   energyBarLayout,
   effectivePotentialPlot,
   turningPointsText,
+  potentialEnergyWindow,
+  potentialProfile,
 } from "./logic";
 
 describe("Conservation Laws -- UI Logic", () => {
@@ -626,5 +628,69 @@ describe("turningPointsText", () => {
     expect(turningPointsText({ orbitType: "radial", rpAu: 0, raAu: 1.2 })).toBe(
       "No angular momentum, so there is no barrier: the body falls straight in."
     );
+  });
+});
+
+describe("potentialEnergyWindow", () => {
+  it("runs from 12% below the minimum to max(eps, 0) plus 45% of the depth", () => {
+    // toBeCloseTo, not toEqual: 1.12 * -2 is -2.2400000000000002 in floating point.
+    const bound = potentialEnergyWindow({ epsAu2Yr2: -1.5, uEffMinAu2Yr2: -2 });
+    expect(bound.eLo).toBeCloseTo(-2.24, 12);
+    expect(bound.eHi).toBeCloseTo(0.9, 12);
+    const open = potentialEnergyWindow({ epsAu2Yr2: 0.5, uEffMinAu2Yr2: -2 });
+    expect(open.eLo).toBeCloseTo(-2.24, 12);
+    expect(open.eHi).toBeCloseTo(1.4, 12);
+  });
+});
+
+describe("potentialProfile", () => {
+  // Same toy as effectivePotentialPlot: mu = 2, h = 1, turning points 1/3 and 1 at eps = -1.5.
+  const uEff = (r: number) => -2 / r + 1 / (2 * r * r);
+  const args = { uEff, epsAu2Yr2: -1.5, uEffMinAu2Yr2: -2, rpAu: 1 / 3, raAu: 1, rMaxAu: 2, widthPx: 600, heightPx: 300 };
+  // Built inside each test, not at describe scope: a throw there fails collection ("no tests"), not an assertion.
+  const makeProfile = () => {
+    const prof = potentialProfile(args);
+    if (!prof) throw new Error("expected a profile");
+    return prof;
+  };
+
+  it("puts the Sun at the centre and r on a linear scale out to rMaxAu on each side", () => {
+    const prof = makeProfile();
+    expect(prof.xPx(0)).toBe(300);
+    expect(prof.xPx(2)).toBe(600);
+    expect(prof.xPx(-2)).toBe(0);
+    expect(prof.rpXPx).toBeCloseTo(350, 9);
+    expect(prof.raXPx ?? Number.NaN).toBeCloseTo(450, 9);
+  });
+
+  it("is mirror-symmetric about the Sun", () => {
+    const prof = makeProfile();
+    for (const r of [0.4, 0.8, 1.7]) {
+      expect(prof.xPx(r) + prof.xPx(-r)).toBeCloseTo(600, 9);
+    }
+  });
+
+  it("puts the turning points on the energy line", () => {
+    const prof = makeProfile();
+    expect(prof.yPx(uEff(1 / 3))).toBeCloseTo(prof.epsYPx, 6);
+    expect(prof.yPx(uEff(1))).toBeCloseTo(prof.epsYPx, 6);
+  });
+
+  it("draws two curve halves and two closed allowed regions, with no NaN", () => {
+    const prof = makeProfile();
+    expect(prof.curveD.match(/M /g)?.length).toBe(2);
+    expect(prof.allowedD.match(/Z/g)?.length).toBe(2);
+    expect(prof.curveD).not.toContain("NaN");
+  });
+
+  it("uses the same energy window as the instrument plot", () => {
+    const prof = makeProfile();
+    const plot = effectivePotentialPlot({ ...args, widthPx: 300, heightPx: 300 });
+    expect(prof.epsYPx).toBeCloseTo(plot?.epsYPx ?? Number.NaN, 9);
+  });
+
+  it("has no outer turning point for an open orbit, and is null for radial motion", () => {
+    expect(potentialProfile({ ...args, epsAu2Yr2: 0.5, raAu: Number.POSITIVE_INFINITY })?.raXPx).toBeNull();
+    expect(potentialProfile({ ...args, rpAu: 0 })).toBeNull();
   });
 });

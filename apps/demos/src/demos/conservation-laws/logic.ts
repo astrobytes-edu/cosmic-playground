@@ -414,8 +414,7 @@ export function effectivePotentialPlot(args: {
   if (!(rpAu > 0) || !(rMaxAu > rpAu) || !(uEffMinAu2Yr2 < 0) || !Number.isFinite(epsAu2Yr2)) return null;
   if (!(widthPx > 0) || !(heightPx > 0)) return null;
   const rMin = 0.55 * rpAu;
-  const eLo = 1.12 * uEffMinAu2Yr2;
-  const eHi = Math.max(epsAu2Yr2, 0) - 0.45 * uEffMinAu2Yr2;
+  const { eLo, eHi } = potentialEnergyWindow({ epsAu2Yr2, uEffMinAu2Yr2 });
   const xPx = (rAu: number) => ((rAu - rMin) / (rMaxAu - rMin)) * widthPx;
   const yPx = (e: number) => ((eHi - clamp(e, eLo, eHi)) / (eHi - eLo)) * heightPx;
   const pt = (rAu: number, e: number) => `${xPx(rAu).toFixed(2)} ${yPx(e).toFixed(2)}`;
@@ -453,4 +452,82 @@ export function turningPointsText(args: { orbitType: string; rpAu: number; raAu:
   if (orbitType === "circular") return `Circular: the energy line touches the bottom of the curve at ${formatNumber(rpAu, 2)} AU.`;
   if (Number.isFinite(raAu)) return `Turns around at ${formatNumber(rpAu, 2)} AU and ${formatNumber(raAu, 2)} AU.`;
   return `Turns around once, at ${formatNumber(rpAu, 2)} AU, and does not come back.`;
+}
+
+/**
+ * The energy range both potential drawings show: from 12% below the minimum U_eff (-mu^2/(2 h^2)) to max(eps, 0)
+ * plus 45% of that depth, so the trough, the energy line and some of the barrier are always in view.
+ */
+export function potentialEnergyWindow(args: { epsAu2Yr2: number; uEffMinAu2Yr2: number }): { eLo: number; eHi: number } {
+  return { eLo: 1.12 * args.uEffMinAu2Yr2, eHi: Math.max(args.epsAu2Yr2, 0) - 0.45 * args.uEffMinAu2Yr2 };
+}
+
+export type PotentialProfile = {
+  curveD: string;
+  allowedD: string;
+  epsYPx: number;
+  zeroYPx: number;
+  rpXPx: number;
+  /** Null for an open orbit, or when r_a is beyond the view. */
+  raXPx: number | null;
+  /** Signed distance along the cut through the Sun, AU, to px. */
+  xPx: (signedRAu: number) => number;
+  yPx: (eAu2Yr2: number) => number;
+};
+
+/**
+ * The Potential view's 2D drawing: the landscape cut through the Sun, U_eff(|x|) for x from -rMaxAu to +rMaxAu,
+ * mirrored about the centre, with r on a linear scale so distances read true. Within 0.55 r_p of the Sun the
+ * centrifugal barrier is off the top and is not drawn. The body is drawn at x = +r by the caller.
+ */
+export function potentialProfile(args: {
+  uEff: (rAu: number) => number;
+  epsAu2Yr2: number;
+  uEffMinAu2Yr2: number;
+  rpAu: number;
+  raAu: number;
+  rMaxAu: number;
+  widthPx: number;
+  heightPx: number;
+  samples?: number;
+}): PotentialProfile | null {
+  const { uEff, epsAu2Yr2, uEffMinAu2Yr2, rpAu, raAu, rMaxAu, widthPx, heightPx, samples = 90 } = args;
+  if (!(rpAu > 0) || !(rMaxAu > rpAu) || !(uEffMinAu2Yr2 < 0) || !Number.isFinite(epsAu2Yr2)) return null;
+  if (!(widthPx > 0) || !(heightPx > 0)) return null;
+  const { eLo, eHi } = potentialEnergyWindow({ epsAu2Yr2, uEffMinAu2Yr2 });
+  const cx = widthPx / 2;
+  const xPx = (signedRAu: number) => cx + (signedRAu / rMaxAu) * cx;
+  const yPx = (e: number) => ((eHi - clamp(e, eLo, eHi)) / (eHi - eLo)) * heightPx;
+  const pt = (signedRAu: number, e: number) => `${xPx(signedRAu).toFixed(2)} ${yPx(e).toFixed(2)}`;
+  const rMin = 0.55 * rpAu;
+  const rEnd = Number.isFinite(raAu) ? Math.min(raAu, rMaxAu) : rMaxAu;
+
+  const half = (sign: 1 | -1) => {
+    const out: string[] = [];
+    for (let i = 0; i <= samples; i++) {
+      const r = rMin + ((rMaxAu - rMin) * i) / samples;
+      out.push(`${i === 0 ? "M" : "L"} ${pt(sign * r, uEff(r))}`);
+    }
+    return out.join(" ");
+  };
+  const allowed = (sign: 1 | -1) => {
+    const out = [`M ${pt(sign * rpAu, epsAu2Yr2)}`];
+    for (let i = 0; i <= samples; i++) {
+      const r = rpAu + ((rEnd - rpAu) * i) / samples;
+      out.push(`L ${pt(sign * r, uEff(r))}`);
+    }
+    out.push(`L ${pt(sign * rEnd, epsAu2Yr2)} Z`);
+    return out.join(" ");
+  };
+
+  return {
+    curveD: `${half(-1)} ${half(1)}`,
+    allowedD: `${allowed(-1)} ${allowed(1)}`,
+    epsYPx: yPx(epsAu2Yr2),
+    zeroYPx: yPx(0),
+    rpXPx: xPx(rpAu),
+    raXPx: Number.isFinite(raAu) && raAu <= rMaxAu ? xPx(raAu) : null,
+    xPx,
+    yPx
+  };
 }
