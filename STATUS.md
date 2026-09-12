@@ -1,13 +1,39 @@
 # Cosmic Playground — status
 
-next: claude/orbit-stage 2026-09-11 -- conservation-laws refactor is on main and deployed (9d446e4). Orbit stage design approved by Anna (B's effective-potential landscape in A's glass, on the existing theme; Observatory/Potential view switch, Observatory default, activity sends students to Potential): docs/plans/2026-09-11-orbit-stage-design.md. Execute docs/plans/2026-09-11-orbit-stage-phase1.md (Tasks 0-12) in a separate session with superpowers:executing-plans; hand off to Anna before any push. Then Phase 2 (three.js Potential landscape), then the planetary-conjunctions audit.
-blocker: none -- Phase 1 not started
+next: Anna reviews the Phase 1 orbit shell screenshots; on approval, land to main, then Phase 2 (three.js Potential landscape)
+blocker: none -- Phase 1 done on claude/orbit-stage, not pushed; waiting on Anna's approval to land
 due: 2026-09-18 (dossier)
 
 ## Current focus
 _Seeded 2026-06-07 by the brain STATUS.md convention (`~/brain/work/meta/status-convention.md`). Update in your cosmic-playground session; the brain pulls `next:`/`blocker:`/`due:` via `federate.py`._
 
 Research-grade interactive demos (physics unit-tested), deployed live, used in ASTR 101/201. Cottrell EdTech instrument.
+
+## Orbit stage Phase 1 (2026-09-11, branch claude/orbit-stage, not pushed)
+
+Plan: docs/plans/2026-09-11-orbit-stage-phase1.md (Execution log has every command, count and erratum).
+
+- **Shipped:** conservation-laws in the orbit shell (stage left, glass instrument right, dock under the stage);
+  energy colour tokens and glass tokens with contrast on the composited ground; energy bar with K ending on a fixed
+  eps marker; U_eff(r) plot with its equation and a "Why an effective potential?" drawer section; Observatory /
+  Potential stage switch with the mirrored 2D profile; activity copy (What to notice, play step, station card,
+  instructor MW Short) sending students to Potential for turning points. Model gains `effectivePotentialAu2Yr2`,
+  `circularOrbitRadiusAu`, `radialKineticAu2Yr2`.
+- **Layout decision (Anna, option A):** instrument capped at the viewport (scrolls inside with the edge fade on short
+  screens), stage budget 28rem. 1440x900: every readout and the whole dock above the fold. 1280x720: stage view,
+  energy bar and Play/Step row above the fold; the dock's sliders run below.
+- **Gates (`corepack pnpm gates`, GATES_EXIT=0):** lint, typecheck, unit, build, e2e all EXIT=0; unit 1,896 tests in
+  the main run; E2E 1,204 passed, 34 skipped, 0 failed.
+- **Reviews:** visual-ux-reviewer: one High (sticky instrument covered the drawer when scrolled), fixed in ceadf57.
+  physics-reviewer: round 1 NOT SAFE (barrier curve cut off for near-circular orbits; dot drawn off the plot beyond
+  the view; NaN at periapsis near escape; ambiguous h^2/2r^2), all fixed (86c63d3, d12f81c, 90b3b61, 85bc080);
+  round 2 SAFE TO SHIP.
+- **Deferred:** eps label touches the rising curve in the Potential view (0px at 1280x720 and phones); stage text on
+  open sky dips to 1.0-2.8:1 where a star lands under a glyph (glass panels pass); no x-scale on either potential
+  drawing (Phase 2 label overlay, design 5.3); theme-wide reduced-motion override leaves entry stagger delays and
+  0.01ms `all` transitions; 320px view switch moves the dock 30px (status wraps); `.instrument__equation` is an
+  unlabelled Tab stop; KaTeX breaks drawer inequalities at 390/320px; station word bank says "Angular momentum h"
+  without "per unit mass".
 
 ## Open
 - [ ] (no empirical learning data yet — assessment plan via CRMSE)
