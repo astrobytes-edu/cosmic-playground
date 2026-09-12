@@ -320,6 +320,13 @@ describe("Conservation Laws -- Design System Contracts", () => {
       expect(html).toMatch(/id="ueffRaLabel"[^>]*>\$r_a\$</);
     });
 
+    it("writes the barrier fractions unambiguously and names |h| as per unit mass (physics review)", () => {
+      // h^2/2r^2 reads as (h^2/2) r^2.
+      expect(html).not.toMatch(/h\^2\/2r\^2|\\mu\^2\/2h\^2/);
+      expect(html).toContain("h^2/(2r^2)");
+      expect(html).toContain("Angular momentum per unit mass $|h|$");
+    });
+
     it("explains the effective potential in the drawer", () => {
       expect(html).toContain("Why an effective potential?");
       expect(html).toContain("v^2 = v_r^2 + v_t^2");

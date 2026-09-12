@@ -39,12 +39,12 @@ has_math: true
 **Setup (projector):** Elliptical preset, stage on **Observatory**.
 
 1. Ask for a prediction: *"Where on this orbit is the body neither approaching nor receding from the Sun?"* Press **Step** a few times and let students point.
-2. Switch the stage to **Potential**. The gold line from the energy level $\varepsilon$ down to the curve $U_{\rm eff}(r) = -\mu/r + h^2/2r^2$ has length $\tfrac{1}{2}v_r^2$.
+2. Switch the stage to **Potential**. The gold line from the energy level $\varepsilon$ down to the curve $U_{\rm eff}(r) = -\mu/r + h^2/(2r^2)$ has length $\tfrac{1}{2}v_r^2$.
 3. Step until the gold line vanishes. It vanishes only at $r_p$ and $r_a$, where $v_r = 0$ and the motion is purely tangential.
 
 **Key takeaway:** the body can only be where $U_{\rm eff}(r) \le \varepsilon$, and it turns around where the two are equal. The bottom of the curve, at $r_c = h^2/\mu$, is the circular orbit.
 
-**Discussion prompt:** *"Why does more angular momentum push $r_p$ outward?"* A larger $h$ raises the barrier $h^2/2r^2$.
+**Discussion prompt:** *"Why does more angular momentum push $r_p$ outward?"* A larger $h$ raises the barrier $h^2/(2r^2)$.
 
 ## Friday Lab (20–30+ min): Map orbit type in (speed, direction) space
 
