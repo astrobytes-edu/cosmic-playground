@@ -1,7 +1,7 @@
 # Cosmic Playground — status
 
-next: Anna reviews the Phase 1 orbit shell screenshots; on approval, land to main, then Phase 2 (three.js Potential landscape)
-blocker: none -- Phase 1 done on claude/orbit-stage, not pushed; waiting on Anna's approval to land
+next: Anna tweaks the conservation-laws orbit shell (Phase 1 landed on main 2026-09-11); then Phase 2 (three.js Potential landscape), then the planetary-conjunctions audit
+blocker: none
 due: 2026-09-18 (dossier)
 
 ## Current focus
@@ -9,7 +9,7 @@ _Seeded 2026-06-07 by the brain STATUS.md convention (`~/brain/work/meta/status-
 
 Research-grade interactive demos (physics unit-tested), deployed live, used in ASTR 101/201. Cottrell EdTech instrument.
 
-## Orbit stage Phase 1 (2026-09-11, branch claude/orbit-stage, not pushed)
+## Orbit stage Phase 1 (2026-09-11, landed on main from claude/orbit-stage)
 
 Plan: docs/plans/2026-09-11-orbit-stage-phase1.md (Execution log has every command, count and erratum).
 
