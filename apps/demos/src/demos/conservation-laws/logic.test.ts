@@ -608,6 +608,16 @@ describe("effectivePotentialPlot", () => {
     expect(effectivePotentialPlot({ ...args, rMaxAu: 0.2 })).toBeNull();
     expect(effectivePotentialPlot({ ...args, heightPx: 0 })).toBeNull();
   });
+
+  it("starts a near-circular orbit's curve at the top edge, so the centrifugal barrier is drawn (physics review)", () => {
+    // Circular toy: eps = U_eff,min = -2 at r_c = r_p = 0.5. At 0.55 r_p = 0.275, U_eff = -0.66, still below the
+    // window's top (0.9), so a start at 0.55 r_p drew a well open towards the Sun (y = 74.5 of 150 px).
+    const circ = effectivePotentialPlot({ ...args, epsAu2Yr2: -2, rpAu: 0.5, raAu: 0.5, rMaxAu: 1.5 });
+    if (!circ) throw new Error("expected a plot");
+    const [, x0, y0] = /^M (\S+) (\S+)/.exec(circ.curveD) ?? [];
+    expect(x0).toBe("0.00");
+    expect(Number(y0)).toBeLessThanOrEqual(0.01);
+  });
 });
 
 describe("turningPointsText", () => {
@@ -692,5 +702,13 @@ describe("potentialProfile", () => {
   it("has no outer turning point for an open orbit, and is null for radial motion", () => {
     expect(potentialProfile({ ...args, epsAu2Yr2: 0.5, raAu: Number.POSITIVE_INFINITY })?.raXPx).toBeNull();
     expect(potentialProfile({ ...args, rpAu: 0 })).toBeNull();
+  });
+
+  it("starts both halves of a near-circular orbit's curve at the top edge (physics review)", () => {
+    const circ = potentialProfile({ ...args, epsAu2Yr2: -2, rpAu: 0.5, raAu: 0.5, rMaxAu: 1.5 });
+    if (!circ) throw new Error("expected a profile");
+    const starts = [...circ.curveD.matchAll(/M (\S+) (\S+)/g)].map((m) => Number(m[2]));
+    expect(starts).toHaveLength(2);
+    for (const y of starts) expect(y).toBeLessThanOrEqual(0.01);
   });
 });

@@ -396,7 +396,7 @@ export type EffectivePotentialPlot = {
 
 /**
  * U_eff(r) in plot pixels, y down. `uEff` is injected so this file stays free of physics imports.
- * r runs from 0.55 r_p to rMaxAu. Energy runs from 12% below the minimum U_eff (-mu^2/(2 h^2)) up to max(eps, 0)
+ * r runs from curveStartAu (0.55 r_p, or closer in for a near-circular orbit) to rMaxAu. Energy runs from 12% below the minimum U_eff (-mu^2/(2 h^2)) up to max(eps, 0)
  * plus 45% of that depth; the centrifugal barrier above the top is clamped to the top edge.
  */
 export function effectivePotentialPlot(args: {
@@ -413,8 +413,8 @@ export function effectivePotentialPlot(args: {
   const { uEff, epsAu2Yr2, uEffMinAu2Yr2, rpAu, raAu, rMaxAu, widthPx, heightPx, samples = 120 } = args;
   if (!(rpAu > 0) || !(rMaxAu > rpAu) || !(uEffMinAu2Yr2 < 0) || !Number.isFinite(epsAu2Yr2)) return null;
   if (!(widthPx > 0) || !(heightPx > 0)) return null;
-  const rMin = 0.55 * rpAu;
   const { eLo, eHi } = potentialEnergyWindow({ epsAu2Yr2, uEffMinAu2Yr2 });
+  const rMin = curveStartAu({ uEff, rpAu, eTopAu2Yr2: eHi });
   const xPx = (rAu: number) => ((rAu - rMin) / (rMaxAu - rMin)) * widthPx;
   const yPx = (e: number) => ((eHi - clamp(e, eLo, eHi)) / (eHi - eLo)) * heightPx;
   const pt = (rAu: number, e: number) => `${xPx(rAu).toFixed(2)} ${yPx(e).toFixed(2)}`;
@@ -462,6 +462,26 @@ export function potentialEnergyWindow(args: { epsAu2Yr2: number; uEffMinAu2Yr2: 
   return { eLo: 1.12 * args.uEffMinAu2Yr2, eHi: Math.max(args.epsAu2Yr2, 0) - 0.45 * args.uEffMinAu2Yr2 };
 }
 
+/**
+ * Where both potential drawings start their curve: 0.55 r_p, or closer in when the barrier has not reached the top of
+ * the window there. For a near-circular orbit U_eff(0.55 r_p) is still below the top (Circular drew its curve from
+ * y = 74.6 of 150 px, a well open towards the Sun; physics review 2026-09-11). The crossing is found by bisection on the
+ * injected uEff over (0, 0.55 r_p], where U_eff falls monotonically because r < r_p <= r_c = h^2/mu.
+ */
+function curveStartAu(args: { uEff: (rAu: number) => number; rpAu: number; eTopAu2Yr2: number }): number {
+  const { uEff, rpAu, eTopAu2Yr2 } = args;
+  const outer = 0.55 * rpAu;
+  if (!(uEff(outer) < eTopAu2Yr2)) return outer;
+  let above = 0;
+  let below = outer;
+  for (let i = 0; i < 60; i++) {
+    const mid = 0.5 * (above + below);
+    if (uEff(mid) > eTopAu2Yr2) above = mid;
+    else below = mid;
+  }
+  return below;
+}
+
 export type PotentialProfile = {
   curveD: string;
   allowedD: string;
@@ -477,7 +497,7 @@ export type PotentialProfile = {
 
 /**
  * The Potential view's 2D drawing: the landscape cut through the Sun, U_eff(|x|) for x from -rMaxAu to +rMaxAu,
- * mirrored about the centre, with r on a linear scale so distances read true. Within 0.55 r_p of the Sun the
+ * mirrored about the centre, with r on a linear scale so distances read true. Inside curveStartAu the
  * centrifugal barrier is off the top and is not drawn. The body is drawn at x = +r by the caller.
  */
 export function potentialProfile(args: {
@@ -499,7 +519,7 @@ export function potentialProfile(args: {
   const xPx = (signedRAu: number) => cx + (signedRAu / rMaxAu) * cx;
   const yPx = (e: number) => ((eHi - clamp(e, eLo, eHi)) / (eHi - eLo)) * heightPx;
   const pt = (signedRAu: number, e: number) => `${xPx(signedRAu).toFixed(2)} ${yPx(e).toFixed(2)}`;
-  const rMin = 0.55 * rpAu;
+  const rMin = curveStartAu({ uEff, rpAu, eTopAu2Yr2: eHi });
   const rEnd = Number.isFinite(raAu) ? Math.min(raAu, rMaxAu) : rMaxAu;
 
   const half = (sign: 1 | -1) => {
