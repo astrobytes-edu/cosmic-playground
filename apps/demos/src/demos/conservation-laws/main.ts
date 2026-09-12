@@ -1,4 +1,12 @@
-import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
+import {
+  createDemoModes,
+  createInstrumentRuntime,
+  initMath,
+  initPopovers,
+  initStarfield,
+  initTabs,
+  setLiveRegionText
+} from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { ConservationLawsModel, TwoBodyAnalytic } from "@cosmic/physics";
 import {
@@ -21,6 +29,8 @@ import {
   leftViewMessage,
   logSliderToValue,
   orbitAnnouncement,
+  potentialProfile,
+  type PotentialProfile,
   toSvg,
   type TrailEntry,
   trailSegments,
@@ -97,6 +107,20 @@ const ueffDrop = must<SVGLineElement>("#ueffDrop");
 const ueffDot = must<SVGCircleElement>("#ueffDot");
 const ueffRpLabel = must<HTMLSpanElement>("#ueffRpLabel");
 const ueffRaLabel = must<HTMLSpanElement>("#ueffRaLabel");
+const stageSection = must<HTMLElement>(".cp-demo__stage");
+const stageViews = must<HTMLElement>(".stage__views");
+const viewPotentialTab = must<HTMLButtonElement>("#viewPotentialTab");
+const potentialSvg = must<SVGSVGElement>("#potentialSvg");
+const potentialCurve = must<SVGPathElement>("#potentialCurve");
+const potentialAllowed = must<SVGPathElement>("#potentialAllowed");
+const potentialZero = must<SVGLineElement>("#potentialZero");
+const potentialEps = must<SVGLineElement>("#potentialEps");
+const potentialSun = must<SVGCircleElement>("#potentialSun");
+const potentialDrop = must<SVGLineElement>("#potentialDrop");
+const potentialBody = must<SVGCircleElement>("#potentialBody");
+const potentialRpLabel = must<HTMLSpanElement>("#potentialRpLabel");
+const potentialRaLabel = must<HTMLSpanElement>("#potentialRaLabel");
+const potentialEpsLabel = must<HTMLSpanElement>("#potentialEpsLabel");
 
 const CENTER = { x: 300, y: 300 };
 const VIEW_RADIUS_PX = 250;
@@ -153,6 +177,8 @@ const anim = {
 
 /** The effective-potential plot for the current orbit and box; null when there is nothing to draw. */
 let ueff: EffectivePotentialPlot | null = null;
+/** The Potential view's mirrored profile for the current orbit; null while the view is hidden or has nothing to draw. */
+let profile: PotentialProfile | null = null;
 
 function setLine(line: SVGLineElement, x1: number, y1: number, x2: number, y2: number) {
   line.setAttribute("x1", x1.toFixed(2));
@@ -387,6 +413,7 @@ function recomputeOrbit() {
     stopAnimation();
     hideEnergyInstrument();
     renderPotentialPlot();
+    renderPotentialView();
     return;
   }
 
@@ -445,6 +472,7 @@ function recomputeOrbit() {
   raAuValue.textContent = Number.isFinite(o.raAu) ? formatNumber(o.raAu, 1) : "";
 
   renderPotentialPlot();
+  renderPotentialView();
   renderBody();
   // Not redundant: the call at the top ran canAnimate() against the old orbit. This one re-runs it
   // against the new orbit, so Play's disabled state is right.
@@ -578,13 +606,73 @@ function renderEnergyInstrument(o: ValidOrbit, rAu: number, energy: { kAu2Yr2: n
     energyBarEps.style.left = `${bar.epsPx.toFixed(1)}px`;
   }
 
-  if (!ueff) return;
-  const x = ueff.xPx(rAu);
-  ueffDot.setAttribute("cx", x.toFixed(2));
-  ueffDot.setAttribute("cy", ueff.epsYPx.toFixed(2));
-  setLine(ueffDrop, x, ueff.epsYPx, x, ueff.yPx(uEffAt(o, rAu)));
-  ueffDrop.dataset.radialKinetic = String(
-    ConservationLawsModel.radialKineticAu2Yr2({ rAu, hAbsAu2Yr: o.hAbsAu2Yr, muAu3Yr2: o.muAu3Yr2, epsAu2Yr2: o.epsAu2Yr2 })
+  if (ueff) {
+    const x = ueff.xPx(rAu);
+    ueffDot.setAttribute("cx", x.toFixed(2));
+    ueffDot.setAttribute("cy", ueff.epsYPx.toFixed(2));
+    setLine(ueffDrop, x, ueff.epsYPx, x, ueff.yPx(uEffAt(o, rAu)));
+    ueffDrop.dataset.radialKinetic = String(
+      ConservationLawsModel.radialKineticAu2Yr2({ rAu, hAbsAu2Yr: o.hAbsAu2Yr, muAu3Yr2: o.muAu3Yr2, epsAu2Yr2: o.epsAu2Yr2 })
+    );
+  }
+
+  if (profile) {
+    const px = profile.xPx(rAu);
+    potentialBody.setAttribute("cx", px.toFixed(2));
+    potentialBody.setAttribute("cy", profile.epsYPx.toFixed(2));
+    setLine(potentialDrop, px, profile.epsYPx, px, profile.yPx(uEffAt(o, rAu)));
+  }
+}
+
+/** The Potential view's profile for the current orbit. A hidden panel has no box, so this runs again on show. */
+function renderPotentialView() {
+  const o = validOrbit();
+  const box = potentialSvg.getBoundingClientRect();
+  profile = null;
+  if (o && o.orbitType !== "radial" && box.width > 0) {
+    const rc = ConservationLawsModel.circularOrbitRadiusAu({ hAbsAu2Yr: o.hAbsAu2Yr, muAu3Yr2: o.muAu3Yr2 });
+    profile = potentialProfile({
+      uEff: (rAu) => uEffAt(o, rAu),
+      epsAu2Yr2: o.epsAu2Yr2,
+      uEffMinAu2Yr2: uEffAt(o, rc),
+      rpAu: o.rpAu,
+      raAu: o.raAu,
+      rMaxAu: viewRadiusAu({ raAu: o.raAu, r0Au: controls.r0Au }),
+      widthPx: box.width,
+      heightPx: box.height
+    });
+  }
+  for (const el of [potentialCurve, potentialAllowed, potentialZero, potentialEps, potentialDrop, potentialBody]) {
+    el.style.display = profile ? "" : "none";
+  }
+  potentialRpLabel.hidden = !profile;
+  potentialRaLabel.hidden = !profile || profile.raXPx === null;
+  potentialEpsLabel.hidden = !profile;
+  if (!profile) return;
+  potentialSvg.setAttribute("viewBox", `0 0 ${box.width.toFixed(0)} ${box.height.toFixed(0)}`);
+  potentialCurve.setAttribute("d", profile.curveD);
+  potentialAllowed.setAttribute("d", profile.allowedD);
+  setLine(potentialZero, 0, profile.zeroYPx, box.width, profile.zeroYPx);
+  setLine(potentialEps, 0, profile.epsYPx, box.width, profile.epsYPx);
+  potentialSun.setAttribute("cx", (box.width / 2).toFixed(2));
+  potentialRpLabel.style.left = `${profile.rpXPx.toFixed(1)}px`;
+  if (profile.raXPx !== null) potentialRaLabel.style.left = `${profile.raXPx.toFixed(1)}px`;
+  potentialEpsLabel.style.left = `${(box.width - 12).toFixed(1)}px`;
+  potentialEpsLabel.style.top = `${(profile.epsYPx - 12).toFixed(1)}px`;
+}
+
+function syncStageView() {
+  const view = viewPotentialTab.getAttribute("aria-selected") === "true" ? "potential" : "observatory";
+  if (stageSection.dataset.view === view) return;
+  stageSection.dataset.view = view;
+  renderPotentialView();
+  renderBody();
+  const o = validOrbit();
+  setLiveRegionText(
+    status,
+    view === "potential"
+      ? `Potential view. ${o ? turningPointsText({ orbitType: o.orbitType, rpAu: o.rpAu, raAu: o.raAu }) : ""}`.trim()
+      : "Observatory view."
   );
 }
 
@@ -796,6 +884,14 @@ new ResizeObserver(() => {
   renderPotentialPlot();
   renderBody();
 }).observe(ueffPlot);
+initTabs(stageSection);
+// initTabs has already updated aria-selected by the time these run: its listeners were added first.
+stageViews.addEventListener("click", syncStageView);
+stageViews.addEventListener("keydown", syncStageView);
+new ResizeObserver(() => {
+  renderPotentialView();
+  renderBody();
+}).observe(potentialSvg);
 if (prefersReducedMotion) {
   setLiveRegionText(status, "Reduced motion is enabled; use Step to move the body.");
 }

@@ -268,8 +268,10 @@ describe("Conservation Laws -- Design System Contracts", () => {
   });
 
   describe("Contracts from the 2026-09-11 visual review", () => {
-    it("the orbit and its caption are positioned above the fixed starfield canvas (V5)", () => {
-      expect(css).toMatch(/\.orbit,\s*\.stage__caption\s*\{\s*position:\s*relative;\s*z-index:\s*1;\s*\}/);
+    it("the stage's drawing and caption are positioned above the fixed starfield canvas (V5)", () => {
+      // Since the Observatory/Potential switch the view panel, not the SVG, carries the stacking for both drawings.
+      expect(css).toMatch(/\.stage__head,\s*\.stage__caption\s*\{\s*position:\s*relative;\s*z-index:\s*1;\s*\}/);
+      expect(css).toMatch(/\.stage__view\s*\{\s*position:\s*relative;\s*z-index:\s*1;/);
     });
 
     it("each readout label's equation is one KaTeX group, so it cannot wrap mid-equation (V6)", () => {
@@ -327,6 +329,20 @@ describe("Conservation Laws -- Design System Contracts", () => {
 
     it("moves the orbit type into the stage header as a chip", () => {
       expect(html).toMatch(/class="stage__chip"[\s\S]*?id="orbitType"/);
+    });
+
+    it("switches the stage between Observatory (default) and Potential with tabs", () => {
+      expect(html).toContain('data-view="observatory"');
+      expect(html).toMatch(/role="tablist"[^>]*aria-label="Stage view"/);
+      expect(html).toMatch(/id="viewObservatoryTab"[^>]*aria-selected="true"[^>]*aria-controls="observatoryView"/);
+      expect(html).toMatch(/id="viewPotentialTab"[^>]*aria-selected="false"[^>]*aria-controls="potentialView"/);
+      expect(html).toMatch(/id="potentialView"[^>]*hidden/);
+      expect(mainTs).toContain("initTabs(");
+      expect(mainTs).toContain("potentialProfile(");
+    });
+
+    it("labels the Potential view as energy, not space", () => {
+      expect(html).toMatch(/data-kind="misconception"[^>]*>\s*Height is energy per unit mass, not depth in space\./);
     });
 
     it("renders the energy bar and plot from logic.ts helpers and the physics model", () => {

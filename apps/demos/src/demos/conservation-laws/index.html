@@ -17,10 +17,14 @@
     >
       <h1 class="sr-only">Conservation Laws: Energy &amp; Momentum</h1>
 
-      <section class="cp-demo__stage cp-stage stage" aria-label="Orbit visualization stage">
+      <section class="cp-demo__stage cp-stage stage" data-view="observatory" aria-label="Orbit visualization stage">
         <canvas class="cp-starfield" aria-hidden="true"></canvas>
         <div class="stage__head">
           <p class="stage__title">Energy and angular momentum</p>
+          <div class="cp-tabs stage__views" role="tablist" aria-label="Stage view">
+            <button id="viewObservatoryTab" class="cp-tab" role="tab" aria-selected="true" aria-controls="observatoryView" type="button">Observatory</button>
+            <button id="viewPotentialTab" class="cp-tab" role="tab" aria-selected="false" aria-controls="potentialView" tabindex="-1" type="button">Potential</button>
+          </div>
           <span class="stage__chip"><span class="sr-only">Orbit type: </span><span id="orbitType"></span></span>
           <div class="presets">
             <div class="cp-chip-group--grid presets__row" role="group" aria-label="Orbit presets">
@@ -32,27 +36,47 @@
           </div>
         </div>
 
-        <svg id="orbitSvg" class="orbit" viewBox="0 0 600 600" role="img" aria-label="Orbit path and moving particle">
-          <defs>
-            <marker id="arrowVel" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon class="orbit__arrowhead" points="0 0, 10 3.5, 0 7"></polygon>
-            </marker>
-          </defs>
+        <div id="observatoryView" class="stage__view" role="tabpanel" aria-labelledby="viewObservatoryTab">
+          <svg id="orbitSvg" class="orbit" viewBox="0 0 600 600" role="img" aria-label="Orbit path and moving particle">
+            <defs>
+              <marker id="arrowVel" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon class="orbit__arrowhead" points="0 0, 10 3.5, 0 7"></polygon>
+              </marker>
+            </defs>
 
-          <circle id="centralMass" class="orbit__mass" cx="300" cy="300" r="10"></circle>
-          <path id="orbitPath" class="orbit__path" d=""></path>
-          <g id="orbitTrail" class="orbit__trail-group" aria-hidden="true"></g>
-          <circle id="particle" class="orbit__particle" cx="400" cy="300" r="8"></circle>
-          <line
-            id="velocityLine"
-            class="orbit__velocity"
-            x1="400"
-            y1="300"
-            x2="460"
-            y2="300"
-            marker-end="url(#arrowVel)"
-          ></line>
-        </svg>
+            <circle id="centralMass" class="orbit__mass" cx="300" cy="300" r="10"></circle>
+            <path id="orbitPath" class="orbit__path" d=""></path>
+            <g id="orbitTrail" class="orbit__trail-group" aria-hidden="true"></g>
+            <circle id="particle" class="orbit__particle" cx="400" cy="300" r="8"></circle>
+            <line
+              id="velocityLine"
+              class="orbit__velocity"
+              x1="400"
+              y1="300"
+              x2="460"
+              y2="300"
+              marker-end="url(#arrowVel)"
+            ></line>
+          </svg>
+        </div>
+
+        <div id="potentialView" class="stage__view potential" role="tabpanel" aria-labelledby="viewPotentialTab" hidden>
+          <p class="cp-callout potential__note" data-kind="misconception">Height is energy per unit mass, not depth in space.</p>
+          <div class="potential__frame">
+            <svg id="potentialSvg" class="potential__svg" role="img" aria-label="Effective potential profile through the Sun.">
+              <path id="potentialAllowed" class="ueff__allowed" d=""></path>
+              <line id="potentialZero" class="ueff__zero" x1="0" y1="0" x2="0" y2="0"></line>
+              <path id="potentialCurve" class="ueff__curve potential__curve" d=""></path>
+              <line id="potentialEps" class="ueff__eps" x1="0" y1="0" x2="0" y2="0"></line>
+              <circle id="potentialSun" class="orbit__mass" cx="0" cy="12" r="8"></circle>
+              <line id="potentialDrop" class="ueff__drop potential__drop" x1="0" y1="0" x2="0" y2="0"></line>
+              <circle id="potentialBody" class="orbit__particle" cx="0" cy="0" r="7"></circle>
+            </svg>
+            <span id="potentialRpLabel" class="potential__label potential__label--turn" aria-hidden="true">$r_p$</span>
+            <span id="potentialRaLabel" class="potential__label potential__label--turn" aria-hidden="true">$r_a$</span>
+            <span id="potentialEpsLabel" class="potential__label" aria-hidden="true">$\varepsilon$</span>
+          </div>
+        </div>
 
         <p id="stageCaption" class="stage__caption">
           <span id="arrowCaption">Green arrow: distance covered in <span id="arrowDtDays"></span> <span id="arrowDtUnit">days</span> at the current velocity.</span>

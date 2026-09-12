@@ -987,4 +987,50 @@ test.describe("Conservation Laws -- orbit shell and energy instrument", () => {
     await expect(page.locator("#energyBarK")).toBeHidden();
     await expect(page.locator("#ueffCurve")).toBeHidden();
   });
+
+  test("opens in Observatory, switches to Potential and back by click and arrow key, without moving the body", async ({ page }) => {
+    const stage = page.locator(".cp-demo__stage");
+    await expect(stage).toHaveAttribute("data-view", "observatory");
+    await expect(page.locator("#observatoryView")).toBeVisible();
+    await expect(page.locator("#potentialView")).toBeHidden();
+    await page.locator('[data-preset="elliptical"]').click();
+    for (let i = 0; i < 3; i++) await page.locator("#step").click();
+    const u = await page.locator("#uAu").textContent();
+    // Page coordinates, not viewport: Step scrolls the page down to the dock and clicking the tab scrolls back up
+    // (a viewport-relative top moved by exactly that 460px scroll at 1280x720, 2026-09-11).
+    const dockPageTop = () =>
+      page.locator(".cp-demo__controls").evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+    const dockTop = await dockPageTop();
+
+    await page.getByRole("tab", { name: "Potential" }).click();
+    await expect(stage).toHaveAttribute("data-view", "potential");
+    await expect(page.locator("#potentialView")).toBeVisible();
+    await expect(page.locator("#observatoryView")).toBeHidden();
+    await expect(page.locator("#uAu")).toHaveText(u ?? "");
+    await expect(page.locator("#status")).toContainText("Potential view.");
+    expect(Math.abs((await dockPageTop()) - dockTop)).toBeLessThanOrEqual(1);
+
+    await page.keyboard.press("ArrowLeft");
+    await expect(stage).toHaveAttribute("data-view", "observatory");
+    await expect(page.locator("#status")).toHaveText("Observatory view.");
+  });
+
+  test("the Potential view puts the body on the energy line at x = r, with the Sun at the centre (tilted start)", async ({ page }) => {
+    await setSlider(page, "speedFactor", 0.9);
+    await setSlider(page, "directionDeg", 30);
+    await page.getByRole("tab", { name: "Potential" }).click();
+    const rp = await num(page, "rpAu");
+    const rMax = await num(page, "viewRadiusAu");
+    const g = await page.evaluate(() => {
+      const n = (id: string, a: string) => Number(document.getElementById(id)?.getAttribute(a));
+      const w = (document.getElementById("potentialSvg") as Element).getBoundingClientRect().width;
+      const rpLeft = Number.parseFloat((document.getElementById("potentialRpLabel") as HTMLElement).style.left);
+      return { w, bodyX: n("potentialBody", "cx"), bodyY: n("potentialBody", "cy"), epsY: n("potentialEps", "y1"), sunX: n("potentialSun", "cx"), rpLeft };
+    });
+    expect(Math.abs(g.sunX - g.w / 2)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(g.bodyY - g.epsY)).toBeLessThanOrEqual(0.5);
+    // At the start r = r0 = 1 AU. The caption's view radius has 2 decimals, worth about 1px here.
+    expect(Math.abs(g.bodyX - (g.w / 2 + (1 / rMax) * (g.w / 2)))).toBeLessThanOrEqual(2);
+    expect(Math.abs(g.rpLeft - (g.w / 2 + (rp / rMax) * (g.w / 2)))).toBeLessThanOrEqual(2);
+  });
 });
