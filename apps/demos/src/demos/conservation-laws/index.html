@@ -12,14 +12,194 @@
       id="cp-demo"
       role="main"
       class="cp-layer-instrument cp-demo"
-      data-shell="triad"
+      data-shell="orbit"
       aria-label="Conservation Laws instrument"
     >
       <h1 class="sr-only">Conservation Laws: Energy &amp; Momentum</h1>
-      <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
-        <div class="cp-panel-header">Conservation Laws: Energy &amp; Momentum</div>
+
+      <section class="cp-demo__stage cp-stage stage" aria-label="Orbit visualization stage">
+        <canvas class="cp-starfield" aria-hidden="true"></canvas>
+        <div class="stage__head">
+          <p class="stage__title">Energy and angular momentum</p>
+          <span class="stage__chip"><span class="sr-only">Orbit type: </span><span id="orbitType"></span></span>
+          <div class="presets">
+            <div class="cp-chip-group--grid presets__row" role="group" aria-label="Orbit presets">
+              <button class="cp-chip preset" data-preset="circular" type="button" aria-pressed="false">Circular</button>
+              <button class="cp-chip preset" data-preset="elliptical" type="button" aria-pressed="false">Elliptical</button>
+              <button class="cp-chip preset" data-preset="escape" type="button" aria-pressed="false">Escape</button>
+              <button class="cp-chip preset" data-preset="hyperbolic" type="button" aria-pressed="false">Hyperbolic</button>
+            </div>
+          </div>
+        </div>
+
+        <svg id="orbitSvg" class="orbit" viewBox="0 0 600 600" role="img" aria-label="Orbit path and moving particle">
+          <defs>
+            <marker id="arrowVel" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon class="orbit__arrowhead" points="0 0, 10 3.5, 0 7"></polygon>
+            </marker>
+          </defs>
+
+          <circle id="centralMass" class="orbit__mass" cx="300" cy="300" r="10"></circle>
+          <path id="orbitPath" class="orbit__path" d=""></path>
+          <g id="orbitTrail" class="orbit__trail-group" aria-hidden="true"></g>
+          <circle id="particle" class="orbit__particle" cx="400" cy="300" r="8"></circle>
+          <line
+            id="velocityLine"
+            class="orbit__velocity"
+            x1="400"
+            y1="300"
+            x2="460"
+            y2="300"
+            marker-end="url(#arrowVel)"
+          ></line>
+        </svg>
+
+        <p id="stageCaption" class="stage__caption">
+          <span id="arrowCaption">Green arrow: distance covered in <span id="arrowDtDays"></span> <span id="arrowDtUnit">days</span> at the current velocity.</span>
+          <span id="arrowCaptionNotToScale" hidden>Green arrow: speed and direction, shortened to fit this zoom.</span>
+          <span id="apoCaption" hidden>This orbit reaches <span id="raAu"></span> AU, beyond the view.</span>
+          <span class="stage__caption-view">View radius: <span id="viewRadiusAu"></span> AU.</span>
+          <span id="timeCaption" class="stage__caption-time">Time: 1 s on screen = <span id="timeScale"></span><span id="timeScaleSlowed" hidden> (slowed so this fast orbit is visible)</span>.</span>
+          <span id="stepCaption" class="stage__caption-time" hidden>Each Step = <span id="stepDuration"></span> of orbital time.</span>
+        </p>
+      </section>
+
+      <aside class="cp-demo__readouts cp-panel instrument" aria-label="Readouts panel">
+        <div class="cp-panel-header">Readouts</div>
         <div class="cp-panel-body">
-          <p class="cp-muted">Energy + angular momentum determine orbit shape and escape.</p>
+          <section class="instrument__section" aria-labelledby="energyTitle">
+            <p id="energyTitle" class="instrument__title">
+              Energy per unit mass <span class="instrument__unit">AU$^2$/yr$^2$</span>
+            </p>
+            <div class="energy-bar">
+              <div class="energy-bar__labels" aria-hidden="true">
+                <span class="energy-bar__label energy-bar__label--u">$U$</span>
+                <span class="energy-bar__label energy-bar__label--k">$K$</span>
+              </div>
+              <div
+                id="energyBar"
+                class="energy-bar__tracks"
+                role="img"
+                aria-label="Energy bar: the potential energy U and the kinetic energy K add up to the fixed total energy."
+              >
+                <span id="energyBarU" class="energy-bar__fill energy-bar__fill--u"></span>
+                <span id="energyBarK" class="energy-bar__fill energy-bar__fill--k"></span>
+                <span id="energyBarZero" class="energy-bar__marker energy-bar__marker--zero"
+                  ><span class="energy-bar__tick">0</span></span
+                >
+                <span id="energyBarEps" class="energy-bar__marker energy-bar__marker--eps"
+                  ><span class="energy-bar__tick">$\varepsilon$</span></span
+                >
+              </div>
+            </div>
+            <div class="instrument__energy-values">
+              <div class="cp-readout" data-energy="kinetic">
+                <div class="cp-readout__label">Kinetic ${K = v^2/2}$</div>
+                <div class="cp-readout__value"><span id="kAu"></span> <span class="cp-readout__unit">AU$^2$/yr$^2$</span></div>
+              </div>
+              <div class="cp-readout" data-energy="potential">
+                <div class="cp-readout__label">Potential ${U = -\mu/r}$</div>
+                <div class="cp-readout__value"><span id="uAu"></span> <span class="cp-readout__unit">AU$^2$/yr$^2$</span></div>
+              </div>
+              <div class="cp-readout" data-energy="total">
+                <div class="cp-readout__label">Total ${\varepsilon = K + U}$</div>
+                <div class="cp-readout__value"><span id="eps"></span> <span class="cp-readout__unit">AU$^2$/yr$^2$</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="instrument__section" aria-labelledby="ueffTitle">
+            <p id="ueffTitle" class="instrument__title">Effective potential</p>
+            <p class="instrument__equation">$U_{\rm eff}(r) = -\frac{\mu}{r} + \frac{h^2}{2r^2}$</p>
+            <div class="ueff">
+              <svg id="ueffPlot" class="ueff__plot" role="img" aria-label="Effective potential against distance.">
+                <path id="ueffAllowed" class="ueff__allowed" d=""></path>
+                <line id="ueffZero" class="ueff__zero" x1="0" y1="0" x2="0" y2="0"></line>
+                <path id="ueffCurve" class="ueff__curve" d=""></path>
+                <line id="ueffEps" class="ueff__eps" x1="0" y1="0" x2="0" y2="0"></line>
+                <line id="ueffDrop" class="ueff__drop" x1="0" y1="0" x2="0" y2="0"></line>
+                <circle id="ueffDot" class="ueff__dot" cx="0" cy="0" r="4"></circle>
+              </svg>
+              <span id="ueffRpLabel" class="ueff__label" aria-hidden="true">$r_p$</span>
+              <span id="ueffRaLabel" class="ueff__label" aria-hidden="true">$r_a$</span>
+            </div>
+            <p id="ueffCaption" class="instrument__caption">
+              The body can only be where the energy line is above the curve; it turns around where they meet.
+            </p>
+          </section>
+
+          <section class="instrument__section" aria-label="Orbit values">
+            <div class="instrument__values">
+              <div class="cp-readout">
+                <div class="cp-readout__label">Eccentricity $e$</div>
+                <div class="cp-readout__value"><span id="ecc"></span></div>
+              </div>
+              <div class="cp-readout">
+                <div class="cp-readout__label">Angular momentum $|h|$</div>
+                <div class="cp-readout__value"><span id="h"></span> <span class="cp-readout__unit">AU$^2$/yr</span></div>
+              </div>
+              <div class="cp-readout">
+                <div class="cp-readout__label">Speed $v$</div>
+                <div class="cp-readout__value"><span id="vKmS"></span> <span class="cp-readout__unit">km/s</span></div>
+              </div>
+              <div class="cp-readout">
+                <div class="cp-readout__label">Periapsis $r_p$</div>
+                <div class="cp-readout__value"><span id="rpAu"></span> <span class="cp-readout__unit">AU</span></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <aside class="cp-demo__controls cp-panel dock" aria-label="Controls panel">
+        <div class="cp-panel-body">
+          <div class="dock__bar">
+            <div class="cp-button-row" role="group" aria-label="Animation controls">
+              <button id="play" class="cp-button cp-button--ghost" type="button">Play</button>
+              <button id="pause" class="cp-button cp-button--ghost" type="button" disabled>Pause</button>
+              <button id="step" class="cp-button cp-button--ghost" type="button">Step</button>
+              <button id="reset" class="cp-button cp-button--ghost" type="button">Reset</button>
+            </div>
+            <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
+              <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="2" width="12" height="16" rx="1.5"></rect>
+                  <line x1="7" y1="7" x2="13" y2="7"></line>
+                  <line x1="7" y1="10" x2="13" y2="10"></line>
+                  <line x1="7" y1="13" x2="10" y2="13"></line>
+                </svg>
+              </button>
+              <button id="help" class="cp-utility-btn" type="button" aria-label="Help and shortcuts" title="Help / keys">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="10" cy="10" r="8"></circle>
+                  <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"></path>
+                  <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"></circle>
+                </svg>
+              </button>
+              <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
+                  <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
+                </svg>
+              </button>
+              <div class="cp-popover-anchor">
+                <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                    <circle cx="4" cy="10" r="1.5"></circle>
+                    <circle cx="10" cy="10" r="1.5"></circle>
+                    <circle cx="16" cy="10" r="1.5"></circle>
+                  </svg>
+                </button>
+                <div class="cp-popover" id="navPopover" hidden>
+                  <nav class="cp-popover__body">
+                    <a class="cp-popover-link" href="../../exhibits/conservation-laws/">Open exhibit</a>
+                    <a class="cp-popover-link" href="../../stations/conservation-laws/">Station card</a>
+                    <a class="cp-popover-link" href="../../instructor/conservation-laws/">Instructor notes</a>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <label class="control">
             <span>Central mass $M$</span>
@@ -66,134 +246,7 @@
             <span class="control__value"><span id="directionValue"></span><span class="control__unit">$^{\circ}$</span></span>
           </label>
 
-          <div class="presets">
-            <div class="presets__label">Presets</div>
-            <div class="cp-chip-group--grid presets__row" role="group" aria-label="Orbit presets">
-              <button class="cp-chip preset" data-preset="circular" type="button" aria-pressed="false">Circular</button>
-              <button class="cp-chip preset" data-preset="elliptical" type="button" aria-pressed="false">Elliptical</button>
-              <button class="cp-chip preset" data-preset="escape" type="button" aria-pressed="false">Escape</button>
-              <button class="cp-chip preset" data-preset="hyperbolic" type="button" aria-pressed="false">Hyperbolic</button>
-            </div>
-          </div>
-
-          <div class="cp-button-row" role="group" aria-label="Animation controls">
-            <button id="play" class="cp-button cp-button--ghost" type="button">Play</button>
-            <button id="pause" class="cp-button cp-button--ghost" type="button" disabled>Pause</button>
-            <button id="step" class="cp-button cp-button--ghost" type="button">Step</button>
-            <button id="reset" class="cp-button cp-button--ghost" type="button">Reset</button>
-          </div>
-
-          <div class="cp-utility-toolbar" role="toolbar" aria-label="Demo actions">
-            <button id="stationMode" class="cp-utility-btn" type="button" aria-label="Station mode" title="Station mode">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="4" y="2" width="12" height="16" rx="1.5"></rect>
-                <line x1="7" y1="7" x2="13" y2="7"></line>
-                <line x1="7" y1="10" x2="13" y2="10"></line>
-                <line x1="7" y1="13" x2="10" y2="13"></line>
-              </svg>
-            </button>
-            <button id="help" class="cp-utility-btn" type="button" aria-label="Help and shortcuts" title="Help / keys">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="10" cy="10" r="8"></circle>
-                <path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"></path>
-                <circle cx="10" cy="15" r="0.75" fill="currentColor" stroke="none"></circle>
-              </svg>
-            </button>
-            <button id="copyResults" class="cp-utility-btn" type="button" aria-label="Copy results" title="Copy results">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="6" width="10" height="12" rx="1.5"></rect>
-                <path d="M14 6V3.5A1.5 1.5 0 0 0 12.5 2H5.5A1.5 1.5 0 0 0 4 3.5V14"></path>
-              </svg>
-            </button>
-            <div class="cp-popover-anchor">
-              <button class="cp-utility-btn cp-popover-trigger" aria-label="Navigation links" aria-expanded="false" aria-controls="navPopover" title="More links" type="button">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <circle cx="4" cy="10" r="1.5"></circle>
-                  <circle cx="10" cy="10" r="1.5"></circle>
-                  <circle cx="16" cy="10" r="1.5"></circle>
-                </svg>
-              </button>
-              <div class="cp-popover" id="navPopover" hidden>
-                <nav class="cp-popover__body">
-                  <a class="cp-popover-link" href="../../exhibits/conservation-laws/">Open exhibit</a>
-                  <a class="cp-popover-link" href="../../stations/conservation-laws/">Station card</a>
-                  <a class="cp-popover-link" href="../../instructor/conservation-laws/">Instructor notes</a>
-                </nav>
-              </div>
-            </div>
-          </div>
           <p id="status" class="cp-status" role="status" aria-live="polite" aria-atomic="true"></p>
-        </div>
-      </aside>
-
-      <section class="cp-demo__stage cp-stage stage" aria-label="Orbit visualization stage">
-        <canvas class="cp-starfield" aria-hidden="true"></canvas>
-        <svg id="orbitSvg" class="orbit" viewBox="0 0 600 600" role="img" aria-label="Orbit path and moving particle">
-          <defs>
-            <marker id="arrowVel" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon class="orbit__arrowhead" points="0 0, 10 3.5, 0 7"></polygon>
-            </marker>
-          </defs>
-
-          <circle id="centralMass" class="orbit__mass" cx="300" cy="300" r="10"></circle>
-          <path id="orbitPath" class="orbit__path" d=""></path>
-          <g id="orbitTrail" class="orbit__trail-group" aria-hidden="true"></g>
-          <circle id="particle" class="orbit__particle" cx="400" cy="300" r="8"></circle>
-          <line
-            id="velocityLine"
-            class="orbit__velocity"
-            x1="400"
-            y1="300"
-            x2="460"
-            y2="300"
-            marker-end="url(#arrowVel)"
-          ></line>
-        </svg>
-        <p id="stageCaption" class="stage__caption">
-          <span id="arrowCaption">Green arrow: distance covered in <span id="arrowDtDays"></span> <span id="arrowDtUnit">days</span> at the current velocity.</span>
-          <span id="arrowCaptionNotToScale" hidden>Green arrow: speed and direction, shortened to fit this zoom.</span>
-          <span id="apoCaption" hidden>This orbit reaches <span id="raAu"></span> AU, beyond the view.</span>
-          <span class="stage__caption-view">View radius: <span id="viewRadiusAu"></span> AU.</span>
-          <span id="timeCaption" class="stage__caption-time">Time: 1 s on screen = <span id="timeScale"></span><span id="timeScaleSlowed" hidden> (slowed so this fast orbit is visible)</span>.</span>
-          <span id="stepCaption" class="stage__caption-time" hidden>Each Step = <span id="stepDuration"></span> of orbital time.</span>
-        </p>
-      </section>
-
-      <aside class="cp-demo__readouts cp-panel" aria-label="Readouts panel">
-        <div class="cp-panel-header">Readouts</div>
-        <div class="cp-panel-body">
-          <div class="cp-readout">
-            <div class="cp-readout__label">Orbit type</div>
-            <div class="cp-readout__value"><span id="orbitType"></span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Eccentricity $e$</div>
-            <div class="cp-readout__value"><span id="ecc"></span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Kinetic ${K = v^2/2}$</div>
-            <div class="cp-readout__value"><span id="kAu"></span> <span class="cp-readout__unit">AU$^2$/yr$^2$</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Potential ${U = -\mu/r}$</div>
-            <div class="cp-readout__value"><span id="uAu"></span> <span class="cp-readout__unit">AU$^2$/yr$^2$</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Specific energy ${\varepsilon = K + U}$</div>
-            <div class="cp-readout__value"><span id="eps"></span> <span class="cp-readout__unit">AU$^2$/yr$^2$</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Specific angular momentum $|h|$</div>
-            <div class="cp-readout__value"><span id="h"></span> <span class="cp-readout__unit">AU$^2$/yr</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Speed $v$</div>
-            <div class="cp-readout__value"><span id="vKmS"></span> <span class="cp-readout__unit">km/s</span></div>
-          </div>
-          <div class="cp-readout">
-            <div class="cp-readout__label">Periapsis $r_p$</div>
-            <div class="cp-readout__value"><span id="rpAu"></span> <span class="cp-readout__unit">AU</span></div>
-          </div>
         </div>
       </aside>
 
@@ -226,6 +279,41 @@
                 <li>The green arrow is the distance the body would cover in the stated number of days at its current velocity, drawn at the orbit's scale, unless the caption says it was shortened to fit.</li>
                 <li>Paths reaching beyond $6\,r_0$ are clipped to that window, bound or not, and the window stays between $1.5\,r_0$ and 50 AU; the caption gives how far a clipped bound orbit reaches.</li>
                 <li>With zero speed there is no angular momentum and no conic: the body falls straight in.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="cp-accordion">
+            <summary>
+              <span class="cp-accordion__title">Why an effective potential?</span>
+              <span class="cp-accordion__meta">$U_{\rm eff}(r)$</span>
+            </summary>
+            <div class="cp-accordion__body">
+              <p>
+                Split the speed into radial and tangential parts, $v^2 = v_r^2 + v_t^2$. Angular momentum per unit
+                mass is conserved, $h = r\,v_t$, so $v_t = h/r$ and the specific energy becomes
+              </p>
+              <p class="drawer__equation">
+                $\displaystyle \varepsilon = \tfrac{1}{2}v_r^2 + U_{\rm eff}(r), \qquad U_{\rm eff}(r) = -\frac{\mu}{r} + \frac{h^2}{2r^2}.$
+              </p>
+              <ul>
+                <li>
+                  The tangential kinetic energy, $h^2/2r^2$, depends only on $r$ once $h$ is fixed, so it acts like a
+                  potential: a centrifugal barrier that keeps the body away from $r = 0$.
+                </li>
+                <li>
+                  $\tfrac{1}{2}v_r^2$ cannot be negative, so the body can only be where $U_{\rm eff}(r) \le \varepsilon$.
+                  It turns around ($v_r = 0$) where $U_{\rm eff}(r) = \varepsilon$: at $r_p$, and for a bound orbit at $r_a$.
+                </li>
+                <li>
+                  The curve is lowest at $r_c = h^2/\mu$, where $U_{\rm eff} = -\mu^2/2h^2$. An orbit with exactly
+                  that energy is circular.
+                </li>
+                <li>With $\varepsilon \ge 0$ there is no outer turning point: the body comes in once and leaves.</li>
+                <li>
+                  In the plot, the gold line from the energy level down to the curve has length $\tfrac{1}{2}v_r^2$.
+                  It shrinks to zero at each turning point.
+                </li>
               </ul>
             </div>
           </details>

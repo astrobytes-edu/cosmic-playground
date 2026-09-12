@@ -272,7 +272,71 @@ describe("Conservation Laws -- Design System Contracts", () => {
     it("each readout label's equation is one KaTeX group, so it cannot wrap mid-equation (V6)", () => {
       expect(html).toMatch(/Kinetic \$\{K = v\^2\/2\}\$/);
       expect(html).toMatch(/Potential \$\{U = -\\mu\/r\}\$/);
-      expect(html).toMatch(/Specific energy \$\{\\varepsilon = K \+ U\}\$/);
+      // "Total" since the orbit shell: the label sits under "Energy per unit mass" (orbit-stage design section 7).
+      expect(html).toMatch(/Total \$\{\\varepsilon = K \+ U\}\$/);
+    });
+  });
+
+  describe("Orbit shell and energy instrument (orbit-stage design, Phase 1)", () => {
+    it("uses the orbit shell", () => {
+      expect(html).toContain('data-shell="orbit"');
+      expect(html).not.toContain('data-shell="triad"');
+    });
+
+    it("keeps the four regions and their accessible names", () => {
+      for (const cls of ["cp-demo__controls", "cp-demo__stage", "cp-demo__readouts", "cp-demo__drawer"]) {
+        expect(html).toContain(cls);
+      }
+      expect(html).toContain('aria-label="Controls panel"');
+      expect(html).toContain('aria-label="Readouts panel"');
+    });
+
+    it("has an energy bar: U and K fills, a zero line and a total-energy marker", () => {
+      for (const id of ["energyBar", "energyBarU", "energyBarK", "energyBarZero", "energyBarEps"]) {
+        expect(html).toContain(`id="${id}"`);
+      }
+    });
+
+    it("tags the K, U and eps readouts with their energy meaning", () => {
+      expect(html).toMatch(/data-energy="kinetic"[\s\S]*?id="kAu"/);
+      expect(html).toMatch(/data-energy="potential"[\s\S]*?id="uAu"/);
+      expect(html).toMatch(/data-energy="total"[\s\S]*?id="eps"/);
+    });
+
+    it("typesets the effective-potential equation in the instrument", () => {
+      expect(html).toContain("U_{\\rm eff}(r) = -\\frac{\\mu}{r} + \\frac{h^2}{2r^2}");
+    });
+
+    it("has the effective-potential plot parts and KaTeX turning-point labels", () => {
+      for (const id of ["ueffPlot", "ueffCurve", "ueffAllowed", "ueffZero", "ueffEps", "ueffDrop", "ueffDot", "ueffRpLabel", "ueffRaLabel", "ueffCaption"]) {
+        expect(html).toContain(`id="${id}"`);
+      }
+      expect(html).toMatch(/id="ueffRpLabel"[^>]*>\$r_p\$</);
+      expect(html).toMatch(/id="ueffRaLabel"[^>]*>\$r_a\$</);
+    });
+
+    it("explains the effective potential in the drawer", () => {
+      expect(html).toContain("Why an effective potential?");
+      expect(html).toContain("v^2 = v_r^2 + v_t^2");
+      expect(html).toContain("r_c = h^2/\\mu");
+      expect(html).toContain("centrifugal barrier");
+    });
+
+    it("moves the orbit type into the stage header as a chip", () => {
+      expect(html).toMatch(/class="stage__chip"[\s\S]*?id="orbitType"/);
+    });
+  });
+
+  describe("Orbit shell styling (orbit-stage design, Phase 1)", () => {
+    it.todo("colours energy by meaning, from the energy tokens", () => {
+      expect(css).toContain("var(--cp-energy-kinetic)");
+      expect(css).toContain("var(--cp-energy-potential)");
+      expect(css).toContain("var(--cp-energy-total)");
+    });
+
+    it.todo("drops the boxed stage: no border, radius or gradient on the orbit drawing", () => {
+      const orbitRule = /\.orbit\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+      expect(orbitRule).not.toMatch(/border|radial-gradient/);
     });
   });
 });

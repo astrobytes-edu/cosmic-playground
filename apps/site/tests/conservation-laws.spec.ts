@@ -17,10 +17,10 @@ test.describe("Conservation Laws -- E2E", () => {
     await expect(page.locator("#orbitSvg")).toBeVisible();
   });
 
-  test(".cp-demo__controls is visible with panel header text", async ({ page }) => {
+  // The orbit shell dropped the controls' panel header (the dock has none); the demo's name is the page's h1.
+  test(".cp-demo__controls is visible and the demo is named by its heading", async ({ page }) => {
     await expect(page.locator(".cp-demo__controls")).toBeVisible();
-    const header = page.locator(".cp-panel-header").first();
-    await expect(header).toContainText("Conservation Laws");
+    await expect(page.locator("#cp-demo h1")).toContainText("Conservation Laws");
   });
 
   test(".cp-demo__readouts is visible", async ({ page }) => {
@@ -32,8 +32,8 @@ test.describe("Conservation Laws -- E2E", () => {
     await expect(canvas).toBeAttached();
   });
 
-  test('data-shell="triad" attribute is present', async ({ page }) => {
-    await expect(page.locator("#cp-demo")).toHaveAttribute("data-shell", "triad");
+  test('data-shell="orbit" attribute is present', async ({ page }) => {
+    await expect(page.locator("#cp-demo")).toHaveAttribute("data-shell", "orbit");
   });
 
   // --- Slider Controls ---
