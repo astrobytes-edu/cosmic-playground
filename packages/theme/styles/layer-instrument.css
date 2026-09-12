@@ -26,6 +26,12 @@
   --cp-instr-panel-bg: rgba(23, 27, 34, 0.88);
   --cp-instr-panel-bg-muted: rgba(23, 27, 34, 0.75);
   --cp-instr-panel-border: rgba(109, 119, 148, 0.25);
+
+  /* Glass for the orbit shell: more of the sky shows through than --cp-instr-panel-bg lets, so
+     text contrast is tested on the composited ground in tokenContrast.test.ts. */
+  --cp-instr-glass-bg: color-mix(in srgb, var(--cp-bg1) 62%, transparent);
+  --cp-instr-glass-blur: 16px;
+  --cp-instr-glass-edge: inset 0 1px 0 color-mix(in srgb, var(--cp-text) 6%, transparent);
 }
 
 /* --- Glow intensity overrides (visible, not invisible) --- */

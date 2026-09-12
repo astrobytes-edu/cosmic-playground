@@ -179,6 +179,30 @@ describe("token contrast, resolved from the CSS", () => {
       const separation = check(base, "--cp-text2", "--cp-muted");
       expect(separation).toBeGreaterThan(1.2);
     });
+
+    /*
+     * Glass (orbit shell). The panel is 38% transparent, so its real ground is whatever the stage
+     * paints behind it. The brightest thing Phase 1 paints there is the violet tint over ink. Phase 2
+     * adds bloom and must extend this ground.
+     */
+    it.each([
+      ["--cp-text", 4.5],
+      ["--cp-muted", 4.5],
+      ["--cp-accent-amber", 4.5],
+      ["--cp-accent-ice", 4.5],
+      ["--cp-energy-kinetic", 4.5],
+      ["--cp-energy-potential", 4.5],
+      ["--cp-energy-total", 4.5]
+    ])("%s on the glass ground meets %s:1", (token, min) => {
+      for (const t of ["--cp-instr-glass-bg", "--cp-tint-violet", token as string]) {
+        expect(instrument.has(t), `${t} is defined`).toBe(true);
+      }
+      const ink = resolve(instrument.get("--cp-bg0") as string, instrument, { r: 0, g: 0, b: 0 });
+      const sky = resolve(instrument.get("--cp-tint-violet") as string, instrument, ink);
+      const glass = resolve(instrument.get("--cp-instr-glass-bg") as string, instrument, sky);
+      const fg = resolve(instrument.get(token as string) as string, instrument, glass);
+      expect(ratio(fg, glass)).toBeGreaterThanOrEqual(min as number);
+    });
   });
 
   describe("paper layer", () => {

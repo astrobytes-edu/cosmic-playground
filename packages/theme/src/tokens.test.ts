@@ -138,6 +138,16 @@ describe("Design tokens", () => {
     });
   });
 
+  describe("Energy semantics", () => {
+    it.each([
+      ["--cp-energy-kinetic", "--cp-celestial-sun"],
+      ["--cp-energy-potential", "--cp-violet"],
+      ["--cp-energy-total", "--cp-text"]
+    ])("%s aliases %s", (token, target) => {
+      expect(css).toMatch(new RegExp(`${token}:\\s*var\\(${target}\\)`));
+    });
+  });
+
   describe("Data visualization tokens", () => {
     it("defines chart color palette", () => {
       const chartColors = [
