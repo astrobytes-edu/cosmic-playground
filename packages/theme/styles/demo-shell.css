@@ -340,3 +340,56 @@
     min-height: clamp(360px, 56svh, 560px);
   }
 }
+
+/* ============================================
+   Orbit shell: stage + instrument + dock
+   ============================================
+   The stage is the hero; the readouts become a glass instrument column on the
+   right; the controls become a dock under the stage. Same four regions and
+   ARIA as every demo, with only the grid areas moved. Written after the generic
+   mobile block on purpose: .cp-demo[data-shell="orbit"] outranks .cp-demo, so
+   it needs its own stacked layout below.
+   Design: docs/plans/2026-09-11-orbit-stage-design.md section 4.
+   ============================================ */
+.cp-demo[data-shell="orbit"] {
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 380px);
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "viz      readouts"
+    "sidebar  readouts"
+    "shelf    shelf";
+}
+
+.cp-demo[data-shell="orbit"] .cp-demo__controls {
+  position: relative;
+  top: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.cp-demo[data-shell="orbit"] .cp-demo__readouts {
+  align-self: start;
+  position: sticky;
+  top: var(--cp-space-4);
+  z-index: 3;
+}
+
+.cp-demo[data-shell="orbit"] .cp-demo__stage {
+  min-height: 0;
+}
+
+@media (max-width: 1024px) { /* --cp-bp-lg */
+  .cp-demo[data-shell="orbit"] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas:
+      "viz"
+      "readouts"
+      "sidebar"
+      "shelf";
+  }
+
+  .cp-demo[data-shell="orbit"] .cp-demo__readouts {
+    position: static;
+  }
+}

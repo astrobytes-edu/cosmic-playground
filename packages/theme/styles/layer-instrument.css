@@ -196,3 +196,31 @@
 .cp-layer-instrument .cp-chip:focus-visible {
   box-shadow: var(--cp-glow-teal);
 }
+
+/* --- Orbit shell: glass instrument surfaces (design section 3.2) --- */
+.cp-layer-instrument[data-shell="orbit"] .cp-panel {
+  background: var(--cp-instr-glass-bg);
+  border-color: color-mix(in srgb, var(--cp-text) 10%, transparent);
+  border-radius: var(--cp-r-2);
+  box-shadow: var(--cp-instr-glass-edge), var(--cp-shadow-2);
+  backdrop-filter: blur(var(--cp-instr-glass-blur));
+  -webkit-backdrop-filter: blur(var(--cp-instr-glass-blur));
+}
+
+.cp-layer-instrument[data-shell="orbit"] .cp-panel-header {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--cp-font-display);
+  font-size: 1rem;
+  color: var(--cp-text2);
+}
+
+.cp-layer-instrument[data-shell="orbit"] .cp-readout {
+  background: none;
+  padding: 0;
+}
+
+.cp-layer-instrument[data-shell="orbit"] .cp-readout__label {
+  text-transform: none;
+  letter-spacing: 0;
+}
