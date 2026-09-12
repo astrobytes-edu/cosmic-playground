@@ -335,3 +335,122 @@ export function captionTimeLine(args: { canStep: boolean; reducedMotion: boolean
   if (!args.canStep) return "none";
   return args.reducedMotion ? "step" : "playback";
 }
+
+// ---------------------------------------------------------------------------
+// Energy instrument (orbit-stage design, sections 6 and 7)
+// ---------------------------------------------------------------------------
+
+export type EnergyBar = {
+  /** x of U = 0, px from the track's left edge. */
+  zeroPx: number;
+  /** x of the total-energy marker; fixed for a given orbit. */
+  epsPx: number;
+  /** U runs from U up to 0. */
+  uBar: { xPx: number; widthPx: number };
+  /** K starts where U ends and runs to U + K, which is eps. */
+  kBar: { xPx: number; widthPx: number };
+};
+
+/**
+ * Two stacked bars on one scale that is fixed per orbit. U runs from 0 down to U; K starts where U ends, so its far
+ * end lands on eps, which stays still while the body moves. The scale runs from 6% past the deepest U on the orbit
+ * (-mu/r_p) to max(eps, 0) plus a fifth of that depth, so an unbound eps > 0 still fits.
+ * Null when there is no finite deepest potential (radial infall reaches r = 0) or no width to draw in.
+ */
+export function energyBarLayout(args: {
+  kAu2Yr2: number;
+  uAu2Yr2: number;
+  epsAu2Yr2: number;
+  uDeepestAu2Yr2: number;
+  widthPx: number;
+}): EnergyBar | null {
+  const { kAu2Yr2, uAu2Yr2, epsAu2Yr2, uDeepestAu2Yr2, widthPx } = args;
+  if (![kAu2Yr2, uAu2Yr2, epsAu2Yr2, uDeepestAu2Yr2, widthPx].every(Number.isFinite)) return null;
+  if (!(uDeepestAu2Yr2 < 0) || !(widthPx > 0)) return null;
+  const lo = uDeepestAu2Yr2 * 1.06;
+  const hi = Math.max(epsAu2Yr2, 0) - uDeepestAu2Yr2 * 0.2;
+  const x = (v: number) => ((v - lo) / (hi - lo)) * widthPx;
+  const zeroPx = x(0);
+  const uPx = x(uAu2Yr2);
+  return {
+    zeroPx,
+    epsPx: x(epsAu2Yr2),
+    uBar: { xPx: uPx, widthPx: zeroPx - uPx },
+    kBar: { xPx: uPx, widthPx: x(uAu2Yr2 + kAu2Yr2) - uPx }
+  };
+}
+
+export type EffectivePotentialPlot = {
+  /** SVG path of U_eff(r) across the plot. */
+  curveD: string;
+  /** Closed SVG path between the energy line and the curve, from r_p to r_a (or to the plot edge). */
+  allowedD: string;
+  epsYPx: number;
+  zeroYPx: number;
+  rpXPx: number;
+  /** Null for an open orbit, or when r_a is beyond the plot. */
+  raXPx: number | null;
+  xPx: (rAu: number) => number;
+  yPx: (eAu2Yr2: number) => number;
+};
+
+/**
+ * U_eff(r) in plot pixels, y down. `uEff` is injected so this file stays free of physics imports.
+ * r runs from 0.55 r_p to rMaxAu. Energy runs from 12% below the minimum U_eff (-mu^2/(2 h^2)) up to max(eps, 0)
+ * plus 45% of that depth; the centrifugal barrier above the top is clamped to the top edge.
+ */
+export function effectivePotentialPlot(args: {
+  uEff: (rAu: number) => number;
+  epsAu2Yr2: number;
+  uEffMinAu2Yr2: number;
+  rpAu: number;
+  raAu: number;
+  rMaxAu: number;
+  widthPx: number;
+  heightPx: number;
+  samples?: number;
+}): EffectivePotentialPlot | null {
+  const { uEff, epsAu2Yr2, uEffMinAu2Yr2, rpAu, raAu, rMaxAu, widthPx, heightPx, samples = 120 } = args;
+  if (!(rpAu > 0) || !(rMaxAu > rpAu) || !(uEffMinAu2Yr2 < 0) || !Number.isFinite(epsAu2Yr2)) return null;
+  if (!(widthPx > 0) || !(heightPx > 0)) return null;
+  const rMin = 0.55 * rpAu;
+  const eLo = 1.12 * uEffMinAu2Yr2;
+  const eHi = Math.max(epsAu2Yr2, 0) - 0.45 * uEffMinAu2Yr2;
+  const xPx = (rAu: number) => ((rAu - rMin) / (rMaxAu - rMin)) * widthPx;
+  const yPx = (e: number) => ((eHi - clamp(e, eLo, eHi)) / (eHi - eLo)) * heightPx;
+  const pt = (rAu: number, e: number) => `${xPx(rAu).toFixed(2)} ${yPx(e).toFixed(2)}`;
+
+  const curve: string[] = [];
+  for (let i = 0; i <= samples; i++) {
+    const r = rMin + ((rMaxAu - rMin) * i) / samples;
+    curve.push(`${i === 0 ? "M" : "L"} ${pt(r, uEff(r))}`);
+  }
+
+  const rEnd = Number.isFinite(raAu) ? Math.min(raAu, rMaxAu) : rMaxAu;
+  const allowed: string[] = [`M ${pt(rpAu, epsAu2Yr2)}`];
+  for (let i = 0; i <= samples; i++) {
+    const r = rpAu + ((rEnd - rpAu) * i) / samples;
+    allowed.push(`L ${pt(r, uEff(r))}`);
+  }
+  allowed.push(`L ${pt(rEnd, epsAu2Yr2)} Z`);
+
+  return {
+    curveD: curve.join(" "),
+    allowedD: allowed.join(" "),
+    epsYPx: yPx(epsAu2Yr2),
+    zeroYPx: yPx(0),
+    rpXPx: xPx(rpAu),
+    raXPx: Number.isFinite(raAu) && raAu <= rMaxAu ? xPx(raAu) : null,
+    xPx,
+    yPx
+  };
+}
+
+/** The turning points in words, for the plot's accessible name and the caption under it. */
+export function turningPointsText(args: { orbitType: string; rpAu: number; raAu: number }): string {
+  const { orbitType, rpAu, raAu } = args;
+  if (orbitType === "radial" || !(rpAu > 0)) return "No angular momentum, so there is no barrier: the body falls straight in.";
+  if (orbitType === "circular") return `Circular: the energy line touches the bottom of the curve at ${formatNumber(rpAu, 2)} AU.`;
+  if (Number.isFinite(raAu)) return `Turns around at ${formatNumber(rpAu, 2)} AU and ${formatNumber(raAu, 2)} AU.`;
+  return `Turns around once, at ${formatNumber(rpAu, 2)} AU, and does not come back.`;
+}

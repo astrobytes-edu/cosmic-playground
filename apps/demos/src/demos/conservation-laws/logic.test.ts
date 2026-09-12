@@ -23,6 +23,9 @@ import {
   leftViewMessage,
   captionTimeLine,
   trailSegments,
+  energyBarLayout,
+  effectivePotentialPlot,
+  turningPointsText,
 } from "./logic";
 
 describe("Conservation Laws -- UI Logic", () => {
@@ -500,5 +503,128 @@ describe("Conservation Laws -- UI Logic", () => {
       expect(captionTimeLine({ canStep: false, reducedMotion: false })).toBe("none");
       expect(captionTimeLine({ canStep: false, reducedMotion: true })).toBe("none");
     });
+  });
+});
+
+describe("energyBarLayout", () => {
+  // One bound orbit seen at two points: near periapsis (K large) and far out (K small).
+  const base = { epsAu2Yr2: -11.05, uDeepestAu2Yr2: -39.48, widthPx: 300 };
+  // Built inside each test, not at describe scope: a throw there fails collection ("no tests"), not an assertion.
+  const layouts = () => {
+    const near = energyBarLayout({ ...base, kAu2Yr2: 28.43, uAu2Yr2: -39.48 });
+    const far = energyBarLayout({ ...base, kAu2Yr2: 4.66, uAu2Yr2: -15.71 });
+    if (!near || !far) throw new Error("expected layouts");
+    return { near, far };
+  };
+
+  it("keeps the total-energy marker still while K and U trade length", () => {
+    const { near, far } = layouts();
+    expect(near.epsPx).toBe(far.epsPx);
+    expect(near.kBar.widthPx).toBeGreaterThan(far.kBar.widthPx);
+    expect(near.uBar.widthPx).toBeGreaterThan(far.uBar.widthPx);
+  });
+
+  it("ends U at zero, starts K where U ends, and ends K on the marker", () => {
+    const { near, far } = layouts();
+    for (const b of [near, far]) {
+      expect(b.uBar.xPx + b.uBar.widthPx).toBeCloseTo(b.zeroPx, 9);
+      expect(b.kBar.xPx).toBe(b.uBar.xPx);
+      expect(b.kBar.xPx + b.kBar.widthPx).toBeCloseTo(b.epsPx, 9);
+    }
+  });
+
+  it("puts zero and eps at known pixels: scale from 1.06 x -39.48 to 0 + 0.2 x 39.48", () => {
+    const { near } = layouts();
+    // lo = -41.8488, hi = 7.896, span = 49.7448
+    expect(near.zeroPx).toBeCloseTo((41.8488 / 49.7448) * 300, 6);
+    expect(near.epsPx).toBeCloseTo(((-11.05 + 41.8488) / 49.7448) * 300, 6);
+  });
+
+  it("fits an unbound orbit, with eps > 0 right of zero and inside the track", () => {
+    const b = energyBarLayout({ kAu2Yr2: 60, uAu2Yr2: -39.48, epsAu2Yr2: 20.52, uDeepestAu2Yr2: -39.48, widthPx: 300 });
+    if (!b) throw new Error("expected a layout");
+    expect(b.epsPx).toBeGreaterThan(b.zeroPx);
+    expect(b.epsPx).toBeLessThanOrEqual(300);
+  });
+
+  it("returns null without a finite negative deepest potential or a width", () => {
+    expect(energyBarLayout({ ...base, kAu2Yr2: 1, uAu2Yr2: -1, uDeepestAu2Yr2: Number.NEGATIVE_INFINITY })).toBeNull();
+    expect(energyBarLayout({ ...base, kAu2Yr2: 1, uAu2Yr2: -1, widthPx: 0 })).toBeNull();
+  });
+});
+
+describe("effectivePotentialPlot", () => {
+  // Toy units with a closed form: mu = 2, h = 1, so U_eff = -2/r + 1/(2 r^2), minimum -2 at r_c = 0.5.
+  // eps = -1.5 gives -1.5 r^2 + 2 r - 0.5 = 0, i.e. turning points r_p = 1/3 and r_a = 1.
+  const uEff = (r: number) => -2 / r + 1 / (2 * r * r);
+  const args = { uEff, epsAu2Yr2: -1.5, uEffMinAu2Yr2: -2, rpAu: 1 / 3, raAu: 1, rMaxAu: 2, widthPx: 300, heightPx: 150 };
+  const makePlot = () => {
+    const plot = effectivePotentialPlot(args);
+    if (!plot) throw new Error("expected a plot");
+    return plot;
+  };
+  // rMin = 0.55 / 3; energy from 1.12 x -2 = -2.24 up to 0 + 0.45 x 2 = 0.9.
+  const rMin = 0.55 / 3;
+
+  it("maps r and energy to known pixels", () => {
+    const plot = makePlot();
+    expect(plot.rpXPx).toBeCloseTo(((1 / 3 - rMin) / (2 - rMin)) * 300, 9);
+    expect(plot.raXPx ?? Number.NaN).toBeCloseTo(((1 - rMin) / (2 - rMin)) * 300, 9);
+    expect(plot.zeroYPx).toBeCloseTo((0.9 / 3.14) * 150, 9);
+    expect(plot.epsYPx).toBeCloseTo((2.4 / 3.14) * 150, 9);
+  });
+
+  it("puts both turning points on the energy line", () => {
+    const plot = makePlot();
+    expect(plot.yPx(uEff(1 / 3))).toBeCloseTo(plot.epsYPx, 6);
+    expect(plot.yPx(uEff(1))).toBeCloseTo(plot.epsYPx, 6);
+  });
+
+  it("keeps the minimum inside the plot and clamps the centrifugal barrier to the top edge", () => {
+    const plot = makePlot();
+    expect(plot.yPx(-2)).toBeLessThan(150);
+    expect(plot.yPx(uEff(rMin))).toBe(0);
+  });
+
+  it("draws the curve with samples + 1 points and closes the allowed region", () => {
+    const plot = makePlot();
+    expect(plot.curveD.startsWith("M 0.00 ")).toBe(true);
+    expect(plot.curveD.split(" L ").length).toBe(121);
+    expect(plot.allowedD.endsWith("Z")).toBe(true);
+    expect(plot.curveD).not.toContain("NaN");
+  });
+
+  it("has no outer turning point for an open orbit, and the allowed region runs to the edge", () => {
+    const open = effectivePotentialPlot({ ...args, epsAu2Yr2: 0.5, raAu: Number.POSITIVE_INFINITY });
+    if (!open) throw new Error("expected a plot");
+    expect(open.raXPx).toBeNull();
+    expect(open.allowedD).toContain(`L ${(300).toFixed(2)} ${open.epsYPx.toFixed(2)} Z`);
+  });
+
+  it("returns null for radial motion or a degenerate window", () => {
+    expect(effectivePotentialPlot({ ...args, rpAu: 0 })).toBeNull();
+    expect(effectivePotentialPlot({ ...args, rMaxAu: 0.2 })).toBeNull();
+    expect(effectivePotentialPlot({ ...args, heightPx: 0 })).toBeNull();
+  });
+});
+
+describe("turningPointsText", () => {
+  it("names both turning points of a bound orbit", () => {
+    expect(turningPointsText({ orbitType: "elliptical", rpAu: 1.1015, raAu: 3.0183 })).toBe("Turns around at 1.10 AU and 3.02 AU.");
+  });
+  it("names the one turning point of an open orbit", () => {
+    expect(turningPointsText({ orbitType: "hyperbolic", rpAu: 1, raAu: Number.POSITIVE_INFINITY })).toBe(
+      "Turns around once, at 1.00 AU, and does not come back."
+    );
+  });
+  it("describes a circular orbit as touching the bottom of the curve", () => {
+    expect(turningPointsText({ orbitType: "circular", rpAu: 1, raAu: 1 })).toBe(
+      "Circular: the energy line touches the bottom of the curve at 1.00 AU."
+    );
+  });
+  it("explains radial motion", () => {
+    expect(turningPointsText({ orbitType: "radial", rpAu: 0, raAu: 1.2 })).toBe(
+      "No angular momentum, so there is no barrier: the body falls straight in."
+    );
   });
 });
