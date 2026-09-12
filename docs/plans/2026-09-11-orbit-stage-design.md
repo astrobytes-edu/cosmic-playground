@@ -6,7 +6,9 @@
 
 ## 1. Decision
 
-Anna chose **B's landscape inside A's glass**: the effective-potential landscape is the hero of the stage, and the instrument column and dock are frosted glass over a deep sky. The result must **stay inside the existing theme**: Aurora Ink tokens, the instrument layer, Outfit / Source Sans 3, amber readout values with ice units, the starfield, and the motion contract. The **effective-potential equation is shown and explained** in the demo.
+Anna chose **B's landscape inside A's glass**: the effective-potential landscape becomes a stage view, and the instrument column and dock are frosted glass over a deep sky.
+
+**Two stage views (Anna, 2026-09-11):** the stage switches between **Observatory**, the orbit seen from above, and **Potential**, the effective-potential landscape. Both are useful. Observatory is the default because it is simpler, and the activity has students switch to Potential (§5.0, §6.2). The result must **stay inside the existing theme**: Aurora Ink tokens, the instrument layer, Outfit / Source Sans 3, amber readout values with ice units, the starfield, and the motion contract. The **effective-potential equation is shown and explained** in the demo.
 
 The mock-up palettes (Geist, gold `#f2c14e`, graphite `#0d0f12`) were for exploring a direction only and are not adopted. Every colour below is an existing token or a new token added to `packages/theme`.
 
@@ -86,7 +88,7 @@ grid-template-areas:
   "drawer    drawer";
 ```
 
-- `cp-demo__stage` holds the scene, the camera switch (Landscape / Top-down / Edge-on), the presets and the caption.
+- `cp-demo__stage` holds the view switch (Observatory / Potential), the orbit-type chip, the presets, the drawing and the caption.
 - `cp-demo__readouts` becomes the **instrument** column, in glass: energy bar, then the $U_{\rm eff}$ plot with its equation, then values.
 - `cp-demo__controls` becomes the **dock** under the stage, in glass: Play/Pause, Step, time scrubber, and the $M$, $r_0$, $v/v_{\rm circ}$ and direction sliders.
 - `cp-demo__drawer` keeps What to notice, Model notes and the new **Why an effective potential?** accordion.
@@ -99,7 +101,24 @@ grid-template-areas:
 
 ## 5. Stage
 
-### 5.1 Landscape view (default)
+### 5.0 Two views, one switch
+
+The stage header has a two-tab switch: **Observatory**, the default and the simpler picture, and **Potential**.
+- Observatory shows the orbit in space from above (§5.2).
+- Potential shows the same instant as energy (§5.1).
+
+The switch changes only the drawing. Controls, instrument, time and the body are shared, so the body is at the same point of its orbit in both views and switching never resets playback.
+
+- **Phase 1:** Potential is a 2D profile, the landscape cut through the Sun and mirrored about it:
+  - $U_{\rm eff}(|x|)$;
+  - the $\varepsilon$ line;
+  - the shaded allowed region;
+  - the body at $x = r$ with its gold drop line $\tfrac12 v_r^2$;
+  - KaTeX $r_p$/$r_a$ labels;
+  - the misconception label.
+- **Phase 2:** Potential becomes the three.js landscape wherever a renderer starts, and the 2D profile stays as its fallback.
+
+### 5.1 Potential view: the landscape (Phase 2; the 2D profile in Phase 1)
 
 - **Surface:** $z = U_{\rm eff}(r)$ as a surface of revolution. It is drawn as a lit wireframe in `--cp-energy-potential` with depth-faded rings, clamped above the centrifugal barrier and below $1.05\,|U_{\rm eff,min}|$.
 - **Level plane:** a translucent annulus at height $\varepsilon$ in `--cp-energy-total`. Dashed rings mark where it cuts the surface: $r_p$ and, when bound, $r_a$.
@@ -110,11 +129,11 @@ grid-template-areas:
 - **Sun:** the sun tokens with bloom, on the axis.
 - **Permanent label, top-left:** "Height is energy per unit mass, not depth in space." It is a `cp-callout data-kind="misconception"` style chip.
 
-### 5.2 Top-down and edge-on views
+### 5.2 Observatory view (default)
 
-- **Top-down:** the true orbit in the plane, with ghosts at equal times, swept-area wedges, and the velocity arrow to scale. The arrow is the distance covered in one ghost step, as now.
-- **Edge-on:** the landscape profile; it is the $U_{\rm eff}$ plot in 3D.
-- Camera changes animate over `--cp-duration-enter`, or cut when reduced motion is on.
+- The true orbit in the plane, with ghosts at equal times (Phase 2), swept-area wedges (Phase 2), and the velocity arrow to scale. The arrow is the distance covered in one ghost step, as now.
+- View changes cross-fade over `--cp-duration-enter`, or cut when reduced motion is on.
+- Tilting the Potential landscape's camera is Phase 3.
 
 ### 5.3 Labels
 
@@ -160,7 +179,12 @@ Units: $U_{\rm eff}$ and $\varepsilon$ in $\mathrm{AU^2/yr^2}$; $h$ in $\mathrm{
    - A one-line caption: "The body can only be where the line is above the curve; it turns around where they meet."
 2. **Drawer, "Why an effective potential?":** the three-step derivation above, the barrier and turning-point bullets, and a sentence tying the landscape to the plot: "The landscape is this curve spun around the Sun."
 3. **Stage:** the misconception label (§5.1), and the drop line labelled $\tfrac12 v_r^2$ on hover or focus.
-4. **Station card and instructor pages:** a short version, and one instructor question on reading turning points from the plot, added in the rollout task with a math validator run.
+4. **The activity (Phase 1):** students switch views on purpose.
+   - The play steps and What to notice start in Observatory and then send students to Potential: "On Elliptical, switch to Potential and press Play. Where does the gold line shrink to zero, and what does the orbit do there?"
+   - The station card gets the same step, with a prediction first.
+   - Instructor pages get one question on reading turning points from the Potential view.
+
+   Every copy change gets a math-validator run.
 
 ## 7. Instrument
 
@@ -201,13 +225,13 @@ It re-reads when `high-contrast.css` or the colour scheme changes. There are no 
 
 ### 8.4 Test hooks
 
-- The stage publishes `data-camera`, `data-renderer` (`webgpu` | `webgl2` | `svg`), `data-turning-points` and `data-energy-level` on its overlay. The WebGL buffer can't be read back, so E2E has no other way to see state (CLAUDE.md).
+- The stage publishes `data-view` (`observatory` | `potential`), `data-renderer` (`webgpu` | `webgl2` | `svg`), `data-turning-points` and `data-energy-level` on its overlay. The WebGL buffer can't be read back, so E2E has no other way to see state (CLAUDE.md).
 
 ## 9. Accessibility
 
 - **Keyboard:**
   - every slider has `aria-valuetext`;
-  - the camera switch is a radio group;
+  - the view switch is a tablist: arrow keys move between Observatory and Potential, and the live region announces the view and its turning points;
   - the time scrubber has `aria-valuetext` "t = 1.41 yr of 2.38 yr";
   - Step is kept.
 - **Live region:** it announces orbit type changes, turning points ("Turns around at 1.00 AU and 2.57 AU"), and Play/Pause/Reset.
@@ -229,7 +253,7 @@ It re-reads when `high-contrast.css` or the colour scheme changes. There are no 
 - **E2E** (one Playwright run at a time, WebGL2 forced):
   - `data-renderer` is `webgl2`;
   - turning-point labels match $r_p$/$r_a$ from the readouts;
-  - the camera switch moves `data-camera`;
+  - the view switch sets `data-view`, shows only the matching drawing, defaults to Observatory, and leaves the body's $r$ unchanged;
   - the SVG fallback renders with WebGL disabled;
   - layout budget at 1440×900 and 1280×720;
   - reflow at 320 px;
@@ -242,9 +266,9 @@ It re-reads when `high-contrast.css` or the colour scheme changes. There are no 
 
 ## 11. Phases
 
-1. **Visual system and shell:** theme tokens, the orbit shell grid, glass, energy bar, $U_{\rm eff}$ plot with the equation and drawer copy, restyled SVG top-down fallback. This alone fixes the "basic" look without WebGPU.
-2. **Stage:** `@cosmic/orbit-stage`, landscape and top-down cameras, KaTeX label overlay, bloom, trails and ghosts.
-3. **Interaction:** edge-on view, dragging the body and velocity, time scrubber, live orbit preview.
+1. **Visual system, shell and views:** theme tokens, the orbit shell grid, glass, energy bar, the $U_{\rm eff}$ plot with the equation and drawer copy, the restyled SVG Observatory view, the Observatory/Potential switch with the 2D Potential profile, and the activity that uses it. This alone fixes the "basic" look without WebGPU.
+2. **Stage:** `@cosmic/orbit-stage`, which upgrades the Potential view to the three.js landscape (2D profile as fallback); KaTeX label overlay, bloom, trails, ghosts and swept areas in Observatory.
+3. **Interaction:** the landscape camera tilt, dragging the body and velocity, time scrubber, live orbit preview.
 4. **Pedagogy and polish:** challenges and the predict chip, guided tour, sonified screen-reader mode, station and instructor copy.
 5. **Rollout** to `keplers-laws`, then `binary-orbits`, then `planetary-conjunctions` (after its audit and an inclination model).
 
