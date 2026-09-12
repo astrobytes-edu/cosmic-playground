@@ -502,3 +502,78 @@ describe("ConservationLawsModel orbital time: the period of a bound orbit and th
   });
 });
 
+describe("ConservationLawsModel effective potential", () => {
+  const mu = 4 * Math.PI * Math.PI;
+  const rel = (a: number, b: number) => Math.abs(a - b) / Math.max(1, Math.abs(b));
+
+  it("at r = 1 AU with h = 2 pi AU^2/yr is -mu/r + h^2/(2 r^2) = -2 pi^2", () => {
+    const u = ConservationLawsModel.effectivePotentialAu2Yr2({ rAu: 1, hAbsAu2Yr: 2 * Math.PI, muAu3Yr2: mu });
+    expect(u).toBeCloseTo(-2 * Math.PI * Math.PI, 12);
+  });
+
+  it("with h = 0 is the Newtonian potential -mu/r", () => {
+    expect(ConservationLawsModel.effectivePotentialAu2Yr2({ rAu: 2.5, hAbsAu2Yr: 0, muAu3Yr2: mu })).toBeCloseTo(-mu / 2.5, 12);
+  });
+
+  it("is NaN for r <= 0, mu <= 0 or a non-finite h", () => {
+    expect(ConservationLawsModel.effectivePotentialAu2Yr2({ rAu: 0, hAbsAu2Yr: 1, muAu3Yr2: mu })).toBeNaN();
+    expect(ConservationLawsModel.effectivePotentialAu2Yr2({ rAu: 1, hAbsAu2Yr: 1, muAu3Yr2: 0 })).toBeNaN();
+    expect(ConservationLawsModel.effectivePotentialAu2Yr2({ rAu: 1, hAbsAu2Yr: Number.NaN, muAu3Yr2: mu })).toBeNaN();
+  });
+
+  // Asymmetric and not a preset: tilted outward, so the start is not a turning point.
+  const o = ConservationLawsModel.initialOrbit({ massSolar: 1, r0Au: 1.3, speedFactor: 1.17, directionDeg: 17.76 });
+  if (o.orbitType !== "elliptical") throw new Error(`expected an elliptical test orbit, got ${o.orbitType}`);
+  const U = (rAu: number) =>
+    ConservationLawsModel.effectivePotentialAu2Yr2({ rAu, hAbsAu2Yr: o.hAbsAu2Yr, muAu3Yr2: o.muAu3Yr2 });
+
+  it("equals the specific energy at both turning points: U_eff(r_p) = U_eff(r_a) = eps", () => {
+    expect(rel(U(o.rpAu), o.epsAu2Yr2)).toBeLessThan(1e-9);
+    expect(rel(U(o.raAu), o.epsAu2Yr2)).toBeLessThan(1e-9);
+  });
+
+  it("has its minimum -mu^2/(2 h^2) at r_c = h^2/mu, with zero slope there", () => {
+    const rc = ConservationLawsModel.circularOrbitRadiusAu({ hAbsAu2Yr: o.hAbsAu2Yr, muAu3Yr2: o.muAu3Yr2 });
+    expect(rel(rc, (o.hAbsAu2Yr * o.hAbsAu2Yr) / o.muAu3Yr2)).toBeLessThan(1e-12);
+    expect(rel(U(rc), -(o.muAu3Yr2 * o.muAu3Yr2) / (2 * o.hAbsAu2Yr * o.hAbsAu2Yr))).toBeLessThan(1e-12);
+    const d = 1e-5 * rc;
+    expect(Math.abs((U(rc + d) - U(rc - d)) / (2 * d))).toBeLessThan(1e-6);
+    expect(U(rc * 1.1)).toBeGreaterThan(U(rc));
+    expect(U(rc * 0.9)).toBeGreaterThan(U(rc));
+  });
+
+  it("splits the energy along the orbit: v_r^2/2 + U_eff(r) = eps, and v_r^2/2 = (v^2 - (h/r)^2)/2", () => {
+    for (let k = 0; k < 12; k++) {
+      const nuRad = (2 * Math.PI * k) / 12 + 0.1;
+      const pos = ConservationLawsModel.conicPositionAndTangentAu({ ecc: o.ecc, pAu: o.pAu, omegaRad: o.omegaRad, nuRad });
+      if (!pos) throw new Error(`no position at nu = ${nuRad}`);
+      const rAu = Math.hypot(pos.xAu, pos.yAu);
+      const vAuYr = ConservationLawsModel.instantaneousSpeedAuPerYr({
+        muAu3Yr2: o.muAu3Yr2,
+        hAbsAu2Yr: o.hAbsAu2Yr,
+        ecc: o.ecc,
+        nuRad
+      });
+      const kr = ConservationLawsModel.radialKineticAu2Yr2({
+        rAu,
+        hAbsAu2Yr: o.hAbsAu2Yr,
+        muAu3Yr2: o.muAu3Yr2,
+        epsAu2Yr2: o.epsAu2Yr2
+      });
+      expect(rel(kr + U(rAu), o.epsAu2Yr2)).toBeLessThan(1e-9);
+      const vt = o.hAbsAu2Yr / rAu;
+      expect(Math.abs(kr - 0.5 * (vAuYr * vAuYr - vt * vt))).toBeLessThan(1e-9 * Math.abs(o.epsAu2Yr2));
+    }
+  });
+
+  it("radial kinetic energy is 0 at a turning point and NaN clearly outside the allowed region", () => {
+    const args = { hAbsAu2Yr: o.hAbsAu2Yr, muAu3Yr2: o.muAu3Yr2, epsAu2Yr2: o.epsAu2Yr2 };
+    expect(ConservationLawsModel.radialKineticAu2Yr2({ ...args, rAu: o.rpAu })).toBeCloseTo(0, 9);
+    expect(ConservationLawsModel.radialKineticAu2Yr2({ ...args, rAu: o.rpAu * 0.5 })).toBeNaN();
+  });
+
+  it("has no circular radius without angular momentum", () => {
+    expect(ConservationLawsModel.circularOrbitRadiusAu({ hAbsAu2Yr: 0, muAu3Yr2: mu })).toBeNaN();
+  });
+});
+

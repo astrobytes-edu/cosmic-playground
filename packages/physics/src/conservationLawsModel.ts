@@ -256,6 +256,37 @@ function specificEnergyPartsAu2Yr2(args: { rAu: number; vAuYr: number; muAu3Yr2:
   return { kAu2Yr2, uAu2Yr2, epsAu2Yr2: kAu2Yr2 + uAu2Yr2 };
 }
 
+/**
+ * Effective potential per unit mass, U_eff(r) = -mu/r + h^2/(2 r^2), AU^2/yr^2.
+ * With |h| conserved, the tangential kinetic energy h^2/(2 r^2) depends on r alone, so it acts as a
+ * potential (the centrifugal barrier) and eps = v_r^2/2 + U_eff(r). Motion is allowed where U_eff(r) <= eps.
+ */
+function effectivePotentialAu2Yr2(args: { rAu: number; hAbsAu2Yr: number; muAu3Yr2: number }): number {
+  const { rAu, hAbsAu2Yr, muAu3Yr2 } = args;
+  if (!(rAu > 0) || !(muAu3Yr2 > 0) || !Number.isFinite(hAbsAu2Yr)) return Number.NaN;
+  return -muAu3Yr2 / rAu + (hAbsAu2Yr * hAbsAu2Yr) / (2 * rAu * rAu);
+}
+
+/** Radius of the circular orbit with this |h|, where U_eff is smallest: r_c = h^2/mu, AU. NaN without h. */
+function circularOrbitRadiusAu(args: { hAbsAu2Yr: number; muAu3Yr2: number }): number {
+  const { hAbsAu2Yr, muAu3Yr2 } = args;
+  if (!(hAbsAu2Yr > 0) || !(muAu3Yr2 > 0)) return Number.NaN;
+  return (hAbsAu2Yr * hAbsAu2Yr) / muAu3Yr2;
+}
+
+/**
+ * Radial kinetic energy per unit mass, v_r^2/2 = eps - U_eff(r), AU^2/yr^2.
+ * Round-off at a turning point reads as 0. A radius clearly outside the allowed region is NaN rather
+ * than a clamped 0, so a caller that passes an impossible radius finds out.
+ */
+function radialKineticAu2Yr2(args: { rAu: number; hAbsAu2Yr: number; muAu3Yr2: number; epsAu2Yr2: number }): number {
+  const uEff = effectivePotentialAu2Yr2(args);
+  if (!Number.isFinite(uEff) || !Number.isFinite(args.epsAu2Yr2)) return Number.NaN;
+  const d = args.epsAu2Yr2 - uEff;
+  if (d < -1e-9 * Math.max(Math.abs(args.epsAu2Yr2), Math.abs(uEff))) return Number.NaN;
+  return Math.max(0, d);
+}
+
 export type InitialOrbit =
   | { orbitType: "invalid" }
   | {
@@ -455,6 +486,9 @@ export const ConservationLawsModel = {
   conicPositionAndTangentAu,
   instantaneousSpeedAuPerYr,
   specificEnergyPartsAu2Yr2,
+  effectivePotentialAu2Yr2,
+  circularOrbitRadiusAu,
+  radialKineticAu2Yr2,
   initialOrbit
 } as const;
 
