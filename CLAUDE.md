@@ -97,6 +97,15 @@ You can keep PR overhead low but still get value:
 - eos-lab's first-visit tour blocks clicks in E2E unless localStorage `eos-lab-toured` is set.
 - Pushing to main cancels an in-progress deploy (`deploy.yml` concurrency, `cancel-in-progress: true`).
 - Readiness: only `launch-ready` removes the card badge (`readiness.ts:59`); only `status: stable` removes the exhibit's "Active development" callout. Move both together; `readinessReason` is public copy.
+- `validate-math-formatting.mjs` is green and blind: it tests literal characters only, so
+  Unicode math reaching readers through `\uXXXX` escapes or `&#x` entities passes, and its
+  character class omits `<= >= != +- . / sqrt sum int -> <-`. Do not read its OK as proof.
+- `pnpm lint` runs biome with `--max-diagnostics=10`. On 2026-10-23 that hid 488 further
+  diagnostics. Use `pnpm lint:biome` (`--max-diagnostics=2000`) when you want the truth.
+- Auditing a tree while fixing it produces stale findings: 6 of 8 refutations in the
+  2026-10-23 audit were "already fixed in the working tree" because finders had read HEAD.
+  Freeze the tree during a long parallel audit, or re-check each finding against the live
+  files before acting on it.
 
 ## Dependency notes
 
@@ -329,6 +338,32 @@ One copy in the repo, shared by Claude and Codex.
   `corepack pnpm gates [names]` runs every gate in order with exit codes, for either agent.
 - Superpowers process skills (`superpowers:writing-plans`, `superpowers:executing-plans`,
   `superpowers:systematic-debugging`, `superpowers:test-driven-development`) remain available where installed.
+
+## Model policy for delegated work — HARD RULE
+
+Set 2026-10-23, after a red-team audit that ran 107 agents and 15.4M subagent output
+tokens in about 3 hours. Most of those agents were reading files, grepping and checking
+contracts. Work like that does not need the strongest model, and spending it there is what
+makes a thorough audit unaffordable to repeat.
+
+- **The lead session runs on the strongest model available.** It holds the context, chooses
+  the structure and makes the calls that are expensive to reverse.
+- **Subagents and workflow fan-out default to Sonnet 5.5** (`agent(prompt, {model:
+  "sonnet"})`, `Agent(..., model: "sonnet")`). Breadth is Sonnet work: reading a file,
+  grepping, enumerating routes, checking a contract, building a coverage matrix,
+  summarising a spec, taking screenshots, running a targeted test.
+- **Escalate an individual subagent to Opus 5.5 only when its task is one of these:**
+  1. Deriving or re-deriving physics, or independently re-implementing a published relation
+     to check ours against it (this is what caught the AO closure and the MOND/Freeman
+     mismatch, and what reproduced Tout 1996 to machine precision).
+  2. Adversarially verifying a P0. "Is this actually real?" is exactly where a weaker model
+     agrees too readily, and the whole value of the verify pass is that it refuses to.
+  3. A design, contract, schema or cutover decision that will be expensive to undo.
+- **Say in one line, per workflow, which stages run on which model and why.** A workflow
+  where every agent is Opus is a cost bug, not thoroughness.
+- NOT MEASURED: the per-model split of that 15.4M-token run, so this policy is a judgement
+  about where reasoning depth pays, not a measured saving. Measure it the first time a
+  workflow runs mixed, and record the result here.
 
 ## Communication mode (explanatory default)
 
