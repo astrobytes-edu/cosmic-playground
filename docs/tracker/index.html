@@ -1,0 +1,500 @@
+<title>Cosmic Playground Remediation</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: an instrument logbook. Readout strip on top, then three views (roadmap lanes,
+   a dense filterable findings ledger, a decision log). Dark-first like the project's
+   instrument layer: amber for values, ice for links, semantic colours for severity/state. */
+:root {
+  color-scheme: dark;
+  --ink: #0f1115;
+  --slate: #171b22;
+  --raise: #21242d;
+  --line: #2c303b;
+  --text: #e4e6eb;
+  --muted: #959bab;
+  --amber: #ffb86c;
+  --ice: #8be9fd;
+  --sev0: #ff6b81;
+  --sev1: #ffa94d;
+  --sev2: #e3c565;
+  --sev3: #8f96a6;
+  --ok: #69db7c;
+  --prog: #8be9fd;
+  --focus: #8be9fd;
+  --font-display: "Lexend", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --step--1: 0.84rem;
+  --step-0: 1rem;
+  --step-1: 1.2rem;
+  --step-2: 1.6rem;
+  --step-3: 2.2rem;
+  --r: 6px;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --ink: #f4f5f8; --slate: #ffffff; --raise: #eceef3; --line: #d6d9e1;
+    --text: #1a1e27; --muted: #586072; --amber: #a2560a; --ice: #0b6e80;
+    --sev0: #c2253f; --sev1: #b85a00; --sev2: #7d6400; --sev3: #646b7a;
+    --ok: #2b8a3e; --prog: #0b6e80; --focus: #0b6e80;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ink: #f4f5f8; --slate: #ffffff; --raise: #eceef3; --line: #d6d9e1;
+  --text: #1a1e27; --muted: #586072; --amber: #a2560a; --ice: #0b6e80;
+  --sev0: #c2253f; --sev1: #b85a00; --sev2: #7d6400; --sev3: #646b7a;
+  --ok: #2b8a3e; --prog: #0b6e80; --focus: #0b6e80;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 24px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; margin: 0; }
+h1 { font-size: var(--step-3); letter-spacing: -0.01em; }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); }
+a { color: var(--ice); }
+button, select, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.mono { font-family: var(--font-mono); font-size: 0.86em; }
+.muted { color: var(--muted); }
+.eyebrow { font-family: var(--font-mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+header.top { display: grid; gap: 14px; }
+.lede { max-width: 70ch; margin: 0; color: var(--muted); }
+.now { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--slate); max-width: 900px; }
+.now dt { font-family: var(--font-mono); font-size: var(--step--1); color: var(--amber); text-transform: uppercase; letter-spacing: 0.06em; padding-top: 2px; }
+.now dd { margin: 0; min-width: 0; }
+
+.readouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.readout { background: var(--slate); padding: 12px 14px; display: grid; gap: 2px; align-content: start; }
+.readout__label { font-size: var(--step--1); color: var(--muted); }
+.readout__value { font-family: var(--font-mono); font-size: var(--step-2); color: var(--amber); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.readout__unit { font-family: var(--font-mono); font-size: var(--step--1); color: var(--ice); margin-left: 4px; }
+.readout__src { font-size: 0.78rem; color: var(--muted); }
+
+.banner { padding: 10px 14px; border-radius: var(--r); border: 1px dashed var(--line); color: var(--muted); }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 14px; cursor: pointer; color: var(--muted); font-family: var(--font-display); font-size: var(--step-0); }
+.tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--amber); }
+.tab .count { font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); margin-left: 6px; }
+
+/* Pills and chips */
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 1px 8px; border-radius: 999px; font-size: var(--step--1); border: 1px solid currentColor; white-space: nowrap; line-height: 1.5; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.st-unverified { color: var(--muted); border-style: dashed; }
+.st-unverified::before { background: transparent; border: 1px solid currentColor; }
+.st-confirmed, .st-blocked { color: var(--sev0); }
+.st-in-progress, .st-next { color: var(--prog); }
+.st-fixed, .st-done { color: var(--ok); }
+.st-refuted, .st-wontfix, .st-dropped { color: var(--muted); text-decoration: line-through; }
+.st-todo { color: var(--muted); }
+.st-decided, .st-implemented, .st-landed, .st-standing { color: var(--ok); }
+.st-pending { color: var(--sev1); }
+.sev { font-family: var(--font-mono); font-weight: 600; font-size: var(--step--1); padding: 1px 6px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap; }
+.sev-P0 { color: var(--sev0); }
+.sev-P1 { color: var(--sev1); }
+.sev-P2 { color: var(--sev2); }
+.sev-P3 { color: var(--sev3); }
+.chip { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+
+/* Roadmap */
+.phase { display: grid; gap: 10px; }
+.phase__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.bar { height: 6px; border-radius: 3px; background: var(--raise); overflow: hidden; width: min(260px, 100%); }
+.bar > span { display: block; height: 100%; background: var(--ok); }
+.phase__meta { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); }
+.items { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.item { background: var(--slate); padding: 12px 14px; display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 6px 16px; align-items: start; }
+.item__body { display: grid; gap: 6px; min-width: 0; }
+.item__title { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-weight: 600; }
+.item__detail { margin: 0; color: var(--muted); max-width: 80ch; }
+.item__gate { margin: 0; font-size: var(--step--1); color: var(--sev1); }
+.item__links { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--ice); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; font-size: var(--step--1); }
+.item__note { margin: 0; font-size: var(--step--1); max-width: 80ch; border-left: 2px solid var(--line); padding-left: 8px; }
+.saved { font-size: 0.76rem; color: var(--muted); }
+
+/* Findings ledger */
+.filters { display: grid; grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr)) auto; gap: 8px; align-items: end; }
+.filters label { display: grid; gap: 2px; font-size: var(--step--1); color: var(--muted); min-width: 0; }
+.filters input, .filters select { width: 100%; background: var(--slate); border: 1px solid var(--line); border-radius: var(--r); padding: 6px 8px; min-width: 0; }
+.btn { background: var(--raise); border: 1px solid var(--line); border-radius: var(--r); padding: 6px 12px; cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.btn--primary { border-color: var(--amber); color: var(--amber); }
+.resultline { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: var(--step--1); color: var(--muted); }
+.idfilter { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--ice); color: var(--ice); border-radius: 999px; padding: 0 4px 0 10px; }
+.idfilter button { background: none; border: 0; color: inherit; cursor: pointer; padding: 0 6px; }
+.ledger { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.f { background: var(--slate); }
+.f > summary { list-style: none; cursor: pointer; padding: 9px 14px; display: grid; grid-template-columns: 4.6rem 7.4rem minmax(0, 1fr) 12rem; gap: 12px; align-items: baseline; }
+.f > summary::-webkit-details-marker { display: none; }
+.f > summary:hover { background: var(--raise); }
+.f[open] > summary { background: var(--raise); }
+.f__title { min-width: 0; }
+.f__loc { display: block; color: var(--muted); overflow-wrap: anywhere; }
+.f__area { font-size: var(--step--1); color: var(--muted); text-align: right; overflow-wrap: anywhere; }
+.f__body { padding: 4px 14px 16px; display: grid; gap: 14px; border-top: 1px solid var(--line); }
+.f__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.f__block { min-width: 0; display: grid; gap: 4px; align-content: start; }
+.f__block p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.94rem; max-width: 80ch; }
+.f__status { display: grid; gap: 6px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.more { justify-self: center; }
+
+/* Decisions */
+.decisions { display: grid; gap: 12px; }
+.dec { background: var(--slate); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 4px 16px; }
+.dec__date { font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); }
+.dec__q { font-weight: 600; }
+.dec__choice { color: var(--amber); }
+.dec__why { margin: 0; color: var(--muted); max-width: 80ch; font-size: 0.95rem; }
+
+footer { font-size: var(--step--1); color: var(--muted); }
+
+@media (max-width: 860px) {
+  .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .filters label:first-child { grid-column: 1 / -1; }
+  .f > summary { grid-template-columns: 4.2rem minmax(0, 1fr); }
+  .f > summary .pill { grid-column: 2; grid-row: 2; justify-self: start; }
+  .f__area { grid-column: 1 / -1; text-align: left; }
+  .f__grid { grid-template-columns: minmax(0, 1fr); }
+  .item { grid-template-columns: minmax(0, 1fr); }
+  .dec { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">ASTR 101 / 201 teaching site &middot; red-team audit 2026-10-23</span>
+    <h1>Cosmic Playground Remediation</h1>
+    <p class="lede">The working plan after the audit: six structural fixes first, then the confirmed P0s, with every finding's status. This page displays <span class="mono">docs/tracker/state.json</span> in the repo; to change anything, ask any agent (Claude or Codex) or edit that file and commit.</p>
+    <dl class="now" id="now" hidden></dl>
+    <div class="readouts" id="readouts" aria-live="polite"></div>
+    <div class="banner" id="banner" hidden></div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" role="tab" id="tab-roadmap" aria-controls="view-roadmap" data-view="roadmap">Roadmap<span class="count" id="count-roadmap"></span></button>
+    <button class="tab" role="tab" id="tab-findings" aria-controls="view-findings" data-view="findings">Findings<span class="count" id="count-findings"></span></button>
+    <button class="tab" role="tab" id="tab-decisions" aria-controls="view-decisions" data-view="decisions">Decisions<span class="count" id="count-decisions"></span></button>
+  </nav>
+
+  <main>
+    <section id="view-roadmap" role="tabpanel" aria-labelledby="tab-roadmap">
+      <div id="roadmap" class="phase"><p class="banner">Loading the roadmap&hellip;</p></div>
+    </section>
+
+    <section id="view-findings" role="tabpanel" aria-labelledby="tab-findings" hidden>
+      <div style="display:grid;gap:12px">
+        <div class="filters">
+          <label for="q">Search title, file or evidence<input id="q" type="search" placeholder="e.g. parallax, aria-valuetext, logic.ts"></label>
+          <label for="f-sev">Severity<select id="f-sev"><option value="">All</option><option>P0</option><option>P1</option><option>P2</option><option>P3</option></select></label>
+          <label for="f-state">Status<select id="f-state"><option value="">All</option><option value="open">Open (not fixed/refuted)</option></select></label>
+          <label for="f-area">Area<select id="f-area"><option value="">All areas</option></select></label>
+          <label for="f-cat">Category<select id="f-cat"><option value="">All categories</option></select></label>
+          <button class="btn" id="clear" type="button">Clear</button>
+        </div>
+        <div class="resultline" id="resultline"></div>
+        <div class="ledger" id="ledger"><p class="banner" style="margin:0">Loading 591 findings&hellip;</p></div>
+        <button class="btn more" id="more" type="button" hidden>Show more</button>
+      </div>
+    </section>
+
+    <section id="view-decisions" role="tabpanel" aria-labelledby="tab-decisions" hidden>
+      <div class="decisions" id="decisions"><p class="banner">Loading decisions&hellip;</p></div>
+    </section>
+  </main>
+
+  <footer id="footer">State: <span class="mono">docs/tracker/state.json</span>. Findings: <span class="mono">docs/tracker/findings.json</span>, derived from <span class="mono">docs/reviews/2026-10-23-red-team-findings.json</span> (591 findings; 8 refuted ones are kept separately in that file). Severity shows the verifier's confirmed level where one exists.</footer>
+</div>
+
+<script>
+(() => {
+  const STATES = [
+    ["unverified", "Unverified"], ["confirmed", "Confirmed"], ["in-progress", "In progress"],
+    ["fixed", "Fixed"], ["refuted", "Refuted"], ["wontfix", "Won't fix"]
+  ];
+  const ITEM_STATES = [["todo", "Not started"], ["next", "Up next"], ["in-progress", "In progress"], ["blocked", "Blocked"], ["done", "Done"], ["dropped", "Dropped"]];
+  const CLOSED = new Set(["fixed", "refuted", "wontfix"]);
+  const SEV_ORDER = { P0: 0, P1: 1, P2: 2, P3: 3 };
+  const PAGE = 60;
+
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, attrs = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? "" : v);
+    }
+    for (const kid of kids.flat()) if (kid != null) n.append(kid);
+    return n;
+  };
+  const label = (pairs, key) => (pairs.find(([k]) => k === key) || [key, key])[1];
+  const fmtTime = (iso) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return isNaN(d) ? "" : d.toISOString().slice(0, 16).replace("T", " ") + " UTC";
+  };
+
+  const store = { get(k, d) { try { const v = localStorage.getItem("cpr:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+                  set(k, v) { try { localStorage.setItem("cpr:" + k, JSON.stringify(v)); } catch {} } };
+
+  const state = {
+    data: null, findings: [], byId: new Map(), status: new Map(),
+    roadmap: [], decisions: [], meta: null, updatedAt: "",
+    shown: PAGE, idFilter: null
+  };
+
+  /* ---------- status helpers ---------- */
+  const sevOf = (f) => f.sevC || f.sev;
+  const defaultState = (f) => (f.verdict === "CONFIRMED" ? "confirmed" : "unverified");
+  const stateOf = (f) => (state.status.get(f.id) || {}).state || defaultState(f);
+
+  /* ---------- readouts ---------- */
+  function renderReadouts() {
+    const box = $("readouts");
+    box.replaceChildren();
+    const add = (labelText, value, unit, src) => box.append(el("div", { class: "readout" },
+      el("span", { class: "readout__label", text: labelText }),
+      el("span", { class: "readout__value", text: value }, unit ? el("span", { class: "readout__unit", text: unit }) : null),
+      el("span", { class: "readout__src", text: src })));
+
+    if (!state.data) return;
+    const grades = Object.values(state.data.grades);
+    const mean = grades.reduce((s, g) => s + g, 0) / grades.length;
+    add("Audit grade", String(Math.round(mean)), "/ 100", `mean of ${grades.length} area grades`);
+
+    const p0 = state.findings.filter((f) => f.verdict === "CONFIRMED" && f.sevC === "P0");
+    const p0Open = p0.filter((f) => !CLOSED.has(stateOf(f))).length;
+    add("Confirmed P0 open", String(p0Open), `of ${p0.length}`, "verifier-confirmed, not yet fixed");
+
+    const structural = state.roadmap.filter((i) => i.phase === "structural");
+    if (structural.length) add("Structural fixes done", String(structural.filter((i) => i.state === "done").length), `of ${structural.length}`, "S1-S6 on the roadmap");
+
+    const closed = state.findings.filter((f) => CLOSED.has(stateOf(f))).length;
+    add("Findings closed", String(closed), `of ${state.findings.length}`, "fixed, refuted or won't fix");
+
+    const unv = state.findings.filter((f) => stateOf(f) === "unverified" && SEV_ORDER[sevOf(f)] <= 1).length;
+    add("P0/P1 awaiting verification", String(unv), "", "recompute before acting");
+  }
+
+  function renderNow() {
+    const box = $("now");
+    const m = state.meta;
+    if (!m || (!m.focus && !m.next)) { box.hidden = true; return; }
+    box.replaceChildren();
+    if (m.focus) box.append(el("dt", { text: "Now" }), el("dd", { text: m.focus }));
+    if (m.next) box.append(el("dt", { text: "Next" }), el("dd", { text: m.next }));
+    if (m.blocker) box.append(el("dt", { text: "Blocked" }), el("dd", { text: m.blocker }));
+    if (state.updatedAt) box.append(el("dt", { text: "As of" }), el("dd", { class: "mono muted", text: fmtTime(state.updatedAt) }));
+    box.hidden = false;
+  }
+
+  /* ---------- roadmap ---------- */
+  function renderRoadmap() {
+    const box = $("roadmap");
+    $("count-roadmap").textContent = state.roadmap.length ? String(state.roadmap.length) : "";
+    if (!state.roadmap.length) {
+      box.replaceChildren(el("p", { class: "banner", text: "No roadmap items in state.json." }));
+      return;
+    }
+    const phases = new Map();
+    for (const it of [...state.roadmap].sort((a, b) => (a.phaseOrder - b.phaseOrder) || (a.order - b.order))) {
+      if (!phases.has(it.phase)) phases.set(it.phase, { title: it.phaseTitle || it.phase, blurb: it.phaseBlurb, items: [] });
+      phases.get(it.phase).items.push(it);
+    }
+    const out = [];
+    for (const [key, ph] of phases) {
+      const done = ph.items.filter((i) => i.state === "done").length;
+      const pct = Math.round((100 * done) / ph.items.length);
+      out.push(el("section", { class: "phase", "aria-labelledby": "ph-" + key },
+        el("div", { class: "phase__head" },
+          el("h2", { id: "ph-" + key, text: ph.title }),
+          el("div", { class: "phase__meta" },
+            el("span", { text: `${done} of ${ph.items.length} done` }),
+            el("div", { class: "bar", role: "img", "aria-label": `${pct}% done` }, el("span", { style: `width:${pct}%` })))),
+        ph.blurb ? el("p", { class: "item__detail", text: ph.blurb }) : null,
+        el("div", { class: "items" }, ph.items.map(renderItem))));
+    }
+    box.replaceChildren(...out);
+  }
+
+  function renderItem(it) {
+    const stamp = el("span", { class: "saved", text: it.updatedAt ? "Updated " + fmtTime(it.updatedAt) : "" });
+    const ids = (it.findingIds || []).filter((id) => state.byId.has(id));
+    const links = [];
+    if (ids.length) links.push(el("button", { class: "linkbtn", type: "button", text: `${ids.length} linked finding${ids.length > 1 ? "s" : ""}`,
+      onclick: () => { state.idFilter = { ids, from: it.title }; state.shown = PAGE; show("findings"); renderFindings(); } }));
+    if (it.effort) links.push(el("span", { class: "chip", title: "Effort", text: "effort " + it.effort }));
+    if (it.ref) links.push(el("span", { class: "chip mono", text: it.ref }));
+
+    return el("article", { class: "item" },
+      el("div", {}, el("span", { class: "pill st-" + it.state, text: label(ITEM_STATES, it.state) })),
+      el("div", { class: "item__body" },
+        el("div", { class: "item__title" }, it.code ? el("span", { class: "mono", style: "color:var(--amber)", text: it.code }) : null, el("span", { text: it.title })),
+        it.detail ? el("p", { class: "item__detail", text: it.detail }) : null,
+        it.gate ? el("p", { class: "item__gate", text: "Needs your decision first: " + it.gate }) : null,
+        it.note ? el("p", { class: "item__note", text: it.note }) : null,
+        links.length ? el("div", { class: "item__links" }, links) : null,
+        stamp));
+  }
+
+  /* ---------- findings ---------- */
+  function filters() {
+    return { q: $("q").value.trim().toLowerCase(), sev: $("f-sev").value, st: $("f-state").value, area: $("f-area").value, cat: $("f-cat").value };
+  }
+  function matches(f, flt) {
+    if (state.idFilter && !state.idFilter.ids.includes(f.id)) return false;
+    if (flt.sev && sevOf(f) !== flt.sev) return false;
+    const st = stateOf(f);
+    if (flt.st === "open" && CLOSED.has(st)) return false;
+    if (flt.st && flt.st !== "open" && st !== flt.st) return false;
+    if (flt.area && f.area !== flt.area) return false;
+    if (flt.cat && f.cat !== flt.cat) return false;
+    if (flt.q) {
+      const hay = (f.title + " " + f.file + " " + (f.evidence || "") + " " + f.id).toLowerCase();
+      if (!flt.q.split(/\s+/).every((w) => hay.includes(w))) return false;
+    }
+    return true;
+  }
+  function renderFindings() {
+    if (!state.data) return;
+    const flt = filters();
+    store.set("filters", flt);
+    const rows = state.findings.filter((f) => matches(f, flt)).sort((a, b) =>
+      (SEV_ORDER[sevOf(a)] - SEV_ORDER[sevOf(b)]) || ((a.verdict === "CONFIRMED" ? 0 : 1) - (b.verdict === "CONFIRMED" ? 0 : 1)) || a.area.localeCompare(b.area));
+    const open = rows.filter((f) => !CLOSED.has(stateOf(f))).length;
+    const line = $("resultline");
+    line.replaceChildren(el("span", { text: `Showing ${Math.min(rows.length, state.shown)} of ${rows.length} matching (${open} open) · ${state.findings.length} total` }));
+    if (state.idFilter) line.append(el("span", { class: "idfilter" }, el("span", { text: "Linked from: " + state.idFilter.from }),
+      el("button", { type: "button", "aria-label": "Remove linked-findings filter", text: "×", onclick: () => { state.idFilter = null; renderFindings(); } })));
+    const ledger = $("ledger");
+    ledger.replaceChildren(...rows.slice(0, state.shown).map(renderFinding));
+    if (!rows.length) ledger.replaceChildren(el("p", { class: "banner", style: "margin:0", text: "No findings match these filters." }));
+    $("more").hidden = rows.length <= state.shown;
+  }
+
+  function renderFinding(f) {
+    const st = stateOf(f);
+    const sev = sevOf(f);
+    const down = f.sevC && f.sevC !== f.sev ? `${f.sev}→${f.sevC}` : sev;
+    const d = el("details", { class: "f", "data-id": f.id },
+      el("summary", {},
+        el("span", { class: "sev sev-" + sev, title: f.sevC ? "Confirmed severity" : "Auditor's severity (not verified)", text: down }),
+        el("span", { class: "pill st-" + st, text: label(STATES, st) }),
+        el("span", { class: "f__title" }, el("span", { text: f.title }), el("span", { class: "f__loc mono", text: f.file + (f.line ? ":" + f.line : "") })),
+        el("span", { class: "f__area", text: f.area + " · " + (f.cat || "") })));
+    d.addEventListener("toggle", () => { if (d.open && d.children.length === 1) d.append(renderFindingBody(f)); }, { once: false });
+    return d;
+  }
+
+  function renderFindingBody(f) {
+    const block = (title, text) => text ? el("div", { class: "f__block" }, el("span", { class: "eyebrow", text: title }), el("p", { text })) : null;
+    const cur = state.status.get(f.id) || {};
+    return el("div", { class: "f__body" },
+      el("div", { class: "resultline" },
+        el("span", { class: "chip", text: "id " + f.id }), el("span", { class: "chip", text: "wave " + f.wave }),
+        el("span", { class: "chip", text: "effort " + (f.effort || "?") }), el("span", { class: "chip", text: f.verdict })),
+      el("div", { class: "f__grid" }, block("Evidence", f.evidence), block("Failure scenario", f.scenario), block("Proposed fix", f.fix), block("Verifier", f.note)),
+      cur.note || cur.updatedAt ? el("div", { class: "f__status" },
+        block("Status note", cur.note),
+        cur.updatedAt ? el("span", { class: "saved", text: "Updated " + fmtTime(cur.updatedAt) }) : null) : null);
+  }
+
+  /* ---------- decisions ---------- */
+  function renderDecisions() {
+    const box = $("decisions");
+    $("count-decisions").textContent = state.decisions.length ? String(state.decisions.length) : "";
+    if (!state.decisions.length) {
+      box.replaceChildren(el("p", { class: "banner", text: "No decisions in state.json." }));
+      return;
+    }
+    const sorted = [...state.decisions].sort((a, b) => (b.date || "").localeCompare(a.date || "") || (a.order || 0) - (b.order || 0));
+    box.replaceChildren(...sorted.map((d) => el("article", { class: "dec" },
+      el("div", { class: "dec__date" }, el("div", { text: d.date || "" }), el("span", { class: "pill st-" + (d.status || "decided"), text: d.statusLabel || d.status || "decided" })),
+      el("div", { style: "display:grid;gap:4px;min-width:0" },
+        el("div", { class: "dec__q", text: d.question }),
+        el("div", { class: "dec__choice", text: d.choice }),
+        d.why ? el("p", { class: "dec__why", text: d.why }) : null))));
+  }
+
+  /* ---------- views ---------- */
+  const VIEWS = ["roadmap", "findings", "decisions"];
+  function show(view) {
+    if (!VIEWS.includes(view)) view = "roadmap";
+    for (const v of VIEWS) {
+      $("view-" + v).hidden = v !== view;
+      $("tab-" + v).setAttribute("aria-selected", String(v === view));
+      $("tab-" + v).tabIndex = v === view ? 0 : -1;
+    }
+    try { history.replaceState(null, "", "#" + view); } catch {}
+    store.set("view", view);
+  }
+  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => show(t.dataset.view)));
+  document.querySelector(".tabs").addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const i = VIEWS.indexOf(VIEWS.find((v) => !$("view-" + v).hidden));
+    const n = VIEWS[(i + (e.key === "ArrowRight" ? 1 : VIEWS.length - 1)) % VIEWS.length];
+    show(n); $("tab-" + n).focus();
+  });
+  show((location.hash || "").slice(1) || store.get("view", "roadmap"));
+
+  for (const id of ["q", "f-sev", "f-state", "f-area", "f-cat"]) {
+    $(id).addEventListener(id === "q" ? "input" : "change", () => { state.shown = PAGE; renderFindings(); });
+  }
+  $("clear").addEventListener("click", () => {
+    for (const id of ["q", "f-sev", "f-state", "f-area", "f-cat"]) $(id).value = "";
+    state.idFilter = null; state.shown = PAGE; renderFindings();
+  });
+  $("more").addEventListener("click", () => { state.shown += PAGE; renderFindings(); });
+
+  function renderAll() { renderReadouts(); renderNow(); renderRoadmap(); renderFindings(); renderDecisions(); }
+
+  /* ---------- load: both files sit beside this page ---------- */
+  const banner = (text) => { $("banner").textContent = text; $("banner").hidden = !text; };
+  const getJson = (name) => fetch(name, { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(name + ": HTTP " + r.status); return r.json(); });
+  Promise.all([getJson("findings.json"), getJson("state.json")]).then(([data, tracker]) => {
+    state.data = data;
+    state.findings = data.findings;
+    state.byId = new Map(data.findings.map((f) => [f.id, f]));
+    state.status = new Map(Object.entries(tracker.status || {}));
+    state.roadmap = tracker.roadmap || [];
+    state.decisions = tracker.decisions || [];
+    state.meta = tracker.now || null;
+    state.updatedAt = tracker.updatedAt || "";
+    $("count-findings").textContent = String(data.findings.length);
+    const areas = [...new Set(data.findings.map((f) => f.area))].sort();
+    $("f-area").append(...areas.map((a) => el("option", { value: a, text: `${a} (${data.grades[a] ?? "?"}/100)` })));
+    const cats = [...new Set(data.findings.map((f) => f.cat).filter(Boolean))].sort();
+    $("f-cat").append(...cats.map((c) => el("option", { value: c, text: c })));
+    $("f-state").append(...STATES.map(([k, v]) => el("option", { value: k, text: v })));
+    const saved = store.get("filters", null);
+    if (saved) { $("q").value = saved.q || ""; for (const [id, k] of [["f-sev", "sev"], ["f-state", "st"], ["f-area", "area"], ["f-cat", "cat"]]) $(id).value = saved[k] || ""; }
+    renderAll();
+  }).catch((e) => {
+    banner("Could not load the tracker (" + e.message + "). Opened from disk? Serve the folder: python3 -m http.server -d docs/tracker 8766");
+    $("ledger").replaceChildren();
+    $("roadmap").replaceChildren();
+    $("decisions").replaceChildren();
+  });
+})();
+</script>

@@ -9,6 +9,18 @@
         "dev"
       ],
       "port": 3000
+    },
+    {
+      "name": "site-preview",
+      "runtimeExecutable": "corepack",
+      "runtimeArgs": ["pnpm", "-C", "apps/site", "preview", "--host", "127.0.0.1", "--port", "4331"],
+      "port": 4331
+    },
+    {
+      "name": "tracker",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "-d", "docs/tracker", "--bind", "127.0.0.1", "8766"],
+      "port": 8766
     }
   ]
 }

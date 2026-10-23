@@ -387,3 +387,9 @@ makes a thorough audit unaffordable to repeat.
 <!-- brain-status-convention -->
 ## Brain status updates
 When you make notable progress, hit a blocker, or set the next action, update this repo's `STATUS.md` (`next:` / `blocker:` / `due:` lines) — the brain pulls it into the portfolio dashboard + standup via `federate.py` (see `~/brain/work/meta/status-convention.md`). Brain stays pull-only: never hand-edit `~/brain`; capture events with `brain "…"`.
+
+## Remediation tracker
+The audit remediation plan, per-finding status and decision log live in
+`docs/tracker/state.json` (schema and update rules: `docs/tracker/README.md`). Read it as context
+at the start of remediation work; edit it in the same commit as the change it records, and keep
+its `now` block in step with `STATUS.md`. The claude.ai artifact only displays it.

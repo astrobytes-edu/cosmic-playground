@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: continue remediation in a new Opus 5.5 session using docs/plans/2026-10-23-remediation-handoff.md — first decide whether to commit the 11 validated audit fixes, then structural fix S2 (harden the math-formatting gate)
+next: push the two local commits (S2 6eceb79, tracker) when Anna says so, then the test-suite refactor T1-T4 and S6
 blocker: none
 due: 2026-09-18 (dossier)
 
