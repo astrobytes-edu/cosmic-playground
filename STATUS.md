@@ -1,8 +1,37 @@
 # Cosmic Playground — status
 
-next: Anna tweaks the conservation-laws orbit shell (Phase 1 landed on main 2026-09-11); then Phase 2 (three.js Potential landscape), then the planetary-conjunctions audit
+next: continue remediation in a new Opus 5.5 session using docs/plans/2026-10-23-remediation-handoff.md — first decide whether to commit the 11 validated audit fixes, then structural fix S2 (harden the math-formatting gate)
 blocker: none
 due: 2026-09-18 (dossier)
+
+## Red-team audit (2026-10-23, claude-opus-5)
+
+Report: `docs/reviews/2026-10-23-red-team-audit.md`. Data: `docs/reviews/2026-10-23-red-team-findings.json`
+(599 findings). Handoff: `docs/plans/2026-10-23-remediation-handoff.md`.
+
+- **Grade 51/100 (C-)**, mean of 35 independent area grades, median 52, range 34 (telescope-resolution,
+  touch/mobile) to 72 (conservation-laws). `packages/physics` 63 and its equations were reproduced
+  exactly by independent re-implementation; the defects are in the layer between the physics and the
+  student -- drawings, labels, axes, readouts, controls.
+- **35 auditors** (27 wave 1 + 8 wave 2), 6 concurrent, read-only, evidence standard = independent
+  recomputation (wave 1 measured: 99 agents, 13.9M subagent tokens, 2,739 tool calls, 152.7 min).
+  72 high-severity findings handed to adversarial verifiers: 64 confirmed, 8 refuted, of which 6 were
+  refuted only because this session had already fixed them -> **genuine false-positive rate 2 of 72 (3%)**.
+  Confirmed break down 15 P0 / 35 P1 / 14 downgraded to P2. **257 P0/P1 findings never reached a verifier**
+  (cap) and 119 wave-2 findings are unverified by design.
+- **15 confirmed P0s.** `parallax-distance/logic.ts:127` is the one in the only `launch-ready` demo: the
+  detector offset sign is inverted, so the star shifts WITH Earth.
+- **Six structural fixes** are the remediation spine (report section 5): drawing-vs-model contract tests,
+  harden the math gate, a readout component with mandatory units, a shell-level reflow fix, a shared
+  aria-valuetext/live-region helper, and deriving `content_verified` from evidence.
+- **11 fixes landed and validated, none committed**: math-safe card excerpts (unbalanced-math
+  descriptions 2 -> 0 over 20 bodies), MOND now sharing the Freeman-disk baryon gravity, AO resolution =
+  diffraction limit with a new `aoPsf()`, the blackbody readout relabelled as a flux ratio, `noindex` into
+  `<head>`, the skip link above the sticky header, one nav source, `TOPIC_LABEL` in the filter, Unicode
+  `<=` removed, 14 copies of the base-path rule reduced to one, and `.cp-readout__qualifier` in the theme.
+- **Scientific decisions approved 2026-10-23**: AO core+halo with Strehl reported separately (landed);
+  MOND on the exact Freeman disk (landed); blackbody readout relabelled, no physics change (landed);
+  stars-zams-hr lifetime pair locked at Z = 0.02 and labelled (NOT yet implemented).
 
 ## Current focus
 _Seeded 2026-06-07 by the brain STATUS.md convention (`~/brain/work/meta/status-convention.md`). Update in your cosmic-playground session; the brain pulls `next:`/`blocker:`/`due:` via `federate.py`._
