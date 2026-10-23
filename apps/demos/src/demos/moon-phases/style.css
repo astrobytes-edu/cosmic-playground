@@ -81,6 +81,12 @@
   transform: translateY(0);
 }
 
+/* KaTeX lays an expression out as inline-block runs that may wrap between top-level
+ * operators. Keep each equation in the tooltip on one line, as the plain-text version was. */
+.moon-tip__content .katex-html {
+  white-space: nowrap;
+}
+
 .moon-angle-helper {
   margin-top: var(--cp-space-1);
   font-size: var(--cp-text-xs);
@@ -252,12 +258,28 @@
 }
 
 .timeline-direction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
   font-weight: var(--cp-font-semibold);
   color: var(--cp-accent);
 }
 
 .timeline-direction.waning {
   color: var(--cp-violet);
+}
+
+/* Waxing reads "WAXING ->" and waning "<- WANING": exactly one arrow shows. */
+.timeline-direction .timeline-direction__icon--before {
+  display: none;
+}
+
+.timeline-direction.waning .timeline-direction__icon--before {
+  display: inline-block;
+}
+
+.timeline-direction.waning .timeline-direction__icon--after {
+  display: none;
 }
 
 .timeline-day {
@@ -354,6 +376,13 @@
 .cp-readout__value--equation {
   font-size: 0.92rem;
   color: var(--cp-muted);
+}
+
+/* KaTeX sets .katex to 1.21em; keep the equation the same size as the number beside it
+ * (and the same row height as the other readouts) instead of a fifth larger. */
+.cp-readout__value--equation .katex {
+  font-size: 1em;
+  line-height: 1;
 }
 
 /* --- Entry animations (staggered) --- */

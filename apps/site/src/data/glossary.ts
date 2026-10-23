@@ -62,7 +62,7 @@ export const glossary: GlossaryEntry[] = [
   {
     term: "Obliquity",
     definition:
-      "The angle between a planet\u2019s rotational axis and the perpendicular to its orbital plane. Earth\u2019s obliquity (~23.4\u00B0) causes the seasons.",
+      "The angle between a planet\u2019s rotational axis and the perpendicular to its orbital plane. Earth\u2019s obliquity (~$23.4^{\\circ}$) causes the seasons.",
     demos: ["seasons"],
   },
   {
@@ -104,7 +104,7 @@ export const glossary: GlossaryEntry[] = [
   {
     term: "Wien\u2019s displacement law",
     definition:
-      "The peak wavelength of a blackbody spectrum is inversely proportional to the temperature: \u03BB_max = b / T, where b \u2248 2.898 \u00D7 10\u207B\u00B3 m\u00B7K.",
+      "The peak wavelength of a blackbody spectrum is inversely proportional to the temperature: $\\lambda_{\\text{max}} = b / T$, where $b \\approx 2.898 \\times 10^{-3}\\ \\text{m}\\cdot\\text{K}$.",
     demos: ["blackbody-radiation"],
   },
   {

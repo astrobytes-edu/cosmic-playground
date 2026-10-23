@@ -18,7 +18,7 @@ has_math: true
 > | --- | --- | --- | --- | --- | --- |
 > | Heaviest star ($M_\odot$) | | | | | |
 >
-> Largest ÷ smallest = __________
+> Largest $\div$ smallest = __________
 >
 > **Part 2 — large cluster, five draws.** Set the number of stars to **20,000** and repeat.
 >
@@ -26,7 +26,7 @@ has_math: true
 > | --- | --- | --- | --- | --- | --- |
 > | Heaviest star ($M_\odot$) | | | | | |
 >
-> Largest ÷ smallest = __________
+> Largest $\div$ smallest = __________
 >
 > **Part 3 — one sentence.** Nothing about the mass function changed between Part 1 and
 > Part 2. So why did the answer become more reproducible?

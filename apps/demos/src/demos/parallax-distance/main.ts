@@ -10,6 +10,7 @@ import {
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { ParallaxDistanceModel } from "@cosmic/physics";
 import { nearbyStars } from "@cosmic/data-astr101";
+import { setMathText } from "../../shared/mathText";
 import {
   addVec2,
   applyAxisNoiseToOffset,
@@ -922,14 +923,18 @@ function renderReadouts(snap: Snapshot) {
 
   // Inline "+/- sigma" beside the value it belongs to. Empty rather than an em dash when
   // there is no inference yet, so the value does not read as "12.4 +/- nothing".
-  sigmaPHatMasValue.textContent =
+  setMathText(
+    sigmaPHatMasValue,
     snap.inference.sigmaPHatMas !== null
-      ? ` \u00B1 ${formatNumber(snap.inference.sigmaPHatMas, 3)}`
-      : "";
-  sigmaDHatPcValue.textContent =
+      ? ` $\\pm$ ${formatNumber(snap.inference.sigmaPHatMas, 3)}`
+      : ""
+  );
+  setMathText(
+    sigmaDHatPcValue,
     snap.inference.sigmaDHatPc !== null
-      ? ` \u00B1 ${formatDistance(snap.inference.sigmaDHatPc)}`
-      : "";
+      ? ` $\\pm$ ${formatDistance(snap.inference.sigmaDHatPc)}`
+      : ""
+  );
 }
 
 function render() {

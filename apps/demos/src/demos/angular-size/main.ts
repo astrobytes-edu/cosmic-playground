@@ -2,13 +2,16 @@ import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, in
 import type { Challenge } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { AngularSizeModel, AstroConstants, AstroUnits } from "@cosmic/physics";
-import { clamp, logSliderToValue, valueToLogSlider, formatNumber, formatSci, formatAngleDisplay, formatDistanceAuto, formatDiameterAuto, describeMoonOrbitAngle, describeMoonRecessionTime } from "./logic";
+import { setMathText } from "../../shared/mathText";
+import { clamp, logSliderToValue, valueToLogSlider, formatNumber, formatSci, formatAngleDisplay, formatDistanceAuto, formatDiameterAuto, describeMoonOrbitAngle, describeMoonRecessionTime, type SciStyle } from "./logic";
 
 const presetEl = document.querySelector<HTMLSelectElement>("#preset");
 const distanceSliderEl = document.querySelector<HTMLInputElement>("#distanceSlider");
 const distanceValueEl = document.querySelector<HTMLSpanElement>("#distanceValue");
+const distanceValueTextEl = document.querySelector<HTMLSpanElement>("#distanceValueText");
 const diameterSliderEl = document.querySelector<HTMLInputElement>("#diameterSlider");
 const diameterValueEl = document.querySelector<HTMLSpanElement>("#diameterValue");
+const diameterValueTextEl = document.querySelector<HTMLSpanElement>("#diameterValueText");
 
 const moonControlsEl = document.querySelector<HTMLElement>("#moonControls");
 const moonModeOrbitEl = document.querySelector<HTMLInputElement>("#moonModeOrbit");
@@ -67,8 +70,10 @@ if (
   !presetEl ||
   !distanceSliderEl ||
   !distanceValueEl ||
+  !distanceValueTextEl ||
   !diameterSliderEl ||
   !diameterValueEl ||
+  !diameterValueTextEl ||
   !moonControlsEl ||
   !moonModeOrbitEl ||
   !moonModeRecessionEl ||
@@ -114,8 +119,10 @@ if (
 const preset = presetEl;
 const distanceSlider = distanceSliderEl;
 const distanceValue = distanceValueEl;
+const distanceValueText = distanceValueTextEl;
 const diameterSlider = diameterSliderEl;
 const diameterValue = diameterValueEl;
+const diameterValueText = diameterValueTextEl;
 
 const moonControls = moonControlsEl;
 const moonModeOrbit = moonModeOrbitEl;
@@ -397,11 +404,11 @@ function renderSkyView(thetaDegValue: number, presetColor: string) {
 
   // FOV label
   if (fovDeg >= 1) {
-    skyFov.textContent = `(${fovDeg.toFixed(1)}\u00b0 field)`;
+    setMathText(skyFov, `(${fovDeg.toFixed(1)}$^{\\circ}$ field)`);
   } else if (fovDeg >= 1 / 60) {
-    skyFov.textContent = `(${(fovDeg * 60).toFixed(1)}\u2032 field)`;
+    setMathText(skyFov, `(${(fovDeg * 60).toFixed(1)}$^{\\prime}$ field)`);
   } else {
-    skyFov.textContent = `(${(fovDeg * 3600).toFixed(1)}\u2033 field)`;
+    setMathText(skyFov, `(${(fovDeg * 3600).toFixed(1)}$^{\\prime\\prime}$ field)`);
   }
 }
 
@@ -420,7 +427,7 @@ function exportResults(thetaDegValue: number): ExportPayloadV1 {
 
   if (state.presetId === "moon") {
     const moonModeLabel =
-      state.moonTimeMode === "orbit" ? "Orbit (perigee ↔ apogee)" : "Recession (Myr from today)";
+      state.moonTimeMode === "orbit" ? "Orbit (perigee to apogee)" : "Recession (Myr from today)";
     const moonSettingLabel =
       state.moonTimeMode === "orbit"
         ? describeMoonOrbitAngle(state.moonOrbitAngleDeg)
@@ -694,32 +701,32 @@ function setState(next: unknown): void {
 }
 
 /** Format distance in a specific forced unit, or use auto-selection. */
-function formatDistanceInUnit(km: number, unit: string, sigFigs = 3): { text: string; unit: string } {
-  if (unit === "auto") return formatDistanceAuto(km, sigFigs);
+function formatDistanceInUnit(km: number, unit: string, sigFigs = 3, style: SciStyle = "plain"): { text: string; unit: string } {
+  if (unit === "auto") return formatDistanceAuto(km, sigFigs, style);
   if (!Number.isFinite(km)) return { text: "\u2014", unit: "" };
   const KM_PER_AU_V = AstroConstants.LENGTH.KM_PER_AU;
   const KM_PER_PC_V = AstroConstants.LENGTH.KM_PER_PC;
   switch (unit) {
-    case "cm": return { text: formatSci(km * 1e5, sigFigs), unit: "cm" };
-    case "m": return { text: formatSci(km * 1000, sigFigs), unit: "m" };
-    case "km": return { text: formatSci(km, sigFigs), unit: "km" };
-    case "AU": return { text: formatSci(km / KM_PER_AU_V, sigFigs), unit: "AU" };
-    case "pc": return { text: formatSci(km / KM_PER_PC_V, sigFigs), unit: "pc" };
-    case "kpc": return { text: formatSci(km / (1e3 * KM_PER_PC_V), sigFigs), unit: "kpc" };
-    case "Mpc": return { text: formatSci(km / (1e6 * KM_PER_PC_V), sigFigs), unit: "Mpc" };
-    case "Gpc": return { text: formatSci(km / (1e9 * KM_PER_PC_V), sigFigs), unit: "Gpc" };
-    default: return formatDistanceAuto(km, sigFigs);
+    case "cm": return { text: formatSci(km * 1e5, sigFigs, style), unit: "cm" };
+    case "m": return { text: formatSci(km * 1000, sigFigs, style), unit: "m" };
+    case "km": return { text: formatSci(km, sigFigs, style), unit: "km" };
+    case "AU": return { text: formatSci(km / KM_PER_AU_V, sigFigs, style), unit: "AU" };
+    case "pc": return { text: formatSci(km / KM_PER_PC_V, sigFigs, style), unit: "pc" };
+    case "kpc": return { text: formatSci(km / (1e3 * KM_PER_PC_V), sigFigs, style), unit: "kpc" };
+    case "Mpc": return { text: formatSci(km / (1e6 * KM_PER_PC_V), sigFigs, style), unit: "Mpc" };
+    case "Gpc": return { text: formatSci(km / (1e9 * KM_PER_PC_V), sigFigs, style), unit: "Gpc" };
+    default: return formatDistanceAuto(km, sigFigs, style);
   }
 }
 
 /** Format angle in a specific forced unit, or use auto-selection. */
-function formatAngleInUnit(thetaDeg: number, unit: string): { text: string; unit: string } {
+function formatAngleInUnit(thetaDeg: number, unit: string, style: SciStyle = "plain"): { text: string; unit: string } {
   if (unit === "auto") return formatAngleDisplay(thetaDeg);
   if (!Number.isFinite(thetaDeg)) return { text: "\u2014", unit: "" };
   switch (unit) {
-    case "deg": return { text: formatSci(thetaDeg, 4), unit: "deg" };
-    case "arcmin": return { text: formatSci(AstroUnits.degToArcmin(thetaDeg), 4), unit: "arcmin" };
-    case "arcsec": return { text: formatSci(AstroUnits.degToArcsec(thetaDeg), 4), unit: "arcsec" };
+    case "deg": return { text: formatSci(thetaDeg, 4, style), unit: "deg" };
+    case "arcmin": return { text: formatSci(AstroUnits.degToArcmin(thetaDeg), 4, style), unit: "arcmin" };
+    case "arcsec": return { text: formatSci(AstroUnits.degToArcsec(thetaDeg), 4, style), unit: "arcsec" };
     default: return formatAngleDisplay(thetaDeg);
   }
 }
@@ -735,17 +742,23 @@ function render() {
 
   const selectedAngleUnit = angleUnitSelect.value;
   const selectedDistUnit = distanceUnitSelect.value;
-  const display = formatAngleInUnit(thetaDegValue, selectedAngleUnit);
+  const display = formatAngleInUnit(thetaDegValue, selectedAngleUnit, "math");
 
   preset.value = state.presetId;
   distanceSlider.value = String(valueToLogSlider(state.distanceKm, DISTANCE_MIN_KM, DISTANCE_MAX_KM));
   diameterSlider.value = String(valueToLogSlider(state.diameterKm, DIAMETER_MIN_KM, DIAMETER_MAX_KM));
 
   // Slider value labels use auto-formatted distance/diameter
-  const distSliderFmt = formatDistanceAuto(state.distanceKm);
-  const diamSliderFmt = formatDiameterAuto(state.diameterKm);
-  distanceValue.textContent = `${distSliderFmt.text} ${distSliderFmt.unit}`;
-  diameterValue.textContent = `${diamSliderFmt.text} ${diamSliderFmt.unit}`;
+  // The visible label is typeset; the hidden twin is the plain-text source for the slider
+  // tooltip, which copies textContent (KaTeX's MathML would otherwise be copied with it).
+  const distSliderFmt = formatDistanceAuto(state.distanceKm, 3, "math");
+  const diamSliderFmt = formatDiameterAuto(state.diameterKm, 3, "math");
+  setMathText(distanceValue, `${distSliderFmt.text} ${distSliderFmt.unit}`);
+  setMathText(diameterValue, `${diamSliderFmt.text} ${diamSliderFmt.unit}`);
+  const distSliderPlain = formatDistanceAuto(state.distanceKm);
+  const diamSliderPlain = formatDiameterAuto(state.diameterKm);
+  distanceValueText.textContent = `${distSliderPlain.text} ${distSliderPlain.unit}`;
+  diameterValueText.textContent = `${diamSliderPlain.text} ${diamSliderPlain.unit}`;
 
   if (state.presetId === "moon") {
     moonOrbitValue.textContent = `${Math.round(state.moonOrbitAngleDeg)} deg`;
@@ -756,17 +769,17 @@ function render() {
   }
 
   // Readout strip
-  thetaDisplay.textContent = display.text;
+  setMathText(thetaDisplay, display.text);
   thetaDisplayUnit.textContent = display.unit;
-  thetaDeg.textContent = formatSci(thetaDegValue, 4);
+  setMathText(thetaDeg, formatSci(thetaDegValue, 4, "math"));
   thetaDegUnit.textContent = "deg";
 
-  const distReadout = formatDistanceInUnit(state.distanceKm, selectedDistUnit, 4);
-  distanceKm.textContent = distReadout.text;
+  const distReadout = formatDistanceInUnit(state.distanceKm, selectedDistUnit, 4, "math");
+  setMathText(distanceKm, distReadout.text);
   distanceUnit.textContent = distReadout.unit;
 
-  const diamReadout = formatDiameterAuto(state.diameterKm, 4);
-  diameterKm.textContent = diamReadout.text;
+  const diamReadout = formatDiameterAuto(state.diameterKm, 4, "math");
+  setMathText(diameterKm, diamReadout.text);
   diameterUnit.textContent = diamReadout.unit;
 
   // SVG stage labels use auto-formatted units

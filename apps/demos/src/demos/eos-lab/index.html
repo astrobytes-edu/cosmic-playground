@@ -87,9 +87,9 @@
               max="1000"
               value="500"
               step="1"
-              data-tooltip-source="#tempValue"
+              data-tooltip-source="#tempValueText"
             />
-            <span class="control__value"><span id="tempValue"></span></span>
+            <span class="control__value"><span id="tempValue"></span><span id="tempValueText" hidden></span></span>
           </label>
 
           <label class="cp-field control">
@@ -102,9 +102,9 @@
               max="1000"
               value="500"
               step="1"
-              data-tooltip-source="#rhoValue"
+              data-tooltip-source="#rhoValueText"
             />
-            <span class="control__value"><span id="rhoValue"></span></span>
+            <span class="control__value"><span id="rhoValue"></span><span id="rhoValueText" hidden></span></span>
           </label>
 
           <div class="cp-notice">
@@ -157,7 +157,7 @@
               <button class="cp-chip preset" type="button" data-preset-id="solar-envelope" aria-pressed="false">Solar envelope</button>
               <button class="cp-chip preset" type="button" data-preset-id="massive-core" aria-pressed="false">Massive-star core</button>
               <button class="cp-chip preset" type="button" data-preset-id="red-giant-envelope" aria-pressed="false">Red giant envelope</button>
-              <button class="cp-chip preset" type="button" data-preset-id="white-dwarf-core" aria-pressed="false" title="He-like composition (Y=0.98) mimics C/O white dwarfs because mu_e &approx; 2 in both cases. Since n_e = rho/(mu_e m_u), the same mu_e gives the same electron density and degeneracy pressure.">White dwarf core</button>
+              <button class="cp-chip preset" type="button" data-preset-id="white-dwarf-core" aria-pressed="false" title="He-like composition (Y=0.98) mimics C/O white dwarfs because mu_e is about 2 in both cases. Since n_e = rho/(mu_e m_u), the same mu_e gives the same electron density and degeneracy pressure.">White dwarf core</button>
               <button class="cp-chip preset" type="button" data-preset-id="brown-dwarf-interior" aria-pressed="false">Brown dwarf interior</button>
             </div>
             <p id="presetNote" class="cp-muted"></p>

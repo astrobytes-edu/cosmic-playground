@@ -23,9 +23,13 @@ filters or sorts by URL must run in the browser (see `apps/site/src/lib/exploreF
 ## Math: KaTeX, never Unicode
 
 - Every reader-visible equation, symbol, unit and operator is LaTeX rendered by KaTeX. No `°`, `×`,
-  `−`, `θ`, `M☉`, superscript digits — and no `\uXXXX` escapes that produce them (the validator
-  cannot see escapes). Write `$L/L_{\odot}$`, `$10^{n}$`; never `e` notation in teaching copy.
+  `−`, `θ`, `M☉`, superscript digits — and no `\uXXXX` escapes or `&#x` entities that produce them
+  (the validator decodes both since 2026-10-23). Write `$L/L_{\odot}$`, `$10^{n}$`; never `e`
+  notation in teaching copy.
 - Canvas 2D / uPlot tick labels are the only exemption, and use ASCII (`lambda`, `deg`, `M_sun`).
+- SVG `<text>` cannot host KaTeX: symbol labels go through `createSvgMathOverlay()`
+  (`apps/demos/src/shared/svgMathOverlay.ts`); unit words like `deg` stay as SVG text.
+- UI arrows and close glyphs are words plus a `.cp-icon` CSS icon (`aria-hidden`), never typed glyphs.
 - Markdown bodies are typeset at build (remark-math + rehype-katex). Display math is **fenced**:
   `$$` alone on the line above and below. Single-line `$$...$$` renders INLINE; the build rejects it.
 - Frontmatter and `.astro` pages use client auto-render (`KatexAutoRender`), where `$$` is display.

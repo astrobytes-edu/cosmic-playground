@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   AGE_MAX_MYR,
   AGE_MIN_MYR,
-  LSUN_SYMBOL,
-  MSUN_SYMBOL,
   SLIDER_STEPS,
   STAR_COUNT_MAX,
   STAR_COUNT_MIN,
@@ -36,7 +34,6 @@ import {
   starCountToSlider,
   temperatureTickLabel,
   temperatureToRgb,
-  toSuperscript,
   turnoffMassMsun
 } from "./logic";
 import type { CensusStar } from "./logic";
@@ -371,23 +368,13 @@ describe("census announcement", () => {
 });
 
 describe("canvas typography", () => {
-  it("renders exponents as superscripts, including negatives", () => {
-    expect(toSuperscript(0)).toBe("\u2070");
-    expect(toSuperscript(6)).toBe("\u2076");
-    expect(toSuperscript(-4)).toBe("\u207b\u2074");
-    expect(toSuperscript(12)).toBe("\u00b9\u00b2");
-  });
-
-  it("builds decade labels without a caret", () => {
-    expect(powerOfTenLabel(3)).toBe("10\u00b3");
-    expect(powerOfTenLabel(-2)).toBe("10\u207b\u00b2");
-    // The caret form is what this replaced; it should not survive anywhere.
-    expect(powerOfTenLabel(3)).not.toContain("^");
-  });
-
-  it("uses the solar symbol rather than an ASCII stand-in", () => {
-    expect(MSUN_SYMBOL).toBe("M\u2609");
-    expect(LSUN_SYMBOL).toBe("L\u2609");
+  it("builds decade labels in ASCII, with a signed exponent", () => {
+    // Canvas cannot typeset, so the label is "10^n": the exponent keeps its sign and is
+    // never swapped for a Unicode superscript.
+    expect(powerOfTenLabel(0)).toBe("10^0");
+    expect(powerOfTenLabel(3)).toBe("10^3");
+    expect(powerOfTenLabel(-2)).toBe("10^-2");
+    expect(powerOfTenLabel(12)).toBe("10^12");
   });
 
   it("never prints the same temperature tick twice in a row", () => {

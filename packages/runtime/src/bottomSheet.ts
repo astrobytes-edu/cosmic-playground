@@ -10,15 +10,15 @@
 export type SnapPoint = "collapsed" | "half" | "full";
 
 const SNAP_THRESHOLDS = {
-  /** If dragged above 70% of viewport → snap full */
+  /** If dragged above 70% of viewport -> snap full */
   full: 0.3,
-  /** If dragged above 35% of viewport → snap half */
+  /** If dragged above 35% of viewport -> snap half */
   half: 0.5,
-  /** Otherwise → collapsed */
+  /** Otherwise -> collapsed */
   collapsed: 0.9,
 } as const;
 
-/** Snap order for toggle: collapsed ↔ half */
+/** Snap order for toggle: collapsed <-> half */
 const TOGGLE_MAP: Record<SnapPoint, SnapPoint> = {
   collapsed: "half",
   half: "collapsed",
@@ -111,7 +111,7 @@ export function initBottomSheet(root: HTMLElement): () => void {
     const endY = e.clientY;
     const deltaY = endY - startY;
 
-    // If drag distance is small, treat as tap → toggle
+    // If drag distance is small, treat as tap -> toggle
     if (Math.abs(deltaY) < 10) {
       setSnap(sheet, TOGGLE_MAP[startSnap]);
       return;
@@ -122,7 +122,7 @@ export function initBottomSheet(root: HTMLElement): () => void {
     setSnap(sheet, snap);
   };
 
-  // Touch outside sheet while expanded → collapse
+  // Touch outside sheet while expanded -> collapse
   const onOutsideClick = (e: Event) => {
     const snap = getSnap(sheet);
     if (snap === "collapsed") return;
@@ -131,7 +131,7 @@ export function initBottomSheet(root: HTMLElement): () => void {
     }
   };
 
-  // Keyboard: Escape → collapse
+  // Keyboard: Escape -> collapse
   const onKeydown = (e: KeyboardEvent) => {
     if (e.key === "Escape" && getSnap(sheet) !== "collapsed") {
       e.preventDefault();

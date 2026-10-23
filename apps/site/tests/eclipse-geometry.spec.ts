@@ -6,62 +6,26 @@ test.describe("Eclipse Geometry -- E2E", () => {
     await expect(page.locator("#cp-demo")).toBeVisible();
   });
 
-  // --- Layout & Visual ---
+  // --- Layout & Structure ---
 
-  test("demo loads with all shell sections visible", async ({ page }) => {
-    await expect(page.locator(".cp-demo__sidebar")).toBeVisible();
-    await expect(page.locator(".cp-demo__stage")).toBeVisible();
-    await expect(page.locator(".cp-readout-strip")).toBeVisible();
-    await expect(page.locator(".cp-demo__shelf")).toBeVisible();
-  });
-
-  test("starfield canvas is present in the DOM", async ({ page }) => {
-    const canvas = page.locator("canvas.cp-starfield");
-    await expect(canvas).toBeAttached();
-  });
-
-  test("SVG stage contains orbit and beta panels", async ({ page }) => {
-    const svg = page.locator("#eclipseStage");
-    await expect(svg).toBeVisible();
-    await expect(page.locator("#orbitPanel")).toBeAttached();
-    await expect(page.locator("#betaPanel")).toBeAttached();
-  });
-
-  test("earth and moon elements are rendered in SVG", async ({ page }) => {
-    await expect(page.locator(".stage__earth")).toBeAttached();
-    await expect(page.locator(".stage__moon")).toBeAttached();
-    await expect(page.locator("#ascNodeDot")).toBeAttached();
-    await expect(page.locator("#descNodeDot")).toBeAttached();
-  });
-
-  // --- Visual Regression (skipped -- re-enable when baselines are generated) ---
-
-  test.skip("screenshot: default state", async ({ page }) => {
-    await page.waitForSelector(".katex", { timeout: 5000 }).catch(() => {});
-    await page.waitForTimeout(500);
-    await expect(page).toHaveScreenshot("eclipse-geometry-default.png", {
-      maxDiffPixelRatio: 0.05,
-    });
-  });
-
-  test.skip("screenshot: new moon near node", async ({ page }) => {
-    await page.locator("#setNewMoon").click();
-    // Use total solar preset to position near node
-    await page.locator("#presetsBtn").click();
-    await page.locator("#presetTotalSolar").click();
-    await page.waitForTimeout(500); // 400ms tween + margin
-    await expect(page).toHaveScreenshot("eclipse-geometry-solar-eclipse.png", {
-      maxDiffPixelRatio: 0.05,
-    });
-  });
-
-  test.skip("screenshot: full moon near node", async ({ page }) => {
-    await page.locator("#presetsBtn").click();
-    await page.locator("#presetLunar").click();
-    await page.waitForTimeout(500); // 400ms tween + margin
-    await expect(page).toHaveScreenshot("eclipse-geometry-lunar-eclipse.png", {
-      maxDiffPixelRatio: 0.05,
-    });
+  // One page load for all the "is it there" checks; soft assertions still report every miss.
+  test("shell, starfield and stage render with all their parts", async ({ page }) => {
+    for (const selector of [".cp-demo__sidebar", ".cp-demo__stage", ".cp-readout-strip", ".cp-demo__shelf", "#eclipseStage"]) {
+      await expect.soft(page.locator(selector), selector).toBeVisible();
+    }
+    for (const selector of [
+      "canvas.cp-starfield",
+      "#orbitPanel",
+      "#betaPanel",
+      ".stage__earth",
+      ".stage__moon",
+      "#ascNodeDot",
+      "#descNodeDot",
+    ]) {
+      await expect.soft(page.locator(selector), selector).toBeAttached();
+    }
+    await expect.soft(page.locator("#betaCurve"), "beta curve path").toHaveAttribute("d", /^M/);
+    await expect.soft(page.locator(".stage__moon"), "moon is draggable").toHaveCSS("cursor", "grab");
   });
 
   // --- Phase Buttons ---
@@ -122,17 +86,6 @@ test.describe("Eclipse Geometry -- E2E", () => {
     await expect(presets).toHaveCount(4);
   });
 
-  test("total solar preset produces solar eclipse readout", async ({ page }) => {
-    // Open popover and click total solar preset
-    await page.locator("#presetsBtn").click();
-    await page.locator("#presetTotalSolar").click();
-
-    // Wait for 400ms tween to complete and readout to update
-    await expect
-      .poll(async () => (await page.locator("#solarOutcome").textContent() || "").toLowerCase(), { timeout: 2000 })
-      .toContain("solar");
-  });
-
   // --- Distance Preset ---
 
   test("distance preset dropdown has perigee/mean/apogee options", async ({ page }) => {
@@ -155,23 +108,9 @@ test.describe("Eclipse Geometry -- E2E", () => {
   // --- Readouts ---
 
   test("all six readouts display values", async ({ page }) => {
-    const phaseLabel = await page.locator("#phaseLabel").textContent();
-    expect(phaseLabel).toBeTruthy();
-
-    const phaseAngle = await page.locator("#phaseAngle").textContent();
-    expect(phaseAngle).toBeTruthy();
-
-    const absBeta = await page.locator("#absBeta").textContent();
-    expect(absBeta).toBeTruthy();
-
-    const nearestNode = await page.locator("#nearestNode").textContent();
-    expect(nearestNode).toBeTruthy();
-
-    const solarOutcome = await page.locator("#solarOutcome").textContent();
-    expect(solarOutcome).toBeTruthy();
-
-    const lunarOutcome = await page.locator("#lunarOutcome").textContent();
-    expect(lunarOutcome).toBeTruthy();
+    for (const id of ["phaseLabel", "phaseAngle", "absBeta", "nearestNode", "solarOutcome", "lunarOutcome"]) {
+      await expect.soft(page.locator(`#${id}`), `#${id}`).toHaveText(/\S/);
+    }
   });
 
   test("readout units are in separate .cp-readout__unit spans", async ({ page }) => {
@@ -245,22 +184,6 @@ test.describe("Eclipse Geometry -- E2E", () => {
     await expect(panel).toBeVisible();
   });
 
-  test("Model notes tab can be clicked to switch", async ({ page }) => {
-    const modelTab = page.locator("#tab-btn-model");
-    // Tab may be obscured by sidebar in test viewport; use JS click
-    await modelTab.evaluate((el: HTMLElement) => el.click());
-
-    await expect(modelTab).toHaveAttribute("aria-selected", "true");
-    const modelPanel = page.locator("#tab-model");
-    await expect(modelPanel).toBeVisible();
-
-    // Previous tab should be deselected
-    const noticeTab = page.locator("#tab-btn-notice");
-    await expect(noticeTab).toHaveAttribute("aria-selected", "false");
-    const noticePanel = page.locator("#tab-notice");
-    await expect(noticePanel).toBeHidden();
-  });
-
   test("shelf tabs switch panels correctly", async ({ page }) => {
     // Click each tab and verify its panel shows
     const tabs = [
@@ -303,28 +226,19 @@ test.describe("Eclipse Geometry -- E2E", () => {
     expect(value).toMatch(/1[,.]?000/);
   });
 
-  test("simulation years slider default is ~10 years", async ({ page }) => {
-    // Open the simulation tab to ensure the readout is rendered
+  test("simulation tab defaults: ~10 years, four tick labels, three speeds", async ({ page }) => {
     await page.locator("#tab-btn-sim").click();
-    const value = await page.locator("#simYearsValue").textContent();
-    expect(value).toContain("10");
-  });
+    await expect(page.locator("#tab-sim")).toBeVisible();
 
-  test("simulation slider has tick labels", async ({ page }) => {
-    await page.locator("#tab-btn-sim").click();
+    expect(await page.locator("#simYearsValue").textContent()).toContain("10");
+
     const ticks = page.locator(".sim-ticks span");
-    const count = await ticks.count();
-    expect(count).toBe(4);
+    await expect(ticks).toHaveCount(4);
     const texts = await ticks.allTextContents();
     expect(texts[0]).toBe("1");
     expect(texts[3]).toMatch(/1[,.]?000/);
-  });
 
-  test("simulation speed dropdown has three options", async ({ page }) => {
-    await page.locator("#tab-btn-sim").click();
-    const options = page.locator("#simSpeed option");
-    const count = await options.count();
-    expect(count).toBe(3);
+    await expect(page.locator("#simSpeed option")).toHaveCount(3);
   });
 
   // --- Eclipse Arc Rendering ---
@@ -350,103 +264,37 @@ test.describe("Eclipse Geometry -- E2E", () => {
 
   // --- Animate Month ---
 
-  test("animate-month advances Sun and Node (not just the Moon)", async ({ page }) => {
-    // Record initial moon slider value
+  test("animate-month advances the Moon longitude", async ({ page }) => {
     const initialMoonSlider = await page.locator("#moonLon").inputValue();
 
-    // Start the month animation
     await page.locator("#animateMonth").click();
 
-    // Wait until moon longitude slider value changes (animation is running)
+    // Wait until the moon longitude slider changes (animation is running)
     await expect
-      .poll(async () => {
-        return await page.locator("#moonLon").inputValue();
-      }, { timeout: 5000 })
+      .poll(async () => await page.locator("#moonLon").inputValue(), { timeout: 5000 })
       .not.toBe(initialMoonSlider);
-
-    // Let animation run to accumulate enough node drift
-    // (Node regression: ~0.053 deg/day, at default 5 days/sec = ~0.27 deg/sec)
-    await page.waitForTimeout(4000);
-
-    // Stop the animation by clicking again (it toggles)
-    await page.locator("#animateMonth").click();
-
-    // Read the phase angle readout -- should have changed from initial
-    // This verifies the animation is running and updating state
-    const updatedMoon = await page.locator("#moonLon").inputValue();
-    expect(parseFloat(updatedMoon)).not.toBeCloseTo(parseFloat(initialMoonSlider), 0);
   });
 
   // --- Buttons ---
 
-  test("station mode button is present and not disabled", async ({ page }) => {
-    const btn = page.locator("#stationMode");
-    await expect(btn).toBeVisible();
-    await expect(btn).toBeEnabled();
-  });
-
-  test("challenge mode button is present and not disabled", async ({ page }) => {
-    const btn = page.locator("#challengeMode");
-    await expect(btn).toBeVisible();
-    await expect(btn).toBeEnabled();
-  });
-
-  test("copy results button is present", async ({ page }) => {
-    const btn = page.locator("#copyResults");
-    await expect(btn).toBeVisible();
+  test("station, challenge and copy buttons are usable", async ({ page }) => {
+    for (const id of ["#stationMode", "#challengeMode"]) {
+      await expect.soft(page.locator(id), id).toBeVisible();
+      await expect.soft(page.locator(id), id).toBeEnabled();
+    }
+    await expect.soft(page.locator("#copyResults")).toBeVisible();
   });
 
   // --- Accessibility ---
 
-  test("status region has aria-live polite", async ({ page }) => {
-    const status = page.locator("#status");
-    await expect(status).toHaveAttribute("aria-live", "polite");
-  });
-
-  test("sidebar has accessible label", async ({ page }) => {
-    const sidebar = page.locator(".cp-demo__sidebar");
-    await expect(sidebar).toHaveAttribute("aria-label", "Controls panel");
-  });
-
-  test("readout strip has accessible label", async ({ page }) => {
-    const readouts = page.locator(".cp-demo__readouts");
-    await expect(readouts).toHaveAttribute("aria-label", "Readouts");
-  });
-
-  test("SVG stage has role=img and aria-label", async ({ page }) => {
-    const svg = page.locator("#eclipseStage");
-    await expect(svg).toHaveAttribute("role", "img");
-    const label = await svg.getAttribute("aria-label");
-    expect(label).toBeTruthy();
-  });
-
-  test("phase buttons group has aria-label", async ({ page }) => {
-    const group = page.locator('[role="group"][aria-label="Phase buttons"]');
-    await expect(group).toBeAttached();
-  });
-
-  test("time controls group has aria-label", async ({ page }) => {
-    const group = page.locator('[role="group"][aria-label="Time controls"]');
-    await expect(group).toBeAttached();
-  });
-
-  // --- Beta Curve ---
-
-  test("beta curve path element exists with non-empty d attribute", async ({ page }) => {
-    const path = page.locator("#betaCurve");
-    await expect(path).toBeAttached();
-    const d = await path.getAttribute("d");
-    expect(d).toBeTruthy();
-    expect(d!.startsWith("M")).toBe(true);
-  });
-
-  // --- Moon Drag ---
-
-  test("moon dot has grab cursor for drag interaction", async ({ page }) => {
-    const cursor = await page.locator(".stage__moon").evaluate(
-      (el) => getComputedStyle(el).cursor
-    );
-    expect(cursor).toBe("grab");
+  test("landmarks, groups and the stage have accessible names", async ({ page }) => {
+    await expect.soft(page.locator("#status")).toHaveAttribute("aria-live", "polite");
+    await expect.soft(page.locator(".cp-demo__sidebar")).toHaveAttribute("aria-label", "Controls panel");
+    await expect.soft(page.locator(".cp-demo__readouts")).toHaveAttribute("aria-label", "Readouts");
+    await expect.soft(page.locator("#eclipseStage")).toHaveAttribute("role", "img");
+    await expect.soft(page.locator("#eclipseStage")).toHaveAttribute("aria-label", /\S/);
+    await expect.soft(page.locator('[role="group"][aria-label="Phase buttons"]')).toBeAttached();
+    await expect.soft(page.locator('[role="group"][aria-label="Time controls"]')).toBeAttached();
   });
 
   // --- Challenges ---

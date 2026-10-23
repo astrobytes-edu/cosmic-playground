@@ -1,6 +1,7 @@
 import { AstroConstants, EclipseGeometryModel } from "@cosmic/physics";
 import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
+import { setMathText } from "../../shared/mathText";
 import {
   clamp,
   formatNumber,
@@ -356,6 +357,13 @@ function renderStage(args: {
    *
    * `text-anchor` follows the side the node is on, so a label on the left of the diagram
    * grows leftward instead of back across the orbit.
+   *
+   * Clearance budget (viewBox units, 11 px Source Sans 3): the widest label, "desc. node 358 deg",
+   * is about 88 wide. Drawn start-anchored at x = 260 + 162 cos(theta), its right edge reaches
+   * about 510, so the beta panel (and its "height" axis label, which ends at x = 556) starts at
+   * translate(540, 40) to stay clear of it. The bottom caption sits at y = 404 so a label at
+   * theta = 90 deg (baseline y = 386) does not touch it. Re-measure both if the label text,
+   * labelR or either panel position changes.
    */
   const labelR = r + 22;
   const placeNodeLabel = (label: SVGTextElement, angle: number) => {
@@ -372,8 +380,8 @@ function renderStage(args: {
   placeNodeLabel(ascNodeLabel, ascAngle);
   placeNodeLabel(descNodeLabel, descAngle);
 
-  ascNodeLabel.textContent = `asc. node ${Math.round(nodeDisplayLonDeg)}\u00B0`;
-  descNodeLabel.textContent = `desc. node ${Math.round(EclipseGeometryModel.normalizeAngleDeg(nodeDisplayLonDeg + 180))}\u00B0`;
+  ascNodeLabel.textContent = `asc. node ${Math.round(nodeDisplayLonDeg)} deg`;
+  descNodeLabel.textContent = `desc. node ${Math.round(EclipseGeometryModel.normalizeAngleDeg(nodeDisplayLonDeg + 180))} deg`;
 
   // beta indicator: draw a short line "out of plane" near the Moon point.
   const betaScalePxPerDeg = 10;
@@ -509,7 +517,8 @@ function render() {
     solarPartialDeg: thresholds.solarPartialDeg,
     lunarPenumbralDeg: thresholds.lunarPenumbralDeg,
   });
-  contextMessage.textContent = ctxMsg;
+  // ctxMsg is math source ($...$); only setMathText may write it, and it skips unchanged strings.
+  setMathText(contextMessage, ctxMsg);
 
   const phase = getPhaseInfo(derived.phaseAngleDeg);
 
@@ -527,7 +536,7 @@ function render() {
   solarReadoutEl!.dataset.active = String(derived.solarType !== "none");
   lunarReadoutEl!.dataset.active = String(derived.lunarType !== "none");
 
-  // Visual reward: floating label when eclipse state transitions none → active
+  // Visual reward: floating label when eclipse state transitions none -> active
   if (eclipseLabelEl) {
     const newSolar = derived.solarType !== "none";
     const newLunar = derived.lunarType !== "none";

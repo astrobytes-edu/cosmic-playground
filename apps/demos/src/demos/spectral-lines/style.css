@@ -190,6 +190,16 @@
   gap: var(--cp-space-2);
 }
 
+/* The Transition readout is KaTeX ("n = 3 \to n = 2"). KaTeX sets .katex to 1.21em with
+   line-height 1.2, which made the value box 5.5px taller than the monospace text it replaced
+   at 1920 px and widened it past the 1.2rem column at 1280-1536 px (row 148.6px -> 160px,
+   measured). Match the value size and line box instead, as moon-phases does for its
+   equation readout. */
+#readoutTransition .katex {
+  font-size: 1em;
+  line-height: 1;
+}
+
 /* ── Stage layout ────────────────────────────────────────── */
 
 .stage-tabs {
@@ -613,7 +623,7 @@
 
   /* Six columns leaves ~128px of content per readout, and the 1.5rem value
      token was sized for the ~213px a four-column strip gave it: `1.8887 eV`
-     and `n = 3 -> n = 2` both wrapped, so the row stood 119px tall instead of
+     and the transition readout both wrapped, so the row stood 119px tall instead of
      85px. Re-scope the token rather than overriding font-size, so the label ->
      value -> unit hierarchy still comes from one place. */
   .cp-demo__readouts {

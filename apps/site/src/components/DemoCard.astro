@@ -71,9 +71,10 @@ const topicLinks = topics.map((t) => ({
 }));
 const badge = readinessBadge(readiness);
 /*
- * Words, not a relational operator. This read "\u226410 min" -- a Unicode math glyph in
- * reader-visible copy, which the project authors as KaTeX everywhere else, and which no
- * pill can typeset. The filter's own option labels say the same thing.
+ * Words, not a relational operator. This read "<=10 min" with a single less-than-or-equal
+ * glyph -- a Unicode math character in reader-visible copy, which the project authors as
+ * KaTeX everywhere else, and which no pill can typeset. The filter's own option labels
+ * say the same thing.
  */
 const timeLabel =
   timeMinutes <= 10 ? "Under 10 min" : timeMinutes <= 20 ? "10\u201320 min" : "20+ min";

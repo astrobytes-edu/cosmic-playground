@@ -71,7 +71,7 @@
 
           <label class="cp-field">
             <span class="cp-label moon-label-with-tip">
-              <span>Phase angle &#x03B1; (deg)</span>
+              <span>Phase angle $\alpha$ (deg)</span>
               <span class="moon-tip">
                 <button
                   type="button"
@@ -82,8 +82,8 @@
                   ?
                 </button>
                 <span id="alphaAngleTip" class="moon-tip__content" role="tooltip">
-                  We use &#x03B1; as the Sun&ndash;Moon&ndash;Earth phase angle. It controls illumination via
-                  f=(1+cos&#x03B1;)/2.
+                  We use $\alpha$ as the Sun&ndash;Moon&ndash;Earth phase angle. It controls illumination via
+                  $f=(1+\cos\alpha)/2$.
                 </span>
               </span>
             </span>
@@ -97,8 +97,8 @@
               step="1"
               data-tooltip-source="#angleReadout"
             />
-            <div class="cp-muted moon-angle-helper">In this model: &#x03B1; = Sun&ndash;Moon&ndash;Earth angle</div>
-            <div class="cp-muted moon-angle-helper">0&deg; = Full, 180&deg; = New</div>
+            <div class="cp-muted moon-angle-helper">In this model: $\alpha$ = Sun&ndash;Moon&ndash;Earth angle</div>
+            <div class="cp-muted moon-angle-helper">$0^{\circ}$ = Full, $180^{\circ}$ = New</div>
           </label>
 
           <label class="cp-toggle">
@@ -467,7 +467,11 @@
 
         <div class="playbar-timeline">
           <div class="timeline-header">
-            <span class="timeline-direction" id="timeline-direction">WAXING &#x2192;</span>
+            <span class="timeline-direction" id="timeline-direction">
+              <span class="cp-icon cp-icon--arrow-left timeline-direction__icon timeline-direction__icon--before" aria-hidden="true"></span>
+              <span id="timeline-direction-text">WAXING</span>
+              <span class="cp-icon cp-icon--arrow-right timeline-direction__icon timeline-direction__icon--after" aria-hidden="true"></span>
+            </span>
             <span class="timeline-day" id="timeline-day">Day 0 of 29.5</span>
           </div>
           <div class="timeline-strip" id="timeline-strip">
@@ -533,7 +537,7 @@
         <div class="cp-readout cp-readout--equation">
           <span class="cp-readout__label">Illumination model</span>
           <span class="cp-readout__value cp-readout__value--equation">
-            f = (1 + cos &#x03B1;)/2 = <span id="illumination-equation-value">1.000</span>
+            $f = (1 + \cos\alpha)/2 =$ <span id="illumination-equation-value">1.000</span>
           </span>
         </div>
       </div>

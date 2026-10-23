@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { renderMathText } from "./mathText";
+import { renderMathText, setMathText } from "./mathText";
 
 describe("renderMathText", () => {
   it("renders inline LaTeX without leaving raw delimiters behind", () => {
@@ -17,5 +17,31 @@ describe("renderMathText", () => {
 
     expect(html).toContain("&lt;local&gt;");
     expect(html).toContain("katex");
+  });
+});
+
+describe("setMathText", () => {
+  // Readouts are refreshed from render(), which some demos call every animation frame.
+  it("typesets on change and skips KaTeX when the source is unchanged", () => {
+    let writes = 0;
+    let html = "";
+    const el = {
+      get innerHTML() {
+        return html;
+      },
+      set innerHTML(value: string) {
+        writes++;
+        html = value;
+      }
+    };
+
+    setMathText(el, "$1.50 \\times 10^{8}$ km");
+    setMathText(el, "$1.50 \\times 10^{8}$ km");
+    expect(writes).toBe(1);
+    expect(html).toContain("katex");
+    expect(html).not.toContain("$");
+
+    setMathText(el, "$1.51 \\times 10^{8}$ km");
+    expect(writes).toBe(2);
   });
 });

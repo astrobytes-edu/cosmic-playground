@@ -20,7 +20,7 @@ import {
   meanMolecularWeight,
   meanMolecularWeightPerElectron,
   evaluateRegimeGrid,
-  superscript,
+  powerOfTenLabel,
 } from "./logic";
 import type { RegimeChannel, RegimeGridResult } from "./logic";
 import { resolveCssColor } from "./uplotHelpers";
@@ -92,10 +92,10 @@ function resizeCanvasToCssPixels(
 }
 
 /* ──────────────────────────────────────────────────
- * Coordinate mapping: log-space → pixel-space
+ * Coordinate mapping: log-space -> pixel-space
  *
- * X axis: log10(T)   → left to right
- * Y axis: log10(rho) → bottom to top  (canvas y is inverted)
+ * X axis: log10(T)   -> left to right
+ * Y axis: log10(rho) -> bottom to top  (canvas y is inverted)
  * ────────────────────────────────────────────────── */
 
 const PADDING = { top: 28, right: 16, bottom: 46, left: 64 };
@@ -285,7 +285,7 @@ function drawGrid(
     ctx.moveTo(x, pa.y);
     ctx.lineTo(x, pa.y + pa.h);
     ctx.stroke();
-    ctx.fillText(`10${superscript(logT)}`, x, pa.y + pa.h + 4);
+    ctx.fillText(powerOfTenLabel(logT), x, pa.y + pa.h + 4);
   }
 
   ctx.textAlign = "right";
@@ -296,7 +296,7 @@ function drawGrid(
     ctx.moveTo(pa.x, y);
     ctx.lineTo(pa.x + pa.w, y);
     ctx.stroke();
-    ctx.fillText(`10${superscript(logRho)}`, pa.x - 4, y);
+    ctx.fillText(powerOfTenLabel(logRho), pa.x - 4, y);
   }
 
   ctx.textAlign = "center";
@@ -308,7 +308,7 @@ function drawGrid(
   ctx.translate(14, pa.y + pa.h / 2);
   ctx.rotate(-Math.PI / 2);
   ctx.textBaseline = "middle";
-  ctx.fillText("log \u03C1 (g cm\u207B\u00B3)", 0, 0);
+  ctx.fillText("log rho (g cm^-3)", 0, 0);
   ctx.restore();
 }
 

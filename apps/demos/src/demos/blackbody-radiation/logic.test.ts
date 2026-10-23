@@ -224,11 +224,11 @@ describe("Blackbody Radiation -- UI Logic", () => {
     });
 
     it("formats um for thousands of nm", () => {
-      expect(formatWavelengthLabel(1500)).toBe("1.5 \u03BCm");
+      expect(formatWavelengthLabel(1500)).toBe("1.5 um");
     });
 
     it("formats um without decimal for large values", () => {
-      expect(formatWavelengthLabel(50000)).toBe("50 \u03BCm");
+      expect(formatWavelengthLabel(50000)).toBe("50 um");
     });
 
     it("formats mm for >= 1e6 nm", () => {
@@ -262,7 +262,7 @@ describe("Blackbody Radiation -- UI Logic", () => {
     it("returns um for near-IR", () => {
       const r = formatWavelengthReadout(10000);
       expect(r.value).toBe("10");
-      expect(r.unit).toBe("\u03BCm");
+      expect(r.unit).toBe("$\\mu\\mathrm{m}$");
     });
 
     it("returns mm for far-IR / microwave", () => {

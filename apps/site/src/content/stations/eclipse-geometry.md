@@ -31,5 +31,5 @@ has_math: true
 >
 > **Sanity checks:**
 > - You need BOTH: (1) New/Full Moon and (2) near a node (small $|\beta|$). One condition alone is not enough.
-> - If $i=0^\circ$, then $\beta=0^\circ$ always → eclipses happen every month.
+> - If $i=0^\circ$, then $\beta=0^\circ$ always $\rightarrow$ eclipses happen every month.
 > - Changing Earth–Moon distance can change whether a solar eclipse is total or annular (size matters too).

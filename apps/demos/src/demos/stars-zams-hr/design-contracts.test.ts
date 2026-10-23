@@ -41,10 +41,19 @@ describe("HR Diagram Inference Lab -- Design System Contracts", () => {
     expect(html).toContain('id="claimStarterHotFaint"');
   });
 
-  it("contains plot stage and persistent axis badges", () => {
+  it("contains plot stage and four axis badges, each a word plus a decorative CSS arrow", () => {
     expect(html).toContain('id="hrCanvas"');
-    expect(html).toContain("Brighter ↑");
-    expect(html).toContain("Hotter ←");
+    const badges = [
+      ...html.matchAll(
+        /<span class="axis-badge[^"]*">(\w+) <span class="cp-icon cp-icon--(arrow-\w+)([^"]*)" aria-hidden="true"><\/span><\/span>/g,
+      ),
+    ].map((m) => ({ word: m[1], icon: m[2], modifier: m[3].trim() }));
+    expect(badges).toEqual([
+      { word: "Brighter", icon: "arrow-up", modifier: "" },
+      { word: "Fainter", icon: "arrow-down", modifier: "" },
+      { word: "Hotter", icon: "arrow-left", modifier: "" },
+      { word: "Cooler", icon: "arrow-right", modifier: "" },
+    ]);
   });
 
   it("contains start-here and explore cards in the controls panel", () => {

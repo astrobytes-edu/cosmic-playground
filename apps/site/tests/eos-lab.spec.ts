@@ -268,6 +268,23 @@ test.describe("EOS Lab -- E2E", () => {
     await expect(checkbox).toBeChecked();
   });
 
+  // At 1280x720 the stage budget once gave 468px: the regime-map legend and this toggle
+  // overflowed under the stage summary, whose KaTeX then took the toggle's clicks.
+  test("stage summary leaves the regime-map toggle uncovered on a 720px-tall window", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    const layout = await page.evaluate(() => {
+      const toggle = document.querySelector("#showSolarProfile")?.closest("label");
+      const summary = document.querySelector(".stage-summary");
+      if (!toggle || !summary) return null;
+      toggle.scrollIntoView({ block: "center" });
+      const t = toggle.getBoundingClientRect();
+      const hit = document.elementFromPoint(t.left + 8, t.top + t.height / 2);
+      return { gap: summary.getBoundingClientRect().top - t.bottom, toggleOnTop: !!hit && toggle.contains(hit) };
+    });
+    expect(layout).toEqual({ gap: expect.any(Number), toggleOnTop: true });
+    expect(layout?.gap).toBeGreaterThanOrEqual(0);
+  });
+
   test("contextual suggestion updates when state changes", async ({ page }) => {
     const suggestion = page.locator("#trySuggestion");
     await expect(suggestion).toBeVisible();

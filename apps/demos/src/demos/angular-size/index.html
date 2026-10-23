@@ -70,7 +70,7 @@
           <div class="cp-callout" data-kind="tip">
             <strong>Quick sky rule</strong>
             <div>
-              Thumb at arm&#x2019;s length &#x2248; 2&#xb0;. Sun &amp; Moon &#x2248; 0.5&#xb0;.
+              Thumb at arm&#x2019;s length $\approx 2^{\circ}$. Sun &amp; Moon $\approx 0.5^{\circ}$.
             </div>
           </div>
 
@@ -89,9 +89,9 @@
               max="1000"
               value="500"
               step="1"
-              data-tooltip-source="#distanceValue"
+              data-tooltip-source="#distanceValueText"
             />
-            <div class="cp-muted"><span id="distanceValue"></span></div>
+            <div class="cp-muted"><span id="distanceValue"></span><span id="distanceValueText" hidden></span></div>
           </label>
 
           <label class="cp-field">
@@ -104,9 +104,9 @@
               max="1000"
               value="500"
               step="1"
-              data-tooltip-source="#diameterValue"
+              data-tooltip-source="#diameterValueText"
             />
-            <div class="cp-muted"><span id="diameterValue"></span></div>
+            <div class="cp-muted"><span id="diameterValue"></span><span id="diameterValueText" hidden></span></div>
           </label>
 
           <div class="unit-selectors">
@@ -145,7 +145,7 @@
             <div class="radio-row" role="radiogroup" aria-label="Moon time mode">
               <label class="radio">
                 <input id="moonModeOrbit" type="radio" name="moonMode" value="orbit" checked />
-                Orbit (perigee &#x2194; apogee)
+                Orbit (perigee <span class="cp-icon cp-icon--arrow-both" aria-hidden="true"></span><span class="sr-only"> to </span> apogee)
               </label>
               <label class="radio">
                 <input id="moonModeRecession" type="radio" name="moonMode" value="recession" />
@@ -270,11 +270,11 @@
             <!-- Readouts pinned under geometry diagram -->
             <div class="cp-readout-strip cp-demo__readouts" aria-label="Readouts">
               <div class="cp-readout">
-                <span class="cp-readout__label">&#x03B8;</span>
+                <span class="cp-readout__label">$\theta$</span>
                 <span class="cp-readout__value"><span id="thetaDisplay"></span><span id="thetaDisplayUnit" class="cp-readout__unit"></span></span>
               </div>
               <div class="cp-readout">
-                <span class="cp-readout__label">&#x03B8; (decimal)</span>
+                <span class="cp-readout__label">$\theta$ (decimal)</span>
                 <span class="cp-readout__value"><span id="thetaDeg"></span><span id="thetaDegUnit" class="cp-readout__unit">deg</span></span>
               </div>
               <div class="cp-readout">

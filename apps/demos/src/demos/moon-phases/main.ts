@@ -127,6 +127,10 @@ const timelineDirectionEl = requireEl(
   document.querySelector<HTMLElement>("#timeline-direction"),
   "#timeline-direction"
 );
+const timelineDirectionTextEl = requireEl(
+  document.querySelector<HTMLElement>("#timeline-direction-text"),
+  "#timeline-direction-text"
+);
 const timelineDayEl = requireEl(
   document.querySelector<HTMLElement>("#timeline-day"),
   "#timeline-day"
@@ -371,14 +375,14 @@ function updateAnnotations() {
   const waxing = MoonPhasesModel.waxingWaningFromPhaseAngleDeg(moonAngleDeg) === "Waxing";
   const xEnd = waxing ? 156 : 44;
   const labelX = waxing ? 128 : 72;
-  const labelText = waxing ? "Sun is this way \u2192" : "\u2190 Sun is this way";
 
+  // The label is plain words ("Sun is this way", authored in index.html); the arrowhead on
+  // the line below it carries the direction, so no arrow glyph is typed into the text.
   earthSunDirectionLineEl.setAttribute("x1", "100");
   earthSunDirectionLineEl.setAttribute("y1", "34");
   earthSunDirectionLineEl.setAttribute("x2", String(xEnd));
   earthSunDirectionLineEl.setAttribute("y2", "34");
   earthSunDirectionLabelEl.setAttribute("x", String(labelX));
-  earthSunDirectionLabelEl.textContent = labelText;
 }
 
 function animateAngle(targetDeg: number, durationMs: number) {
@@ -461,7 +465,7 @@ function updateReadouts() {
 function updateTimeline() {
   const state = computeTimelineState(moonAngleDeg, PHASE_ANGLES, MoonPhasesModel);
 
-  timelineDirectionEl.textContent = state.directionText;
+  timelineDirectionTextEl.textContent = state.directionText;
   timelineDirectionEl.classList.toggle("waning", state.directionClass === "waning");
   timelineDayEl.textContent = state.dayText;
 

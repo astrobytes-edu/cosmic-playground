@@ -32,6 +32,6 @@ has_math: true
 > $$
 >
 > **Sanity checks:**
-> - Hotter → $\lambda_{\text{peak}}$ shifts to *shorter* wavelength (toward blue/UV).
-> - Cooler → $\lambda_{\text{peak}}$ shifts to *longer* wavelength (toward red/IR).
+> - Hotter $\rightarrow$ $\lambda_{\text{peak}}$ shifts to *shorter* wavelength (toward blue/UV).
+> - Cooler $\rightarrow$ $\lambda_{\text{peak}}$ shifts to *longer* wavelength (toward red/IR).
 > - In astronomy, “redder” blackbodies are **cooler**, not hotter.

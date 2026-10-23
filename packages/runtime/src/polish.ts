@@ -100,9 +100,15 @@ export function initSliderTooltips(root: Root = document): void {
     `;
     container.appendChild(tooltip);
 
-    const format = () => {
+    // A KaTeX readout carries MathML and its TeX annotation as hidden text, so its
+    // textContent is not what the reader sees: mirror its markup instead.
+    const render = () => {
+      if (sourceEl.querySelector(".katex")) {
+        tooltip.innerHTML = sourceEl.innerHTML;
+        return;
+      }
       const text = sourceEl.textContent?.trim();
-      return text && text.length > 0 ? text : slider.value;
+      tooltip.textContent = text && text.length > 0 ? text : slider.value;
     };
 
     const position = () => {
@@ -119,7 +125,7 @@ export function initSliderTooltips(root: Root = document): void {
       const leftInContainer = rect.left - containerRect.left + left;
 
       tooltip.style.left = `${leftInContainer}px`;
-      tooltip.textContent = format();
+      render();
     };
 
     const show = () => {

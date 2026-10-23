@@ -179,7 +179,7 @@ const presets = {
     distance: 0.0007,
     category: "everyday",
     color: "object",
-    description: "Thumb at arm's length ≈ 2°"
+    description: "Thumb at arm's length, about 2 deg"
   },
   airplane: {
     name: "Jet @ 10km",

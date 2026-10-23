@@ -26,7 +26,7 @@ has_math: true
 > - **Semi-major axis $a$ (AU):** the orbit’s size scale.
 > - **Eccentricity $e$ (unitless):** orbit shape (0 = circle; larger = more stretched).
 > - **Perihelion / aphelion:** closest / farthest point from the star.
-> - **Kepler 2:** equal areas in equal times (a timing law → speed changes).
+> - **Kepler 2:** equal areas in equal times (a timing law $\rightarrow$ speed changes).
 > - **Kepler 3:** bigger orbits have longer periods (for the same central mass).
 >
 > **Key relationship (period scaling):**

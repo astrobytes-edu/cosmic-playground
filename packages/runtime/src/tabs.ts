@@ -2,9 +2,9 @@
  * CpTabs — Horizontal tab bar with panel switching.
  *
  * Implements the WAI-ARIA Tabs pattern:
- * - Click tab → show panel, hide others, set aria-selected
- * - Arrow left/right → move between tabs
- * - Home/End → first/last tab
+ * - Click tab -> show panel, hide others, set aria-selected
+ * - Arrow left/right -> move between tabs
+ * - Home/End -> first/last tab
  *
  * JS owns: event listeners, attribute toggling, ARIA state.
  * CSS owns: visual styling, transitions, hidden state.

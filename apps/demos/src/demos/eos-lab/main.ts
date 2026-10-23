@@ -19,18 +19,20 @@ import {
   compositionFromXY,
   formatFraction,
   formatScientific,
+  formatScientificLatex,
+  formatScientificMath,
   gasEquationLatex,
   gasEquationSymbolic,
   logSliderToValue,
   percent,
   pressureBarPercent,
   pressureCurveData,
+  powerOfTenLabel,
   pressureTone,
   radEquationLatex,
   radEquationSymbolic,
   degEquationLatex,
   degEquationSymbolic,
-  superscript,
   valueToLogSlider,
   adiabaticIndex,
   solarProfileData,
@@ -38,6 +40,7 @@ import {
   SCALING_CHALLENGES,
   getContextualSuggestion
 } from "./logic";
+import { setMathText } from "../../shared/mathText";
 import { createEosPlot, destroyPlot } from "./uplotHelpers";
 import type { uPlot } from "./uplotHelpers";
 import { renderRegimeMap, invalidateRegimeGrid, setGridFromWorker, canvasToLogCoords } from "./regimeMap";
@@ -120,29 +123,8 @@ function requestRegimeGridRebuild(): void {
  * Formatting helpers
  * ================================================================ */
 
-/** Cached renderMath — only re-renders KaTeX when text content changes. */
-const lastMathText = new WeakMap<HTMLElement, string>();
 /**
- * Set an element's text and typeset it, skipping the work when the source has not changed.
- *
- * This used to read the source back off the element after the caller had already written
- * it, which is only safe while consecutive values differ. KaTeX replaces the element's
- * contents, so once the caller writes the same source a second time the element holds raw
- * LaTeX while the cache still says "already rendered", and the guard skips the render that
- * would fix it. The bug was invisible while every call came from a slider moving to a new
- * value; a resize handler re-rendering identical state made it visible immediately.
- *
- * Owning the write closes it: the cache is only updated on the path that also renders.
- */
-function setMathText(el: HTMLElement, source: string): void {
-  if (lastMathText.get(el) === source) return;
-  lastMathText.set(el, source);
-  el.textContent = source;
-  renderMath(el);
-}
-
-/**
- * Format log-scale tick values as 10^n using Unicode superscripts.
+ * Format log-scale tick values as ASCII 10^n (uPlot draws axis labels on a canvas).
  * Auto-thins labels when the range spans many decades to prevent overlap.
  */
 const logTickValues = (_self: unknown, splits: number[]) => {
@@ -158,7 +140,7 @@ const logTickValues = (_self: unknown, splits: number[]) => {
     const exp = Math.round(Math.log10(v));
     if (Math.abs(v - Math.pow(10, exp)) / v > 0.01) return "";
     if (step > 1 && exp % step !== 0) return "";
-    return `10${superscript(exp)}`;
+    return powerOfTenLabel(exp);
   });
 };
 
@@ -275,8 +257,10 @@ function q<T extends HTMLElement>(sel: string): T {
 
 const tempSlider = q<HTMLInputElement>("#tempSlider");
 const tempValue = q<HTMLSpanElement>("#tempValue");
+const tempValueText = q<HTMLSpanElement>("#tempValueText");
 const rhoSlider = q<HTMLInputElement>("#rhoSlider");
 const rhoValue = q<HTMLSpanElement>("#rhoValue");
+const rhoValueText = q<HTMLSpanElement>("#rhoValueText");
 const xSlider = q<HTMLInputElement>("#xSlider");
 const xValue = q<HTMLSpanElement>("#xValue");
 const ySlider = q<HTMLInputElement>("#ySlider");
@@ -485,8 +469,8 @@ const pressurePlotHandle = createEosPlot(pressureCurvePlotEl, {
     { label: "P_total", stroke: totalColor, width: 3, dash: [6, 3], value: (_u: unknown, v: number | null) => v == null ? "\u2014" : formatScientific(v, 3) },
   ],
   axes: [
-    { label: "\u03C1 (g cm\u207B\u00B3)", values: logTickValues },
-    { label: "P (dyne cm\u207B\u00B2)", values: logTickValues },
+    { label: "rho (g cm^-3)", values: logTickValues },
+    { label: "P (dyne cm^-2)", values: logTickValues },
   ],
   legend: { show: true, live: true },
   cursor: {
@@ -559,7 +543,7 @@ function setPressureCard(
   pressureDynePerCm2: number,
   dominantPressureDynePerCm2: number
 ): void {
-  valueEl.textContent = formatScientific(pressureDynePerCm2, 4);
+  setMathText(valueEl, formatScientificMath(pressureDynePerCm2, 4));
   const widthPct = pressureBarPercent({
     pressureDynePerCm2,
     maxPressureDynePerCm2: dominantPressureDynePerCm2
@@ -643,13 +627,16 @@ function fermiRelativityRegimeLabelLatex(regime: StellarEosStateCgs["fermiRelati
  * ================================================================ */
 
 function renderAdvancedDiagnostics(model: StellarEosStateCgs): void {
-  xFValue.textContent = formatScientific(model.fermiRelativityX, 5);
+  setMathText(xFValue, formatScientificMath(model.fermiRelativityX, 5));
   setMathText(fermiRegimeValue, fermiRelativityRegimeLabelLatex(model.fermiRelativityRegime));
-  finiteTCorrectionValue.textContent = Number.isFinite(model.finiteTemperatureDegeneracyCorrectionFactor)
-    ? formatScientific(model.finiteTemperatureDegeneracyCorrectionFactor, 5)
-    : "\u2014";
+  setMathText(
+    finiteTCorrectionValue,
+    Number.isFinite(model.finiteTemperatureDegeneracyCorrectionFactor)
+      ? formatScientificMath(model.finiteTemperatureDegeneracyCorrectionFactor, 5)
+      : "\u2014"
+  );
   setMathText(finiteTValidityValue, `${model.finiteTemperatureDegeneracyAssessment.label} (${electronDegeneracyMethodLabel(model.electronDegeneracyMethod)})`);
-  neutronExtensionValue.textContent = formatScientific(model.neutronExtensionPressureDynePerCm2, 5);
+  setMathText(neutronExtensionValue, formatScientificMath(model.neutronExtensionPressureDynePerCm2, 5));
 }
 
 /* ================================================================
@@ -727,8 +714,12 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   tempSlider.value = Number.isFinite(temperatureSliderValue) ? String(Math.round(temperatureSliderValue)) : "0";
   rhoSlider.value = Number.isFinite(densitySliderValue) ? String(Math.round(densitySliderValue)) : "0";
 
-  tempValue.textContent = `${formatScientific(state.temperatureK, 4)} K`;
-  rhoValue.textContent = `${formatScientific(state.densityGPerCm3, 4)} g cm\u207B\u00B3`;
+  // The slider tooltips read their source's textContent, which KaTeX would garble with its
+  // MathML twin, so each visible readout has a hidden plain-text sibling to feed the tooltip.
+  setMathText(tempValue, `${formatScientificMath(state.temperatureK, 4)} K`);
+  tempValueText.textContent = `${formatScientific(state.temperatureK, 4)} K`;
+  setMathText(rhoValue, `${formatScientificMath(state.densityGPerCm3, 4)} g cm$^{-3}$`);
+  rhoValueText.textContent = `${formatScientific(state.densityGPerCm3, 4)} g cm^-3`;
 
   // --- Composition sliders ---
   const x = state.composition.hydrogenMassFractionX;
@@ -780,7 +771,7 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   // --- Regime map detail text ---
   const logT = Math.log10(model.input.temperatureK);
   const logRho = Math.log10(model.input.densityGPerCm3);
-  setMathText(regimeDetail, `Point details: $\\log_{10}(T/\\mathrm{K})=${formatFraction(logT, 2)}$, $\\log_{10}(\\rho/(\\mathrm{g\\ cm^{-3}}))=${formatFraction(logRho, 2)}$, $P_{\\rm rad}/P_{\\rm gas}=${formatScientific(model.pressureRatios.radiationToGas, 3)}$, $P_{\\rm deg,e}/P_{\\rm tot}=${formatScientific(model.pressureRatios.degeneracyToTotal, 3)}$.`);
+  setMathText(regimeDetail, `Point details: $\\log_{10}(T/\\mathrm{K})=${formatFraction(logT, 2)}$, $\\log_{10}(\\rho/(\\mathrm{g\\ cm^{-3}}))=${formatFraction(logRho, 2)}$, $P_{\\rm rad}/P_{\\rm gas}=${formatScientificLatex(model.pressureRatios.radiationToGas, 3)}$, $P_{\\rm deg,e}/P_{\\rm tot}=${formatScientificLatex(model.pressureRatios.degeneracyToTotal, 3)}$.`);
   setMathText(
     regimeSummary,
     `Interpretation: ${dominantChannelLabel(model)} dominates at the highlighted state; white markers show preset anchors.`
@@ -792,7 +783,7 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   setPressureCard(cardRadiation, pRadBar, pRadValue, model.radiationPressureDynePerCm2, dominantP);
   setPressureCard(cardDegeneracy, pDegBar, pDegValue, model.electronDegeneracyPressureDynePerCm2, dominantP);
 
-  pTotalValue.textContent = formatScientific(model.totalPressureDynePerCm2, 4);
+  setMathText(pTotalValue, formatScientificMath(model.totalPressureDynePerCm2, 4));
   dominantChannel.textContent = dominantChannelLabel(model);
 
   // Dominance-switch pulse — animate the newly dominant card
@@ -819,9 +810,9 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   muValue.textContent = formatFraction(model.meanMolecularWeightMu, 5);
   muEValue.textContent = formatFraction(model.meanMolecularWeightMuE, 5);
   betaValue.textContent = percent(model.pressureRatios.betaGasToTotal, 2);
-  radGasValue.textContent = formatScientific(model.pressureRatios.radiationToGas, 5);
+  setMathText(radGasValue, formatScientificMath(model.pressureRatios.radiationToGas, 5));
   degTotalValue.textContent = percent(model.pressureRatios.degeneracyToTotal, 2);
-  chiDegValue.textContent = formatScientific(model.chiDegeneracy, 5);
+  setMathText(chiDegValue, formatScientificMath(model.chiDegeneracy, 5));
   setMathText(degRegimeValue, degeneracyRegimeLabelLatex(model.degeneracyRegime));
 
   const gammaEff = adiabaticIndex({
@@ -839,17 +830,17 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   if (Number.isFinite(gammaEff)) {
     if (gammaEff < GAMMA_CRIT - 0.01) {
       gammaReadout?.setAttribute("data-stability", "unstable");
-      gammaEffNote.textContent = "\u26A0 Below 4/3 \u2014 dynamically unstable";
+      setMathText(gammaEffNote, "\u26A0 Below 4/3 \u2014 dynamically unstable");
     } else if (gammaEff < GAMMA_CRIT + 0.05) {
       gammaReadout?.setAttribute("data-stability", "marginal");
-      gammaEffNote.textContent = "\u2248 4/3 \u2014 marginal stability";
+      setMathText(gammaEffNote, "$\\approx 4/3$ \u2014 marginal stability");
     } else {
       gammaReadout?.setAttribute("data-stability", "stable");
-      gammaEffNote.textContent = "> 4/3 \u2014 stable";
+      setMathText(gammaEffNote, "> 4/3 \u2014 stable");
     }
   } else {
     gammaReadout?.removeAttribute("data-stability");
-    gammaEffNote.textContent = "";
+    setMathText(gammaEffNote, "");
   }
 
   renderRadiationClosure(model);
@@ -857,14 +848,14 @@ function render(args: { deferGridRebuild?: boolean } = {}): void {
   renderPresetState();
 
   // Contextual "what to try next" suggestion
-  trySuggestion.textContent = getContextualSuggestion({
+  setMathText(trySuggestion, getContextualSuggestion({
     dominantChannel: model.dominantPressureChannel,
     radiationToGas: model.pressureRatios.radiationToGas,
     degeneracyToTotal: model.pressureRatios.degeneracyToTotal,
     chiDegeneracy: model.chiDegeneracy,
     gammaEff: gammaEff,
     lteTag: model.radiationClosureAssessment.tag,
-  });
+  }));
 
   // --- Debug / E2E interface ---
   (window as Window & { __cp?: unknown }).__cp = {
@@ -924,13 +915,13 @@ function showDeltaFlash(el: HTMLElement, oldP: number, newP: number): void {
   const ratio = newP / oldP;
   if (!Number.isFinite(ratio) || Math.abs(ratio - 1) < 0.001) {
     el.dataset.direction = "none";
-    el.textContent = "\u2014";
+    setMathText(el, "\u2014");
   } else if (ratio > 1) {
     el.dataset.direction = "up";
-    el.textContent = "\u2191 \u00D7" + ratio.toFixed(ratio > 10 ? 0 : 1);
+    setMathText(el, `$\\uparrow\\times ${ratio.toFixed(ratio > 10 ? 0 : 1)}$`);
   } else {
     el.dataset.direction = "down";
-    el.textContent = "\u2193 \u00D7" + (1 / ratio).toFixed(ratio < 0.1 ? 0 : 1);
+    setMathText(el, `$\\downarrow\\times ${(1 / ratio).toFixed(ratio < 0.1 ? 0 : 1)}$`);
   }
   el.classList.add("is-visible");
   const prev = flashTimeouts.get(el);
@@ -943,8 +934,8 @@ function showDeltaFlash(el: HTMLElement, oldP: number, newP: number): void {
 
 function renderCompareView(model: StellarEosStateCgs): void {
   // Slider readouts
-  compareTVal.textContent = formatScientific(model.input.temperatureK, 4) + " K";
-  compareRhoVal.textContent = formatScientific(model.input.densityGPerCm3, 4) + " g cm\u207B\u00B3";
+  setMathText(compareTVal, `${formatScientificMath(model.input.temperatureK, 4)} K`);
+  setMathText(compareRhoVal, `${formatScientificMath(model.input.densityGPerCm3, 4)} g cm$^{-3}$`);
   compareXVal.textContent = formatFraction(model.input.composition.hydrogenMassFractionX, 3);
   compareYVal.textContent = formatFraction(model.input.composition.heliumMassFractionY, 3);
   compareMuVal.textContent = formatFraction(model.meanMolecularWeightMu, 3);
@@ -1120,7 +1111,7 @@ if (scalingContainer) {
 
           if (currentIdx < SCALING_CHALLENGES.length - 1) {
             // User-controlled advance instead of auto-timeout
-            feedbackEl.innerHTML += `<button class="cp-button cp-button--ghost scaling-detective__next" type="button">Next \u2192</button>`;
+            feedbackEl.innerHTML += `<button class="cp-button cp-button--ghost scaling-detective__next" type="button">Next <span class="cp-icon cp-icon--arrow-right" aria-hidden="true"></span></button>`;
             feedbackEl.querySelector(".scaling-detective__next")!.addEventListener("click", () => {
               currentIdx++;
               renderChallenge();
@@ -1378,7 +1369,10 @@ regimeMapCanvas.addEventListener("mousemove", (e) => {
   const T = Math.pow(10, coords.logT);
   const rho = Math.pow(10, coords.logRho);
   regimeTooltip.hidden = false;
-  regimeTooltip.textContent = `T = ${formatScientific(T, 2)} K, \u03C1 = ${formatScientific(rho, 2)} g/cm\u00B3`;
+  setMathText(
+    regimeTooltip,
+    `$T = ${formatScientificLatex(T, 2)}$ K, $\\rho = ${formatScientificLatex(rho, 2)}$ g/cm$^3$`
+  );
   // Position tooltip near cursor, flip left when near right edge
   const cx = e.clientX - rect.left;
   const cy = e.clientY - rect.top;
@@ -1484,7 +1478,7 @@ window.addEventListener("beforeunload", () => {
 
 const TOUR_STEPS = [
   { target: "#tempSlider", text: "Drag temperature to see how each pressure channel responds." },
-  { target: "#regimeMapCanvas", text: "This map shows which pressure dominates at every (T, \u03C1) combination for the current composition." },
+  { target: "#regimeMapCanvas", text: "This map shows which pressure dominates at every ($T$, $\\rho$) combination for the current composition." },
   { target: "#tab-understand", text: "Switch here to see animations of the physical mechanism behind each channel." },
   { target: ".scaling-detective > summary", text: "Try the Scaling Law Detective quiz to test your understanding of how each pressure scales.", switchTab: "understand" },
 ];
@@ -1535,6 +1529,7 @@ function runTour(): void {
       `<button class="tour-skip">Skip</button>` +
       `<button class="tour-next">${step < TOUR_STEPS.length - 1 ? "Next" : "Done"}</button>` +
       `</div>`;
+    renderMath(tooltip);
 
     // Position tooltip below or above the target
     const above = rect.bottom > window.innerHeight * 0.6;

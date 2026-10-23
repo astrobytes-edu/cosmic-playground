@@ -97,7 +97,7 @@ test.describe("Seasons -- E2E", () => {
   test("latitude presets update slider and readouts", async ({ page }) => {
     await page.locator('button[data-lat-preset="32.7"]').click();
     await expect(page.locator("#latitude")).toHaveValue("32.7");
-    await expect(page.locator("#latitudeValue")).toHaveText("32.7°N");
+    await expect(page.locator("#latitudeValue")).toHaveText("32.7 deg N");
   });
 
   // --- Anchor Buttons ---

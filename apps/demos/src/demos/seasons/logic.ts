@@ -341,17 +341,21 @@ export function easeInOutCubic(t: number): number {
 }
 
 /**
- * Format a latitude value with hemisphere direction.
- * E.g. 45 -> "45 deg N", -30 -> "30 deg S", 0 -> "0 deg (Equator)"
+ * Format a latitude value with hemisphere direction, as plain text.
+ * E.g. 45 -> "45 deg N", -30 -> "30 deg S", 0 -> "0 deg (Equator)".
+ *
+ * The unit is written as ASCII "deg", not a typeset glyph: this string is the text of the
+ * latitude readout and, through data-tooltip-source, of the slider tooltip, which copies
+ * textContent and so cannot carry KaTeX output.
  */
 export function formatLatitude(latDeg: number): string {
   const rounded = Math.round(latDeg * 10) / 10;
-  if (Math.abs(rounded) < 0.05) return "0\u00B0 (Equator)";
+  if (Math.abs(rounded) < 0.05) return "0 deg (Equator)";
   const abs = Math.abs(rounded);
   const absText =
     Math.abs(abs - Math.round(abs)) < 0.05 ? String(Math.round(abs)) : formatNumber(abs, 1);
   const dir = latDeg > 0 ? "N" : "S";
-  return `${absText}\u00B0${dir}`;
+  return `${absText} deg ${dir}`;
 }
 
 /**
@@ -462,13 +466,16 @@ export interface SeasonContextState {
 /**
  * Return a contextual pedagogical message for the current state.
  * Priority: zero tilt > perihelion myth > solstice > equinox > empty.
+ *
+ * The string is math-text source: it may contain `$...$` KaTeX and must be written to the
+ * page with setMathText, never textContent.
  */
 export function contextualMessage(state: SeasonContextState): string {
   const { dayOfYear, axialTiltDeg } = state;
 
   // Zero tilt = no seasons
   if (axialTiltDeg < 1) {
-    return "With near-zero tilt, declination stays near 0\u00B0 all year \u2014 no seasons.";
+    return "With near-zero tilt, declination stays near $0^{\\circ}$ all year \u2014 no seasons.";
   }
 
   // Perihelion in Northern winter (distance myth)

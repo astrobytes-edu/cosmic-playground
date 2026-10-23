@@ -89,6 +89,9 @@ You can keep PR overhead low but still get value:
 
 - Capture gate exit codes directly (`cmd > log 2>&1; echo EXIT=$?`), never through a pipe.
 - Never run two Playwright runs at once: they share port 4321 and `test-results/` is wiped at start.
+- `reuseExistingServer` reuses whatever answers on the port, not only our preview. On 2026-10-23
+  another project's `serve.py` held 4321 and 404 tests failed on `{"error": "Page not found"}`.
+  Check `lsof -nP -iTCP:4321 -sTCP:LISTEN` first, or set `PLAYWRIGHT_PORT`.
 - A RED must fail on assertions. "Tests  no tests" means the file failed to load (e.g. `it` where the file imports `test`).
 - Test physics at asymmetric points, not only symmetric ones: a waxing/waning swap passed because tests checked only full and new moon.
 - Moon phase convention: 0 = full, 90 = third quarter, 180 = new, 270 = first quarter; elongation = (alpha - 180) mod 360.
@@ -97,9 +100,10 @@ You can keep PR overhead low but still get value:
 - eos-lab's first-visit tour blocks clicks in E2E unless localStorage `eos-lab-toured` is set.
 - Pushing to main cancels an in-progress deploy (`deploy.yml` concurrency, `cancel-in-progress: true`).
 - Readiness: only `launch-ready` removes the card badge (`readiness.ts:59`); only `status: stable` removes the exhibit's "Active development" callout. Move both together; `readinessReason` is public copy.
-- `validate-math-formatting.mjs` is green and blind: it tests literal characters only, so
-  Unicode math reaching readers through `\uXXXX` escapes or `&#x` entities passes, and its
-  character class omits `<= >= != +- . / sqrt sum int -> <-`. Do not read its OK as proof.
+- `validate-math-formatting.mjs` was green and blind until 2026-10-23 (S2): it now decodes JS
+  escapes, HTML entities and CSS `content:` escapes before testing, covers comparison, operator
+  and arrow glyphs, and scans physics string literals (not comments) and `packages/data-*`.
+  It still sees only glyphs: a word like `inf` or `lambda_app` in reader text passes.
 - `pnpm lint` runs biome with `--max-diagnostics=10`. On 2026-10-23 that hid 488 further
   diagnostics. Use `pnpm lint:biome` (`--max-diagnostics=2000`) when you want the truth.
 - Auditing a tree while fixing it produces stale findings: 6 of 8 refutations in the
@@ -167,6 +171,7 @@ math nodes can be checked; a stray `θ` in a string cannot.
 | Markdown bodies (`src/content/**/*.md`) | Typeset at build by remark-math + rehype-katex. Display math must be fenced — `$$` alone on the lines above and below; single-line `$$…$$` renders INLINE (the validator rejects it). Frontmatter and `.astro` pages still use client auto-render, where `$$` is display. |
 | Astro/TS that emits reader-visible strings | LaTeX only. Render it with `renderInlineMath()` from `apps/site/src/lib/inlineMath.ts` (build-time KaTeX, no client JS) or `renderMath()` from `@cosmic/runtime` in the demos. |
 | Canvas 2D / uPlot axis labels | The one exemption -- KaTeX cannot render into a canvas. Use ASCII (`lambda`, `deg`, `M_sun`), never Unicode. |
+| SVG `<text>` | Cannot host KaTeX. A symbol label (photon $\gamma$, $\infty$, $\lambda_{\rm app}$) goes through `createSvgMathOverlay()` in `apps/demos/src/shared/svgMathOverlay.ts`, which pins typeset HTML over the drawing (Anna, 2026-10-23). Unit words such as `deg` stay as SVG text. |
 | `packages/physics` comments and test names | Not scanned today; the maths there is documentation, not rendered output. Prefer ASCII in new code. |
 
 **Adding a new reader-visible surface?** Add its directory to `SCAN_ROOTS` in

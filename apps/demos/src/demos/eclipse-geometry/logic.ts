@@ -22,11 +22,12 @@ export function formatNumber(value: number, digits: number): string {
 /*  Signed beta formatting                                            */
 /* ------------------------------------------------------------------ */
 
-/** Format ecliptic latitude with explicit sign: "+" for above, Unicode
- *  minus "\u2212" for below the ecliptic, no sign for exactly zero. */
+/** Format ecliptic latitude with explicit sign: "+" for above, ASCII "-" for
+ *  below the ecliptic, no sign for exactly zero. The value is shown in a
+ *  monospace readout next to a separate "deg" unit, so it stays plain ASCII. */
 export function formatSignedBeta(betaDeg: number, decimals: number): string {
   if (betaDeg === 0) return betaDeg.toFixed(decimals);
-  const sign = betaDeg > 0 ? "+" : "\u2212";
+  const sign = betaDeg > 0 ? "+" : "-";
   return `${sign}${Math.abs(betaDeg).toFixed(decimals)}`;
 }
 
@@ -165,6 +166,9 @@ const ALMOST_MARGIN_DEG = 0.5; // how close to threshold counts as "almost"
  *  4. Near node but wrong phase
  *  5. Wrong phase (general, only when somewhat near a node)
  *  6. Mundane state -- returns empty string
+ *
+ * The result is math source, not display text: degree signs and beta come back as
+ * `$...$` and must be written with `setMathText`, never `textContent`.
  */
 export function contextualMessage(
   state: EclipseDemoState,
@@ -181,10 +185,10 @@ export function contextualMessage(
 
   // Eclipse achieved
   if (hasSolar) {
-    return `${outcomeLabel(solarType)} eclipse! Moon at New Moon, ${formatNumber(nearestNodeDeg, 1)}\u00b0 from nearest node.`;
+    return `${outcomeLabel(solarType)} eclipse! Moon at New Moon, ${formatNumber(nearestNodeDeg, 1)}$^{\\circ}$ from nearest node.`;
   }
   if (hasLunar) {
-    return `${outcomeLabel(lunarType)} eclipse! Moon at Full Moon, ${formatNumber(nearestNodeDeg, 1)}\u00b0 from nearest node.`;
+    return `${outcomeLabel(lunarType)} eclipse! Moon at Full Moon, ${formatNumber(nearestNodeDeg, 1)}$^{\\circ}$ from nearest node.`;
   }
 
   // Almost -- near syzygy and beta is close to a threshold
@@ -192,16 +196,16 @@ export function contextualMessage(
     const solarPartial = thresholds.solarPartialDeg ?? 1.5;
     const lunarPenumbral = thresholds.lunarPenumbralDeg ?? 1.6;
     if (absBetaDeg > solarPartial && absBetaDeg < solarPartial + ALMOST_MARGIN_DEG) {
-      return `Almost! |\u03b2| = ${formatNumber(absBetaDeg, 2)}\u00b0 \u2014 needs to be below ${formatNumber(solarPartial, 1)}\u00b0 for a solar eclipse.`;
+      return `Almost! $|\\beta|$ = ${formatNumber(absBetaDeg, 2)}$^{\\circ}$ \u2014 needs to be below ${formatNumber(solarPartial, 1)}$^{\\circ}$ for a solar eclipse.`;
     }
     if (absBetaDeg > lunarPenumbral && absBetaDeg < lunarPenumbral + ALMOST_MARGIN_DEG) {
-      return `Almost! |\u03b2| = ${formatNumber(absBetaDeg, 2)}\u00b0 \u2014 needs to be below ${formatNumber(lunarPenumbral, 1)}\u00b0 for a lunar eclipse.`;
+      return `Almost! $|\\beta|$ = ${formatNumber(absBetaDeg, 2)}$^{\\circ}$ \u2014 needs to be below ${formatNumber(lunarPenumbral, 1)}$^{\\circ}$ for a lunar eclipse.`;
     }
   }
 
   // Near syzygy but too far from node
   if (nearSyzygy && !nearNode) {
-    return `Moon is ${formatNumber(absBetaDeg, 1)}\u00b0 from the ecliptic \u2014 too far from a node for an eclipse.`;
+    return `Moon is ${formatNumber(absBetaDeg, 1)}$^{\\circ}$ from the ecliptic \u2014 too far from a node for an eclipse.`;
   }
 
   // Near node but wrong phase

@@ -8,6 +8,7 @@ import {
 } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { BinaryOrbitModel, DopplerShiftModel, SpectralLineModel } from "@cosmic/physics";
+import { setMathText } from "../../shared/mathText";
 import {
   INCLINATION_MAX_DEG,
   INCLINATION_MIN_DEG,
@@ -1659,19 +1660,22 @@ function updateSpectroscopyControls(): void {
 
 function updateScalingCue(): void {
   if (!state.scalingCue) {
-    scalingCue.textContent = "";
+    setMathText(scalingCue, "");
     scalingCue.classList.remove("is-active");
   } else {
-    scalingCue.textContent = `${state.scalingCue.equation} — ${state.scalingCue.message}`;
+    setMathText(scalingCue, `${state.scalingCue.equation} — ${state.scalingCue.message}`);
     scalingCue.classList.toggle("is-active", state.scalingCueActive);
   }
 
   if (!state.energyScalingCue) {
-    energyScalingCue.textContent = "";
+    setMathText(energyScalingCue, "");
     energyScalingCue.classList.remove("is-active");
     return;
   }
-  energyScalingCue.textContent = `${state.energyScalingCue.equation} — ${state.energyScalingCue.message}`;
+  setMathText(
+    energyScalingCue,
+    `${state.energyScalingCue.equation} — ${state.energyScalingCue.message}`,
+  );
   energyScalingCue.classList.toggle("is-active", state.energyScalingCueActive);
 }
 

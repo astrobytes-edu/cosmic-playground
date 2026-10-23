@@ -11,7 +11,7 @@ has_math: true
 *Goal:* Use the demo to make a claim supported by (1) at least one number/readout and (2) at least one sanity check.
 
 > **Station card: Moon Phases (6–8 minutes)**
-> **Demo setup:** start at New → First Quarter → Full → Third Quarter.
+> **Demo setup:** start at New $\rightarrow$ First Quarter $\rightarrow$ Full $\rightarrow$ Third Quarter.
 > **Tip:** Click **Station Mode** to add key-phase rows and print/copy your table.
 > **Advanced (optional):** Enable **Advanced: latitude/season** to estimate rise/set using latitude (deg) and day of year (1–365). Polar day/night returns N/A.
 >
@@ -58,8 +58,8 @@ has_math: true
 > - **Illuminated (%)**: the same information as $f$, but scaled to 0–100.
 > - **Days since new ($d$):** where we are in the 29.53-day cycle (0 at New, ~14.8 at Full).
 > - **Moon angle $\alpha$ (degrees, this demo):** $0^\circ$ = Full, $180^\circ$ = New; quarter phases are at $90^\circ$ and $270^\circ$.
-> - **Waxing:** the illuminated fraction is increasing (after New → toward Full).
-> - **Waning:** the illuminated fraction is decreasing (after Full → toward New).
+> - **Waxing:** the illuminated fraction is increasing (after New $\rightarrow$ toward Full).
+> - **Waning:** the illuminated fraction is decreasing (after Full $\rightarrow$ toward New).
 > - **Quarter phase:** about 50% illuminated; "quarter" refers to the orbit position, not the lit fraction.
 >
 > **Sanity checks:**

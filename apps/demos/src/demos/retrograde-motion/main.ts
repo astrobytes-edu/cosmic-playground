@@ -10,6 +10,8 @@ import {
 } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { RetrogradeMotionModel } from "@cosmic/physics";
+import { setMathText } from "../../shared/mathText";
+import { createSvgMathOverlay, type SvgMathLabel } from "../../shared/svgMathOverlay";
 import {
   advanceCursor,
   buildOrbitPath,
@@ -76,6 +78,7 @@ const deltaNValue = requireEl(document.querySelector<HTMLSpanElement>("#deltaNVa
 const plotFocus = requireEl(document.querySelector<HTMLDivElement>("#plotFocus"), "#plotFocus");
 const plotSvgEl = requireEl(document.querySelector<SVGSVGElement>("#plotSvg"), "#plotSvg");
 const orbitSvgEl = requireEl(document.querySelector<SVGSVGElement>("#orbitSvg"), "#orbitSvg");
+const orbitMath = createSvgMathOverlay(orbitSvgEl);
 const skySvgEl = requireEl(document.querySelector<SVGSVGElement>("#skySvg"), "#skySvg");
 const focusPlotBtn = requireEl(document.querySelector<HTMLButtonElement>("#focusPlotBtn"), "#focusPlotBtn");
 const plotFocusStatus = requireEl(document.querySelector<HTMLDivElement>("#plotFocusStatus"), "#plotFocusStatus");
@@ -312,15 +315,15 @@ function updateNavigationButtons(ds: ReturnType<typeof computeDisplayState>) {
     cursorDay: state.cursorDay,
   });
 
-  prevStationaryBtn.textContent = hints.prevLabel;
-  nextStationaryBtn.textContent = hints.nextLabel;
-  centerRetrogradeBtn.textContent = hints.midpointLabel;
-
   const disableRetroControls = isUndefinedPair();
   if (disableRetroControls) {
-    prevStationaryBtn.textContent = "\u00ab Prev stationary";
-    nextStationaryBtn.textContent = "Next stationary \u00bb";
-    centerRetrogradeBtn.textContent = "\u2022 Retrograde midpoint";
+    setMathText(prevStationaryBtn, "\u00ab Prev stationary");
+    setMathText(nextStationaryBtn, "Next stationary \u00bb");
+    setMathText(centerRetrogradeBtn, "\u2022 Retrograde midpoint");
+  } else {
+    setMathText(prevStationaryBtn, hints.prevLabel);
+    setMathText(nextStationaryBtn, hints.nextLabel);
+    setMathText(centerRetrogradeBtn, hints.midpointLabel);
   }
   prevStationaryBtn.disabled = disableRetroControls || !Number.isFinite(hints.prevDay);
   nextStationaryBtn.disabled = disableRetroControls || !Number.isFinite(hints.nextDay);
@@ -929,6 +932,7 @@ function renderOrbitDynamic() {
   if (!series || !orbitRenderContext) return;
   const ctx = orbitRenderContext;
   clear(ctx.dynamicLayer);
+  const orbitMathLabels: SvgMathLabel[] = [];
 
   const colorCache: Record<string, string> = {};
   const cachedColor = (key: string): string => {
@@ -1032,14 +1036,14 @@ function renderOrbitDynamic() {
     ctx.dynamicLayer.appendChild(arc);
 
     const midAngle = angle * 0.5;
-    const arcLabel = svgEl("text");
-    arcLabel.textContent = "\u03bb_app";
-    arcLabel.setAttribute("x", String(observerPx.x + (arcRadius + 10) * Math.cos(midAngle)));
-    arcLabel.setAttribute("y", String(observerPx.y + (arcRadius + 10) * Math.sin(midAngle)));
-    arcLabel.setAttribute("fill", "var(--cp-accent-amber)");
-    arcLabel.setAttribute("font-size", "10");
-    arcLabel.setAttribute("text-anchor", "middle");
-    ctx.dynamicLayer.appendChild(arcLabel);
+    orbitMathLabels.push({
+      key: "lambdaApp",
+      tex: "$\\lambda_{\\rm app}$",
+      x: observerPx.x + (arcRadius + 10) * Math.cos(midAngle),
+      y: observerPx.y + (arcRadius + 10) * Math.sin(midAngle),
+      fontUnits: 10,
+      color: "var(--cp-accent-amber)",
+    });
   }
 
   const observerDot = svgEl("circle");
@@ -1075,6 +1079,7 @@ function renderOrbitDynamic() {
   targetLabel.setAttribute("font-size", "10");
   targetLabel.setAttribute("text-anchor", "middle");
   ctx.dynamicLayer.appendChild(targetLabel);
+  orbitMath.set(orbitMathLabels);
 }
 
 // ── Sky-view strip ───────────────────────────────────────────

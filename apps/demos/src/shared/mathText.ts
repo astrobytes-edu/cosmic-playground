@@ -57,3 +57,17 @@ export function renderMathText(source: string): string {
   html += escapeHtml(source.slice(lastIndex));
   return html;
 }
+
+const renderedSource = new WeakMap<object, string>();
+
+/**
+ * Typeset `source` into `el`, skipping KaTeX when the source has not changed since the last
+ * call. Readouts are refreshed from render(), which several demos run every animation frame,
+ * and the string is usually identical frame to frame. The element must be owned by this
+ * helper: anything else that writes its content leaves the cache stale.
+ */
+export function setMathText(el: Pick<Element, "innerHTML">, source: string): void {
+  if (renderedSource.get(el) === source) return;
+  el.innerHTML = renderMathText(source);
+  renderedSource.set(el, source);
+}

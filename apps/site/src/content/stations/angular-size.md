@@ -30,7 +30,7 @@ has_math: true
 > - **Angular size $\theta$ (degrees/arcmin/arcsec):** how big an object looks on the sky (an angle).
 > - **Physical diameter $D$ (km in this demo):** the object’s actual size.
 > - **Distance $d$ (km in this demo):** how far the object is from the observer.
-> - **Small-angle idea:** larger $D$ → larger $\theta$; larger $d$ → smaller $\theta$.
+> - **Small-angle idea:** larger $D$ $\rightarrow$ larger $\theta$; larger $d$ $\rightarrow$ smaller $\theta$.
 > - **Unit ladder:** $1^\circ = 60\,\mathrm{arcmin}$ and $1\,\mathrm{arcmin} = 60\,\mathrm{arcsec}$.
 >
 > **Sanity checks:**

@@ -41,7 +41,7 @@ model_notes:
   - "The limit $n=\\infty$ is the ionization limit (electron no longer bound), so $E_{\\infty}=0$."
   - "As $n_{\\text{upper}}$ increases, level spacing shrinks and lines converge toward each series limit."
   - "Emission and absorption use the same $\\Delta E$ values and therefore the same wavelengths."
-  - "Wavelengths are vacuum wavelengths via $\\lambda = hc / \\Delta E$ with $hc = 1239.8\\ \\text{eV·nm}$."
+  - "Wavelengths are vacuum wavelengths via $\\lambda = hc / \\Delta E$ with $hc = 1239.8\\ \\text{eV}\\cdot\\text{nm}$."
   - "Multi-element line data from the NIST Atomic Spectra Database (strongest lines only)."
   - "Mystery mode requires a reflection commitment ('what pattern convinced you?') before reveal to train inference habits."
   - "Temperature readouts use qualitative proxy populations normalized over n=1,2,3 and a Balmer-strength proxy (Boltzmann excitation times neutral-hydrogen proxy), not full radiative transfer."

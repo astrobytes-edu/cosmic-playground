@@ -74,7 +74,7 @@ export function initPopovers(root: HTMLElement): () => void {
     popover.hidden = true;
     trigger.setAttribute("aria-expanded", "false");
 
-    // Click trigger → toggle
+    // Click trigger -> toggle
     const onTriggerClick = (e: Event) => {
       e.stopPropagation();
       if (isOpen(popover)) {
@@ -84,7 +84,7 @@ export function initPopovers(root: HTMLElement): () => void {
       }
     };
 
-    // Escape → close
+    // Escape -> close
     const onKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen(popover)) {
         e.preventDefault();
@@ -95,7 +95,7 @@ export function initPopovers(root: HTMLElement): () => void {
       }
     };
 
-    // Click outside → close
+    // Click outside -> close
     const onOutsideClick = (e: Event) => {
       if (
         isOpen(popover) &&

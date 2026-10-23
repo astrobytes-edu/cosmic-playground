@@ -20,7 +20,7 @@ Astronomy is built on *geometry + light*: we infer reality by connecting **what 
 
 1. **Seasons** establishes: tilt changes the Sun’s declination, which changes day length and noon altitude. The transferable skill is reading *angles as physical constraints*.
 
-2. **Moon phases** establishes: phases are geometry (illuminated half vs visible half), not shadows. The transferable skill is reading *phase angle → observable fraction*.
+2. **Moon phases** establishes: phases are geometry (illuminated half vs visible half), not shadows. The transferable skill is reading *phase angle $\rightarrow$ observable fraction*.
 
 3. **Angular size** establishes: what you see depends on $d/D$. The transferable skill is reasoning with *ratios and units* (degrees/arcminutes/arcseconds).
 
@@ -28,7 +28,7 @@ Astronomy is built on *geometry + light*: we infer reality by connecting **what 
 
 ## Recommended sequencing
 
-- **MW lecture moments:** one short exploration per day (prediction → run → explain).
+- **MW lecture moments:** one short exploration per day (prediction $\rightarrow$ run $\rightarrow$ explain).
 - **Friday Astro Lab:** either (a) one demo deep dive, or (b) the rotation capstone across all four.
 
 ## Capstone

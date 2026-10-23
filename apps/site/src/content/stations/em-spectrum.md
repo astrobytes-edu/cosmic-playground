@@ -26,7 +26,7 @@ has_math: true
 > **Word bank:**
 > - **Wavelength $\lambda$:** “size” of the wave; longer $\lambda$ $\to$ lower photon energy.
 > - **Photon energy:** energy per photon (not the same thing as brightness).
-> - **Band names:** labels we give to wavelength ranges (radio → gamma).
+> - **Band names:** labels we give to wavelength ranges (radio $\rightarrow$ gamma).
 >
 > **Key relationship (photon energy scaling):**
 >
@@ -35,6 +35,6 @@ has_math: true
 > $$
 >
 > **Sanity checks:**
-> - Ordering: Radio (lowest energy) → … → Gamma (highest energy).
+> - Ordering: Radio (lowest energy) $\rightarrow$ … $\rightarrow$ Gamma (highest energy).
 > - Shorter wavelength should correspond to larger energy readouts.
 > - Use convenient units: nm/$\mu\mathrm{m}$/mm/m for $\lambda$; eV/keV/MeV for energy.

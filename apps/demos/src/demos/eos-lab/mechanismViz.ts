@@ -557,13 +557,31 @@ export class DegeneracyPressureAnimation implements MechanismAnimation {
         ctx.fillStyle = violetDim;
         ctx.fill();
 
-        // Arrows (white on violet circles) — larger font for visibility
-        ctx.fillStyle = "#fff";
-        ctx.font = "bold 12px sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("\u2191", xUp, yE);
-        ctx.fillText("\u2193", xDown, yE);
+        // Spin arrows (white on violet circles), stroked as paths rather than
+        // drawn as font glyphs: canvas text must stay ASCII, and a stroked arrow
+        // scales with the electron radius instead of the font.
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 1.4;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        const half = eR * 0.8;
+        const head = eR * 0.5;
+        const strokeSpinArrow = (cx: number, dir: 1 | -1) => {
+          // dir = +1 points up (canvas y decreases), -1 points down.
+          const tipY = yE - dir * half;
+          const tailY = yE + dir * half;
+          ctx.beginPath();
+          ctx.moveTo(cx, tailY);
+          ctx.lineTo(cx, tipY);
+          ctx.moveTo(cx - head, tipY + dir * head);
+          ctx.lineTo(cx, tipY);
+          ctx.lineTo(cx + head, tipY + dir * head);
+          ctx.stroke();
+        };
+        strokeSpinArrow(xUp, 1);
+        strokeSpinArrow(xDown, -1);
+        ctx.lineCap = "butt";
+        ctx.lineJoin = "miter";
       }
     }
 

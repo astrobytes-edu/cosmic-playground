@@ -547,3 +547,9 @@
   color: var(--cp-readout-unit-color);
   white-space: nowrap;
 }
+
+/* KaTeX sets .katex to 1.21em; here the plus-or-minus sign sits beside digits already at
+ * 0.82em, so keep it the same size rather than a fifth larger than the number it modifies. */
+.cp-readout__pm .katex {
+  font-size: 1em;
+}

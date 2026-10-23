@@ -26,8 +26,8 @@ has_math: true
 > **Word bank + sanity checks**
 > **Word bank:**
 > - **Resolution (diffraction limit):** the smallest angular separation a telescope can distinguish.
-> - **Aperture $D$:** bigger $D$ → better (smaller) diffraction limit.
-> - **Wavelength $\lambda$:** longer $\lambda$ → worse (larger) diffraction limit.
+> - **Aperture $D$:** bigger $D$ $\rightarrow$ better (smaller) diffraction limit.
+> - **Wavelength $\lambda$:** longer $\lambda$ $\rightarrow$ worse (larger) diffraction limit.
 > - **Seeing (atmosphere):** turbulence can blur images beyond the diffraction limit; AO can partially correct.
 >
 > **Key relationship (diffraction-limited scaling):**

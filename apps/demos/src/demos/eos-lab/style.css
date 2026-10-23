@@ -907,7 +907,13 @@
  * refuses to shrink below its content size without it.
  *
  * uPlot and the regime canvas both size from their element, so `initStageResize` in main.ts
- * re-renders them when the box changes. */
+ * re-renders them when the box changes.
+ *
+ * The floor is 640px, not the 380px it started at. Measured 2026-10-23 at 1280x720: the
+ * budget gave 468px, the plots shrank to 120-204px and the regime-map legend and solar-profile
+ * toggle overflowed under the stage summary by 120px. The overlap clears at 600px; 640px
+ * leaves a 25px gap and 149-273px plots. Below a ~890px-tall window the readout strip now
+ * needs a scroll, which beats an unreadable stage (Anna, 2026-10-23). */
 @media (min-width: 1025px) {
   .cp-demo__stage {
     --eos-readout-reserve: 14rem;
@@ -916,7 +922,7 @@
     gap: var(--cp-space-3);
     min-height: 0;
     box-sizing: border-box;
-    height: clamp(380px, calc(100svh - var(--eos-readout-reserve)), 900px);
+    height: clamp(640px, calc(100svh - var(--eos-readout-reserve)), 900px);
   }
 
   .cp-demo__stage > .cp-tabs,

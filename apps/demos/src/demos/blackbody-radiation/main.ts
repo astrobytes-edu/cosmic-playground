@@ -1,6 +1,7 @@
 import { createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, initTabs, setLiveRegionText } from "@cosmic/runtime";
 import type { ExportPayloadV1 } from "@cosmic/runtime";
 import { BlackbodyRadiationModel } from "@cosmic/physics";
+import { setMathText } from "../../shared/mathText";
 import { clamp, logSliderToValue, valueToLogSlider, formatNumber, wavelengthDomainNm, sampleLogSpace, wavelengthToApproxRgb, formatWavelengthLabel, wavelengthToLogFraction, formatWavelengthReadout } from "./logic";
 
 const tempSliderEl = document.querySelector<HTMLInputElement>("#tempSlider");
@@ -469,7 +470,7 @@ function render() {
 
   const peakReadout = formatWavelengthReadout(peakNm);
   peakNmValue.textContent = peakReadout.value;
-  if (peakUnitEl) peakUnitEl.textContent = peakReadout.unit;
+  if (peakUnitEl) setMathText(peakUnitEl, peakReadout.unit);
   lumRatioValue.textContent = formatNumber(lumRatio, 3);
   spectralClass.textContent = classLetter;
   colorName.textContent = name;

@@ -353,10 +353,7 @@ describe("Cluster Census -- Design System Contracts", () => {
       expect(mainTs).not.toContain("luminosity [");
     });
 
-    it("uses real superscripts on the canvas tick labels", () => {
-      // Written as escapes so validate-math-formatting still sees pure-ASCII source.
-      expect(logicTs).toContain("\\u2076");
-      expect(logicTs).toContain("\\u2609");
+    it("builds canvas decade ticks through powerOfTenLabel, not inline templates", () => {
       expect(mainTs).toContain("powerOfTenLabel");
       expect(mainTs).not.toContain("`10^${");
     });

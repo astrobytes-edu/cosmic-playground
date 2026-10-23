@@ -497,7 +497,7 @@ test.describe("Retrograde Motion -- E2E", () => {
   });
 
   test("annotation message does not contain escaped unicode literal", async ({ page }) => {
-    const text = await page.locator("#retroAnnotation span").textContent();
+    const text = await page.locator("#retroAnnotation > span").textContent();
     expect(text).toBeTruthy();
     expect(text).not.toContain("\\u2014");
   });
@@ -585,7 +585,22 @@ test.describe("Retrograde Motion -- E2E", () => {
     await expect(page.locator("#orbitSvg text").filter({ hasText: "0 deg" })).toHaveCount(1);
     const lineCount = await page.locator("#orbitSvg line").count();
     expect(lineCount).toBeGreaterThanOrEqual(2);
-    await expect(page.locator("#orbitSvg text").filter({ hasText: "\u03bb_app" })).toHaveCount(1);
+    await expect(page.locator('[data-svg-math="lambdaApp"] .katex')).toHaveCount(1);
+    // The typeset label is HTML pinned over the SVG. It must sit on the arc, 36 user units
+    // (arc radius 26 + 10) from the observer, not at the overlay's corner. One evaluate, so
+    // the label and the dot are read from the same frame.
+    const placement = await page.evaluate(() => {
+      const svg = document.querySelector("#orbitSvg");
+      const dot = svg?.querySelector('circle[r="6"]');
+      const label = document.querySelector('[data-svg-math="lambdaApp"]');
+      if (!svg || !dot || !label) return null;
+      const centre = (r: DOMRect) => [r.left + r.width / 2, r.top + r.height / 2];
+      const [lx, ly] = centre(label.getBoundingClientRect());
+      const [dx, dy] = centre(dot.getBoundingClientRect());
+      return { distance: Math.hypot(lx - dx, ly - dy), expected: (36 * svg.getBoundingClientRect().width) / 420 };
+    });
+    expect(placement).not.toBeNull();
+    expect(Math.abs((placement?.distance ?? 0) - (placement?.expected ?? 0))).toBeLessThan(2);
   });
 
   test("plot step warning appears for coarse sampling", async ({ page }) => {

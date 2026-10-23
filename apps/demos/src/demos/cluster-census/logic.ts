@@ -291,43 +291,13 @@ export function censusAnnouncement(input: {
 }
 
 /* ── Canvas typography ───────────────────────────────────────────────────────
- * Canvas 2D cannot render KaTeX, so this is the one place the project allows real
- * Unicode for maths. The source stays ASCII because `validate-math-formatting` scans
- * raw text: the symbols are written as escapes and only become themselves at runtime. */
+ * Canvas 2D cannot render KaTeX, so canvas text is plain ASCII: a decade is "10^4", never
+ * a Unicode superscript. Axis titles with real maths live in the HTML beside the canvas,
+ * where KaTeX can typeset them. */
 
-const SUPERSCRIPT_DIGITS = [
-  "\u2070",
-  "\u00b9",
-  "\u00b2",
-  "\u00b3",
-  "\u2074",
-  "\u2075",
-  "\u2076",
-  "\u2077",
-  "\u2078",
-  "\u2079"
-] as const;
-
-const SUPERSCRIPT_MINUS = "\u207b";
-
-/** Solar-mass and solar-luminosity symbols, for axis titles. */
-export const MSUN_SYMBOL = "M\u2609";
-export const LSUN_SYMBOL = "L\u2609";
-
-/** An integer rendered in Unicode superscript digits: -4 becomes a raised minus four. */
-export function toSuperscript(value: number): string {
-  const rounded = Math.trunc(value);
-  const digits = Math.abs(rounded)
-    .toString()
-    .split("")
-    .map((d) => SUPERSCRIPT_DIGITS[Number(d)])
-    .join("");
-  return rounded < 0 ? `${SUPERSCRIPT_MINUS}${digits}` : digits;
-}
-
-/** A decade tick label: 10 to the given power, as a reader expects to see it. */
+/** A decade tick label: 10 to the given power, e.g. "10^4" or "10^-2" (ASCII, for canvas). */
 export function powerOfTenLabel(exponent: number): string {
-  return `10${toSuperscript(exponent)}`;
+  return `10^${Math.trunc(exponent)}`;
 }
 
 /**

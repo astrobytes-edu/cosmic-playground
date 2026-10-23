@@ -359,7 +359,7 @@ function createDialog(args: {
       <h2 class="cp-modal-title">${escapeHtml(args.title ?? "")}</h2>
       ${args.subtitle ? `<div class="cp-modal-subtitle">${escapeHtml(args.subtitle)}</div>` : ""}
     </div>
-    <button class="cp-modal-close" type="button" aria-label="Close">&times;</button>
+    <button class="cp-modal-close" type="button" aria-label="Close"><span class="cp-icon cp-icon--close" aria-hidden="true"></span></button>
   `;
 
   const body = document.createElement("div");

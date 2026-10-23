@@ -277,8 +277,8 @@ export function computeTimelineState(
   const daysSinceNew = model.daysSinceNewFromPhaseAngleDeg(angleDeg);
   const waxingWaning = model.waxingWaningFromPhaseAngleDeg(angleDeg);
 
-  const directionText =
-    waxingWaning === "Waxing" ? "WAXING \u2192" : "\u2190 WANING";
+  // Words only: the direction arrow is a CSS icon in index.html, switched by `directionClass`.
+  const directionText = waxingWaning === "Waxing" ? "WAXING" : "WANING";
   const directionClass = waxingWaning === "Waning" ? "waning" : "";
   const dayText = `Day ${formatDay(daysSinceNew)} of ${model.synodicMonthDays}`;
 

@@ -93,6 +93,7 @@ export interface HydrogenPopulationProxy {
 export interface ElementLineEntry {
   wavelengthNm: number;
   relativeIntensity: number;
+  /** Plain-text ASCII label ("H-alpha", "Na D2"): consumers draw it on canvas and write it to exports. */
   label?: string;
 }
 
@@ -120,7 +121,7 @@ const ELEMENT_CATALOG: Record<string, ElementLineData> = {
       { wavelengthNm: 447.1, relativeIntensity: 0.35, label: "He I 447.1" },
       { wavelengthNm: 471.3, relativeIntensity: 0.25, label: "He I 471.3" },
       { wavelengthNm: 501.6, relativeIntensity: 0.40, label: "He I 501.6" },
-      { wavelengthNm: 587.6, relativeIntensity: 1.00, label: "He I D₃ 587.6" },
+      { wavelengthNm: 587.6, relativeIntensity: 1.00, label: "He I D3 587.6" },
       { wavelengthNm: 667.8, relativeIntensity: 0.55, label: "He I 667.8" },
       { wavelengthNm: 706.5, relativeIntensity: 0.30, label: "He I 706.5" },
     ]
@@ -131,8 +132,8 @@ const ELEMENT_CATALOG: Record<string, ElementLineData> = {
     lines: [
       { wavelengthNm: 330.2, relativeIntensity: 0.30, label: "Na I 330.2" },
       { wavelengthNm: 568.8, relativeIntensity: 0.20, label: "Na I 568.8" },
-      { wavelengthNm: 589.0, relativeIntensity: 1.00, label: "Na D₂ 589.0" },
-      { wavelengthNm: 589.6, relativeIntensity: 0.95, label: "Na D₁ 589.6" },
+      { wavelengthNm: 589.0, relativeIntensity: 1.00, label: "Na D2 589.0" },
+      { wavelengthNm: 589.6, relativeIntensity: 0.95, label: "Na D1 589.6" },
     ]
   },
   Ca: {
@@ -468,9 +469,9 @@ export const SpectralLineModel = {
       const lyAlpha = SpectralLineModel.transitionWavelengthNm({ nUpper: 2, nLower: 1 });
       const lines: ElementLineEntry[] = [];
       // Ly-alpha
-      lines.push({ wavelengthNm: lyAlpha, relativeIntensity: 1.0, label: "Lyα" });
+      lines.push({ wavelengthNm: lyAlpha, relativeIntensity: 1.0, label: "Ly-alpha" });
       // Balmer series
-      const balmerLabels = ["Hα", "Hβ", "Hγ", "Hδ", "Hε", "H8"];
+      const balmerLabels = ["H-alpha", "H-beta", "H-gamma", "H-delta", "H-epsilon", "H8"];
       const balmerIntensities = [1.0, 0.75, 0.55, 0.40, 0.30, 0.22];
       for (let i = 0; i < balmer.length; i++) {
         lines.push({

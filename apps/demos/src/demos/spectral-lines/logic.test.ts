@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { renderMathText } from "../../shared/mathText";
 import {
   clamp,
   formatNumber,
@@ -11,6 +12,7 @@ import {
   SPECTRUM_DOMAIN,
   wavelengthToFraction,
   transitionLabel,
+  transitionLabelMath,
   shouldRenderEmission,
   filterHydrogenTransitionsBySeries,
   nextSequenceIndex,
@@ -185,7 +187,24 @@ describe("Spectral Lines -- UI Logic", () => {
 
   describe("transitionLabel", () => {
     it("formats correctly", () => {
-      expect(transitionLabel(3, 2)).toBe("n = 3 \u2192 n = 2");
+      expect(transitionLabel(3, 2)).toBe("n = 3 to n = 2");
+    });
+
+    // Two representations of one transition: plain text for live regions and exports,
+    // KaTeX source for the readout. They must not drift apart.
+    it("plain label and KaTeX readout source name the same transition", () => {
+      for (const [upper, lower] of [[3, 2], [2, 1], [7, 4], [12, 3]]) {
+        const mathSource = transitionLabelMath(upper, lower);
+        expect(mathSource.replace(/^\$|\$$/g, "").replace("\\to", "to")).toBe(transitionLabel(upper, lower));
+      }
+    });
+
+    it("KaTeX readout source typesets cleanly and keeps its TeX annotation", () => {
+      const html = renderMathText(transitionLabelMath(3, 2));
+      expect(html).toContain("katex-html");
+      expect(html).not.toContain("katex-error");
+      // The E2E spec reads textContent; the MathML annotation is what carries "n = 3".
+      expect(html).toContain("n = 3 \\to n = 2");
     });
   });
 
@@ -399,7 +418,7 @@ describe("Spectral Lines -- UI Logic", () => {
         band: "Visible (red)",
         inferenceMode: "inverse",
         observedWavelengthNm: 656,
-        inferredTransitionLabel: "n = 3 → n = 2",
+        inferredTransitionLabel: "n = 3 to n = 2",
         inverseResidualNm: 0.3,
         includeHydrogenInferenceFields: true,
         mysteryReflectionEvidence: "spacing-pattern",
@@ -413,6 +432,13 @@ describe("Spectral Lines -- UI Logic", () => {
       const readoutNames = payload.readouts.map((item) => item.name);
       expect(readoutNames).toContain("Inferred transition");
       expect(readoutNames).toContain("Inverse residual (nm)");
+
+      // The export is plain text pasted into lab notes: pin the exact strings.
+      const valueOf = (rows: { name: string; value: string }[], name: string) =>
+        rows.find((item) => item.name === name)?.value;
+      expect(valueOf(payload.parameters, "Inference mode")).toBe("Inverse (lambda to transition)");
+      expect(valueOf(payload.readouts, "Transition")).toBe("n = 3 to n = 2");
+      expect(valueOf(payload.readouts, "Inferred transition")).toBe("n = 3 to n = 2");
     });
 
     it("omits inverse export rows outside hydrogen inverse context", () => {
@@ -431,7 +457,7 @@ describe("Spectral Lines -- UI Logic", () => {
         band: "Visible (blue)",
         inferenceMode: "inverse",
         observedWavelengthNm: 656,
-        inferredTransitionLabel: "n = 3 -> n = 2",
+        inferredTransitionLabel: "n = 3 to n = 2",
         inverseResidualNm: 0.3,
       });
 

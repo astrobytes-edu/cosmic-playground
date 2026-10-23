@@ -26,15 +26,12 @@ const C = AstroConstants.EOS;
  * General helpers (unchanged from original)
  * ────────────────────────────────────────────────── */
 
-/** Convert an integer to Unicode superscript (e.g. 12 -> 10^12 style, -3 -> 10^-3 style). */
-export function superscript(n: number): string {
-  const digits = String(n);
-  const map: Record<string, string> = {
-    "0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3",
-    "4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077",
-    "8": "\u2078", "9": "\u2079", "-": "\u207B",
-  };
-  return digits.split("").map(ch => map[ch] ?? ch).join("");
+/**
+ * ASCII power of ten for canvas and uPlot tick labels, which cannot host KaTeX:
+ * `10^4`, `10^-3`.
+ */
+export function powerOfTenLabel(exp: number): string {
+  return `10^${exp}`;
 }
 
 export function clamp(value: number, min: number, max: number): number {
@@ -75,16 +72,47 @@ export function valueToLogSlider(args: {
   return sliderMin + fraction * sliderSpan;
 }
 
+/** formatScientific and its LaTeX forms switch to exponent notation outside [1e-3, 1e5). */
+function usesExponentNotation(abs: number): boolean {
+  return abs >= 1e5 || abs < 1e-3;
+}
+
+/**
+ * Plain-text number for sinks that cannot typeset math: canvas and uPlot legends, live
+ * regions, station-table and export cells. Exponent notation is ASCII, `1.20x10^7`.
+ * Readouts that can host KaTeX use {@link formatScientificMath} instead.
+ */
 export function formatScientific(value: number, digits = 3): string {
   if (!Number.isFinite(value)) return "\u2014";
   if (value === 0) return "0";
   const abs = Math.abs(value);
-  if (abs >= 1e5 || abs < 1e-3) {
+  if (usesExponentNotation(abs)) {
     const exp = Math.floor(Math.log10(abs));
     const mantissa = value / Math.pow(10, exp);
-    return `${mantissa.toFixed(digits - 1)}\u00D710${superscript(exp)}`;
+    return `${mantissa.toFixed(digits - 1)}x10^${exp}`;
   }
   return value.toFixed(digits);
+}
+
+/**
+ * The same number as {@link formatScientific}, as a LaTeX body for use inside `$...$`:
+ * `1.20 \times 10^{7}`. A non-finite value is `\text{--}`, matching latexScientific.
+ */
+export function formatScientificLatex(value: number, digits = 3): string {
+  if (!Number.isFinite(value)) return "\\text{--}";
+  if (value === 0 || !usesExponentNotation(Math.abs(value))) return formatScientific(value, digits);
+  return latexScientific(value, digits);
+}
+
+/**
+ * The same number as {@link formatScientific}, ready for setMathText: exponent notation is
+ * delimited math (`$1.20 \times 10^{7}$`); everything else stays plain text.
+ */
+export function formatScientificMath(value: number, digits = 3): string {
+  if (!Number.isFinite(value) || value === 0 || !usesExponentNotation(Math.abs(value))) {
+    return formatScientific(value, digits);
+  }
+  return `$${latexScientific(value, digits)}$`;
 }
 
 export function formatFraction(value: number, digits = 3): string {
@@ -430,7 +458,7 @@ export function dominantChannelAt(args: {
  * Evaluates the full EOS model at every grid point to determine
  * the dominant pressure channel.  More accurate than analytical
  * boundaries because it captures:
- *   - NR → UR degeneracy transition (high x_F)
+ *   - NR -> UR degeneracy transition (high x_F)
  *   - Finite-temperature Fermi-Dirac effects
  *   - Mixed-dominance zones
  *   - Future neutron-matter extensions
@@ -527,7 +555,7 @@ export const SCALING_CHALLENGES: ScalingChallengeDef[] = [
       { label: "\\times 8", factor: 8 },
     ],
     correctFactor: 2,
-    insight: "$P_{\\rm gas} \\propto T^1$ \\u2014 linear scaling. Double $T$ \\u21D2 double $P$.",
+    insight: "$P_{\\rm gas} \\propto T^1$ \u2014 linear scaling. Double $T$ $\\Rightarrow$ double $P$.",
   },
   {
     id: "rad-T",
@@ -540,7 +568,7 @@ export const SCALING_CHALLENGES: ScalingChallengeDef[] = [
       { label: "\\times 16", factor: 16 },
     ],
     correctFactor: 16,
-    insight: "$P_{\\rm rad} \\propto T^4$ \\u2014 explosive! Double $T$ \\u21D2 $2^4 = 16\\times P$.",
+    insight: "$P_{\\rm rad} \\propto T^4$ \u2014 explosive! Double $T$ $\\Rightarrow$ $2^4 = 16\\times P$.",
   },
   {
     id: "deg-rho",
@@ -553,7 +581,7 @@ export const SCALING_CHALLENGES: ScalingChallengeDef[] = [
       { label: "\\times 8", factor: 8 },
     ],
     correctFactor: 3.17,
-    insight: "$P_{\\rm deg} \\propto \\rho^{5/3}$ \\u2014 steeper than linear. $2^{5/3} \\approx 3.17$.",
+    insight: "$P_{\\rm deg} \\propto \\rho^{5/3}$ \u2014 steeper than linear. $2^{5/3} \\approx 3.17$.",
   },
 ];
 
@@ -791,6 +819,9 @@ export type ContextualSuggestionInput = {
   lteTag: string;
 };
 
+/**
+ * Math in the returned prompt is `$...$`-delimited: write it with setMathText, never textContent.
+ */
 export function getContextualSuggestion(input: ContextualSuggestionInput): string {
   const { dominantChannel, radiationToGas, chiDegeneracy, gammaEff, lteTag } = input;
 
@@ -810,32 +841,32 @@ export function getContextualSuggestion(input: ContextualSuggestionInput): strin
 
   // 3. Mixed dominance — the most interesting regime for discovery
   if (dominantChannel === "mixed") {
-    return "No single channel dominates \u2014 you\u2019re at a transition boundary! Small changes in T or \u03C1 can flip the winner. Explore to find the exact crossover point.";
+    return "No single channel dominates \u2014 you\u2019re at a transition boundary! Small changes in $T$ or $\\rho$ can flip the winner. Explore to find the exact crossover point.";
   }
 
   // 4. Gas dominated, radiation negligible
   if (dominantChannel === "gas" && radiationToGas < 0.01) {
-    return "Gas pressure dominates strongly. Try raising T by 10\u00D7 \u2014 radiation pressure scales as T\u2074, so it gains ground much faster than the linear T scaling of gas pressure.";
+    return "Gas pressure dominates strongly. Try raising $T$ by $10\\times$ \u2014 radiation pressure scales as $T^4$, so it gains ground much faster than the linear $T$ scaling of gas pressure.";
   }
 
   // 5. Gas dominated, radiation noticeable
   if (dominantChannel === "gas") {
-    return "Radiation is starting to compete with gas pressure. Keep increasing T or lowering \u03C1 to find where P_rad overtakes P_gas \u2014 this transition defines the Eddington luminosity regime.";
+    return "Radiation is starting to compete with gas pressure. Keep increasing $T$ or lowering $\\rho$ to find where $P_{\\rm rad}$ overtakes $P_{\\rm gas}$ \u2014 this transition defines the Eddington luminosity regime.";
   }
 
   // 6. Radiation dominated
   if (dominantChannel === "radiation") {
-    return "Radiation dominates \u2014 you\u2019re in the regime of massive-star envelopes. Try increasing density to see degeneracy pressure compete, or switch to Tab 2 to watch the T\u2074 scaling in action.";
+    return "Radiation dominates \u2014 you\u2019re in the regime of massive-star envelopes. Try increasing density to see degeneracy pressure compete, or switch to Tab 2 to watch the $T^4$ scaling in action.";
   }
 
   // 7. Degeneracy dominated, strongly degenerate
   if (dominantChannel === "degeneracy" && chiDegeneracy < 0.1) {
-    return "Strong degeneracy \u2014 T/T_F is small, so temperature barely matters. Raise T slowly and watch T/T_F in the readout strip to see when thermal pressure reasserts itself.";
+    return "Strong degeneracy \u2014 $T/T_F$ is small, so temperature barely matters. Raise $T$ slowly and watch $T/T_F$ in the readout strip to see when thermal pressure reasserts itself.";
   }
 
   // 8. Degeneracy dominated, moderate
   if (dominantChannel === "degeneracy") {
-    return "Degeneracy pressure dominates. Try changing composition \u2014 switching from He-rich to H-rich changes \u03BC_e, which shifts electron density and thus degeneracy pressure.";
+    return "Degeneracy pressure dominates. Try changing composition \u2014 switching from He-rich to H-rich changes $\\mu_e$, which shifts electron density and thus degeneracy pressure.";
   }
 
   // Fallback

@@ -19,6 +19,7 @@ import {
   animationProgress,
   easeInOutCubic,
   shortestDayDelta,
+  contextualMessage,
 } from "./logic";
 
 describe("Seasons -- UI Logic", () => {
@@ -221,26 +222,31 @@ describe("Seasons -- UI Logic", () => {
   });
 
   describe("formatLatitude", () => {
-    it("formats 0 as equator", () => {
-      expect(formatLatitude(0)).toBe("0\u00B0 (Equator)");
+    // Plain-text sink (readout + slider tooltip): exact strings, unit written as ASCII "deg".
+    it.each([
+      [0, "0 deg (Equator)"],
+      [45, "45 deg N"],
+      [-30, "30 deg S"],
+      [90, "90 deg N"],
+      [-90, "90 deg S"],
+      [32.7, "32.7 deg N"],
+      [-0.01, "0 deg (Equator)"],
+    ])("formatLatitude(%s) is %j", (latDeg, expected) => {
+      expect(formatLatitude(latDeg)).toBe(expected);
     });
-    it("formats positive latitude as N", () => {
-      expect(formatLatitude(45)).toBe("45\u00B0N");
-    });
-    it("formats negative latitude as S", () => {
-      expect(formatLatitude(-30)).toBe("30\u00B0S");
-    });
-    it("formats 90 as 90N", () => {
-      expect(formatLatitude(90)).toBe("90\u00B0N");
-    });
-    it("formats -90 as 90S", () => {
-      expect(formatLatitude(-90)).toBe("90\u00B0S");
-    });
-    it("formats decimal latitude with one decimal place", () => {
-      expect(formatLatitude(32.7)).toBe("32.7\u00B0N");
-    });
-    it("treats tiny values near zero as equator", () => {
-      expect(formatLatitude(-0.01)).toBe("0\u00B0 (Equator)");
+  });
+
+  describe("contextualMessage", () => {
+    it("zero tilt: degrees are KaTeX source for setMathText, not a Unicode glyph", () => {
+      const message = contextualMessage({
+        dayOfYear: 172,
+        seasonNorth: "Summer",
+        axialTiltDeg: 0,
+        distanceAu: 1,
+      });
+      expect(message).toBe(
+        "With near-zero tilt, declination stays near $0^{\\circ}$ all year \u2014 no seasons."
+      );
     });
   });
 

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { renderMathText } from "../../shared/mathText";
 import {
   CAMERA_TRANSITION_MS,
   INVARIANT_STATEMENTS,
@@ -350,26 +351,45 @@ describe("Binary Orbits -- UI Logic", () => {
     it("returns separation scaling cue for separation control", () => {
       const cue = scalingCueForControl("separation");
       expect(cue.key).toBe("separation");
-      expect(cue.equation).toContain("a^{3/2}");
+      expect(cue.equation).toBe("$P \\propto a^{3/2}$");
     });
 
     it("returns total-mass scaling cue for mass ratio control", () => {
       const cue = scalingCueForControl("massRatio");
       expect(cue.key).toBe("totalMass");
-      expect(cue.equation).toContain("(M1 + M2)^{-1/2}");
+      expect(cue.equation).toBe("$P \\propto (M_1 + M_2)^{-1/2}$");
     });
   });
 
   describe("energy scaling cues", () => {
     it("routes separation control to inverse-a energy cue", () => {
       const cue = energyScaleCueForControl("separation");
-      expect(cue.equation).toContain("-1/a");
+      expect(cue.equation).toBe("$E \\propto -1/a$");
     });
 
     it("routes mass-ratio control to |E| proportionality cue", () => {
       const cue = energyScaleCueForControl("massRatio");
-      expect(cue.equation).toContain("|E|");
-      expect(cue.equation).toContain("M2");
+      expect(cue.equation).toBe("$|E| \\propto M_2$");
+    });
+  });
+
+  describe("cue typesetting", () => {
+    // main.ts writes `${equation} -- ${message}` through setMathText, and KaTeX is called with
+    // throwOnError:false, so a LaTeX typo does not throw: an unknown command renders as text in
+    // KaTeX's default error colour (#cc0000), which is what these assertions look for.
+    const cues = [
+      scalingCueForControl("separation"),
+      scalingCueForControl("massRatio"),
+      energyScaleCueForControl("separation"),
+      energyScaleCueForControl("massRatio"),
+    ];
+
+    it.each(cues)("typesets $key cue without KaTeX errors or leftover delimiters", (cue) => {
+      const html = renderMathText(`${cue.equation} \u2014 ${cue.message}`);
+      expect(html).toContain('class="katex"');
+      expect(html).not.toContain("katex-error");
+      expect(html).not.toContain("#cc0000");
+      expect(html).not.toContain("$");
     });
   });
 

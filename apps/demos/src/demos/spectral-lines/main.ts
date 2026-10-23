@@ -1,6 +1,8 @@
 import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, initTabs, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SpectralLineModel } from "@cosmic/physics";
+import { setMathText } from "../../shared/mathText";
+import { createSvgMathOverlay, type SvgMathLabel } from "../../shared/svgMathOverlay";
 import {
   clamp,
   formatNumber,
@@ -27,6 +29,7 @@ import {
   buildSpectralExportPayload,
   wavelengthToFraction,
   transitionLabel,
+  transitionLabelMath,
   createSeededRandom,
   pickMysteryTarget,
   isMysteryCopyLocked,
@@ -76,6 +79,8 @@ const readoutBand = $<HTMLSpanElement>("#readoutBand")!;
 
 const bohrSvg = document.querySelector<SVGSVGElement>("#bohrAtom")!;
 const energySvg = document.querySelector<SVGSVGElement>("#energyLevels")!;
+const bohrMath = createSvgMathOverlay(bohrSvg);
+const energyMath = createSvgMathOverlay(energySvg);
 const spectrumCanvas = $<HTMLCanvasElement>("#spectrumCanvas")!;
 const seriesMicroscopeCanvas = $<HTMLCanvasElement>("#seriesMicroscopeCanvas");
 const microscopeProbeSlider = $<HTMLInputElement>("#microscopeProbeSlider");
@@ -213,7 +218,10 @@ const SEQUENCE_STEP_INTERVAL_MS = 520;
 
 interface CurrentReadoutContext {
   transitionLabel: string;
+  /** Plain text: live regions, clipboard and station exports. */
   transitionText: string;
+  /** Same content as setMathText source, for the Transition readout (plain text is escaped). */
+  transitionReadout: string;
   wavelengthNm: number;
   energyEv: number;
   frequencyHz: number;
@@ -291,9 +299,13 @@ function currentReadoutContext(): CurrentReadoutContext {
   if (state.viewTab === "elements") {
     const elementContext = activeElementLineContext();
     const hideRepresentativeLabel = state.mystery.active && !state.mystery.revealed;
+    const representativeText = hideRepresentativeLabel
+      ? "Hidden during mystery challenge"
+      : elementContext.representativeLineLabel;
     return {
       transitionLabel: "Representative line",
-      transitionText: hideRepresentativeLabel ? "Hidden during mystery challenge" : elementContext.representativeLineLabel,
+      transitionText: representativeText,
+      transitionReadout: representativeText,
       wavelengthNm: elementContext.wavelengthNm,
       energyEv: elementContext.energyEv,
       frequencyHz: elementContext.frequencyHz,
@@ -307,12 +319,12 @@ function currentReadoutContext(): CurrentReadoutContext {
   const wavelengthNm = inverseInference?.wavelengthNm ?? SpectralLineModel.transitionWavelengthNm({ nUpper: state.nUpper, nLower: state.nLower });
   const energyEv = inverseInference?.energyEv ?? SpectralLineModel.transitionEnergyEv({ nUpper: state.nUpper, nLower: state.nLower });
   const frequencyHz = inverseInference?.frequencyHz ?? SpectralLineModel.transitionFrequencyHz({ nUpper: state.nUpper, nLower: state.nLower });
+  const shownNUpper = inverseInference?.nUpper ?? state.nUpper;
+  const shownNLower = inverseInference?.nLower ?? state.nLower;
   return {
     transitionLabel: "Transition",
-    transitionText: transitionLabel(
-      inverseInference?.nUpper ?? state.nUpper,
-      inverseInference?.nLower ?? state.nLower,
-    ),
+    transitionText: transitionLabel(shownNUpper, shownNLower),
+    transitionReadout: transitionLabelMath(shownNUpper, shownNLower),
     wavelengthNm,
     energyEv,
     frequencyHz,
@@ -979,19 +991,17 @@ function drawBohrAtom() {
 
   bohrSvg.appendChild(arrowLine);
 
-  // Photon wavy line near the transition
-  const photonX = cx + (fromR + toR) / 2 * Math.cos(arrowAngle) + 20;
-  const photonY = cy + (fromR + toR) / 2 * Math.sin(arrowAngle);
-  const photon = svgEl("text", {
-    x: photonX, y: photonY,
-    fill: photonColor,
-    "font-size": unitsForScreenPx(bohrScale, 16),
-    "font-family": "system-ui, sans-serif",
-    filter: "url(#photonGlow)"
-  });
-  photon.textContent = "\u03B3";
-  photon.id = "photonSymbol";
-  bohrSvg.appendChild(photon);
+  // Photon symbol beside the transition arrow, typeset over the SVG.
+  bohrMath.set([{
+    key: "photonSymbol",
+    tex: "$\\gamma$",
+    x: cx + (fromR + toR) / 2 * Math.cos(arrowAngle) + 20,
+    y: cy + (fromR + toR) / 2 * Math.sin(arrowAngle),
+    anchor: "start",
+    fontPx: 16,
+    color: photonColor,
+    glow: true,
+  }]);
 
   // "Not to scale" label
   const scaleLabel = svgEl("text", {
@@ -1011,6 +1021,7 @@ function drawBohrAtom() {
 
 function drawEnergyLevels() {
   clearSvg(energySvg);
+  const energyMathLabels: SvgMathLabel[] = [];
 
   const energyScale = svgRenderScale(energySvg, ENERGY_SVG_W);
   const energyLabelUnits = unitsForScreenPx(energyScale, 10);
@@ -1047,15 +1058,18 @@ function drawEnergyLevels() {
   });
   ionLabel.textContent = "0 eV";
   if (ionCaptionsFit) energySvg.appendChild(ionLabel);
-  const ionRight = svgEl("text", {
-    x: rightX + 4, y: yIon + 4,
-    fill: "var(--cp-muted)",
-    "font-size": energyLabelUnits,
-    "text-anchor": "start",
-    opacity: 0.6,
-  });
-  ionRight.textContent = "\u221E";
-  if (ionCaptionsFit) energySvg.appendChild(ionRight);
+  if (ionCaptionsFit) {
+    energyMathLabels.push({
+      key: "ionizationLimit",
+      tex: "$\\infty$",
+      x: rightX + 4,
+      y: yIon,
+      anchor: "start",
+      fontPx: 10,
+      color: "var(--cp-muted)",
+      opacity: 0.6,
+    });
+  }
 
   // Draw energy levels
   for (let n = 1; n <= N_MAX; n++) {
@@ -1134,16 +1148,16 @@ function drawEnergyLevels() {
   });
   energySvg.appendChild(transitionArrow);
 
-  // Photon label
-  const photonLabel = svgEl("text", {
+  // Photon symbol beside the transition arrow, typeset over the SVG.
+  energyMathLabels.push({
+    key: "photonSymbol",
+    tex: "$\\gamma$",
     x: midX + 14,
-    y: (yUpper + yLower) / 2 + 4,
-    fill: photonColor,
-    "font-size": energyTitleUnits,
-    "font-family": "system-ui, sans-serif",
+    y: (yUpper + yLower) / 2,
+    anchor: "start",
+    fontPx: 12,
+    color: photonColor,
   });
-  photonLabel.textContent = "\u03B3";
-  energySvg.appendChild(photonLabel);
 
   // Title
   const title = svgEl("text", {
@@ -1156,6 +1170,7 @@ function drawEnergyLevels() {
   });
   title.textContent = "Energy (eV)";
   energySvg.appendChild(title);
+  energyMath.set(energyMathLabels);
 }
 
 // ── Draw spectrum strip ─────────────────────────────────────
@@ -1406,7 +1421,7 @@ function updateReadouts() {
   readoutTransitionLabel.textContent = state.inferenceMode === "inverse" && state.viewTab === "hydrogen"
     ? "Inferred transition"
     : context.transitionLabel;
-  readoutTransition.textContent = context.transitionText;
+  setMathText(readoutTransition, context.transitionReadout);
 
   const wReadout = formatWavelengthReadout(context.wavelengthNm);
   readoutWavelength.textContent = wReadout.value;
@@ -2143,10 +2158,10 @@ const demoModes = createDemoModes({
         label: "Add Balmer series examples",
         getRows() {
           const transitions = [
-            { label: "H\u03B1", nU: 3, nL: 2 },
-            { label: "H\u03B2", nU: 4, nL: 2 },
-            { label: "H\u03B3", nU: 5, nL: 2 },
-            { label: "H\u03B4", nU: 6, nL: 2 },
+            { label: "H-alpha", nU: 3, nL: 2 },
+            { label: "H-beta", nU: 4, nL: 2 },
+            { label: "H-gamma", nU: 5, nL: 2 },
+            { label: "H-delta", nU: 6, nL: 2 },
           ];
           return transitions.map((t) => {
             const wNm = SpectralLineModel.transitionWavelengthNm({ nUpper: t.nU, nLower: t.nL });

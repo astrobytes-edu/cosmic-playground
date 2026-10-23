@@ -67,8 +67,8 @@ interface ShootingStar {
 
 /**
  * Realistic stellar colors by spectral type.
- * O/B → blue-white, A → white, F → warm white, G → yellow,
- * K → orange, M → warm red-orange.
+ * O/B: blue-white, A: white, F: warm white, G: yellow,
+ * K: orange, M: warm red-orange.
  */
 const STAR_COLORS = [
   "#aabfff", // O/B blue-white

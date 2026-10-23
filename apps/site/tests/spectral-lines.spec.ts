@@ -148,6 +148,53 @@ test.describe("Spectral Lines -- E2E", () => {
     await expect(page.locator("#inverseResult")).toContainText("Inferred");
   });
 
+  // The value face is monospace at 1.2rem, sized for a 13-cell string. The plain-text
+  // "n = 3 to n = 2" is 14 cells and wrapped to two lines (row 121.6px -> 148.3px) at about
+  // 1690-1760px wide, which is the default scaled width of 14- and 16-inch laptops. The
+  // readout is KaTeX at the value size instead, so it must stay on one line there.
+  test("transition readout stays on one line at 1710 and 1728 px wide", async ({ page }) => {
+    for (const width of [1710, 1728]) {
+      await page.setViewportSize({ width, height: 1000 });
+      const lines = await page.locator("#readoutTransition").evaluate((el) => {
+        const valueBox = el.parentElement as HTMLElement;
+        return valueBox.getBoundingClientRect().height / parseFloat(getComputedStyle(valueBox).lineHeight);
+      });
+      expect(lines, `value box height in line-heights at ${width}px`).toBeLessThan(1.5);
+    }
+  });
+
+  // SVG <text> cannot host KaTeX, so the photon and ionization symbols are HTML pinned over
+  // the diagrams. A pinning error parks them at the overlay's corner or off the drawing.
+  // The infinity caption is drawn with its "0 eV" partner or not at all: both drop out when
+  // the energy ladder renders too small for captions (as at 1280x720).
+  test("photon and ionization symbols are typeset and sit on their diagrams", async ({ page }) => {
+    const placed = await page.evaluate(() => {
+      const captionsDrawn = [...document.querySelectorAll("#energyLevels text")].some((t) => t.textContent === "0 eV");
+      const labels: Array<[string, string]> = [
+        ["#bohrAtom", "photonSymbol"],
+        ["#energyLevels", "photonSymbol"],
+      ];
+      if (captionsDrawn) labels.push(["#energyLevels", "ionizationLimit"]);
+      const orphan = !captionsDrawn && !!document.querySelector('[data-svg-math="ionizationLimit"]');
+      return {
+        orphan,
+        results: labels.map(([svgId, key]) => {
+          const svg = document.querySelector(svgId);
+          const label = svg?.parentElement?.querySelector(`[data-svg-math="${key}"]`);
+          if (!svg || !label?.querySelector(".katex")) return `${svgId} ${key}: missing`;
+          const s = svg.getBoundingClientRect();
+          const l = label.getBoundingClientRect();
+          const cx = l.left + l.width / 2;
+          const cy = l.top + l.height / 2;
+          const inside = l.width > 0 && cx > s.left && cx < s.right && cy > s.top && cy < s.bottom;
+          return inside ? "ok" : `${svgId} ${key}: centre (${cx}, ${cy}) outside the diagram`;
+        }),
+      };
+    });
+    expect(placed.orphan, "infinity drawn without its 0 eV partner").toBe(false);
+    expect(placed.results.every((r) => r === "ok"), placed.results.join("; ")).toBe(true);
+  });
+
   test("inverse observed wavelength input clamps to 80..5000 nm", async ({ page }) => {
     await page.locator("#inferenceInverse").click();
 

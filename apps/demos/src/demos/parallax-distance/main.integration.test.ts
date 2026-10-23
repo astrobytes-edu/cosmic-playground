@@ -27,7 +27,10 @@ vi.mock("@cosmic/runtime", () => ({
   initPopovers: runtimeSpies.initPopovers,
   initStarfield: runtimeSpies.initStarfield,
   initTabs: runtimeSpies.initTabs,
-  setLiveRegionText: runtimeSpies.setLiveRegionText
+  setLiveRegionText: runtimeSpies.setLiveRegionText,
+  // shared/mathText.ts typesets "$...$" through this. KaTeX is not under test here, so the
+  // stub keeps the LaTeX source visible in a marked span instead of rendering it.
+  renderInlineKatex: (latex: string) => `<span class="katex-stub">${latex}</span>`
 }));
 
 vi.mock("@cosmic/data-astr101", () => ({
@@ -199,6 +202,36 @@ describe("Parallax Distance -- DOM integration", { timeout: 20000 }, () => {
     expect(p10 / p100).toBeGreaterThan(8.5);
     expect(p10 / p100).toBeLessThan(11.5);
     expect(sep10).toBeGreaterThan(sep100 * 2);
+  });
+
+  it("writes each inferred value's uncertainty beside it, consistent with the propagation d = 1/p", async () => {
+    await import("./main");
+
+    const parallaxMas = requiredElement<HTMLElement>("#parallaxMas");
+    const parallaxPm = requiredElement<HTMLElement>("#parallaxMasPm");
+    const distancePc = requiredElement<HTMLElement>("#distancePc");
+    const distancePm = requiredElement<HTMLElement>("#distancePcPm");
+
+    // No capture pair yet: the sigma slots are empty, not a dangling "+/- ".
+    expect(parallaxPm.textContent).toBe("");
+    expect(distancePm.textContent).toBe("");
+
+    setRangeValue("#distancePcRange", 100);
+    setRangeValue("#sigmaMas", 2);
+    captureEpoch(0, "A");
+    captureEpoch(180, "B");
+
+    const sigmaPattern = /^ <span class="katex-stub">\\pm<\/span> (\d+\.\d+)$/;
+    const sigmaP = Number(parallaxPm.innerHTML.match(sigmaPattern)?.[1]);
+    const sigmaD = Number(distancePm.innerHTML.match(sigmaPattern)?.[1]);
+    const p = parseNumericText(parallaxMas.textContent);
+    const d = parseNumericText(distancePc.textContent);
+
+    expect(sigmaP).toBeGreaterThan(0);
+    expect(sigmaD).toBeGreaterThan(0);
+    // d = 1000/p (pc, mas), so sigma_d/d = sigma_p/p. Displayed values are rounded to 3 and
+    // 2 decimals, which at these magnitudes is well inside 1%.
+    expect(sigmaD / d).toBeCloseTo(sigmaP / p, 2);
   });
 
   it("increasing sigma expands uncertainty visuals and lowers p/sigma", async () => {

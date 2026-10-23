@@ -337,6 +337,10 @@ export function retrogradeDurationIfActiveAtCursor(
   return activeInterval.endDay - activeInterval.startDay;
 }
 
+/**
+ * Button labels for the stationary-point navigation. They carry `$...$` KaTeX source (the
+ * approximately-equal sign), so write them with setMathText, never textContent.
+ */
 export function buildStationaryNavigationLabels(args: {
   stationaryDays: number[];
   intervals: { startDay: number; endDay: number }[];
@@ -358,13 +362,13 @@ export function buildStationaryNavigationLabels(args: {
     nextDay: next,
     midpointDay,
     prevLabel: Number.isFinite(prev)
-      ? `\u00ab Prev stationary \u2248 Day ${formatNumber(prev, 1)}`
+      ? `\u00ab Prev stationary $\\approx$ Day ${formatNumber(prev, 1)}`
       : "\u00ab Prev stationary",
     nextLabel: Number.isFinite(next)
-      ? `Next stationary \u2248 Day ${formatNumber(next, 1)} \u00bb`
+      ? `Next stationary $\\approx$ Day ${formatNumber(next, 1)} \u00bb`
       : "Next stationary \u00bb",
     midpointLabel: Number.isFinite(midpointDay)
-      ? `\u2022 Retrograde midpoint \u2248 Day ${formatNumber(midpointDay, 1)}`
+      ? `\u2022 Retrograde midpoint $\\approx$ Day ${formatNumber(midpointDay, 1)}`
       : "\u2022 Retrograde midpoint",
   };
 }

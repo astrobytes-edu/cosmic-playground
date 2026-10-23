@@ -149,14 +149,14 @@ describe("Retrograde Motion — Design System Contracts", () => {
       expect(html).toMatch(/id="nextStationary"/);
       expect(html).toMatch(/id="centerRetrograde"/);
     });
-  });
 
-  // ── Unicode-math normalization ────────────────────────────
-  describe("Unicode math normalization", () => {
-    it("avoids unicode math glyphs in non-KaTeX UI code", () => {
-      const forbiddenUnicodeMath = /\\u00B0|\\u00B1|\\u2264|\\u2265|\\u2248|\\u2190|\\u2192/;
-      expect(html).not.toMatch(forbiddenUnicodeMath);
-      expect(main).not.toMatch(forbiddenUnicodeMath);
+    it("lays each stationary-nav label out as one run of text, not as flex items", () => {
+      // The labels carry a KaTeX approx sign, so a button's children are text, .katex, text.
+      // .cp-button is inline-flex, which would make those three flex items shrinking side by
+      // side with an 8px gap; the nav rule has to take the button out of flex layout.
+      const rule = css.match(/\.playbar-nav \.cp-button\s*\{([^}]*)\}/);
+      expect(rule).not.toBeNull();
+      expect(rule?.[1]).toMatch(/display:\s*block/);
     });
   });
 

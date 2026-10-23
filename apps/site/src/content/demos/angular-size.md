@@ -26,7 +26,7 @@ explain_prompt: "Use your observations to explain how apparent size depends on b
 model_notes:
   - 'Angular diameter uses the exact geometric relation $\theta = 2\arctan\!\left(\frac{D}{2d}\right)$.'
   - 'Units: diameter $D$ and distance $d$ are always in km; angles are reported in $^\circ$ / $^\prime$ / $^{\prime\prime}$.'
-  - 'Moon time modes: (1) Orbit (perigee ↔ apogee) and (2) Recession (Myr from today; a toy linear extrapolation using a constant recession rate).'
+  - 'Moon time modes: (1) Orbit (perigee $\leftrightarrow$ apogee) and (2) Recession (Myr from today; a toy linear extrapolation using a constant recession rate).'
 demo_path: "/play/angular-size/"
 station_path: "/stations/angular-size/"
 instructor_path: "/instructor/angular-size/"

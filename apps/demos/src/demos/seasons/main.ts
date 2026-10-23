@@ -1,6 +1,7 @@
 import { ChallengeEngine, createDemoModes, createInstrumentRuntime, initMath, initPopovers, initStarfield, initTabs, setLiveRegionText } from "@cosmic/runtime";
 import type { Challenge, ExportPayloadV1 } from "@cosmic/runtime";
 import { SeasonsModel } from "@cosmic/physics";
+import { setMathText } from "../../shared/mathText";
 import { clamp, formatNumber, formatDateFromDayOfYear, formatDayLength, formatLatitude, seasonFromPhaseNorth, oppositeSeason, orbitPosition, projectLatitudeCircle, globeAxisScreen, projectObserverMarker, GLOBE_VIEW_ELEVATION_DEG, animationProgress, easeInOutCubic, shortestDayDelta, orbitSeasonLabelPositions, polarisIndicatorEndpoints, seasonColorClass, contextualMessage, dayLengthArcGeometry } from "./logic";
 
 const dayOfYearEl = document.querySelector<HTMLInputElement>("#dayOfYear");
@@ -250,8 +251,8 @@ const demoModes = createDemoModes({
         heading: "Shortcuts",
         type: "shortcuts",
         items: [
-          { key: "\u2190 / \u2192", action: "Step \u00B11 day" },
-          { key: "\u2191 / \u2193", action: "Step \u00B130 days" },
+          { key: "Left / Right arrow keys", action: "Step $\\pm 1$ day" },
+          { key: "Up / Down arrow keys", action: "Step $\\pm 30$ days" },
           { key: "Space", action: "Play / pause animation" },
           { key: "E", action: "Jump to March equinox" },
           { key: "S", action: "Jump to June solstice" },
@@ -650,12 +651,18 @@ function initHourGrid() {
 
 let orbitDragActive = false;
 
-function formatDegreeValue(value: number): string {
+/** Rounded angle as plain digits ("23.5", "90"). The caller adds the unit: KaTeX via degreesLatex, or ASCII "deg" in plain-text sinks. */
+function formatDegreeNumber(value: number): string {
   const rounded = Math.round(value * 10) / 10;
   if (Math.abs(rounded - Math.round(rounded)) < 0.05) {
-    return `${Math.round(rounded)}\u00B0`;
+    return String(Math.round(rounded));
   }
-  return `${formatNumber(rounded, 1)}\u00B0`;
+  return formatNumber(rounded, 1);
+}
+
+/** LaTeX (no delimiters) for an angle with its degree unit, e.g. 23.5^{\circ}. */
+function degreesLatex(value: number): string {
+  return `${formatDegreeNumber(value)}^{\\circ}`;
 }
 
 function formatLatitudeTableValue(value: number): string {
@@ -771,7 +778,8 @@ function render() {
   dateValue.textContent = formatDateFromDayOfYear(day);
   yearScrubValue.textContent = `Day ${day} (${formatDateFromDayOfYear(day)})`;
 
-  tiltValue.textContent = formatDegreeValue(axialTiltDeg);
+  // Plain-text sink: #tiltValue is also the slider tooltip source (textContent), so the unit is ASCII.
+  tiltValue.textContent = `${formatDegreeNumber(axialTiltDeg)} deg`;
   latitudeValue.textContent = formatLatitude(latitudeDeg);
   syncLatitudePresetButtons(latitudeDeg);
 
@@ -786,9 +794,9 @@ function render() {
   seasonNorthValue.textContent = north;
   seasonSouthValue.textContent = south;
 
-  causalTiltChip.textContent = `\u03B5 ${formatDegreeValue(axialTiltDeg)}`;
-  causalDeclinationChip.textContent = `\u03B4 ${formatDegreeValue(Number(declinationText))}`;
-  causalNoonChip.textContent = formatDegreeValue(Number(noonAltitudeText));
+  setMathText(causalTiltChip, `$\\varepsilon\\ ${degreesLatex(axialTiltDeg)}$`);
+  setMathText(causalDeclinationChip, `$\\delta\\ ${degreesLatex(Number(declinationText))}$`);
+  setMathText(causalNoonChip, `$${degreesLatex(Number(noonAltitudeText))}$`);
   causalDayLengthChip.textContent = dayLengthText;
   noSeasonsBadge.hidden = axialTiltDeg >= 0.5;
   polarLatitudeBadge.hidden = Math.abs(latitudeDeg) < 66.5;
@@ -804,7 +812,7 @@ function render() {
     axialTiltDeg,
     distanceAu,
   });
-  contextMessage.textContent = msg;
+  setMathText(contextMessage, msg);
   updatePeriJanCalloutVisibility();
 
   renderStage({
@@ -890,7 +898,7 @@ function exportResults(st: SeasonsDemoState): ExportPayloadV1 {
     "Earth\u2013Sun distance uses a first-order eccentric model r ~ 1 - e cos(theta) (not a Kepler solver); distance variations are small and not the main cause of seasons."
   );
   notes.push(
-    `Perihelion is anchored near day 3 (Jan 3) with an uncertainty of about \u00B1${SeasonsModel.PERIHELION_DAY_UNCERTAINTY} days.`
+    `Perihelion is anchored near day 3 (Jan 3) with an uncertainty of about +/-${SeasonsModel.PERIHELION_DAY_UNCERTAINTY} days.`
   );
   if (prefersReducedMotion) {
     notes.push("Reduced motion: year animation is disabled.");

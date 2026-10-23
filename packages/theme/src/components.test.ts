@@ -355,3 +355,20 @@ describe("demo shell layering", () => {
     expect(shellCss).toMatch(/\.cp-demo__drawer \.cp-accordion__body[\s\S]{0,200}padding-left/);
   });
 });
+
+describe("Component CSS — Icon", () => {
+  const css = readComponent("icon.css");
+
+  // Vertical cues (the HR diagram's Brighter/Fainter badges) rotate the right arrow. Swapping
+  // the signs flips the cue and nothing else would fail.
+  it("points arrow-up up and arrow-down down", () => {
+    expect(css).toMatch(/\.cp-icon--arrow-up\s*\{[^}]*rotate\(-90deg\)/);
+    expect(css).toMatch(/\.cp-icon--arrow-down\s*\{[^}]*rotate\(90deg\)/);
+  });
+
+  it("paints from currentColor with no hex literal, and survives forced colours", () => {
+    expect(css).toContain("background-color: currentColor");
+    expect(css).toMatch(/@media \(forced-colors: active\)[^}]*\{[^}]*CanvasText/);
+    assertNoColorLiterals(css, "icon.css");
+  });
+});

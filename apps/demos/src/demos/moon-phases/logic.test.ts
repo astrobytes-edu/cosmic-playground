@@ -449,15 +449,15 @@ describe("Moon Phases -- UI Logic", () => {
   describe("computeTimelineState", () => {
     const cb = mockCallbacks();
 
-    it("Waxing phase (225 deg): directionText contains WAXING, directionClass empty", () => {
+    it("Waxing phase (225 deg): directionText is exactly WAXING, directionClass empty", () => {
       const state = computeTimelineState(225, PHASE_ANGLES, cb);
-      expect(state.directionText).toContain("WAXING");
+      expect(state.directionText).toBe("WAXING");
       expect(state.directionClass).toBe("");
     });
 
-    it("Waning phase (45 deg): directionText contains WANING, directionClass waning", () => {
+    it("Waning phase (45 deg): directionText is exactly WANING, directionClass waning", () => {
       const state = computeTimelineState(45, PHASE_ANGLES, cb);
-      expect(state.directionText).toContain("WANING");
+      expect(state.directionText).toBe("WANING");
       expect(state.directionClass).toBe("waning");
     });
 

@@ -454,10 +454,24 @@ export function transitionAnnouncement(args: {
 // ── Transition label formatting ─────────────────────────────
 
 /**
- * Format a transition label like "n = 3 → n = 2".
+ * Format a transition label like "n = 3 to n = 2".
+ *
+ * Plain text on purpose: the same string reaches the readout, live-region
+ * announcements and the clipboard/station exports, so it carries no arrow glyph.
  */
 export function transitionLabel(nUpper: number, nLower: number): string {
-  return `n = ${nUpper} \u2192 n = ${nLower}`;
+  return `n = ${nUpper} to n = ${nLower}`;
+}
+
+/**
+ * The same transition as KaTeX source, for the Transition readout only (written with
+ * setMathText). The plain label above is one character wider than an arrow glyph, and the
+ * readout's value size was tuned for the narrower string: at 1.2rem monospace it wrapped
+ * to two lines at roughly 1690-1760 px viewport width. Proportional KaTeX is narrower
+ * than 14 monospace cells. The live regions and exports keep the plain label.
+ */
+export function transitionLabelMath(nUpper: number, nLower: number): string {
+  return `$n = ${nUpper} \\to n = ${nLower}$`;
 }
 
 function modeLabel(mode: TransitionMode): string {
@@ -516,7 +530,7 @@ export function buildSpectralExportPayload(args: {
     { name: "Series filter", value: seriesFilterLabel(args.seriesFilter) },
   ];
   if (includeHydrogenInferenceFields && args.inferenceMode) {
-    parameters.push({ name: "Inference mode", value: args.inferenceMode === "inverse" ? "Inverse (lambda→transition)" : "Forward (n→lambda)" });
+    parameters.push({ name: "Inference mode", value: args.inferenceMode === "inverse" ? "Inverse (lambda to transition)" : "Forward (n to lambda)" });
   }
   if (includeHydrogenInferenceFields && Number.isFinite(args.observedWavelengthNm)) {
     parameters.push({ name: "Observed wavelength input (nm)", value: Number(args.observedWavelengthNm).toFixed(1) });

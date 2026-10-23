@@ -106,11 +106,12 @@ export function wavelengthToApproxRgb(nm: number): { r: number; g: number; b: nu
 
 /**
  * Format a wavelength value with the most natural unit (nm / um / mm).
+ * The result feeds canvas text (axis ticks, peak marker), so it is ASCII: "um" for micrometres.
  */
 export function formatWavelengthLabel(nm: number): string {
   if (nm >= 1e6) return `${(nm / 1e6).toFixed(0)} mm`;
-  if (nm >= 1e4) return `${(nm / 1e3).toFixed(0)} \u03BCm`;
-  if (nm >= 1e3) return `${(nm / 1e3).toFixed(nm >= 2e3 ? 0 : 1)} \u03BCm`;
+  if (nm >= 1e4) return `${(nm / 1e3).toFixed(0)} um`;
+  if (nm >= 1e3) return `${(nm / 1e3).toFixed(nm >= 2e3 ? 0 : 1)} um`;
   return `${nm.toFixed(0)} nm`;
 }
 
@@ -125,11 +126,14 @@ export function wavelengthToLogFraction(nm: number, minNm: number, maxNm: number
 /**
  * Format a wavelength for the readout panel, returning separate value and unit.
  * Picks the most natural unit (nm / um / mm) for readability.
+ *
+ * `unit` is math source for `setMathText`, not display text: micrometres come back as
+ * `$\\mu\\mathrm{m}$` so the readout typesets a real KaTeX mu instead of a Unicode glyph.
  */
 export function formatWavelengthReadout(nm: number): { value: string; unit: string } {
   if (!Number.isFinite(nm)) return { value: "\u2014", unit: "" };
   if (nm >= 1e6) return { value: (nm / 1e6).toFixed(nm >= 2e6 ? 0 : 1), unit: "mm" };
-  if (nm >= 1e4) return { value: (nm / 1e3).toFixed(0), unit: "\u03BCm" };
-  if (nm >= 1e3) return { value: (nm / 1e3).toFixed(1), unit: "\u03BCm" };
+  if (nm >= 1e4) return { value: (nm / 1e3).toFixed(0), unit: "$\\mu\\mathrm{m}$" };
+  if (nm >= 1e3) return { value: (nm / 1e3).toFixed(1), unit: "$\\mu\\mathrm{m}$" };
   return { value: Math.round(nm).toString(), unit: "nm" };
 }

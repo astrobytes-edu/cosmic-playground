@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator } from "@playwright/test";
 
 test.describe("Moon Phases -- E2E", () => {
   test.beforeEach(async ({ page }) => {
@@ -44,17 +44,40 @@ test.describe("Moon Phases -- E2E", () => {
 
   // --- Phase Angle Control ---
 
+  // The symbols are typeset by KaTeX. Replace each typeset node with "$<TeX source>$" (the
+  // source KaTeX keeps in its <annotation>) so a test can assert the whole sentence, words
+  // and symbols in order, rather than fragments.
+  const sourceText = (loc: Locator) =>
+    loc.evaluate((el) => {
+      const copy = el.cloneNode(true) as HTMLElement;
+      for (const k of Array.from(copy.querySelectorAll(".katex"))) {
+        const tex = k.querySelector('annotation[encoding="application/x-tex"]')?.textContent ?? "";
+        k.replaceWith(`$${tex}$`);
+      }
+      return (copy.textContent ?? "").replace(/\s+/g, " ").trim();
+    });
+
   test("alpha slider includes point-of-use helper text", async ({ page }) => {
-    await expect(page.locator(".moon-angle-helper")).toHaveCount(2);
-    await expect(page.getByText("In this model: α = Sun–Moon–Earth angle")).toBeVisible();
-    await expect(page.getByText("0° = Full, 180° = New")).toBeVisible();
+    const helpers = page.locator(".moon-angle-helper");
+    await expect(helpers).toHaveCount(2);
+    await expect(helpers.nth(0)).toBeVisible();
+    await expect(helpers.nth(1)).toBeVisible();
+    // Each angle stays paired with its phase word: 0 deg = Full, 180 deg = New.
+    await expect
+      .poll(() => sourceText(helpers.nth(0)))
+      .toBe("In this model: $\\alpha$ = Sun–Moon–Earth angle");
+    await expect
+      .poll(() => sourceText(helpers.nth(1)))
+      .toBe("$0^{\\circ}$ = Full, $180^{\\circ}$ = New");
   });
 
   test("alpha slider includes tooltip help trigger", async ({ page }) => {
     await expect(page.locator(".moon-tip__trigger")).toBeVisible();
-    await expect(page.locator("#alphaAngleTip")).toContainText(
-      "Sun–Moon–Earth phase angle"
-    );
+    await expect
+      .poll(() => sourceText(page.locator("#alphaAngleTip")))
+      .toBe(
+        "We use $\\alpha$ as the Sun–Moon–Earth phase angle. It controls illumination via $f=(1+\\cos\\alpha)/2$."
+      );
   });
 
   test("phase angle slider updates readouts", async ({ page }) => {
@@ -294,10 +317,23 @@ test.describe("Moon Phases -- E2E", () => {
 
   // --- Timeline ---
 
-  test("timeline shows waxing/waning direction", async ({ page }) => {
-    const dir = await page.locator("#timeline-direction").textContent();
-    expect(dir).toMatch(/WAXING|WANING/);
-  });
+  // The word comes from logic.ts; the arrow is a CSS icon, drawn after the word while waxing
+  // and before it while waning.
+  for (const { angle, word, arrow } of [
+    { angle: 225, word: "WAXING", arrow: "after" },
+    { angle: 45, word: "WANING", arrow: "before" }
+  ]) {
+    test(`timeline shows ${word} with one ${arrow}-word arrow at ${angle} deg`, async ({ page }) => {
+      await page.locator("#angle").evaluate((el: HTMLInputElement, value: number) => {
+        el.value = String(value);
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      }, angle);
+      const dir = page.locator("#timeline-direction");
+      await expect(dir.locator("#timeline-direction-text")).toHaveText(word);
+      await expect(dir.locator(".cp-icon:visible")).toHaveCount(1);
+      await expect(dir.locator(`.timeline-direction__icon--${arrow}`)).toBeVisible();
+    });
+  }
 
   test("timeline day counter is visible", async ({ page }) => {
     const day = await page.locator("#timeline-day").textContent();

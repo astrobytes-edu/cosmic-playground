@@ -679,7 +679,7 @@ export class ChallengeEngine {
     wrapper.innerHTML = `
       <div class="cp-challenge-header">
         <span class="cp-challenge-badge">Challenge Mode</span>
-        <button class="cp-challenge-close" type="button" aria-label="Exit challenge mode">&times;</button>
+        <button class="cp-challenge-close" type="button" aria-label="Exit challenge mode"><span class="cp-icon cp-icon--close" aria-hidden="true"></span></button>
       </div>
       <div class="cp-challenge-content">
         <div class="cp-challenge-number"></div>
@@ -693,9 +693,9 @@ export class ChallengeEngine {
         <button class="cp-challenge-btn check-btn primary" type="button">Check Answer</button>
       </div>
       <div class="cp-challenge-nav">
-        <button class="cp-challenge-btn prev-btn" type="button" disabled>&larr; Previous</button>
+        <button class="cp-challenge-btn prev-btn" type="button" disabled><span class="cp-icon cp-icon--arrow-left" aria-hidden="true"></span> Previous</button>
         <span class="cp-challenge-progress"></span>
-        <button class="cp-challenge-btn next-btn" type="button">Next &rarr;</button>
+        <button class="cp-challenge-btn next-btn" type="button"><span class="next-label">Next</span> <span class="cp-icon cp-icon--arrow-right" aria-hidden="true"></span></button>
       </div>
     `;
 
@@ -781,7 +781,16 @@ export class ChallengeEngine {
     if (progressEl) progressEl.textContent = `${this.currentIndex + 1} / ${this.challenges.length}`;
 
     if (prevBtn) prevBtn.disabled = this.currentIndex === 0;
-    if (nextBtn) nextBtn.textContent = this.currentIndex === this.challenges.length - 1 ? "Finish" : "Next →";
+    if (nextBtn) {
+      // The button holds a label span plus a CSS arrow icon, so only the label is rewritten;
+      // setting nextBtn.textContent would wipe the icon. The last challenge reads "Finish" and
+      // drops the arrow, as the old "Next ->" / "Finish" text did.
+      const isLast = this.currentIndex === this.challenges.length - 1;
+      const nextLabel = nextBtn.querySelector<HTMLElement>(".next-label");
+      const nextIcon = nextBtn.querySelector<HTMLElement>(".cp-icon");
+      if (nextLabel) nextLabel.textContent = isLast ? "Finish" : "Next";
+      if (nextIcon) nextIcon.style.display = isLast ? "none" : "";
+    }
 
     if (hintBtn) {
       const hints = (challenge as any).hints as string[];

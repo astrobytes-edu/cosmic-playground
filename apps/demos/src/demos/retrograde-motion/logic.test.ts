@@ -447,9 +447,9 @@ describe("buildStationaryNavigationLabels", () => {
       intervals,
       cursorDay: 130,
     });
-    expect(labels.prevLabel).toContain("Day 100.0");
-    expect(labels.nextLabel).toContain("Day 170.0");
-    expect(labels.midpointLabel).toContain("Day 135.0");
+    expect(labels.prevLabel).toBe("\u00ab Prev stationary $\\approx$ Day 100.0");
+    expect(labels.nextLabel).toBe("Next stationary $\\approx$ Day 170.0 \u00bb");
+    expect(labels.midpointLabel).toBe("\u2022 Retrograde midpoint $\\approx$ Day 135.0");
   });
 
   it("returns fallback labels when events do not exist", () => {

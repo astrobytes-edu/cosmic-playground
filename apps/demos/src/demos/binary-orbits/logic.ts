@@ -472,6 +472,8 @@ export function evaluatePredictionChoices(args: {
   };
 }
 
+// `equation` and `message` are math-text sources ("$...$" is LaTeX): write them to the DOM
+// with setMathText, never textContent.
 export type ScalingCue = {
   key: "separation" | "totalMass";
   equation: string;
@@ -482,14 +484,14 @@ export function scalingCueForControl(control: "separation" | "massRatio"): Scali
   if (control === "separation") {
     return {
       key: "separation",
-      equation: "P \u221d a^{3/2}",
+      equation: "$P \\propto a^{3/2}$",
       message: "Changing separation updates period by a three-halves power law.",
     };
   }
 
   return {
     key: "totalMass",
-    equation: "P \u221d (M1 + M2)^{-1/2}",
+    equation: "$P \\propto (M_1 + M_2)^{-1/2}$",
     message: "Changing total mass updates period with an inverse square-root law.",
   };
 }
@@ -504,15 +506,15 @@ export function energyScaleCueForControl(control: "separation" | "massRatio"): E
   if (control === "separation") {
     return {
       key: "separation",
-      equation: "E \u221d -1/a",
+      equation: "$E \\propto -1/a$",
       message: "Increasing separation makes the bound orbit less negative in total energy.",
     };
   }
 
   return {
     key: "massRatio",
-    equation: "|E| \u221d M2",
-    message: "With M1 fixed, increasing M2 raises the bound-energy magnitude.",
+    equation: "$|E| \\propto M_2$",
+    message: "With $M_1$ fixed, increasing $M_2$ raises the bound-energy magnitude.",
   };
 }
 

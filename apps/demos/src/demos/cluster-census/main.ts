@@ -326,7 +326,7 @@ const SANS_STACK = "system-ui, -apple-system, Segoe UI, sans-serif";
  * Left padding wide enough for the widest tick label AND the rotated axis title beside it.
  *
  * Guessing a multiple of the font size put "luminosity" through the middle of the tick
- * labels once the labels grew a superscript minus. Measuring costs one pass over at most
+ * labels once the labels grew a signed exponent. Measuring costs one pass over at most
  * a dozen short strings, and cannot drift.
  */
 function measuredAxisPadLeft(

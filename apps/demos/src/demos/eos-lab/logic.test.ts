@@ -5,6 +5,8 @@ import {
   clamp,
   compositionFromXY,
   formatScientific,
+  formatScientificLatex,
+  formatScientificMath,
   logSliderToValue,
   percent,
   pressureBarPercent,
@@ -33,6 +35,8 @@ import {
   solarProfileData,
   getContextualSuggestion,
   type ContextualSuggestionInput,
+  SCALING_CHALLENGES,
+  checkScalingAnswer,
   LOG_AXIS_FLOOR,
   logSafe
 } from "./logic";
@@ -74,14 +78,27 @@ describe("EOS Lab -- UI Logic", () => {
     expect(value).toBeCloseTo(1e6, 8);
   });
 
-  it("formats scientific readouts safely", () => {
-    expect(formatScientific(Number.NaN)).toBe("\u2014");
-    expect(formatScientific(0)).toBe("0");
-    // Unicode format: 1.20x10^7 (with multiplication sign and superscript)
-    const result = formatScientific(1.2e7);
-    expect(result).toContain("\u00D7"); // multiplication sign
-    expect(result).toContain("10");
-    expect(result).toMatch(/1\.20/);
+  it("formats one number for plain-text, LaTeX-body and delimited-math sinks", () => {
+    // [value, digits, formatScientific, formatScientificLatex, formatScientificMath]
+    const cases: Array<[number, number, string, string, string]> = [
+      // Exponent notation: ASCII for canvas/exports, \times for KaTeX.
+      [1.2e7, 3, "1.20x10^7", "1.20 \\times 10^{7}", "$1.20 \\times 10^{7}$"],
+      [3.4e-5, 3, "3.40x10^-5", "3.40 \\times 10^{-5}", "$3.40 \\times 10^{-5}$"],
+      [-2.5e9, 3, "-2.50x10^9", "-2.50 \\times 10^{9}", "$-2.50 \\times 10^{9}$"],
+      // Switch points: 1e5 and above, and below 1e-3, take the exponent; just inside do not.
+      [1e5, 3, "1.00x10^5", "1.00 \\times 10^{5}", "$1.00 \\times 10^{5}$"],
+      [99999, 3, "99999.000", "99999.000", "99999.000"],
+      [9.99e-4, 3, "9.99x10^-4", "9.99 \\times 10^{-4}", "$9.99 \\times 10^{-4}$"],
+      [1e-3, 3, "0.001", "0.001", "0.001"],
+      // Zero is exact; a failed solve is marked unavailable, never zero.
+      [0, 3, "0", "0", "0"],
+      [Number.NaN, 3, "\u2014", "\\text{--}", "\u2014"],
+    ];
+    for (const [value, digits, plain, latexBody, math] of cases) {
+      expect(formatScientific(value, digits), `formatScientific(${value})`).toBe(plain);
+      expect(formatScientificLatex(value, digits), `formatScientificLatex(${value})`).toBe(latexBody);
+      expect(formatScientificMath(value, digits), `formatScientificMath(${value})`).toBe(math);
+    }
   });
 
   it("formats percentages", () => {
@@ -637,7 +654,7 @@ describe("getContextualSuggestion", () => {
 
   it("suggests raising T when gas dominates and radiation is negligible", () => {
     const s = getContextualSuggestion({ ...base, radiationToGas: 0.001 });
-    expect(s).toContain("raising T");
+    expect(s).toContain("raising $T$");
   });
 
   it("mentions Eddington regime when gas dominates but radiation is noticeable", () => {
@@ -701,6 +718,32 @@ describe("getContextualSuggestion", () => {
       expect(latexScientific(Number.NaN)).not.toBe("0");
       expect(latexScientific(0)).toBe("0");
       expect(latexScientific(1.5e16)).toContain("10^{16}");
+    });
+  });
+
+  describe("Scaling Law Detective challenges", () => {
+    // Doubling the driver multiplies the pressure by 2^n: P_gas ~ T^1, P_rad ~ T^4,
+    // P_deg ~ rho^(5/3).
+    const EXPONENT: Record<string, number> = { "gas-T": 1, "rad-T": 4, "deg-rho": 5 / 3 };
+
+    it("each correct factor is 2^n for the law it teaches, and exactly one option is accepted", () => {
+      expect(SCALING_CHALLENGES.map((c) => c.id).sort()).toEqual(Object.keys(EXPONENT).sort());
+      for (const ch of SCALING_CHALLENGES) {
+        expect(Math.abs(ch.correctFactor - 2 ** EXPONENT[ch.id])).toBeLessThan(0.01);
+        const accepted = ch.options.filter((o) => checkScalingAnswer(o.factor, ch.correctFactor));
+        expect(accepted).toHaveLength(1);
+      }
+    });
+
+    it("reader-visible strings carry no literal backslash-u escape", () => {
+      // A doubled backslash in source survives the build as backslash + "u2014" and is
+      // shown to the reader verbatim. The math-formatting gate cannot see it because
+      // it decodes only odd backslash runs.
+      for (const ch of SCALING_CHALLENGES) {
+        for (const text of [ch.question, ch.insight, ...ch.options.map((o) => o.label)]) {
+          expect(text).not.toMatch(/\\u[0-9A-Fa-f]{4}/);
+        }
+      }
     });
   });
 });

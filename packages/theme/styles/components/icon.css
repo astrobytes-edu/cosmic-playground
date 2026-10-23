@@ -1,0 +1,60 @@
+/* packages/theme/styles/components/icon.css
+ *
+ * Direction and close icons drawn by CSS, never typed as glyphs. A typed arrow or
+ * multiplication sign is a math character to scripts/validate-math-formatting.mjs and is
+ * read aloud as "right arrow" or "times"; here it is decoration. The element carrying the
+ * icon is aria-hidden and the control keeps its words (Anna, 2026-10-23):
+ *
+ *   <button class="cp-button">Next <span class="cp-icon cp-icon--arrow-right" aria-hidden="true"></span></button>
+ *   <button aria-label="Close"><span class="cp-icon cp-icon--close" aria-hidden="true"></span></button>
+ *
+ * The shape is a mask over currentColor, so it follows the text colour in every layer and
+ * in high-contrast mode.
+ */
+.cp-icon {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  background-color: currentColor;
+  -webkit-mask: var(--cp-icon-shape) center / contain no-repeat;
+  mask: var(--cp-icon-shape) center / contain no-repeat;
+}
+
+/* Forced colours (Windows high contrast) repaint backgrounds as Canvas, which would erase a
+   shape painted with background-color. Keep the icon in the forced text colour instead. */
+@media (forced-colors: active) {
+  .cp-icon {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+}
+
+.cp-icon--arrow-right,
+.cp-icon--arrow-left,
+.cp-icon--arrow-up,
+.cp-icon--arrow-down {
+  --cp-icon-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 8h10.5M9 4l4 4-4 4' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.cp-icon--arrow-left {
+  transform: scaleX(-1);
+}
+
+/* CSS rotation is clockwise: a quarter turn back points the right arrow up. */
+.cp-icon--arrow-up {
+  transform: rotate(-90deg);
+}
+
+.cp-icon--arrow-down {
+  transform: rotate(90deg);
+}
+
+.cp-icon--arrow-both {
+  --cp-icon-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 8h11M5.5 5l-3 3 3 3M10.5 5l3 3-3 3' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.cp-icon--close {
+  --cp-icon-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 4l8 8M12 4l-8 8' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+}

@@ -97,7 +97,7 @@ describe("Moon Phases — Design System Contracts", () => {
 
     it("contains compact illumination equation readout", () => {
       expect(html).toContain('id="illumination-equation-value"');
-      expect(html).toContain("f = (1 + cos");
+      expect(html).toContain("$f = (1 + \\cos\\alpha)/2 =$");
     });
   });
 

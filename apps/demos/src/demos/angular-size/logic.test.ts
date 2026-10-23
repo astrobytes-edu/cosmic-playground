@@ -7,7 +7,6 @@ import {
   formatAngleDisplay,
   describeMoonOrbitAngle,
   describeMoonRecessionTime,
-  toSuperscript,
   formatSci,
   formatDistanceAuto,
   formatDiameterAuto,
@@ -127,26 +126,6 @@ describe("Angular Size -- UI Logic", () => {
     });
   });
 
-  describe("toSuperscript", () => {
-    it("converts single digit", () => {
-      expect(toSuperscript(3)).toBe("\u00B3");
-    });
-    it("converts multi-digit number", () => {
-      expect(toSuperscript(12)).toBe("\u00B9\u00B2");
-    });
-    it("converts negative exponent", () => {
-      expect(toSuperscript(-4)).toBe("\u207B\u2074");
-    });
-    it("converts zero", () => {
-      expect(toSuperscript(0)).toBe("\u2070");
-    });
-    it("converts all digits 0-9", () => {
-      expect(toSuperscript(1234567890)).toBe(
-        "\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u2070"
-      );
-    });
-  });
-
   describe("formatSci", () => {
     it("formats numbers in normal range without exponent", () => {
       expect(formatSci(150, 3)).toBe("150");
@@ -157,28 +136,45 @@ describe("Angular Size -- UI Logic", () => {
     it("formats small decimal in normal range", () => {
       expect(formatSci(0.5, 3)).toBe("0.500");
     });
-    it("uses Unicode exponent for large numbers", () => {
-      expect(formatSci(1.5e8, 3)).toBe("1.50 \u00D7 10\u2078");
+    it("normal-range values are identical in both styles", () => {
+      expect(formatSci(150, 3, "math")).toBe(formatSci(150, 3, "plain"));
+      expect(formatSci(0.5, 3, "math")).toBe(formatSci(0.5, 3, "plain"));
     });
-    it("uses Unicode exponent for small numbers", () => {
-      expect(formatSci(0.00012, 3)).toBe("1.20 \u00D7 10\u207B\u2074");
+    it("writes large numbers as ASCII by default", () => {
+      expect(formatSci(1.5e8, 3)).toBe("1.50 x 10^8");
     });
-    it("returns em-dash for NaN", () => {
+    it("writes small numbers as ASCII by default", () => {
+      expect(formatSci(0.00012, 3)).toBe("1.20 x 10^-4");
+    });
+    it("math style returns a KaTeX source string for large numbers", () => {
+      expect(formatSci(1.5e8, 3, "math")).toBe("$1.50 \\times 10^{8}$");
+    });
+    it("math style returns a KaTeX source string for small numbers", () => {
+      expect(formatSci(0.00012, 3, "math")).toBe("$1.20 \\times 10^{-4}$");
+    });
+    it("returns em-dash for NaN and Infinity in either style", () => {
       expect(formatSci(NaN)).toBe("\u2014");
-    });
-    it("returns em-dash for Infinity", () => {
-      expect(formatSci(Infinity)).toBe("\u2014");
+      expect(formatSci(Infinity, 3, "math")).toBe("\u2014");
     });
     it("returns 0 for zero", () => {
       expect(formatSci(0)).toBe("0");
     });
     it("respects custom sig figs", () => {
       expect(formatSci(6779, 4)).toBe("6779");
-      expect(formatSci(6779, 3)).toBe("6.78 \u00D7 10\u00B3");
+      expect(formatSci(6779, 3)).toBe("6.78 x 10^3");
+      expect(formatSci(6779, 3, "math")).toBe("$6.78 \\times 10^{3}$");
     });
     it("handles negative numbers", () => {
       expect(formatSci(-150, 3)).toBe("-150");
-      expect(formatSci(-1.5e8, 3)).toBe("-1.50 \u00D7 10\u2078");
+      expect(formatSci(-1.5e8, 3)).toBe("-1.50 x 10^8");
+      expect(formatSci(-1.5e8, 3, "math")).toBe("$-1.50 \\times 10^{8}$");
+    });
+    it("keeps a multi-digit exponent whole (math style depends on the braces)", () => {
+      // Without {...}, KaTeX would typeset 10^12 as 10^1 followed by a stray 2.
+      expect(formatSci(1.5e12, 3)).toBe("1.50 x 10^12");
+      expect(formatSci(1.5e12, 3, "math")).toBe("$1.50 \\times 10^{12}$");
+      expect(formatSci(1.5e-12, 3)).toBe("1.50 x 10^-12");
+      expect(formatSci(1.5e-12, 3, "math")).toBe("$1.50 \\times 10^{-12}$");
     });
   });
 
@@ -218,6 +214,14 @@ describe("Angular Size -- UI Logic", () => {
       const r = formatDistanceAuto(4e23);
       expect(r.unit).toBe("Gpc");
     });
+    it("threads the notation style through to the text", () => {
+      // 1e-9 km = 1.00e-4 cm, outside the fixed-notation range.
+      expect(formatDistanceAuto(1e-9)).toEqual({ text: "1.00 x 10^-4", unit: "cm" });
+      expect(formatDistanceAuto(1e-9, 3, "math")).toEqual({
+        text: "$1.00 \\times 10^{-4}$",
+        unit: "cm"
+      });
+    });
     it("returns em-dash for NaN", () => {
       expect(formatDistanceAuto(NaN)).toEqual({ text: "\u2014", unit: "" });
     });
@@ -248,6 +252,13 @@ describe("Angular Size -- UI Logic", () => {
     it("shows Mpc for galaxy clusters", () => {
       const r = formatDiameterAuto(7e19);
       expect(r.unit).toBe("Mpc");
+    });
+    it("threads the notation style through to the text (Sun)", () => {
+      expect(formatDiameterAuto(1.392e6)).toEqual({ text: "1.39 x 10^6", unit: "km" });
+      expect(formatDiameterAuto(1.392e6, 3, "math")).toEqual({
+        text: "$1.39 \\times 10^{6}$",
+        unit: "km"
+      });
     });
     it("returns em-dash for NaN", () => {
       expect(formatDiameterAuto(NaN)).toEqual({ text: "\u2014", unit: "" });

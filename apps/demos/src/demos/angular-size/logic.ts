@@ -40,25 +40,20 @@ export function formatAngleDisplay(thetaDegValue: number): { text: string; unit:
   return { text: AstroUnits.degToArcsec(thetaDegValue).toFixed(0), unit: "arcsec" };
 }
 
-const SUPERSCRIPT_DIGITS = "\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079";
-
-/** Convert an integer to Unicode superscript characters (e.g. 8 -> superscript 8). */
-export function toSuperscript(n: number): string {
-  const s = String(Math.round(n));
-  let result = "";
-  for (const ch of s) {
-    if (ch === "-") result += "\u207B";
-    else if (ch >= "0" && ch <= "9") result += SUPERSCRIPT_DIGITS[Number(ch)];
-    else result += ch;
-  }
-  return result;
-}
+/**
+ * How scientific notation is written.
+ *   "plain": ASCII, "1.50 x 10^8". For SVG <text>, tooltips and exports, which cannot host KaTeX.
+ *   "math":  a KaTeX source string, $1.50 \times 10^{8}$. For HTML readouts only, and only
+ *            through setMathText(); written to textContent it would show raw delimiters.
+ * The default is "plain" so a caller that forgets to opt in degrades to readable ASCII.
+ */
+export type SciStyle = "plain" | "math";
 
 /**
- * Format a number with Unicode scientific notation (e.g. "1.50 x 10^8").
+ * Format a number in scientific notation (see SciStyle for the two spellings).
  * Uses fixed notation (toPrecision) when the number is in [0.01, 10^sigFigs).
  */
-export function formatSci(value: number, sigFigs = 3): string {
+export function formatSci(value: number, sigFigs = 3, style: SciStyle = "plain"): string {
   if (!Number.isFinite(value)) return "\u2014";
   if (value === 0) return "0";
   const abs = Math.abs(value);
@@ -68,61 +63,62 @@ export function formatSci(value: number, sigFigs = 3): string {
     return value.toPrecision(sigFigs);
   }
 
-  // Scientific notation with Unicode superscripts
   const expStr = value.toExponential(sigFigs - 1);
   const match = expStr.match(/^(.+)e([+-]\d+)$/);
   if (!match) return value.toPrecision(sigFigs);
   const mantissa = match[1];
   const expNum = parseInt(match[2], 10);
-  return `${mantissa} \u00D7 10${toSuperscript(expNum)}`;
+  return style === "math"
+    ? `$${mantissa} \\times 10^{${expNum}}$`
+    : `${mantissa} x 10^${expNum}`;
 }
 
 /**
  * Auto-select the best distance unit for a given value in km.
- * Returns { text, unit } with text formatted via formatSci.
+ * Returns { text, unit } with text formatted via formatSci in the requested style.
  * Progression: cm -> m -> km -> AU -> pc -> kpc -> Mpc -> Gpc
  */
-export function formatDistanceAuto(km: number, sigFigs = 3): { text: string; unit: string } {
+export function formatDistanceAuto(km: number, sigFigs = 3, style: SciStyle = "plain"): { text: string; unit: string } {
   if (!Number.isFinite(km)) return { text: "\u2014", unit: "" };
   const abs = Math.abs(km);
 
   if (abs < 0.001)
-    return { text: formatSci(km * 1e5, sigFigs), unit: "cm" };
+    return { text: formatSci(km * 1e5, sigFigs, style), unit: "cm" };
   if (abs < 1)
-    return { text: formatSci(km * 1000, sigFigs), unit: "m" };
+    return { text: formatSci(km * 1000, sigFigs, style), unit: "m" };
   if (abs < 0.01 * KM_PER_AU)
-    return { text: formatSci(km, sigFigs), unit: "km" };
+    return { text: formatSci(km, sigFigs, style), unit: "km" };
   if (abs < 0.1 * KM_PER_PC)
-    return { text: formatSci(km / KM_PER_AU, sigFigs), unit: "AU" };
+    return { text: formatSci(km / KM_PER_AU, sigFigs, style), unit: "AU" };
   if (abs < 1000 * KM_PER_PC)
-    return { text: formatSci(km / KM_PER_PC, sigFigs), unit: "pc" };
+    return { text: formatSci(km / KM_PER_PC, sigFigs, style), unit: "pc" };
   if (abs < 1e6 * KM_PER_PC)
-    return { text: formatSci(km / (1e3 * KM_PER_PC), sigFigs), unit: "kpc" };
+    return { text: formatSci(km / (1e3 * KM_PER_PC), sigFigs, style), unit: "kpc" };
   if (abs < 1e9 * KM_PER_PC)
-    return { text: formatSci(km / (1e6 * KM_PER_PC), sigFigs), unit: "Mpc" };
-  return { text: formatSci(km / (1e9 * KM_PER_PC), sigFigs), unit: "Gpc" };
+    return { text: formatSci(km / (1e6 * KM_PER_PC), sigFigs, style), unit: "Mpc" };
+  return { text: formatSci(km / (1e9 * KM_PER_PC), sigFigs, style), unit: "Gpc" };
 }
 
 /**
  * Auto-select the best diameter unit for a given value in km.
- * Returns { text, unit } with text formatted via formatSci.
+ * Returns { text, unit } with text formatted via formatSci in the requested style.
  * Progression: cm -> m -> km -> AU -> kpc -> Mpc
  */
-export function formatDiameterAuto(km: number, sigFigs = 3): { text: string; unit: string } {
+export function formatDiameterAuto(km: number, sigFigs = 3, style: SciStyle = "plain"): { text: string; unit: string } {
   if (!Number.isFinite(km)) return { text: "\u2014", unit: "" };
   const abs = Math.abs(km);
 
   if (abs < 1e-4)
-    return { text: formatSci(km * 1e5, sigFigs), unit: "cm" };
+    return { text: formatSci(km * 1e5, sigFigs, style), unit: "cm" };
   if (abs < 1)
-    return { text: formatSci(km * 1000, sigFigs), unit: "m" };
+    return { text: formatSci(km * 1000, sigFigs, style), unit: "m" };
   if (abs < 1e8)
-    return { text: formatSci(km, sigFigs), unit: "km" };
+    return { text: formatSci(km, sigFigs, style), unit: "km" };
   if (abs < 0.1 * KM_PER_PC)
-    return { text: formatSci(km / KM_PER_AU, sigFigs), unit: "AU" };
+    return { text: formatSci(km / KM_PER_AU, sigFigs, style), unit: "AU" };
   if (abs < 1e6 * KM_PER_PC)
-    return { text: formatSci(km / (1e3 * KM_PER_PC), sigFigs), unit: "kpc" };
-  return { text: formatSci(km / (1e6 * KM_PER_PC), sigFigs), unit: "Mpc" };
+    return { text: formatSci(km / (1e3 * KM_PER_PC), sigFigs, style), unit: "kpc" };
+  return { text: formatSci(km / (1e6 * KM_PER_PC), sigFigs, style), unit: "Mpc" };
 }
 
 export function describeMoonOrbitAngle(angleDeg: number): string {

@@ -23,7 +23,7 @@ demos:
     required: false
     goal: "Separate apparent size from physical size using distance-aware reasoning."
     note: "Optional extension: compare ‘looks big’ vs ‘is big’."
-overview: "A short starter set for building intuition about sky geometry using a consistent predict→play→explain flow."
+overview: "A short starter set for building intuition about sky geometry using a consistent predict $\\rightarrow$ play $\\rightarrow$ explain flow."
 instructions: |
   Work through each exhibit in order.
 
