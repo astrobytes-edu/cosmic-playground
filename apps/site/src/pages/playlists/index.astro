@@ -4,13 +4,12 @@ import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import TagPill from "../../components/TagPill.astro";
 import DemoCanvasThumbnail from "../../components/DemoCanvasThumbnail.astro";
-import { normalizeBasePathPath } from "../../lib/catalog";
+import { withBase } from "../../lib/base";
 
 const playlists = await getCollection("playlists");
 const demos = await getCollection("demos");
 
 const base = import.meta.env.BASE_URL;
-const withBase = (path: string) => normalizeBasePathPath(path, base);
 
 const demoFilterSlug = Astro.url.searchParams.get("demo")?.trim() ?? "";
 const filteredPlaylists = demoFilterSlug

@@ -227,7 +227,20 @@
           </div>
         </div>
         <div class="cp-readout">
-          <div class="cp-readout__label">Luminosity ratio $L/L_{\odot}$</div>
+          <!--
+            This reports (T/T_sun)^4, which is the ratio of EMITTED FLUX, or equivalently
+            the luminosity ratio only at equal radius -- the model function is named
+            `luminosityRatioSameRadius` for that reason. Labelled "Luminosity ratio
+            L/L_sun" it claimed a luminosity for every preset, including the CMB and the
+            Earth, where the quantity is meaningless: L also needs a radius, and
+            L/L_sun = (R/R_sun)^2 (T/T_sun)^4 spans a further 4-10 orders of magnitude for
+            these presets. The readout keeps the Stefan-Boltzmann lesson and drops the
+            claim it cannot support.
+          -->
+          <div class="cp-readout__label">
+            Flux ratio $F/F_{\odot}$
+            <span class="cp-readout__qualifier">at equal radius</span>
+          </div>
           <div class="cp-readout__value">
             <span id="lumRatio"></span>
           </div>

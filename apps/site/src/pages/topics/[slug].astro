@@ -12,7 +12,8 @@ import {
   topicFilterPath
 } from "../../lib/topics";
 import type { TopicKey } from "../../lib/topics";
-import { listedDemos } from "../../lib/catalog";
+import { excerptFromBody, listedDemos } from "../../lib/catalog";
+import { withBase } from "../../lib/base";
 
 export async function getStaticPaths() {
   const demos = listedDemos(await getCollection("demos"));
@@ -30,12 +31,6 @@ interface Props {
 }
 
 const { topicKey } = Astro.props;
-const base = import.meta.env.BASE_URL;
-const withBase = (path: string) => {
-  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
-  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
-  return `${normalizedBase}${normalizedPath}`;
-};
 
 const demos = listedDemos(await getCollection("demos"));
 const playlists = await getCollection("playlists");
@@ -59,15 +54,6 @@ const sequence = order
   .map((slug) => sorted.find((d) => d.slug === slug))
   .filter((d): d is (typeof sorted)[number] => Boolean(d));
 const showSequence = sequence.length > 1;
-
-function excerptFromBody(body: string) {
-  const firstLine = body
-    .split("\n")
-    .map((l) => l.trim())
-    .find((l) => l.length > 0 && !l.startsWith("---"));
-  if (!firstLine) return "\u2014";
-  return firstLine.replace(/^#+\s*/, "").slice(0, 140);
-}
 
 // Aggregate learning goals across demos in this topic
 const allGoals = Array.from(

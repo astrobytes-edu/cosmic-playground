@@ -443,15 +443,31 @@ export const GalaxyRotationModel = {
     return Math.pow(this.G_GALAXY * masses.visible * this.A0_MOND, 0.25);
   },
 
+  /*
+   * MOND with the simple interpolating function mu(x) = x / (1 + x), which inverts to
+   *   a = (a_N / 2) * [1 + sqrt(1 + 4 a_0 / a_N)]
+   * and gives a -> a_N for a_N >> a_0 and a -> sqrt(a_N a_0) for a_N << a_0.
+   *
+   * The Newtonian baryonic acceleration comes from the model's OWN baryonic curve,
+   * a_N = v_baryons^2 / R, where v_baryons is the exact Freeman exponential disk in
+   * quadrature with the Hernquist bulge. It used to come from G M_vis(R) / R^2, a
+   * spherical-enclosed-mass stand-in -- but the Newtonian curve plotted on the same axes
+   * is the Freeman disk, so the two lines were drawn from different baryon gravity. For a
+   * Milky-Way-like disk (M_d = 5e10 Msun, R_d = 3 kpc) the spherical form is 0.864 of the
+   * Freeman value at R = 10 kpc and 1.068 of it at R = 2 kpc, so the comparison the demo
+   * exists to make carried a 14% unexplained offset at the radius where the rotation curve
+   * flattens. A disk is not a sphere, and the two curves must share one baryon model.
+   */
   vMondKmS(args: { radiusKpc: number; params: GalaxyParams }): number {
     const { radiusKpc, params } = args;
     if (!isFiniteNonNegative(radiusKpc)) return NaN;
     if (radiusKpc === 0) return 0;
-    const masses = this.enclosedMass10({ radiusKpc, params });
-    if (!isFiniteNonNegative(masses.visible)) return NaN;
-    if (masses.visible === 0) return 0;
 
-    const aN = (this.G_GALAXY * masses.visible) / (radiusKpc * radiusKpc);
+    const vBaryonsKmS = this.vVisibleKmS({ radiusKpc, params });
+    if (!Number.isFinite(vBaryonsKmS)) return NaN;
+    if (vBaryonsKmS === 0) return 0;
+
+    const aN = (vBaryonsKmS * vBaryonsKmS) / radiusKpc;
     if (!isFinitePositive(aN)) return NaN;
     const a = 0.5 * aN * (1 + Math.sqrt(1 + (4 * this.A0_MOND) / aN));
     if (!isFiniteNonNegative(a)) return NaN;

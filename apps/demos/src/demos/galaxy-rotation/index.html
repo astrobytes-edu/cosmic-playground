@@ -370,8 +370,8 @@
             <div class="cp-accordion__body">
               <ul>
                 <li>The halo uses an NFW (Navarro-Frenk-White) density profile; the disk uses an exponential surface density; the bulge uses a Hernquist profile.</li>
-                <li>Component velocities add in quadrature because the gravitational potentials are independent and spherically averaged.</li>
-                <li>The MOND curve shows the deep-MOND asymptotic limit ($a \ll a_0$) where $V^4 \approx G\,M\,a_0$. The full MOND interpolating function transitions smoothly from Newtonian at small $R$ to this flat regime.</li>
+                <li>Component velocities add in quadrature because the gravitational potentials superpose: $V^2 = V_{\rm bulge}^2 + V_{\rm disk}^2 + V_{\rm halo}^2$. The disk term is the exact Freeman solution for an exponential surface density, not a spherical approximation to it.</li>
+                <li>The MOND curve uses the simple interpolating function $\mu(x) = x/(1+x)$, so $a = \tfrac{1}{2}a_N\left[1 + \sqrt{1 + 4a_0/a_N}\right]$: Newtonian at small $R$ where $a_N \gg a_0$, and approaching the deep-MOND limit $V^4 \to G\,M\,a_0$ at large $R$. Its baryonic acceleration $a_N = V_{\rm baryons}^2/R$ comes from the same exponential disk and bulge as the Newtonian curve, so the two lines differ only by the interpolation.</li>
                 <li>Rotation curves are one line of evidence for dark matter. Cluster dynamics, gravitational lensing (Bullet Cluster), and CMB anisotropies all indicate most matter is non-luminous.</li>
               </ul>
             </div>

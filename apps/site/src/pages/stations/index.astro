@@ -5,16 +5,11 @@ import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import DemoCanvasThumbnail from "../../components/DemoCanvasThumbnail.astro";
 import { topicColor, primaryTopic } from "../../lib/topicColors";
+import { withBase } from "../../lib/base";
 
 const demos = listedDemos(await getCollection("demos"));
 const stationEntries = await getCollection("stations");
 
-const base = import.meta.env.BASE_URL;
-const withBase = (path: string) => {
-  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
-  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
-  return `${normalizedBase}${normalizedPath}`;
-};
 
 // A station page exists for every demo (getStaticPaths derives from the demos
 // collection), but only some have authored content. The rest render a generic

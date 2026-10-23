@@ -1,5 +1,6 @@
 ---
 import Icon from "./Icon.astro";
+import { TOPIC_LABEL, isTopicKey } from "../lib/topics";
 
 /*
  * No current-value props. The page is prerendered, so any "selected" state computed here
@@ -49,9 +50,11 @@ const LEVEL_LABEL: Record<string, string> = {
       <span class="filter-bar__label">Choose a topic</span>
       <select class="cp-select" name="topic">
         <option value="">All</option>
-        {topics.map((t) => (
-          <option value={t} data-label={t}>{t}</option>
-        ))}
+        {topics.map((t) => {
+          /* The schema's enum keys are identifiers ("DataInference"), not copy. */
+          const label = isTopicKey(t) ? TOPIC_LABEL[t] : t;
+          return <option value={t} data-label={label}>{label}</option>;
+        })}
       </select>
     </label>
 
@@ -59,7 +62,7 @@ const LEVEL_LABEL: Record<string, string> = {
       <span class="filter-bar__label">Time budget</span>
       <select class="cp-select" name="time">
         <option value="">Any</option>
-        <option value="lt10" data-label="≤10 min">≤10 min</option>
+        <option value="lt10" data-label="Under 10 min">Under 10 min</option>
         <option value="10to20" data-label="10–20 min">10–20 min</option>
         <option value="gt20" data-label="20+ min">20+ min</option>
       </select>

@@ -3,7 +3,7 @@ import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import TagPill from "../../components/TagPill.astro";
-import { normalizeBasePathPath } from "../../lib/catalog";
+import { normalizeBasePathPath, withBase } from "../../lib/base";
 
 export async function getStaticPaths() {
   const playlists = await getCollection("playlists");
@@ -15,7 +15,6 @@ export async function getStaticPaths() {
 
 const { playlist } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const withBase = (path: string) => normalizeBasePathPath(path, base);
 
 const demos = await getCollection("demos");
 const demoBySlug = new Map<string, (typeof demos)[number]>(demos.map((d) => [d.slug, d]));

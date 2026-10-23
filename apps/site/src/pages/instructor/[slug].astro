@@ -53,9 +53,8 @@ const missingSections = sectionOrder.filter((section) => !presentSections.has(se
 const hasPartialInstructorBundle = hasInstructorContent && missingSections.length > 0;
 ---
 
-<Layout title={`${entry.data.title} — Instructor Notes`} hasMath={true}>
+<Layout title={`${entry.data.title} — Instructor Notes`} hasMath={true} noindex>
   <head>
-    <meta name="robots" content="noindex" />
   </head>
 
   <header class="header">

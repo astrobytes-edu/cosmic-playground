@@ -130,6 +130,23 @@
   white-space: nowrap;
 }
 
+/*
+ * A readout qualifier: the condition under which the value is the quantity its label
+ * names. blackbody-radiation reports $(T/T_\odot)^4$, which is the luminosity ratio only
+ * at equal radius, and the label claimed a luminosity for the CMB without it. Set small
+ * and muted on its own line so it reads as a condition on the label, not as part of the
+ * quantity's name, and never as a unit -- units stay in .cp-readout__unit beside the
+ * value, which is where the readout typography contract puts them.
+ */
+.cp-layer-instrument .cp-readout__qualifier {
+  display: block;
+  font-size: var(--cp-readout-unit-size);
+  font-weight: var(--cp-readout-label-weight);
+  color: var(--cp-readout-unit-color);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
 /* --- Callouts --- */
 .cp-layer-instrument .cp-callout {
   border-left: 3px solid var(--cp-accent);

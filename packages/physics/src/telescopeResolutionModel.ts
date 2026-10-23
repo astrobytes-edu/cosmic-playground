@@ -80,6 +80,24 @@ function diffractionLimitArcsecFromWavelengthCmAndApertureCm(
   return AstroUnits.radToArcsec(thetaRad);
 }
 
+/**
+ * The angular resolution actually delivered.
+ *
+ * Without AO the atmosphere sets the floor, so the answer is the larger of the
+ * diffraction limit and the seeing disc.
+ *
+ * With AO the corrected point-spread function is a DIFFRACTION-WIDTH CORE sitting in a
+ * seeing-width halo. The resolution is the core's width -- the diffraction limit -- and
+ * the Strehl ratio is the fraction of the light that lands in it: Strehl sets contrast
+ * and halo brightness, not width. `aoPsf` below returns that decomposition.
+ *
+ * This replaced `sqrt(theta_diff^2 + [seeing (1 - S)]^2)`, which made the reported AO
+ * resolution almost independent of the telescope. Recomputed at 550 nm with 1.00 arcsec
+ * seeing and S = 0.6, the old expression returned 0.400 arcsec for an 8 m (23x the
+ * diffraction limit), 0.400 arcsec for a 10 m (29x) and 0.400 arcsec for a 39 m (113x) --
+ * so a student sweeping the aperture with AO on saw the resolution refuse to improve,
+ * which is the inverse of the lesson. Real AO on an 8 m delivers a ~0.017 arcsec core.
+ */
 function effectiveResolutionArcsec(args: {
   diffractionLimitArcsec: number;
   seeingArcsec: number;
@@ -90,15 +108,38 @@ function effectiveResolutionArcsec(args: {
   if (!Number.isFinite(diffractionLimitArcsec) || diffractionLimitArcsec <= 0) return Number.NaN;
   if (!Number.isFinite(seeingArcsec) || seeingArcsec <= 0) return diffractionLimitArcsec;
 
-  if (!aoEnabled) return Math.max(diffractionLimitArcsec, seeingArcsec);
+  if (aoEnabled) return diffractionLimitArcsec;
+  return Math.max(diffractionLimitArcsec, seeingArcsec);
+}
 
+export interface AoPsf {
+  /** Width of the corrected core: the diffraction limit [arcsec]. */
+  coreArcsec: number;
+  /** Width of the uncorrected halo around it: the seeing disc [arcsec]. */
+  haloArcsec: number;
+  /** Fraction of the light in the core. This is the Strehl ratio. */
+  coreEnergyFraction: number;
+  /** Fraction left in the halo, 1 - Strehl. */
+  haloEnergyFraction: number;
+}
+
+/**
+ * The two components of an AO-corrected point-spread function, so a drawing can show the
+ * core inside the halo and a readout can report the Strehl ratio as what it is.
+ */
+function aoPsf(args: {
+  diffractionLimitArcsec: number;
+  seeingArcsec: number;
+  aoStrehl?: number;
+}): AoPsf {
+  const { diffractionLimitArcsec, seeingArcsec } = args;
   const strehl = clamp01(args.aoStrehl ?? AO_STREHL_DEFAULT);
-  const correctedSeeingArcsec = seeingArcsec * (1 - strehl);
-  const combined = Math.sqrt(
-    diffractionLimitArcsec * diffractionLimitArcsec +
-      correctedSeeingArcsec * correctedSeeingArcsec
-  );
-  return Math.max(diffractionLimitArcsec, combined);
+  return {
+    coreArcsec: diffractionLimitArcsec,
+    haloArcsec: Math.max(diffractionLimitArcsec, seeingArcsec),
+    coreEnergyFraction: strehl,
+    haloEnergyFraction: 1 - strehl
+  };
 }
 
 function resolutionStatusFromSeparationArcsec(args: {
@@ -126,5 +167,6 @@ export const TelescopeResolutionModel = {
   diffractionLimitRadFromWavelengthCmAndApertureCm,
   diffractionLimitArcsecFromWavelengthCmAndApertureCm,
   effectiveResolutionArcsec,
+  aoPsf,
   resolutionStatusFromSeparationArcsec
 } as const;

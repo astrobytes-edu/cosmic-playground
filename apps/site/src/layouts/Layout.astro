@@ -4,20 +4,23 @@ import BrandMark from "../components/BrandMark.astro";
 import KatexAutoRender from "../components/KatexAutoRender.astro";
 import MobileNav from "../components/MobileNav.astro";
 import MuseumStarfield from "../components/MuseumStarfield.astro";
+import { withBase } from "../lib/base";
+import { FOOTER_NAV, PRIMARY_NAV } from "../lib/nav";
 
 export type LayoutProps = {
   title?: string;
   hasMath?: boolean;
+  /**
+   * Keep this page out of search results. The instructor pages carried their own
+   * `<meta name="robots">` inside the page body, where it is inert -- a robots meta is
+   * only honoured in <head>, so all 20 of them were indexable. Pages that want it now
+   * ask the layout, which is the only thing that can write to <head>.
+   */
+  noindex?: boolean;
 };
 
-const { title = "Cosmic Playground", hasMath = true } = Astro.props;
+const { title = "Cosmic Playground", hasMath = true, noindex = false } = Astro.props;
 
-const withBase = (path: string) => {
-  const base = import.meta.env.BASE_URL;
-  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
-  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
-  return `${normalizedBase}${normalizedPath}`;
-};
 
 const currentPath = Astro.url.pathname;
 
@@ -40,6 +43,7 @@ const isLightTheme =
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{title}</title>
+    {noindex ? <meta name="robots" content="noindex, follow" /> : null}
     <link rel="stylesheet" href={withBase("assets/katex/katex.min.css")} />
     <link rel="preload" href={withBase("fonts/Outfit.woff2")} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={withBase("fonts/SourceSans3.woff2")} as="font" type="font/woff2" crossorigin />
@@ -92,38 +96,13 @@ const isLightTheme =
           </ul>
         </div>
         <nav class="desktop-nav" aria-label="Primary">
-          <a
-            href={withBase("explore/")}
-            aria-current={isActive("/explore/") ? "page" : undefined}
-          >
-            Explore
-          </a>
-          <a
-            href={withBase("topics/")}
-            aria-current={isActive("/topics/") ? "page" : undefined}
-          >
-            Topics
-          </a>
-          <a
-            href={withBase("playlists/")}
-            aria-current={isActive("/playlists/") ? "page" : undefined}
-          >
-            Playlists
-          </a>
-          <a
-            href={withBase("for-instructors/")}
-            aria-current={isActive("/for-instructors/") ? "page" : undefined}
-          >
-            For Instructors
-          </a>
-          <a
-            href={withBase("about/")}
-            aria-current={isActive("/about/") ? "page" : undefined}
-          >
-            About
-          </a>
+          {PRIMARY_NAV.map(({ href, label }) => (
+            <a href={withBase(href)} aria-current={isActive(`/${href}`) ? "page" : undefined}>
+              {label}
+            </a>
+          ))}
         </nav>
-        <MobileNav withBase={withBase} isActive={isActive} />
+        <MobileNav isActive={isActive} />
       </div>
     </header>
     <main id="content" class="site-main">
@@ -133,13 +112,9 @@ const isLightTheme =
     <footer class="site-footer cp-no-print">
       <div class="site-footer__inner">
         <nav class="site-footer__nav" aria-label="Footer">
-          <a href={withBase("explore/")}>Explore</a>
-          <a href={withBase("topics/")}>Topics</a>
-          <a href={withBase("playlists/")}>Playlists</a>
-          <a href={withBase("stations/")}>Station cards</a>
-          <a href={withBase("glossary/")}>Glossary</a>
-          <a href={withBase("for-instructors/")}>For instructors</a>
-          <a href={withBase("about/")}>About</a>
+          {FOOTER_NAV.map(({ href, label }) => (
+            <a href={withBase(href)}>{label}</a>
+          ))}
         </nav>
         <div class="site-footer__meta">
           <p class="site-footer__credit">Developed and designed by Anna Rosen.</p>

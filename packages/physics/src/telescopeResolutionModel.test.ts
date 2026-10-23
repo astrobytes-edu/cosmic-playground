@@ -61,15 +61,52 @@ describe("TelescopeResolutionModel", () => {
     ).toBe(1.0);
   });
 
-  it("reduces effective seeing with AO (quadrature with corrected seeing)", () => {
-    const eff = TelescopeResolutionModel.effectiveResolutionArcsec({
-      diffractionLimitArcsec: 0.05,
+  /*
+   * A corrected AO core has the width of the diffraction pattern, not a scaled-down
+   * seeing disc. Strehl is the fraction of the light IN that core, so it changes the
+   * contrast and the halo, not the resolution. The previous model returned
+   * sqrt(theta_diff^2 + [seeing (1 - S)]^2), which at S = 0.6 and seeing = 1.00 arcsec
+   * reports 0.400 arcsec for an 8 m, a 10 m AND a 39 m telescope -- the aperture drops
+   * out of the answer, which is the opposite of what the demo teaches.
+   */
+  it("resolves at the diffraction limit with AO on, whatever the seeing", () => {
+    for (const seeingArcsec of [0.4, 1.0, 2.5]) {
+      expect(
+        TelescopeResolutionModel.effectiveResolutionArcsec({
+          diffractionLimitArcsec: 0.0173,
+          seeingArcsec,
+          aoEnabled: true,
+          aoStrehl: 0.6
+        })
+      ).toBeCloseTo(0.0173, 12);
+    }
+  });
+
+  it("AO resolution still scales with aperture", () => {
+    const eight = TelescopeResolutionModel.effectiveResolutionArcsec({
+      diffractionLimitArcsec: 0.0173,
       seeingArcsec: 1.0,
-      aoEnabled: true,
+      aoEnabled: true
+    });
+    const elt = TelescopeResolutionModel.effectiveResolutionArcsec({
+      diffractionLimitArcsec: 0.0035,
+      seeingArcsec: 1.0,
+      aoEnabled: true
+    });
+    // 39 m / 8 m = 4.9x, so the resolutions must differ by about that factor.
+    expect(eight / elt).toBeCloseTo(0.0173 / 0.0035, 6);
+  });
+
+  it("splits the AO point-spread function into a core and a seeing halo", () => {
+    const psf = TelescopeResolutionModel.aoPsf({
+      diffractionLimitArcsec: 0.0173,
+      seeingArcsec: 1.0,
       aoStrehl: 0.6
     });
-    expect(eff).toBeGreaterThan(0.35);
-    expect(eff).toBeLessThan(0.6);
+    expect(psf.coreArcsec).toBeCloseTo(0.0173, 12);
+    expect(psf.haloArcsec).toBeCloseTo(1.0, 12);
+    expect(psf.coreEnergyFraction).toBeCloseTo(0.6, 12);
+    expect(psf.haloEnergyFraction).toBeCloseTo(0.4, 12);
   });
 
   it("labels resolved/marginal/unresolved with ratio cutoffs", () => {

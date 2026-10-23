@@ -5,6 +5,7 @@ import DemoCanvasThumbnail from "./DemoCanvasThumbnail.astro";
 import { topicColor, primaryTopic } from "../lib/topicColors";
 import { TOPIC_LABEL, isTopicKey, topicPath } from "../lib/topics";
 import { readinessBadge } from "../lib/readiness";
+import { renderInlineMath } from "../lib/inlineMath";
 
 export type DemoCardProps = {
   title: string;
@@ -69,8 +70,13 @@ const topicLinks = topics.map((t) => ({
     : undefined
 }));
 const badge = readinessBadge(readiness);
+/*
+ * Words, not a relational operator. This read "\u226410 min" -- a Unicode math glyph in
+ * reader-visible copy, which the project authors as KaTeX everywhere else, and which no
+ * pill can typeset. The filter's own option labels say the same thing.
+ */
 const timeLabel =
-  timeMinutes <= 10 ? "\u226410 min" : timeMinutes <= 20 ? "10\u201320 min" : "20+ min";
+  timeMinutes <= 10 ? "Under 10 min" : timeMinutes <= 20 ? "10\u201320 min" : "20+ min";
 ---
 
 <article
@@ -103,10 +109,10 @@ const timeLabel =
         </p>
       ) : (
         <p class="demo-card__key-line">
-          <strong>Key idea:</strong> {keyIdea ?? description}
+          <strong>Key idea:</strong> <span set:html={renderInlineMath(keyIdea ?? description)} />
         </p>
       )}
-      <p class="demo-card__desc">{description}</p>
+      <p class="demo-card__desc" set:html={renderInlineMath(description)}></p>
       {/*
         * Why this card matched. Filled by the Explore script when the search term hits a
         * misconception rather than the title or tags -- otherwise the reader gets a card

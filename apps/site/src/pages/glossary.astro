@@ -4,13 +4,9 @@ import { listedDemos } from "../lib/catalog";
 import Layout from "../layouts/Layout.astro";
 import Breadcrumb from "../components/Breadcrumb.astro";
 import { glossary as glossaryData, type GlossaryEntry } from "../data/glossary";
+import { withBase } from "../lib/base";
 
 const base = import.meta.env.BASE_URL;
-const withBase = (path: string) => {
-  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
-  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
-  return `${normalizedBase}${normalizedPath}`;
-};
 
 const glossary = [...glossaryData].sort((a, b) =>
   a.term.localeCompare(b.term)

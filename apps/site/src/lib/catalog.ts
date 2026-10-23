@@ -14,12 +14,6 @@ export type PlaylistEntry = CollectionEntry<"playlists">;
  * first place, so the unreachable one is gone rather than kept "in case".
  */
 
-export function normalizeBasePathPath(path: string, base: string): string {
-  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
-  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
-  return `${normalizedBase}${normalizedPath}`;
-}
-
 /**
  * Demos that belong in catalogue listings.
  *
@@ -52,4 +46,39 @@ export function playlistMembershipMap(
     }
   }
   return memberships;
+}
+
+/**
+ * The one-line card description, taken from the exhibit body's first prose line.
+ *
+ * Two identical copies of this lived in explore/index.astro and topics/[slug].astro, and
+ * both sliced the line at exactly 140 characters with no regard for where that landed.
+ * Demo bodies are authored with inline TeX, so the cut fell inside a `$...$` span and the
+ * card printed raw LaTeX at a reader: the conservation-laws card ended "...then press
+ * Escape ($\sqrt{2" and eclipse-geometry ended "$|\be". Cutting on a word boundary and
+ * then dropping any span left unbalanced by the cut makes the result always renderable,
+ * and `renderInlineMath` in DemoCard typesets what survives.
+ */
+export function excerptFromBody(body: string, limit = 140): string {
+  const firstLine = body
+    .split("\n")
+    .map((l) => l.trim())
+    .find((l) => l.length > 0 && !l.startsWith("---"));
+  if (!firstLine) return "\u2014";
+
+  const line = firstLine.replace(/^#+\s*/, "");
+  if (line.length <= limit) return line;
+
+  // Back the cut off to the last word boundary rather than mid-word.
+  const cut = line.slice(0, limit);
+  const lastSpace = cut.lastIndexOf(" ");
+  let text = lastSpace > limit * 0.5 ? cut.slice(0, lastSpace) : cut;
+
+  // An odd number of `$` means the cut fell inside a math span: drop the opener too.
+  const dollars = (text.match(/\$/g) ?? []).length;
+  if (dollars % 2 === 1) {
+    text = text.slice(0, text.lastIndexOf("$"));
+  }
+
+  return `${text.replace(/[\s,;:.\u2014-]+$/, "")}\u2026`;
 }

@@ -26,13 +26,22 @@ body {
   line-height: var(--cp-leading-normal);
 }
 
+/*
+ * The skip link focuses to top: 12px, which is inside the sticky header's box. With no
+ * z-index it lost the paint order to `.site-header` (z-index: var(--cp-z-sticky)) and a
+ * keyboard user's first Tab went somewhere invisible -- the link was there, announced,
+ * and covered. It needs to out-stack the header and to be opaque, because the header's
+ * 72%-transparent blurred background sat over it.
+ */
 .skip-link {
   position: absolute;
   left: var(--cp-space-3);
   top: -999px;
+  z-index: calc(var(--cp-z-sticky) + 1);
   padding: var(--cp-space-3);
-  background: color-mix(in srgb, var(--cp-bg0) 75%, transparent);
-  border: 1px solid var(--cp-border);
+  background: var(--cp-bg0);
+  color: var(--cp-text);
+  border: 1px solid var(--cp-accent);
   border-radius: var(--cp-r-1);
 }
 

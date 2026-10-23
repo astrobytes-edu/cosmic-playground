@@ -216,7 +216,7 @@
                   where $\lambda$ is wavelength and $D$ is effective aperture.
                 </li>
                 <li>
-                  Atmosphere (toy model): without AO we take $\max(\theta_\mathrm{diff},\,\theta_\mathrm{seeing})$; with AO we reduce seeing and combine in quadrature.
+                  Atmosphere: without AO the resolution is $\max(\theta_\mathrm{diff},\,\theta_\mathrm{seeing})$. With AO the corrected point-spread function is a core of width $\theta_\mathrm{diff}$ inside a halo of width $\theta_\mathrm{seeing}$, so the resolution is $\theta_\mathrm{diff}$ and the Strehl ratio $S$ is the fraction of the light in that core, not a reduction of the seeing.
                 </li>
                 <li>
                   Status cutoffs are didactic: resolved if separation $\ge \theta_\mathrm{eff}$, marginal if $\ge 0.8\,\theta_\mathrm{eff}$.

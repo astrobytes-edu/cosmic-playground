@@ -153,6 +153,31 @@ describe("GalaxyRotationModel", () => {
       expect(vHalo).toBeGreaterThanOrEqual(0);
     });
 
+    /*
+     * The MOND curve and the Newtonian-baryons curve are drawn on the same axes, so they
+     * must be computed from the SAME baryonic gravity. MOND's interpolation reduces to
+     * Newton in the high-acceleration limit, so in that limit v_MOND must equal the
+     * model's own visible-matter curve -- the exact Freeman disk plus Hernquist bulge --
+     * and not a spherical-enclosed-mass stand-in for it.
+     */
+    it("MOND reduces to the model's own baryonic curve when a_N >> a_0", () => {
+      const compact = {
+        ...mw,
+        diskMass10: 100,
+        diskScaleLengthKpc: 0.5,
+        bulgeMass10: 0,
+        haloMass10: 0
+      };
+      for (const radiusKpc of [0.5, 1, 2]) {
+        const vMond = GalaxyRotationModel.vMondKmS({ radiusKpc, params: compact });
+        const vBaryons = GalaxyRotationModel.vVisibleKmS({ radiusKpc, params: compact });
+        const aN = (vBaryons * vBaryons) / radiusKpc;
+        expect(aN / GalaxyRotationModel.A0_MOND).toBeGreaterThan(50);
+        expect(vMond / vBaryons).toBeGreaterThan(0.99);
+        expect(vMond / vBaryons).toBeLessThan(1.02);
+      }
+    });
+
     it("MOND full interpolation approaches deep-MOND asymptote at large radius", () => {
       const radiusKpc = 50;
       const vMond = GalaxyRotationModel.vMondKmS({ radiusKpc, params: mw });
