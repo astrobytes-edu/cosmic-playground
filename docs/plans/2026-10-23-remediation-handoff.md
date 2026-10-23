@@ -39,25 +39,26 @@ audit.
 
 ## State of the tree — read this before you touch anything
 
-**There are 11 uncommitted changes on `main`.** They are all validated (see section 7 of
-the report) but nothing is committed. Your first decision to put to Anna is whether to
-commit them as one "audit fixes" commit, split them, or branch first. Do not commit
-without asking.
+The audit work is **committed on `main` and not pushed**. Anna chose to push from this
+session, so that is your first action, after confirming the two commits are what you
+expect:
 
 ```bash
-git status -sb && git diff --stat
+git log --oneline -3 && git status -sb
+git push origin main      # only after she confirms
 ```
 
-Changed: `apps/site/src/lib/base.ts` (new), `apps/site/src/lib/nav.ts` (new),
-`apps/site/src/lib/catalog.ts`, `apps/site/src/layouts/Layout.astro`,
-`apps/site/src/components/{MobileNav,DemoCard,FilterBar}.astro`,
-`apps/site/src/pages/instructor/[slug].astro`, `apps/site/src/pages/explore/index.astro`,
-`apps/site/src/pages/topics/[slug].astro`, `apps/site/src/styles/global.css`,
-11 further pages rewired to `withBase`, `packages/physics/src/galaxyRotationModel.ts`,
-`packages/physics/src/telescopeResolutionModel.ts` (+ both test files),
-`packages/theme/styles/layer-instrument.css`,
-`apps/demos/src/demos/{blackbody-radiation,galaxy-rotation,telescope-resolution}/index.html`,
-plus the two new docs.
+- `8a3d1d4` — 29 files, +340/-169: the three landed physics fixes (AO, MOND, blackbody
+  relabel), the four reader-visible correctness fixes (card excerpts, `noindex`, skip link,
+  topic labels) and the three single-source-of-truth collapses (`lib/base.ts`, `lib/nav.ts`,
+  `.cp-readout__qualifier`). Gates recorded in the commit message.
+- `4634e1a` — the report, the findings JSON, this handoff and STATUS.md.
+
+Note that pushing to `main` cancels any in-progress Pages deploy (`deploy.yml` sets
+`cancel-in-progress: true`), so push once rather than in quick succession.
+
+One untracked file, `apps/site/.gitignore`, predates this work and was deliberately left
+alone.
 
 ## The plan: six structural fixes, in this order
 
@@ -148,6 +149,7 @@ cosmological redshifts at all.
 
 ## What Anna asked for that is still outstanding
 
+0. **Push the two commits above**, which she asked to do from this session.
 1. **A detailed tracker and roadmap artifact** she will use to guide all work and progress.
    Deliberately paused before it was built. The data is ready in the findings JSON; build
    it as a page with a persistent store so finding status survives across sessions, and
@@ -175,5 +177,7 @@ cosmological redshifts at all.
 
 ## Start by
 
-Reading the report, then `git status -sb && git diff --stat`, then asking Anna the one
-gating question: commit the 11 validated fixes first, or branch and start on S2.
+Reading the report, then `git log --oneline -3 && git status -sb` to confirm the two commits,
+then pushing them. After that go straight to structural fix S2, hardening
+`scripts/validate-math-formatting.mjs`: it is a gate, it is cheap, and it currently
+certifies Unicode math that reaches readers through escapes it cannot decode.
