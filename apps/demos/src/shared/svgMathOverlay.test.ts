@@ -18,7 +18,10 @@ function setup(ctm: Ctm | null, layerOrigin = { left: 100, top: 200 }) {
   Object.assign(svg, { getScreenCTM: () => matrix });
   const overlay = createSvgMathOverlay(svg);
   overlay.layer.getBoundingClientRect = () => ({ ...layerOrigin, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => ({}) });
-  return { host, svg, overlay, setCtm: (next: Ctm | null) => (matrix = next) };
+  const setCtm = (next: Ctm | null) => {
+    matrix = next;
+  };
+  return { host, svg, overlay, setCtm };
 }
 
 const label = (key: string) => document.querySelector<HTMLElement>(`[data-svg-math="${key}"]`);

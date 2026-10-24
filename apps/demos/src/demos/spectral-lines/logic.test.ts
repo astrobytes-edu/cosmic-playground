@@ -434,11 +434,11 @@ describe("Spectral Lines -- UI Logic", () => {
       expect(readoutNames).toContain("Inverse residual (nm)");
 
       // The export is plain text pasted into lab notes: pin the exact strings.
-      const valueOf = (rows: { name: string; value: string }[], name: string) =>
+      const rowValue = (rows: { name: string; value: string }[], name: string) =>
         rows.find((item) => item.name === name)?.value;
-      expect(valueOf(payload.parameters, "Inference mode")).toBe("Inverse (lambda to transition)");
-      expect(valueOf(payload.readouts, "Transition")).toBe("n = 3 to n = 2");
-      expect(valueOf(payload.readouts, "Inferred transition")).toBe("n = 3 to n = 2");
+      expect(rowValue(payload.parameters, "Inference mode")).toBe("Inverse (lambda to transition)");
+      expect(rowValue(payload.readouts, "Transition")).toBe("n = 3 to n = 2");
+      expect(rowValue(payload.readouts, "Inferred transition")).toBe("n = 3 to n = 2");
     });
 
     it("omits inverse export rows outside hydrogen inverse context", () => {
