@@ -1,10 +1,10 @@
 {
   "about": "Cosmic Playground remediation tracker. Source of truth; see docs/tracker/README.md.",
-  "updatedAt": "2026-10-24T06:20:00Z",
+  "updatedAt": "2026-10-24T06:40:00Z",
   "now": {
     "focus": "All three parallel sessions are merged into main (not pushed): S6, the em-spectrum tick P0 and the parallax sign P0 with its stage redesign. Of the 591 findings, 26 are fixed with evidence (6 of 24 P0) and 18 more are partly fixed.",
-    "next": "Push main once and confirm the Pages deploy; then T1 on an idle machine.",
-    "blocker": ""
+    "next": "Commit and push the tick stagger, confirm the Pages deploy; then T1 on an idle machine.",
+    "blocker": "CI failed on a79a1a1: em-spectrum tick labels overlapped at 320px on Linux fonts, so the deploy was skipped and the live site is still f17f812. The two-line stagger fix is in the working tree."
   },
   "roadmap": [
     {
@@ -1526,6 +1526,16 @@
       "question": "What readiness should parallax-distance carry after the sign fix and redesign?",
       "choice": "content_verified: true, but stay beta / candidate until the redesign has a visual check and an off-scale marker",
       "why": "Its only P0 is fixed and a review is on file, but the September launch-ready wording predates a 556-line redesign. Anna approved by popup in the lead session."
+    },
+    {
+      "id": "d-em-ticks-phone-stagger",
+      "date": "2026-10-24",
+      "order": 27,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "At phone width the em-spectrum tick labels \"10 km\" and \"1 m\" had 2px of clearance on macOS and overlapped on CI Linux fonts; how should they clear?",
+      "choice": "Alternate the tick row onto two lines at 480px and below, as the power row already stacks",
+      "why": "CI run 40068409892 failed on the overlap and its screenshot showed \"10 kml m\". Staggered, the smallest same-line gap at 320px is 14.2px. Anna approved by popup. Landed on main 2026-10-24 in the commit after a79a1a1."
     }
   ]
 }

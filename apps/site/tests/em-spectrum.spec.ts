@@ -62,6 +62,7 @@ test.describe("EM Spectrum -- E2E", () => {
       await page.goto("play/em-spectrum/", { waitUntil: "domcontentloaded" });
       await expect(page.locator("#cp-demo")).toBeVisible();
       await page.waitForSelector(".spectrum__ticks .katex", { timeout: 5000 });
+      await page.evaluate(() => document.fonts.ready);
 
       // True positions are 100 - (log10(lambdaCm) + 12) / 18 * 100, recomputed here
       // (not imported) so this check is independent of the demo's own mapping.
@@ -113,6 +114,17 @@ test.describe("EM Spectrum -- E2E", () => {
             const overlap =
               A.left < B.right && B.left < A.right && A.top < B.bottom && B.top < A.bottom;
             expect(overlap, `${row.sel}[${a}] overlaps [${b}]`).toBe(false);
+          }
+        }
+
+        // At phone width neighbours on one line had 2px to spare on macOS and overlapped
+        // on CI's Linux fonts (2026-10-24), so they must sit on different lines there.
+        if (viewport.width <= 480) {
+          for (let i = 0; i + 1 < row.labels.length; i++) {
+            expect(
+              Math.abs(row.labels[i].top - row.labels[i + 1].top),
+              `${row.sel}[${i}] and [${i + 1}] share a line`
+            ).toBeGreaterThan(1);
           }
         }
       }

@@ -61,7 +61,8 @@
 /* Label rows share the bar's log axis: main.ts sets each span's `left` from
    wavelengthToPositionPercent(data-lambda-cm). The end labels are anchored by their
    outer edge so they stay inside the bar; the last label drops to a second line
-   because 88.9% and 100% are only 11% of the bar apart. */
+   because 88.9% and 100% are only 11% of the bar apart (at phone width the tick row
+   alternates lines instead; see the 480px block). */
 .spectrum__powers,
 .spectrum__ticks {
   position: relative;
@@ -120,6 +121,17 @@
 
   .spectrum__ticks {
     font-size: 0.8rem;
+  }
+
+  /* One line left "10 km" and "1 m" 2px apart on macOS, and CI's Linux fonts overlapped
+     them (2026-10-24). Alternate lines instead: odd labels on the first, even on the
+     second, so "10 fm" rises to the first line, about 15px clear of "1 nm". */
+  .spectrum__ticks > span:nth-child(odd) {
+    top: 0;
+  }
+
+  .spectrum__ticks > span:nth-child(even) {
+    top: var(--axis-step);
   }
 }
 

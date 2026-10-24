@@ -1,7 +1,7 @@
 # Cosmic Playground — status
 
-next: push main once and confirm the Pages deploy, then T1 on an idle machine; 26 of 591 audit findings fixed with evidence (6 of 24 P0), 18 partly
-blocker: none (S6, em-spectrum ticks and the parallax sign fix merged into main 2026-10-23, not pushed; f17f812 live)
+next: commit and push the em-spectrum 320px tick stagger so the Pages deploy goes green, then T1 on an idle machine; 26 of 591 audit findings fixed with evidence (6 of 24 P0), 18 partly
+blocker: CI red on a79a1a1 (em-spectrum ticks overlapped at 320px on Linux fonts; deploy skipped, live site still f17f812); fix in the working tree
 due: 2026-09-18 (dossier)
 
 ## Red-team audit (2026-10-23, claude-opus-5)
