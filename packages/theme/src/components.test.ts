@@ -337,22 +337,17 @@ describe("demo shell layering", () => {
     "utf-8"
   );
 
-  it("keeps the sidebar above the drawer where they overlap", () => {
-    // These two overlap while the sidebar is sticky-pinned past its grid area, and only
-    // one can receive the click. Measured both ways: with the drawer on top, every
-    // sidebar control -- sliders included -- becomes unclickable once the drawer is in
-    // view. The sidebar is how you drive the demo, so it wins.
-    const zOf = (selector: string) => {
-      const block = shellCss.split(selector)[1]?.split("}")[0] ?? "";
-      return Number(block.match(/z-index:\s*(\d+)/)?.[1] ?? NaN);
-    };
-    expect(zOf(".cp-demo__controls,")).toBeGreaterThan(zOf(".cp-demo__shelf {"));
-  });
-
-  it("insets drawer content so it is not stranded under the sidebar", () => {
-    // The consequence of the line above: anything interactive in the drawer's left
-    // ~360px cannot be clicked. Prose never noticed; a button does.
-    expect(shellCss).toMatch(/\.cp-demo__drawer \.cp-accordion__body[\s\S]{0,200}padding-left/);
+  it("gives the sticky sidebar its whole column, shelf row included", () => {
+    // A sticky grid item travels within the whole grid, not its own area. When the shelf
+    // spanned both columns the pinned sidebar slid over its left ~340px and covered 13
+    // shelf tabs in 5 demos (2026-10-23). The sidebar must head every row of the desktop
+    // grid so nothing else shares its column.
+    const block = shellCss.split(/\n\.cp-demo \{/)[1]?.split("}")[0] ?? "";
+    const rows = [...(block.match(/grid-template-areas:([^;]*);/)?.[1] ?? "").matchAll(/"([^"]*)"/g)].map(
+      (row) => row[1].trim().split(/\s+/)
+    );
+    expect(rows.map((row) => row.at(-1))).toEqual(["viz", "playbar", "readouts", "shelf"]);
+    expect(rows.every((row) => row[0] === "sidebar")).toBe(true);
   });
 });
 

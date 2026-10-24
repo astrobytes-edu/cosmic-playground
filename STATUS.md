@@ -1,6 +1,6 @@
 # Cosmic Playground — status
 
-next: confirm the Pages deploy of the CI layout fix goes green and the live site moves off 9d446e4, then the test-suite refactor T1-T4 and S6 (structural sidebar/shelf fix runs in its own session)
+next: confirm the Pages deploy of the CI layout fix goes green and the live site moves off 9d446e4, then the test-suite refactor T1-T4 and S6 (structural sidebar/shelf fix committed on branch claude/elated-dijkstra-1374ae, not yet on main)
 blocker: none; the live site stays at 9d446e4 (2026-09-11) until that deploy passes
 due: 2026-09-18 (dossier)
 

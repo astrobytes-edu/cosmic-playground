@@ -36,20 +36,23 @@
   border: 0;
 }
 
-/* --- Unified grid (>= 1024px) --- */
+/* --- Unified grid (>= 1024px) ---
+ * The sidebar owns its whole column, shelf row included. A sticky grid item travels within
+ * the whole grid container, not its own area, so when the shelf spanned both columns the
+ * pinned sidebar slid over the shelf's left ~340px (13 shelf tabs in 5 demos unclickable,
+ * 2026-10-23). With nothing else in its column it has nothing to cover. A demo that defines
+ * its own areas keeps the sidebar in every row of its column too (shelf-reach.spec.ts). */
 .cp-demo {
-  /* The sidebar column, which shelf content below it is padded clear of. */
-  --cp-demo-sidebar-w: clamp(280px, 25vw, 360px);
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: var(--cp-demo-sidebar-w) minmax(0, 1fr);
+  grid-template-columns: clamp(280px, 25vw, 360px) minmax(0, 1fr);
   grid-template-rows: 1fr auto auto auto;
   grid-template-areas:
     "sidebar  viz"
     "sidebar  playbar"
     "sidebar  readouts"
-    "shelf    shelf";
+    "sidebar  shelf";
   gap: var(--cp-space-3);
   padding: var(--cp-space-4);
   min-height: 100svh;
@@ -59,8 +62,8 @@
 /* --- Grid area mappings --- */
 
 /* Sidebar: physics controls (sticky, scrollable)
-   z-index: 3 keeps the sidebar above .cp-demo__drawer (z-index:2)
-   so utility-toolbar buttons remain clickable when shelf overlaps. */
+   z-index: 3 dates from when the pinned sidebar slid over the shelf (z-index: 2); the grid
+   above no longer lets them meet. */
 .cp-demo__controls,
 .cp-demo__sidebar {
   grid-area: sidebar;
@@ -91,19 +94,7 @@
 /* Playbar: animation transport (collapses to 0 when absent) */
 /* (styled in components/playbar.css, grid-area set there) */
 
-/* Shelf / Drawer: tabbed content below everything.
-   position: relative + z-index ensures the shelf layers ABOVE the
-   sticky sidebar when they overlap during scroll.
-   Background prevents the sidebar from bleeding through.
-
-   NOTE, 2026-09-04: the comment above is aspirational and the sidebar wins on purpose --
-   see its own rule, which raises it to 3 so its controls stay clickable. Measured both
-   ways: with the drawer on top, every sidebar control (sliders included) becomes
-   unclickable once the drawer is in view, which is worse, because the sidebar is how you
-   drive the demo. The two overlap only while the sidebar is sticky-pinned past its grid
-   area, so the real fix is to stop the overlap, not to reorder the layers. Until then,
-   interactive drawer content must sit clear of the sidebar column -- see
-   `.cp-drawer__body` below. */
+/* Shelf / Drawer: tabbed content below the stage, beside the pinned sidebar. */
 .cp-demo__drawer,
 .cp-demo__shelf {
   grid-area: shelf;
@@ -111,25 +102,6 @@
   position: relative;
   z-index: 2;
   background: var(--cp-bg1);
-}
-
-/*
- * Keep interactive drawer content clear of the sticky sidebar.
- *
- * The sidebar stays pinned over the left column while the drawer scrolls under it, so a
- * button in the drawer's left ~360px is unclickable: elementFromPoint returns a sidebar
- * control instead. Prose never noticed, which is why this survived -- the drawer only
- * held accordions of text until an activity with buttons moved into one.
- *
- * Tab shelves got the same treatment on 2026-10-23: 13 tabs in 5 demos sat under a sidebar
- * control at 1280x720 (shelf-reach.spec.ts). Still a stopgap; the fix is to stop the overlap.
- */
-@media (min-width: 1025px) {
-  .cp-demo__drawer .cp-accordion__body,
-  .cp-demo__shelf .cp-accordion__body,
-  .cp-demo__shelf > .cp-tabs-container {
-    padding-left: var(--cp-demo-sidebar-w);
-  }
 }
 
 /* --- Sidebar internals ---

@@ -1,9 +1,9 @@
 {
   "about": "Cosmic Playground remediation tracker. Source of truth; see docs/tracker/README.md.",
-  "updatedAt": "2026-10-24T02:00:00Z",
+  "updatedAt": "2026-10-24T03:00:00Z",
   "now": {
     "focus": "CI layout fix pushed to origin/main: demos load the design fonts, the conservation-laws dock lost its phantom grid track, shelf tabs clear the sticky sidebar, eos-lab readouts fit at 1440x900.",
-    "next": "Confirm the Pages deploy of that push goes green and the live site moves off 9d446e4; then the test-suite refactor (T1-T4) and S6. The structural sidebar/shelf fix runs in its own session.",
+    "next": "Confirm the Pages deploy of that push goes green and the live site moves off 9d446e4; then the test-suite refactor (T1-T4) and S6. The structural sidebar/shelf fix is committed on branch claude/elated-dijkstra-1374ae, not yet on main.",
     "blocker": ""
   },
   "roadmap": [
@@ -1115,7 +1115,7 @@
       "statusLabel": "landed",
       "question": "Shelf tabs under the sticky sidebar (13 tabs in 5 demos at 1280x720)",
       "choice": "Pad the tab rows clear of the sidebar now; the structural fix is a separate task",
-      "why": "Same stopgap the accordion bodies already use; shelf-reach.spec.ts holds the line until the overlap itself is removed. Landed in commit \"Load the design fonts in demos and fix the CI layout overflow\"."
+      "why": "Same stopgap the accordion bodies already use; shelf-reach.spec.ts holds the line until the overlap itself is removed. Landed in commit \"Load the design fonts in demos and fix the CI layout overflow\". Superseded by d-shelf-column: the padding is deleted."
     },
     {
       "id": "d-eos-katex",
@@ -1126,6 +1126,26 @@
       "question": "eos-lab channel-card numbers grew 21% when S2 moved them to KaTeX, pushing Total P 5px below the fold at 1440x900",
       "choice": "KaTeX at 1em in the cards plus a 15rem readout reserve",
       "why": "Restores the size the mono text had; at 900px tall the 640px stage floor binds and Total P ends at 891px. Landed in commit \"Load the design fonts in demos and fix the CI layout overflow\"."
+    },
+    {
+      "id": "d-shelf-column",
+      "date": "2026-10-23",
+      "order": 16,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "Structural fix for the sticky sidebar sliding over the full-width shelf",
+      "choice": "The sidebar owns its whole column, shelf row included (CSS only); the shelf sits beside it",
+      "why": "Smallest change: shell template plus the blackbody, hydrostatic and stars-zams-hr overrides, no markup. The sidebar stays pinned while the reader works through shelf activities, which the 2026-09-04 layering note says matters. Measured on eclipse-geometry at 1440x900: overlap 360px wide -> 0, page height unchanged at 1211px. The rejected wrapper option would have let the sidebar scroll away and taken the shelf to 1392px wide, touching ~20 index.html files. Committed on branch claude/elated-dijkstra-1374ae."
+    },
+    {
+      "id": "d-hydro-student-unstick",
+      "date": "2026-10-23",
+      "order": 17,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "Hydrostatic student mode stacks a full-width sticky controls panel above the stage, which pinned over it while scrolling",
+      "choice": "Make the controls non-sticky in student mode only, in the same commit",
+      "why": "Measured 2026-10-23 at 1440x900, scrolled 500px: the 645px panel covered the top 480px of the stage. Found by the new sidebar-footprint E2E. Committed on branch claude/elated-dijkstra-1374ae."
     }
   ]
 }
