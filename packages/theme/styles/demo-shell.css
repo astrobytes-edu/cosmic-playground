@@ -41,7 +41,9 @@
  * the whole grid container, not its own area, so when the shelf spanned both columns the
  * pinned sidebar slid over the shelf's left ~340px (13 shelf tabs in 5 demos unclickable,
  * 2026-10-23). With nothing else in its column it has nothing to cover. A demo that defines
- * its own areas keeps the sidebar in every row of its column too (shelf-reach.spec.ts). */
+ * its own areas must do the same while its sidebar is sticky; the orbit shell and hydro's
+ * student mode put rows beside or below it and are safe only because their sidebar is not
+ * sticky. shelf-reach.spec.ts checks the geometry, not this rule. */
 .cp-demo {
   position: relative;
   z-index: 1;

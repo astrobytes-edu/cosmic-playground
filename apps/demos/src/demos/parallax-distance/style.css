@@ -439,20 +439,16 @@
      * outside the height and the reserve is 26px short. */
     box-sizing: border-box;
     /*
-     * The shell puts `sidebar` in all three of the first grid rows, so those rows together
-     * are as tall as the taller of the sidebar and (stage + gaps + readout strip), and the
-     * strip's bottom is that plus the shell's 24px padding.
+     * The reserves were sized on 2026-09-10, when the shell put `sidebar` in only the first
+     * three grid rows and the sidebar (capped at `100svh - 32px`) set their height. They kept
+     * the stage-plus-strip term under that cap on CI's Linux metrics, where the strip ran
+     * ~80px taller than on macOS. 1440x900 then measured sidebar 868, stage 558, strip 186.
      *
-     * The sidebar's own cap is `100svh - 32px` -- a deterministic value, identical on every
-     * platform. So the strip clears the fold reliably exactly when the SIDEBAR is the taller
-     * of the two. When the stage-plus-strip term wins instead, clearance starts depending on
-     * how tall the text renders, and CI on Linux (wider, taller default face, ~80px more
-     * strip) ran 14px past the fold while macOS sat 6px inside it.
-     *
-     * These reserves are therefore sized so the stage-plus-strip term stays UNDER the
-     * sidebar at every desktop size on the Linux metrics, not the local ones. Measured
-     * 2026-09-10, 1440x900: sidebar 868, stage 558, strip 186 here and ~266 on CI, so the
-     * term is 808 against 868 -- 60px of slack where there used to be none.
+     * Since a32087b the sidebar spans every row of its column, shelf row included, so it no
+     * longer sets those rows. The strip's bottom is now just the shell padding plus stage,
+     * gaps and strip. Measured 2026-10-23: at 1440x900, stage 558 and strip 189 put the
+     * strip's bottom at 795 (sidebar 870); at 1280x720, stage 296 and strip 276 put it at
+     * 620. Both leave about 100px below the strip, so the reserves are now on the safe side.
      */
     height: clamp(296px, calc(100svh - var(--parallax-readout-reserve)), 820px);
   }

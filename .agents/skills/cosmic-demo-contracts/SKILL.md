@@ -57,7 +57,7 @@ planetary-conjunctions have neither mode yet.
 
 - eos-lab's first-visit tour blocks clicks unless `localStorage["eos-lab-toured"] = "1"` (addInitScript).
 - Range inputs with decimals: set the value via `evaluate` and dispatch `input` and `change`.
-- Wait for entry animations before clicking; shelf tabs sit under the sticky sidebar.
+- Wait for entry animations before clicking. Shelf tabs sat under the sticky sidebar until a32087b (2026-10-23) gave the sidebar its whole column; older specs still click them via JS for that reason.
 
 ## Red flags — stop
 

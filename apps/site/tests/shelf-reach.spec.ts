@@ -52,44 +52,62 @@ async function openDemo(page: Page, slug: string) {
   await page.evaluate(() => document.fonts.ready);
 }
 
+/** At each size, every region the sticky sidebar intersects at any scroll position. */
+async function pinnedSidebarOverlaps(page: Page): Promise<string[]> {
+  const overlaps: string[] = [];
+  for (const size of SIZES) {
+    await page.setViewportSize(size);
+    const found = await page.evaluate((regions) => {
+      const sidebar = document.querySelector<HTMLElement>(".cp-demo__controls, .cp-demo__sidebar");
+      if (!sidebar || getComputedStyle(sidebar).position !== "sticky") return [];
+      const others = [...document.querySelectorAll<HTMLElement>(regions)].filter(
+        (el) => !el.contains(sidebar) && !sidebar.contains(el)
+      );
+      const first = new Map<string, string>();
+      const maxY = document.documentElement.scrollHeight - innerHeight;
+      for (let y = 0; ; y = Math.min(maxY, y + 100)) {
+        scrollTo({ top: y, behavior: "instant" });
+        const s = sidebar.getBoundingClientRect();
+        for (const el of others) {
+          const b = el.getBoundingClientRect();
+          const w = Math.min(s.right, b.right) - Math.max(s.left, b.left);
+          const h = Math.min(s.bottom, b.bottom) - Math.max(s.top, b.top);
+          const name = el.className.split(" ")[0];
+          if (w > 1 && h > 1 && !first.has(name)) {
+            first.set(name, `over ${name}, ${Math.round(w)}x${Math.round(h)}px at scrollY=${y}`);
+          }
+        }
+        if (y >= maxY) break;
+      }
+      scrollTo({ top: 0, behavior: "instant" });
+      return [...first.values()];
+    }, REGIONS);
+    overlaps.push(...found.map((line) => `${size.width}x${size.height} sidebar ${line}`));
+  }
+  return overlaps;
+}
+
 test.describe("Sidebar footprint", () => {
   for (const slug of demoSlugsFromContent()) {
     test(`${slug}: the sticky sidebar never covers another region`, async ({ page }) => {
       await openDemo(page, slug);
-
-      const overlaps: string[] = [];
-      for (const size of SIZES) {
-        await page.setViewportSize(size);
-        const found = await page.evaluate((regions) => {
-          const sidebar = document.querySelector<HTMLElement>(".cp-demo__controls, .cp-demo__sidebar");
-          if (!sidebar || getComputedStyle(sidebar).position !== "sticky") return [];
-          const others = [...document.querySelectorAll<HTMLElement>(regions)].filter(
-            (el) => !el.contains(sidebar) && !sidebar.contains(el)
-          );
-          const first = new Map<string, string>();
-          const maxY = document.documentElement.scrollHeight - innerHeight;
-          for (let y = 0; ; y = Math.min(maxY, y + 100)) {
-            scrollTo({ top: y, behavior: "instant" });
-            const s = sidebar.getBoundingClientRect();
-            for (const el of others) {
-              const b = el.getBoundingClientRect();
-              const w = Math.min(s.right, b.right) - Math.max(s.left, b.left);
-              const h = Math.min(s.bottom, b.bottom) - Math.max(s.top, b.top);
-              const name = el.className.split(" ")[0];
-              if (w > 1 && h > 1 && !first.has(name)) {
-                first.set(name, `over ${name}, ${Math.round(w)}x${Math.round(h)}px at scrollY=${y}`);
-              }
-            }
-            if (y >= maxY) break;
-          }
-          scrollTo({ top: 0, behavior: "instant" });
-          return [...first.values()];
-        }, REGIONS);
-        overlaps.push(...found.map((line) => `${size.width}x${size.height} sidebar ${line}`));
-      }
-      expect(overlaps, `${slug}: regions the pinned sidebar covers`).toEqual([]);
+      expect(await pinnedSidebarOverlaps(page), `${slug}: regions the pinned sidebar covers`).toEqual([]);
     });
   }
+
+  test("hydrostatic-equilibrium-explorer in instructor mode: the sticky sidebar never covers another region", async ({
+    page
+  }) => {
+    // Hydro opens in student mode, whose stacked controls are not sticky, so the loop above
+    // checks nothing there. Instructor mode is the two-column sticky template whose shelf
+    // row a32087b changed to "sidebar shelf" (review of the merge, 2026-10-23).
+    await openDemo(page, "hydrostatic-equilibrium-explorer");
+    await page.locator("#modeInstructor").click();
+    await expect(page.locator(".hydro-demo")).toHaveAttribute("data-view-mode", "instructor");
+    await page.setViewportSize(SIZES[0]);
+    await expect(page.locator(".cp-demo__controls")).toHaveCSS("position", "sticky");
+    expect(await pinnedSidebarOverlaps(page), "hydro instructor mode: regions the pinned sidebar covers").toEqual([]);
+  });
 });
 
 test.describe("Shelf reach", () => {
