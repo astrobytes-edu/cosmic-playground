@@ -204,14 +204,14 @@ describe("Parallax Distance -- DOM integration", { timeout: 20000 }, () => {
     expect(sep10).toBeGreaterThan(sep100 * 2);
   });
 
-  // The two panels share one screen frame and one axis, axisHat = (-1, 0). The drawn
-  // Earth->star ray leans along the axis by -(b . axis) * ORBIT_RADIUS_PX, which is the
-  // sign of the true apparent offset; the detector dots must lean the same way.
+  // The two panels share one screen x and one axis, which points to screen-right. The
+  // drawn Earth->star ray leans along the axis by -(b . axis) * ORBIT_RADIUS_PX, which is
+  // the sign of the true apparent offset; the detector dots must lean the same way.
   // Asymmetric phases only: 0/90/180 cannot tell the two signs apart.
   it("moves the detector dots the same way the drawn Earth->star sightlines lean", async () => {
     await import("./main");
 
-    const axisX = -1;
+    const axisX = 1;
     const detectorCenterX = 280;
     const rayAxisComponent = (selector: string) => {
       const ray = requiredElement<SVGLineElement>(selector);
@@ -242,13 +242,37 @@ describe("Parallax Distance -- DOM integration", { timeout: 20000 }, () => {
       Math.sign(rayAxisComponent("#rayCaptureB"))
     );
 
-    // Offsets along the axis are +79.864 (A, 37 deg) and -79.864 (B, 143 deg) mas at
-    // d = 10 pc, so the signed A->B shift is about -159.7 mas; noise is 0.5 mas per epoch.
+    // With the axis to screen-right, offsets along it are -79.864 (A, 37 deg) and +79.864
+    // (B, 143 deg) mas at d = 10 pc, so the signed A->B shift is about +159.7 mas and B
+    // sits right of A; noise is 0.5 mas per epoch.
     const signed = parseNumericText(
       requiredElement<HTMLElement>("#deltaThetaSignedMas").textContent
     );
-    expect(signed).toBeLessThan(-150);
-    expect(signed).toBeGreaterThan(-170);
+    expect(signed).toBeGreaterThan(150);
+    expect(signed).toBeLessThan(170);
+    expect(dotAxisComponent("#detectorMarkerEpochB")).toBeGreaterThan(
+      dotAxisComponent("#detectorMarkerEpochA")
+    );
+  });
+
+  // The orbit view is a top view from the north: the star is drawn above the Sun and
+  // Earth runs counter-clockwise, so a quarter orbit from phase 0 (right of the Sun)
+  // lands Earth between the Sun and the star.
+  it("draws the star above the Sun and Earth orbiting counter-clockwise", async () => {
+    await import("./main");
+
+    const sun = requiredElement<SVGCircleElement>("#sun");
+    const star = requiredElement<SVGCircleElement>("#targetStar");
+    const earth = requiredElement<SVGCircleElement>("#earthNow");
+    const sunY = Number(sun.getAttribute("cy"));
+    const sunX = Number(sun.getAttribute("cx"));
+
+    expect(Number(star.getAttribute("cy"))).toBeLessThan(sunY);
+
+    setRangeValue("#orbitPhaseScrub", 0);
+    expect(Number(earth.getAttribute("cx"))).toBeGreaterThan(sunX);
+    setRangeValue("#orbitPhaseScrub", 90);
+    expect(Number(earth.getAttribute("cy"))).toBeLessThan(sunY);
   });
 
   it("writes each inferred value's uncertainty beside it, consistent with the propagation d = 1/p", async () => {

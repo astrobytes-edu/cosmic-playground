@@ -35,7 +35,7 @@ The demo uses:
 - **Detector shift and parallax** in **milliarcseconds** (mas) and **arcseconds** (").
 - A unit-radius orbit (AU) with explicit axis conventions:
   - Target direction $\hat{\mathbf{s}}$.
-  - Parallax measurement axis $\hat{\mathbf{a}}=\mathrm{perp}(\hat{\mathbf{s}})$.
+  - Parallax measurement axis $\hat{\mathbf{a}}$: $\hat{\mathbf{s}}$ turned $90^{\circ}$ clockwise in the top view, so it points to the right in both panels.
 
 ## Key relationships to foreground (with meaning + units)
 
@@ -70,7 +70,7 @@ $$
 \mathbf{o}_{\rm true}(\phi)=-p_{\rm true,mas}\,(\mathbf{r}(\phi)\cdot\hat{\mathbf{a}})\,\hat{\mathbf{a}}
 $$
 
-The minus sign is the physics: a star at distance $d$ in direction $\hat{\mathbf{s}}$, seen from Earth at $\mathbf{r}$, lies along $\hat{\mathbf{s}}-\mathbf{r}_\perp/d$ (with $\mathbf{r}$ and $d$ both in AU), so it appears displaced opposite to Earth's own displacement. That is the way each Earth-to-star sightline leans in the orbit panel. In the demo, positive along $\hat{\mathbf{a}}$ is toward the left of the detector.
+The minus sign is the physics: a star at distance $d$ in direction $\hat{\mathbf{s}}$, seen from Earth at $\mathbf{r}$, lies along $\hat{\mathbf{s}}-\mathbf{r}_\perp/d$ (with $\mathbf{r}$ and $d$ both in AU), so it appears displaced opposite to Earth's own displacement. That is the way each Earth-to-star sightline leans in the orbit panel. In the demo, positive along $\hat{\mathbf{a}}$ is toward the right of the detector.
 
 For captures A and B:
 

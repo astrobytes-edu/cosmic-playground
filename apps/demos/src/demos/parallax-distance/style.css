@@ -50,6 +50,14 @@
 .distance-input-cell {
   display: grid;
   gap: var(--cp-space-1);
+  min-width: 0;
+}
+
+/* `.cp-input` is width: 100% plus padding and border, so without border-box each field ran
+ * 17px past the sidebar edge (measured 2026-10-23 at 1440 and 390 wide). */
+.distance-input-cell .cp-input {
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .distance-input-label {
@@ -59,45 +67,109 @@
   letter-spacing: 0.03em;
 }
 
+/* A progress line, not a column of button-shaped boxes: the steps are status, and the
+ * buttons that advance them live in the capture bar under the stage. */
 .cp-workflow {
-  display: grid;
-  gap: var(--cp-space-1);
+  display: flex;
+  gap: var(--cp-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: cp-step;
 }
 
 .cp-workflow-step {
-  border: 1px solid color-mix(in srgb, var(--cp-border) 74%, transparent);
-  border-radius: var(--cp-r-1);
-  padding: var(--cp-space-1) var(--cp-space-2);
+  flex: 1 1 0;
+  min-width: 0;
+  padding-top: var(--cp-space-2);
+  border-top: 3px solid color-mix(in srgb, var(--cp-border) 80%, transparent);
   font-size: var(--cp-text-sm);
   color: var(--cp-muted);
-  background: color-mix(in srgb, var(--cp-bg2) 70%, transparent);
+  counter-increment: cp-step;
+}
+
+.cp-workflow-step::before {
+  content: counter(cp-step) ". ";
 }
 
 .cp-workflow-step[data-step-state="current"] {
   color: var(--cp-text);
-  border-color: color-mix(in srgb, var(--cp-accent-ice) 52%, var(--cp-border));
-  background: color-mix(in srgb, var(--cp-accent-ice) 18%, transparent);
+  font-weight: var(--cp-font-semibold);
+  border-top-color: var(--cp-accent-ice);
 }
 
 .cp-workflow-step[data-step-state="complete"] {
-  color: var(--cp-text);
-  border-color: color-mix(in srgb, var(--cp-celestial-star) 54%, var(--cp-border));
-  background: color-mix(in srgb, var(--cp-celestial-star) 18%, transparent);
+  color: var(--cp-text2);
+  border-top-color: color-mix(in srgb, var(--cp-accent-ice) 45%, var(--cp-border));
 }
 
-.capture-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+/* -- Capture bar ------------------------------------------------------------
+ * The orbit scrub and the capture buttons sit in the shell's playbar row, directly under
+ * the two drawings they change, instead of below the fold of the sidebar. */
+.capture-bar {
+  flex-wrap: wrap;
+  gap: var(--cp-space-2) var(--cp-space-3);
+  animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
+  animation-delay: calc(var(--cp-stagger) * 1.5);
+}
+
+.capture-bar .cp-button {
+  padding: var(--cp-space-2) var(--cp-space-4);
+  font-size: var(--cp-text-sm);
+  white-space: nowrap;
+}
+
+.capture-bar__scrub {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-3);
+}
+
+.capture-bar__scrub .cp-range {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.capture-bar__phase {
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-text-sm);
+  color: var(--cp-readout-value-color);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  /* Fixed width so the slider does not jitter as the phase runs 0..359, and `flex: none`
+   * so it is never squeezed under the slider (a 9ch min-width let "deg" overlap it). */
+  flex: none;
+  width: 12ch;
+}
+
+.capture-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--cp-space-2);
 }
 
-.capture-row + .capture-row {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: var(--cp-space-2);
+.capture-bar__capture--a {
+  border-color: color-mix(in srgb, var(--cp-accent-ice) 55%, var(--cp-border));
 }
 
-.capture-row .cp-chip {
-  justify-content: center;
+.capture-bar__capture--b {
+  border-color: color-mix(in srgb, var(--cp-accent-rose) 55%, var(--cp-border));
+}
+
+.capture-bar__capture--a.is-next {
+  background: color-mix(in srgb, var(--cp-accent-ice) 24%, transparent);
+  border-color: var(--cp-accent-ice);
+}
+
+.capture-bar__capture--b.is-next {
+  background: color-mix(in srgb, var(--cp-accent-rose) 24%, transparent);
+  border-color: var(--cp-accent-rose);
+}
+
+.capture-bar__minor {
+  color: var(--cp-text2);
 }
 
 .stage {
@@ -225,12 +297,18 @@
   stroke: color-mix(in srgb, var(--cp-accent-rose) 64%, var(--cp-text));
 }
 
+/* SVG font sizes are in viewBox units: a 560-wide drawing in a ~467px panel renders 15 as
+ * about 12.5px. */
 .stage__label {
   fill: var(--cp-text);
   font-family: var(--cp-font-sans);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: var(--cp-font-medium);
   text-anchor: middle;
+}
+
+.stage__label--start {
+  text-anchor: start;
 }
 
 .stage__label--sun,
@@ -239,11 +317,38 @@
 }
 
 .stage__label--earth,
-.stage__label--baseline,
-.stage__label--detector-dot,
+.stage__label--detector-dot {
+  font-size: 15px;
+  font-weight: var(--cp-font-semibold);
+}
+
 .stage__label--axis {
   fill: var(--cp-text2);
-  font-size: 12px;
+  font-size: 14px;
+}
+
+.stage__break line {
+  stroke: var(--cp-text2);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.detector__tick {
+  stroke: color-mix(in srgb, var(--cp-text2) 70%, transparent);
+  stroke-width: 1.5;
+}
+
+.detector__tick--zero {
+  stroke: var(--cp-text2);
+  stroke-width: 2;
+}
+
+.detector__tick-label {
+  fill: var(--cp-text2);
+  font-family: var(--cp-font-mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-anchor: middle;
 }
 
 .stage__label--earth-now,
@@ -262,10 +367,19 @@
 }
 
 .stage__note {
-  fill: var(--cp-muted);
+  fill: var(--cp-text2);
   font-family: var(--cp-font-sans);
-  font-size: 12px;
+  font-size: 14px;
   text-anchor: middle;
+}
+
+.stage__note--end {
+  text-anchor: end;
+}
+
+.stage__note--status {
+  fill: var(--cp-text);
+  font-weight: var(--cp-font-semibold);
 }
 
 .stage__note--warning {
@@ -279,9 +393,8 @@
 }
 
 .detector__axis {
-  stroke: color-mix(in srgb, var(--cp-border) 80%, transparent);
+  stroke: color-mix(in srgb, var(--cp-text2) 55%, transparent);
   stroke-width: 1.5;
-  stroke-dasharray: 4 5;
 }
 
 .detector__difference {
@@ -352,12 +465,6 @@
   opacity: 0.65;
 }
 
-.schematic-note {
-  text-align: center;
-  color: var(--cp-muted);
-  font-size: var(--cp-text-sm);
-}
-
 .cp-readout-strip .cp-readout__value {
   font-variant-numeric: tabular-nums;
 }
@@ -383,8 +490,10 @@
   animation: cp-slide-up var(--cp-duration-enter) var(--cp-ease-out) both;
 }
 
+/* The stage hugs its two drawings. The shell's floor (up to 70svh) framed ~100-140px of
+ * empty panel under each drawing at 1440x900 (measured 2026-10-23). */
 .cp-demo__stage {
-  min-height: clamp(380px, 62svh, 760px);
+  min-height: 0;
   animation: cp-fade-in var(--cp-duration-enter) var(--cp-ease-out) both;
   animation-delay: calc(var(--cp-stagger) * 1);
 }
@@ -432,8 +541,14 @@
  * a bounded height would leave each of them a sliver. */
 @media (min-width: 1081px) {
   .cp-demo__stage {
-    --parallax-readout-reserve: 24rem;
+    /* 2026-10-23: +3.75rem (~68px) for the capture bar that now sits between the stage and
+     * the readout strip, on top of the reserves recorded below. */
+    --parallax-readout-reserve: 27.75rem;
     display: grid;
+    /* With a max-height rather than a height, the single flex row is sized to its content
+     * when the drawings are width-limited and clamped to the cap when they are not; that
+     * is what lets the panels hug their drawings at 1440 and still shrink at 1280x720. */
+    grid-template-rows: minmax(0, 1fr);
     min-height: 0;
     /* The stage sizes as content-box, so without this the 12px padding and 1px border sit
      * outside the height and the reserve is 26px short. */
@@ -450,7 +565,26 @@
      * strip's bottom at 795 (sidebar 870); at 1280x720, stage 296 and strip 276 put it at
      * 620. Both leave about 100px below the strip, so the reserves are now on the safe side.
      */
-    height: clamp(296px, calc(100svh - var(--parallax-readout-reserve)), 820px);
+    max-height: clamp(328px, calc(100svh - var(--parallax-readout-reserve)), 820px);
+  }
+
+  /* Short screens (1280x720 projectors) cap the stage, so the drawings render at about half
+   * their viewBox and 15-unit text came out near 7px. These keep it near 9px. */
+  @media (max-height: 820px) {
+    .stage__label,
+    .stage__label--earth,
+    .stage__label--detector-dot {
+      font-size: 19px;
+    }
+
+    .stage__label--axis,
+    .stage__note {
+      font-size: 17px;
+    }
+
+    .detector__tick-label {
+      font-size: 16px;
+    }
   }
 
   .viz-layout {
@@ -478,21 +612,13 @@
 
 @media (min-width: 1440px) {
   .cp-demo__stage {
-    --parallax-readout-reserve: 19rem;
+    --parallax-readout-reserve: 22.75rem;
   }
 }
 
 @media (max-width: 1080px) {
   .viz-layout {
     grid-template-columns: 1fr;
-  }
-
-  .capture-row {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .capture-row + .capture-row {
-    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -501,9 +627,26 @@
     grid-template-columns: 1fr;
   }
 
-  .capture-row,
-  .capture-row + .capture-row {
-    grid-template-columns: 1fr;
+  /* At 390 wide the drawing renders at ~0.52 of its viewBox, which took 12-unit labels to
+   * 6.3px. These sizes keep them at 11px or more. */
+  .stage__label,
+  .stage__label--earth,
+  .stage__label--detector-dot {
+    font-size: 22px;
+  }
+
+  .stage__label--axis,
+  .stage__note,
+  .detector__tick-label {
+    font-size: 21px;
+  }
+
+  .capture-bar__actions {
+    width: 100%;
+  }
+
+  .capture-bar__actions .cp-button {
+    flex: 1 1 40%;
   }
 
   .cp-readout-strip {
@@ -518,6 +661,7 @@
 @media (prefers-reduced-motion: reduce) {
   .cp-demo__sidebar,
   .cp-demo__stage,
+  .capture-bar,
   .cp-demo__readouts,
   .cp-demo__shelf {
     animation: none;
