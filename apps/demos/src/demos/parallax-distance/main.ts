@@ -14,7 +14,6 @@ import { setMathText } from "../../shared/mathText";
 import {
   addVec2,
   applyAxisNoiseToOffset,
-  buildParallaxBasis,
   clamp,
   computeCaptureInference,
   deterministicAxisNoiseMas,
@@ -26,7 +25,9 @@ import {
   normalizePhaseDeg,
   offsetPx,
   parallaxArcsecFromMas,
+  phaseSeparationDeg,
   scaleVec2,
+  type Basis2D,
   type CaptureInference,
   type Vec2
 } from "./logic";
@@ -88,15 +89,28 @@ const EXAGGERATION_MIN = 1;
 const EXAGGERATION_MAX = 40;
 const MIN_EFFECTIVE_BASELINE_AU = 0.2;
 
-const ORBIT_CENTER = { x: 280, y: 220 };
-const ORBIT_RADIUS_PX = 138;
-const STAR_RADIUS_PX = 148;
-const AXIS_HALF_LEN_PX = 168;
+// The orbit view is a schematic: the star is drawn 2 AU from the Sun, behind a "not to
+// scale" break; at 10 pc it is really about 2 million AU away.
+const ORBIT_CENTER = { x: 280, y: 262 };
+const ORBIT_RADIUS_PX = 110;
+const STAR_DISTANCE_PX = 222;
+const AXIS_HALF_LEN_PX = 130;
+const EARTH_LABEL_OFFSET_PX = 24;
+// Two Earth markers closer than this (in degrees of orbit) share one label position.
+const LABEL_MERGE_DEG = 16;
+const AU_PER_PC = 648000 / Math.PI;
 
 const DETECTOR_CENTER = { x: 280, y: 210 };
 const DETECTOR_AXIS_HALF_LEN_PX = 208;
 const DETECTOR_PX_PER_MAS = 0.012;
 const DETECTOR_RANGE_PX = 182;
+const DETECTOR_TICK_HALF_PX = 6;
+const DETECTOR_TICK_LABEL_DY = 24;
+const DETECTOR_CAPTURE_LABEL_DY = -14;
+// 26 units above the capture labels: enough for the 22-unit phone font's text boxes.
+const DETECTOR_NOW_LABEL_DY = -40;
+// Capture labels closer than this along the axis are pushed apart.
+const DETECTOR_LABEL_MIN_GAP_PX = 18;
 
 const ORBIT_RATE_DEG_PER_SEC = 14;
 const BLINK_INTERVAL_MS = 420;
@@ -121,7 +135,12 @@ function prefersReducedMotionEnabled(): boolean {
   );
 }
 
-const basis = buildParallaxBasis({ x: 0, y: 1 });
+// Geometry lives in an ecliptic frame in AU with y up and toward the star. screenDir()
+// flips y for SVG, which is what makes Earth run counter-clockwise (the view from
+// ecliptic north) and puts the star at the top. The parallax axis is the star direction
+// turned 90 degrees clockwise -- screen-right -- so a positive offset or signed shift
+// reads rightward. (logic.ts's buildParallaxBasis turns it the other way; it is unused here.)
+const basis: Basis2D = { starDirHat: { x: 0, y: 1 }, axisHat: { x: 1, y: 0 } };
 
 const state: DemoState = {
   distancePc: 10,
@@ -276,21 +295,13 @@ const parallaxAxisLine = requireEl(
   document.querySelector<SVGLineElement>("#parallaxAxisLine"),
   "#parallaxAxisLine"
 );
-const targetDirectionLabel = requireEl(
-  document.querySelector<SVGTextElement>("#targetDirectionLabel"),
-  "#targetDirectionLabel"
-);
-const parallaxAxisLabel = requireEl(
-  document.querySelector<SVGTextElement>("#parallaxAxisLabel"),
-  "#parallaxAxisLabel"
-);
 const targetStar = requireEl(
   document.querySelector<SVGCircleElement>("#targetStar"),
   "#targetStar"
 );
-const targetStarLabel = requireEl(
-  document.querySelector<SVGTextElement>("#targetStarLabel"),
-  "#targetStarLabel"
+const scaleNote = requireEl(
+  document.querySelector<SVGTextElement>("#scaleNote"),
+  "#scaleNote"
 );
 
 const earthNow = requireEl(
@@ -335,10 +346,6 @@ const baseline = requireEl(
   document.querySelector<SVGLineElement>("#baseline"),
   "#baseline"
 );
-const baselineLabel = requireEl(
-  document.querySelector<SVGTextElement>("#baselineLabel"),
-  "#baselineLabel"
-);
 
 const detectorPanel = requireEl(
   document.querySelector<HTMLElement>("#detectorPanel"),
@@ -347,6 +354,14 @@ const detectorPanel = requireEl(
 const detectorMeasurementAxis = requireEl(
   document.querySelector<SVGLineElement>("#detectorMeasurementAxis"),
   "#detectorMeasurementAxis"
+);
+const detectorTicks = requireEl(
+  document.querySelector<SVGGElement>("#detectorTicks"),
+  "#detectorTicks"
+);
+const detectorScaleNote = requireEl(
+  document.querySelector<SVGTextElement>("#detectorScaleNote"),
+  "#detectorScaleNote"
 );
 const detectorNow = requireEl(
   document.querySelector<SVGCircleElement>("#detectorNow"),
@@ -483,24 +498,68 @@ function formatDistance(valuePc: number): string {
   return valuePc >= 100 ? formatNumber(valuePc, 1) : formatNumber(valuePc, 2);
 }
 
-function orbitToScreen(earthPosAu: Vec2): Vec2 {
-  return {
-    x: ORBIT_CENTER.x + earthPosAu.x * ORBIT_RADIUS_PX,
-    y: ORBIT_CENTER.y + earthPosAu.y * ORBIT_RADIUS_PX
-  };
+// SVG y points down; the AU frame's y points up.
+function screenDir(vector: Vec2): Vec2 {
+  return { x: vector.x, y: -vector.y };
 }
 
-function detectorToScreen(offsetMas: Vec2): Vec2 {
-  const scalarMas = dotVec2(offsetMas, state.axisHat);
-  const scalarPx = clamp(
+function orbitToScreen(earthPosAu: Vec2): Vec2 {
+  return addVec2(ORBIT_CENTER, scaleVec2(screenDir(earthPosAu), ORBIT_RADIUS_PX));
+}
+
+function detectorPxFromMas(scalarMas: number): number {
+  return clamp(
     offsetPx(scalarMas, state.exaggerationVisual, DETECTOR_PX_PER_MAS),
     -DETECTOR_RANGE_PX,
     DETECTOR_RANGE_PX
   );
-  return {
-    x: DETECTOR_CENTER.x + state.axisHat.x * scalarPx,
-    y: DETECTOR_CENTER.y + state.axisHat.y * scalarPx
-  };
+}
+
+function detectorToScreen(offsetMas: Vec2): Vec2 {
+  const scalarPx = detectorPxFromMas(dotVec2(offsetMas, state.axisHat));
+  return addVec2(DETECTOR_CENTER, scaleVec2(screenDir(state.axisHat), scalarPx));
+}
+
+/** Largest 1, 2 or 5 x 10^n step that still puts at least `minTicks` ticks per side. */
+function detectorTickStepMas(rangeMas: number, minTicks = 2): number {
+  const target = rangeMas / minTicks;
+  const decade = 10 ** Math.floor(Math.log10(target));
+  for (const mantissa of [5, 2, 1]) {
+    if (mantissa * decade <= target) return mantissa * decade;
+  }
+  return decade;
+}
+
+function formatTickMas(valueMas: number, stepMas: number): string {
+  const decimals = stepMas >= 1 ? 0 : Math.ceil(-Math.log10(stepMas));
+  return valueMas.toFixed(decimals);
+}
+
+/** Distance in AU as words a student can read: "2.1 million AU". */
+function formatAuInWords(distanceAu: number): string {
+  const scales: Array<[number, string]> = [
+    [1e9, " billion"],
+    [1e6, " million"],
+    [1e3, " thousand"]
+  ];
+  for (const [scale, word] of scales) {
+    if (distanceAu >= scale) return `${Number((distanceAu / scale).toPrecision(2))}${word} AU`;
+  }
+  return `${Number(distanceAu.toPrecision(2))} AU`;
+}
+
+/** Puts a label just outside the orbit, along the Sun->Earth direction. */
+function setEarthLabel(label: SVGTextElement, earthPosAu: Vec2) {
+  const point = orbitToScreen(
+    scaleVec2(earthPosAu, (ORBIT_RADIUS_PX + EARTH_LABEL_OFFSET_PX) / ORBIT_RADIUS_PX)
+  );
+  label.setAttribute("x", point.x.toFixed(2));
+  // +4 centres 12-13px text on the point.
+  label.setAttribute("y", (point.y + 4).toFixed(2));
+}
+
+function phasesClose(phaseA: number, phaseB: number): boolean {
+  return phaseSeparationDeg(phaseA, phaseB) < LABEL_MERGE_DEG;
 }
 
 function setLine(line: SVGLineElement, p1: Vec2, p2: Vec2) {
@@ -657,6 +716,8 @@ function workflowState() {
   stepCaptureA.dataset.stepState = hasA ? "complete" : "current";
   stepCaptureB.dataset.stepState = hasB ? "complete" : hasA ? "current" : "pending";
 
+  captureEpochAButton.classList.toggle("is-next", !hasA);
+  captureEpochBButton.classList.toggle("is-next", hasA && !hasB);
   captureEpochBButton.disabled = !hasA;
   swapCapturesButton.disabled = !(hasA && hasB);
   clearCapturesButton.disabled = !(hasA || hasB);
@@ -701,88 +762,119 @@ function renderControls(snap: Snapshot) {
 }
 
 function renderOrbit(snap: Snapshot) {
-  const starPos = addVec2(ORBIT_CENTER, scaleVec2(state.starDirHat, STAR_RADIUS_PX));
-  const axisStart = addVec2(ORBIT_CENTER, scaleVec2(state.axisHat, -AXIS_HALF_LEN_PX));
-  const axisEnd = addVec2(ORBIT_CENTER, scaleVec2(state.axisHat, AXIS_HALF_LEN_PX));
+  const starPos = addVec2(ORBIT_CENTER, scaleVec2(screenDir(state.starDirHat), STAR_DISTANCE_PX));
+  const axisScreen = screenDir(state.axisHat);
+  const axisStart = addVec2(ORBIT_CENTER, scaleVec2(axisScreen, -AXIS_HALF_LEN_PX));
+  const axisEnd = addVec2(ORBIT_CENTER, scaleVec2(axisScreen, AXIS_HALF_LEN_PX));
 
   setLine(targetDirectionLine, ORBIT_CENTER, starPos);
   setLine(parallaxAxisLine, axisStart, axisEnd);
-
-  targetDirectionLabel.textContent = "Target direction";
-  parallaxAxisLabel.textContent = "Parallax axis";
-
   setCircle(targetStar, starPos);
-  setLabel(targetStarLabel, starPos, -6);
+  scaleNote.textContent = `${formatAuInWords(snap.distancePcTrue * AU_PER_PC)} away`;
 
   const nowPos = orbitToScreen(snap.nowEarthPosAu);
   setCircle(earthNow, nowPos);
-  setLabel(earthNowLabel, nowPos, 28);
-  earthNowLabel.textContent = `Now ${formatNumber(snap.nowPhaseDeg, 0)}deg`;
-
+  setEarthLabel(earthNowLabel, snap.nowEarthPosAu);
   setLine(rayNow, nowPos, starPos);
 
-  if (state.captureA) {
-    const posA = orbitToScreen(state.captureA.earthPosAU);
+  const { captureA, captureB } = state;
+  // One label per spot on the orbit: a capture's label wins over "Now", and A and B
+  // taken close together share "A, B".
+  const nowNearCapture =
+    (captureA !== null && phasesClose(snap.nowPhaseDeg, captureA.phaseDeg)) ||
+    (captureB !== null && phasesClose(snap.nowPhaseDeg, captureB.phaseDeg));
+  const capturesTogether =
+    captureA !== null && captureB !== null && phasesClose(captureA.phaseDeg, captureB.phaseDeg);
+  setVisibility(earthNowLabel, !nowNearCapture);
+
+  if (captureA) {
+    const posA = orbitToScreen(captureA.earthPosAU);
     setCircle(earthCaptureA, posA);
-    setLabel(earthCaptureALabel, posA, 28);
-    earthCaptureALabel.textContent = `A ${formatNumber(state.captureA.phaseDeg, 0)}deg`;
+    setEarthLabel(earthCaptureALabel, captureA.earthPosAU);
+    earthCaptureALabel.textContent = capturesTogether ? "A, B" : "A";
     setLine(rayCaptureA, posA, starPos);
-    setVisibility(earthCaptureA, true);
-    setVisibility(earthCaptureALabel, true);
-    setVisibility(rayCaptureA, true);
-  } else {
-    setVisibility(earthCaptureA, false);
-    setVisibility(earthCaptureALabel, false);
-    setVisibility(rayCaptureA, false);
   }
+  setVisibility(earthCaptureA, captureA !== null);
+  setVisibility(earthCaptureALabel, captureA !== null);
+  setVisibility(rayCaptureA, captureA !== null);
 
-  if (state.captureB) {
-    const posB = orbitToScreen(state.captureB.earthPosAU);
+  if (captureB) {
+    const posB = orbitToScreen(captureB.earthPosAU);
     setCircle(earthCaptureB, posB);
-    setLabel(earthCaptureBLabel, posB, 28);
-    earthCaptureBLabel.textContent = `B ${formatNumber(state.captureB.phaseDeg, 0)}deg`;
+    setEarthLabel(earthCaptureBLabel, captureB.earthPosAU);
     setLine(rayCaptureB, posB, starPos);
-    setVisibility(earthCaptureB, true);
-    setVisibility(earthCaptureBLabel, true);
-    setVisibility(rayCaptureB, true);
-  } else {
-    setVisibility(earthCaptureB, false);
-    setVisibility(earthCaptureBLabel, false);
-    setVisibility(rayCaptureB, false);
   }
+  setVisibility(earthCaptureB, captureB !== null);
+  setVisibility(earthCaptureBLabel, captureB !== null && !capturesTogether);
+  setVisibility(rayCaptureB, captureB !== null);
 
-  const hasBaseline = state.captureA && state.captureB && state.showBaseline;
-  if (hasBaseline) {
-    const a = orbitToScreen(state.captureA!.earthPosAU);
-    const b = orbitToScreen(state.captureB!.earthPosAU);
-    setLine(baseline, a, b);
-    baselineLabel.textContent = `Chord ${formatNumber(
-      snap.inference.baselineChordAu,
-      2
-    )} AU, Beff ${formatNumber(snap.inference.baselineEffAu, 2)} AU`;
+  if (captureA && captureB && state.showBaseline) {
+    setLine(baseline, orbitToScreen(captureA.earthPosAU), orbitToScreen(captureB.earthPosAU));
     setVisibility(baseline, true);
-    setVisibility(baselineLabel, true);
   } else {
-    baselineLabel.textContent = "Baseline pending captures";
     setVisibility(baseline, false);
-    setVisibility(baselineLabel, false);
   }
+}
+
+function renderDetectorTicks() {
+  const pxPerMas = offsetPx(1, state.exaggerationVisual, DETECTOR_PX_PER_MAS);
+  if (!(pxPerMas > 0)) {
+    detectorTicks.replaceChildren();
+    return;
+  }
+  const rangeMas = DETECTOR_RANGE_PX / pxPerMas;
+  const stepMas = detectorTickStepMas(rangeMas);
+  const count = Math.floor(rangeMas / stepMas + 1e-9);
+  const axisScreen = screenDir(state.axisHat);
+  const nodes: SVGElement[] = [];
+
+  for (let i = -count; i <= count; i += 1) {
+    const valueMas = i * stepMas;
+    const point = addVec2(DETECTOR_CENTER, scaleVec2(axisScreen, detectorPxFromMas(valueMas)));
+    // Zero is the star's direction as seen from the Sun; give it the long tick.
+    const half = i === 0 ? DETECTOR_TICK_HALF_PX * 2 : DETECTOR_TICK_HALF_PX;
+
+    const tick = document.createElementNS(SVG_NS, "line");
+    tick.setAttribute("x1", point.x.toFixed(2));
+    tick.setAttribute("x2", point.x.toFixed(2));
+    tick.setAttribute("y1", (point.y - half).toFixed(2));
+    tick.setAttribute("y2", (point.y + half).toFixed(2));
+    tick.setAttribute("class", i === 0 ? "detector__tick detector__tick--zero" : "detector__tick");
+    nodes.push(tick);
+
+    const label = document.createElementNS(SVG_NS, "text");
+    label.setAttribute("x", point.x.toFixed(2));
+    label.setAttribute("y", (point.y + DETECTOR_TICK_LABEL_DY).toFixed(2));
+    label.setAttribute("class", "detector__tick-label");
+    label.textContent = formatTickMas(valueMas, stepMas);
+    nodes.push(label);
+  }
+  detectorTicks.replaceChildren(...nodes);
+
+  const exaggeration = state.exaggerationVisual;
+  detectorScaleNote.textContent =
+    exaggeration === 1
+      ? "Offsets in mas, drawn at true size"
+      : `Offsets in mas; shifts drawn ${formatNumber(exaggeration, exaggeration % 1 === 0 ? 0 : 1)} times true size`;
 }
 
 function renderDetector(snap: Snapshot) {
   const axisStart = addVec2(
     DETECTOR_CENTER,
-    scaleVec2(state.axisHat, -DETECTOR_AXIS_HALF_LEN_PX)
+    scaleVec2(screenDir(state.axisHat), -DETECTOR_AXIS_HALF_LEN_PX)
   );
   const axisEnd = addVec2(
     DETECTOR_CENTER,
-    scaleVec2(state.axisHat, DETECTOR_AXIS_HALF_LEN_PX)
+    scaleVec2(screenDir(state.axisHat), DETECTOR_AXIS_HALF_LEN_PX)
   );
   setLine(detectorMeasurementAxis, axisStart, axisEnd);
+  renderDetectorTicks();
 
+  // Tick labels sit below the axis, so every dot label goes above it: captures just
+  // over their dots, the live "Now" one row higher so the three never collide.
   const nowPoint = detectorToScreen(snap.nowDetectorTrueMas);
   setCircle(detectorNow, nowPoint);
-  setLabel(detectorNowLabel, nowPoint, 22);
+  setLabel(detectorNowLabel, nowPoint, DETECTOR_NOW_LABEL_DY);
 
   const hasA = !!state.captureA;
   const hasB = !!state.captureB;
@@ -793,7 +885,7 @@ function renderDetector(snap: Snapshot) {
   if (state.captureA) {
     pointA = detectorToScreen(state.captureA.detectorMeasMas);
     setCircle(detectorMarkerEpochA, pointA);
-    setLabel(detectorEpochALabel, pointA, 22);
+    setLabel(detectorEpochALabel, pointA, DETECTOR_CAPTURE_LABEL_DY);
     setVisibility(detectorMarkerEpochA, true);
     setVisibility(detectorEpochALabel, true);
 
@@ -819,7 +911,7 @@ function renderDetector(snap: Snapshot) {
   if (state.captureB) {
     pointB = detectorToScreen(state.captureB.detectorMeasMas);
     setCircle(detectorMarkerEpochB, pointB);
-    setLabel(detectorEpochBLabel, pointB, 22);
+    setLabel(detectorEpochBLabel, pointB, DETECTOR_CAPTURE_LABEL_DY);
     setVisibility(detectorMarkerEpochB, true);
     setVisibility(detectorEpochBLabel, true);
 
@@ -851,6 +943,15 @@ function renderDetector(snap: Snapshot) {
   if (pointA && pointB) {
     setLine(differenceVector, pointA, pointB);
     setVisibility(differenceVector, true);
+
+    const gap = pointB.x - pointA.x;
+    if (Math.abs(gap) < DETECTOR_LABEL_MIN_GAP_PX) {
+      const midX = (pointA.x + pointB.x) / 2;
+      const half = DETECTOR_LABEL_MIN_GAP_PX / 2;
+      const aLeft = gap >= 0;
+      detectorEpochALabel.setAttribute("x", (midX + (aLeft ? -half : half)).toFixed(2));
+      detectorEpochBLabel.setAttribute("x", (midX + (aLeft ? half : -half)).toFixed(2));
+    }
   } else {
     setVisibility(differenceVector, false);
   }
@@ -862,7 +963,7 @@ function renderDetector(snap: Snapshot) {
   }
 
   if (snap.inference.computable) {
-    detectorSeparationLabel.textContent = `Measured shift deltaTheta = ${formatNumber(
+    detectorSeparationLabel.textContent = `Measured shift: ${formatNumber(
       snap.inference.deltaThetaMas,
       2
     )} mas`;
@@ -871,7 +972,7 @@ function renderDetector(snap: Snapshot) {
     detectorSeparationLabel.textContent = "Effective baseline too small for stable inference.";
     degenerateWarningLabel.textContent = "Increase capture separation along the parallax axis.";
   } else {
-    detectorSeparationLabel.textContent = "Capture A and B to compute measured shift deltaTheta.";
+    detectorSeparationLabel.textContent = "Capture A and B to measure the shift.";
     degenerateWarningLabel.textContent = "";
   }
 

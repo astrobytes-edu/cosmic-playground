@@ -7,12 +7,15 @@ import {
   deterministicAxisNoiseMas,
   detectorTrueOffsetMasFromPhase,
   dotVec2,
+  earthPosAuFromPhaseDeg,
   errorRadiusPx,
   formatNumber,
   normalizePhaseDeg,
   offsetPx,
   phaseSeparationDeg,
+  scaleVec2,
   signalToNoise,
+  subVec2,
   vecLength
 } from "./logic";
 
@@ -64,6 +67,44 @@ describe("Parallax Distance -- UI Logic", () => {
       expect(at180.y).toBeCloseTo(0, 12);
       expect(at0.x).toBeCloseTo(-at180.x, 10);
     });
+
+    // Star at barycentric d*u, Earth at b: the topocentric direction is u - b_perp/d,
+    // so the apparent offset is -p (b . axis) axis. Asymmetric phases, because 0/90/180
+    // are blind to the sign (see the antisymmetry check above).
+    it.each([
+      { phaseDeg: 37, offsetAlongAxisMas: 79.864 },
+      { phaseDeg: 143, offsetAlongAxisMas: -79.864 },
+      { phaseDeg: 251, offsetAlongAxisMas: -32.557 }
+    ])(
+      "shifts the star opposite to Earth's displacement at phase $phaseDeg deg",
+      ({ phaseDeg, offsetAlongAxisMas }) => {
+        // d = 10 pc -> p = 100 mas.
+        const { axisHat } = buildParallaxBasis({ x: 0, y: 1 });
+        const earthPosAu = earthPosAuFromPhaseDeg(phaseDeg);
+        const offset = detectorTrueOffsetMasFromPhase(100, phaseDeg, axisHat);
+
+        expect(dotVec2(offset, axisHat)).toBeCloseTo(offsetAlongAxisMas, 3);
+        expect(dotVec2(offset, axisHat) * dotVec2(earthPosAu, axisHat)).toBeLessThan(0);
+      }
+    );
+
+    it.each([37, 143, 251])(
+      "matches the exact topocentric angle to first order at phase %d deg",
+      (phaseDeg) => {
+        const distanceAu = 10 * (648000 / Math.PI);
+        const { starDirHat, axisHat } = buildParallaxBasis({ x: 0, y: 1 });
+        const earthPosAu = earthPosAuFromPhaseDeg(phaseDeg);
+        const topocentric = subVec2(scaleVec2(starDirHat, distanceAu), earthPosAu);
+        const exactMas =
+          Math.atan2(dotVec2(topocentric, axisHat), dotVec2(topocentric, starDirHat)) *
+          (180 / Math.PI) *
+          3600 *
+          1000;
+
+        const offset = detectorTrueOffsetMasFromPhase(100, phaseDeg, axisHat);
+        expect(dotVec2(offset, axisHat)).toBeCloseTo(exactMas, 3);
+      }
+    );
   });
 
   describe("deterministic noise", () => {

@@ -67,15 +67,13 @@
             Watch the causal chain: Earth orbits, line-of-sight changes, and apparent position shifts against fixed background stars.
           </p>
 
-          <div class="cp-callout" data-kind="model">
-            <strong>Distance relation</strong>
-            <div>$$d\,(\mathrm{pc})=\frac{1}{p\,(\mathrm{arcsec})}$$</div>
-          </div>
-
-          <div class="cp-workflow" aria-label="Capture workflow steps">
-            <div id="stepSetDistance" class="cp-workflow-step" data-step-state="current">1. Set distance</div>
-            <div id="stepCaptureA" class="cp-workflow-step" data-step-state="pending">2. Capture A</div>
-            <div id="stepCaptureB" class="cp-workflow-step" data-step-state="pending">3. Capture B</div>
+          <div class="cp-workflow-group">
+            <ol class="cp-workflow" aria-label="Capture workflow steps">
+              <li id="stepSetDistance" class="cp-workflow-step" data-step-state="current">Set distance</li>
+              <li id="stepCaptureA" class="cp-workflow-step" data-step-state="pending">Capture A</li>
+              <li id="stepCaptureB" class="cp-workflow-step" data-step-state="pending">Capture B</li>
+            </ol>
+            <div id="captureSummary" class="cp-field__hint">Capture two moments to infer parallax.</div>
           </div>
 
           <label class="cp-field">
@@ -98,22 +96,6 @@
             <div id="distancePcValue" class="cp-field__value">10.0 pc</div>
             <input id="distancePcRange" class="cp-range" type="range" min="1" max="5000" value="10" step="0.1" data-tooltip-source="#distancePcValue" />
             <div class="cp-field__hint">Parallax is inferred from captures, not set directly.</div>
-          </div>
-
-          <div class="cp-field">
-            <span class="cp-label">Orbit motion and capture</span>
-            <div class="capture-row">
-              <button id="playPauseOrbit" class="cp-chip is-active" type="button" aria-pressed="true">Pause orbit</button>
-              <button id="captureEpochA" class="cp-chip" type="button">Capture A</button>
-              <button id="captureEpochB" class="cp-chip" type="button">Capture B</button>
-            </div>
-            <div class="capture-row">
-              <button id="swapCaptures" class="cp-chip" type="button">Swap A/B</button>
-              <button id="clearCaptures" class="cp-chip" type="button">Clear captures</button>
-            </div>
-            <div id="orbitPhaseValue" class="cp-field__value">Now: 0 deg</div>
-            <input id="orbitPhaseScrub" class="cp-range" type="range" min="0" max="360" value="0" step="1" data-tooltip-source="#orbitPhaseValue" />
-            <div id="captureSummary" class="cp-field__hint">Capture two moments to infer parallax.</div>
           </div>
 
           <div class="cp-field cp-field--compact">
@@ -163,25 +145,37 @@
             <svg id="orbitSvg" class="stage__svg" viewBox="0 0 560 420" role="img" aria-label="Top view showing Sun, moving Earth, target direction, parallax axis, and captured baseline">
               <rect x="0" y="0" width="560" height="420" rx="16" class="stage__bg" />
 
-              <circle id="orbitPath" class="stage__orbit" cx="280" cy="220" r="138" />
-              <circle id="sun" class="stage__sun" cx="280" cy="220" r="18" />
-              <text class="stage__label stage__label--sun" x="280" y="252">Sun</text>
+              <line id="targetDirectionLine" class="stage__direction" x1="280" y1="262" x2="280" y2="40" />
+              <!-- The star sits far beyond the top edge in reality; the break marks the
+                   gap the drawing leaves out. -->
+              <g class="stage__break">
+                <line x1="268" y1="106" x2="292" y2="98" />
+                <line x1="268" y1="114" x2="292" y2="106" />
+              </g>
+              <!-- Anchored left of x = 255, where the sightline from the leftmost Earth
+                   position crosses these heights, and above y = 128, the top of the ring
+                   Earth's label travels, so neither a ray nor a label runs through it. -->
+              <text class="stage__note stage__note--end" x="232" y="82">Not to scale:</text>
+              <text id="scaleNote" class="stage__note stage__note--end" x="232" y="104">2.1 million AU away</text>
 
-              <line id="targetDirectionLine" class="stage__direction" x1="280" y1="220" x2="280" y2="72" />
-              <text id="targetDirectionLabel" class="stage__label stage__label--axis" x="280" y="58">Target direction</text>
+              <line id="parallaxAxisLine" class="stage__axis" x1="150" y1="262" x2="410" y2="262" />
+              <!-- A corner legend rather than a label at the line's end: Earth's own label
+                   circles the orbit out to x = 414, so text there collides with it. -->
+              <text id="parallaxAxisLabel" class="stage__label stage__label--axis stage__note--end" x="516" y="404">Parallax axis</text>
+              <line class="stage__axis" x1="524" y1="399" x2="548" y2="399" />
 
-              <line id="parallaxAxisLine" class="stage__axis" x1="112" y1="220" x2="448" y2="220" />
-              <text id="parallaxAxisLabel" class="stage__label stage__label--axis" x="280" y="392">Parallax axis</text>
+              <circle id="orbitPath" class="stage__orbit" cx="280" cy="262" r="110" />
+              <circle id="sun" class="stage__sun" cx="280" cy="262" r="16" />
+              <text class="stage__label stage__label--sun" x="280" y="298">Sun</text>
 
-              <circle id="targetStar" class="stage__star" cx="280" cy="72" r="8" />
-              <text id="targetStarLabel" class="stage__label stage__label--star" x="306" y="66">Target star</text>
+              <circle id="targetStar" class="stage__star" cx="280" cy="40" r="8" />
+              <text id="targetStarLabel" class="stage__label stage__label--star stage__label--start" x="296" y="45">Target star</text>
 
               <line id="rayNow" class="stage__ray stage__ray--now" x1="0" y1="0" x2="0" y2="0" />
               <line id="rayCaptureA" class="stage__ray stage__ray--a" x1="0" y1="0" x2="0" y2="0" />
               <line id="rayCaptureB" class="stage__ray stage__ray--b" x1="0" y1="0" x2="0" y2="0" />
 
               <line id="baseline" class="stage__baseline" x1="0" y1="0" x2="0" y2="0" />
-              <text id="baselineLabel" class="stage__label stage__label--baseline" x="280" y="372">Baseline pending captures</text>
 
               <circle id="earthNow" class="stage__earth stage__earth--now" cx="0" cy="0" r="10" />
               <text id="earthNowLabel" class="stage__label stage__label--earth stage__label--earth-now" x="0" y="0">Now</text>
@@ -191,10 +185,7 @@
 
               <circle id="earthCaptureB" class="stage__earth stage__earth--b" cx="0" cy="0" r="10" />
               <text id="earthCaptureBLabel" class="stage__label stage__label--earth stage__label--earth-b" x="0" y="0">B</text>
-
-              <text id="geometryCue" class="stage__note" x="280" y="28">Earth motion changes the line-of-sight to the same star.</text>
             </svg>
-            <div class="schematic-note">Live orbit drives detector shift. Captures freeze two epochs for inference.</div>
           </div>
 
           <div class="viz-panel" id="detectorPanel" data-detector-mode="overlay" data-blink="off">
@@ -208,12 +199,15 @@
                 <circle cx="204" cy="70" r="2" />
                 <circle cx="354" cy="92" r="2.5" />
                 <circle cx="412" cy="138" r="2" />
-                <circle cx="454" cy="248" r="3" />
-                <circle cx="206" cy="278" r="2" />
-                <circle cx="126" cy="242" r="2.5" />
+                <circle cx="454" cy="318" r="3" />
+                <circle cx="206" cy="336" r="2" />
+                <circle cx="126" cy="302" r="2.5" />
               </g>
 
               <line id="detectorMeasurementAxis" class="detector__axis" x1="72" y1="210" x2="488" y2="210" />
+              <g id="detectorTicks" class="detector__ticks"></g>
+              <text class="stage__label stage__label--axis stage__label--start" x="496" y="214">mas</text>
+              <text id="detectorScaleNote" class="stage__note" x="280" y="266">Offsets in mas; shifts drawn 15 times true size</text>
               <line id="differenceVector" class="detector__difference" x1="0" y1="0" x2="0" y2="0" />
 
               <circle id="errorCircleEpochA" class="detector__error detector__error--a" cx="0" cy="0" r="0" />
@@ -230,12 +224,25 @@
               <text id="detectorEpochALabel" class="stage__label stage__label--detector-dot" x="0" y="0">A</text>
               <text id="detectorEpochBLabel" class="stage__label stage__label--detector-dot" x="0" y="0">B</text>
 
-              <text id="detectorModeLabel" class="stage__note" x="280" y="28">Overlay mode: compare captured points directly.</text>
-              <text id="detectorSeparationLabel" class="stage__note" x="280" y="396">Capture A and B to compute measured shift deltaTheta.</text>
-              <text id="degenerateWarningLabel" class="stage__note stage__note--warning" x="280" y="378"></text>
+              <text id="detectorModeLabel" class="stage__note" x="280" y="30">Overlay mode: compare captured points directly.</text>
+              <text id="detectorSeparationLabel" class="stage__note stage__note--status" x="280" y="398">Capture A and B to measure the shift.</text>
+              <text id="degenerateWarningLabel" class="stage__note stage__note--warning" x="280" y="376"></text>
             </svg>
-            <div class="schematic-note">Background stars stay fixed while the apparent target position shifts.</div>
           </div>
+        </div>
+      </section>
+
+      <section class="cp-playbar capture-bar" aria-label="Orbit motion and capture">
+        <button id="playPauseOrbit" class="cp-button cp-button--outline capture-bar__play" type="button" aria-pressed="true">Pause orbit</button>
+        <label class="capture-bar__scrub">
+          <span id="orbitPhaseValue" class="capture-bar__phase">Now: 0 deg</span>
+          <input id="orbitPhaseScrub" class="cp-range" type="range" min="0" max="360" value="0" step="1" aria-label="Orbit phase" data-tooltip-source="#orbitPhaseValue" />
+        </label>
+        <div class="capture-bar__actions">
+          <button id="captureEpochA" class="cp-button capture-bar__capture capture-bar__capture--a" type="button">Capture A</button>
+          <button id="captureEpochB" class="cp-button capture-bar__capture capture-bar__capture--b" type="button">Capture B</button>
+          <button id="swapCaptures" class="cp-button cp-button--ghost capture-bar__minor" type="button">Swap A/B</button>
+          <button id="clearCaptures" class="cp-button cp-button--ghost capture-bar__minor" type="button">Clear</button>
         </div>
       </section>
 
@@ -248,7 +255,7 @@
         <div class="cp-readout">
           <span class="cp-readout__label">Effective baseline $B_{\rm eff}$</span>
           <span class="cp-readout__value"><span id="baselineEffAu"></span><span class="cp-readout__unit">AU</span></span>
-          <div class="cp-readout__sub">Chord: <span id="baselineChordAu"></span> AU | deltaPhi <span id="phaseSepDeg"></span> deg</div>
+          <div class="cp-readout__sub">Chord <span id="baselineChordAu"></span> AU, $\Delta\phi =$ <span id="phaseSepDeg"></span>$^{\circ}$</div>
         </div>
         <div class="cp-readout">
           <span class="cp-readout__label">Inferred parallax $\hat p \pm \sigma_{\hat p}$</span>
@@ -290,6 +297,9 @@
             <ul>
               <li>Distance relation: $d\,(\mathrm{pc}) = 1/p\,(\mathrm{arcsec})$.</li>
               <li>General capture inference uses projected shift and effective baseline $B_{\rm eff}$.</li>
+              <li>The target's apparent shift is opposite to Earth's displacement along the parallax axis, the way each Earth-to-star sightline leans.</li>
+              <li>Signed $\Delta\theta$ is positive when B appears right of A on the detector.</li>
+              <li>The orbit view is not to scale: the star is drawn just beyond Earth's orbit, but at $10\,\mathrm{pc}$ it is about $2\times10^{6}$ times farther from the Sun than Earth is.</li>
               <li>Detector exaggeration changes only visualization, not computed $\hat p$ or $\hat d$.</li>
             </ul>
           </div>
