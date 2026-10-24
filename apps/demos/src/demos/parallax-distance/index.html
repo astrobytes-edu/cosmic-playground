@@ -208,6 +208,18 @@
               <g id="detectorTicks" class="detector__ticks"></g>
               <text class="stage__label stage__label--axis stage__label--start" x="496" y="214">mas</text>
               <text id="detectorScaleNote" class="stage__note" x="280" y="266">Offsets in mas; shifts drawn 15 times true size</text>
+
+              <!-- Off-scale markers: a dot whose drawn offset would pass the clamp (182 px)
+                   is pinned there; the arrow beyond it and the label give its true value. -->
+              <g id="offscaleLeft" class="detector__offscale" visibility="hidden">
+                <polygon points="78,210 92,202 92,218" />
+              </g>
+              <!-- Separate rows: both sides can be pinned at once (A far left, B far right). -->
+              <text id="offscaleLeftLabel" class="stage__note detector__offscale-label stage__note--start" x="24" y="120"></text>
+              <g id="offscaleRight" class="detector__offscale" visibility="hidden">
+                <polygon points="482,210 468,202 468,218" />
+              </g>
+              <text id="offscaleRightLabel" class="stage__note detector__offscale-label stage__note--end" x="536" y="144"></text>
               <line id="differenceVector" class="detector__difference" x1="0" y1="0" x2="0" y2="0" />
 
               <circle id="errorCircleEpochA" class="detector__error detector__error--a" cx="0" cy="0" r="0" />
