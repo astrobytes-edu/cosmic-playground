@@ -1,9 +1,9 @@
 {
   "about": "Cosmic Playground remediation tracker. Source of truth; see docs/tracker/README.md.",
-  "updatedAt": "2026-10-24T04:40:00Z",
+  "updatedAt": "2026-10-24T07:20:00Z",
   "now": {
-    "focus": "The sticky sidebar now owns its whole column (a32087b, merged into main, not pushed), so it cannot cover the shelf; the padding stopgap is gone. Of the 591 findings, 18 are fixed with evidence and 18 more are partly fixed.",
-    "next": "Push the sidebar merge once and confirm the Pages deploy; then the test-suite refactor (T1-T4) and S6.",
+    "focus": "The sticky sidebar column fix is live (a1aa15c, Pages deploy green): the sidebar owns its whole column, so it cannot cover the shelf. Of the 591 findings, 18 are fixed with evidence and 18 more are partly fixed.",
+    "next": "Push main once (binary-orbits tablet stack 196c689 and its stack tuning) and confirm the Pages deploy; then the test-suite refactor (T1-T4) and S6.",
     "blocker": ""
   },
   "roadmap": [
@@ -1406,6 +1406,16 @@
       "question": "Hydrostatic student mode stacks a full-width sticky controls panel above the stage, which pinned over it while scrolling",
       "choice": "Make the controls non-sticky in student mode only, in the same commit",
       "why": "Measured 2026-10-23 at 1440x900, scrolled 500px: the 645px panel covered the top 480px of the stage. Found by the new sidebar-footprint E2E. Landed in a32087b, merged into main 2026-10-23 (Anna approved both by popup in that session)."
+    },
+    {
+      "id": "d-binary-orbits-stack-tuning",
+      "date": "2026-10-23",
+      "order": 19,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "After 196c689 stacked binary-orbits in one column from 901 to 1024px, should the demo's stacked tuning (680px orbit cap, 620px stage cap) extend from 900px to the shell's 1024px stack?",
+      "choice": "Extend it to 1024px",
+      "why": "Measured 2026-10-23 at 1024x768 on the merged build: the desktop 862x647 orbit canvas ended at y=820, 52px below the fold, and jumped from 682 to 821px wide at 900/901px. Extended, it is 682x512 ending at y=681 across the whole stack; widths of 1025px and up are unchanged. Anna approved by popup; landed on main 2026-10-23 in the commit after 196c689, not pushed."
     }
   ]
 }

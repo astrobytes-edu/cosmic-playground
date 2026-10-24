@@ -524,7 +524,10 @@
   }
 }
 
-@media (max-width: 900px) {
+/* The stacked layout's tuning, over the shell's whole 1024px stack. Stopped at 900px, it let
+ * the stack from 901 to 1024px draw the desktop 860px 4:3 orbit, whose bottom sat 52px below
+ * the fold at 1024x768 (2026-10-23). */
+@media (max-width: 1024px) {
   .cp-demo__stage {
     min-height: clamp(340px, 58svh, 620px);
   }

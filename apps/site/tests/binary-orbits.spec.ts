@@ -925,6 +925,21 @@ test.describe("Binary Orbits -- tablet stack", () => {
       expect(layout.tracks, "the stack has one column track").toBe(1);
     });
   }
+
+  test("the whole orbit view is on screen at 1024x768", async ({ page }) => {
+    // The demo's stacked tuning (680px orbit cap) once stopped at 900px, so the stack from
+    // 901 to 1024px drew the desktop 860px 4:3 canvas and its bottom sat 52px below the
+    // fold on a 1024x768 tablet (measured 2026-10-23).
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.goto("play/binary-orbits/", { waitUntil: "load" });
+    const orbit = page.locator("#orbitCanvas");
+    await expect(orbit).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+
+    const bottom = await orbit.evaluate((el) => el.getBoundingClientRect().bottom);
+    expect(bottom, `orbit canvas bottom at y=${bottom} of a 768px viewport`).toBeLessThanOrEqual(768);
+  });
 });
 
 // --- Reduced Motion (separate describe, no beforeEach) ---

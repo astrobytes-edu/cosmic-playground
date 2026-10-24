@@ -1,7 +1,7 @@
 # Cosmic Playground — status
 
-next: push the sidebar/shelf structural fix (a32087b, merged into main locally), then the test-suite refactor T1-T4 and S6; 18 of 591 audit findings fixed with evidence, 18 partly
-blocker: none (Pages deploy of 63ac72a green 2026-10-23; live site current)
+next: push main once (binary-orbits tablet stack and stack tuning), then the test-suite refactor T1-T4 and S6; 18 of 591 audit findings fixed with evidence, 18 partly
+blocker: none (a1aa15c live; 196c689 and the stack tuning committed on main, not pushed)
 due: 2026-09-18 (dossier)
 
 ## Red-team audit (2026-10-23, claude-opus-5)
