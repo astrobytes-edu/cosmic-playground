@@ -38,10 +38,12 @@
 
 /* --- Unified grid (>= 1024px) --- */
 .cp-demo {
+  /* The sidebar column, which shelf content below it is padded clear of. */
+  --cp-demo-sidebar-w: clamp(280px, 25vw, 360px);
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: clamp(280px, 25vw, 360px) minmax(0, 1fr);
+  grid-template-columns: var(--cp-demo-sidebar-w) minmax(0, 1fr);
   grid-template-rows: 1fr auto auto auto;
   grid-template-areas:
     "sidebar  viz"
@@ -118,11 +120,15 @@
  * button in the drawer's left ~360px is unclickable: elementFromPoint returns a sidebar
  * control instead. Prose never noticed, which is why this survived -- the drawer only
  * held accordions of text until an activity with buttons moved into one.
+ *
+ * Tab shelves got the same treatment on 2026-10-23: 13 tabs in 5 demos sat under a sidebar
+ * control at 1280x720 (shelf-reach.spec.ts). Still a stopgap; the fix is to stop the overlap.
  */
 @media (min-width: 1025px) {
   .cp-demo__drawer .cp-accordion__body,
-  .cp-demo__shelf .cp-accordion__body {
-    padding-left: clamp(280px, 25vw, 360px);
+  .cp-demo__shelf .cp-accordion__body,
+  .cp-demo__shelf > .cp-tabs-container {
+    padding-left: var(--cp-demo-sidebar-w);
   }
 }
 

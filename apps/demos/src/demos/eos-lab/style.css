@@ -107,6 +107,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* KaTeX sets itself at 1.21em; in a card that made the numbers 21% larger than the mono
+ * text they replaced (S2, 2026-10-23). The card already sets the size. */
+.pressure-card .katex {
+  font-size: 1em;
+}
+
 .pressure-card__unit {
   color: var(--cp-readout-unit-color, var(--cp-muted));
   font-size: 0.82rem;
@@ -912,11 +918,16 @@
  * The floor is 640px, not the 380px it started at. Measured 2026-10-23 at 1280x720: the
  * budget gave 468px, the plots shrank to 120-204px and the regime-map legend and solar-profile
  * toggle overflowed under the stage summary by 120px. The overlap clears at 600px; 640px
- * leaves a 25px gap and 149-273px plots. Below a ~890px-tall window the readout strip now
- * needs a scroll, which beats an unreadable stage (Anna, 2026-10-23). */
+ * leaves a 25px gap and 149-273px plots. Below a ~900px-tall window the readout strip now
+ * needs a scroll, which beats an unreadable stage (Anna, 2026-10-23).
+ *
+ * The reserve is 15rem, not 14rem: typeset as KaTeX, the channel-card values put a
+ * superscript in every line box, and Total P ended 5px below the fold at 1440x900. With
+ * 15rem the floor binds at 900px tall, the stage is 640px and Total P ends at 891px
+ * (Anna, 2026-10-23). */
 @media (min-width: 1025px) {
   .cp-demo__stage {
-    --eos-readout-reserve: 14rem;
+    --eos-readout-reserve: 15rem;
     display: flex;
     flex-direction: column;
     gap: var(--cp-space-3);

@@ -572,7 +572,8 @@ test.describe("Conservation Laws -- what the student sees", () => {
       massSlider: "Central mass",
       r0Slider: "Initial radius",
       speedFactor: "Speed factor, speed divided by circular speed",
-      directionDeg: "Direction from tangential, positive is outward"
+      // Starts with the visible label, so a voice-control user can say what they see (WCAG 2.5.3).
+      directionDeg: "Angle from tangent, positive is outward"
     };
     for (const [id, name] of Object.entries(names)) {
       await expect(page.getByRole("slider", { name, exact: true })).toHaveAttribute("id", id);
@@ -1076,6 +1077,21 @@ test.describe("Conservation Laws -- orbit shell and energy instrument", () => {
     expect((await rect(page, ".cp-demo__controls")).bottom).toBeLessThanOrEqual(900);
     const body = await page.locator(".cp-demo__readouts .cp-panel-body").evaluate((el) => el.scrollHeight - el.clientHeight);
     expect(body).toBeLessThanOrEqual(1);
+  });
+
+  // The same budget with text 0.06em wider than the design font. Until 2026-10-23 the demo loaded no web font and the
+  // Linux CI runner's fallback put the dock bottom at 914.7px; 0.06em reproduces that (921px) on the old five-track
+  // dock, so this holds wherever the design font fails to load (Anna, 2026-10-23).
+  test("at 1440x900 the whole dock stays on screen when the text is 0.06em wider than the design font", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator("#orbitType")).toHaveText("circular");
+    await page.addStyleTag({ content: "#cp-demo, #cp-demo * { letter-spacing: 0.06em !important; }" });
+    await settleEntry(page);
+    const box = { view: await rect(page, ".stage__view:not([hidden])"), bar: await rect(page, "#energyBar"), dock: await rect(page, ".cp-demo__controls") };
+    expect(box.view.bottom, JSON.stringify(box)).toBeLessThanOrEqual(900);
+    expect(box.bar.bottom, JSON.stringify(box)).toBeLessThanOrEqual(900);
+    expect(box.dock.bottom, JSON.stringify(box)).toBeLessThanOrEqual(900);
   });
 
   test("at 1280x720 the stage view, energy bar and Play/Step row are on screen, with the dock right under the stage", async ({ page }) => {

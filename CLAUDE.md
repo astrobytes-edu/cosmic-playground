@@ -92,6 +92,9 @@ You can keep PR overhead low but still get value:
 - `reuseExistingServer` reuses whatever answers on the port, not only our preview. On 2026-10-23
   another project's `serve.py` held 4321 and 404 tests failed on `{"error": "Page not found"}`.
   Check `lsof -nP -iTCP:4321 -sTCP:LISTEN` first, or set `PLAYWRIGHT_PORT`.
+- A layout test that passes locally and fails on CI: check the font first. Until 2026-10-23 the demos loaded no web
+  font, so local runs measured Inter (installed on Anna's Mac) and CI measured a wide Linux fallback; the dock
+  differed by 34px. CDP `CSS.getPlatformFontsForNode` names the font a node actually renders in.
 - A RED must fail on assertions. "Tests  no tests" means the file failed to load (e.g. `it` where the file imports `test`).
 - Test physics at asymmetric points, not only symmetric ones: a waxing/waning swap passed because tests checked only full and new moon.
 - Moon phase convention: 0 = full, 90 = third quarter, 180 = new, 270 = first quarter; elongation = (alpha - 180) mod 360.

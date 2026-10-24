@@ -65,9 +65,11 @@
  * preserveAspectRatio (xMidYMid meet) centres the drawing.
  *
  * Budget measured 2026-09-11 (plan Task 10), root font 18px, with the instrument capped at the viewport: at 1440x900
- * 27rem ended the dock at 898.9px, 1.1px inside the fold, and 28rem leaves 19px for platforms whose fonts set taller
- * (Linux CI; see the layout-budget notes). At 1280x720 both hit the 270px floor, where the Play/Step row ends at about
- * 556px and the rest of the dock runs below the fold, which Anna accepted (option A). */
+ * 27rem ended the dock at 898.9px, 1.1px inside the fold, and 28rem was chosen for 19px of slack. That slack was
+ * measured in a font installed on one Mac; the Linux CI runner's fallback ended the dock at 914.7px. Since 2026-10-23
+ * the demo loads Source Sans 3 and the controls have their own grid: dock bottom 832.5px in the design font, 853px in
+ * SF and 894px in Verdana, where the instrument's viewport cap sets it. At 1280x720 both hit the 270px floor, where
+ * the Play/Step row ends at about 556px and the rest of the dock runs below the fold, which Anna accepted (option A). */
 .stage__view {
   position: relative;
   z-index: 1;
@@ -353,15 +355,11 @@
 }
 
 /* ===== Dock (design 4) ===== */
-.dock .cp-panel-body {
+.dock__controls {
+  display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: var(--cp-space-3) var(--cp-space-5);
   align-items: end;
-}
-
-.dock__bar,
-.dock .cp-status {
-  grid-column: 1 / -1;
 }
 
 .dock__bar {

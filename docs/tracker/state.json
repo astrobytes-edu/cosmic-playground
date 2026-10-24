@@ -1,9 +1,9 @@
 {
   "about": "Cosmic Playground remediation tracker. Source of truth; see docs/tracker/README.md.",
-  "updatedAt": "2026-10-23T22:40:00Z",
+  "updatedAt": "2026-10-24T02:00:00Z",
   "now": {
-    "focus": "S2 committed (6eceb79): math gate hardened, 202 violations fixed. Tracker moved into the repo. Both commits local, not pushed.",
-    "next": "Push when you say so (once: a push cancels an in-progress Pages deploy); then the test-suite refactor (T1-T4) and S6.",
+    "focus": "CI layout fix pushed to origin/main: demos load the design fonts, the conservation-laws dock lost its phantom grid track, shelf tabs clear the sticky sidebar, eos-lab readouts fit at 1440x900.",
+    "next": "Confirm the Pages deploy of that push goes green and the live site moves off 9d446e4; then the test-suite refactor (T1-T4) and S6. The structural sidebar/shelf fix runs in its own session.",
     "blocker": ""
   },
   "roadmap": [
@@ -959,6 +959,21 @@
       "state": "fixed",
       "note": "Fixed in 6eceb79 (S2): validator now decodes escapes and entities; gate exits 0.",
       "updatedAt": "2026-10-23T22:40:00Z"
+    },
+    "f32eff56": {
+      "state": "fixed",
+      "note": "Fixed in commit \"Load the design fonts in demos and fix the CI layout overflow\" (2026-10-23): every demo links ../../fonts/fonts.css (Outfit, Source Sans 3, Inter) from apps/site/public/fonts; demo-fonts.spec.ts red 20/20 before, green 20/20 after.",
+      "updatedAt": "2026-10-24T02:00:00Z"
+    },
+    "5146b9c8": {
+      "state": "fixed",
+      "note": "Fixed in commit \"Load the design fonts in demos and fix the CI layout overflow\" (2026-10-23): every demo links ../../fonts/fonts.css (Outfit, Source Sans 3, Inter) from apps/site/public/fonts; demo-fonts.spec.ts red 20/20 before, green 20/20 after.",
+      "updatedAt": "2026-10-24T02:00:00Z"
+    },
+    "9ea08f74": {
+      "state": "fixed",
+      "note": "Fixed in commit \"Load the design fonts in demos and fix the CI layout overflow\" (2026-10-23): the dead packages/theme/styles/fonts.css is deleted; Inter is declared in apps/site/public/fonts/fonts.css, which every demo links.",
+      "updatedAt": "2026-10-24T02:00:00Z"
     }
   },
   "decisions": [
@@ -1008,9 +1023,9 @@
       "date": "2026-10-23",
       "order": 5,
       "question": "Middle dot in the math-formatting gate",
-      "status": "implemented",
-      "statusLabel": "implemented",
-      "why": "98 of 110 hits were the instructor-page nav separator, which is typography."
+      "status": "landed",
+      "statusLabel": "landed",
+      "why": "98 of 110 hits were the instructor-page nav separator, which is typography. Landed in 6eceb79."
     },
     {
       "id": "d-ui-arrows",
@@ -1018,9 +1033,9 @@
       "date": "2026-10-23",
       "order": 6,
       "question": "UI-affordance arrows (Next, Previous, Waxing, Hotter)",
-      "status": "implemented",
-      "statusLabel": "Implemented, not committed",
-      "why": "Shared .cp-icon class added to packages/theme; being applied in the S2 fixes."
+      "status": "landed",
+      "statusLabel": "landed",
+      "why": "Shared .cp-icon class added to packages/theme; being applied in the S2 fixes. Landed in 6eceb79."
     },
     {
       "id": "d-ui-approval",
@@ -1046,21 +1061,21 @@
       "id": "d-svg-labels",
       "date": "2026-10-23",
       "order": 9,
-      "status": "implemented",
-      "statusLabel": "Implemented, not committed",
+      "status": "landed",
+      "statusLabel": "landed",
       "question": "Math symbols in SVG <text> labels (photon, ionization limit, apparent longitude)",
       "choice": "Typeset with KaTeX in an HTML layer pinned over the SVG (createSvgMathOverlay); unit words such as deg stay as SVG text",
-      "why": "SVG text cannot host KaTeX, and the ASCII stand-ins (inf, lambda_app) read as code to an ASTR 101 student."
+      "why": "SVG text cannot host KaTeX, and the ASCII stand-ins (inf, lambda_app) read as code to an ASTR 101 student. Landed in 6eceb79."
     },
     {
       "id": "d-eos-floor",
       "date": "2026-10-23",
       "order": 10,
-      "status": "implemented",
-      "statusLabel": "Implemented, not committed",
+      "status": "landed",
+      "statusLabel": "landed",
       "question": "eos-lab stage height on short windows",
       "choice": "Raise the stage-height floor from 380px to 640px",
-      "why": "At 1280x720 the 468px budget squashed the plots to 120-204px and put the solar-profile toggle under the stage summary; 640px leaves a 25px gap and 149-273px plots. Readouts need a scroll below a ~890px-tall window."
+      "why": "At 1280x720 the 468px budget squashed the plots to 120-204px and put the solar-profile toggle under the stage summary; 640px leaves a 25px gap and 149-273px plots. Readouts need a scroll below a ~900px-tall window. Landed in 6eceb79."
     },
     {
       "id": "d-tracker-repo",
@@ -1071,6 +1086,46 @@
       "question": "Where the remediation tracker lives",
       "choice": "In the repo, docs/tracker/state.json; the claude.ai page displays it and has no edit buttons",
       "why": "One copy that Codex and every account can read, with git history. The in-browser edit buttons had never been used: all 46 records were still at version 1."
+    },
+    {
+      "id": "d-demo-fonts",
+      "date": "2026-10-23",
+      "order": 12,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "Demos rendered in whatever sans the machine had (Inter on Anna's Mac, a wide fallback on CI), so a dock that fit locally overflowed CI by 15px",
+      "choice": "Load the design fonts in every demo AND rework the conservation-laws dock",
+      "why": "The font fix makes layouts match across machines; the dock fix keeps a 67px margin even in a wide fallback font (0.06em letter-spacing stress test, calibrated to CI's 914.7px). Landed in commit \"Load the design fonts in demos and fix the CI layout overflow\"."
+    },
+    {
+      "id": "d-cl-direction-label",
+      "date": "2026-10-23",
+      "order": 13,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "Shorter label for the conservation-laws direction slider",
+      "choice": "Angle from tangent (+ outward)",
+      "why": "Keeps the sign convention visible in the label; the accessible name, Angle from tangent, positive is outward, still contains the visible words (WCAG 2.5.3). Landed in commit \"Load the design fonts in demos and fix the CI layout overflow\"."
+    },
+    {
+      "id": "d-shelf-pad",
+      "date": "2026-10-23",
+      "order": 14,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "Shelf tabs under the sticky sidebar (13 tabs in 5 demos at 1280x720)",
+      "choice": "Pad the tab rows clear of the sidebar now; the structural fix is a separate task",
+      "why": "Same stopgap the accordion bodies already use; shelf-reach.spec.ts holds the line until the overlap itself is removed. Landed in commit \"Load the design fonts in demos and fix the CI layout overflow\"."
+    },
+    {
+      "id": "d-eos-katex",
+      "date": "2026-10-23",
+      "order": 15,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "eos-lab channel-card numbers grew 21% when S2 moved them to KaTeX, pushing Total P 5px below the fold at 1440x900",
+      "choice": "KaTeX at 1em in the cards plus a 15rem readout reserve",
+      "why": "Restores the size the mono text had; at 900px tall the 640px stage floor binds and Total P ends at 891px. Landed in commit \"Load the design fonts in demos and fix the CI layout overflow\"."
     }
   ]
 }
