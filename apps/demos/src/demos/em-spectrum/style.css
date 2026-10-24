@@ -58,16 +58,69 @@
   letter-spacing: 0.01em;
 }
 
-.spectrum__powers {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
+/* Label rows share the bar's log axis: main.ts sets each span's `left` from
+   wavelengthToPositionPercent(data-lambda-cm). The end labels are anchored by their
+   outer edge so they stay inside the bar; the last label drops to a second line
+   because 88.9% and 100% are only 11% of the bar apart. */
+.spectrum__powers,
+.spectrum__ticks {
+  position: relative;
   color: var(--cp-muted);
+  --axis-step: 1.5em;
+  line-height: 1.5;
+  height: calc(2 * var(--axis-step));
+}
+
+.spectrum__powers {
+  /* KaTeX superscripts make these boxes ~1.6em tall, taller than the 1.5em line */
+  --axis-step: 1.75em;
   font-size: 0.78rem;
 }
 
-.spectrum__powers span {
-  text-align: center;
+.spectrum__powers > span,
+.spectrum__ticks > span {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.spectrum__powers > span:first-child,
+.spectrum__ticks > span:first-child {
+  transform: none;
+}
+
+.spectrum__powers > span:last-child,
+.spectrum__ticks > span:last-child {
+  top: var(--axis-step);
+  transform: translateX(-100%);
+}
+
+/* At phone width the 88.9% power label (10^-12 m) is wide enough to overhang the bar's
+   right end by ~1.5px; a smaller type step keeps every label inside the bar. */
+@media (max-width: 480px) {
+  /* Six power-of-ten labels are ~45px wide on ~40px spacing at 238px of bar, so no
+     two neighbours fit on one line: stack them on three lines by index mod 3. */
+  .spectrum__powers {
+    font-size: 0.7rem;
+    height: calc(3 * var(--axis-step));
+  }
+
+  .spectrum__powers > span:nth-child(3n + 1) {
+    top: 0;
+  }
+
+  .spectrum__powers > span:nth-child(3n + 2) {
+    top: var(--axis-step);
+  }
+
+  .spectrum__powers > span:nth-child(3n) {
+    top: calc(2 * var(--axis-step));
+  }
+
+  .spectrum__ticks {
+    font-size: 0.8rem;
+  }
 }
 
 .spectrum__bar {
@@ -123,15 +176,7 @@
 }
 
 .spectrum__ticks {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
-  color: var(--cp-muted);
   font-size: 0.86rem;
-}
-
-.spectrum__ticks span {
-  text-align: center;
 }
 
 .spectrum__scale {

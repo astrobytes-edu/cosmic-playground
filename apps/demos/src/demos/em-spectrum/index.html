@@ -85,13 +85,13 @@
           <div class="spectrum" aria-label="Spectrum bar">
             <div class="spectrum__powers-label cp-muted" aria-hidden="true">Power-of-ten guide (meters)</div>
             <div class="spectrum__powers" aria-hidden="true">
-              <span>$10^{4}\,\mathrm{m}$</span>
-              <span>$10^{0}\,\mathrm{m}$</span>
-              <span>$10^{-3}\,\mathrm{m}$</span>
-              <span>$10^{-6}\,\mathrm{m}$</span>
-              <span>$10^{-9}\,\mathrm{m}$</span>
-              <span>$10^{-12}\,\mathrm{m}$</span>
-              <span>$10^{-14}\,\mathrm{m}$</span>
+              <span data-lambda-cm="1e6">$10^{4}\,\mathrm{m}$</span>
+              <span data-lambda-cm="1e2">$10^{0}\,\mathrm{m}$</span>
+              <span data-lambda-cm="1e-1">$10^{-3}\,\mathrm{m}$</span>
+              <span data-lambda-cm="1e-4">$10^{-6}\,\mathrm{m}$</span>
+              <span data-lambda-cm="1e-7">$10^{-9}\,\mathrm{m}$</span>
+              <span data-lambda-cm="1e-10">$10^{-12}\,\mathrm{m}$</span>
+              <span data-lambda-cm="1e-12">$10^{-14}\,\mathrm{m}$</span>
             </div>
             <div class="spectrum__bar" aria-hidden="true">
               <canvas id="spectrumWaveCanvas" class="spectrum__wave"></canvas>
@@ -101,13 +101,13 @@
               </div>
             </div>
             <div class="spectrum__ticks" aria-hidden="true">
-              <span>10 km</span>
-              <span>1 m</span>
-              <span>1 mm</span>
-              <span>1 $\mu\mathrm{m}$</span>
-              <span>1 nm</span>
-              <span>1 pm</span>
-              <span>10 fm</span>
+              <span data-lambda-cm="1e6">10 km</span>
+              <span data-lambda-cm="1e2">1 m</span>
+              <span data-lambda-cm="1e-1">1 mm</span>
+              <span data-lambda-cm="1e-4">1 $\mu\mathrm{m}$</span>
+              <span data-lambda-cm="1e-7">1 nm</span>
+              <span data-lambda-cm="1e-10">1 pm</span>
+              <span data-lambda-cm="1e-12">10 fm</span>
             </div>
             <div class="spectrum__scale" aria-hidden="true" id="spectrumScale"></div>
           </div>
