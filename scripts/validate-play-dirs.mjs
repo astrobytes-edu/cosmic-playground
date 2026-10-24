@@ -61,6 +61,45 @@ function findStartTagById(html, id) {
   return match ? match[0] : null;
 }
 
+/** demo slug -> ids of confirmed P0 findings not marked fixed. Empty when no tracker exists. */
+async function openP0FindingsByDemo(slugs) {
+  const findingsPath = path.join(repoRoot, "docs", "tracker", "findings.json");
+  const statePath = path.join(repoRoot, "docs", "tracker", "state.json");
+  const byDemo = new Map();
+  if (!(await pathExists(findingsPath)) || !(await pathExists(statePath))) return byDemo;
+  const { findings } = JSON.parse(await readText(findingsPath));
+  const { status = {} } = JSON.parse(await readText(statePath));
+  for (const f of findings) {
+    if (f.sevC !== "P0" || status[f.id]?.state === "fixed") continue;
+    const fromPath = /^apps\/demos\/src\/demos\/([^/]+)\//.exec(f.file ?? "")?.[1];
+    const slug = slugs.includes(f.area) ? f.area : fromPath;
+    if (!slug || !slugs.includes(slug)) continue;
+    byDemo.set(slug, [...(byDemo.get(slug) ?? []), f.id]);
+  }
+  return byDemo;
+}
+
+/**
+ * The modes a demo's source actually ships, read from the code the reader runs:
+ * Station = a `station:` block passed to createDemoModes, Challenge = a ChallengeEngine,
+ * Export = the #copyResults control. /about/ counts these, so frontmatter `modes` must agree.
+ */
+async function modesFromSource(slug) {
+  const dir = path.join(repoRoot, "apps", "demos", "src", "demos", slug);
+  const entries = await fs.readdir(dir);
+  let code = "";
+  for (const name of entries) {
+    if (/\.ts$/.test(name) && !/\.test\.ts$/.test(name)) code += await readText(path.join(dir, name));
+  }
+  const htmlPath = path.join(dir, "index.html");
+  const html = (await pathExists(htmlPath)) ? await readText(htmlPath) : "";
+  const modes = [];
+  if (/createDemoModes\(/.test(code) && /\bstation:\s*\{/.test(code)) modes.push("station");
+  if (/new ChallengeEngine\(/.test(code)) modes.push("challenge");
+  if (html.includes('id="copyResults"')) modes.push("export");
+  return modes;
+}
+
 async function main() {
   const slugs = await getDemoSlugsFromContent();
   const playRoot = path.join(repoRoot, "apps", "site", "public", "play");
@@ -212,6 +251,35 @@ async function main() {
     unbackedVerification.push({ slug, reviewPath });
   }
 
+  // Verification is also derived from the remediation tracker: a confirmed P0 that is not
+  // marked fixed means a reader can meet a wrong readout or drawing, so the demo may not
+  // claim its content was checked. A finding belongs to a demo by its `area` slug or by the
+  // `apps/demos/src/demos/<slug>/` path of its file; findings in shared packages carry no
+  // demo and are not attributed.
+  const openP0ByDemo = await openP0FindingsByDemo(sourceSlugs);
+  const verifiedWithOpenP0 = [];
+  for (const slug of sourceSlugs) {
+    const open = openP0ByDemo.get(slug);
+    if (!open?.length) continue;
+    const mdPath = path.join(repoRoot, "apps", "site", "src", "content", "demos", `${slug}.md`);
+    if (!(await pathExists(mdPath))) continue;
+    if (!/^content_verified:\s*true\s*$/m.test(await readText(mdPath))) continue;
+    verifiedWithOpenP0.push({ slug, ids: open });
+  }
+
+  const modesMismatch = [];
+  for (const slug of sourceSlugs) {
+    const mdPath = path.join(repoRoot, "apps", "site", "src", "content", "demos", `${slug}.md`);
+    if (!(await pathExists(mdPath))) continue;
+    const declared = /^modes:\s*\[(.*)\]\s*$/m.exec(await readText(mdPath));
+    if (!declared) continue;
+    const claimed = declared[1].split(",").map((m) => m.trim()).filter(Boolean);
+    const shipped = await modesFromSource(slug);
+    if ([...claimed].sort().join() !== [...shipped].sort().join()) {
+      modesMismatch.push({ slug, claimed, shipped });
+    }
+  }
+
   if (
     missingPlayArtifacts.length > 0 ||
     missingContractMarkers.length > 0 ||
@@ -219,8 +287,31 @@ async function main() {
     invalidCopyResultsButton.length > 0 ||
     invalidInstrumentRootA11y.length > 0 ||
     missingMetadata.length > 0 ||
-    unbackedVerification.length > 0
+    unbackedVerification.length > 0 ||
+    verifiedWithOpenP0.length > 0 ||
+    modesMismatch.length > 0
   ) {
+    if (modesMismatch.length > 0) {
+      console.error("Demos whose frontmatter modes disagree with the controls in their source:");
+      for (const item of modesMismatch) {
+        console.error(
+          `- ${item.slug}: modes: [${item.claimed.join(", ")}] but source ships [${item.shipped.join(", ")}]`
+        );
+      }
+      console.error("");
+    }
+
+    if (verifiedWithOpenP0.length > 0) {
+      console.error("Demos claiming content_verified: true with an open P0:");
+      for (const item of verifiedWithOpenP0) {
+        console.error(`- ${item.slug} (${item.ids.join(", ")})`);
+      }
+      console.error(
+        "  Set content_verified: false until the P0 is fixed and marked fixed in docs/tracker/state.json."
+      );
+      console.error("");
+    }
+
     if (unbackedVerification.length > 0) {
       console.error("Demos claiming content_verified: true with no physics review on file:");
       for (const item of unbackedVerification) {

@@ -2,6 +2,7 @@
 title: "Binary Orbits: Dynamical Reasoning Lab"
 status: beta
 content_verified: true
+modes: [station, export]
 levels: [Both]
 topics: [Orbits]
 time_minutes: 16

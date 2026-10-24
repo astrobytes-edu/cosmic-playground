@@ -2,6 +2,7 @@
 title: "Retrograde Motion: Apparent Longitude from Relative Motion"
 status: draft
 content_verified: true
+modes: [station, challenge, export]
 levels: [Both]
 topics: [EarthSky, Orbits]
 time_minutes: 12

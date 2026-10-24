@@ -6,6 +6,8 @@ const demos = defineCollection({
     title: z.string().min(1),
     status: z.enum(["stable", "beta", "draft"]),
     content_verified: z.boolean().default(false),
+    // Controls the demo ships; checked against its source by scripts/validate-play-dirs.mjs.
+    modes: z.array(z.enum(["station", "challenge", "export"])).min(1),
     levels: z.array(z.enum(["ASTR101", "ASTR201", "Both"])).min(1),
     topics: z
       .array(

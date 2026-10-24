@@ -1,7 +1,8 @@
 ---
 title: "Kepler’s Laws: Patterns of Planetary Motion"
 status: draft
-content_verified: true
+content_verified: false
+modes: [station, export]
 levels: [Both]
 topics: [Orbits]
 time_minutes: 12

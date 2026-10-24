@@ -1,7 +1,8 @@
 ---
 title: "Electromagnetic Spectrum: Light Beyond Visible"
 status: beta
-content_verified: true
+content_verified: false
+modes: [export]
 levels: [Both]
 topics: [LightSpectra]
 time_minutes: 10

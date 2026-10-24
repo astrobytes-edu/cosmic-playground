@@ -2,6 +2,7 @@
 title: "Eclipse Geometry: Shadows in Space"
 status: draft
 content_verified: true
+modes: [station, challenge, export]
 levels: [Both]
 topics: [EarthSky]
 time_minutes: 12

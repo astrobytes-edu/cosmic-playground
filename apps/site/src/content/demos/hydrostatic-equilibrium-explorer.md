@@ -2,6 +2,7 @@
 title: "Hydrostatic Equilibrium Explorer"
 status: draft
 content_verified: true
+modes: [station, challenge, export]
 levels: [ASTR201]
 topics: [Stars]
 time_minutes: 14

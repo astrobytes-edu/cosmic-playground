@@ -2,6 +2,7 @@
 title: "Telescope Resolution: Sharper Eyes"
 status: draft
 content_verified: true
+modes: [station, export]
 levels: [Both]
 topics: [Telescopes]
 time_minutes: 10

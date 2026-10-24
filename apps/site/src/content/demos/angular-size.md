@@ -2,6 +2,7 @@
 title: "Angular Size: The Sky’s Ruler"
 status: beta
 content_verified: true
+modes: [station, challenge, export]
 levels: [Both]
 topics: [EarthSky]
 time_minutes: 10

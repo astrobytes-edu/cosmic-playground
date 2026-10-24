@@ -2,6 +2,7 @@
 title: "Blackbody Radiation: Thermal Spectrum and Temperature"
 status: draft
 content_verified: true
+modes: [station, export]
 levels: [Both]
 topics: [LightSpectra]
 time_minutes: 12
