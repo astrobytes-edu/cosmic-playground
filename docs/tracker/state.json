@@ -1,9 +1,9 @@
 {
   "about": "Cosmic Playground remediation tracker. Source of truth; see docs/tracker/README.md.",
-  "updatedAt": "2026-10-24T02:00:00Z",
+  "updatedAt": "2026-10-24T04:10:00Z",
   "now": {
-    "focus": "CI layout fix pushed to origin/main: demos load the design fonts, the conservation-laws dock lost its phantom grid track, shelf tabs clear the sticky sidebar, eos-lab readouts fit at 1440x900.",
-    "next": "Confirm the Pages deploy of that push goes green and the live site moves off 9d446e4; then the test-suite refactor (T1-T4) and S6. The structural sidebar/shelf fix runs in its own session.",
+    "focus": "The Pages deploy of d4d2713 is green; the live site is current for the first time since 2026-09-11. Of the 591 findings, 18 are fixed with evidence and 18 more are partly fixed.",
+    "next": "Review and merge the sidebar/shelf structural fix (a32087b on claude/elated-dijkstra-1374ae; it also edits STATUS.md and state.json, so expect conflicts there), then the test-suite refactor (T1-T4) and S6.",
     "blocker": ""
   },
   "roadmap": [
@@ -60,7 +60,7 @@
         "c0551c4e",
         "79509473"
       ],
-      "note": "Commit 6eceb79. Validator decodes JS escapes, HTML entities and CSS content: escapes; 202 violations fixed. Owning unit tests green (1,292 demo, 162 theme, 53 physics, 37 runtime, 8 validator) and 16 owning E2E specs green. Not yet visually checked in a browser.",
+      "note": "Commit 6eceb79. Validator decodes JS escapes, HTML entities and CSS content: escapes; 202 violations fixed. Owning unit tests green (1,292 demo, 162 theme, 53 physics, 37 runtime, 8 validator) and 16 owning E2E specs green. Not yet visually checked in a browser. Rechecked 2026-10-23 (8 agents, checker plus skeptic) against d4d2713. Of the 46 linked findings, 11 are fixed (8 by S2 itself, 3 marked earlier), 13 are partly fixed and 21 are still open. The 21 open ones are mostly a different defect the keyword link pulled in: KaTeX payload and licensing, 320px reflow, and the glossary unit system.",
       "order": 0,
       "phase": "structural",
       "phaseBlurb": "Each closes a whole class of finding, so the per-demo P0s get cheaper afterwards. Order from the audit, section 5.",
@@ -69,7 +69,7 @@
       "ref": "audit s5",
       "state": "done",
       "title": "Harden validate-math-formatting",
-      "updatedAt": "2026-10-23T22:40:00Z"
+      "updatedAt": "2026-10-24T03:30:00Z"
     },
     {
       "id": "S6",
@@ -974,6 +974,256 @@
       "state": "fixed",
       "note": "Fixed in commit \"Load the design fonts in demos and fix the CI layout overflow\" (2026-10-23): the dead packages/theme/styles/fonts.css is deleted; Inter is declared in apps/site/public/fonts/fonts.css, which every demo links.",
       "updatedAt": "2026-10-24T02:00:00Z"
+    },
+    "a8bf1404": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: The client KaTeX pass is still in the bundle of every museum page (275 kB), and hasMath still gates only behaviour, not the download. The fix needs build-time typesetting of the remaining frontmatter and glossary math through renderInlineMath, then deleting KatexAutoRender and the Layout import. The glossary definitions (glossary.ts:107, rendered as plain `{entry.definition}` at glossary.astro:68) and the exhibit ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "e29f919b": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Neither option in the fix was taken. binary-orbits is still featured as step 3 of 3 and labelled candidate, and its /play/ page still scrolls sideways at 320px (WCAG 1.4.10). It is still excluded from the reflow gate. Either demote it from featured and candidate, or fix the accordion tracks and KaTeX display overflow and add play/binary-orbits/ to PLAY_ROUTES.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "415cbdd1": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: The main escape hole is closed and the validator exits 0, but the finding's other required fixes are not done. (1) Fix (b) is incomplete. Testing the FORBIDDEN_UNICODE_MATH class (validate-math-formatting.mjs:45-46) against U+212B and U+00C5 (angstrom), U+2299 (circled dot, the common M-sun glyph), U+27E8, U+27E9, U+2016, the superscript and subscript letters (U+207F, U+2090, U+2099) and U+208A, U+208B all return ... The \"Under 10 min\" mislabel the recheck found (4 demos of exactly 10 min) now reads \"Up to 10 min\", in commit 'Label 10-minute demos \"Up to 10 min\" and record the audit recheck' (Anna, 2026-10-23); explore.spec.ts asserts it, and smoke.spec.ts no longer matches the dead <= branch.",
+      "updatedAt": "2026-10-24T04:10:00Z"
+    },
+    "99b98d59": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: The SI half is untouched. apps/site/src/data/glossary.ts:107 still states Wien's constant in SI, 2.898 x 10^-3 m*K. CLAUDE.md requires CGS, and the CGS value is 0.2898 cm*K, which packages/physics/src/blackbodyRadiationModel.ts:9 (wienDisplacementCmK: 0.2898) and instructor/blackbody-radiation/model.md:44 already use. The definition is also still plain text typeset by the client auto-render (glossary.astro:68), not ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "7d7164af": {
+      "state": "fixed",
+      "note": "Fixed in 6eceb79 (S2). Rechecked 2026-10-23 against d4d2713: a checker found it fixed and a skeptic failed to refute it. eclipse-geometry/logic.ts:28 now uses ASCII `betaDeg > 0 ? \"+\" : \"-\"` with a comment that the readout sits next to a separate \"deg\" unit. contextualMessage (logic.ts:~170-205) now returns LaTeX source (`$^{\\\\circ}$`, `$|\\\\beta|$`) and is documented as math source. main.ts:521 writes it with ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "15c4e90d": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: The named sites are fixed, but the same raw-lambda defect survives in this demo as ASCII, which the validator cannot see. Fixed: the arc label is now `$\\lambda_{\\rm app}$` through createSvgMathOverlay (main.ts:1039-1082). The nav labels use `$\\approx$` through setMathText (logic.ts:364-372, main.ts:324-326). The e2e spec was updated for the overlay. Surviving: (a) main.ts:531-533 sets `stateFormula.textContent = ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "2b586a0e": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: All the ASCII solar-unit math and the full Stefan-Boltzmann relation are still plain text and still not KaTeX. The fix is to author `$M_\\\\odot$`, `$L/L_\\\\odot$`, `$R/R_\\\\odot$` and a fenced display equation in index.html, and to route the main.ts DOM strings through setMathText. The validator does not catch this: `M_sun` is ASCII, not a forbidden glyph.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "d797ed34": {
+      "state": "fixed",
+      "note": "Fixed in 6eceb79 (S2). Rechecked 2026-10-23 against d4d2713: a checker found it fixed and a skeptic failed to refute it. galaxy-rotation/index.html:244 now reads `<summary>Dark matter $\\\\neq$ dark energy</summary>`. The validator class (validate-math-formatting.mjs:45-46) now includes ≠ ≤ ≥ ± ÷ √ ∂ ∇ ∑ ∏ ∫ plus arrows, and a middle-dot operator rule is added at :48-52. A grep of galaxy-rotation for ≠ ≤ ≥ ± ÷ √ → ∂ ∇ ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "6324fb23": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: All 20 demos still download the ~288 kB KaTeX-dominated shared chunk to typeset math that is static in their index.html. The fix is a Vite plugin that pre-renders static `$...$` spans at build time, as apps/site/src/lib/inlineMath.ts does for the site, keeping runtime KaTeX only for demos that compose math at runtime.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "1ee59b0d": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: There is no manualChunks, so the shared KaTeX, runtime and physics code is still in one misleadingly named chunk. Fix: name chunks for katex, @cosmic/runtime and @cosmic/physics.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "c0551c4e": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: The board still presents as active and still names non-existent targets. It should be marked superseded, and the content-verification and demo-architecture gates moved into STATUS.md or docs/tracker with real paths. CP-002 and CP-006 should be recorded as satisfied elsewhere (deploy.yml's verify job and createInstrumentRuntime).",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "0ceaa6bf": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Instructor and station index and detail pages are still indexable while the instructor detail pages are noindex, and there is no robots.txt stating the policy. CLAUDE.md allows either choice but the tree is still inconsistent.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "dda0cc21": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Outfit.woff2 (the display face on every heading) ships with no OFL licence text. The unrelated Lexend licence remains. Fix: add Outfit-LICENSE.txt (OFL-1.1, Copyright 2020 The Outfit Project Authors) and delete Lexend-LICENSE.txt.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "f637dff4": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: All of it. Delete line 75 (keep copyKatexIntoSourceAssets). Restrict build.mjs:55 to the real content-collection slugs so `assets` is not copied as a slug. Optionally strip the woff/ttf src entries and copy only woff2. The museum/demo font URL dedup was advised against by the finding itself.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "cee8b691": {
+      "state": "fixed",
+      "note": "Fixed in 6eceb79 (S2). Rechecked 2026-10-23 against d4d2713: a checker found it fixed and a skeptic failed to refute it. scripts/validate-math-formatting.mjs (6eceb79) now covers every missing class. The regex at line 45 includes ± ≤ ≥ ≠ √ ∑ ∏ ∫ ∂ ∇ ÷ and all arrow glyphs, and OPERATOR_MIDDLE_DOT at line 49 catches operator middle dots. It decodes \\uXXXX, \\u{...}, \\xXX (lines 84-90), HTML entities (lines 92-97) and ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "8572507d": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: 19 of 20 /play/ routes have no 320px gate. No dated allowlist ratchet exists. binary-orbits is still unfixed. layout-budget.spec.ts is not in the mobile project and does not sample 1280x720 or 1366x768.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "08e2dbec": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: The Unicode glyphs are gone, but the same reader-visible degradation survives on the default view. formatSci's default 'plain' style emits the ASCII stand-in 'x 10^n' (logic.ts:73). main.ts:786-789 writes it into the SVG stage labels: sizeStageLabel.textContent = `D ~ ${diamLabel.text} ${diamLabel.unit}` (index.html:262 and 267 are SVG <text>). The default preset is the Sun (main.ts:196, diameter 1.392e6 km), so on ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "9738b68d": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: The inline readouts are fixed: pressure cards, #tempValue/#rhoValue with $^{-3}$ and hidden plain twins, x_F, chi, the contextual suggestions, the delta flash, the regime tooltip and the tour, all via setMathText/formatScientificMath. superscript() is gone and the \\u escapes are gone. But the original finding named 'the station-mode table' as a sink and prescribed ASCII only for the uPlot tick callback and the ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "f196763a": {
+      "state": "fixed",
+      "note": "Fixed in 6eceb79 (S2). Rechecked 2026-10-23 against d4d2713: a checker found it fixed and a skeptic failed to refute it. seasons/main.ts:797-798 render the chips as `setMathText(causalTiltChip, `$\\varepsilon\\ ${degreesLatex(...)}$`)` and `$\\delta\\ ...$`, with degreesLatex (line 664) giving `^{\\circ}`. The help rows at main.ts:253-255 are 'Left / Right arrow keys' with `Step $\\pm 1$ day` and `$\\pm 30$ days`, and ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "bd6d1154": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: (1) Re-point the SB test at an asymmetric case, for example R=3, T=8000, tSun=5772, expecting 34.50. (2) Assert the mass-colour hue direction, and fix the inverted hue ramp at logic.ts:194. (4) Bound the compact-remnant Teff against the plotted axis maximum. Also still missing is a test that the evolve track starts on the ZAMS. stellarLifetimeModel.test.ts covers only the post-main-sequence branch.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "db57631e": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: All sites. Convert the index.html hints and units to LaTeX. Render #massDisplay (main.ts:591) through renderMath. Add a validator rule for bare `_sun`, `_odot` and `^2` or `^3` in reader-visible demo HTML, if wanted.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "0e078a1d": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Delete line 75. The dead /play/assets/katex tree keeps shipping.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "6d0f0313": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: No MIT copyright and permission notice for KaTeX in any of the three copies or the deployed output. No THIRD-PARTY-NOTICES.md. three.js, uPlot and the OFL fonts are also not listed.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "79509473": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Demo display equations (`$$...$$`) are still unbreakable boxes with no containment on /play/ pages. The rule needs to move to a shared theme stylesheet imported by both stub-demo.css and the site's global.css. Whether a given demo actually scrolls sideways at 320px would need a Playwright measurement, which the read-only constraint rules out. But 19 of 20 /play/ routes are ungated (see 8572507d), so a regression ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "361fc861": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: The gate still truncates to 10 diagnostics. The standing warnings are still not ratcheted, there is no strict script, and noEmptyBlockStatements is still not an error. .astro is still outside Biome and has no colour or link text scan.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "9ad87c44": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Rename the label and the export row to a toy-model label, and add the toy-model qualifier to the readout card. The units in that strip are still ASCII (`dyne cm^-2`, `M_sun`), as in db57631e.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "ccf8e73c": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: The SI-unit defect is untouched: glossary.ts:107 still gives Wien's constant as 2.898 x 10^-3 m K. CGS is b = 0.2898 cm K, so a student copying it into a cm/erg calculation is still off by 100. The repo rule says never SI.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "e2540063": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: binary-orbits still overflows at 320px, since its own readiness copy admits it. The 18 other /play/ routes have no 320px gate. The fix is to repair the binary-orbits drawer (min-width:0 plus a scroll region for .katex-display), then set PLAY_ROUTES to all 20 slugs.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "42d50ffb": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: (a) No constants-consistency test reads prose numbers against @cosmic/physics. spectral-lines/index.html:354 still says the Balmer limit is 364.6 nm, while packages/physics/src/spectralLineModel.test.ts:54-56 asserts 364.7014 nm. (b) No rendered-DOM Unicode sweep exists: math-rendering.spec.ts checks only .katex case, KaTeX errors and TeX leakage, and smoke.spec.ts:923 checks only for literal backslash-u text. (c) ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "44ecbacc": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: The aria-live insight region is still torn down and rebuilt, with four KaTeX renders, every animation frame. The fix is to move the insight update out of the rAF loop or memoize on (massRatio, separation, inclination).",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "0b44486b": {
+      "state": "fixed",
+      "note": "Fixed in 6eceb79 (S2). Rechecked 2026-10-23 against d4d2713: a checker found it fixed and a skeptic failed to refute it. apps/demos/src/demos/moon-phases/index.html no longer has the entities or glyphs. Line 77 is `Phase angle $\\alpha$ (deg)`. Line 103 is `$\\alpha$ = Sun&ndash;Moon&ndash;Earth angle`. Line 104 is `$0^{\\circ}$ = Full, $180^{\\circ}$ = New`. Line 543 is `$f = (1 + \\cos\\alpha)/2 =$ <span ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "291b9b52": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: main.ts:733 still does `scalingInsight.textContent = \"Delta E ~ 27.2 eV / n^3 (large n). At n=...\"`, overwriting the KaTeX authored at index.html:556-560 with ASCII pseudo-math. main.ts:269 still writes `inverseResult.textContent = \\`Inferred ... Delta E=...\\``, so 'Delta E' is still spelled out. No design-contract test greps for textContent assignments with 'Delta'.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "7b2bcbb4": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: An equation that fits at load but overflows after zoom or resize (the 400% case) is never made keyboard-focusable. The pass needs to re-run from a debounced ResizeObserver and also remove the attributes when the overflow goes away.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "9078f592": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: index.html:251 still reads `deltaPhi <span id=\"phaseSepDeg\"></span> deg` (should be $\\Delta\\phi$ and a degree mark). The SVG <text> at index.html:234, and main.ts:865 and :874, still spell out 'deltaTheta' in prose ('Measured shift deltaTheta = ...'). The unit-word 'deg' labels (main.ts:720, 728, 743, e.g. `Now 37deg`) remain, but those are allowed by the current SVG-unit-word rule. The export field names at ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "effd4b0d": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: The woff/ttf fallbacks (~76% of each font set) still ship, and the set is still copied to multiple places. No woff2-only filter was added, and the duplicate apps/demos/public/assets/katex copy still exists.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "270cce28": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: The separate positive check on .cp-readout__unit content was not added: validate-math-formatting.mjs has no readout-unit rule. ASCII transliterations are still reader-visible: stars-zams-hr/index.html:322 `L/L_sun` and :326 `R/R_sun` inside .cp-readout__unit spans. `M_sun` also appears at :51, :52 and :230, and `L/L_sun = (R/R_sun)^2 (T/T_sun)^4` at :372.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "5b3ca92b": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: (1) apps/site/src/pages/welcome.astro:94-98 still has an untyped client-script copy of withBase (inside `<script define:vars={{ base }}>`). (2) apps/site/src/pages/index.astro:20-23 still declares its own `function parseIsoDate`, identical to catalog.ts:34, in a file that already imports from ../lib/catalog. (3) index.astro still interpolates `${base}` directly (lines 56, 59, 64, 103, 146, 197-205). (4) ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "1d2b055e": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: The file-level defect is gone, but the finding's other half, 'invisible to every gate', is not fixed and is worse than the claim states. Confirmed gone: packages/theme/styles/fonts.css was deleted in d4d2713 and is absent from the directory and git ls-files. apps/site/public/fonts/fonts.css uses relative urls at lines 12, 19, 26 and 33, and the four .woff2 files are tracked. No Lexend @font-face exists, and no ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "c9d6ca8f": {
+      "state": "fixed",
+      "note": "Fixed in 6eceb79 (S2). Rechecked 2026-10-23 against d4d2713: a checker found it fixed and a skeptic failed to refute it. scripts/validate-math-formatting.mjs:33-34 FORBIDDEN_UNICODE_MATH now includes ≤ ≥ ≠ ± ÷ √ ∑ ∫ ∂ ∇ → ← ↔ ⇒ etc.; :40-42 OPERATOR_MIDDLE_DOT flags unspaced operator dots; :56-112 decodeJsEscapes, decodeHtmlEntities (numeric and named) and decodeCssEscapes run before the test (unicodeMathLines, ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "fc839013": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Add the tabindex=0/role=region/aria-label pass to initMath for .katex-display and the shared scroll classes, or add tabindex and labels to the six declared overflow-x:auto equation containers (conservation-laws x2, doppler-shift, binary-orbits, galaxy-rotation, plus the spectral-lines, blackbody-radiation and cluster-census .understand-equation instances). Modern Chromium auto-focuses some scrollers, so a browser ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "5d4bbd88": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Rewrite the ASCII-math frontmatter in eos-lab.md, stars-zams-hr.md (including 1e-4 as $10^{-4}$), doppler-shift.md and the hydrostatic station_params as LaTeX. Rename the colliding M symbols (mean anomaly vs mass). Consider a validator pass for ASCII math patterns (e-notation, '<=', '_sun') in reader-facing frontmatter.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "a0a54df0": {
+      "state": "fixed",
+      "note": "Fixed in 6eceb79 (S2). Rechecked 2026-10-23 against d4d2713: a checker found it fixed and a skeptic failed to refute it. packages/physics/src/spectralLineModel.ts:471-477 now builds balmerLabels = [\"H-alpha\",\"H-beta\",\"H-gamma\",\"H-delta\",\"H-epsilon\",\"H8\"] and Lyman 'Ly-alpha'. Catalogue labels at :124 'He I D3 587.6', :135 'Na D2 589.0', :136 'Na D1 589.6'. The ElementLineEntry.label doc at :96 states plain-text ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "45a83d51": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Write the strip as LaTeX source and set it via the runtime renderMath path (innerHTML from the rendered result), or toggle only the undefined-pair case and leave index.html alone. Also fix main.ts:217 and update the spec at retrograde-motion.spec.ts:354-355 so it asserts typeset KaTeX instead of 'eps'.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "6bd88dca": {
+      "state": "fixed",
+      "note": "Fixed in 6eceb79 (S2). Rechecked 2026-10-23 against d4d2713: a checker found it fixed and a skeptic failed to refute it. apps/demos/src/demos/spectral-lines/main.ts:5,82-83 import and instantiate createSvgMathOverlay for bohrSvg and energySvg. The photon label is now overlay tex '$\\\\gamma$' at :995-1002 (Bohr) and :1152-1159 (energy diagram), and infinity is tex '$\\\\infty$' at :1062-1064. Station Mode rows use ASCII ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "4e7e1dc4": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: The core test pinning is fixed, but the finding's own evidence still holds in part. Fixed: angular-size/logic.test.ts:144-177 now asserts ASCII `1.50 x 10^8` and `$1.50 \\\\times 10^{8}$`, the `toSuperscript` tests and function are gone, and logic.ts:56-76 has `SciStyle`. Still present as the finding described: (1) design-contracts.test.ts has no KaTeX, Unicode or escape assertion (grep finds none). (2) Its only ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "39884a66": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Add a './starfield' export to packages/runtime/package.json and import from '@cosmic/runtime/starfield' in MuseumStarfield.astro.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "c17d4687": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Gate the katex.min.css link on hasMath and preload KaTeX_Main-Regular and KaTeX_Math-Italic on math pages.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "9e7565fa": {
+      "state": "confirmed",
+      "note": "Still open. Rechecked 2026-10-23 against d4d2713: Add min-width:0 on .cp-accordion__body and a scrolling .katex-display container in the shell, then add all candidate-and-above /play/ routes (including binary-orbits and parallax-distance) to PLAY_ROUTES. Whether binary-orbits still scrolls sideways at 320px needs a browser run of reflow.spec.ts, but the coverage gap is open regardless.",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "bfb1c700": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: (1) welcome.astro:94-98 still retypes the same four-line withBase in its <script define:vars={{ base }}> (the 'twelfth copy'). (2) Breadcrumb.astro:21,24 still declares and uses a withBase prop, and about 10 callers still pass withBase={withBase} (e.g. topics/[slug].astro:79, glossary.astro:33, playlists/index.astro:42, stations/index.astro:24). (3) Hand-built base joins remain in instructor/[slug].astro:15 and ...",
+      "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "2a763059": {
+      "state": "in-progress",
+      "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: apps/site/public/fonts/Lexend-LICENSE.txt is still tracked and ships with the site (git ls-files lists it), although no Lexend font file or reference exists anywhere in the live tree.",
+      "updatedAt": "2026-10-24T03:30:00Z"
     }
   },
   "decisions": [
@@ -1126,6 +1376,16 @@
       "question": "eos-lab channel-card numbers grew 21% when S2 moved them to KaTeX, pushing Total P 5px below the fold at 1440x900",
       "choice": "KaTeX at 1em in the cards plus a 15rem readout reserve",
       "why": "Restores the size the mono text had; at 900px tall the 640px stage floor binds and Total P ends at 891px. Landed in commit \"Load the design fonts in demos and fix the CI layout overflow\"."
+    },
+    {
+      "id": "d-time-label",
+      "date": "2026-10-23",
+      "order": 16,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "Explore time label for demos of 10 minutes or less",
+      "choice": "Up to 10 min",
+      "why": "Keeps the old <= 10 bucket in words. \"Under 10 min\" had mislabelled angular-size, conservation-laws, em-spectrum and telescope-resolution, which take exactly 10 minutes. Landed in commit 'Label 10-minute demos \"Up to 10 min\" and record the audit recheck'."
     }
   ]
 }

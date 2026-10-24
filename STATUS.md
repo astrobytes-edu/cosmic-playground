@@ -1,7 +1,7 @@
 # Cosmic Playground — status
 
-next: confirm the Pages deploy of the CI layout fix goes green and the live site moves off 9d446e4, then the test-suite refactor T1-T4 and S6 (structural sidebar/shelf fix runs in its own session)
-blocker: none; the live site stays at 9d446e4 (2026-09-11) until that deploy passes
+next: review and merge the sidebar/shelf structural fix (a32087b on claude/elated-dijkstra-1374ae), then the test-suite refactor T1-T4 and S6; 18 of 591 audit findings fixed with evidence, 18 partly
+blocker: none (Pages deploy of d4d2713 green 2026-10-23; live site current)
 due: 2026-09-18 (dossier)
 
 ## Red-team audit (2026-10-23, claude-opus-5)

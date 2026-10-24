@@ -31,7 +31,7 @@ export type TimeBucket = "lt10" | "10to20" | "gt20";
  * 2026-09-09 and could not earn their place:
  *
  *   labs    matched 19 of 19 -- every demo ships a Station-mode lab, so it narrowed nothing
- *   lt10    identical to the Time budget select's "<=10 min", to the demo
+ *   lt10    identical to the Time budget select's "Up to 10 min", to the demo
  *   noMath  identical to Math required = No, and 18 of 19 either way
  *
  * A control that cannot change the result is worse than absent: it invites a click, does

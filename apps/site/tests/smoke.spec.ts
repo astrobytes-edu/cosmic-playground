@@ -148,7 +148,7 @@ test.describe("Cosmic Playground smoke", () => {
       .first();
     await expect(timeBadge).toBeVisible();
     const text = (await timeBadge.textContent()) ?? "";
-    expect(text).toMatch(/(≤|–|\+)/);
+    expect(text).toMatch(/(Up to|–|\+)/);
   });
 
   test("Explore cards lead with readiness, and only when it needs saying", async ({ page }) => {

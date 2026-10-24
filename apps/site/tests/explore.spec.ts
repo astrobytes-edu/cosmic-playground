@@ -111,6 +111,18 @@ test.describe("Explore filters", () => {
     expect(await under10.getAttribute("disabled")).toBeNull();
   });
 
+  test("a 10-minute demo is labelled up to 10 minutes, not under", async ({ page }) => {
+    // The bucket is <= 10. "Under 10 min" replaced the <= glyph during the 2026-10-23 audit
+    // and mislabelled the four demos that take exactly 10 minutes (Anna, 2026-10-23).
+    await page.goto("explore/", { waitUntil: "load" });
+    const tenMinute = page.locator(".demo-card[data-time='10']");
+    await expect(tenMinute.first()).toBeVisible();
+    for (const card of await tenMinute.all()) {
+      await expect(card.locator(".cp-badge").filter({ hasText: "min" })).toHaveText("Up to 10 min");
+    }
+    await expect(page.locator("select[name='time'] option[value='lt10']")).toHaveText(/^Up to 10 min/);
+  });
+
   test("a search matching nothing shows the empty state, not a silent full list", async ({ page }) => {
     await page.goto("explore/?q=zzzznotademo", { waitUntil: "load" });
     expect(await resultCount(page)).toBe(0);
