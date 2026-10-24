@@ -18,7 +18,7 @@
   grid-template-areas:
     "sidebar viz"
     "sidebar readouts"
-    "shelf shelf";
+    "sidebar shelf";
 }
 
 .hydro-demo[data-view-mode="student"] {
@@ -28,6 +28,13 @@
     "viz"
     "readouts"
     "shelf";
+}
+
+/* Stacked above the stage, a sticky sidebar pins over it: measured 2026-10-23 at 1440x900,
+ * scrolled 500px, the 645px controls panel covered the top 480px of the stage. */
+.hydro-demo[data-view-mode="student"] .cp-demo__controls {
+  position: relative;
+  top: auto;
 }
 
 .hydro-demo .cp-demo__controls {

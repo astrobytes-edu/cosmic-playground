@@ -1,7 +1,7 @@
 # Cosmic Playground — status
 
-next: review and merge the sidebar/shelf structural fix (a32087b on claude/elated-dijkstra-1374ae), then the test-suite refactor T1-T4 and S6; 18 of 591 audit findings fixed with evidence, 18 partly
-blocker: none (Pages deploy of d4d2713 green 2026-10-23; live site current)
+next: push the sidebar/shelf structural fix (a32087b, merged into main locally), then the test-suite refactor T1-T4 and S6; 18 of 591 audit findings fixed with evidence, 18 partly
+blocker: none (Pages deploy of 63ac72a green 2026-10-23; live site current)
 due: 2026-09-18 (dossier)
 
 ## Red-team audit (2026-10-23, claude-opus-5)
