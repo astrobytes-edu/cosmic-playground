@@ -2,6 +2,7 @@
 title: "Planetary Conjunctions: Alignments in the Sky"
 status: draft
 content_verified: false
+modes: [export]
 levels: [ASTR101]
 topics: [EarthSky, Orbits]
 time_minutes: 8

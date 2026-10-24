@@ -10,6 +10,7 @@ import {
 } from "@cosmic/runtime";
 import { MoonPhasesModel, moonRiseSetLocalTimeHours } from "@cosmic/physics";
 import { nextAngleDeg } from "./animation";
+import { gradeQuarterChallenge, gradeShadowChallenge } from "./challenges";
 import { buildMoonPhasesExport } from "./exportPayload";
 import {
   normalizeAngle,
@@ -855,19 +856,7 @@ function setupChallenges() {
       hints: ["Quarter phases are about 50% illuminated.", "Try $\\alpha$ near $270^\\circ$."],
       initialState: { angleDeg: 250 },
       check(state: any) {
-        const angleDeg = Number(state?.angleDeg);
-        const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(angleDeg);
-        if (![angleDeg, illum].every(Number.isFinite)) {
-          return { correct: false, close: false, message: "No valid state yet." };
-        }
-        const diff = Math.abs(illum - 0.5);
-        if (diff <= 0.03) {
-          return { correct: true, close: false, message: `$f \\approx ${formatFraction(illum)}$.` };
-        }
-        if (diff <= 0.08) {
-          return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(illum)}$.` };
-        }
-        return { correct: false, close: false, message: "Move toward quarter phase (50% lit)." };
+        return gradeQuarterChallenge("first", Number(state?.angleDeg), MoonPhasesModel);
       }
     },
     {
@@ -875,19 +864,7 @@ function setupChallenges() {
       hints: ["Quarter phases are about 50% illuminated.", "Try $\\alpha$ near $90^\\circ$."],
       initialState: { angleDeg: 110 },
       check(state: any) {
-        const angleDeg = Number(state?.angleDeg);
-        const illum = MoonPhasesModel.illuminationFractionFromPhaseAngleDeg(angleDeg);
-        if (![angleDeg, illum].every(Number.isFinite)) {
-          return { correct: false, close: false, message: "No valid state yet." };
-        }
-        const diff = Math.abs(illum - 0.5);
-        if (diff <= 0.03) {
-          return { correct: true, close: false, message: `$f \\approx ${formatFraction(illum)}$.` };
-        }
-        if (diff <= 0.08) {
-          return { correct: false, close: true, message: `Close: $f \\approx ${formatFraction(illum)}$.` };
-        }
-        return { correct: false, close: false, message: "Move toward quarter phase (50% lit)." };
+        return gradeQuarterChallenge("third", Number(state?.angleDeg), MoonPhasesModel);
       }
     },
     {
@@ -898,23 +875,10 @@ function setupChallenges() {
       ],
       initialState: { showShadow: true, angleDeg: 10 },
       check(state: any) {
-        if (!state?.showShadow) {
-          return {
-            correct: false,
-            close: false,
-            message: "Turn on the shadow toggle first to see the cone."
-          };
-        }
-        const angleDeg = Number(state?.angleDeg);
-        const normalized = normalizeAngle(angleDeg);
-        const inShadowZone = normalized < 30 || normalized > 330;
-        return {
-          correct: inShadowZone,
-          close: false,
-          message: inShadowZone
-            ? "Yes \u2014 that\u2019s a lunar eclipse alignment."
-            : "Move the Moon into the shadow cone (near Full Moon)."
-        };
+        return gradeShadowChallenge({
+          angleDeg: Number(state?.angleDeg),
+          showShadow: Boolean(state?.showShadow)
+        });
       }
     }
   ];

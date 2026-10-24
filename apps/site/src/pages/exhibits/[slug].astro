@@ -86,11 +86,11 @@ const badge = readinessBadge(entry.data.readiness);
   <IframeStage src={demoHref} title={entry.data.title} openHref={demoHref} />
 
   {!entry.data.content_verified ? (
-    <section class="cp-callout" data-kind="warn" aria-label="Legacy content warning">
-      <strong>Legacy content (unverified)</strong>
+    <section class="cp-callout" data-kind="warn" aria-label="Content verification status">
+      <strong>Still in development</strong>
       <div>
-        This exhibit's copy was imported from the legacy ASTR101 SP26 demos and has not yet been
-        fully reviewed against the current instrument UI, units, and exports.
+        This exhibit is in beta and still being developed. Its copy has not been rechecked against
+        the current instrument, so treat numbers and labels as provisional.
       </div>
     </section>
   ) : null}

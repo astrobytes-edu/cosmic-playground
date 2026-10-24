@@ -2,6 +2,7 @@
 title: "Doppler Shift of Light"
 status: draft
 content_verified: true
+modes: [station, challenge, export]
 levels: [Both]
 topics: [LightSpectra, DataInference]
 time_minutes: 14

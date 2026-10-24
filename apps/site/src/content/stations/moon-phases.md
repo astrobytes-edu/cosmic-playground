@@ -43,9 +43,9 @@ has_math: true
 | Phase name | $\alpha$ (deg) | $f$ | Illuminated (%) | Waxing / Waning |
 |---|---|---|---|---|
 | Full | 0 | 1.00 | 100 | — |
-| First Quarter | 90 | 0.50 | 50 | Waning |
+| Third Quarter | 90 | 0.50 | 50 | Waning |
 | New | 180 | 0.00 | 0 | — |
-| Third Quarter | 270 | 0.50 | 50 | Waxing |
+| First Quarter | 270 | 0.50 | 50 | Waxing |
 | (custom) | 45 | | | |
 | (custom) | 135 | | | |
 | (custom) | 225 | | | |
@@ -57,7 +57,7 @@ has_math: true
 > - **Illumination fraction $f$ (0–1):** fraction of the visible disk that is lit (0 = New, 1 = Full).
 > - **Illuminated (%)**: the same information as $f$, but scaled to 0–100.
 > - **Days since new ($d$):** where we are in the 29.53-day cycle (0 at New, ~14.8 at Full).
-> - **Moon angle $\alpha$ (degrees, this demo):** $0^\circ$ = Full, $180^\circ$ = New; quarter phases are at $90^\circ$ and $270^\circ$.
+> - **Moon angle $\alpha$ (degrees, this demo):** $0^\circ$ = Full, $180^\circ$ = New; Third Quarter is $90^\circ$ (waning), First Quarter is $270^\circ$ (waxing).
 > - **Waxing:** the illuminated fraction is increasing (after New $\rightarrow$ toward Full).
 > - **Waning:** the illuminated fraction is decreasing (after Full $\rightarrow$ toward New).
 > - **Quarter phase:** about 50% illuminated; "quarter" refers to the orbit position, not the lit fraction.

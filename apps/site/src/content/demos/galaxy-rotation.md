@@ -2,6 +2,7 @@
 title: "Galaxy Rotation Curves"
 status: beta
 content_verified: true
+modes: [station, challenge, export]
 levels: [Both]
 topics: [Galaxies, Cosmology, DataInference]
 time_minutes: 16

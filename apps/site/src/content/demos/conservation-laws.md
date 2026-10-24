@@ -2,6 +2,7 @@
 title: "Conservation Laws: Energy & Momentum"
 status: beta
 content_verified: true
+modes: [station, export]
 levels: [Both]
 topics: [Orbits]
 time_minutes: 10

@@ -26,6 +26,18 @@ export function listedDemos(demos: readonly DemoEntry[]): DemoEntry[] {
   return demos.filter((entry) => !entry.data.unlisted);
 }
 
+/** How many of `demos` ship each mode, from the frontmatter `modes` list that the build checks against the demo source. */
+export function demoModeCounts(demos: readonly DemoEntry[]) {
+  const withMode = (mode: DemoEntry["data"]["modes"][number]) =>
+    demos.filter((entry) => entry.data.modes.includes(mode)).length;
+  return {
+    total: demos.length,
+    station: withMode("station"),
+    challenge: withMode("challenge"),
+    exporting: withMode("export")
+  };
+}
+
 export function demoKeyIdea(entry: DemoEntry): string {
   // TODO(content): populate `short_key_idea` in demo frontmatter for richer card summaries.
   return entry.data.short_key_idea ?? entry.data.learning_goals[0] ?? "\u2014";

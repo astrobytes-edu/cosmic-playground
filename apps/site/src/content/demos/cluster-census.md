@@ -1,7 +1,8 @@
 ---
 title: "Cluster Census: Sampling Stars from the Initial Mass Function"
 status: draft
-content_verified: true
+content_verified: false
+modes: [station, export]
 levels: [Both]
 topics: [Stars, DataInference]
 time_minutes: 15

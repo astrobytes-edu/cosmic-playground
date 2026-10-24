@@ -1,7 +1,8 @@
 ---
 title: "Moon Phases: Light, Not Shadow"
 status: beta
-content_verified: true
+content_verified: false
+modes: [station, challenge, export]
 levels: [Both]
 topics: [EarthSky]
 time_minutes: 8

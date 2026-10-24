@@ -1,6 +1,6 @@
 ---
 import { getCollection } from "astro:content";
-import { listedDemos } from "../lib/catalog";
+import { demoModeCounts, listedDemos } from "../lib/catalog";
 import Layout from "../layouts/Layout.astro";
 import StatBar from "../components/StatBar.astro";
 import CitationCard from "../components/CitationCard.astro";
@@ -9,11 +9,21 @@ import { withBase } from "../lib/base";
 
 
 // Derived, not hardcoded: this read "14" while 19 demos shipped.
-const demoCount = listedDemos(await getCollection("demos")).length;
+const listed = listedDemos(await getCollection("demos"));
+const demoCount = listed.length;
+// Derived from each demo's `modes` frontmatter, which the build checks against its source:
+// this page said "3 modes per demo" while Station was on 17 of 19 and Challenge on 9.
+const modes = demoModeCounts(listed);
+const exportPhrase =
+  modes.exporting === modes.total ? "Export on all" : `Export on ${modes.exporting} of ${modes.total}`;
 
 const stats = [
   { value: String(demoCount), unit: "interactive demos" },
-  { value: "3", unit: "modes per demo", label: "Station / Challenge / Export" },
+  {
+    value: exportPhrase,
+    unit: "demos",
+    label: `Station Mode on ${modes.station} of ${modes.total}, Challenge Mode on ${modes.challenge} of ${modes.total}`
+  },
   { value: "0", unit: "logins required" },
   { value: "8", unit: "topic areas" },
 ];
@@ -86,9 +96,9 @@ const citations = [
     <StatBar stats={stats} />
     <div class="cp-prose">
       <p>
-        No login, no install. Each demo ships with <strong>Station Mode</strong> (structured
-        data collection), <strong>Challenge Mode</strong> (self-assessment), and
-        <strong>Export</strong> (copy your table into a lab doc).
+        No login, no install. Every demo exports its data (copy your table into a lab doc).
+        Most add <strong>Station Mode</strong> (structured data collection); some add
+        <strong>Challenge Mode</strong> (self-assessment).
       </p>
       <table class="design-table">
         <thead>
@@ -181,7 +191,7 @@ const citations = [
           </dd>
           <dt>Station Mode as Scaffolded Data Collection</dt>
           <dd>
-            Every demo includes a Station Mode that converts free exploration into
+            Most demos include a Station Mode that converts free exploration into
             structured data collection. Students add rows to a live table, then export the
             data for use in lab reports. This bridges the gap between "playing with a toy"
             and "doing science."

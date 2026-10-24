@@ -1,7 +1,8 @@
 ---
 title: "EOS Lab: Pressure Support in Stars"
 status: draft
-content_verified: true
+content_verified: false
+modes: [station, export]
 levels: [ASTR201]
 topics: [Stars]
 time_minutes: 12
