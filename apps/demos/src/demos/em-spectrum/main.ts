@@ -189,6 +189,18 @@ function renderScaleObjects() {
 }
 renderScaleObjects();
 
+// Place the tick and power-of-ten labels on the same log axis as the bar and marker.
+function renderAxisLabels() {
+  for (const el of document.querySelectorAll<HTMLElement>(
+    ".spectrum__ticks > span, .spectrum__powers > span"
+  )) {
+    const lambdaCm = Number(el.dataset.lambdaCm);
+    if (!Number.isFinite(lambdaCm) || lambdaCm <= 0) continue;
+    el.style.left = `${wavelengthToPositionPercent(lambdaCm)}%`;
+  }
+}
+renderAxisLabels();
+
 const state: { wavelengthCm: number; band: BandKey } = {
   wavelengthCm: AstroUnits.nmToCm(520),
   band: "visible"

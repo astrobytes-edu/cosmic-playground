@@ -51,6 +51,81 @@ test.describe("EM Spectrum -- E2E", () => {
     await expect(powers).toContainText("10");
   });
 
+  // --- Axis labels sit on the same log axis as the bar (P0 d085a04d) ---
+
+  for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 320, height: 512 }
+  ]) {
+    test(`tick and power rows sit on the log axis at ${viewport.width}px`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("play/em-spectrum/", { waitUntil: "domcontentloaded" });
+      await expect(page.locator("#cp-demo")).toBeVisible();
+      await page.waitForSelector(".spectrum__ticks .katex", { timeout: 5000 });
+
+      // True positions are 100 - (log10(lambdaCm) + 12) / 18 * 100, recomputed here
+      // (not imported) so this check is independent of the demo's own mapping.
+      const trueFraction = (lambdaCm: number) => 1 - (Math.log10(lambdaCm) + 12) / 18;
+      // 10 km, 1 m, 1 mm, 1 um, 1 nm, 1 pm, 10 fm -- both rows name the same seven wavelengths
+      const LABEL_LAMBDA_CM = [1e6, 1e2, 1e-1, 1e-4, 1e-7, 1e-10, 1e-12];
+
+      const measured = await page.evaluate(() => {
+        const bar = document.querySelector(".spectrum__bar")?.getBoundingClientRect();
+        if (!bar) throw new Error("no .spectrum__bar");
+        return [".spectrum__ticks", ".spectrum__powers"].map((sel) => ({
+          sel,
+          labels: [...document.querySelectorAll<HTMLElement>(`${sel} > span`)].map((el) => {
+            const r = el.getBoundingClientRect();
+            return {
+              left: r.left,
+              right: r.right,
+              top: r.top,
+              bottom: r.bottom
+            };
+          })
+        })).map((row) => ({ ...row, barLeft: bar.left, barWidth: bar.width }));
+      });
+
+      for (const row of measured) {
+        expect(row.labels, `${row.sel} label count`).toHaveLength(7);
+        row.labels.forEach((label, i) => {
+          const x = row.barLeft + trueFraction(LABEL_LAMBDA_CM[i]) * row.barWidth;
+          if (i === 0) {
+            // flush to the bar's left end, not centred (half would hang off the edge)
+            expect(Math.abs(label.left - x), `${row.sel}[0] left edge`).toBeLessThan(1);
+          } else if (i === 6) {
+            expect(Math.abs(label.right - x), `${row.sel}[6] right edge`).toBeLessThan(1);
+          } else {
+            const centre = (label.left + label.right) / 2;
+            expect(Math.abs(centre - x), `${row.sel}[${i}] centre vs true position`).toBeLessThan(1);
+          }
+          expect(label.left, `${row.sel}[${i}] inside bar (left)`).toBeGreaterThanOrEqual(row.barLeft - 1);
+          expect(label.right, `${row.sel}[${i}] inside bar (right)`).toBeLessThanOrEqual(
+            row.barLeft + row.barWidth + 1
+          );
+        });
+
+        // no two labels in a row may overlap
+        for (let a = 0; a < row.labels.length; a++) {
+          for (let b = a + 1; b < row.labels.length; b++) {
+            const A = row.labels[a];
+            const B = row.labels[b];
+            const overlap =
+              A.left < B.right && B.left < A.right && A.top < B.bottom && B.top < A.bottom;
+            expect(overlap, `${row.sel}[${a}] overlaps [${b}]`).toBe(false);
+          }
+        }
+      }
+
+      // the page must not scroll sideways because of the label rows
+      const scrolls = await page.evaluate(() => {
+        window.scrollTo(2000, 0);
+        return window.scrollX;
+      });
+      expect(scrolls).toBe(0);
+    });
+  }
+
   // --- Visual Regression (skipped -- re-enable when baselines are generated) ---
 
   test.skip("screenshot: default state", async ({ page }) => {
