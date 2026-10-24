@@ -204,6 +204,53 @@ describe("Parallax Distance -- DOM integration", { timeout: 20000 }, () => {
     expect(sep10).toBeGreaterThan(sep100 * 2);
   });
 
+  // The two panels share one screen frame and one axis, axisHat = (-1, 0). The drawn
+  // Earth->star ray leans along the axis by -(b . axis) * ORBIT_RADIUS_PX, which is the
+  // sign of the true apparent offset; the detector dots must lean the same way.
+  // Asymmetric phases only: 0/90/180 cannot tell the two signs apart.
+  it("moves the detector dots the same way the drawn Earth->star sightlines lean", async () => {
+    await import("./main");
+
+    const axisX = -1;
+    const detectorCenterX = 280;
+    const rayAxisComponent = (selector: string) => {
+      const ray = requiredElement<SVGLineElement>(selector);
+      return (Number(ray.getAttribute("x2")) - Number(ray.getAttribute("x1"))) * axisX;
+    };
+    const dotAxisComponent = (selector: string) =>
+      (Number(requiredElement<SVGCircleElement>(selector).getAttribute("cx")) - detectorCenterX) *
+      axisX;
+
+    setRangeValue("#distancePcRange", 10);
+    setRangeValue("#sigmaMas", 0.5);
+
+    for (const phaseDeg of [37, 143, 251]) {
+      setRangeValue("#orbitPhaseScrub", phaseDeg);
+      const ray = rayAxisComponent("#rayNow");
+      const dot = dotAxisComponent("#detectorNow");
+      expect(Math.abs(ray)).toBeGreaterThan(1);
+      expect(Math.abs(dot)).toBeGreaterThan(1);
+      expect(Math.sign(dot)).toBe(Math.sign(ray));
+    }
+
+    captureEpoch(37, "A");
+    captureEpoch(143, "B");
+    expect(Math.sign(dotAxisComponent("#detectorMarkerEpochA"))).toBe(
+      Math.sign(rayAxisComponent("#rayCaptureA"))
+    );
+    expect(Math.sign(dotAxisComponent("#detectorMarkerEpochB"))).toBe(
+      Math.sign(rayAxisComponent("#rayCaptureB"))
+    );
+
+    // Offsets along the axis are +79.864 (A, 37 deg) and -79.864 (B, 143 deg) mas at
+    // d = 10 pc, so the signed A->B shift is about -159.7 mas; noise is 0.5 mas per epoch.
+    const signed = parseNumericText(
+      requiredElement<HTMLElement>("#deltaThetaSignedMas").textContent
+    );
+    expect(signed).toBeLessThan(-150);
+    expect(signed).toBeGreaterThan(-170);
+  });
+
   it("writes each inferred value's uncertainty beside it, consistent with the propagation d = 1/p", async () => {
     await import("./main");
 

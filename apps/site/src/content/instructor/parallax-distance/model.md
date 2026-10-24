@@ -67,8 +67,10 @@ $$
 True detector offset is constrained to the measurement axis:
 
 $$
-\mathbf{o}_{\rm true}(\phi)=p_{\rm true,mas}\,(\mathbf{r}(\phi)\cdot\hat{\mathbf{a}})\,\hat{\mathbf{a}}
+\mathbf{o}_{\rm true}(\phi)=-p_{\rm true,mas}\,(\mathbf{r}(\phi)\cdot\hat{\mathbf{a}})\,\hat{\mathbf{a}}
 $$
+
+The minus sign is the physics: a star at distance $d$ in direction $\hat{\mathbf{s}}$, seen from Earth at $\mathbf{r}$, lies along $\hat{\mathbf{s}}-\mathbf{r}_\perp/d$ (with $\mathbf{r}$ and $d$ both in AU), so it appears displaced opposite to Earth's own displacement. That is the way each Earth-to-star sightline leans in the orbit panel. In the demo, positive along $\hat{\mathbf{a}}$ is toward the left of the detector.
 
 For captures A and B:
 

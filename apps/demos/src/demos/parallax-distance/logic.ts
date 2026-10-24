@@ -117,6 +117,12 @@ export function earthPosAuFromPhaseDeg(phaseDeg: number): Vec2 {
   };
 }
 
+/**
+ * The star's apparent angular displacement (mas) from its barycentric direction, as seen
+ * from Earth at earthPosAu. For a star at d*u observed from b, the topocentric direction
+ * is u - b_perp/d to first order, so the offset is -p (b . axis) axis: ANTI-parallel to
+ * the observer's sky-plane displacement, the same way the drawn Earth->star sightline leans.
+ */
 export function detectorTrueOffsetMasFromPosition(
   parallaxMas: number,
   earthPosAu: Vec2,
@@ -124,7 +130,7 @@ export function detectorTrueOffsetMasFromPosition(
 ): Vec2 {
   const pMas = Math.max(0, parallaxMas);
   const axis = normalizeVec2(axisHat);
-  const scalar = pMas * dotVec2(earthPosAu, axis);
+  const scalar = -pMas * dotVec2(earthPosAu, axis);
   return scaleVec2(axis, scalar);
 }
 
