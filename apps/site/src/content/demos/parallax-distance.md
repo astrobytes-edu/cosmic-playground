@@ -1,7 +1,7 @@
 ---
 title: "Parallax Distance: Measuring the Stars"
 status: beta
-content_verified: false
+content_verified: true
 modes: [station, export]
 levels: [Both]
 topics: [DataInference]
@@ -9,7 +9,7 @@ time_minutes: 12
 has_math_mode: false
 tags: ["parallax", "triangles", "distance", "arcseconds", "parsec", "stellar distance", "baseline", "far away", "how far"]
 readiness: candidate
-readinessReason: "Close to ready: the star's apparent shift is drawn in the wrong direction and is being corrected. It works on a phone, announces changes to screen readers, and has full instructor notes and a station card."
+readinessReason: "Close to ready: the star's apparent shift now runs the right way and the stage has been redesigned. Still to come: a visual check of the new layout, and a marker for a detector dot that runs past its scale. It works on a phone, announces changes to screen readers, and has full instructor notes and a station card."
 parityAuditPath: "docs/audits/migrations/parallax-distance-parity.md"
 lastVerifiedAt: "2026-02-09"
 learning_goals:

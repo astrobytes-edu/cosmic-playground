@@ -1,7 +1,7 @@
 # Cosmic Playground — status
 
-next: merge the parallax P0 when its session finishes, push main once, then T1; 25 of 591 audit findings fixed with evidence (5 of 24 P0), 18 partly
-blocker: none (S6 and the em-spectrum tick P0 merged into main 2026-10-23, not pushed; f17f812 live)
+next: push main once and confirm the Pages deploy, then T1 on an idle machine; 26 of 591 audit findings fixed with evidence (6 of 24 P0), 18 partly
+blocker: none (S6, em-spectrum ticks and the parallax sign fix merged into main 2026-10-23, not pushed; f17f812 live)
 due: 2026-09-18 (dossier)
 
 ## Red-team audit (2026-10-23, claude-opus-5)

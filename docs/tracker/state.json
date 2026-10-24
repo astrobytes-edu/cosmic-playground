@@ -1,9 +1,9 @@
 {
   "about": "Cosmic Playground remediation tracker. Source of truth; see docs/tracker/README.md.",
-  "updatedAt": "2026-10-24T05:55:00Z",
+  "updatedAt": "2026-10-24T06:20:00Z",
   "now": {
-    "focus": "S6 and the em-spectrum tick P0 are merged into main (not pushed); moon-phases quarter and eclipse P0s fixed. The parallax sign P0 is in its own session. Of the 591 findings, 25 are fixed with evidence and 18 more are partly fixed.",
-    "next": "Merge the parallax P0 when its session finishes, push main once, then T1 on an idle machine.",
+    "focus": "All three parallel sessions are merged into main (not pushed): S6, the em-spectrum tick P0 and the parallax sign P0 with its stage redesign. Of the 591 findings, 26 are fixed with evidence (6 of 24 P0) and 18 more are partly fixed.",
+    "next": "Push main once and confirm the Pages deploy; then T1 on an idle machine.",
     "blocker": ""
   },
   "roadmap": [
@@ -379,16 +379,16 @@
       "findingIds": [
         "fc507e37"
       ],
-      "note": "",
+      "note": "Landed in 430d421 with the stage redesign f479385 (merged 6ce65d5).",
       "order": 0,
       "phase": "p0",
       "phaseBlurb": "Independently recomputed by a verifier told to refute them. Start with parallax-distance: the one launch-ready, stable demo.",
       "phaseOrder": 2,
       "phaseTitle": "Confirmed P0s",
       "ref": "parallax-distance/logic.ts:127",
-      "state": "next",
+      "state": "done",
       "title": "Parallax: detector offset sign inverted",
-      "updatedAt": "2026-10-23T00:00:00Z"
+      "updatedAt": "2026-10-24T06:20:00Z"
     },
     {
       "id": "P0-ao",
@@ -1259,6 +1259,11 @@
       "note": "Landed in 7abf088 (merged 22757cb): station card uses the demo convention, Third Quarter 90 deg waning, First Quarter 270 deg waxing; stationCard.test.ts.",
       "state": "fixed",
       "updatedAt": "2026-10-24T05:55:00Z"
+    },
+    "fc507e37": {
+      "note": "Landed in 430d421 (merged 6ce65d5): offset is -p (b . axis) axis; tests at 37/143/251 deg match the exact topocentric angle. Stage redesign f479385 in the same merge.",
+      "state": "fixed",
+      "updatedAt": "2026-10-24T06:20:00Z"
     }
   },
   "decisions": [
@@ -1501,6 +1506,26 @@
       "question": "Keep S6 rewrite of the seasons readinessReason (no longer claims the day-night boundary is fixed)?",
       "choice": "Keep the rewrite",
       "why": "P0 c52b5182 (daylight arc overruns the terminator) is open. Anna approved by popup in the lead session 2026-10-23."
+    },
+    {
+      "id": "d-parallax-redesign",
+      "date": "2026-10-23",
+      "order": 25,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "How should the parallax stage draw the star, place the capture controls and scale the detector?",
+      "choice": "Star at the top behind a not-to-scale break; capture bar under the drawings; detector tick scale in true mas",
+      "why": "Measured defects: star drawn 148 px from the Sun (read as 1 AU), labels overlapping up to 540 px^2, capture A below the fold, 6.3 px phone text. Approved by three popups in the parallax session; landed in f479385."
+    },
+    {
+      "id": "d-parallax-readiness",
+      "date": "2026-10-23",
+      "order": 26,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "What readiness should parallax-distance carry after the sign fix and redesign?",
+      "choice": "content_verified: true, but stay beta / candidate until the redesign has a visual check and an off-scale marker",
+      "why": "Its only P0 is fixed and a review is on file, but the September launch-ready wording predates a 556-line redesign. Anna approved by popup in the lead session."
     }
   ]
 }
