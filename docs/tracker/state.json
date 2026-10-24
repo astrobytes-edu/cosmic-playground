@@ -1,9 +1,9 @@
 {
   "about": "Cosmic Playground remediation tracker. Source of truth; see docs/tracker/README.md.",
-  "updatedAt": "2026-10-24T07:20:00Z",
+  "updatedAt": "2026-10-24T05:55:00Z",
   "now": {
-    "focus": "The sticky sidebar column fix is live (a1aa15c, Pages deploy green): the sidebar owns its whole column, so it cannot cover the shelf. Of the 591 findings, 18 are fixed with evidence and 18 more are partly fixed.",
-    "next": "Push main once (binary-orbits tablet stack 196c689 and its stack tuning) and confirm the Pages deploy; then the test-suite refactor (T1-T4) and S6.",
+    "focus": "S6 and the em-spectrum tick P0 are merged into main (not pushed); moon-phases quarter and eclipse P0s fixed. The parallax sign P0 is in its own session. Of the 591 findings, 25 are fixed with evidence and 18 more are partly fixed.",
+    "next": "Merge the parallax P0 when its session finishes, push main once, then T1 on an idle machine.",
     "blocker": ""
   },
   "roadmap": [
@@ -130,16 +130,16 @@
         "3471e87b",
         "5b9163d6"
       ],
-      "note": "",
+      "note": "Landed in 7abf088 (merged 22757cb): content_verified derived from open P0s by validate-play-dirs; /about/ mode counts derived from a checked modes field.",
       "order": 1,
       "phase": "structural",
       "phaseBlurb": "Each closes a whole class of finding, so the per-demo P0s get cheaper afterwards. Order from the audit, section 5.",
       "phaseOrder": 1,
       "phaseTitle": "Structural fixes",
       "ref": "audit s5",
-      "state": "todo",
+      "state": "done",
       "title": "Derive content_verified from evidence",
-      "updatedAt": "2026-10-23T00:00:00Z"
+      "updatedAt": "2026-10-24T05:45:00Z"
     },
     {
       "id": "S4",
@@ -482,16 +482,16 @@
       "findingIds": [
         "d085a04d"
       ],
-      "note": "",
+      "note": "Landed in 5df1cf2 (merged a224125).",
       "order": 6,
       "phase": "p0",
       "phaseBlurb": "Independently recomputed by a verifier told to refute them. Start with parallax-distance: the one launch-ready, stable demo.",
       "phaseOrder": 2,
       "phaseTitle": "Confirmed P0s",
       "ref": "em-spectrum/index.html:100",
-      "state": "todo",
+      "state": "done",
       "title": "EM spectrum: ticks evenly spaced on an 18-decade log axis",
-      "updatedAt": "2026-10-23T00:00:00Z"
+      "updatedAt": "2026-10-24T05:45:00Z"
     },
     {
       "id": "P0-em-microwave",
@@ -552,16 +552,16 @@
         "71ea9f53"
       ],
       "gate": "challenge grading criterion",
-      "note": "",
+      "note": "Landed in 7abf088 (merged 22757cb).",
       "order": 10,
       "phase": "p0",
       "phaseBlurb": "Independently recomputed by a verifier told to refute them. Start with parallax-distance: the one launch-ready, stable demo.",
       "phaseOrder": 2,
       "phaseTitle": "Confirmed P0s",
       "ref": "moon-phases/main.ts:859",
-      "state": "todo",
+      "state": "done",
       "title": "Moon phases: quarter challenges grade on fraction alone",
-      "updatedAt": "2026-10-23T00:00:00Z"
+      "updatedAt": "2026-10-24T05:45:00Z"
     },
     {
       "id": "P0-moon-eclipse",
@@ -570,16 +570,16 @@
         "774bdaa6"
       ],
       "gate": "eclipse alignment window",
-      "note": "",
+      "note": "Landed in 7abf088 (merged 22757cb).",
       "order": 11,
       "phase": "p0",
       "phaseBlurb": "Independently recomputed by a verifier told to refute them. Start with parallax-distance: the one launch-ready, stable demo.",
       "phaseOrder": 2,
       "phaseTitle": "Confirmed P0s",
       "ref": "moon-phases/main.ts:906",
-      "state": "todo",
+      "state": "done",
       "title": "Moon phases: shadow challenge eclipse window 30 deg",
-      "updatedAt": "2026-10-23T00:00:00Z"
+      "updatedAt": "2026-10-24T05:45:00Z"
     },
     {
       "id": "P0-seasons-arc",
@@ -1224,6 +1224,41 @@
       "state": "in-progress",
       "note": "Partly fixed. Rechecked 2026-10-23 against d4d2713. Still open: apps/site/public/fonts/Lexend-LICENSE.txt is still tracked and ships with the site (git ls-files lists it), although no Lexend font file or reference exists anywhere in the live tree.",
       "updatedAt": "2026-10-24T03:30:00Z"
+    },
+    "71ea9f53": {
+      "note": "Landed in 7abf088 (S6 session, merged 22757cb): quarter challenges require waxing/waning, First near 270 deg, Third near 90 deg.",
+      "state": "fixed",
+      "updatedAt": "2026-10-24T05:45:00Z"
+    },
+    "774bdaa6": {
+      "note": "Landed in 7abf088 (merged 22757cb): shadow challenge tests the drawn Moon against the drawn umbra (about 11 deg), feedback gives the real 0.69/0.95 deg window and 5.1 deg tilt.",
+      "state": "fixed",
+      "updatedAt": "2026-10-24T05:45:00Z"
+    },
+    "d085a04d": {
+      "note": "Landed in 5df1cf2 (merged a224125): tick and power-of-ten labels placed by wavelengthToPositionPercent, E2E within 1px at 1280 and 320px.",
+      "state": "fixed",
+      "updatedAt": "2026-10-24T05:45:00Z"
+    },
+    "672faa85": {
+      "note": "Landed in 7abf088 (merged 22757cb): /about/ shows mode counts derived from a frontmatter modes field that validate-play-dirs checks against each demo source.",
+      "state": "fixed",
+      "updatedAt": "2026-10-24T05:55:00Z"
+    },
+    "27be86f5": {
+      "note": "Landed in 7abf088 (merged 22757cb): /about/ shows mode counts derived from a frontmatter modes field that validate-play-dirs checks against each demo source.",
+      "state": "fixed",
+      "updatedAt": "2026-10-24T05:55:00Z"
+    },
+    "37da33c1": {
+      "note": "Landed in 7abf088 (merged 22757cb): /about/ shows mode counts derived from a frontmatter modes field that validate-play-dirs checks against each demo source.",
+      "state": "fixed",
+      "updatedAt": "2026-10-24T05:55:00Z"
+    },
+    "e955414d": {
+      "note": "Landed in 7abf088 (merged 22757cb): station card uses the demo convention, Third Quarter 90 deg waning, First Quarter 270 deg waxing; stationCard.test.ts.",
+      "state": "fixed",
+      "updatedAt": "2026-10-24T05:55:00Z"
     }
   },
   "decisions": [
@@ -1416,6 +1451,56 @@
       "question": "After 196c689 stacked binary-orbits in one column from 901 to 1024px, should the demo's stacked tuning (680px orbit cap, 620px stage cap) extend from 900px to the shell's 1024px stack?",
       "choice": "Extend it to 1024px",
       "why": "Measured 2026-10-23 at 1024x768 on the merged build: the desktop 862x647 orbit canvas ended at y=820, 52px below the fold, and jumped from 682 to 821px wide at 900/901px. Extended, it is 682x512 ending at y=681 across the whole stack; widths of 1025px and up are unchanged. Anna approved by popup; landed on main 2026-10-23 in the commit after 196c689, not pushed."
+    },
+    {
+      "id": "d-s6-scope",
+      "date": "2026-10-23",
+      "order": 20,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "Which scope for the S6 session?",
+      "choice": "S6 plus the 2 moon-phases P0s (71ea9f53, 774bdaa6)",
+      "why": "Approved by popup in the S6 session 2026-10-23; fixes landed in 7abf088."
+    },
+    {
+      "id": "d-about-modes",
+      "date": "2026-10-23",
+      "order": 21,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "How should /about/ describe demo modes?",
+      "choice": "Honest counts derived from a per-demo modes field that validate-play-dirs checks against the source",
+      "why": "The old \"3 modes per demo\" claim was false: Station 18 of 20, Challenge 9 of 20. Approved by popup in the S6 session."
+    },
+    {
+      "id": "d-parallax-demote",
+      "date": "2026-10-23",
+      "order": 22,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "parallax-distance was launch-ready with open P0 fc507e37; how to keep readiness consistent with content_verified: false?",
+      "choice": "Demote to beta / candidate until the sign fix lands",
+      "why": "check-readiness forbids launch-ready with content_verified: false. Approved by popup in the S6 session."
+    },
+    {
+      "id": "d-em-ticks-stagger",
+      "date": "2026-10-23",
+      "order": 23,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "At phone width the power-of-ten labels cannot sit side by side on the true log axis",
+      "choice": "Stagger them on three lines below 480px; drop nothing",
+      "why": "At 320px the bar is 238px wide. Approved by popup in the em-ticks session; landed in 5df1cf2."
+    },
+    {
+      "id": "d-seasons-copy",
+      "date": "2026-10-23",
+      "order": 24,
+      "status": "landed",
+      "statusLabel": "landed",
+      "question": "Keep S6 rewrite of the seasons readinessReason (no longer claims the day-night boundary is fixed)?",
+      "choice": "Keep the rewrite",
+      "why": "P0 c52b5182 (daylight arc overruns the terminator) is open. Anna approved by popup in the lead session 2026-10-23."
     }
   ]
 }

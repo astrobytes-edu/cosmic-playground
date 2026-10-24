@@ -1,7 +1,7 @@
 # Cosmic Playground — status
 
-next: push main once (binary-orbits tablet stack and stack tuning), then the test-suite refactor T1-T4 and S6; 18 of 591 audit findings fixed with evidence, 18 partly
-blocker: none (a1aa15c live; 196c689 and the stack tuning committed on main, not pushed)
+next: merge the parallax P0 when its session finishes, push main once, then T1; 25 of 591 audit findings fixed with evidence (5 of 24 P0), 18 partly
+blocker: none (S6 and the em-spectrum tick P0 merged into main 2026-10-23, not pushed; f17f812 live)
 due: 2026-09-18 (dossier)
 
 ## Red-team audit (2026-10-23, claude-opus-5)
