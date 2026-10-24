@@ -1,9 +1,12 @@
 @import "../../shared/stub-demo.css";
 
-.cp-demo[data-shell="viz-first"] {
-  grid-template-columns: clamp(360px, 31vw, 420px) minmax(0, 1fr);
+/* Desktop only. This selector (0,2,0) outranks the shell's 1024px stack (0,1,0), so unbounded
+ * it put that one-column stack in a 360px track beside an empty one from 901 to 1024px. */
+@media (min-width: 1025px) {
+  .cp-demo[data-shell="viz-first"] {
+    grid-template-columns: clamp(360px, 31vw, 420px) minmax(0, 1fr);
+  }
 }
-
 
 .control__value {
   color: color-mix(in srgb, var(--cp-text) 76%, var(--cp-bg0));
@@ -522,10 +525,6 @@
 }
 
 @media (max-width: 900px) {
-  .cp-demo[data-shell="viz-first"] {
-    grid-template-columns: 1fr;
-  }
-
   .cp-demo__stage {
     min-height: clamp(340px, 58svh, 620px);
   }

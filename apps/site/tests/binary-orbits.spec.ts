@@ -881,6 +881,52 @@ test.describe("Binary Orbits -- E2E", () => {
   });
 });
 
+// --- Tablet stack (separate describe, no beforeEach) ---
+
+/*
+ * At 1024px and below the shell stacks every region in one column. This demo's two-track
+ * grid outranked the shell's stack (0,2,0 against 0,1,0) and its own reset started at
+ * 900px, so from 901 to 1024px the whole stack sat in a 360px first track beside an
+ * empty second one (measured 2026-10-23).
+ */
+test.describe("Binary Orbits -- tablet stack", () => {
+  for (const width of [960, 1024]) {
+    test(`every region fills the content width at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("play/binary-orbits/", { waitUntil: "domcontentloaded" });
+      await expect(page.locator("#cp-demo")).toBeVisible();
+
+      const layout = await page.evaluate(() => {
+        const demo = document.getElementById("cp-demo");
+        if (!demo) throw new Error("#cp-demo is missing");
+        const style = getComputedStyle(demo);
+        // A missing region reads as 0px wide and fails below by name.
+        const regionWidth = (selector: string) =>
+          document.querySelector(selector)?.getBoundingClientRect().width ?? 0;
+        return {
+          contentWidth:
+            demo.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+          tracks: style.gridTemplateColumns.trim().split(/\s+/).length,
+          regions: {
+            stage: regionWidth(".cp-demo__stage"),
+            readouts: regionWidth(".cp-demo__readouts"),
+            controls: regionWidth(".cp-demo__controls"),
+            shelf: regionWidth(".cp-demo__drawer"),
+          },
+        };
+      });
+
+      for (const [region, regionWidth] of Object.entries(layout.regions)) {
+        expect(
+          Math.abs(regionWidth - layout.contentWidth),
+          `${region} is ${regionWidth}px of a ${layout.contentWidth}px content box`
+        ).toBeLessThanOrEqual(1);
+      }
+      expect(layout.tracks, "the stack has one column track").toBe(1);
+    });
+  }
+});
+
 // --- Reduced Motion (separate describe, no beforeEach) ---
 
 test.describe("Binary Orbits -- Reduced Motion", () => {
