@@ -343,6 +343,15 @@
   stroke-width: 2;
 }
 
+.detector__offscale polygon {
+  fill: var(--cp-accent-amber);
+}
+
+.detector__offscale-label {
+  fill: var(--cp-accent-amber);
+  font-weight: var(--cp-font-semibold);
+}
+
 .detector__tick-label {
   fill: var(--cp-text2);
   font-family: var(--cp-font-mono);
@@ -371,6 +380,10 @@
   font-family: var(--cp-font-sans);
   font-size: 14px;
   text-anchor: middle;
+}
+
+.stage__note--start {
+  text-anchor: start;
 }
 
 .stage__note--end {
@@ -639,6 +652,11 @@
   .stage__note,
   .detector__tick-label {
     font-size: 21px;
+  }
+
+  /* At 21px, labels on every tick run together ("-300-200-100"); keep every other one. */
+  .detector__tick-label--odd {
+    display: none;
   }
 
   .capture-bar__actions {

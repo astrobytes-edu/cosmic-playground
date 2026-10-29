@@ -255,6 +255,34 @@ describe("Parallax Distance -- DOM integration", { timeout: 20000 }, () => {
     );
   });
 
+  // A dot whose drawn offset would pass the axis end is pinned there; the marker says so
+  // and gives the true value. At 1 pc (p = 1000 mas) and 40x, phase 0 puts Earth on +x,
+  // so the star's true offset is -1000 mas: 480 px, far past the 182 px clamp, on the left.
+  it("marks a pinned detector dot as off scale with its true offset", async () => {
+    await import("./main");
+
+    const left = requiredElement<SVGGElement>("#offscaleLeft");
+    const right = requiredElement<SVGGElement>("#offscaleRight");
+    const leftLabel = requiredElement<SVGTextElement>("#offscaleLeftLabel");
+
+    setRangeValue("#orbitPhaseScrub", 0);
+    expect(left.getAttribute("visibility")).toBe("hidden");
+    expect(right.getAttribute("visibility")).toBe("hidden");
+
+    setRangeValue("#distancePcRange", 1);
+    setRangeValue("#exaggeration", 40);
+    setRangeValue("#orbitPhaseScrub", 0);
+
+    expect(left.getAttribute("visibility")).toBe("visible");
+    expect(right.getAttribute("visibility")).toBe("hidden");
+    expect(leftLabel.textContent).toContain("Now");
+    expect(leftLabel.textContent).toContain("-1000 mas");
+
+    // Back inside the range: at 15x the same offset is 180 px, under the clamp.
+    setRangeValue("#exaggeration", 15);
+    expect(left.getAttribute("visibility")).toBe("hidden");
+  });
+
   // The orbit view is a top view from the north: the star is drawn above the Sun and
   // Earth runs counter-clockwise, so a quarter orbit from phase 0 (right of the Sun)
   // lands Earth between the Sun and the star.

@@ -363,6 +363,22 @@ const detectorScaleNote = requireEl(
   document.querySelector<SVGTextElement>("#detectorScaleNote"),
   "#detectorScaleNote"
 );
+const offscaleLeft = requireEl(
+  document.querySelector<SVGGElement>("#offscaleLeft"),
+  "#offscaleLeft"
+);
+const offscaleRight = requireEl(
+  document.querySelector<SVGGElement>("#offscaleRight"),
+  "#offscaleRight"
+);
+const offscaleLeftLabel = requireEl(
+  document.querySelector<SVGTextElement>("#offscaleLeftLabel"),
+  "#offscaleLeftLabel"
+);
+const offscaleRightLabel = requireEl(
+  document.querySelector<SVGTextElement>("#offscaleRightLabel"),
+  "#offscaleRightLabel"
+);
 const detectorNow = requireEl(
   document.querySelector<SVGCircleElement>("#detectorNow"),
   "#detectorNow"
@@ -816,6 +832,29 @@ function renderOrbit(snap: Snapshot) {
   }
 }
 
+/**
+ * Pinned dots, per side of the axis. The axis is horizontal on screen, so "left" is the
+ * negative end of axisHat = (1, 0). Each entry carries the TRUE offset (measured for
+ * captures), which the drawing can no longer show.
+ */
+function renderOffscaleMarkers(entries: ReadonlyArray<{ name: string; offsetMas: Vec2 }>) {
+  const sides = { left: [] as string[], right: [] as string[] };
+  for (const { name, offsetMas } of entries) {
+    const scalarMas = dotVec2(offsetMas, state.axisHat);
+    const drawnPx = offsetPx(scalarMas, state.exaggerationVisual, DETECTOR_PX_PER_MAS);
+    if (Math.abs(drawnPx) <= DETECTOR_RANGE_PX) continue;
+    const value = formatNumber(scalarMas, Math.abs(scalarMas) >= 100 ? 0 : 1);
+    sides[drawnPx < 0 ? "left" : "right"].push(`${name} ${scalarMas > 0 ? "+" : ""}${value}`);
+  }
+  const apply = (group: SVGGElement, label: SVGTextElement, items: string[]) => {
+    setVisibility(group, items.length > 0);
+    setVisibility(label, items.length > 0);
+    label.textContent = items.length > 0 ? `Off scale: ${items.join(", ")} mas` : "";
+  };
+  apply(offscaleLeft, offscaleLeftLabel, sides.left);
+  apply(offscaleRight, offscaleRightLabel, sides.right);
+}
+
 function renderDetectorTicks() {
   const pxPerMas = offsetPx(1, state.exaggerationVisual, DETECTOR_PX_PER_MAS);
   if (!(pxPerMas > 0)) {
@@ -845,7 +884,10 @@ function renderDetectorTicks() {
     const label = document.createElementNS(SVG_NS, "text");
     label.setAttribute("x", point.x.toFixed(2));
     label.setAttribute("y", (point.y + DETECTOR_TICK_LABEL_DY).toFixed(2));
-    label.setAttribute("class", "detector__tick-label");
+    label.setAttribute(
+      "class",
+      i % 2 === 0 ? "detector__tick-label" : "detector__tick-label detector__tick-label--odd",
+    );
     label.textContent = formatTickMas(valueMas, stepMas);
     nodes.push(label);
   }
@@ -975,6 +1017,12 @@ function renderDetector(snap: Snapshot) {
     detectorSeparationLabel.textContent = "Capture A and B to measure the shift.";
     degenerateWarningLabel.textContent = "";
   }
+
+  renderOffscaleMarkers([
+    { name: "Now", offsetMas: snap.nowDetectorTrueMas },
+    ...(state.captureA ? [{ name: "A", offsetMas: state.captureA.detectorMeasMas }] : []),
+    ...(state.captureB ? [{ name: "B", offsetMas: state.captureB.detectorMeasMas }] : [])
+  ]);
 
   if (blinkEnabled && hasA && hasB) {
     setVisibility(detectorMarkerEpochA, blinkShowA);
