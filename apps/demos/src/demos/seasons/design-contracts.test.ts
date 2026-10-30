@@ -44,18 +44,7 @@ describe("Seasons -- Design System Contracts", () => {
     });
   });
 
-  describe("Starfield invariant", () => {
-    it("demo HTML contains a starfield canvas element", () => {
-      expect(html).toContain('class="cp-starfield"');
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    });
-  });
-
   describe("Readout unit separation", () => {
-    it("readout values with units use .cp-readout__unit spans", () => {
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(3);
-    });
 
     it("readout labels do not contain parenthesized units", () => {
       const labels = html.match(/class="cp-readout__label"[^>]*>([^<]*)</g) || [];
@@ -106,15 +95,6 @@ describe("Seasons -- Design System Contracts", () => {
         return /#[0-9a-fA-F]{3,8}\b/.test(line);
       });
       expect(violations).toEqual([]);
-    });
-  });
-
-  describe("Starfield initialization", () => {
-    it("main.ts imports and calls initStarfield", () => {
-      const mainPath = path.resolve(__dirname, "main.ts");
-      const mainTs = fs.readFileSync(mainPath, "utf-8");
-      expect(mainTs).toContain("initStarfield");
-      expect(mainTs).toMatch(/initStarfield\s*\(/);
     });
   });
 

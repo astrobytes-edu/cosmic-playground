@@ -24,10 +24,8 @@ const mainTs = read("main.ts");
 
 describe("Eclipse Geometry -- Design System Contracts", () => {
   describe("Instrument layer and starfield", () => {
-    it("the demo root is an instrument-layer page with a starfield canvas that main.ts initialises", () => {
+    it("the demo root is an instrument-layer page", () => {
       expect(html).toContain("cp-layer-instrument");
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-      expect(mainTs).toMatch(/initStarfield\s*\(/);
     });
   });
 
@@ -69,11 +67,6 @@ describe("Eclipse Geometry -- Design System Contracts", () => {
   });
 
   describe("Readout typography", () => {
-    it("dimensional readouts put their units in .cp-readout__unit spans", () => {
-      // phase angle, |beta| and nearest node are the three dimensional readouts
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(3);
-    });
 
     it("readout labels do not carry parenthesised units", () => {
       const labels = html.match(/class="cp-readout__label"[^>]*>([^<]*)</g) || [];

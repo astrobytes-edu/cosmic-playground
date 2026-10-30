@@ -17,6 +17,7 @@
       class="cp-layer-instrument cp-demo"
       aria-label="Spectral Lines instrument"
     >
+      <canvas class="cp-starfield" aria-hidden="true"></canvas>
       <h1 class="sr-only">Spectral Lines &amp; the Bohr Atom</h1>
       <!-- ─── Controls sidebar ──────────────────────────────── -->
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
@@ -250,7 +251,6 @@
 
       <!-- ─── Main stage ────────────────────────────────────── -->
       <section class="cp-demo__stage cp-stage" aria-label="Visualization stage">
-        <canvas class="cp-starfield" aria-hidden="true"></canvas>
         <div class="cp-tabs stage-tabs" role="tablist" aria-label="View mode">
           <button class="cp-tab" role="tab" aria-selected="true"
                   aria-controls="panel-explore" id="tab-explore">Explore</button>

@@ -165,24 +165,27 @@ function formatRadiusLatex(radiusSolarRadius: number, showUnits: boolean): strin
   return latexQuantity(formatFixed(radiusSolarRadius, 2), "R_{\\odot}", showUnits);
 }
 
+function profileUnitLatex(key: HydrostaticProfileKey): string {
+  if (key === "enclosed-mass") return "M_{\\odot}";
+  if (key === "gravity") return "{\\rm cm\\,s^{-2}}";
+  if (key === "density") return "{\\rm g\\,cm^{-3}}";
+  if (key === "pressure-gradient") return "{\\rm dyne\\,cm^{-3}}";
+  return "{\\rm dyne\\,cm^{-2}}";
+}
+
 function formatProfileValueLatex(
   key: HydrostaticProfileKey,
   value: number,
   showUnits: boolean
 ): string {
-  if (key === "enclosed-mass") {
-    return latexQuantity(formatScientificLatex(value, 3), "M_{\\odot}", showUnits);
-  }
-  if (key === "gravity") {
-    return scientificQuantityLatex(value, "{\\rm cm\\,s^{-2}}", showUnits, 3);
-  }
-  if (key === "density") {
-    return scientificQuantityLatex(value, "{\\rm g\\,cm^{-3}}", showUnits, 3);
-  }
-  if (key === "pressure-gradient") {
-    return scientificQuantityLatex(value, "{\\rm dyne\\,cm^{-3}}", showUnits, 3);
-  }
-  return scientificQuantityLatex(value, "{\\rm dyne\\,cm^{-2}}", showUnits, 3);
+  return latexQuantity(formatScientificLatex(value, 3), profileUnitLatex(key), showUnits);
+}
+
+/** The readout keeps its unit in a .cp-readout__unit span, outside the typeset value. */
+function profileValueMarkup(key: HydrostaticProfileKey, value: number, showUnits: boolean): string {
+  const number = renderInlineLatex(formatScientificLatex(value, 3));
+  if (!showUnits) return number;
+  return `${number}<span class="cp-readout__unit">${renderInlineLatex(profileUnitLatex(key))}</span>`;
 }
 
 function setMathText(element: HTMLElement, content: string): void {
@@ -196,7 +199,7 @@ function buildReadoutMarkup(primaryLatex: string, secondaryLatex: string | null)
   if (!secondaryLatex) {
     return `<span class="readout-primary">${renderInlineLatex(primaryLatex)}</span>`;
   }
-  return `<span class="readout-primary">${renderInlineLatex(primaryLatex)}</span><span class="readout-secondary">${renderInlineLatex(secondaryLatex)}</span>`;
+  return `<span class="readout-primary">${renderInlineLatex(primaryLatex)}</span><span class="cp-readout__sub">${renderInlineLatex(secondaryLatex)}</span>`;
 }
 
 function nearlyEqual(a: number, b: number, tolerance = 1e-6): boolean {
@@ -1419,9 +1422,9 @@ function render(): void {
   profilePlot.innerHTML = renderProfileSvg(scenario, state.profileKey, state.explorerMode);
 
   setInlineLatex(profileCurrentLabel, currentProfileMeta.quantityLabel);
-  setInlineLatex(
+  setMarkup(
     profileCurrentValue,
-    formatProfileValueLatex(state.profileKey, currentProfileValue, state.showUnits)
+    profileValueMarkup(state.profileKey, currentProfileValue, state.showUnits)
   );
   setMathText(profileInterpretation, buildProfileInterpretation(scenario, state.profileKey));
 

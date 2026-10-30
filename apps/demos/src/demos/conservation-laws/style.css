@@ -8,7 +8,8 @@
   padding: var(--cp-space-2) var(--cp-space-2) 0;
 }
 
-/* `.cp-starfield` is position: fixed with z-index 0, so everything drawn over it is positioned above it. */
+/* Positioned to stay above `.cp-starfield` while it was z-index 0. Since 2026-10-29 it is -1,
+ * behind every panel, so this no longer matters for the stars. */
 .stage__head,
 .stage__caption {
   position: relative;

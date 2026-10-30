@@ -60,26 +60,7 @@ describe("Planetary Conjunctions -- Design System Contracts", () => {
     });
   });
 
-  describe("Starfield invariant", () => {
-    it("demo HTML contains a starfield canvas element", () => {
-      expect(html).toContain('class="cp-starfield"');
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    });
-  });
-
-  describe("Starfield initialization", () => {
-    it("main.ts imports and calls initStarfield", () => {
-      expect(mainTs).toContain("initStarfield");
-      expect(mainTs).toMatch(/initStarfield\s*\(/);
-    });
-  });
-
   describe("Readout unit separation", () => {
-    it("readout values with units use .cp-readout__unit spans", () => {
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      // synodic (days), elapsed (days), earth angle (deg), target angle (deg), separation (deg)
-      expect(unitSpans.length).toBeGreaterThanOrEqual(5);
-    });
 
     it("readout labels do not contain parenthesized units", () => {
       const labels = html.match(/class="cp-readout__label"[^>]*>([^<]*)</g) || [];

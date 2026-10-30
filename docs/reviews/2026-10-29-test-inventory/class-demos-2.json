@@ -1,0 +1,497 @@
+{
+ "files": [
+  {
+   "file": "apps/demos/src/demos/moon-phases/challenges.test.ts",
+   "tests": 14,
+   "counts": {
+    "GUARD": 13,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 1
+   },
+   "verdict": "keep",
+   "notes": [
+    "challenges.test.ts:114-116 \u2014 pins the umbra constants [225,380,15] (constant snapshot; the drawing-vs-grader consistency is already covered by the test at :109)",
+    "challenges.test.ts:20-37 \u2014 quarter tests use 90/270 only for the sign check, but the sense (waxing/waning) is exactly what a sign error flips, so they are not blind; :46-56 add +/-3 and +/-6 deg offsets (asymmetric enough)",
+    "challenges.test.ts:77-92 \u2014 shadow window accepted for |alpha|<=~11 deg is a drawn-umbra criterion, not the physical +/-0.95 deg of finding 774bdaa6; the success message (:98-101) does carry the real scale"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/moon-phases/design-contracts.test.ts",
+   "tests": 26,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 24,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 2
+   },
+   "verdict": "rewrite",
+   "notes": [
+    "design-contracts.test.ts:27-80 \u2014 regex/contains on index.html for token names and ids; no gate enforces --cp-celestial-* use (--cp-warning/--cp-accent2 are still defined in tokens.css:53,59 so theme:undefined-token does not catch them)",
+    "design-contracts.test.ts:85-87 \u2014 starfield canvas presence: STRING-ONLY, and no script in scripts/validate-*.mjs checks starfield despite CLAUDE.md implying a gate",
+    "design-contracts.test.ts:105-111 \u2014 `.viz-panel[\\s\\S]*?background...` / `...backdrop-filter` lazy regex spans the whole file and passes with both declarations deleted from the block (finding cd6a085e, verified by mutation): ASSERTS-NOTHING x2",
+    "design-contracts.test.ts:125-176 \u2014 11 id/class-exists checks (playbar, popover, annotation groups, rise-set-line, 'sky view removed'); source text only",
+    "design-contracts.test.ts:98-101 \u2014 pins the KaTeX source string of the equation readout; STRING-ONLY"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/moon-phases/exportPayload.test.ts",
+   "tests": 1,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 1,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "rewrite",
+   "notes": [
+    "exportPayload.test.ts:13-15 \u2014 title says 'with units' but only asserts two row NAMES exist; no value, unit or the illumination/days/phase rows are checked"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/moon-phases/logic.test.ts",
+   "tests": 64,
+   "counts": {
+    "GUARD": 54,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 10
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:70-98 \u2014 7 tests pin exported constants (PHASE_ANGLES, SNAP_DEGREES, ORBITAL_RADIUS...) to their own literals: constant snapshots",
+    "logic.test.ts:376-394 \u2014 270/225/45 deg phase-path tests assert only non-empty / contains 'M 0' / contains 'A'; flipping isWaxing leaves them green (finding 88a58b8f): ASSERTS-NOTHING x3",
+    "logic.test.ts:29-59 \u2014 mockCallbacks re-implements the physics, so computeReadoutData/computeStablePhaseName/computeTimelineState tests never touch @cosmic/physics (finding bbe56ff4); GUARD for UI logic only",
+    "logic.test.ts:235-257 \u2014 computeApproxRiseSet checked only at the four cardinal angles 0/90/180/270 (distinct enough to catch a waxing/waning swap, but no intermediate angle); demo copy of rise/set physics is finding 0ae03505",
+    "logic.test.ts:336-352 \u2014 computeOrbitalPosition only at 0/90/180 deg (no 270, no off-axis angle)",
+    "logic.test.ts:412-423 \u2014 Full/New readouts are symmetric points; only the 270 deg days-since-new test (:430) is asymmetric"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/moon-phases/riseSetUiState.test.ts",
+   "tests": 4,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 4
+   },
+   "verdict": "delete",
+   "notes": [
+    "riseSetUiState.test.ts:11-14 \u2014 asserts PRESET_DAY_OF_YEAR equals the same literals as the source (constant snapshot)",
+    "riseSetUiState.test.ts:17-25 \u2014 getAdvancedVisibility/getRiseSetVisibility are `!enabled`; test restates the implementation",
+    "riseSetUiState.test.ts:28-30 \u2014 applyPresetDayOfYear is a table lookup; restates :11-14"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/moon-phases/riseSetViewModel.test.ts",
+   "tests": 3,
+   "counts": {
+    "GUARD": 3,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": [
+    "riseSetViewModel.test.ts:12-18 \u2014 normal-case test checks only /\\d{2}:\\d{2}/ format and status text, not the rise/set hours; the two polar tests (:27,:39) are the real guards (distinct June/December cases, physically correct for a full moon at 80 N)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/moon-phases/stationCard.test.ts",
+   "tests": 6,
+   "counts": {
+    "GUARD": 4,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 2,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": [
+    "stationCard.test.ts:24 \u2014 counts table rows == 4 (source-text shape check)",
+    "stationCard.test.ts:41-44 \u2014 regex on word-bank prose in the markdown card",
+    "stationCard.test.ts:27-39 \u2014 4 expanded row tests compare the printed card to MoonPhasesModel; 90 vs 270 rows catch a First/Third swap, 0/180 rows are symmetric (f only)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/parallax-distance/design-contracts.test.ts",
+   "tests": 18,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 16,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "rewrite",
+   "notes": [
+    "design-contracts.test.ts:34-39 \u2014 #cp-demo, #copyResults, #status ids: duplicate of scripts/validate-play-dirs.mjs requiredMarkers (:114-117) on built artifacts",
+    "design-contracts.test.ts:184-201 \u2014 rgba()/hex scan of style.css: duplicate of validate-invariants apps:no-color-literals (scans demo .css/.html incl. comments)",
+    "design-contracts.test.ts:27-175 \u2014 id/class/copy-string presence checks on index.html and main.ts (control ids, panel titles, microcopy, labels); no behaviour",
+    "design-contracts.test.ts:152-158,171-174 \u2014 contains('initStarfield'/'initTabs'/'from \"@cosmic/physics\"') is satisfied by the import line alone (cf. finding cf723b0e)",
+    "design-contracts.test.ts:160-169 \u2014 pins ASCII 'sigma_meas', 'sigma_p_hat' strings in main.ts copy/export text; conflicts with the KaTeX-only rule (finding 9078f592, unverified), so a fix to LaTeX would break this test",
+    "design-contracts.test.ts:178-182 \u2014 legacy aliases (--cp-warning etc.) are still defined in tokens.css, so no gate backs this; STRING-ONLY"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/parallax-distance/logic.test.ts",
+   "tests": 19,
+   "counts": {
+    "GUARD": 19,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": [
+    "logic.test.ts:56-69 \u2014 axis-offset test uses phases 0/90/180 only: blind to the offset sign (finding ac8660dd, now backstopped by the asymmetric it.each at :74-107)",
+    "logic.test.ts:143-210 \u2014 computeCaptureInference cases use phases 0/180 (and 90/270) only, and the function consumes |delta theta| (finding ac8660dd); the signed-swap test (:166) is the only sign check",
+    "logic.test.ts:143-164 \u2014 sigmaShiftMas/sigmaPHatMas/sigmaDHatPc/snrPHat are never asserted (finding ddf0b0e2): the uncertainty propagation is untested at unit level",
+    "logic.test.ts:74-107 \u2014 6 expanded tests at 37/143/251 deg (asymmetric, against the exact topocentric angle): the strongest tests in the group"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/parallax-distance/main.integration.test.ts",
+   "tests": 10,
+   "counts": {
+    "GUARD": 10,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": [
+    "main.integration.test.ts:161-205 \u2014 inverse-scaling test uses phases 0/90/180 only (sign-blind) but checks p10/p100 ~ 10; the sign is covered by :211-256 at 37/143/251 deg",
+    "main.integration.test.ts:289-304 \u2014 star-above-Sun / CCW test checks only phases 0 and 90; fine for y-flip but does not detect the 1.07 AU / 86 deg star placement (finding 196fc9ac)",
+    "main.integration.test.ts:359-361 \u2014 quality label only asserted to be one of four strings; :407-409 asserts mock call counts (initTabs etc.), weak but incidental",
+    "main.integration.test.ts:20-34 \u2014 @cosmic/runtime and data-astr101 are mocked; detector/readout wiring is real, runtime wiring is not"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/planetary-conjunctions/design-contracts.test.ts",
+   "tests": 34,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 32,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "rewrite",
+   "notes": [
+    "design-contracts.test.ts:124-141 \u2014 rgba()/hex scan: duplicate of validate-invariants apps:no-color-literals",
+    "design-contracts.test.ts:30-60 \u2014 token-name regexes `.conjunction__earth[\\s\\S]*?--cp-celestial-earth` are lazy and unbounded over the whole stylesheet; pass if the token appears anywhere after the class",
+    "design-contracts.test.ts:64-82 \u2014 starfield canvas / initStarfield presence: no gate covers this, so STRING-ONLY not DUPLICATE-GATE",
+    "design-contracts.test.ts:94-112 \u2014 legacy token absence; the aliases are still defined in tokens.css (--cp-chart-1 etc.), so no gate enforces",
+    "design-contracts.test.ts:150-162 \u2014 architecture checks inspect main.ts only; logic.ts, where the physics is re-implemented, is outside the check (finding cf723b0e)",
+    "design-contracts.test.ts:166-212 \u2014 chip/toolbar/id existence checks; :217-219 regex for 'Math.min(...0.1' dt clamp"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/planetary-conjunctions/logic.test.ts",
+   "tests": 60,
+   "counts": {
+    "GUARD": 52,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 4,
+    "PINS-DEFECT": 3,
+    "ASSERTS-NOTHING": 1
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:53-55 \u2014 yearDays() === 365.25: constant snapshot of the hardcoded model year (finding ab712869)",
+    "logic.test.ts:352-366 \u2014 planetCssVar maps planet name to a token name string; lookup-table pin, and the dynamic token is not seen by the theme:undefined-token gate",
+    "logic.test.ts:246-253 \u2014 formatNumber exponential cases ('1.5e+7', /e/) pin e-notation that CLAUDE.md forbids in reader text (finding 893212f0, confirmed P1)",
+    "logic.test.ts:269-273 \u2014 formatDays(1460) expects '4.0 ... yr' i.e. the unit switch that yields the '2.7 yr days' readout (finding 28fd346c, confirmed P1)",
+    "logic.test.ts:63-88 \u2014 sidereal/synodic tests use stub callbacks that re-implement Kepler III; they check the logic.ts glue, not @cosmic/physics",
+    "logic.test.ts:130-146 \u2014 planetAngleRad phase tests at 0, half and full period only; nothing tests the J2000 epoch longitudes the demo discards (finding bf22a6b1)",
+    "logic.test.ts:198-219 \u2014 isConjunction default 5 deg threshold pinned; the alignment-at-threshold-entry defect (finding 7002971e) lives in main.ts and has no test",
+    "logic.test.ts:164-170 \u2014 angularSeparationDeg tests at 0/90/180 plus one 350/10 wrap case (asymmetric enough)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/retrograde-motion/design-contracts.test.ts",
+   "tests": 21,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 17,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 2
+   },
+   "verdict": "rewrite",
+   "notes": [
+    "design-contracts.test.ts:94-111 \u2014 rgba()/hex scans: duplicate of validate-invariants apps:no-color-literals",
+    "design-contracts.test.ts:165-173 \u2014 translucency tests match `color-mix|radial-gradient|--cp-instr-panel-bg` anywhere in a 574-line stylesheet and `not.toMatch(background:#...)` (empty-file passes): ASSERTS-NOTHING x2 (finding 704fa6ad)",
+    "design-contracts.test.ts:29-31 \u2014 contains('initStarfield') satisfied by the import statement alone (finding 704fa6ad)",
+    "design-contracts.test.ts:62-66 \u2014 'main.ts has no legacy tokens' asserts only --cp-accent3 absent; comment explicitly allows --cp-warning",
+    "design-contracts.test.ts:88-90 \u2014 entry-animation test is one alternation `cp-slide-up|cp-fade-in` anywhere in the CSS",
+    "design-contracts.test.ts:153-160 \u2014 CSS rule regex for `.playbar-nav .cp-button {display:block}`: source text, not computed layout"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/retrograde-motion/logic.test.ts",
+   "tests": 98,
+   "counts": {
+    "GUARD": 85,
+    "DUPLICATE-GATE": 1,
+    "STRING-ONLY": 2,
+    "PINS-DEFECT": 6,
+    "ASSERTS-NOTHING": 4
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:77-90 \u2014 formatRetrogradeState has no importer in main.ts (superseded by the hysteresis classifier): 4 assertions on a dead export (finding 320ea1b9)",
+    "logic.test.ts:371-395 \u2014 resolveDistinctPair always returns adjusted:false; tests pin the no-op, including 'does not auto-adjust' (finding 320ea1b9): PINS-DEFECT x3",
+    "logic.test.ts:587-603,615-620 \u2014 zodiac labels pinned at 15/195 deg and 30-deg spacing; finding a4413327 (unverified) says the ring is labelled sidereal but uses tropical midpoints: PINS-DEFECT x3",
+    "logic.test.ts:580-585 \u2014 exact list of 12 zodiac abbreviations (name list)",
+    "logic.test.ts:270-276 \u2014 buildOrbitPath asserts only /^M/, contains 'L', contains 'Z'",
+    "logic.test.ts:307-317 \u2014 toHaveProperty shape check on computeDisplayState is guaranteed by the tsc return type (typecheck gate)",
+    "logic.test.ts:535-565 \u2014 projectToSkyView pins the left-edge mapping (0 deg -> x=0) while the docstring says 'center'; test is right, comment wrong; Sky View resolution is finding e79b0c46",
+    "logic.test.ts:281-290,292-305 \u2014 computeDisplayState uses a stubbed planetElements and a constant 0.4 deg/day series; retrograde detection from real series is not exercised here",
+    "logic.test.ts:471-478 \u2014 relativeAngularSpeedProxy only asserted > 0 / NaN"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/seasons/design-contracts.test.ts",
+   "tests": 48,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 46,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "rewrite",
+   "notes": [
+    "design-contracts.test.ts:92-109 \u2014 rgba()/hex scans: duplicate of validate-invariants apps:no-color-literals",
+    "design-contracts.test.ts:20-44 \u2014 `not.toMatch(/\\.stage__sun[\\s\\S]*?--cp-warning/)` negatives pass vacuously if the class is renamed or absent",
+    "design-contracts.test.ts:158-189,253-288 \u2014 ~15 id-exists checks on SVG elements (terminator, latitude bands, polarisGroup, dayArc...); pin names, not geometry, so the confirmed P0/P1 geometry defects (c52b5182, c7c5c678) stay green",
+    "design-contracts.test.ts:194,228,266 \u2014 counts of overlay buttons (7), tabs (3), season labels (4) pin the current markup",
+    "design-contracts.test.ts:290-311 \u2014 season / latitude-band colour regexes, lazy and unbounded",
+    "design-contracts.test.ts:210-220 \u2014 slider min/max in HTML attribute text (tilt max=90) rather than behaviour"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/seasons/logic.test.ts",
+   "tests": 104,
+   "counts": {
+    "GUARD": 79,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 9,
+    "ASSERTS-NOTHING": 16
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:132-136 \u2014 'default distExaggeration is 8' evaluates at 1.0 AU where the factor cancels, so it asserts nothing about the default (and main.ts passes 2, finding 6c7f732b): ASSERTS-NOTHING",
+    "logic.test.ts:154-182 \u2014 axisEndpoint and diskMarkerY have zero importers in main.ts (dead stack, finding 14067d92): 6 assertions on dead code",
+    "logic.test.ts:325-352 \u2014 latitudeToGlobeY has no importer in main.ts: 6 assertions on dead code",
+    "logic.test.ts:397-427 \u2014 globeAxisEndpoints is dead; 3 tests are geometry on dead code (ASSERTS-NOTHING) and :406-410 'north end tilts right' pins the convention opposite to the live globeAxisScreen (:274): PINS-DEFECT",
+    "logic.test.ts:354-395 \u2014 latitudeBandEllipse (zero-tilt ry=0 collapse etc.) is the superseded side-view projection still called by dayLengthArcGeometry, whose arc overruns the terminator (finding c52b5182, confirmed P0): PINS-DEFECT x7",
+    "logic.test.ts:127-131 \u2014 orbitPosition(pi/2) expects y=+orbitR, i.e. the clockwise-on-screen convention (findings c7c5c678 confirmed P1 / 82916c0c): PINS-DEFECT",
+    "logic.test.ts:268-322 \u2014 globe projection tests (Arctic circle tangent to terminator at +/-23.44 deg declination) are the strongest guards in the file and asymmetric in sign",
+    "logic.test.ts:93-107 \u2014 season anchors days 80/172/266/356; the Sep-equinox anchor is 3.4 d off the model (finding c746fda2, unverified) and is not checked against the physics model",
+    "logic.test.ts:239-251 \u2014 contextualMessage covers only the zero-tilt case"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/spectral-lines/design-contracts.test.ts",
+   "tests": 48,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 46,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "rewrite",
+   "notes": [
+    "design-contracts.test.ts:116-118 \u2014 only #copyResults: duplicate of validate-play-dirs requiredMarkers",
+    "design-contracts.test.ts:189-195 \u2014 hex-colour scan: duplicate of validate-invariants apps:no-color-literals",
+    "design-contracts.test.ts:122-311 \u2014 essentially `expect(html).toContain('id=\"...\"')` x ~60; not one assertion reads a number or behaviour (finding 6db1f00d), so every confirmed spectral-lines P0 (f9b92bee, 48c04de1) leaves the file green",
+    "design-contracts.test.ts:53-67 \u2014 lazy `.bohr-container[\\s\\S]*?background` regexes, same flaw as cd6a085e",
+    "design-contracts.test.ts:156-158 \u2014 KaTeX source substrings in index.html",
+    "design-contracts.test.ts:242-251 \u2014 'at least three challenges' via regex on main.ts source"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/spectral-lines/logic.test.ts",
+   "tests": 60,
+   "counts": {
+    "GUARD": 54,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 1,
+    "PINS-DEFECT": 4,
+    "ASSERTS-NOTHING": 1
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:57-62 \u2014 formatNumber '1.50e+7', '5.00e-5' pin e-notation CLAUDE.md forbids (finding 893212f0): PINS-DEFECT x2",
+    "logic.test.ts:260-265 \u2014 spectrumDomainForSeries('all') pinned to 50..5000 nm, the linear domain that compresses the whole visible band into ~52 px (finding 48c04de1, confirmed P0): PINS-DEFECT",
+    "logic.test.ts:220-223 \u2014 'mode behavior is independent of tab' pins the dead viewTab parameter that shouldRenderEmission discards with `void` (finding 6db1f00d): PINS-DEFECT",
+    "logic.test.ts:290-300 \u2014 pile-up density asserts length 4, some count>0, 0<=density<=1: range checks, no value; also feeds the air Balmer limit 364.6 nm (finding 277a5993)",
+    "logic.test.ts:373-403 \u2014 export test 1 checks row NAMES only (the other two export tests pin exact strings)",
+    "logic.test.ts:86-100,310 \u2014 formatters are fed literals (656.3), so they say nothing about the Rydberg physics; no test asserts a computed wavelength (finding 6db1f00d)",
+    "logic.test.ts:102-119 \u2014 wavelengthToRgbString asserted by substring ('rgb(255', '120', '100'); loose",
+    "logic.test.ts:302-307 \u2014 1/n^3 spacing only asserted as ratio > 7 (expected 8)",
+    "logic.test.ts:269-273 \u2014 classifyInverseMatchQuality thresholds (<=0.5 nm exact, <=2 nm near) probed at 0.3/1.2/3.1 only; thresholds are tolerances for Anna to approve, and finding d205bd63 says a pure air/vacuum systematic reads as exact"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/stars-zams-hr/design-contracts.test.ts",
+   "tests": 15,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 1,
+    "STRING-ONLY": 14,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "rewrite",
+   "notes": [
+    "design-contracts.test.ts:114-117 \u2014 hex scan duplicates validate-invariants apps:no-color-literals; `css.toContain('var(--cp-')` is trivially true",
+    "design-contracts.test.ts:14-26 \u2014 #cp-demo/#copyResults/#status ids partly covered by validate-play-dirs but mixed with non-gated asserts, so counted STRING-ONLY",
+    "design-contracts.test.ts:44-57 \u2014 axis-badge markup regex (CSS arrows); finding bd6d1154's Unicode-arrow pin is already gone",
+    "design-contracts.test.ts:95-112 \u2014 contains() on main.ts for runtime hooks and for absence of 'seed: `track-'; does not detect the inline buildEvolutionTrack physics (finding d2e77841 confirmed P0)",
+    "design-contracts.test.ts:1-125 \u2014 no starfield, no celestial-token, no translucency or readout-unit test at all (finding 1e4a8d23)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/stars-zams-hr/logic.test.ts",
+   "tests": 18,
+   "counts": {
+    "GUARD": 13,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 1,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 4
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:43-57 \u2014 Stefan-Boltzmann test uses teffK === tSunK, so the T^4 factor is 1 and any exponent passes; only R^2 is tested (finding bd6d1154); GUARD at a symmetric point",
+    "logic.test.ts:59-67 \u2014 pins axis-limit constants (2500, 50000, -10, 19, 2.5): constant snapshot",
+    "logic.test.ts:91-93 \u2014 RADIUS_GUIDE_VALUES_RSUN equals the same literal list: constant snapshot",
+    "logic.test.ts:95-98 \u2014 massColorHex asserted only to start with 'hsl(' ; the inverted blue-low-mass hue ramp (finding 6ef2cff5) is unconstrained",
+    "logic.test.ts:177-194 \u2014 preset parameter tables (cluster age 0.08/4.6 Gyr, binary fraction, Z=0.02) copied into the assertion: constant snapshot of scientific defaults",
+    "logic.test.ts:196-207 \u2014 guide region labels and hint length only; label positions (finding 9e440816 confirmed P0) are not tested",
+    "logic.test.ts:215-242 \u2014 describeSelectedStarInference fed a 14000 K, L=0.02 'ms' star, physically inconsistent for a main-sequence star; asserts substrings only"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/telescope-resolution/design-contracts.test.ts",
+   "tests": 24,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 22,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "rewrite",
+   "notes": [
+    "design-contracts.test.ts:73-91 \u2014 rgba()/hex scans: duplicate of validate-invariants apps:no-color-literals",
+    "design-contracts.test.ts:20-33 \u2014 starfield canvas / initStarfield: no gate, STRING-ONLY",
+    "design-contracts.test.ts:95-102 \u2014 `not.toMatch(/function rayleigh/)` architecture check; the AO closure defect lives in the physics package (finding 55912396) and is invisible here",
+    "design-contracts.test.ts:152-153 \u2014 pins a *disabled* #challengeMode button in the markup",
+    "design-contracts.test.ts:162-168 \u2014 pins three relative hrefs; root-absolute links are already gated by validate-invariants demos:root-absolute-link"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/telescope-resolution/logic.test.ts",
+   "tests": 75,
+   "counts": {
+    "GUARD": 66,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 3,
+    "PINS-DEFECT": 6,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:144-163 \u2014 formatNumber '2.50e+8', '7.00e-5', '1.00e+6', '1e+8' pin the e-notation readout CLAUDE.md forbids (finding 7856cb03 / 893212f0): PINS-DEFECT x4",
+    "logic.test.ts:390-394,402-407 \u2014 computeFovArcsec 0.4 arcsec floor pinned; the floor makes the Airy pattern unframeable for apertures above ~2 m (finding 4004a39d): PINS-DEFECT x2",
+    "logic.test.ts:363-375 \u2014 toneToBadgeAttr good->good, warn->warn, bad->danger: name-to-name lookup",
+    "logic.test.ts:416-445 \u2014 zoomedFov divides by clamp(zoom,1,20) in isolation; the composition computeFovArcsec -> zoomedFov that ejects the binary at default zoom 6 (finding 9a3f0b64) is never tested",
+    "logic.test.ts:232-237 \u2014 test titled 'scientific notation for very large apertures' actually asserts '10000.000' km; title and assertion disagree",
+    "logic.test.ts:106-112 \u2014 round-trip uses exact toBe on floating point (passes today)",
+    "logic.test.ts:1-447 \u2014 no test touches thetaEff / Airy / AO values: the physics lives in packages/physics, so none of the confirmed telescope-resolution physics findings can be caught here"
+   ]
+  },
+  {
+   "file": "apps/demos/src/shared/demoContracts.test.ts",
+   "tests": 40,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 20,
+    "STRING-ONLY": 20,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "trim",
+   "notes": [
+    "demoContracts.test.ts:17-29 \u2014 20 expanded 'exactly one h1 with readable text' tests regex index.html; no gate checks h1, so STRING-ONLY (but a real cross-demo a11y rule; belongs in validate-play-dirs)",
+    "demoContracts.test.ts:31-42 \u2014 20 expanded '#cp-demo root with .cp-demo class and aria-label' tests duplicate validate-play-dirs.mjs (id=\"cp-demo\" marker :115, aria-label :188-201) which runs on built artifacts",
+    "demoContracts.test.ts:8 \u2014 expansion counts the 20 demo directories present now; it grows silently with each new demo"
+   ]
+  },
+  {
+   "file": "apps/demos/src/shared/dom.test.ts",
+   "tests": 5,
+   "counts": {
+    "GUARD": 5,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": [
+    "dom.test.ts:22-32 \u2014 returns-context test stubs getContext and asserts identity plus typeof fillRect; low information but exercises the narrowing contract"
+   ]
+  },
+  {
+   "file": "apps/demos/src/shared/mathText.test.ts",
+   "tests": 3,
+   "counts": {
+    "GUARD": 3,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": []
+  },
+  {
+   "file": "apps/demos/src/shared/svgMathOverlay.test.ts",
+   "tests": 3,
+   "counts": {
+    "GUARD": 3,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": []
+  }
+ ],
+ "totals": {
+  "tests": 821,
+  "GUARD": 463,
+  "DUPLICATE-GATE": 34,
+  "STRING-ONLY": 251,
+  "PINS-DEFECT": 28,
+  "ASSERTS-NOTHING": 45
+ }
+}

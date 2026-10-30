@@ -16,22 +16,6 @@ describe("Kepler's Laws -- Design System Contracts", () => {
   const html = fs.readFileSync(htmlPath, "utf-8");
   const css = fs.readFileSync(cssPath, "utf-8");
 
-  describe("Starfield invariant", () => {
-    it("demo HTML contains a starfield canvas element", () => {
-      expect(html).toContain('class="cp-starfield"');
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    });
-  });
-
-  describe("Starfield initialization", () => {
-    it("main.ts imports and calls initStarfield", () => {
-      const mainPath = path.resolve(__dirname, "main.ts");
-      const mainTs = fs.readFileSync(mainPath, "utf-8");
-      expect(mainTs).toContain("initStarfield");
-      expect(mainTs).toMatch(/initStarfield\s*\(/);
-    });
-  });
-
   describe("Celestial token invariants", () => {
     it("starGradient uses --cp-celestial-sun, not --cp-warning", () => {
       const starGrad = html.match(
@@ -86,12 +70,6 @@ describe("Kepler's Laws -- Design System Contracts", () => {
   });
 
   describe("Readout unit separation", () => {
-    it("readout values with units use .cp-readout__unit spans", () => {
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      // distance (AU), velocity (km/s), acceleration (mm/s^2), period (yr),
-      // kinetic, potential, total energy, angular momentum, areal velocity = 9
-      expect(unitSpans.length).toBeGreaterThanOrEqual(9);
-    });
 
     it("readout labels do not contain parenthesized units", () => {
       const labels = html.match(/class="cp-readout__label"[^>]*>([^<]*)</g) || [];

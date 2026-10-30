@@ -150,12 +150,6 @@ describe("Cluster Census -- Design System Contracts", () => {
       expect(html).toContain("cp-layer-instrument");
     });
 
-    it("has a starfield canvas and initialises it with the canvas argument", () => {
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-      // initStarfield() with no argument is a runtime error; the canvas must be passed.
-      expect(mainTs).toMatch(/initStarfield\(\{\s*canvas/);
-    });
-
     it("has the controls panel, stage and drawer the shell requires", () => {
       expect(html).toContain("cp-demo__controls");
       expect(html).toContain("cp-demo__stage");
@@ -180,18 +174,6 @@ describe("Cluster Census -- Design System Contracts", () => {
 
     it("writes solar-mass units as LaTeX rather than a Unicode symbol", () => {
       expect(html).toContain("$M_\\odot$");
-    });
-  });
-
-  describe("Panel translucency contract", () => {
-    it("plot panels use the instrument panel background, not an opaque fill", () => {
-      expect(css).toContain("background: var(--cp-instr-panel-bg)");
-      expect(css).toContain("--cp-instr-panel-bg-muted");
-    });
-
-    it("blurs the backdrop, with the prefix Safari needs", () => {
-      expect(css).toContain("backdrop-filter: blur(8px)");
-      expect(css).toContain("-webkit-backdrop-filter: blur(8px)");
     });
   });
 
@@ -276,9 +258,6 @@ describe("Cluster Census -- Design System Contracts", () => {
       }
     });
 
-    it("hides the starfield from assistive technology", () => {
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"[^>]*aria-hidden="true"/);
-    });
   });
 
   describe("Architecture", () => {

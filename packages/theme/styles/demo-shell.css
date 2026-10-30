@@ -14,11 +14,16 @@
      shelf    — tabbed content (What to Notice, etc.)
    ============================================ */
 
-/* --- Starfield canvas (sits behind all demo content) --- */
+/* --- Starfield canvas (sits behind all demo content) ---
+ * z-index -1, not 0. The canvas lives inside #cp-demo, whose z-index makes it a stacking
+ * context; there a z-index 0 positioned canvas paints OVER every non-positioned panel
+ * (stage, readouts, shelf), text included -- all 20 demos until 2026-10-29. At -1 it paints
+ * just above #cp-demo's own background and below every panel, so stars show in the gutters
+ * and through translucent panels only. */
 .cp-starfield {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   width: 100%;
   height: 100%;

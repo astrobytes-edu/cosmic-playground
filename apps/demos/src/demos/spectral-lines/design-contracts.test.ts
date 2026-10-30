@@ -28,44 +28,12 @@ describe("Spectral Lines — Design System Contracts", () => {
   const css = fs.readFileSync(cssPath, "utf-8");
   const main = fs.readFileSync(mainPath, "utf-8");
 
-  describe("Starfield invariant", () => {
-    it("demo HTML contains a starfield canvas element", () => {
-      expect(html).toContain('class="cp-starfield"');
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    });
-  });
-
   describe("Instrument layer", () => {
     it("root element has cp-layer-instrument class", () => {
       expect(html).toContain("cp-layer-instrument");
     });
   });
 
-  describe("Readout unit separation", () => {
-    it("readout values with units use .cp-readout__unit spans", () => {
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      // Wavelength (nm), Energy (eV), Frequency (Hz) = at least 3 unit spans
-      expect(unitSpans.length).toBeGreaterThanOrEqual(3);
-    });
-  });
-
-  describe("Panel translucency", () => {
-    it("Bohr container uses translucent panel background", () => {
-      expect(css).toMatch(/\.bohr-container[\s\S]*?background:\s*var\(--cp-instr-panel-bg\)/);
-    });
-
-    it("Bohr container uses backdrop-filter", () => {
-      expect(css).toMatch(/\.bohr-container[\s\S]*?backdrop-filter/);
-    });
-
-    it("energy container uses translucent panel background", () => {
-      expect(css).toMatch(/\.energy-container[\s\S]*?background:\s*var\(--cp-instr-panel-bg\)/);
-    });
-
-    it("energy container uses backdrop-filter", () => {
-      expect(css).toMatch(/\.energy-container[\s\S]*?backdrop-filter/);
-    });
-  });
 
   describe("No legacy token leakage", () => {
     it("no --cp-warning tokens in HTML", () => {

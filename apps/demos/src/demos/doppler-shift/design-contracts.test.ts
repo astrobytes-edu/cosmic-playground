@@ -23,20 +23,11 @@ describe("Doppler Shift -- Design System Contracts", () => {
     expect(html).toContain("cp-layer-instrument");
   });
 
-  it("includes starfield canvas", () => {
-    expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    expect(main).toContain("initStarfield");
-  });
-
   it("has wave and spectrum visual elements", () => {
     expect(html).toContain('id="waveDiagram"');
     expect(html).toContain('id="spectrumCanvas"');
   });
 
-  it("readouts use separate unit spans", () => {
-    const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-    expect(unitSpans.length).toBeGreaterThanOrEqual(6);
-  });
 
   it("includes utility toolbar + popover links", () => {
     expect(html).toContain("cp-utility-toolbar");

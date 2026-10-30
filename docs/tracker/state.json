@@ -1,9 +1,9 @@
 {
   "about": "Cosmic Playground remediation tracker. Source of truth; see docs/tracker/README.md.",
-  "updatedAt": "2026-10-29T00:00:00Z",
+  "updatedAt": "2026-10-29",
   "now": {
-    "focus": "Live (b228249): S6, the em-spectrum tick P0 and the parallax sign P0 with its redesign. The parallax off-scale marker is merged into main (55232f5), not pushed. Of the 591 findings, 26 are fixed with evidence (6 of 24 P0) and 18 more are partly fixed.",
-    "next": "Push main once (parallax off-scale marker); then T1 on an idle machine.",
+    "focus": "T1 done: test inventory and baseline in docs/reviews/2026-10-29-test-inventory.md. Live: 01ee019. Of the 591 findings, 26 are fixed with evidence (6 of 24 P0) and 18 more are partly fixed.",
+    "next": "T2: commit the batch so far (starfield, readout units, panel translucency), then keep retiring CSS-string and name-only tests from docs/reviews/2026-10-29-test-inventory.md.",
     "blocker": ""
   },
   "roadmap": [
@@ -638,15 +638,15 @@
       "detail": "Count tests and measure wall time per package once (announced first), and classify each suite: guards a real behaviour, duplicates a gate, pins a defect, or asserts nothing.",
       "effort": "S",
       "findingIds": [],
-      "note": "",
+      "note": "docs/reviews/2026-10-29-test-inventory.md: 2,653 unit tests (64% guard, 28% string-only) and 1,300 E2E runs (78% guard; 703 s of 790 s CI wall). ~290 s of summed E2E time is non-guard (estimate). String-only tests are the only check of the starfield, celestial-token, unit-span and translucency invariants.",
       "order": 0,
       "phase": "tests",
       "phaseBlurb": "Your 2026-10-23 ask: fewer, higher-value tests, stale and low-value ones retired, and faster runs. Starts after S2 lands, since S2 rewrites demo test files.",
       "phaseOrder": 3,
       "phaseTitle": "Test suites: quality over quantity",
-      "state": "todo",
+      "state": "done",
       "title": "Inventory and baseline",
-      "updatedAt": "2026-10-23T00:00:00Z"
+      "updatedAt": "2026-10-29T12:00:00Z"
     },
     {
       "id": "T2",
@@ -716,15 +716,15 @@
         "6e7bff4e",
         "cf723b0e"
       ],
-      "note": "",
+      "note": "Started 2026-10-29 (uncommitted): gate demos:starfield-missing added to validate-invariants.mjs (RED-first test; mutation check flags exactly the 2 broken demos of 20). Retired 27 string-only starfield tests (617 -> 590 design-contract tests), trimmed 3 composite tests, and removed the 20-run E2E accessibility starfield check. Units and translucency are not decidable from source; legacy-token gate waits on hydrostatic colours. Browser probe 2026-10-29 (preview of 55232f5 build, 1280x720): the starfield is invisible in 7 demos (angular-size, eos-lab, hydrostatic-equilibrium-explorer, moon-phases, parallax-distance, retrograde-motion, stars-zams-hr) because their canvas sits in <body> before #cp-demo, which is position:relative, z-index:1 with an opaque background; the 13 demos with the canvas inside #cp-demo show it. Every string test and the new source gate pass on these 7. Starfield fixed 2026-10-29 (uncommitted): canvas moved inside #cp-demo in angular-size, eos-lab, hydrostatic-equilibrium-explorer, moon-phases, parallax-distance, retrograde-motion and stars-zams-hr; demos:starfield-missing now also requires the canvas inside #cp-demo (RED-first; flagged exactly those 7 before the move, 0 after). Browser per-panel probe at 1280x720, reduced motion: stars visible in the stage and sidebar of all 20. Units probe: inline units or stray tokens in readout values in eos-lab (2 x %), hydrostatic (4), seasons (12h 00m); 'vs' comparisons in binary-orbits and doppler-shift are false positives. Units done 2026-10-29 (uncommitted): accessibility.spec.ts now checks the rendered primary readout value (minus unit, +/- and sub spans and KaTeX MathML) for an inline unit; % counts, clock times and 'x vs y' are exempt. RED failed on eos-lab (2 x %) and hydrostatic (profile readout with dyne cm^-2 typeset into the value; normalized sub-lines). Fixed: eos-lab percent() returns the number and the HTML carries a % unit span; hydrostatic profile readout renders its unit in a .cp-readout__unit span, its sub-line uses cp-readout__sub, and its strip label units are KaTeX (were ASCII uppercased to 'G CM^-3', 'M_SUN'). accessibility.spec.ts 107/107 passed (58.5 s). Retired 17 string tests that only counted unit spans (590 -> 573 design-contract tests). Gap: a unit deleted outright (no span, no inline text) passes the browser check. Paint-order finding: .cp-starfield is fixed z-index 0 inside the #cp-demo stacking context, so it paints above static panels (.cp-stage opaque in 19 of 20, readouts alpha 0.88) and their text; only the sticky z-index 3 sidebar is in front. Starfield paint order (2026-10-29): .cp-starfield is z-index -1 and the first child of #cp-demo in all 20 demos (13 had it inside the stage, where the stage's entry animation made a stacking context); the gate now requires first child. Stars show in gutters and translucent panels only. Panel translucency (2026-10-29): a per-demo browser check in accessibility.spec.ts requires each of sidebar, controls and readouts to paint translucent (alpha < 1) and blurred at its outermost surface; 20/20 pass, and a mutation (opaque readouts, unblurred sidebar in moon-phases) fails on both. Retired 14 translucency string tests in 6 demos, most of which checked panels inside the now-opaque stage (573 -> 559 design-contract tests). accessibility.spec.ts 126 passed before the eclipse-geometry fix to the check's surface rule; the translucency tests then passed 20/20.",
       "order": 1,
       "phase": "tests",
       "phaseBlurb": "Your 2026-10-23 ask: fewer, higher-value tests, stale and low-value ones retired, and faster runs. Starts after S2 lands, since S2 rewrites demo test files.",
       "phaseOrder": 3,
       "phaseTitle": "Test suites: quality over quantity",
-      "state": "todo",
+      "state": "next",
       "title": "Retire stale and low-value tests",
-      "updatedAt": "2026-10-23T00:00:00Z"
+      "updatedAt": "2026-10-29T13:00:00Z"
     },
     {
       "id": "T3",
@@ -1556,6 +1556,66 @@
       "question": "At phone width the parallax detector tick labels, enlarged to 21px so they stay legible, ran together (\"-300-200-100\"); keep the every-other-label thinning 284fc1e added unasked?",
       "choice": "Keep it: labels every 200 mas at phone width, every tick mark still drawn",
       "why": "The alternative, smaller text, brings back the 6.3px labels the redesign removed. Anna approved in the lead session 2026-10-29; landed in 284fc1e (merged 55232f5)."
+    },
+    {
+      "id": "d-t2-shared-scan",
+      "date": "2026-10-29",
+      "order": 30,
+      "status": "approved",
+      "statusLabel": "approved",
+      "question": "T2 deletes string-only design-contract tests, but they are the only check of the starfield, celestial-token, readout-unit and panel-translucency invariants (no validate-*.mjs gate covers them). Delete outright, or replace them with a shared scan first?",
+      "choice": "Shared scan first: one Node check over every demo's HTML/CSS for the four invariants plus legacy-token use, then delete the string-only tests it replaces",
+      "why": "Deleting first would leave four CLAUDE.md design invariants unchecked; a build-time scan covers every demo, not only those with a design-contracts file, and costs no browser time. Anna chose in the lead session 2026-10-29."
+    },
+    {
+      "id": "d-t2-browser-style-check",
+      "date": "2026-10-29",
+      "order": 31,
+      "status": "approved",
+      "statusLabel": "approved",
+      "question": "Readout units and panel translucency cannot be decided from HTML/CSS source (10 of 12 opaque backgrounds found were canvases, selects and bars). Check them in the browser, or keep the per-demo string tests?",
+      "choice": "Browser check: one computed-style test in the per-demo accessibility loop (panels over the starfield render with background alpha below 1; numeric readouts show their unit in .cp-readout__unit), then retire the matching string tests",
+      "why": "It tests what the reader sees; the string tests pass with the CSS deleted (cd6a085e). Net page loads unchanged because the starfield E2E check it replaces was removed. Anna chose in the lead session 2026-10-29."
+    },
+    {
+      "id": "d-t2-starfield-inside-root",
+      "date": "2026-10-29",
+      "order": 32,
+      "status": "approved",
+      "statusLabel": "approved",
+      "question": "The starfield was invisible in 7 of 20 demos: the canvas sat in <body> before the opaque, z-index 1 #cp-demo root. Move the canvas inside #cp-demo, or make the root transparent in the shared shell?",
+      "choice": "Move the canvas inside #cp-demo in the 7 demos, matching the 13 that already showed stars, and extend demos:starfield-missing to require it",
+      "why": "A markup-only change confined to the broken demos; the 13 working demos do not change. Stars now show in the gutters and through translucent panels. Anna chose in the lead session 2026-10-29."
+    },
+    {
+      "id": "d-t2-percent-is-unit",
+      "date": "2026-10-29",
+      "order": 33,
+      "status": "approved",
+      "statusLabel": "approved",
+      "question": "What counts as a unit for the readout-unit browser check: is % a unit, and are clock times (12h 00m) and 'x vs y' comparisons exempt?",
+      "choice": "% is a unit and goes in .cp-readout__unit; clock times and 'x vs y' comparisons are notation and exempt",
+      "why": "moon-phases (golden reference) and doppler-shift already span %, so this makes the rule consistent; costs 2 eos-lab readouts. Anna chose in the lead session 2026-10-29."
+    },
+    {
+      "id": "d-t2-starfield-behind-panels",
+      "date": "2026-10-29",
+      "order": 34,
+      "status": "approved",
+      "statusLabel": "approved",
+      "question": "Should the starfield paint behind every panel, or stay on top of stage and readout content?",
+      "choice": "Behind every panel: .cp-starfield z-index -1, and the canvas is the first child of #cp-demo in all 20 demos",
+      "why": "At z-index 0 the stars drew over stage and readout content, text included, in all 20 demos. At -1 they show only in gutters and through translucent panels. 13 demos also had the canvas inside the stage, whose fill-mode entry animation makes it a stacking context; moved to first child and gated by demos:starfield-missing. Measured after: 1 star pixel inside opaque panels across 20 demos at 1280x720, rounded corners excluded. Anna chose in the lead session 2026-10-29."
+    },
+    {
+      "id": "d-t2-translucency-named-panels",
+      "date": "2026-10-29",
+      "order": 35,
+      "status": "approved",
+      "statusLabel": "approved",
+      "question": "Which panels must the translucency browser check cover: only sidebar, controls and readouts, or every panel including stage, shelf and accordions?",
+      "choice": "Only sidebar, controls and readouts; the stage, shelf and accordions stay opaque as the instrument's screen",
+      "why": "Stars behind a sky map, orbit or HR plot could pass for data points. All 20 demos already met it (alpha 0.62-0.88, blur 8-16px), so no visual change. Anna chose in the lead session 2026-10-29."
     }
   ]
 }

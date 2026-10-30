@@ -968,7 +968,7 @@
   min-height: 100%;
 }
 
-.readout-secondary {
+.cp-readout__value .cp-readout__sub {
   display: block;
   margin-top: 0.16rem;
   color: var(--cp-readout-unit-color, var(--cp-text2));

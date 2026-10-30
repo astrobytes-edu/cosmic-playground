@@ -16,21 +16,7 @@ describe("Blackbody Radiation -- Design System Contracts", () => {
   const html = fs.readFileSync(htmlPath, "utf-8");
   const css = fs.readFileSync(cssPath, "utf-8");
 
-  describe("Starfield invariant", () => {
-    it("demo HTML contains a starfield canvas element", () => {
-      expect(html).toContain('class="cp-starfield"');
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    });
-  });
-
   describe("Starfield initialization", () => {
-    it("main.ts imports and calls initStarfield", () => {
-      const mainPath = path.resolve(__dirname, "main.ts");
-      const mainTs = fs.readFileSync(mainPath, "utf-8");
-      expect(mainTs).toContain("initStarfield");
-      expect(mainTs).toMatch(/initStarfield\s*\(/);
-    });
-
     it("main.ts initializes tabs via initTabs", () => {
       const mainPath = path.resolve(__dirname, "main.ts");
       const mainTs = fs.readFileSync(mainPath, "utf-8");
@@ -60,11 +46,6 @@ describe("Blackbody Radiation -- Design System Contracts", () => {
   });
 
   describe("Readout unit separation", () => {
-    it("readout values with units use .cp-readout__unit spans", () => {
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      // peak wavelength unit should remain explicit
-      expect(unitSpans.length).toBeGreaterThanOrEqual(1);
-    });
 
     it("readout labels do not contain parenthesized units", () => {
       const labels = html.match(/class="cp-readout__label"[^>]*>([^<]*)</g) || [];

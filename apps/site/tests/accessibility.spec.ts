@@ -53,11 +53,6 @@ test.describe("Cross-demo accessibility audit", () => {
         await expect(status).toHaveAttribute("aria-live", "polite");
       });
 
-      test(`${slug}: starfield canvas is aria-hidden`, async ({ page }) => {
-        const canvas = page.locator("canvas.cp-starfield");
-        await expect(canvas).toHaveAttribute("aria-hidden", "true");
-      });
-
       test(`${slug}: utility toolbar has role=toolbar`, async ({ page }) => {
         const toolbar = page.locator(".cp-utility-toolbar");
         await expect(toolbar).toHaveAttribute("role", "toolbar");
@@ -76,6 +71,63 @@ test.describe("Cross-demo accessibility audit", () => {
         const units = page.locator(".cp-readout__unit");
         const count = await units.count();
         expect(count, `${slug} should have readout unit spans`).toBeGreaterThanOrEqual(1);
+
+        // A unit typed into the value renders amber like the number instead of ice-blue, and
+        // no source scan can see it once the value is filled in by code or typeset by KaTeX.
+        // Read what the page renders: the primary value, minus its unit and +/- spans, its
+        // sub-line and KaTeX's MathML copy. "%" counts as a unit (Anna, 2026-10-29); clock
+        // times such as "12h 00m" and "x vs y" comparisons are notation, not units.
+        const inline = await page.evaluate(() => {
+          const found: string[] = [];
+          for (const value of document.querySelectorAll(".cp-readout__value")) {
+            const copy = value.cloneNode(true) as HTMLElement;
+            for (const node of copy.querySelectorAll(
+              ".cp-readout__unit, .cp-readout__pm, .cp-readout__sub, .katex-mathml"
+            )) {
+              node.remove();
+            }
+            const text = (copy.textContent ?? "")
+              .replace(/\s+/g, " ")
+              .replace(/\b\d+h \d+m\b/g, "")
+              .replace(/ vs /g, " ")
+              .trim();
+            if (/\d\s*(%|[A-Za-z]{1,6}\b)/.test(text)) found.push(text);
+          }
+          return found;
+        });
+        expect(inline, `${slug} readout values with a unit outside .cp-readout__unit`).toEqual([]);
+      });
+
+      test(`${slug}: sidebar, controls and readouts are translucent and blurred`, async ({ page }) => {
+        // The starfield paints behind every panel (z-index -1), so it shows only through
+        // translucent ones. Only these three regions must be translucent: the stage, shelf
+        // and accordions stay opaque as the instrument's screen, where stars could pass for
+        // data points (Anna, 2026-10-29). What is judged is each region's outermost painted
+        // surface: the region itself, or, where it paints nothing (eclipse-geometry's readouts
+        // wrap a .cp-readout-strip), the first descendants that do. Anything nested inside a
+        // surface, such as an accordion, is not judged.
+        const bad = await page.evaluate(() => {
+          const alpha = (color: string) => {
+            const m = color.match(/\/\s*([\d.]+)\s*\)$/) ?? color.match(/^rgba\(.*,\s*([\d.]+)\)$/);
+            return m ? Number(m[1]) : 1;
+          };
+          const found: string[] = [];
+          const judge = (el: Element, sel: string) => {
+            if (el.getClientRects().length === 0) return;
+            const style = getComputedStyle(el);
+            const a = alpha(style.backgroundColor);
+            if (a === 0) {
+              for (const child of el.children) judge(child, sel);
+            } else if (a >= 1 || !/blur\(/.test(style.backdropFilter)) {
+              found.push(`${sel} ${el.className}: ${style.backgroundColor} ${style.backdropFilter}`);
+            }
+          };
+          for (const sel of [".cp-demo__sidebar", ".cp-demo__controls", ".cp-demo__readouts"]) {
+            for (const region of document.querySelectorAll(sel)) judge(region, sel);
+          }
+          return found;
+        });
+        expect(bad, `${slug} panels the starfield cannot show through`).toEqual([]);
       });
     });
   }

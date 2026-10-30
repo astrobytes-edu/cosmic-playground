@@ -81,33 +81,11 @@ describe("Moon Phases — Design System Contracts", () => {
     });
   });
 
-  describe("Starfield invariant", () => {
-    it("demo HTML contains a starfield canvas element", () => {
-      expect(html).toContain('class="cp-starfield"');
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    });
-  });
-
   describe("Readout unit separation", () => {
-    it("readout values with units use .cp-readout__unit spans", () => {
-      // Readouts: Angle (deg), Illuminated (%), Days since new (d)
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(3);
-    });
 
     it("contains compact illumination equation readout", () => {
       expect(html).toContain('id="illumination-equation-value"');
       expect(html).toContain("$f = (1 + \\cos\\alpha)/2 =$");
-    });
-  });
-
-  describe("Panel translucency", () => {
-    it("demo CSS uses translucent backgrounds for viz panels", () => {
-      expect(css).toMatch(/\.viz-panel[\s\S]*?background:\s*var\(--cp-instr-panel-bg\)/);
-    });
-
-    it("demo CSS uses backdrop-filter for viz panels", () => {
-      expect(css).toMatch(/\.viz-panel[\s\S]*?backdrop-filter/);
     });
   });
 

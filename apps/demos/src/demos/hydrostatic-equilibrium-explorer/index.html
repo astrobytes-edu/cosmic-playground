@@ -11,8 +11,6 @@
     <link rel="stylesheet" href="../../fonts/fonts.css" />
   </head>
   <body>
-    <canvas class="cp-starfield" aria-hidden="true"></canvas>
-
     <div
       id="cp-demo"
       role="main"
@@ -20,6 +18,7 @@
       data-shell="viz-first"
       aria-label="Hydrostatic equilibrium explorer instrument"
     >
+      <canvas class="cp-starfield" aria-hidden="true"></canvas>
       <h1 class="sr-only">Hydrostatic Equilibrium Explorer</h1>
       <aside class="cp-demo__controls cp-demo__sidebar cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Hydrostatic Equilibrium Explorer</div>
@@ -590,27 +589,27 @@
 
       <section id="readoutStrip" class="cp-readout-strip cp-demo__readouts" aria-label="Hydrostatic readouts">
         <div id="readoutMassCard" class="cp-readout">
-          <div class="cp-readout__label">Mass <span class="cp-readout__unit hydro-readout-unit">M_sun</span></div>
+          <div class="cp-readout__label">Mass <span class="cp-readout__unit hydro-readout-unit">$M_{\odot}$</span></div>
           <div class="cp-readout__value" id="readoutMass">$1.00$</div>
         </div>
         <div id="readoutRadiusCard" class="cp-readout">
-          <div class="cp-readout__label">Radius <span class="cp-readout__unit hydro-readout-unit">R_sun</span></div>
+          <div class="cp-readout__label">Radius <span class="cp-readout__unit hydro-readout-unit">$R_{\odot}$</span></div>
           <div class="cp-readout__value" id="readoutRadius">$1.00$</div>
         </div>
         <div id="readoutMeanDensityCard" class="cp-readout">
-          <div class="cp-readout__label">Mean density <span class="cp-readout__unit hydro-readout-unit">g cm^-3</span></div>
+          <div class="cp-readout__label">Mean density <span class="cp-readout__unit hydro-readout-unit">$\mathrm{g\,cm^{-3}}$</span></div>
           <div class="cp-readout__value" id="readoutMeanDensity">$1.41$</div>
         </div>
         <div id="readoutGravityCard" class="cp-readout">
-          <div class="cp-readout__label">Local gravity <span class="cp-readout__unit hydro-readout-unit">cm s^-2</span></div>
+          <div class="cp-readout__label">Local gravity <span class="cp-readout__unit hydro-readout-unit">$\mathrm{cm\,s^{-2}}$</span></div>
           <div class="cp-readout__value" id="readoutGravity">$0$</div>
         </div>
         <div id="readoutCentralPressureCard" class="cp-readout">
-          <div class="cp-readout__label">Exact central pressure <span class="cp-readout__unit hydro-readout-unit">dyne cm^-2</span></div>
+          <div class="cp-readout__label">Exact central pressure <span class="cp-readout__unit hydro-readout-unit">$\mathrm{dyne\,cm^{-2}}$</span></div>
           <div class="cp-readout__value" id="readoutCentralPressure">$0$</div>
         </div>
         <div id="readoutCoreTemperatureCard" class="cp-readout">
-          <div class="cp-readout__label">Core-temperature scale <span class="cp-readout__unit hydro-readout-unit">K</span></div>
+          <div class="cp-readout__label">Core-temperature scale <span class="cp-readout__unit hydro-readout-unit">$\mathrm{K}$</span></div>
           <div class="cp-readout__value" id="readoutCoreTemperature">$0$</div>
         </div>
       </section>

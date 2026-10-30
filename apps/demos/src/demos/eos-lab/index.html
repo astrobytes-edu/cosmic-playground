@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="../../fonts/fonts.css" />
   </head>
   <body>
-    <canvas class="cp-starfield" aria-hidden="true"></canvas>
     <div
       id="cp-demo"
       role="main"
@@ -19,6 +18,7 @@
       data-shell="viz-first"
       aria-label="Equation of state lab instrument"
     >
+      <canvas class="cp-starfield" aria-hidden="true"></canvas>
       <h1 class="sr-only">EOS Lab: Pressure Support in Stars</h1>
       <aside class="cp-demo__controls cp-demo__sidebar cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Equation of State Lab</div>
@@ -456,7 +456,7 @@
           </div>
           <div class="cp-readout">
             <span class="cp-readout__label">$\beta=P_{\rm gas}/P_{\rm tot}$</span>
-            <span class="cp-readout__value"><span id="betaValue"></span></span>
+            <span class="cp-readout__value"><span id="betaValue"></span><span class="cp-readout__unit">%</span></span>
           </div>
           <div class="cp-readout">
             <span class="cp-readout__label">$P_{\rm rad}/P_{\rm gas}$</span>
@@ -464,7 +464,7 @@
           </div>
           <div class="cp-readout">
             <span class="cp-readout__label">$P_{\rm deg,e}/P_{\rm tot}$</span>
-            <span class="cp-readout__value"><span id="degTotalValue"></span></span>
+            <span class="cp-readout__value"><span id="degTotalValue"></span><span class="cp-readout__unit">%</span></span>
           </div>
           <div class="cp-readout cp-readout--stack">
             <span class="cp-readout__label">$\chi_{\rm deg}=T/T_F$</span>

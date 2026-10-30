@@ -25,9 +25,8 @@ describe("Hydrostatic Equilibrium Explorer -- Design System Contracts", () => {
     expect(html).toContain("cp-layer-instrument");
   });
 
-  it("includes KaTeX, starfield, tabs, and navigation popover wiring", () => {
+  it("includes KaTeX, tabs, and navigation popover wiring", () => {
     expect(html).toContain("katex.min.css");
-    expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
     expect(html).toContain('role="tablist"');
     expect(html).toContain('id="tab-explore"');
     expect(html).toContain('id="tab-understand"');

@@ -120,9 +120,10 @@ export function formatFraction(value: number, digits = 3): string {
   return value.toFixed(digits);
 }
 
+/** A fraction as a percentage number; the "%" belongs in the readout's unit span. */
 export function percent(value: number, digits = 1): string {
   if (!Number.isFinite(value)) return "\u2014";
-  return `${(100 * value).toFixed(digits)}%`;
+  return (100 * value).toFixed(digits);
 }
 
 export function pressureBarPercent(args: {

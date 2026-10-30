@@ -67,22 +67,7 @@ describe("Angular Size — Design System Contracts", () => {
     });
   });
 
-  describe("Starfield invariant", () => {
-    it("demo HTML contains a starfield canvas element", () => {
-      expect(html).toContain('class="cp-starfield"');
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    });
-  });
-
   describe("Readout unit separation", () => {
-    it("readout values with units use .cp-readout__unit spans", () => {
-      // theta display has dynamic unit (deg/arcmin/arcsec) -- needs cp-readout__unit
-      // theta (deg) has unit (deg) -- needs cp-readout__unit
-      // D has unit (km) -- needs cp-readout__unit
-      // d has unit (km) -- needs cp-readout__unit
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(3);
-    });
 
     it("readout labels do not contain parenthesized units", () => {
       // Labels like "Angular diameter theta (deg)" should become "Angular diameter theta"
@@ -90,13 +75,6 @@ describe("Angular Size — Design System Contracts", () => {
       const labels = html.match(/class="cp-readout__label"[^>]*>([^<]*)</g) || [];
       const parenthesizedUnits = labels.filter((l) => /\((?:deg|km|arcmin|arcsec)\)/.test(l));
       expect(parenthesizedUnits.length).toBe(0);
-    });
-  });
-
-  describe("Panel translucency", () => {
-    it("stage SVG container uses backdrop-filter", () => {
-      // The stage area should participate in the frosted-glass aesthetic
-      expect(css).toMatch(/backdrop-filter/);
     });
   });
 
@@ -147,15 +125,6 @@ describe("Angular Size — Design System Contracts", () => {
     });
   });
 
-  describe("Starfield initialization", () => {
-    it("main.ts imports and calls initStarfield", () => {
-      const mainPath = path.resolve(__dirname, "main.ts");
-      const mainTs = fs.readFileSync(mainPath, "utf-8");
-      expect(mainTs).toContain("initStarfield");
-      expect(mainTs).toMatch(/initStarfield\s*\(/);
-    });
-  });
-
   describe("Sky View panel", () => {
     it("HTML has a sky view SVG with clip path and glow filter", () => {
       expect(html).toContain('id="skyViewSvg"');
@@ -189,10 +158,6 @@ describe("Angular Size — Design System Contracts", () => {
       expect(html).toMatch(/class="viz-panel"/);
     });
 
-    it("viz-panel uses design system panel tokens", () => {
-      expect(css).toMatch(/\.viz-panel[\s\S]*?--cp-instr-panel-bg/);
-      expect(css).toMatch(/\.viz-panel[\s\S]*?backdrop-filter/);
-    });
   });
 
   describe("Architecture compliance", () => {

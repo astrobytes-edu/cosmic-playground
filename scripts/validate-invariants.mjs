@@ -326,6 +326,62 @@ export async function validateInvariants({ repoRoot = process.cwd() } = {}) {
     }
   }
 
+  // Starfield contract: every instrument demo shows the shared starfield behind its panels.
+  // That needs the decorative canvas in the HTML (hidden from screen readers) and a call to
+  // initStarfield() from the demo's own code; a canvas nobody draws into is a blank layer.
+  // The canvas must be the first child of #cp-demo. Before the root, the opaque z-index 1
+  // root paints over it (7 demos until 2026-10-29). Inside a panel, the panel's fill-mode
+  // entry animation makes it a stacking context, so the z-index -1 canvas paints over that
+  // panel's background (13 demos until 2026-10-29). Only the HTML is checked here.
+  if (await pathExists(demosDemosRoot)) {
+    const entries = await fs.readdir(demosDemosRoot, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const demoDir = path.join(demosDemosRoot, entry.name);
+      const htmlPath = path.join(demoDir, "index.html");
+      if (!(await pathExists(htmlPath))) continue;
+      const html = await fs.readFile(htmlPath, "utf8");
+
+      const canvasTags = html.match(/<canvas\b[^>]*>/gi) ?? [];
+      const starfieldTag = canvasTags.find((tag) =>
+        /\bclass=["'][^"']*\bcp-starfield\b/.test(tag)
+      );
+      const hidden = starfieldTag ? /\baria-hidden=["']true["']/.test(starfieldTag) : false;
+      const rootTag = html.match(/<[a-z]+\b[^>]*\bid=["']cp-demo["'][^>]*>/i);
+      const firstInRoot = rootTag
+        ? html
+            .slice(rootTag.index + rootTag[0].length)
+            .match(/^(?:\s|<!--[\s\S]*?-->)*(<[a-z][^>]*>)/i)?.[1]
+        : undefined;
+      const firstChild = Boolean(starfieldTag) && firstInRoot === starfieldTag;
+
+      const tsFiles = (await listFiles(demoDir, { includeExtensions: new Set([".ts"]) })).filter(
+        (f) => !f.endsWith(".test.ts")
+      );
+      let initialised = false;
+      for (const filePath of tsFiles) {
+        if (/\binitStarfield\s*\(/.test(await fs.readFile(filePath, "utf8"))) {
+          initialised = true;
+          break;
+        }
+      }
+
+      const missing = [];
+      if (!starfieldTag) missing.push('a <canvas class="cp-starfield">');
+      else if (!hidden) missing.push('aria-hidden="true" on the starfield canvas');
+      else if (!firstChild) missing.push("the starfield canvas as the first child of #cp-demo");
+      if (!initialised) missing.push("an initStarfield() call outside tests");
+      if (missing.length === 0) continue;
+      violations.push({
+        code: "demos:starfield-missing",
+        file: htmlPath,
+        line: 1,
+        column: 1,
+        message: `Instrument demo lacks ${missing.join(" and ")}; the starfield contract requires all of them.`
+      });
+    }
+  }
+
   // Page-local print hacks in Astro pages
   if (await pathExists(sitePagesRoot)) {
     const pageFiles = await listFiles(sitePagesRoot, { includeExtensions: textExts });

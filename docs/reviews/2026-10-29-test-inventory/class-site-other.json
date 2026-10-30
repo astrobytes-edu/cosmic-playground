@@ -1,0 +1,289 @@
+{
+ "files": [
+  {
+   "file": "apps/site/tests/accessibility.spec.ts",
+   "tests": 127,
+   "ciSeconds": 121.3,
+   "counts": {
+    "GUARD": 65,
+    "DUPLICATE-GATE": 60,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 2
+   },
+   "verdict": "rewrite",
+   "slow": [
+    "accessibility.spec.ts:38-41 — beforeEach reloads the demo for each of 6 tests per demo = 120 page loads, ~116s of the 121.3s (eos-lab alone 6 x 4.7s = 28s)",
+    "accessibility.spec.ts:43-79 — all six per-demo checks read attributes already present in each demo's static index.html; they need no browser. One Node test over apps/demos/src/demos/*/index.html (or apps/site/public/play/*/index.html) would replace ~97s of browser time with ~1s"
+   ],
+   "notes": [
+    "accessibility.spec.ts:22-28 ASSERTS-NOTHING — reads the content dir and asserts hard-coded slugs (spectral-lines, stars-zams-hr) are in it; no page, cannot fail unless a content file is deleted (0.0s)",
+    "accessibility.spec.ts:43-47 DUPLICATE-GATE x20 (19.0s) — root aria-label: scripts/validate-play-dirs.mjs:179-210 (invalidInstrumentRootA11y) already fails the build on a missing aria-label and also requires role=main/region",
+    "accessibility.spec.ts:49-54 DUPLICATE-GATE x20 (19.6s) — #status role=status/aria-live=polite: scripts/validate-play-dirs.mjs:139-157 (invalidExportStatusRegion) checks the same three attributes plus aria-atomic",
+    "accessibility.spec.ts:75-79 DUPLICATE-GATE x20 (19.3s) — `.cp-readout__unit` count >= 1 is near-vacuous; 18 of 20 demos assert unit spans in apps/demos/src/demos/<slug>/design-contracts.test.ts (e.g. moon-phases:92). Uncovered there: hydrostatic-equilibrium-explorer, stars-zams-hr",
+    "accessibility.spec.ts:56-73 GUARD x60 (starfield aria-hidden 19.1s, toolbar role 19.6s, utility-button aria-label 21.0s) — no other gate checks starfield aria-hidden (design-contracts do in 2 demos), explicit role=toolbar (2 demos) or utility-button labels; but they are static HTML facts, so move them to the Node static check rather than keep 60 browser tests",
+    "accessibility.spec.ts:99-105 GUARD x5 — play button disabled under prefers-reduced-motion (conservation-laws, keplers-laws, moon-phases, retrograde-motion, eclipse-geometry); real runtime behaviour, keep",
+    "accessibility.spec.ts:113-126 ASSERTS-NOTHING — looks up `#challengeMode`, which does not exist on angular-size (its challenge button is `#btn-challenges`, apps/demos/src/demos/angular-size/main.ts:62); `if (count > 0)` then skips every assertion, so the test passes with zero assertions (0.5s). The .cp-challenge-feedback aria-live=assertive claim (packages/runtime/src/challengeEngine.ts:688) is untested",
+    "accessibility.spec.ts:36 audit f26dd83b — whole spec checks seven attributes and no WCAG engine (no axe-core); deleting duplicates does not lose accessibility coverage the audit counts as real"
+   ]
+  },
+  {
+   "file": "apps/site/tests/smoke.spec.ts",
+   "tests": 71,
+   "ciSeconds": 92.5,
+   "counts": {
+    "GUARD": 49,
+    "DUPLICATE-GATE": 18,
+    "PINS-DEFECT": 1,
+    "ASSERTS-NOTHING": 3
+   },
+   "verdict": "trim",
+   "slow": [
+    "smoke.spec.ts:599-654 — 30 tests (15 demos x export + keyboard-activatable), each a full page load + waitForEntryAnimations: 46.1s of 92.5s (eos-lab 4.1s + 3.9s, binary-orbits 1.9s + 1.9s)",
+    "smoke.spec.ts:294-311 — one test loading all 20 /play/ pages sequentially: 8.5s; the same 20 pages are loaded again by accessibility :39, math-rendering :56, demo-fonts :35, layout-budget :146/:211, shelf-reach :50. Only the console-error capture (:303-309) is unique -- fold it into a shared per-demo sweep",
+    "smoke.spec.ts:438 — waitForTimeout(350) in the Kepler's Laws test (2.3s); :673 — waitForTimeout(300) in the binary-orbits reduced-motion test (1.0s). Replace with a condition (expect.poll on #meanAnomalyDeg; a settled rAF counter)",
+    "smoke.spec.ts:923-941 — loads the same 9 museum routes as math-rendering.spec.ts:105-148; fold the \\\\u escape scan into that loop (saves 2.3s and 9 loads)",
+    "smoke.spec.ts:628-653 — second page load per demo only to press Enter on a native <button>; 24.1s"
+   ],
+   "notes": [
+    "smoke.spec.ts:82-92 ASSERTS-NOTHING — reads DemoCanvasThumbnail.astro as a string (color-mix present, `_alpha` absent, thumbnailSceneBySlug present); never drives a page, pins implementation text (0.0s)",
+    "smoke.spec.ts:137-141 ASSERTS-NOTHING — asserts only that the first .cp-chip is visible; the test's own comment (:133-136) says quick-filter chips always satisfy it. Superseded by explore.spec.ts:37-48 and :224-234 which exercise ?topic= and chips for real",
+    "smoke.spec.ts:717-734 ASSERTS-NOTHING — `expect(outline).toBeTruthy()` on getComputedStyle().outlineColor, which is a non-empty string (rgb(...)) whether or not a focus ring exists; cannot fail",
+    "smoke.spec.ts:143-152 PINS-DEFECT — regex `/(Up to|–|\\+)/` accepts the en-dash glyph; audit 415cbdd1 cites smoke.spec.ts:151 as pinning the Unicode-in-reader-text violation. explore.spec.ts:114-124 already asserts the correct 'Up to 10 min' label",
+    "smoke.spec.ts:313-336 DUPLICATE-GATE — moon-phases advanced toggle / summer preset (172) / rise-set toggle: moon-phases.spec.ts:195-233 covers each with stronger assertions",
+    "smoke.spec.ts:656-677 DUPLICATE-GATE — identical rAF-counter reduced-motion test exists at binary-orbits.spec.ts:946-971",
+    "smoke.spec.ts:874-887 DUPLICATE-GATE — empty state for q=zzzznotademo: explore.spec.ts:126-131 asserts it (plus result count 0)",
+    "smoke.spec.ts:628-653 DUPLICATE-GATE x15 — Enter on #copyResults: scripts/validate-play-dirs.mjs:160-176 requires #copyResults be a <button type=button> (native Enter activation), and the sibling click test at :600-626 already proves the export text. Fold the Tab-reachability assertion into the click test",
+    "smoke.spec.ts:600-626 GUARD x15 — export text contains header, (v1), Parameters/Readouts and per-demo readout labels; only moon-phases/keplers/doppler/galaxy/spectral-lines specs touch copyResults elsewhere and none asserts these labels except doppler/galaxy/spectral (not in this list)",
+    "smoke.spec.ts:338-441 GUARD — Kepler's canvas pixel-colour check (:380-431) is not in keplers-laws.spec.ts (no getImageData there); the unit/Newton/vector/Jupiter steps overlap keplers-laws.spec.ts:98-120,157 but the test is kept for the pixel check",
+    "smoke.spec.ts:679-688,706-715,853-872 GUARD (low value) — body font >= 18px, transition strings on cards/links/badges pin CSS decoration; they can fail but nothing a reader would notice; candidates to drop in a later trim",
+    "smoke.spec.ts:44 audit b57bc03e — claim that hydrostatic-equilibrium-explorer is never loaded by Playwright is stale: layout-budget, shelf-reach, demo-fonts, math-rendering, accessibility and smoke:294 all load it"
+   ]
+  },
+  {
+   "file": "apps/site/tests/layout-budget.spec.ts",
+   "tests": 41,
+   "ciSeconds": 61.0,
+   "counts": {
+    "GUARD": 41,
+    "DUPLICATE-GATE": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "slow": [
+    "layout-budget.spec.ts:149 and :223 — waitForTimeout(600) x40 = 24s of the 61s (audit 45a4866e). Replace with `document.fonts.ready` plus a double requestAnimationFrame",
+    "layout-budget.spec.ts:144-205 and :209-248 — two tests per demo set up an identical 1440x900 load; merge into one test per demo: removes 20 loads (~27s together with the waits)",
+    "layout-budget.spec.ts:144,:209 — eos-lab costs 4.5s + 4.9s (every other demo ~1.3s)"
+   ],
+   "notes": [
+    "layout-budget.spec.ts:197 vs :204 — header (:17-23) says a demo that improves fails too, but only readoutsBelowFold is exact (toBe); sidebarOverflowPx uses toBeLessThanOrEqual, so the sidebar ratchet cannot tighten",
+    "layout-budget.spec.ts:78,:89,:106,:136 — allowances of 330, 600, 940 and 920px of hidden sidebar content encode the defect in audit 8d31629b (content behind an invisible scroller); still a GUARD (cannot get worse) but passes today with the defect present",
+    "layout-budget.spec.ts:146 — samples 1440x900 only (audit 0a6d3ff3); thresholds are Linux-font-coupled (:82-89,:123)",
+    "layout-budget.spec.ts:209-248 GUARD, two-sided; test.skip at :236 never fires in CI (skip=0)",
+    "layout-budget.spec.ts:250-256 trivial 0.01s map-hygiene test, GUARD"
+   ]
+  },
+  {
+   "file": "apps/site/tests/shelf-reach.spec.ts",
+   "tests": 41,
+   "ciSeconds": 49.7,
+   "counts": {
+    "GUARD": 41,
+    "DUPLICATE-GATE": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "slow": [
+    "shelf-reach.spec.ts:92 and :115 — both loops call openDemo (load + fonts.ready, :47-53) for every demo and then sweep the same two sizes; merge into one test per demo: removes ~20 loads (~12s)",
+    "shelf-reach.spec.ts:121-131 — three browser round trips per control (isVisible, scrollIntoViewIfNeeded, evaluate) over every shelf/drawer control at two sizes; eos-lab 4.3s, binary-orbits 3.3s. One page.evaluate per size would be faster",
+    "shelf-reach.spec.ts:92-95 — eos-lab 3.8s vs ~0.75s for others"
+   ],
+   "notes": [
+    "shelf-reach.spec.ts:62 — pinnedSidebarOverlaps returns [] when the sidebar is not position:sticky, so the 20 footprint tests pass vacuously for any demo in a non-sticky shell (demo-shell.css:354 documents one; :101 says hydro student mode); not measured here which demos",
+    "Not a duplicate of layout-budget.spec.ts: shelf-reach checks sidebar-vs-region geometry across scroll positions and click-target hit-testing; layout-budget checks readouts below the fold and sidebar scroll affordance. Only the page load is shared"
+   ]
+  },
+  {
+   "file": "apps/site/tests/reflow.spec.ts",
+   "tests": 140,
+   "ciSeconds": 46.0,
+   "counts": {
+    "GUARD": 70,
+    "DUPLICATE-GATE": 70,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "trim",
+   "slow": [
+    "reflow.spec.ts:67-68 + playwright.config.ts:33-39 — desktop project has no testIgnore for reflow, so all 70 tests run again at the desktop project: 26.0s of the 46.0s"
+   ],
+   "notes": [
+    "reflow.spec.ts:68 DUPLICATE-GATE x70 (desktop project, 26.0s) — every test calls page.setViewportSize({width:320,height:512}) before goto, and both projects use devices['Desktop Chrome'] (playwright.config.ts:35,43), so the desktop run is byte-for-byte the mobile run. Fix: add `testIgnore: /reflow\\.spec\\.ts/` to the desktop project (or drop the mobile project and keep one). 'tests' is 140 runs = 70 unique x 2 projects",
+    "reflow.spec.ts:65-127 GUARD x70 (mobile project, 20.0s) — widest-unclipped-element and body layout width at 320px can fail (no overflow-x:hidden on html/body: global.css:246,280,295 are scoped containers)",
+    "reflow.spec.ts:55 coverage gap, not a defect pin: PLAY_ROUTES holds 1 of 20 instruments (audits 7bb8a580, e2540063, 8572507d, 9e7565fa, e29f919b)",
+    "reflow.spec.ts:72-79,125 `canScrollSideways` is computed and discarded (`void`); dead code, deliberately not asserted (audit 5152ab46 says CLAUDE.md is stale, not the spec)"
+   ]
+  },
+  {
+   "file": "apps/site/tests/math-rendering.spec.ts",
+   "tests": 89,
+   "ciSeconds": 52.6,
+   "counts": {
+    "GUARD": 89,
+    "DUPLICATE-GATE": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "slow": [
+    "math-rendering.spec.ts:54-82 — 20 play-page loads (17.0s) with waitUntil load; the same 20 pages are loaded in demo-fonts.spec.ts:34-59. A shared per-demo sweep would save ~15s",
+    "math-rendering.spec.ts:112-147 — 69 museum routes at ~0.5s each (35.6s); if the museum pages' KaTeX is typeset at build (CLAUDE.md: remark-math + rehype-katex) a Node scan of dist/ HTML for .katex-error and leaked TeX would cost ~1s; the spec comment (:114) says some pages still typeset client-side, so this needs checking before moving it",
+    "math-rendering.spec.ts:54,:112 — eos-lab 3.6s and 4.0s"
+   ],
+   "notes": [
+    "No duplicate: scripts/validate-math-formatting.mjs scans source for Unicode glyphs; this spec reads rendered computed text-transform (:65-79) and KaTeX errors / leaked TeX (:117-142), which no build gate sees",
+    "math-rendering.spec.ts:62 — the `.katex` attached wait guards against vacuous pass for demos that author `$`; stars-zams-hr is the exempt case (:34-41)"
+   ]
+  },
+  {
+   "file": "apps/site/tests/site-links.spec.ts",
+   "tests": 3,
+   "ciSeconds": 26.5,
+   "counts": {
+    "GUARD": 3,
+    "DUPLICATE-GATE": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "slow": [
+    "site-links.spec.ts:38-90 (12.9s) and :165-216 (12.1s) — two full-site crawls over the same link graph, each a page.goto per route (:55, :179). One crawl that records both broken links and reached routes would save ~12s"
+   ],
+   "notes": [
+    "No duplicate gate: scripts/validate-invariants.mjs (site:root-absolute-link, site:hardcoded-repo-base-path) pattern-matches source; this resolves links in the built site",
+    "site-links.spec.ts:35 120s timeout is documented as a flake workaround (audit 45a4866e)"
+   ]
+  },
+  {
+   "file": "apps/site/tests/topics.spec.ts",
+   "tests": 18,
+   "ciSeconds": 20.0,
+   "counts": {
+    "GUARD": 17,
+    "DUPLICATE-GATE": 1,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "trim",
+   "slow": [
+    "topics.spec.ts:124-130 (4.1s) and :132-135 (3.9s) — eos-lab exhibit and instrument pages wait for the full load event of the heaviest demo; use waitUntil:'domcontentloaded' for the exhibit test (status and notice only)"
+   ],
+   "notes": [
+    "topics.spec.ts:132-135 DUPLICATE-GATE — asserts only status < 400 for play/eos-lab/; the page is loaded and checked by smoke.spec.ts:294-311, accessibility.spec.ts:39 and shelf/layout/fonts, and scripts/validate-play-dirs.mjs:114-130 requires play/<slug>/index.html with #cp-demo",
+    "topics.spec.ts:16-25 hard-coded per-topic exhibit counts (comment says update deliberately); GUARD but brittle",
+    "topics.spec.ts:71-83 workaround comment documents that the explore ?topic= filter was once inert; explore.spec.ts now covers filtering"
+   ]
+  },
+  {
+   "file": "apps/site/tests/explore.spec.ts",
+   "tests": 18,
+   "ciSeconds": 18.4,
+   "counts": {
+    "GUARD": 18,
+    "DUPLICATE-GATE": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "slow": [
+    "explore.spec.ts:192-202 (2.5s) and :204-222 (1.9s) — 6 and 5 sequential full page.goto calls inside one test; drive the search input in place instead (minor)"
+   ],
+   "notes": [
+    "All 18 tests drive filters, URL state and search through the real client script; each could fail. explore.spec.ts:114-124 is the correct version of the time-label check that smoke.spec.ts:143 pins loosely",
+    "Overlap with smoke.spec.ts (count of quick chips :140 vs smoke:196; empty state :126 vs smoke:874) is in smoke, which is where the removal belongs"
+   ]
+  },
+  {
+   "file": "apps/site/tests/demo-fonts.spec.ts",
+   "tests": 20,
+   "ciSeconds": 18.2,
+   "counts": {
+    "GUARD": 20,
+    "DUPLICATE-GATE": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "slow": [
+    "demo-fonts.spec.ts:34-59 — loads the same 20 play pages as math-rendering.spec.ts:54-82 (waitUntil load); merge for ~15s. eos-lab 4.0s"
+   ],
+   "notes": [
+    "demo-fonts.spec.ts:56-58 asserts body first-choice family is 'Source Sans 3' and web fonts loaded; no other spec or gate checks this (validate-invariants has no font rule)"
+   ]
+  },
+  {
+   "file": "apps/site/tests/site-header.spec.ts",
+   "tests": 13,
+   "ciSeconds": 7.9,
+   "counts": {
+    "GUARD": 13,
+    "DUPLICATE-GATE": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "slow": [
+    "site-header.spec.ts:25-27 — 13 tests each reload '/' only to change viewport width; one page load plus a setViewportSize loop (media queries re-evaluate without reload) would take ~1.5s, saving ~6s"
+   ],
+   "notes": [
+    "site-header.spec.ts:75-83 can fail at any swept width; no other spec checks the nav handoff (reflow.spec.ts:18-24 comment says so)"
+   ]
+  },
+  {
+   "file": "apps/site/tests/content-claims.spec.ts",
+   "tests": 9,
+   "ciSeconds": 4.0,
+   "counts": {
+    "GUARD": 8,
+    "DUPLICATE-GATE": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 1
+   },
+   "verdict": "keep",
+   "slow": [],
+   "notes": [
+    "content-claims.spec.ts:43-46 ASSERTS-NOTHING — fixture precondition (`unverified`/`verified` demos exist); no page, 0.0s. Harmless, but note it will start failing if every station demo becomes content_verified:false, and :50,:58 would then goto '/undefined/'",
+    "No duplicate: scripts/validate-play-dirs.mjs checks frontmatter modes/content_verified against source and tracker; this spec checks the rendered callout and /about/ stat tile"
+   ]
+  }
+ ],
+ "totals": {
+  "testRuns": 590,
+  "uniqueTests": 520,
+  "ciSeconds": 518.1,
+  "counts": {
+   "GUARD": 434,
+   "DUPLICATE-GATE": 149,
+   "PINS-DEFECT": 1,
+   "ASSERTS-NOTHING": 6
+  },
+  "ciSecondsByClass": {
+   "GUARD": 399.7,
+   "DUPLICATE-GATE": 114.8,
+   "PINS-DEFECT": 0.9,
+   "ASSERTS-NOTHING": 2.5
+  }
+ },
+ "removable": {
+  "deleteOutright": {
+   "seconds": 118.2,
+   "detail": "reflow desktop run 26.0 + accessibility dup 57.8 + accessibility asserts-nothing 0.5 + smoke dup 27.1 + smoke asserts-nothing 2.0 + smoke pins 0.9 + topics dup 3.9 + content-claims 0.0"
+  },
+  "consolidationEstimate": {
+   "seconds": "~110 (estimate, overlaps if all done)",
+   "detail": "static accessibility checks (starfield 19.1, toolbar 19.6, utility labels 21.0) to a Node scan ~59; layout-budget wait removal+merge ~27-35; site-links one crawl ~12; fonts+math play merge ~15; shelf-reach merge ~12; site-header one load ~6; smoke:294 sweep 8.5 and smoke:923 2.3"
+  }
+ },
+ "method": "Per-test CI durations parsed from ci-full.log (list reporter); seconds are summed test durations across workers, not wall-clock. Nothing was run."
+}

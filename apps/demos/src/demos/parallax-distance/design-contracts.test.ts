@@ -131,10 +131,6 @@ describe("Parallax Distance -- Design System Contracts", () => {
   });
 
   describe("Readout units and inference framing", () => {
-    it("keeps readout unit spans", () => {
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(5);
-    });
 
     it("labels inferred p_hat and inferred d_hat with distance-first framing", () => {
       expect(html).toContain("Measured shift $\\Delta\\theta$");
@@ -149,10 +145,9 @@ describe("Parallax Distance -- Design System Contracts", () => {
   });
 
   describe("Runtime and architecture compliance", () => {
-    it("wires runtime helpers and starfield/tabs/popovers", () => {
+    it("wires runtime helpers and tabs/popovers", () => {
       expect(mainTs).toContain("createDemoModes");
       expect(mainTs).toContain("createInstrumentRuntime");
-      expect(mainTs).toContain("initStarfield");
       expect(mainTs).toContain("initPopovers");
       expect(mainTs).toContain("initTabs");
     });

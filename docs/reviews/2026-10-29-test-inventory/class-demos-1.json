@@ -1,0 +1,462 @@
+{
+ "files": [
+  {
+   "file": "apps/demos/src/demos/angular-size/design-contracts.test.ts",
+   "tests": 25,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 23,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "delete",
+   "notes": [
+    "design-contracts.test.ts:28-67,71-74,78-93,104-114,118-123,151-156,160-183,187-195,199-212 - 23 STRING-ONLY: regex on index.html/style.css/main.ts (gradient tokens, starfield, unit spans, legacy aliases, entry animation, ids, imports); no gate checks starfield/celestial tokens/legacy aliases/unit spans (validate-invariants.mjs has none of these), so these are STRING-ONLY not DUPLICATE-GATE",
+    "design-contracts.test.ts:97-100 - STRING-ONLY and near-vacuous: passes if 'backdrop-filter' appears anywhere in style.css (same lazy-regex weakness as finding cd6a085e)",
+    "design-contracts.test.ts:127-147 - 2 DUPLICATE-GATE: gate apps:no-color-literals in scripts/validate-invariants.mjs (hex/rgb/hsl over apps/demos/src css/html; stricter than the local regex, which exempts color-mix lines)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/angular-size/logic.test.ts",
+   "tests": 56,
+   "counts": {
+    "GUARD": 56,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": [
+    "logic.test.ts:69-73 - GUARD (info): formatNumber e-notation expectations ('1.50e+8') are the same pattern findings a926069f/63a543a9 call a defect elsewhere; not counted as PINS because no angular-size finding names this formatNumber path"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/binary-orbits/design-contracts.test.ts",
+   "tests": 32,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 3,
+    "STRING-ONLY": 29,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "delete",
+   "notes": [
+    "design-contracts.test.ts:25-32,37-46,51-66,71-81,108-124,129-178,183-195,200-203,210-244 - 29 STRING-ONLY (ids, class names, imports, copy strings); no gate checks starfield/celestial tokens/legacy aliases/unit spans (validate-invariants.mjs has none of these), so these are STRING-ONLY not DUPLICATE-GATE",
+    "design-contracts.test.ts:230 - STRING-ONLY: asserts the 'Copy Results and station snapshots are locked' hint text exists; ded36b8b shows the prediction-gating it relates to is unimplemented, so text and behaviour were never compared",
+    "design-contracts.test.ts:86-103 - 2 DUPLICATE-GATE: gate apps:no-color-literals in scripts/validate-invariants.mjs (hex/rgb/hsl over apps/demos/src css/html; stricter than the local regex, which exempts color-mix lines)",
+    "design-contracts.test.ts:204-206 - DUPLICATE-GATE: 'no background: #/rgb/hsl' is subsumed by apps:no-color-literals"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/binary-orbits/logic.test.ts",
+   "tests": 49,
+   "counts": {
+    "GUARD": 45,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 4
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:156-166 - ASSERTS-NOTHING: createBinarySystemState() defaults restated as constants (q=1, i=60 ...); change-detector with no behaviour",
+    "logic.test.ts:185-189 - ASSERTS-NOTHING: counts a static INVARIANT_STATEMENTS list (6 total, 4 mustBeTrue)",
+    "logic.test.ts:191-197 - ASSERTS-NOTHING: named 'marks all invariants true' but only asserts array lengths and the static mustBeTrue flag; never reads isTrue (logic.ts:356,364,372,380), so a false invariant would pass",
+    "logic.test.ts:342-348 - ASSERTS-NOTHING: timing constants 500/300/450 restated",
+    "logic.test.ts:446-461 - GUARD but symmetric-only: bodyPositions sampled at phase 0 and pi where sin(phase)=0, so a y-sign flip (reversed orbit sense) passes (finding fc617c21)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/blackbody-radiation/design-contracts.test.ts",
+   "tests": 29,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 26,
+    "PINS-DEFECT": 1,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "delete",
+   "notes": [
+    "design-contracts.test.ts:20-22,27-38,43-50,54-59,63-79,83-87,91-104,108-111,136-157,161-199,202-226 - 26 STRING-ONLY (ids, class names, copy substrings, imports); no gate checks starfield/celestial tokens/legacy aliases/unit spans (validate-invariants.mjs has none of these), so these are STRING-ONLY not DUPLICATE-GATE",
+    "design-contracts.test.ts:115-132 - 2 DUPLICATE-GATE: gate apps:no-color-literals in scripts/validate-invariants.mjs (hex/rgb/hsl over apps/demos/src css/html; stricter than the local regex, which exempts color-mix lines)",
+    "design-contracts.test.ts:229-236 - PINS-DEFECT: asserts every cp-chip has an aria-pressed attribute in static HTML, which blesses the hardcoded aria-pressed=\"false\" preset buttons (finding 7beba0f9)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/blackbody-radiation/logic.test.ts",
+   "tests": 46,
+   "counts": {
+    "GUARD": 43,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 3,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "rewrite",
+   "notes": [
+    "logic.test.ts:112-118 - 2 PINS-DEFECT: formatNumber expected to emit e-notation ('1.50e+7','5.00e-5'); main.ts:463 routes the temperature readout through it, giving '1e+6 K' and '3 K' (finding a926069f, no-e-notation rule)",
+    "logic.test.ts:126-130 - PINS-DEFECT: pins wavelength domain to 10 nm - 1e6 nm, which excludes the 2.725 K CMB peak (1.06e6 nm, see line 269) (finding 1277cdf6)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/cluster-census/design-contracts.test.ts",
+   "tests": 59,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 3,
+    "STRING-ONLY": 56,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "delete",
+   "notes": [
+    "design-contracts.test.ts:20-98,102-168,171-196,232-310,313-366,369-454 - 56 STRING-ONLY: source greps of clusterScene.ts/main.ts/logic.ts/index.html (blending names, dispose calls, ids, aria attributes, copy substrings); the 'derived slope' and 'star inspector' blocks assert only that identifiers/strings exist",
+    "design-contracts.test.ts:37 - STRING-ONLY false assurance: requires the string perspective.position.distanceTo(controls.target) in clusterScene.ts while line 393 of that file uses a different expression (finding 3b3811f2)",
+    "design-contracts.test.ts:285-290 - STRING-ONLY false assurance: 'takes all physics from @cosmic/physics' never inspects main.ts, where an inline mass-Teff relation lives (finding b4336cdc)",
+    "design-contracts.test.ts:199-207 - 2 DUPLICATE-GATE: gate apps:no-color-literals in scripts/validate-invariants.mjs (hex/rgb/hsl over apps/demos/src css/html; stricter than the local regex, which exempts color-mix lines)",
+    "design-contracts.test.ts:226-229 - DUPLICATE-GATE: bans --cp-text-base; gate theme:undefined-token (validate-invariants.mjs checkTokensResolve) already fails on undefined --cp-* tokens"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/cluster-census/logic.test.ts",
+   "tests": 58,
+   "counts": {
+    "GUARD": 58,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": []
+  },
+  {
+   "file": "apps/demos/src/demos/conservation-laws/design-contracts.test.ts",
+   "tests": 56,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 54,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "delete",
+   "notes": [
+    "design-contracts.test.ts:30-66,69-80,83-96,99-113,116-122,146-238,240-257,260-283,286-381 - 54 STRING-ONLY (CSS/HTML token and id greps, 'function X is gone', renderBody does not contain setLiveRegionText, copy substrings); no gate checks starfield/celestial tokens/legacy aliases/unit spans (validate-invariants.mjs has none of these), so these are STRING-ONLY not DUPLICATE-GATE",
+    "design-contracts.test.ts:125-142 - 2 DUPLICATE-GATE: gate apps:no-color-literals in scripts/validate-invariants.mjs (hex/rgb/hsl over apps/demos/src css/html; stricter than the local regex, which exempts color-mix lines)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/conservation-laws/logic.test.ts",
+   "tests": 100,
+   "counts": {
+    "GUARD": 100,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": [
+    "logic.test.ts:410-412 - GUARD (info): pins DEFAULT_SIM_YEARS_PER_SEC=1/3 and slow-down for fast orbits only; finding 9a1188b5 (no upper bound on on-screen orbit duration) is not covered"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/doppler-shift/design-contracts.test.ts",
+   "tests": 16,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 1,
+    "STRING-ONLY": 14,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 1
+   },
+   "verdict": "delete",
+   "notes": [
+    "design-contracts.test.ts:14-19 - DUPLICATE-GATE: gate scripts/validate-play-dirs.mjs requiredMarkers (cp-demo, copyResults, status, drawer-or-shelf) on built play pages",
+    "design-contracts.test.ts:21-99,106-122 - 14 STRING-ONLY (ids, classes, hrefs, imports, count of 'prompt:' literals at 75-84)",
+    "design-contracts.test.ts:101-104 - ASSERTS-NOTHING: css contains 'stub-demo.css' and 'var(--cp-', true of every demo stylesheet"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/doppler-shift/logic.test.ts",
+   "tests": 22,
+   "counts": {
+    "GUARD": 18,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 4,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": [
+    "logic.test.ts:200-212 - 2 STRING-ONLY: buildRepresentativeLineRuleText output substrings",
+    "logic.test.ts:214-241 - STRING-ONLY: evidence text contains label substrings; no value is checked",
+    "logic.test.ts:243-278 - STRING-ONLY: export payload row names only; values never asserted",
+    "logic.test.ts:67-81 - GUARD (info): regime markers solve the 5 percent divergence definition; finding 30c37107 notes regime() uses |beta|=0.1, so this test does not see the inconsistency"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/eclipse-geometry/design-contracts.test.ts",
+   "tests": 18,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 18,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "trim",
+   "notes": [
+    "design-contracts.test.ts:27-176 - 18 STRING-ONLY (gradient tokens, unit spans, ids, aria wiring, button classes); header (lines 12-18) already removes gate-duplicate colour/glyph tests and defers behaviour to e2e, so this file is the least redundant of the set. Fold the starfield/unit-span/aria-controls checks into one shared contract"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/eclipse-geometry/logic.test.ts",
+   "tests": 144,
+   "counts": {
+    "GUARD": 128,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 15,
+    "ASSERTS-NOTHING": 1
+   },
+   "verdict": "rewrite",
+   "notes": [
+    "logic.test.ts:49-74 - stubModel replaces the physics: solarEclipseType ignores earthMoonDistanceKm and classifies on |beta| alone; every computeDerived/preset test inherits it (finding baf6afc4)",
+    "logic.test.ts:186-192 - PINS-DEFECT: New Moon on node at 384,400 km expected total-solar; the real model returns annular-solar there (umbra radius -46.5 km) (baf6afc4, 3559b8f9)",
+    "logic.test.ts:222-237 - 8 PINS-DEFECT rows: pin the inclusive +/-5 deg syzygy gate that classifies from beta alone and reports eclipses 5 deg from the Sun (finding 03851ec4)",
+    "logic.test.ts:573-575 - 3 PINS-DEFECT rows: toEqual({moonLonDeg,nodeLonDeg}) pins totalSolarPreset to return no Earth-Moon distance, the cause of the 'Total solar' preset answering Annular (finding 3559b8f9)",
+    "logic.test.ts:597-600 - 3 PINS-DEFECT rows: preset -> computeDerived expects total-solar at mean distance, true only under the stub",
+    "logic.test.ts:416-420 - ASSERTS-NOTHING: DISTANCE_PRESETS_KM restated as a constant",
+    "logic.test.ts:94-107 - GUARD (info): asymmetric angles are used well elsewhere (phaseInfo 128-153, routing 239-258, arc 542-548)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/em-spectrum/axis-ticks.test.ts",
+   "tests": 6,
+   "counts": {
+    "GUARD": 4,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 2,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": [
+    "axis-ticks.test.ts:52-54 - 2 STRING-ONLY (describe.each x2): asserts the label row has seven spans",
+    "axis-ticks.test.ts:65-73 - GUARD (info): checks wavelengthToPositionPercent(data-lambda-cm), not that main.ts applies it; the P0 d085a04d regression is only half-covered"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/em-spectrum/design-contracts.test.ts",
+   "tests": 29,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 27,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "delete",
+   "notes": [
+    "design-contracts.test.ts:20-49,52-72,97-127,130-209 - 27 STRING-ONLY (ids, classes, hrefs, count of 7 chips, initPopovers); no gate checks starfield/celestial tokens/legacy aliases/unit spans (validate-invariants.mjs has none of these), so these are STRING-ONLY not DUPLICATE-GATE",
+    "design-contracts.test.ts:76-93 - 2 DUPLICATE-GATE: gate apps:no-color-literals in scripts/validate-invariants.mjs (hex/rgb/hsl over apps/demos/src css/html; stricter than the local regex, which exempts color-mix lines)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/em-spectrum/logic.test.ts",
+   "tests": 104,
+   "counts": {
+    "GUARD": 90,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 2,
+    "PINS-DEFECT": 1,
+    "ASSERTS-NOTHING": 11
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:363-365 - PINS-DEFECT: bandFromWavelengthCm(0.03) expected microwave and commented '3 mm' (0.03 cm is 0.3 mm); it passes only because microwave is defined 0.1-1 mm (logic.ts:37-38), the P0 6b9e34a9 defect (real 3 mm = 0.3 cm classifies as radio)",
+    "logic.test.ts:432-434 - ASSERTS-NOTHING: BANDS has 7 keys",
+    "logic.test.ts:441-447 - ASSERTS-NOTHING: description/examples/detection non-empty (length > 5)",
+    "logic.test.ts:453-457 - ASSERTS-NOTHING: band.name non-empty",
+    "logic.test.ts:485-499 - 5 ASSERTS-NOTHING: LAMBDA_MIN_LOG/MAX_LOG compared with Math.log10 of the literals they are defined from",
+    "logic.test.ts:552-554 - ASSERTS-NOTHING: SCALE_OBJECTS has 7 entries",
+    "logic.test.ts:562-567 - ASSERTS-NOTHING: label non-empty, lambdaCm > 0",
+    "logic.test.ts:573-576 - ASSERTS-NOTHING: typeof drawSpectrumWave === 'function' and arity 3",
+    "logic.test.ts:505-513 - 2 STRING-ONLY: gradient starts with 'linear-gradient(to right,' and has >= 15 hex stops"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/eos-lab/design-contracts.test.ts",
+   "tests": 40,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 38,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "delete",
+   "notes": [
+    "design-contracts.test.ts:21-43,55-112,114-296,278-314 - 38 STRING-ONLY (substring greps of html/main.ts: ids, class names, 'is-newly-dominant', 'Escape', 'localStorage', copy strings, tab counts)",
+    "design-contracts.test.ts:14-19 - DUPLICATE-GATE: gate scripts/validate-play-dirs.mjs requiredMarkers (cp-demo, copyResults, status, drawer-or-shelf) on built play pages",
+    "design-contracts.test.ts:44-53 - DUPLICATE-GATE: gate apps:no-color-literals in scripts/validate-invariants.mjs (hex/rgb/hsl over apps/demos/src css/html; stricter than the local regex, which exempts color-mix lines)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/eos-lab/logic.test.ts",
+   "tests": 67,
+   "counts": {
+    "GUARD": 58,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 5,
+    "PINS-DEFECT": 2,
+    "ASSERTS-NOTHING": 2
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:522-528 - PINS-DEFECT: expects Gamma_eff = 3/2 at P_gas = P_rad, the pressure-weighted mean; Chandrasekhar's Gamma_1 gives 1.426 there (finding 5bc1bfe0)",
+    "logic.test.ts:634-638 - PINS-DEFECT: feeds gammaEff = 1.3, unreachable because Gamma_eff >= 4/3 by construction (5e18c9d4), and asserts the 'unstable' hint whose advice (raise density) is inverted (93f0f103)",
+    "logic.test.ts:259-272 - ASSERTS-NOTHING: named P_total >= P_gas + P_rad but asserts only >= 0.99 * max(P_gas, P_rad)",
+    "logic.test.ts:696-699 - ASSERTS-NOTHING: output length > 10",
+    "logic.test.ts:459-471 - 2 STRING-ONLY: equation LaTeX contains substrings",
+    "logic.test.ts:565-586 - 3 STRING-ONLY: symbolic LaTeX contains substrings / contains no digits",
+    "logic.test.ts:612-617 - GUARD (info): only Core and Photosphere labels checked; Base-of-CZ and Radiative-zone labels are swapped (finding fd691471)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/galaxy-rotation/design-contracts.test.ts",
+   "tests": 23,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 1,
+    "STRING-ONLY": 21,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 1
+   },
+   "verdict": "delete",
+   "notes": [
+    "design-contracts.test.ts:14-19 - DUPLICATE-GATE: gate scripts/validate-play-dirs.mjs requiredMarkers (cp-demo, copyResults, status, drawer-or-shelf) on built play pages",
+    "design-contracts.test.ts:21-109,116-177 - 21 STRING-ONLY (ids, hrefs, 'case \"k\"' keyboard strings, accordion titles, unit-span counts)",
+    "design-contracts.test.ts:111-114 - ASSERTS-NOTHING: css contains 'stub-demo.css' and 'var(--cp-'"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/galaxy-rotation/logic.test.ts",
+   "tests": 10,
+   "counts": {
+    "GUARD": 7,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 2,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 1
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:17-19 - ASSERTS-NOTHING: RADIAL_PROFILE_SAMPLE_KPC toEqual the same literal list",
+    "logic.test.ts:94-115 - STRING-ONLY: evidence text contains label substrings, no values",
+    "logic.test.ts:117-156 - STRING-ONLY: export payload row names/notes substrings; the notes check (MOND, 'exact exponential disk') cannot catch finding 8501a109 (MOND curve mislabelled deep-MOND)"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/hydrostatic-equilibrium-explorer/design-contracts.test.ts",
+   "tests": 10,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 8,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "delete",
+   "notes": [
+    "design-contracts.test.ts:28-110,118-137 - 8 STRING-ONLY (ids, hrefs, imports, copy substrings); line 131-137 (every q('#id') has an element) is the only one that guards a runtime failure and is the one worth keeping as a shared check",
+    "design-contracts.test.ts:16-26 - DUPLICATE-GATE: gate scripts/validate-play-dirs.mjs requiredMarkers (cp-demo, copyResults, status, drawer-or-shelf) on built play pages",
+    "design-contracts.test.ts:112-116 - DUPLICATE-GATE: no-hex half is apps:no-color-literals; the rest ('var(--cp-' present) holds for every demo",
+    "design-contracts.test.ts:1-138 - blind spot: finding ccb09cf3 (ten --cp-warning/--cp-accent2 aliases in this demo's CSS) and 1acc635c (no celestial token on the star) pass because nothing here checks them"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/hydrostatic-equilibrium-explorer/logic.test.ts",
+   "tests": 11,
+   "counts": {
+    "GUARD": 8,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 2,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 1
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:74-86 - ASSERTS-NOTHING: GUIDED_STEPS ids/tags restated as a literal list",
+    "logic.test.ts:65-72 - STRING-ONLY: HYDROSTATIC_CHALLENGES length 5 and prompt substrings",
+    "logic.test.ts:138-144 - STRING-ONLY: profileTeachingNote substrings",
+    "logic.test.ts:34-43 - GUARD (info): tests centralPressureScale ratio 16 and Tc ratio 2; the exact-pressure line shown to readers (finding 2bedb5c5) and localShellPatchBalance (72192daa) have no test"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/keplers-laws/design-contracts.test.ts",
+   "tests": 46,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 2,
+    "STRING-ONLY": 44,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "delete",
+   "notes": [
+    "design-contracts.test.ts:20-86,89-126,150-322 - 44 STRING-ONLY (gradient tokens, ids, 9 chips, 2 chip-groups, utility-toolbar attributes, popover hrefs); no gate checks starfield/celestial tokens/legacy aliases/unit spans (validate-invariants.mjs has none of these), so these are STRING-ONLY not DUPLICATE-GATE",
+    "design-contracts.test.ts:129-147 - 2 DUPLICATE-GATE: gate apps:no-color-literals in scripts/validate-invariants.mjs (hex/rgb/hsl over apps/demos/src css/html; stricter than the local regex, which exempts color-mix lines)",
+    "design-contracts.test.ts:1-322 - blind spots: ba6e9bcc (readouts panel dimmed to 55 percent) and 048a5d6e/9d9d6946 (aria-hidden focusable input) are not asserted against"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/keplers-laws/logic.test.ts",
+   "tests": 37,
+   "counts": {
+    "GUARD": 30,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 4,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 3
+   },
+   "verdict": "trim",
+   "notes": [
+    "logic.test.ts:149-153 - ASSERTS-NOTHING: buildReadouts echoes its inputs (source.rAu, source.units)",
+    "logic.test.ts:204-207 - ASSERTS-NOTHING: readouts list has 9 entries",
+    "logic.test.ts:237-241 - ASSERTS-NOTHING: version === 1 and timestamp truthy",
+    "logic.test.ts:190-202,209-223,231-235 - 4 STRING-ONLY: export row names/unit labels and 'Newton' label, no numeric values",
+    "logic.test.ts:267-270 - GUARD (info): drift tested only for +20 percent; sign of negative drift untested"
+   ]
+  },
+  {
+   "file": "apps/demos/src/demos/moon-phases/animation.test.ts",
+   "tests": 2,
+   "counts": {
+    "GUARD": 2,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "verdict": "keep",
+   "notes": [
+    "animation.test.ts:11-31 - GUARD but weak: expected values are computed with degreesPerSecondFromSpeed itself (circular); no absolute rate (360/29.53 deg/day), no 360 wrap, no direction check, one starting angle (0). A sign flip in the helper would pass"
+   ]
+  }
+ ],
+ "totals": {
+  "GUARD": 647,
+  "DUPLICATE-GATE": 22,
+  "STRING-ONLY": 379,
+  "PINS-DEFECT": 22,
+  "ASSERTS-NOTHING": 25
+ },
+ "total_tests": 1095
+}

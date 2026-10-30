@@ -102,7 +102,7 @@ describe("EOS Lab -- UI Logic", () => {
   });
 
   it("formats percentages", () => {
-    expect(percent(0.5)).toBe("50.0%");
+    expect(percent(0.5)).toBe("50.0");
     expect(percent(Number.NaN)).toBe("\u2014");
   });
 

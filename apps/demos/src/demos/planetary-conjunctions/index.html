@@ -18,6 +18,7 @@
       data-shell="triad"
       aria-label="Planetary Conjunctions instrument"
     >
+      <canvas class="cp-starfield" aria-hidden="true"></canvas>
       <h1 class="sr-only">Planetary Conjunctions: Alignments in the Sky</h1>
       <aside class="cp-demo__controls cp-panel" aria-label="Controls panel">
         <div class="cp-panel-header">Planetary Conjunctions: Synodic Periods</div>
@@ -75,7 +76,6 @@
       </aside>
 
       <section class="cp-demo__stage cp-stage stage" aria-label="Conjunction visualization stage">
-        <canvas class="cp-starfield" aria-hidden="true"></canvas>
         <svg id="conjunctionSvg" class="conjunction" viewBox="0 0 600 600" role="img" aria-label="Orbital diagram showing Earth and target planet">
           <defs>
             <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">

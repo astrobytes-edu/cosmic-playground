@@ -23,11 +23,6 @@ describe("Galaxy Rotation -- Design System Contracts", () => {
     expect(html).toContain("cp-layer-instrument");
   });
 
-  it("includes starfield canvas and runtime hook", () => {
-    expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    expect(main).toContain("initStarfield");
-  });
-
   it("includes required stage surfaces", () => {
     expect(html).toContain('id="galaxyView"');
     expect(html).toContain('id="rotationCanvas"');
@@ -157,10 +152,6 @@ describe("Galaxy Rotation -- Design System Contracts", () => {
       expect(html).toContain("cp-demo__readouts");
     });
 
-    it("readouts have unit spans", () => {
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(11);
-    });
   });
 
   describe("Misconception callout", () => {

@@ -1,0 +1,958 @@
+{
+ "files": [
+  {
+   "file": "packages/math/src/math.test.ts",
+   "tests": 18,
+   "counts": {
+    "GUARD": 18,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "math.test.ts:50-54 \u2014 trapz checked to 5 digits at n=2001 (fine); every test uses an analytic reference (1/3, 1/4, sqrt2). No issues."
+   ]
+  },
+  {
+   "file": "packages/physics/src/angularSizeModel.test.ts",
+   "tests": 13,
+   "counts": {
+    "GUARD": 13,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 4,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "angularSizeModel.test.ts:32-43, :82-88, :95-104 \u2014 round trips (angle->distance->angle, orbit angle, recession time) are circular: the inverse is derived from the forward law, so theta=atan(D/d) or 2atan(D/d) would pass (finding be32d3dd).",
+    "angularSizeModel.test.ts:14-30 \u2014 only Sun (0.53313 +/-0.005) and Moon (0.5178 +/-0.01) are checked against an external value; the other 16 presets are untested.",
+    "angularSizeModel.test.ts:63-68 \u2014 perigee/apogee only bounded to 350000-420000 km; the a=380,824 km, e=0.0667 implied by 8c0b04bc is not pinned.",
+    "angularSizeModel.test.ts:45-53 \u2014 1 cm/yr x 1 Myr = 10 km -> 384410 is an independent hand value (good)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/astroConstants.test.ts",
+   "tests": 3,
+   "counts": {
+    "GUARD": 3,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 2,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "astroConstants.test.ts:5-10 \u2014 compares G to 4*pi^2, i.e. to its own definition (circular but it IS the definition).",
+    "astroConstants.test.ts:20-25 \u2014 draconic-month expectation 1/(1/sid+1/node) is the same formula the code uses; no absolute value (27.2122 d) asserted.",
+    "astroConstants.test.ts \u2014 3 tests for the whole constant table; c, k_B, sigma_SB, M_sun duplicates (cec2a2de, f22dd990) are untested."
+   ]
+  },
+  {
+   "file": "packages/physics/src/binaryOrbitModel.test.ts",
+   "tests": 17,
+   "counts": {
+    "GUARD": 17,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 1,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "binaryOrbitModel.test.ts:45-55 \u2014 omega = 2*pi/period restates the definition; no test fixes an absolute period (Kepler III value, e.g. 1+1 Msun at 4 AU = 8 yr).",
+    "binaryOrbitModel.test.ts:180-216 \u2014 SB1/SB2 expectations are built from the circular state's own fields and are circular-orbit-only (2b8f25e5); fine as consistency but not an external check.",
+    "binaryOrbitModel.test.ts:134-151 \u2014 energy check uses an independent -4*pi^2*m1*m2/(2a) (good)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/blackbodyRadiationModel.test.ts",
+   "tests": 5,
+   "counts": {
+    "GUARD": 4,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 1
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "rewrite",
+   "notes": [
+    "blackbodyRadiationModel.test.ts:31-39 \u2014 ASSERTS-NOTHING: 0<=rgb<=255 is guaranteed by clampByte (3a210435); colorName/spectralClassLetter have no tests.",
+    "blackbodyRadiationModel.test.ts:18-29 \u2014 only zeros are asserted for planckSpectralRadianceCgs; no finite Planck value is checked, so a dropped factor 2 or missing -1 passes (f638f318).",
+    "blackbodyRadiationModel.test.ts:6-16 \u2014 Wien 502 nm +/-2 and T^4 ratio 16 at 2x T are real; the T^4 check uses one point."
+   ]
+  },
+  {
+   "file": "packages/physics/src/clusterProfileModel.test.ts",
+   "tests": 11,
+   "counts": {
+    "GUARD": 9,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 2,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "clusterProfileModel.test.ts:39-44 \u2014 PINS-DEFECT e3496cf8: 'EFF reduces to Plummer at gamma=5' is true only because clusterProfileModel.ts:68 uses gamma as a 3-D exponent rho~(1+r^2/a^2)^(-gamma/2). With the correct deprojection exponent (gamma+1)/2, Plummer is gamma=4 and this test must change. The 1.2971 literal also depends on the hard-coded 15a truncation (d9a5867d).",
+    "clusterProfileModel.test.ts:46-56 \u2014 PINS-DEFECT e3496cf8/d9a5867d: gamma=3 and 2.5 are log-divergent-mass cases, so the half-mass ratio is set by the truncation (r_h/a 3.49 at 10a to 8.15 at 50a); `ratio(3) > 3*ratio(5)` asserts that artefact.",
+    "clusterProfileModel.test.ts:58-65 \u2014 CDF normalised/monotone at gamma=3, rt=15: mechanical, still valid after the fix.",
+    "clusterProfileModel.test.ts:11-36, :68-125 \u2014 Plummer closed form 1.304766 and isotropy test with a derived standard error are strong."
+   ]
+  },
+  {
+   "file": "packages/physics/src/conservationLawsModel.test.ts",
+   "tests": 47,
+   "counts": {
+    "GUARD": 47,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 3,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "conservationLawsModel.test.ts \u2014 strongest physics file in the package: references from Barker's equation (:292-312), a 50-digit mpmath hyperbolic Kepler solve (:442-459), Newton-solved Kepler at an asymmetric point (:268-275), K+U conserved at 6 off-symmetric anomalies (:90-102), U_eff checked at an explicitly 'asymmetric and not a preset' orbit (:530-532).",
+    "conservationLawsModel.test.ts:5-18, :20-23, :61-72 \u2014 direction 0/90 mapping, full 2pi domain and ecc=0 circle are axis-aligned/trivial cases (weak).",
+    "conservationLawsModel.test.ts:215-217 \u2014 rejecting clockwise starts pins a documented limitation, not a physics value."
+   ]
+  },
+  {
+   "file": "packages/physics/src/dopplerShiftModel.test.ts",
+   "tests": 19,
+   "counts": {
+    "GUARD": 19,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 4,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "dopplerShiftModel.test.ts:6-13, :65-70 \u2014 rest-wavelength and z=0 identities are trivial (weak).",
+    "dopplerShiftModel.test.ts:72-80 \u2014 divergence 1.01% / 5.25% are hand-checkable but only at v>0; formulaDivergencePercent is a z-only metric that collapses on the blueshift side (06d0ce94) and regime() uses a different threshold (30c37107); neither is exercised at v<0.",
+    "dopplerShiftModel.test.ts:112-117 \u2014 frequency/wavelength round trip is circular; :136-153 shiftLines deltas are re-derived from the fields the same function computed.",
+    "dopplerShiftModel.test.ts:15-63 \u2014 non-rel/rel inversion values (47,367; 43,665; beta=0.8 at z=2) are independent hand values (good)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/eclipseGeometryModel.test.ts",
+   "tests": 6,
+   "counts": {
+    "GUARD": 6,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 2,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "eclipseGeometryModel.test.ts:14-24 \u2014 ecliptic latitude asserted only at the node where it is identically 0, so a global sign flip of beta passes (fc6ad22e); no test calls lunarEclipseTypeFromBetaDeg, nearestNodeDistanceDeg, phaseAngleDeg, betaFromDeltaLambdaDeg or deltaLambdaFromBetaDeg.",
+    "eclipseGeometryModel.test.ts:26-34 \u2014 threshold ordering only (any consistent bug passes).",
+    "eclipseGeometryModel.test.ts:45-57 \u2014 total/annular flip tested at 363300 and 405500 km, far from the boundary; the Earth-centre evaluation that misplaces the boundary by ~6400 km (039054f0, 8d928a9f) is not tested."
+   ]
+  },
+  {
+   "file": "packages/physics/src/galaxyRotationModel.test.ts",
+   "tests": 26,
+   "counts": {
+    "GUARD": 24,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 2
+   },
+   "weak": 12,
+   "deadCodeTests": 0,
+   "verdict": "trim",
+   "notes": [
+    "galaxyRotationModel.test.ts:213-234 \u2014 ASSERTS-NOTHING: vTotalKmS is defined as sqrt(vBulge^2+vDisk^2+vHalo^2) (galaxyRotationModel.ts:490), so the 'quadrature identity' is true by construction.",
+    "galaxyRotationModel.test.ts:295-304 \u2014 ASSERTS-NOTHING (bbe1abc1): (vTotal^2 - vVisible^2)R/G = vHalo^2 R/G = 0 for halo=0; the displayed M_dark readout is never compared.",
+    "galaxyRotationModel.test.ts:91-96 \u2014 name says 'near 187 km/s' but the window is 175-185 (excludes 187); bbe1abc1.",
+    "galaxyRotationModel.test.ts:72-89, :111-128, :21-29 \u2014 snapshot windows (c=10-10.8, rvir 214-224, dark/visible 6.7-7.7, f_b 0.10-0.14, Vmax 242-262, V(8.2)=206-226) bracket the preset output; no external reference given.",
+    "galaxyRotationModel.test.ts:272-281 \u2014 visible<=total is an identity (visible = hypot(bulge,disk) <= sqrt(b^2+d^2+h^2)).",
+    "galaxyRotationModel.test.ts:163-179 \u2014 good: pins MOND->Newton on the model's own baryon curve. Finding aaceb7e5 (MOND uses spherical GM_vis/R^2) is STALE: vMondKmS now uses vVisibleKmS (galaxyRotationModel.ts:466); only vMondDeepKmS still uses the spherical visible mass.",
+    "galaxyRotationModel.test.ts:98-109 \u2014 21 cm shift and M=V^2R/G are independent hand values (good)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/hrInferencePopulationModel.test.ts",
+   "tests": 11,
+   "counts": {
+    "GUARD": 11,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 3,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "hrInferencePopulationModel.test.ts:75-108 \u2014 expectations come from the same ZamsTout1996Model functions the generator calls, and only at Z=0.02 where xi=0 (b45450de).",
+    "hrInferencePopulationModel.test.ts:110-117 \u2014 lifetime monotone in mass only; mainSequenceLifetimeGyr takes no Z (302b5e41/a37882a4).",
+    "hrInferencePopulationModel.test.ts:189-212 \u2014 old cluster asserts compact remnants exist and are finite/positive; nothing asserts a giant branch exists (9fffc08f: 0-2 giants of 320 at every preset).",
+    "hrInferencePopulationModel.test.ts \u2014 no test of sampleMassMsun at u=0 (6258e8f6).",
+    "hrInferencePopulationModel.test.ts:214-295 \u2014 colour-domain regressions are strong (pinned-at-bracket count == 0, Teff/B-V of solar-mass ZAMS)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/hydrostaticEquilibriumModel.test.ts",
+   "tests": 6,
+   "counts": {
+    "GUARD": 6,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 5,
+   "deadCodeTests": 0,
+   "verdict": "rewrite",
+   "notes": [
+    "hydrostaticEquilibriumModel.test.ts:35-39 \u2014 expectedCenter retypes the implementation's own 3GM^2/(8 pi R^4) at 1e-12 (6e7bff4e); no P(r) vs dP/dr consistency check.",
+    "hydrostaticEquilibriumModel.test.ts \u2014 localShellPatchBalance (behind every force arrow) has 0 tests (grep count 0; 72192daa).",
+    "hydrostaticEquilibriumModel.test.ts:14-22, :91-100 \u2014 loose windows (rho_mean 1.3-1.5, T_core 1-2e7 K).",
+    "hydrostaticEquilibriumModel.test.ts:43-57 \u2014 gradient sign only; :102-129 monotone with <=/>= that a flat profile satisfies."
+   ]
+  },
+  {
+   "file": "packages/physics/src/initialMassFunctionModel.test.ts",
+   "tests": 20,
+   "counts": {
+    "GUARD": 20,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 2,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "initialMassFunctionModel.test.ts:92-98 \u2014 segment alphas compared to the exported constants themselves (no literal 0.3 / 1.3 pinned).",
+    "initialMassFunctionModel.test.ts:151-159 \u2014 'agrees with Maschberger' is a factor-5 window plus not-identical (weak).",
+    "initialMassFunctionModel.test.ts:162-181 \u2014 Jerabkova+2018 Eq. 6 values with hand arithmetic in comments; sampler-vs-analytic bin agreement via stratified uniforms (:51-72, :126-144): strong."
+   ]
+  },
+  {
+   "file": "packages/physics/src/keplerSolver.test.ts",
+   "tests": 1,
+   "counts": {
+    "GUARD": 1,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "keplerSolver.test.ts:5-31 \u2014 residual E - e sinE - M < 1e-10 on a 4x9 grid including wrapped M and e=0.95: an independent check of the defining equation (good)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/keplersLawsModel.test.ts",
+   "tests": 7,
+   "counts": {
+    "GUARD": 6,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 1,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 6,
+   "deadCodeTests": 0,
+   "verdict": "rewrite",
+   "notes": [
+    "keplersLawsModel.test.ts:49-51 \u2014 PINS-DEFECT (disputed, by-design) c97297fb: asserts clampEccentricity(0.999)=0.99 'legacy max'; the audit measured the solver converging to 2e-12 at e=0.9999, so the clamp's stated justification is false.",
+    "keplersLawsModel.test.ts:5-24 \u2014 P(1 AU)=1 yr within +/-2% (exactly 1 with G=4pi^2), a^(3/2) ratio within 22-23.3 (true 22.627), M^(-1/2) within 0.49-0.51: windows far wider than the physics.",
+    "keplersLawsModel.test.ts:53-66 \u2014 acceleration, energy, L and areal velocity checked only at e=0, so an e-dependent (1-e^2) error passes.",
+    "keplersLawsModel.test.ts:26-47 \u2014 e=0 limit and 'faster at perihelion' are qualitative; no perihelion speed value."
+   ]
+  },
+  {
+   "file": "packages/physics/src/moonPhasesModel.test.ts",
+   "tests": 5,
+   "counts": {
+    "GUARD": 5,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 3,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "moonPhasesModel.test.ts:27-30 \u2014 waxing/waning checked only at alpha=0 and 180, the symmetric pair that already hid a sign bug (35cb1a45); 225/315 (Waxing) and 45/135 (Waning) absent.",
+    "moonPhasesModel.test.ts:12-18 \u2014 phase names omit 225 and 315, the only bins whose names encode waxing.",
+    "moonPhasesModel.test.ts:20-25 \u2014 days-since-new asserted only at 0 and 180; direction of time not pinned (daysSinceNew(270) should be 7.38 d).",
+    "moonPhasesModel.test.ts:5-10 \u2014 illumination at 0/90/180/270 only; (1+cos a)/2 is symmetric so this is acceptable physics."
+   ]
+  },
+  {
+   "file": "packages/physics/src/parallaxDistanceModel.test.ts",
+   "tests": 10,
+   "counts": {
+    "GUARD": 10,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 3,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "parallaxDistanceModel.test.ts:28-47 \u2014 three round-trip tests are circular; the pc<->ly conversion already has an external literal at :23-26.",
+    "parallaxDistanceModel.test.ts:56-59 \u2014 negative parallax -> Infinity distance pins a design choice (real catalogues contain negative parallaxes).",
+    "parallaxDistanceModel.test.ts:6-26, :61-64 \u2014 d=1/p, 1000/p_mas, 3.26156 ly/pc, Proxima 768.5 mas -> 1.301 pc are external values (good)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/photonModel.test.ts",
+   "tests": 11,
+   "counts": {
+    "GUARD": 11,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 8,
+   "deadCodeTests": 0,
+   "verdict": "rewrite",
+   "notes": [
+    "photonModel.test.ts:7-17 \u2014 nu(500 nm) only bounded 5-7e14 Hz (true 5.996e14) and E bounded 2-3 eV (true 2.480): a 15% constant error passes.",
+    "photonModel.test.ts:19-31, :70-75 \u2014 three round trips and :33-40 nm-vs-cm helpers are circular.",
+    "photonModel.test.ts:59-68 \u2014 radio test only 0 < nu < 1e5 Hz (comment says ~1.4 kHz); gamma test only > 1e8 eV.",
+    "photonModel.test.ts:44-57 \u2014 NaN edge cases are real behaviour."
+   ]
+  },
+  {
+   "file": "packages/physics/src/retrogradeMotionModel.test.ts",
+   "tests": 10,
+   "counts": {
+    "GUARD": 10,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 4,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "retrogradeMotionModel.test.ts:59-84 \u2014 Earth->Mars/Venus assert only counts (stationary >= 2, retrograde intervals >= 1); lambda_app is never pinned, so a 180 deg error passes (98bcf65a).",
+    "retrogradeMotionModel.test.ts:40-60 \u2014 title says 'advances linearly in angle' but only t=0 and t=1 model year are tested; direction of motion unchecked.",
+    "retrogradeMotionModel.test.ts:16-24 \u2014 e=0 -> E=M only.",
+    "retrogradeMotionModel.test.ts:5-36, :63-110 \u2014 Kepler residual, bisection fallback and unwrap/central-difference tests are real."
+   ]
+  },
+  {
+   "file": "packages/physics/src/riseSetModel.test.ts",
+   "tests": 13,
+   "counts": {
+    "GUARD": 13,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 4,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "riseSetModel.test.ts:9-21 \u2014 declination windows +/-2 deg and 20-26 deg; :23-38 day-length windows 11.5-12.5 h and > 14 h (true ~18.5 h at 60N).",
+    "riseSetModel.test.ts:59-77 \u2014 full/new moon only (phase 0/180), admitted at :170-172 as the symmetric pair.",
+    "riseSetModel.test.ts:88-108, :173-194 \u2014 strong: hand-derived 45N values (cos H0 = 0.4337, 8.57 h, rise 19.71 h), quarter phases at the March equinox, exact asin(sin eps sin lambda)=16.34 vs small-angle 16.57."
+   ]
+  },
+  {
+   "file": "packages/physics/src/sanity.test.ts",
+   "tests": 1,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 1
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "delete",
+   "notes": [
+    "sanity.test.ts:3-6 \u2014 expect(1+1).toBe(2); counts toward the suite total (de5d50bb)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/seasonsModel.test.ts",
+   "tests": 15,
+   "counts": {
+    "GUARD": 15,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 8,
+   "deadCodeTests": 0,
+   "verdict": "rewrite",
+   "notes": [
+    "seasonsModel.test.ts:6-17 \u2014 'given formula': asserts delta=0 at the implementation's own anchor day with toBe(0).",
+    "seasonsModel.test.ts:19-45 \u2014 solstice declinations only to +/-0.5 deg at days 172/356; no asymmetric date anywhere (74ed7bf7: nothing pins delta=+16.19 deg on day 125 or 13.43 h at 32.7N).",
+    "seasonsModel.test.ts:47-51, :90-93, :63-69 \u2014 trivial cases (decl 0 at equator/zero tilt; alt 90 at equator equinox).",
+    "seasonsModel.test.ts:83-88 \u2014 N/S symmetry at the equinox where both are 12 h.",
+    "seasonsModel.test.ts:95-99 \u2014 alt=90 when lat=decl is the definition.",
+    "seasonsModel.test.ts:53-61 \u2014 perihelion 0.983 AU = a(1-e) is independent (good)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/seededRandom.test.ts",
+   "tests": 8,
+   "counts": {
+    "GUARD": 8,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 2,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "seededRandom.test.ts:22-26, :52-56 \u2014 'different sequences' asserts one first draw differs.",
+    "seededRandom.test.ts:58-66 \u2014 no known-answer vector for mulberry32/xmur3: the property 'a student's seed stays valid' is tested only as self-consistency within one build."
+   ]
+  },
+  {
+   "file": "packages/physics/src/spectralLineModel.test.ts",
+   "tests": 40,
+   "counts": {
+    "GUARD": 40,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 5,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "spectralLineModel.test.ts:34-57 \u2014 vacuum H-alpha/beta/gamma/Ly-alpha/Balmer-limit to 0.02 nm with NIST values and a test that rejects R_infinity (:64-71): strong. Finding 277a5993 (364.6 air elsewhere) is about other sites, not this file.",
+    "spectralLineModel.test.ts:241-249 \u2014 neutralHydrogenFractionProxy only bounded to [0,1]; the proxy reads 0 at 4000 K where the neutral fraction is 1 (df3dc95b) and nothing constrains it.",
+    "spectralLineModel.test.ts:128-135 \u2014 wavelengths positive; :156-162 eV*nm = hc to +/-0.5 of 1240 using the model's own constant; :313-318 c=lambda*nu uses BOHR.C_CM_PER_S; :164-175 catalogue bounds only.",
+    "spectralLineModel.test.ts:262-275 \u2014 four series-name lookups (table reads, low value)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/starClusterModel.test.ts",
+   "tests": 29,
+   "counts": {
+    "GUARD": 29,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 3,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "starClusterModel.test.ts:137-158 \u2014 asserts remnants have luminosity exactly 0 (:154); this is the unreachable-white-dwarf behaviour of 812a767f (starClusterModel.ts:190 sends every post-lifetime star down the remnant path) and will change if that is fixed.",
+    "starClusterModel.test.ts:201-206 \u2014 total mass == sum of masses (definition); :125-135 category counts partition the stars (identity).",
+    "starClusterModel.test.ts:160-169 \u2014 thresholds 8/25 Msun retype remnantFateFromInitialMass; :312-319 spectralType === '' string check.",
+    "starClusterModel.test.ts \u2014 ageing tests use the solar-Z-only lifetime (302b5e41) and cannot detect it."
+   ]
+  },
+  {
+   "file": "packages/physics/src/stellarEosModel.test.ts",
+   "tests": 25,
+   "counts": {
+    "GUARD": 24,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 1,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 4,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "stellarEosModel.test.ts:490-513 \u2014 PINS-DEFECT (5dde4737, c0ee61e0): :509 electronDegeneracyPressure = 5.808123130210272e15 (rel 5e-4) is the previous 192-interval Simpson output; the independently refined value is 4.654806e15, so the test pins a +24.8% error and will fail when the quadrature is fixed. :511 total pressure inherits it. The other assertions in this test (mu, mu_e, P_gas, P_rad, x_F, chi) are independent-checkable.",
+    "stellarEosModel.test.ts:76-86, :162-182, :226-247 \u2014 pF monotone, mu/mu_e composition shift, and FD proxy diagnostics assert direction only (no value).",
+    "stellarEosModel.test.ts:468-488 \u2014 'defines displayed degeneracy as max(P_FD - P_cl, 0)' reconstructs the code's own definition (circular).",
+    "stellarEosModel.test.ts:515-538 \u2014 white-dwarf checkpoint (P_rad = aT^4/3 = 2.5219e13; P_deg at x_F=0.80) is a strong, strongly-degenerate case unaffected by the weak-degeneracy Simpson error.",
+    "stellarEosModel.test.ts:106-136 \u2014 NR/relativistic slope windows (5/3, 4/3) are physics-derived (good)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/stellarLifetimeModel.test.ts",
+   "tests": 35,
+   "counts": {
+    "GUARD": 35,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 8,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "stellarLifetimeModel.test.ts:14-32 \u2014 Hurley t_MS pinned to 4-5 digits (11002.9, 128763, ...) and :14-61 take no Z: these are correct for Z=0.02 but cannot catch the Z-blind lifetime next to a Z-dependent ZAMS (302b5e41, a37882a4). Keep as the Z=0.02 row when Z is added.",
+    "stellarLifetimeModel.test.ts:199-203 \u2014 tip-luminosity mass-independence tested at 0.9 and 1.8 Msun, both below the 2.000 Msun step where the tip jumps 1.38 dex (47550475).",
+    "stellarLifetimeModel.test.ts:213-219, :279-285 \u2014 Stefan-Boltzmann consistency is true by construction (WD luminosity is recomputed from the clamped T at stellarLifetimeModel.ts:439).",
+    "stellarLifetimeModel.test.ts:78-85, :310-316 \u2014 spectral-type and colour anchors are lookups of the table the code is built from; :139-143 total life window 10-15 Gyr.",
+    "stellarLifetimeModel.test.ts:241-249 \u2014 Cummings 2018 IMFR checked against hand-evaluated segments (0.08m+0.489, 0.187m+0.184, 0.107m+0.471): independent (good)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/stellarStartraxParity.test.ts",
+   "tests": 45,
+   "counts": {
+    "GUARD": 42,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 2,
+    "PINS-DEFECT": 1,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 2,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "stellarStartraxParity.test.ts:55-62 \u2014 PINS-DEFECT b45450de: asserts metallicityZ === 0.02 and 10 rows; the fixture exercises only xi=0, so 77/240 single-coefficient corruptions of the Tout polynomials pass all 40 parity rows. This test will block adding Z rows.",
+    "stellarStartraxParity.test.ts:64-98 \u2014 40 row tests (L, R, Teff, tMS at 10 masses, 1e-3) against an independent implementation: the only external gate in the package, but solar-Z only; lifetime parity is solar-only by design.",
+    "stellarStartraxParity.test.ts:100-112 \u2014 'both ends' repeats row assertions already made at :64-98 (redundant).",
+    "stellarStartraxParity.test.ts:127-135, :165-172 \u2014 STRING-ONLY: readFileSync of model sources and regex/contain checks for imports and for the absence of `10 * massMsun ** -2.5`; no behaviour.",
+    "stellarStartraxParity.test.ts:137-163 \u2014 lifetime stored by the cluster equals mainSequenceLifetimeMyr (the function the cluster calls); the generatePopulation call asserts only length 1."
+   ]
+  },
+  {
+   "file": "packages/physics/src/telescopeResolutionModel.test.ts",
+   "tests": 11,
+   "counts": {
+    "GUARD": 11,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 7,
+   "deadCodeTests": 0,
+   "verdict": "rewrite",
+   "notes": [
+    "telescopeResolutionModel.test.ts:7-16 \u2014 only numeric check on the headline formula: Hubble 0.04-0.08 arcsec (true 0.0577); coefficients 1.0, 1.22 and 1.5 all pass (f66bf964).",
+    "telescopeResolutionModel.test.ts:18-42 \u2014 monotone in D and lambda: any lambda/D law passes; :135-167 Airy: value at 0 and < 1e-2 near 3.8317, monotone only (side lobes/first null untested).",
+    "telescopeResolutionModel.test.ts:72-110 \u2014 post-fix AO model (core = diffraction limit, halo = seeing): GUARD of the fixed behaviour; finding 55912396 is FIXED in source. :85-98 and :100-110 are identities (output = input).",
+    "telescopeResolutionModel.test.ts:112-133 \u2014 resolved/marginal/unresolved at 1.0, 0.85, 0.5 only; the 1.5->1.0 threshold move (c5904530) is pinned, boundaries untested. AO Strehl 0.6 hard-coded (8450d08b)."
+   ]
+  },
+  {
+   "file": "packages/physics/src/twoBodyAnalytic.test.ts",
+   "tests": 18,
+   "counts": {
+    "GUARD": 18,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 4,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "twoBodyAnalytic.test.ts:57-79 \u2014 synodic-period expectations use the same formula as the code (the known values 583.9/779.9/399 d appear only in comments).",
+    "twoBodyAnalytic.test.ts:16-22 \u2014 mean<->true anomaly round trip (circular).",
+    "twoBodyAnalytic.test.ts:105-170 \u2014 strong: edge classification (rest, radial, parabolic) and asymmetric golden values (e=0.893532, nu=2.369222; inward start nu=-2.412321) plus clockwise mirror."
+   ]
+  },
+  {
+   "file": "packages/physics/src/units.test.ts",
+   "tests": 7,
+   "counts": {
+    "GUARD": 7,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 3,
+   "deadCodeTests": 0,
+   "verdict": "rewrite",
+   "notes": [
+    "units.test.ts:6-11 \u2014 expected km/s = KM_PER_AU / YEAR_S, the same two constants the function divides (de5d50bb).",
+    "units.test.ts:28-33 \u2014 arcsecToRad asserted only > 0 plus a round trip: pi/(180*3600)=4.84813681e-6 is never asserted.",
+    "units.test.ts:40-43 \u2014 evToErg(1) compared to the constant it returns."
+   ]
+  },
+  {
+   "file": "packages/physics/src/zamsTout1996Model.test.ts",
+   "tests": 16,
+   "counts": {
+    "GUARD": 16,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 5,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "zamsTout1996Model.test.ts:20-25 \u2014 L,R > 0 only; :63-93 mass<->Teff inversion round trips (2e-3, 4e-3) circular.",
+    "zamsTout1996Model.test.ts:27-35 \u2014 Sun ZAMS L=0.6977, R=0.8882, T=5597 K at Z=0.02 where xi=0 (b45450de); :47-61 monotone Teff at the Z bounds is the only test touching higher-order metallicity terms and checks monotonicity only.",
+    "zamsTout1996Model.test.ts:117-122 \u2014 150 Msun L=2.4803e6, R=22.861 are snapshots of the extrapolation; :162-173 R136a1 window is loose (L 1e6-1e7, T 40-60 kK).",
+    "zamsTout1996Model.test.ts:95-105, :137-142 \u2014 out-of-domain NaN and no-downward-extrapolation are real."
+   ]
+  },
+  {
+   "file": "packages/runtime/src/bottomSheet.test.ts",
+   "tests": 10,
+   "counts": {
+    "GUARD": 10,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 10,
+   "verdict": "delete",
+   "notes": [
+    "bottomSheet.test.ts:1-163 \u2014 all 10 tests exercise initBottomSheet, which is referenced only by its own file and this test (grep: not exported from index.ts, no .cp-bottom-sheet markup in any index.html); dead code (6a2de304, 8e479cb3). Behavioural tests of unshipped code.",
+    "bottomSheet.test.ts:157-162 \u2014 'noop cleanup' also asserts typeof function (tsc-guaranteed)."
+   ]
+  },
+  {
+   "file": "packages/runtime/src/polish.test.ts",
+   "tests": 1,
+   "counts": {
+    "GUARD": 1,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "polish.test.ts:8-25 \u2014 real DOM behaviour: KaTeX readout mirrored as markup, plain readout as text; guards a copy-text bug."
+   ]
+  },
+  {
+   "file": "packages/runtime/src/popover.test.ts",
+   "tests": 11,
+   "counts": {
+    "GUARD": 11,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "popover.test.ts:41-151 \u2014 open/close/Escape/outside-click/focus-in/focus-return/cleanup/independence: all behavioural state transitions. Outside-click focus pull-back (d0e31a1c) is untested (:103-109 covers Escape only)."
+   ]
+  },
+  {
+   "file": "packages/runtime/src/starfield.test.ts",
+   "tests": 4,
+   "counts": {
+    "GUARD": 3,
+    "DUPLICATE-GATE": 1,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "starfield.test.ts:111-114 \u2014 DUPLICATE-GATE (tsc): asserts the return value is a function; the TypeScript return type already guarantees this.",
+    "starfield.test.ts:91-109 \u2014 zero-size canvas does not throw, paints nothing; sized canvas paints: genuine regression guards with a mocked 2-D context."
+   ]
+  },
+  {
+   "file": "packages/runtime/src/tabs.test.ts",
+   "tests": 11,
+   "counts": {
+    "GUARD": 11,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "tabs.test.ts:38-140 \u2014 ARIA state, click, Arrow/Home/End keyboard, wrap-around, single visible panel, cleanup: behavioural."
+   ]
+  },
+  {
+   "file": "packages/theme/src/components.test.ts",
+   "tests": 63,
+   "counts": {
+    "GUARD": 8,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 54,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 1
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "trim",
+   "notes": [
+    "components.test.ts:29-297 \u2014 STRING-ONLY: `expect(css).toContain(\"...\")` for selectors, token names, and `backdrop-filter: blur(` (\u224845 tests); nothing renders the CSS.",
+    "components.test.ts:286-288 \u2014 ASSERTS-NOTHING: toContain(\"scroll\") is satisfied by the selector `.cp-scroll-shadow` itself.",
+    "components.test.ts:160-208 \u2014 10 tests of bottom-sheet.css for dead code (6a2de304); the stylesheet ships into all 20 demo bundles.",
+    "components.test.ts:74-76, :116-118, :155-157, :205-207, :240-242, :270-272 \u2014 'no hardcoded color literals' (hex only) kept as GUARD: validate-invariants apps:no-color-literals deliberately excludes packages/theme (validate-invariants.mjs:118 comment), so these are not duplicates. rgba() is not checked.",
+    "components.test.ts:340-351 \u2014 GUARD: parses grid-template-areas and asserts sidebar heads every row (documented 13-tab overlay defect).",
+    "components.test.ts:359-362 \u2014 GUARD (value): arrow-up/down rotation signs.",
+    "components.test.ts:299-332 \u2014 control.css layout via regex on source; E2E reflow is the real check."
+   ]
+  },
+  {
+   "file": "packages/theme/src/contrast.test.ts",
+   "tests": 15,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 15
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "delete",
+   "notes": [
+    "contrast.test.ts:31-52 \u2014 ASSERTS-NOTHING (6b13681b): every colour is a local const typed next to a comment naming the token; nothing reads tokens.css, so no theme change can fail it. MUTED=#7d7e81 is the retired 46% value (tokens.css now resolves to #919293).",
+    "contrast.test.ts:58-73 \u2014 #047857/#b45309/#b91c1c are used nowhere in the theme.",
+    "contrast.test.ts:138-140 \u2014 licenses --cp-faint at 2.5:1 (900685a7: placeholder resolves to 2.62:1) on a stale constant.",
+    "Everything worth keeping is already in tokenContrast.test.ts, which resolves from the CSS."
+   ]
+  },
+  {
+   "file": "packages/theme/src/orbitShell.test.ts",
+   "tests": 9,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 9,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "trim",
+   "notes": [
+    "orbitShell.test.ts:18-82 \u2014 STRING-ONLY: slices rules out of demo-shell.css/layer-instrument.css and asserts declarations (grid-template-areas, max-height, overflow, margin: 0, text-transform: none). Layout behaviour is not exercised; the 1045.5px measurement in the :53-57 comment was real, the test only guards the text.",
+    "orbitShell.test.ts:27-32, :68-71 \u2014 media-query ordering via indexOf of the second '@media (max-width: 1024px)' (brittle to reordering)."
+   ]
+  },
+  {
+   "file": "packages/theme/src/tokenContrast.test.ts",
+   "tests": 25,
+   "counts": {
+    "GUARD": 23,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 2
+   },
+   "weak": 4,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "tokenContrast.test.ts:27-33 \u2014 parseTokens ignores selector and @media context (later wins), so the paper map takes layer-paper.css's @media print block (--cp-bg0 #fff, --cp-text #000, --cp-muted #333); :209-218 paper --cp-text and --cp-muted rows measure the print palette, not the screen theme (7d642cb1) -> counted ASSERTS-NOTHING (2).",
+    "tokenContrast.test.ts:209-221 \u2014 paper layer covers only text, muted, ice, amber, focus; the five topic tokens at 1.37-1.67:1 on white (4317c879) are not checked.",
+    "tokenContrast.test.ts:121-206 \u2014 resolves real CSS incl. color-mix and transparent compositing; caught the 2.25:1 focus ring; glass-ground test (:188-205) is a genuine ground-aware check. Border (1.22:1, dddac6e3) and the other instrument grounds (400c36ea) are unmeasured.",
+    "tokenContrast.test.ts:225-235 \u2014 resolver self-test (weak)."
+   ]
+  },
+  {
+   "file": "packages/theme/src/tokens.test.ts",
+   "tests": 49,
+   "counts": {
+    "GUARD": 1,
+    "DUPLICATE-GATE": 14,
+    "STRING-ONLY": 34,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 1,
+   "deadCodeTests": 0,
+   "verdict": "trim",
+   "notes": [
+    "tokens.test.ts:23-37, :45-56, :73-77, :92-94, :98-108, :128-134, :177-179, :217-229, :233-243, :247-263, :271-275, :290-292 \u2014 DUPLICATE-GATE (validate-invariants.mjs theme:undefined-token): token-definition tests whose tokens are all referenced by var() elsewhere (I counted var() references: every token in those tests has >=1 use), so deleting the definition already fails the gate. Count: 14 tests.",
+    "tokens.test.ts:13-19, :39-43, :63-69, :79-90, :111-125, :136-139, :141-170, :173-175, :181-184, :187-200, :285-288, :296-312 \u2014 STRING-ONLY on unreferenced tokens (bp-*, chart-3..5, data-*, ease-spring, elevation-1, museum-*, input-focus, duration-exit): existence of dead tokens.",
+    "tokens.test.ts:58-69 \u2014 STRING-ONLY: --cp-font-display contains 'Outfit' and --cp-font-sans 'Source Sans 3', but no demo loads either face (f32eff56, 5146b9c8).",
+    "tokens.test.ts:202-213 \u2014 GUARD (weak): glow alpha in [0.3,0.5]; the regex is written around the seven compliant tokens and skips --cp-glow-teal/pink/violet at 0.28/0.24/0.24 (52304b5c).",
+    "tokens.test.ts:310-312 \u2014 reduced-motion override asserted by substring only (delay not reset, 7540e25e).",
+    "tokens.test.ts:316-374 \u2014 chip/toggle CSS: 11 toContain checks on source text; toggle ':checked'+'--cp-accent' (:360-363) is satisfied by '--cp-accent-amber' elsewhere in the file."
+   ]
+  },
+  {
+   "file": "scripts/validate-datasets.test.mjs",
+   "tests": 3,
+   "counts": {
+    "GUARD": 3,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 1,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "validate-datasets.test.mjs:14-18 \u2014 empty repo passes (weak); :20-27 missing manifest and :29-60 unit-suffix mismatch are real gate-catches on fixtures.",
+    "validate-datasets.test.mjs:48 \u2014 fixture uses license 'UNSPECIFIED', which the gate accepts (013d63f4); not asserted."
+   ]
+  },
+  {
+   "file": "scripts/validate-invariants.test.mjs",
+   "tests": 5,
+   "counts": {
+    "GUARD": 5,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 1,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "validate-invariants.test.mjs:14-56 \u2014 four gate codes exercised (site:root-absolute-link, content:root-absolute-markdown-link, demos:forbidden-base-url, apps:no-color-literals); the other ~10 codes incl. theme:token-kind-* and theme:undefined-token have no test.",
+    "validate-invariants.test.mjs:47-56 \u2014 no-color-literals tested on .css only; .ts is out of scope by design (2359373e, f910f75c)."
+   ]
+  },
+  {
+   "file": "scripts/validate-math-formatting.test.mjs",
+   "tests": 8,
+   "counts": {
+    "GUARD": 8,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "validate-math-formatting.test.mjs:30-117 \u2014 decodes \\u escapes/entities, 16 comparison/operator/arrow glyphs, middle-dot separator vs operator, every scan root, physics comments vs literals: strong, line-precise. Findings c9d6ca8f, cee8b691, 270cce28 (gate misses <=, ->, \\u escapes) are STALE: this file proves they are covered.",
+    "validate-math-formatting.test.mjs \u2014 does not cover plain-word leaks like `inf` or `lambda_app` (CLAUDE.md gotcha)."
+   ]
+  },
+  {
+   "file": "scripts/validate-moon-phases.test.mjs",
+   "tests": 1,
+   "counts": {
+    "GUARD": 0,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 1,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "delete",
+   "notes": [
+    "validate-moon-phases.test.mjs:15-38 \u2014 STRING-ONLY: 21 `toContain('id=\"...\"')` on apps/demos/src/demos/moon-phases/index.html. Not a validator test despite the name; Playwright (moon-phases.spec.ts) fails if these ids are missing."
+   ]
+  },
+  {
+   "file": "scripts/validate-physics-models.test.mjs",
+   "tests": 2,
+   "counts": {
+    "GUARD": 2,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 1,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "validate-physics-models.test.mjs:14-18 \u2014 empty repo passes (weak); :20-31 gate flags a missing test file and missing export.",
+    "validate-physics-models.test.mjs \u2014 the gate only requires a test FILE to exist; a file containing sanity.test.ts-style assertions satisfies it."
+   ]
+  },
+  {
+   "file": "scripts/validate-play-dirs.test.mjs",
+   "tests": 8,
+   "counts": {
+    "GUARD": 8,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 0,
+   "verdict": "keep",
+   "notes": [
+    "validate-play-dirs.test.mjs:54-90, :119-138, :164-187 \u2014 spawns the real script on fixture trees: aria-atomic, content_verified derived from open P0s in tracker (c91e1e0e/0821441b are addressed), frontmatter modes vs source; both pass and fail paths."
+   ]
+  },
+  {
+   "file": "scripts/validate-plot-contract.test.mjs",
+   "tests": 3,
+   "counts": {
+    "GUARD": 3,
+    "DUPLICATE-GATE": 0,
+    "STRING-ONLY": 0,
+    "PINS-DEFECT": 0,
+    "ASSERTS-NOTHING": 0
+   },
+   "weak": 0,
+   "deadCodeTests": 3,
+   "verdict": "delete",
+   "notes": [
+    "validate-plot-contract.test.mjs:14-73 \u2014 three fixture tests of a gate that guards Plotly/mountPlot, neither of which exists in the repo (f951429a); the gate can never fail on real code. Delete with scripts/validate-plot-contract.mjs."
+   ]
+  }
+ ],
+ "totals": {
+  "files": 49,
+  "tests": 737,
+  "counts": {
+   "GUARD": 595,
+   "DUPLICATE-GATE": 15,
+   "STRING-ONLY": 100,
+   "PINS-DEFECT": 5,
+   "ASSERTS-NOTHING": 22
+  },
+  "weakGuard": 125,
+  "deadCodeTests": 13
+ }
+}

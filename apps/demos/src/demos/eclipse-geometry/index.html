@@ -13,6 +13,7 @@
   <body>
     <div id="cp-demo"
       role="main" class="cp-layer-instrument cp-demo" aria-label="Eclipse Geometry instrument">
+      <canvas class="cp-starfield" aria-hidden="true"></canvas>
       <h1 class="sr-only">Eclipse Geometry: Shadows in Space</h1>
       <!-- ═══════════════════════════════════════════
            SIDEBAR — physics controls
@@ -141,7 +142,6 @@
            STAGE — dual-panel SVG visualization
            ═══════════════════════════════════════════ -->
       <section class="cp-demo__stage cp-stage stage" aria-label="Visualization stage">
-        <canvas class="cp-starfield" aria-hidden="true"></canvas>
         <svg
           id="eclipseStage"
           class="stage__svg"

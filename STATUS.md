@@ -1,7 +1,7 @@
 # Cosmic Playground — status
 
-next: push main once (parallax off-scale marker, 55232f5), then T1 on an idle machine; 26 of 591 audit findings fixed with evidence (6 of 24 P0), 18 partly
-blocker: none (b228249 live; parallax off-scale marker merged into main 2026-10-29, not pushed)
+next: T2 (retire low-value tests): commit the batch so far, then keep retiring CSS-string and name-only tests; starfield behind every panel, readout units and panel translucency checked in the browser (uncommitted); 26 of 591 audit findings fixed with evidence (6 of 24 P0), 18 partly
+blocker: none (Pages deploy of 01ee019 green 2026-10-29; parallax off-scale marker live)
 due: 2026-09-18 (dossier)
 
 ## Red-team audit (2026-10-23, claude-opus-5)

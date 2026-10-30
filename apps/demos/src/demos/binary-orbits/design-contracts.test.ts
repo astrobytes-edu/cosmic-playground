@@ -21,23 +21,9 @@ const main = fs.readFileSync(mainPath, "utf-8");
 
 describe("Binary Orbits -- Design System Contracts", () => {
   // -- Starfield ----------------------------------------------------------
-  describe("Starfield contract", () => {
-    it("HTML contains a starfield canvas element", () => {
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    });
-
-    it("main.ts imports and calls initStarfield", () => {
-      expect(main).toContain("initStarfield");
-      expect(main).toMatch(/initStarfield\s*\(/);
-    });
-  });
 
   // -- Readout unit separation --------------------------------------------
   describe("Readout unit separation", () => {
-    it("readout values with units use .cp-readout__unit spans", () => {
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(6);
-    });
 
     it("readout labels do not contain parenthesized units", () => {
       const labels = html.match(/class="cp-readout__label"[^>]*>([^<]*)</g) || [];
@@ -192,17 +178,6 @@ describe("Binary Orbits -- Design System Contracts", () => {
     it("toolbar buttons use cp-utility-btn", () => {
       const utilityBtns = html.match(/class="cp-utility-btn"/g) || [];
       expect(utilityBtns.length).toBeGreaterThanOrEqual(3);
-    });
-  });
-
-  // -- Panel translucency -------------------------------------------------
-  describe("Panel translucency", () => {
-    it("canvas background uses token-based radial-gradient", () => {
-      expect(css).toMatch(/radial-gradient[\s\S]*?var\(--cp-/);
-    });
-
-    it("CSS does not override panel backgrounds with opaque colors", () => {
-      expect(css).not.toMatch(/background:\s*(#|rgb|hsl)/);
     });
   });
 

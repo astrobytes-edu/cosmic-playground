@@ -21,15 +21,6 @@ const main = fs.readFileSync(mainPath, "utf-8");
 
 describe("Retrograde Motion — Design System Contracts", () => {
   // ── Starfield ─────────────────────────────────────────────
-  describe("Starfield contract", () => {
-    it("HTML contains a starfield canvas", () => {
-      expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    });
-
-    it("main.ts imports and calls initStarfield", () => {
-      expect(main).toContain("initStarfield");
-    });
-  });
 
   // ── Celestial tokens ──────────────────────────────────────
   describe("Celestial token contract", () => {
@@ -68,11 +59,6 @@ describe("Retrograde Motion — Design System Contracts", () => {
 
   // ── Readout unit separation ───────────────────────────────
   describe("Readout unit separation", () => {
-    it("HTML has at least 4 readout unit spans", () => {
-      // Readouts with units: day(s), deg, deg/day, days (for intervals)
-      const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-      expect(unitSpans.length).toBeGreaterThanOrEqual(4);
-    });
 
     it("no parenthesized units in readout labels", () => {
       // Labels should not contain "(deg)" or "(days)" — units go in separate spans
@@ -160,16 +146,4 @@ describe("Retrograde Motion — Design System Contracts", () => {
     });
   });
 
-  // ── Panel translucency ────────────────────────────────────
-  describe("Panel translucency", () => {
-    it("SVG backgrounds use translucent treatment", () => {
-      // retrograde-motion uses color-mix pattern (like angular-size)
-      expect(css).toMatch(/color-mix|radial-gradient|--cp-instr-panel-bg/);
-    });
-
-    it("controls or readouts use backdrop-filter or translucent bg", () => {
-      // The stub-demo.css provides this for .cp-panel, but verify not overridden
-      expect(css).not.toMatch(/background:\s*(#|rgb|hsl)/);
-    });
-  });
 });

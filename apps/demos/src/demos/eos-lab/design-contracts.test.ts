@@ -25,21 +25,11 @@ describe("EOS Lab -- Design System Contracts", () => {
     expect(html).toContain("cp-demo__readouts");
   });
 
-  it("includes starfield canvas and initialization", () => {
-    expect(html).toMatch(/<canvas[^>]*class="cp-starfield"/);
-    expect(mainTs).toContain("initStarfield");
-    expect(mainTs).toMatch(/initStarfield\s*\(/);
-  });
-
   it("imports model physics from @cosmic/physics", () => {
     expect(mainTs).toContain('from "@cosmic/physics"');
     expect(mainTs).toContain("StellarEosModel");
   });
 
-  it("keeps readout unit separation with .cp-readout__unit spans", () => {
-    const unitSpans = html.match(/class="cp-readout__unit"/g) || [];
-    expect(unitSpans.length).toBeGreaterThanOrEqual(3);
-  });
 
   it("avoids hardcoded color literals in CSS", () => {
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
